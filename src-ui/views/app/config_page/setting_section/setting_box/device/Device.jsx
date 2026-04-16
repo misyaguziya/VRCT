@@ -15,7 +15,6 @@ import {
 import {
     LabelComponent,
     DropdownMenu,
-    MultiDropdownMenu,
     ThresholdComponent,
     SwitchBox,
 } from "../_components";
@@ -23,13 +22,13 @@ import {
 export const Device = () => {
     return (
         <>
-            <Mic_Container />
-            <Speaker_Container />
+            <MicContainer />
+            <SpeakerContainer />
         </>
     );
 };
 
-const Mic_Container = () => {
+const MicContainer = () => {
     const { t } = useI18n();
     const {
         currentEnableAutoMicSelect,
@@ -60,8 +59,7 @@ const Mic_Container = () => {
         setSelectedMicDevice(selected_data.selected_id);
     };
 
-    // [Fix me] currentEnableAutoMicSelect.data === "pending"; ?  not currentEnableAutoMicSelect.state === "pending"; ??(.state)
-    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "pending";
+    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.state === "pending";
 
     const getLabels = () => {
         if (currentEnableAutomaticMicThreshold.data === true) {
@@ -132,7 +130,7 @@ const Mic_Container = () => {
     );
 };
 
-const Speaker_Container = () => {
+const SpeakerContainer = () => {
     const { t } = useI18n();
     const {
         currentEnableAutoSpeakerSelect,
@@ -154,7 +152,7 @@ const Speaker_Container = () => {
         setSelectedSpeakerDevice(selected_data.selected_id);
     };
 
-    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.data === "pending";
+    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.state === "pending";
 
     const getLabels = () => {
         if (currentEnableAutomaticSpeakerThreshold.data === true) {

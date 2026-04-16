@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./Transcription.module.scss";
-import { updateLabelsById, genNumObjArray, arrayToObject } from "@utils";
-import { useStore_IsBreakPoint } from "@store";
+import { genNumObjArray } from "@utils";
 
 import {
     useTranscription,
@@ -11,20 +9,16 @@ import {
 import {
     WordFilterContainer,
     DownloadModelsContainer,
-    MultiDropdownMenuContainer,
     RadioButtonContainer,
     DropdownMenuContainer,
     SliderContainer,
-
-    useOnMouseLeaveDropdownMenu,
 } from "../_templates/Templates";
 
 import {
-    DropdownMenu,
-    MultiDropdownMenu,
-    LabelComponent,
     SectionLabelComponent,
 } from "../_components";
+
+import { ComputeDevice } from "../_components/compute_device/ComputeDevice";
 
 export const Transcription = () => {
     return (
@@ -273,7 +267,6 @@ const WhisperWeightType_Box = () => {
     );
 };
 
-// Duplicate
 const TranscriptionComputeDevice_Box = () => {
     const { t } = useI18n();
     const {
@@ -284,155 +277,19 @@ const TranscriptionComputeDevice_Box = () => {
         setSelectedTranscriptionComputeType,
     } = useTranscription();
 
-    const list_for_ui = transformDeviceArray(currentSelectableTranscriptionComputeDeviceList.data);
-
-    const target_index = findKeyByDeviceValue(currentSelectableTranscriptionComputeDeviceList.data, currentSelectedTranscriptionComputeDevice.data);
-
-    const DEFAULT_ORDER = [
-        "auto",
-        "int8",
-        "int8_bfloat16",
-        "int8_float16",
-        "int8_float32",
-        "bfloat16",
-        "float16",
-        "int16",
-        "float32"
-    ];
-
-    const sortComputeTypesArray = (compute_types_array = [], order) => {
-        const src_set = new Set(compute_types_array);
-
-        const from_order = order.filter((id) => src_set.has(id));
-
-        const invalid_ids = compute_types_array.filter((id) => !order.includes(id));
-        if (invalid_ids.length > 0) {
-            console.error("[sortComputeTypesArray] Unsupported compute types ignored:", invalid_ids);
-        }
-
-        return from_order;
-    };
-
-
-    const buildSimpleLabels = (ordered_array = []) => {
-        const n = ordered_array.length;
-        if (n === 0) return {};
-
-        const labels = {};
-
-        ordered_array.forEach((id, idx) => {
-            if (idx === 0 && id === "auto") {
-                labels[id] = t("config_page.common.compute_device.type_template_auto");
-                return;
-            }
-
-            if (idx === 1) {
-                labels[id] = t(
-                    "config_page.common.compute_device.type_template_low",
-                    { type_name: id }
-                );
-                return;
-            }
-
-            if (idx === n - 1) {
-                labels[id] = t(
-                    "config_page.common.compute_device.type_template_high",
-                    { type_name: id }
-                );
-                return;
-            }
-
-            labels[id] = id;
-        });
-
-        return labels;
-    };
-
-
-    const computeTypesArray = currentSelectableTranscriptionComputeDeviceList.data[target_index].compute_types;
-
-    const ordered_array = sortComputeTypesArray(computeTypesArray, DEFAULT_ORDER);
-
-    const new_compute_types_labels = buildSimpleLabels(ordered_array);
-
-    const selectFunction_ComputeDevice = (selected_data) => {
-        const target_obj = currentSelectableTranscriptionComputeDeviceList.data[selected_data.selected_id];
-        setSelectedTranscriptionComputeDevice(target_obj);
-    };
-
-    const selectFunction_ComputeType = (selected_data) => {
-        setSelectedTranscriptionComputeType(selected_data.selected_id);
-    };
-
-    const is_disabled_selector = currentSelectedTranscriptionComputeDevice.state === "pending" || currentSelectedTranscriptionComputeType.state === "pending";
-
     return (
-        <MultiDropdownMenuContainer
+        <ComputeDevice
             label={t("config_page.transcription.transcription_compute_device.label")}
-            desc={t("config_page.common.compute_device.desc")}
-            dropdown_settings={[
-                {
-                    secondary_label: t("config_page.common.compute_device.label_device"),
-                    dropdown_id: "transcription_compute_device",
-                    selected_id: target_index,
-                    list: list_for_ui,
-                    selectFunction: selectFunction_ComputeDevice,
-                    state: currentSelectedTranscriptionComputeDevice.state,
-                    is_disabled: is_disabled_selector,
-                },
-                {
-                    secondary_label: t("config_page.common.compute_device.label_type"),
-                    dropdown_id: "transcription_compute_type",
-                    selected_id: currentSelectedTranscriptionComputeType.data,
-                    list: new_compute_types_labels,
-                    selectFunction: selectFunction_ComputeType,
-                    state: currentSelectedTranscriptionComputeType.state,
-                    is_disabled: is_disabled_selector,
-                }
-            ]}
+            dropdownIdPrefix="transcription"
+            currentDeviceList={currentSelectableTranscriptionComputeDeviceList}
+            currentSelectedDevice={currentSelectedTranscriptionComputeDevice}
+            setSelectedDevice={setSelectedTranscriptionComputeDevice}
+            currentSelectedComputeType={currentSelectedTranscriptionComputeType}
+            setSelectedComputeType={setSelectedTranscriptionComputeType}
         />
     );
 };
 
-// Duplicate
-const transformDeviceArray = (devices) => {
-    const name_counts = Object.values(devices).reduce((counts, device) => {
-        const name = device.device_name;
-        counts[name] = (counts[name] || 0) + 1;
-        return counts;
-    }, {});
-
-    const name_indices = {};
-    const result = {};
-
-    Object.entries(devices).forEach(([key, device]) => {
-        const name = device.device_name;
-
-        if (name_counts[name] > 1) {
-            name_indices[name] = (name_indices[name] || 0);
-            const value = `${name}:${name_indices[name]}`;
-            name_indices[name]++;
-            result[key] = value;
-        } else {
-            result[key] = name;
-        }
-    });
-
-    return result;
-};
-
-const findKeyByDeviceValue = (devices, target_value) => {
-    for (const [key, value] of Object.entries(devices)) {
-        if (
-            value.device === target_value.device &&
-            value.device_index === target_value.device_index &&
-            value.device_name === target_value.device_name
-        ) {
-            return parseInt(key);
-        }
-    }
-    return null;
-};
 
 
 

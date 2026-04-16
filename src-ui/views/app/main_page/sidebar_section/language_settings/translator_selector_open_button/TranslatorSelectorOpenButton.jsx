@@ -1,5 +1,4 @@
 import { useI18n } from "@useI18n";
-import { updateLabelsById } from "@utils";
 import styles from "./TranslatorSelectorOpenButton.module.scss";
 import { TranslatorSelector } from "./translator_selector/TranslatorSelector";
 import { useStore_IsOpenedTranslatorSelector } from "@store";

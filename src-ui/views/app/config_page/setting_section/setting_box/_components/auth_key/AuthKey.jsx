@@ -16,7 +16,7 @@ export const AuthKey = (props) => {
         entryRef.current.focus();
     };
 
-    const onchangeEntryAuthKey = (e) => {
+    const onChangeEntryAuthKey = (e) => {
         props.onChangeFunction(e.target.value);
     };
     const saveAuthKey = () => {
@@ -38,7 +38,7 @@ export const AuthKey = (props) => {
     return (
         <div className={styles.container}>
             <div className={styles.entry_section_wrapper}>
-                <_Entry ref={entryRef} width="24rem" onChange={onchangeEntryAuthKey} ui_variable={props.variable} is_disabled={is_disabled}/>
+                <_Entry ref={entryRef} width="24rem" onChange={onChangeEntryAuthKey} ui_variable={props.variable} is_disabled={is_disabled}/>
                 <button className={save_button_class_names} onClick={saveAuthKey}>
                     {is_disabled
                     ? <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }}/>
