@@ -7,8 +7,8 @@ export const Slider = (props) => {
     const location = props.valueLabelDisplayLocation || "top";
     const {
         ui_value,
-        onchangeFunction,
-        onchangeCommittedFunction,
+        onChangeFunction,
+        onChangeCommittedFunction,
         marks
     } = useSliderLogic({
         variable: props.variable,
@@ -74,7 +74,7 @@ export const Slider = (props) => {
         const newValue = calculateValue(e.clientX, e.clientY);
         setLocalValue(newValue);
         if (newValue !== ui_value) {
-            onchangeFunction(newValue);
+            onChangeFunction(newValue);
         }
         e.preventDefault();
 
@@ -88,7 +88,7 @@ export const Slider = (props) => {
             const newValue = calculateValue(e.clientX, e.clientY);
             setLocalValue(newValue);
             if (newValue !== ui_value) {
-                onchangeFunction(newValue);
+                onChangeFunction(newValue);
             }
         };
 
@@ -96,8 +96,8 @@ export const Slider = (props) => {
             setIsDragging(false);
             const newValue = calculateValue(e.clientX, e.clientY);
             setLocalValue(newValue);
-            if (onchangeCommittedFunction) {
-                onchangeCommittedFunction(newValue);
+            if (onChangeCommittedFunction) {
+                onChangeCommittedFunction(newValue);
             }
         };
 
@@ -108,7 +108,7 @@ export const Slider = (props) => {
             window.removeEventListener("pointermove", handlePointerMove);
             window.removeEventListener("pointerup", handlePointerUp);
         };
-    }, [isDragging, calculateValue, onchangeFunction, onchangeCommittedFunction, ui_value]);
+    }, [isDragging, calculateValue, onChangeFunction, onChangeCommittedFunction, ui_value]);
 
     const handleMouseEnter = (e) => {
         setIsHovered(true);

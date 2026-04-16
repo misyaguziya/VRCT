@@ -14,7 +14,6 @@ import {
     RadioButton,
     AuthKey,
     ActionButton,
-    ComputeDevice,
     WordFilter,
     WordFilterListToggleComponent,
     DownloadModels,
@@ -159,9 +158,7 @@ export const ActionButtonContainer = (props) => (
     <CommonContainer Component={ActionButton} {...props} add_break_point={false}/>
 );
 
-export const ComputeDeviceContainer = (props) => (
-    <CommonContainer Component={ComputeDevice} {...props} />
-);
+
 
 export const WordFilterContainer = (props) => {
     return (

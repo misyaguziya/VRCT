@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 
 import { useOpenFolder } from "@logics_common";
 import {
     useAdvancedSettings,
+    useSaveButtonLogic,
 } from "@logics_configs";
 
 import {
@@ -16,6 +16,8 @@ import {
 import {
     SectionLabelComponent,
 } from "../_components";
+
+import { useStore_OpenedQuickSetting } from "@store";
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
 import HelpSvg from "@images/help.svg?react";
@@ -37,25 +39,17 @@ export const AdvancedSettings = () => {
 const OscIpAddressContainer = () => {
     const { t } = useI18n();
     const { currentOscIpAddress, setOscIpAddress } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(currentOscIpAddress.data);
 
-    const onChangeFunction = (value) => {
-        setInputValue(value);
-    };
-
-    const saveFunction = () => {
-        setOscIpAddress(input_value);
-    };
-
-    useEffect(()=> {
-        if (currentOscIpAddress.state === "pending") return;
-        setInputValue(currentOscIpAddress.data);
-    }, [currentOscIpAddress]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOscIpAddress.data,
+        state: currentOscIpAddress.state,
+        setFunction: setOscIpAddress,
+    });
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.osc_ip_address.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentOscIpAddress.state}
@@ -67,26 +61,21 @@ const OscIpAddressContainer = () => {
 const OscPortContainer = () => {
     const { t } = useI18n();
     const { currentOscPort, setOscPort } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(currentOscPort.data);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentOscPort.data,
+        state: currentOscPort.state,
+        setFunction: setOscPort,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setOscPort(input_value);
-    };
-
-    useEffect(()=> {
-        if (currentOscPort.state === "pending") return;
-        setInputValue(currentOscPort.data);
-    }, [currentOscPort]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.osc_port.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentOscPort.state}
@@ -110,8 +99,6 @@ const OpenConfigFolderContainer = () => {
     );
 };
 
-// Duplicate
-import { useStore_OpenedQuickSetting } from "@store";
 const OpenSwitchComputeDeviceModalContainer = () => {
     const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
@@ -158,25 +145,17 @@ const EnableWebsocketContainer = () => {
 const WebsocketHostContainer = () => {
     const { t } = useI18n();
     const { currentWebsocketHost, setWebsocketHost } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(currentWebsocketHost.data);
 
-    const onChangeFunction = (value) => {
-        setInputValue(value);
-    };
-
-    const saveFunction = () => {
-        setWebsocketHost(input_value);
-    };
-
-    useEffect(()=> {
-        if (currentWebsocketHost.state === "pending") return;
-        setInputValue(currentWebsocketHost.data);
-    }, [currentWebsocketHost]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentWebsocketHost.data,
+        state: currentWebsocketHost.state,
+        setFunction: setWebsocketHost,
+    });
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.websocket_host.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentWebsocketHost.state}
@@ -188,26 +167,21 @@ const WebsocketHostContainer = () => {
 const WebsocketPortContainer = () => {
     const { t } = useI18n();
     const { currentWebsocketPort, setWebsocketPort } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(currentWebsocketPort.data);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentWebsocketPort.data,
+        state: currentWebsocketPort.state,
+        setFunction: setWebsocketPort,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setWebsocketPort(input_value);
-    };
-
-    useEffect(()=> {
-        if (currentWebsocketPort.state === "pending") return;
-        setInputValue(currentWebsocketPort.data);
-    }, [currentWebsocketPort]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.websocket_port.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentWebsocketPort.state}

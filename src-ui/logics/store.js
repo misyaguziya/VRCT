@@ -45,13 +45,10 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
         const setAtom = useSetAtom(atomInstance);
 
         const pendingAtom = () => {
-            setAtom((old_value) => {
-                let new_value = {
-                    state: "pending",
-                    data: old_value.data,
-                };
-                return new_value;
-            });
+            setAtom((old_value) => ({
+                state: "pending",
+                data: old_value.data,
+            }));
         };
 
         const updateAtom = (payload, options = {}) => {
@@ -81,13 +78,10 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
         };
 
         const errorAtom = () => {
-            setAtom((old_value) => {
-                let new_value = {
-                    state: "error",
-                    data: old_value.data,
-                };
-                return new_value;
-            });
+            setAtom((old_value) => ({
+                state: "error",
+                data: old_value.data,
+            }));
         };
 
         const addAtom = (value) => {

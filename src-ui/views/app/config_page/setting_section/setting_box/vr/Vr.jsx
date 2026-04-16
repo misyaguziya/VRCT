@@ -113,7 +113,7 @@ const OverlaySettingsContainer = ({
         setIsOpenedPositionController(!is_opened_position_controller);
     };
 
-    const onchangeFunction = (key, value) => {
+    const onChangeFunction = (key, value) => {
         setSettings((prev) => ({ ...prev, [key]: value }));
 
         if (timeout_id) clearTimeout(timeout_id);
@@ -148,13 +148,13 @@ const OverlaySettingsContainer = ({
 
             <div className={styles.position_rotation_controls_box}>
                 {is_opened_position_controller ? (
-                    <PositionControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
+                    <PositionControls settings={settings} onChangeFunction={onChangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
                 ) : (
-                    <RotationControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
+                    <RotationControls settings={settings} onChangeFunction={onChangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
                 )}
             <SendSampleTextToggleButton />
             </div>
-            <OtherControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
+            <OtherControls settings={settings} onChangeFunction={onChangeFunction} ui_configs={ui_configs} />
             <RadioButtonContainer
                 label={t("config_page.vr.tracker")}
                 selectFunction={(value) => selectFunction("tracker", value)}
@@ -193,7 +193,7 @@ const PageSwitcherContainer = (props) => {
 };
 
 
-export const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
+export const PositionControls = ({ settings, onChangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
     const { t } = useI18n();
 
     const {
@@ -202,7 +202,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
         is_min: is_min_position_x,
         countUp: countUpPositionX,
         countDown: countDownPositionX,
-    } = useVariableControl("x_pos", settings, onchangeFunction, ui_configs);
+    } = useVariableControl("x_pos", settings, onChangeFunction, ui_configs);
 
     const {
         variable_display: y_variable_display,
@@ -210,7 +210,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
         is_min: is_min_position_y,
         countUp: countUpPositionY,
         countDown: countDownPositionY,
-    } = useVariableControl("y_pos", settings, onchangeFunction, ui_configs);
+    } = useVariableControl("y_pos", settings, onChangeFunction, ui_configs);
 
     const {
         variable_display: z_variable_display,
@@ -218,7 +218,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
         is_min: is_min_position_z,
         countUp: countUpPositionZ,
         countDown: countDownPositionZ,
-    } = useVariableControl("z_pos", settings, onchangeFunction, ui_configs);
+    } = useVariableControl("z_pos", settings, onChangeFunction, ui_configs);
 
     return (
         <div className={styles.position_controls}>
@@ -234,7 +234,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.x_pos.step}
                     min={ui_configs.x_pos.min}
                     max={ui_configs.x_pos.max}
-                    setterFunction={(value) => onchangeFunction("x_pos", value)}
+                    setterFunction={(value) => onChangeFunction("x_pos", value)}
                     setter_timing="on_change"
                     valueLabelDisplay={x_variable_display}
                     valueLabelDisplayLocation="top"
@@ -260,7 +260,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.y_pos.step}
                     min={ui_configs.y_pos.min}
                     max={ui_configs.y_pos.max}
-                    setterFunction={(value) => onchangeFunction("y_pos", value)}
+                    setterFunction={(value) => onChangeFunction("y_pos", value)}
                     setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={y_variable_display}
@@ -287,7 +287,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.z_pos.step}
                     min={ui_configs.z_pos.min}
                     max={ui_configs.z_pos.max}
-                    setterFunction={(value) => onchangeFunction("z_pos", value)}
+                    setterFunction={(value) => onChangeFunction("z_pos", value)}
                     setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={z_variable_display}
@@ -305,7 +305,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
     );
 };
 
-export const RotationControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
+export const RotationControls = ({ settings, onChangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
     const { t } = useI18n();
 
     const {
@@ -314,7 +314,7 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
         is_min: is_min_rotation_x,
         countUp: countUpRotationX,
         countDown: countDownRotationX,
-    } = useVariableControl("x_rotation", settings, onchangeFunction, ui_configs);
+    } = useVariableControl("x_rotation", settings, onChangeFunction, ui_configs);
 
     const {
         variable_display: y_variable_display,
@@ -322,7 +322,7 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
         is_min: is_min_rotation_y,
         countUp: countUpRotationY,
         countDown: countDownRotationY,
-    } = useVariableControl("y_rotation", settings, onchangeFunction, ui_configs);
+    } = useVariableControl("y_rotation", settings, onChangeFunction, ui_configs);
 
     const {
         variable_display: z_variable_display,
@@ -330,7 +330,7 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
         is_min: is_min_rotation_z,
         countUp: countUpRotationZ,
         countDown: countDownRotationZ,
-    } = useVariableControl("z_rotation", settings, onchangeFunction, ui_configs);
+    } = useVariableControl("z_rotation", settings, onChangeFunction, ui_configs);
 
     return (
         <div className={styles.rotation_controls}>
@@ -347,7 +347,7 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.x_rotation.step}
                     min={ui_configs.x_rotation.min}
                     max={ui_configs.x_rotation.max}
-                    setterFunction={(value) => onchangeFunction("x_rotation", -value)}
+                    setterFunction={(value) => onChangeFunction("x_rotation", -value)}
                     setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={x_variable_display}
@@ -374,7 +374,7 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.y_rotation.step}
                     min={ui_configs.y_rotation.min}
                     max={ui_configs.y_rotation.max}
-                    setterFunction={(value) => onchangeFunction("y_rotation", value)}
+                    setterFunction={(value) => onChangeFunction("y_rotation", value)}
                     setter_timing="on_change"
                     valueLabelDisplay={y_variable_display}
                     valueLabelDisplayLocation="top"
@@ -400,7 +400,7 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.z_rotation.step}
                     min={ui_configs.z_rotation.min}
                     max={ui_configs.z_rotation.max}
-                    setterFunction={(value) => onchangeFunction("z_rotation", value)}
+                    setterFunction={(value) => onChangeFunction("z_rotation", value)}
                     setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={z_variable_display}
@@ -449,7 +449,7 @@ const AdjustButtonContainer = ({ wrapper_class_name, is_max, is_min, countUp, co
 };
 
 
-const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
+const OtherControls = ({settings, onChangeFunction, ui_configs}) => {
     const { t } = useI18n();
 
     const ui_variable_opacity = (settings.opacity * 100).toFixed(0);
@@ -470,7 +470,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={5}
                     min={10}
                     max={100}
-                    setterFunction={(value) => onchangeFunction("opacity", value / 100)}
+                    setterFunction={(value) => onChangeFunction("opacity", value / 100)}
                     setter_timing="on_change"
                 />
             </div>
@@ -487,7 +487,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={ui_configs.ui_scaling.step}
                     min={ui_configs.ui_scaling.min}
                     max={ui_configs.ui_scaling.max}
-                    setterFunction={(value) => onchangeFunction("ui_scaling", value / 100)}
+                    setterFunction={(value) => onChangeFunction("ui_scaling", value / 100)}
                     setter_timing="on_change"
                 />
             </div>
@@ -501,7 +501,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={1}
                     min={1}
                     max={60}
-                    setterFunction={(value) => onchangeFunction("display_duration", value)}
+                    setterFunction={(value) => onChangeFunction("display_duration", value)}
                     setter_timing="on_change"
                 />
             </div>
@@ -515,7 +515,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={1}
                     min={0}
                     max={5}
-                    setterFunction={(value) => onchangeFunction("fadeout_duration", value)}
+                    setterFunction={(value) => onChangeFunction("fadeout_duration", value)}
                     setter_timing="on_change"
                 />
             </div>
@@ -604,7 +604,7 @@ const SendSampleTextToggleButton = () => {
 
 
 
-const useVariableControl = (key, settings, onchangeFunction, ui_configs) => {
+const useVariableControl = (key, settings, onChangeFunction, ui_configs) => {
     const [variable_display, setVariableDisplay] = useState("auto");
 
     const [is_max, setIsMax] = useState(settings[key] >= ui_configs[key].max);
@@ -635,7 +635,7 @@ const useVariableControl = (key, settings, onchangeFunction, ui_configs) => {
         if (is_max) return;
         const step = ui_configs[key].step;
         const new_value = parseFloat((settings[key] + step).toFixed(2));
-        onchangeFunction(key, new_value);
+        onChangeFunction(key, new_value);
         triggerDisplay();
     };
 
@@ -643,7 +643,7 @@ const useVariableControl = (key, settings, onchangeFunction, ui_configs) => {
         if (is_min) return;
         const step = ui_configs[key].step;
         const new_value = parseFloat((settings[key] - step).toFixed(2));
-        onchangeFunction(key, new_value);
+        onChangeFunction(key, new_value);
         triggerDisplay();
     };
 

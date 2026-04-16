@@ -33,47 +33,32 @@ export const useMainFunction = () => {
 
     const { asyncStdoutToPython } = useStdoutToPython();
 
-    const setTranslation = (to_enable) => {
-        pendingTranslationStatus();
-        if (to_enable) {
-            asyncStdoutToPython("/set/enable/translation");
-        } else {
-            asyncStdoutToPython("/set/disable/translation");
-        }
-    };
-    const toggleTranslation = () => {
-        updateTranslationStatus(prev_state => {
-            if (prev_state.state === "ok") setTranslation(!prev_state.data);
-        }, { set_state: "pending" });
-    };
-
-    const setTranscriptionSend = (to_enable) => {
-        pendingTranscriptionSendStatus();
-        if (to_enable) {
-            asyncStdoutToPython("/set/enable/transcription_send");
-        } else {
-            asyncStdoutToPython("/set/disable/transcription_send");
-        }
-    };
-    const toggleTranscriptionSend = () => {
-        updateTranscriptionSendStatus(prev_state => {
-            if (prev_state.state === "ok") setTranscriptionSend(!prev_state.data);
-        }, { set_state: "pending" });
+    const createTogglePair = (pendingFn, updateFn, endpointName) => {
+        const setFn = (to_enable) => {
+            pendingFn();
+            if (to_enable) {
+                asyncStdoutToPython(`/set/enable/${endpointName}`);
+            } else {
+                asyncStdoutToPython(`/set/disable/${endpointName}`);
+            }
+        };
+        const toggleFn = () => {
+            updateFn(prev_state => {
+                if (prev_state.state === "ok") setFn(!prev_state.data);
+            }, { set_state: "pending" });
+        };
+        return { setFn, toggleFn };
     };
 
-    const setTranscriptionReceive = (to_enable) => {
-        pendingTranscriptionReceiveStatus();
-        if (to_enable) {
-            asyncStdoutToPython("/set/enable/transcription_receive");
-        } else {
-            asyncStdoutToPython("/set/disable/transcription_receive");
-        }
-    };
-    const toggleTranscriptionReceive = () => {
-        updateTranscriptionReceiveStatus(prev_state => {
-            if (prev_state.state === "ok") setTranscriptionReceive(!prev_state.data);
-        }, { set_state: "pending" });
-    };
+    const { setFn: setTranslation, toggleFn: toggleTranslation } = createTogglePair(
+        pendingTranslationStatus, updateTranslationStatus, "translation"
+    );
+    const { setFn: setTranscriptionSend, toggleFn: toggleTranscriptionSend } = createTogglePair(
+        pendingTranscriptionSendStatus, updateTranscriptionSendStatus, "transcription_send"
+    );
+    const { setFn: setTranscriptionReceive, toggleFn: toggleTranscriptionReceive } = createTogglePair(
+        pendingTranscriptionReceiveStatus, updateTranscriptionReceiveStatus, "transcription_receive"
+    );
 
 
     const toggleForeground = async () => {
