@@ -14,7 +14,6 @@ import {
     RadioButton,
     AuthKey,
     ActionButton,
-    ComputeDevice,
     WordFilter,
     WordFilterListToggleComponent,
     DownloadModels,
@@ -47,10 +46,12 @@ export const DropdownMenuContainer = (props) => {
 export const MultiDropdownMenuContainer = (props) => {
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
 
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+
     return (
         <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
-            <MultiDropdownMenu dropdown_settings={props.dropdown_settings} />
+            <MultiDropdownMenu dropdown_settings={props.dropdown_settings} is_break_point={currentIsBreakPoint.data} />
         </TemplatesContainerWrapper>
     );
 };
@@ -157,9 +158,7 @@ export const ActionButtonContainer = (props) => (
     <CommonContainer Component={ActionButton} {...props} add_break_point={false}/>
 );
 
-export const ComputeDeviceContainer = (props) => (
-    <CommonContainer Component={ComputeDevice} {...props} />
-);
+
 
 export const WordFilterContainer = (props) => {
     return (

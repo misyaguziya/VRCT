@@ -1,6 +1,6 @@
 import styles from "./EntryWithSaveButton.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
-import CircularProgress from "@mui/material/CircularProgress";
+import { CircularProgress } from "@common_components";
 import { useI18n } from "@useI18n";
 import { clsx } from "clsx";
 

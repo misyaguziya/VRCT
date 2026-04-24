@@ -9,6 +9,12 @@
     max-width: 70%;
     &.column {
         flex-direction: column;
+        align-items: stretch;
+        .radio_button_container {
+            .radio_button_wrapper {
+                flex-grow: 1;
+            }
+        }
     }
 }
 

@@ -1,7 +1,8 @@
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import * as stores from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
-import { arrayToObject, arrayToIdLabel } from "@utils";
+import { arrayToObject, arrayToIdLabel, transformToIndexedArray } from "@utils";
 
 const transformResponse = (transformName, payload) => {
     if (!transformName) return payload;
@@ -11,8 +12,10 @@ const transformResponse = (transformName, payload) => {
             return arrayToObject(payload);
         case "arrayToIdLabel":
             return arrayToIdLabel(payload);
+        case "transformToIndexedArray":
+            return transformToIndexedArray(payload);
         default:
-            return payload;
+            throw new Error(`[transformResponse] Unknown transform name: "${transformName}". Please add it to the switch in useSettingsLogics.js.`);
     }
 };
 
@@ -94,15 +97,7 @@ export const useSettingsLogics = (settingsArray, Category) => {
 
 
         // To use a response from backend------------------------------------
-        const buildSetSuccess = (transformName) => {
-            return (payload) => {
-                const transformed = transformResponse(transformName, payload);
-                if (update) update(transformed);
-                showNotification_SaveSuccess();
-            };
-        };
-
-        const buildDeleteSuccess = (transformName) => {
+        const buildSuccessHandler = (transformName) => {
             return (payload) => {
                 const transformed = transformResponse(transformName, payload);
                 if (update) update(transformed);
@@ -135,16 +130,16 @@ export const useSettingsLogics = (settingsArray, Category) => {
         if (s.logics_template_id === "get_set") {
             result[getExportName] = buildGet();
             result[setExportName] = buildSet();
-            result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            result[setSuccessExportName] = buildSuccessHandler(s.response_transform ?? null);
             continue;
         }
 
         if (s.logics_template_id === "get_set_delete") {
             result[getExportName] = buildGet();
             result[setExportName] = buildSet();
-            result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            result[setSuccessExportName] = buildSuccessHandler(s.response_transform ?? null);
             result[deleteExportName] = buildDelete();
-            result[deleteSuccessExportName] = buildDeleteSuccess(s.response_transform ?? null);
+            result[deleteSuccessExportName] = buildSuccessHandler(s.response_transform ?? null);
             continue;
         }
 
@@ -160,12 +155,12 @@ export const useSettingsLogics = (settingsArray, Category) => {
                 }
             };
 
-            result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            result[setSuccessExportName] = buildSuccessHandler(s.response_transform ?? null);
             continue;
         }
 
         if (s.logics_template_id === "weight_download_status") {
-            result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            result[setSuccessExportName] = buildSuccessHandler(s.response_transform ?? null);
 
             result[`updateDownloadProgress${base}`] = (payload) => {
                 update((old_status) => {
@@ -231,8 +226,6 @@ export const useConfigFunctions = (Category) => {
 };
 
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-
 export const useSliderLogic = ({
     variable,
     setterFunction,
@@ -249,6 +242,25 @@ export const useSliderLogic = ({
     }
 
     const [ui_value, setUiValue] = useState(variable);
+    const debounceTimerRef = useRef(null);
+
+    const debouncedSetter = useCallback((value) => {
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = setTimeout(() => {
+            setterFunction(value);
+            debounceTimerRef.current = null;
+        }, 200);
+    }, [setterFunction]);
+
+    useEffect(() => {
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, []);
 
     const decimalPlaces = marks_step.toString().includes('.')
         ? marks_step.toString().split('.')[1].length
@@ -269,23 +281,23 @@ export const useSliderLogic = ({
         return createMarks(min, max, marks_step, labelFormatter);
     }, [min, max, marks_step, labelFormatter, show_label_values]);
 
-    let onchangeFunction;
-    let onchangeCommittedFunction;
+    let onChangeFunction;
+    let onChangeCommittedFunction;
 
     if (setter_timing === "on_change") {
-        onchangeFunction = useCallback((value) => {
+        onChangeFunction = useCallback((value) => {
             setUiValue(value);
-            setterFunction(value);
-        }, [setterFunction]);
+            debouncedSetter(value);
+        }, [debouncedSetter]);
 
-        onchangeCommittedFunction = null;
+        onChangeCommittedFunction = null;
 
     } else if (setter_timing === "on_change_committed") {
-        onchangeFunction = useCallback((value) => {
+        onChangeFunction = useCallback((value) => {
             setUiValue(value);
         }, []);
 
-        onchangeCommittedFunction = useCallback((value) => {
+        onChangeCommittedFunction = useCallback((value) => {
             setterFunction(value);
         }, [setterFunction]);
     } else {
@@ -303,8 +315,8 @@ export const useSliderLogic = ({
 
     return {
         ui_value,
-        onchangeFunction,
-        onchangeCommittedFunction,
+        onChangeFunction,
+        onChangeCommittedFunction,
         marks,
     };
 };
@@ -344,20 +356,20 @@ export const useSaveButtonLogic = ({
 
 const createMarks = (min, max, marks_step = 1, labelFormatter = (value) => value) => {
     const marks = [];
-    let variable = min;
+    let current = min;
 
-    for (let i = 0; variable <= max; i++) {
-        const fixedValue = parseFloat(variable.toFixed(10));
+    const decimalPlaces = marks_step.toString().includes('.')
+        ? marks_step.toString().split('.')[1].length
+        : 0;
 
+    for (let i = 0; i <= 1000; i++) {
+        // Use a small epsilon for the comparison to handle floating point errors
+        if (current > max + (marks_step / 10)) break;
+
+        const fixedValue = parseFloat(current.toFixed(decimalPlaces));
         marks.push({ value: fixedValue, label: `${labelFormatter(fixedValue)}` });
 
-        variable += marks_step;
-        variable = parseFloat(variable.toFixed(10));
-
-        if (i > 1000) {
-            console.error("Loop limit exceeded (1000 iterations). createMarks()");
-            break;
-        }
+        current += marks_step;
     }
     return marks;
 };

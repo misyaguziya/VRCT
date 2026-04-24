@@ -1,0 +1,64 @@
+.close_button_wrapper {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    aspect-ratio: 1 / 1;
+    transition: all 0.1s ease;
+}
+
+.size_large {
+    width: 6.8rem;
+    & .x_mark_svg {
+        width: 2.4rem;
+    }
+}
+
+.size_small {
+    width: 5.6rem;
+    & .x_mark_svg {
+        width: 2rem;
+    }
+}
+
+.variant_default {
+    &:hover {
+        background-color: var(--error_bc_color);
+        & .x_mark_svg {
+            color: var(--dark_200_color);
+            transform: rotate(45deg);
+        }
+    }
+    &:active {
+        background-color: var(--error_bc_active_color);
+    }
+}
+
+.variant_active_error {
+    background-color: var(--error_bc_color);
+    & .x_mark_svg {
+        color: var(--dark_200_color);
+    }
+    &:hover {
+        & .x_mark_svg {
+            transform: rotate(45deg);
+        }
+    }
+    &:active {
+        background-color: var(--error_bc_active_color);
+    }
+}
+
+.close_button {
+    // width: 100%;
+    // height: 100%;
+}
+
+.x_mark_svg {
+    transform: rotate(-45deg);
+    color: var(--dark_700_color);
+    transition: transform 0.3s ease;
+}

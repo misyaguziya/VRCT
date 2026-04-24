@@ -15,7 +15,6 @@ import {
 import {
     LabelComponent,
     DropdownMenu,
-    MultiDropdownMenu,
     ThresholdComponent,
     SwitchBox,
 } from "../_components";
@@ -23,13 +22,13 @@ import {
 export const Device = () => {
     return (
         <>
-            <Mic_Container />
-            <Speaker_Container />
+            <MicContainer />
+            <SpeakerContainer />
         </>
     );
 };
 
-const Mic_Container = () => {
+const MicContainer = () => {
     const { t } = useI18n();
     const {
         currentEnableAutoMicSelect,
@@ -47,6 +46,11 @@ const Mic_Container = () => {
     } = useDevice();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
 
+    const _toggleEnableAutoMicSelect = () => {
+        toggleEnableAutoMicSelect();
+        onMouseLeaveFunction();
+    };
+
     const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
     };
@@ -55,8 +59,7 @@ const Mic_Container = () => {
         setSelectedMicDevice(selected_data.selected_id);
     };
 
-    // [Fix me] currentEnableAutoMicSelect.data === "pending"; ?  not currentEnableAutoMicSelect.state === "pending"; ??(.state)
-    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "pending";
+    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.state === "pending";
 
     const getLabels = () => {
         if (currentEnableAutomaticMicThreshold.data === true) {
@@ -83,8 +86,9 @@ const Mic_Container = () => {
                         insert_component_props: {
                             secondary_label: t("config_page.device.label_auto_select"),
                             variable: currentEnableAutoMicSelect,
-                            toggleFunction: toggleEnableAutoMicSelect,
-                        }
+                            toggleFunction: _toggleEnableAutoMicSelect,
+                        },
+                        insert_to: "before",
                     },
                     {
                         dropdown_id: "mic_host",
@@ -93,7 +97,6 @@ const Mic_Container = () => {
                         list: currentMicHostList.data,
                         selectFunction: selectFunction_host,
                         state: currentSelectedMicHost.state,
-                        style: { maxWidth: "20rem", minWidth: "10rem" },
                         is_disabled: is_disabled_selector,
                     },
                     {
@@ -127,7 +130,7 @@ const Mic_Container = () => {
     );
 };
 
-const Speaker_Container = () => {
+const SpeakerContainer = () => {
     const { t } = useI18n();
     const {
         currentEnableAutoSpeakerSelect,
@@ -140,11 +143,16 @@ const Speaker_Container = () => {
     } = useDevice();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
 
+    const _toggleEnableAutoSpeakerSelect = () => {
+        toggleEnableAutoSpeakerSelect();
+        onMouseLeaveFunction();
+    };
+
     const selectFunction = (selected_data) => {
         setSelectedSpeakerDevice(selected_data.selected_id);
     };
 
-    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.data === "pending";
+    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.state === "pending";
 
     const getLabels = () => {
         if (currentEnableAutomaticSpeakerThreshold.data === true) {
@@ -174,7 +182,7 @@ const Speaker_Container = () => {
                     <SwitchBox
                         secondary_label={t("config_page.device.label_auto_select")}
                         variable={currentEnableAutoSpeakerSelect}
-                        toggleFunction={toggleEnableAutoSpeakerSelect}
+                        toggleFunction={_toggleEnableAutoSpeakerSelect}
                     />
                     <DropdownMenu
                         dropdown_id="speaker_device"

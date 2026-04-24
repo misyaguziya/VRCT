@@ -101,7 +101,7 @@ config_page:
         others: "Other"
         hotkeys: "Hotkeys"
         plugins: "Plugins"
-        advanced_settings: "Advanced Settings"
+        advanced_settings: "Advanced"
 
     device:
         check_volume: "Check Volume"

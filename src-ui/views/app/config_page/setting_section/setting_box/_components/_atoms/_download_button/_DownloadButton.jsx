@@ -1,5 +1,5 @@
 import { useI18n } from "@useI18n";
-import CircularProgress from "@mui/material/CircularProgress";
+import { CircularProgress } from "@common_components";
 import styles from "./_DownloadButton.module.scss";
 
 export const _DownloadButton = ({option, ...props}) => {
