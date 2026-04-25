@@ -16,7 +16,7 @@ def update_versions():
 
     tauri_conf["version"] = version
 
-    with open(tauri_conf_path, "w", encoding="utf-8") as f:
+    with open(tauri_conf_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(tauri_conf, f, indent=4, ensure_ascii=False)
 
     # config.pyを更新
@@ -30,7 +30,7 @@ def update_versions():
     replacement = rf'\g<1>{version}\g<2>'
     new_content = re.sub(pattern, replacement, content)
 
-    with open(config_path, "w", encoding="utf-8") as f:
+    with open(config_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(new_content)
 
     print(f"updated to version {version}")
