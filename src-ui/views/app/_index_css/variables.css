@@ -64,6 +64,8 @@
     /*sent_400_color + #000 10% = */
     --supporters_color_fuwa: #5788a2;
 
+    --supporters_crown_color: #f0cb55;
+
     --title_bar_height: 2rem;
     --main_page_topbar_height: 4.8rem;
     --config_page_sidebar_width: 16.8rem;

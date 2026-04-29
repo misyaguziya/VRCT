@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import clsx from "clsx";
-import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
+import { Tooltip } from "@common_components";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import styles from "./SupportersWrapper.module.scss";
 import { shuffleArray, randomIntMinMax, randomMinMax } from "@utils";
@@ -265,7 +265,7 @@ const SupporterPeriodContainer = ({ settings, calc_support_period }) => {
     const offset = {
         popper: {
             sx: {
-                [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]: { marginBottom: "0.2em" },
+                marginBottom: "0.2em"
             }
         }
     };

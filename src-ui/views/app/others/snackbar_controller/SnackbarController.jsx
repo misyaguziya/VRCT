@@ -5,13 +5,13 @@ import clsx from "clsx";
 import "./ReactToastifyOverrideClass.scss";
 import styles from "./SnackbarController.module.scss";
 
-import XMarkSvg from "@images/cancel.svg?react";
 import WarningSvg from "@images/warning.svg?react";
 import MegaphoneSvg from "@images/megaphone.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 import ErrorSvg from "@images/error.svg?react";
 
 import { useNotificationStatus } from "@logics_common";
+import { CloseButton } from "@common_components";
 
 const CustomTransition = cssTransition({
     enter: "fade_in",
@@ -22,7 +22,7 @@ const CustomTransition = cssTransition({
 
 export const SnackbarController = () => {
     const { currentNotificationStatus, closeNotification } = useNotificationStatus();
-    const [containerKey, setContainerKey] = useState(0);
+    // const [containerKey, setContainerKey] = useState(0);
 
     const settings = currentNotificationStatus.data;
 
@@ -61,7 +61,7 @@ export const SnackbarController = () => {
                     toastClassName: snackbar_classname,
                     hideProgressBar: to_hide_progress_bar,
                     progressClassName: styles.toast_progress,
-                    closeButton: <CloseButtonContainer />,
+                    closeButton: ({ closeToast }) => <CloseButton size="small" onClick={closeToast} />,
                     onClose: () => {
                         closeNotification();
                     },
@@ -101,15 +101,5 @@ export const SnackbarController = () => {
                 }
             }}
         />
-    );
-};
-
-const CloseButtonContainer = ({ closeToast }) => {
-    return (
-        <button className={styles.close_button_wrapper} onClick={closeToast}>
-            <div className={styles.close_button}>
-                <XMarkSvg className={styles.x_mark_svg} />
-            </div>
-        </button>
     );
 };

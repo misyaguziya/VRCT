@@ -11,16 +11,20 @@ export const DownloadModelsContainer = () => {
     const { currentCTranslate2WeightTypeStatus } = useTranslation();
     const { currentWhisperWeightTypeStatus } = useTranscription();
 
-    const c_translate_2 = currentCTranslate2WeightTypeStatus.data.find(d => d.id === "m2m100_418M-ct2-int8");
-    const whisper = currentWhisperWeightTypeStatus.data.find(d => d.id === "base");
+    const downloadingCTranslate2 = currentCTranslate2WeightTypeStatus.data.filter(d => d.progress !== null);
+    const downloadingWhisper = currentWhisperWeightTypeStatus.data.filter(d => d.progress !== null);
 
-    if (c_translate_2.progress === null && whisper.progress === null) return null;
+    if (downloadingCTranslate2.length === 0 && downloadingWhisper.length === 0) return null;
 
     return (
         <div className={styles.container}>
             <div className={styles.progress_container}>
-                <DownloadModelsProgress progress={c_translate_2.progress} type_label="Translation Model"/>
-                <DownloadModelsProgress progress={whisper.progress} type_label="Transcription Model"/>
+                {downloadingCTranslate2.map((model) => (
+                    <DownloadModelsProgress key={model.id} progress={model.progress} type_label={`Translation: ${model.id}`} />
+                ))}
+                {downloadingWhisper.map((model) => (
+                    <DownloadModelsProgress key={model.id} progress={model.progress} type_label={`Transcription: ${model.id}`} />
+                ))}
             </div>
             <div className={styles.labels_wrapper}>
                 <img src={vrct_logo_for_dark_mode} className={styles.logo_img}/>

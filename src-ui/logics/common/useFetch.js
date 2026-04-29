@@ -13,7 +13,7 @@ export const useFetch = () => {
         });
 
         if (response.status !== 200) {
-            throw new Error(url, "Failed to fetch, response: " + response);
+            throw new Error(`Failed to fetch ${url}, response status: ${response.status}`);
         }
 
         if (return_row === true) return await response;

@@ -1,13 +1,14 @@
 .container {
-    position: absolute;
-    bottom: 1.2rem;
-    left: 1.4rem;
-    font-size: 1.2rem;
+    padding: 0.8rem 0 0 1.2rem;
+    font-size: 1rem;
     color: var(--dark_400_color);
+    width: 100%;
+    &.is_compact {
+        padding: 0.8rem 0 0 0.6rem;
+    }
 }
 
 .wrapper {
-    position: relative;
     display: flex;
     align-items: center;
     gap: 0.6rem;
@@ -15,19 +16,45 @@
     &.is_copied {
         cursor: default;
     }
+    &.is_compact {
+        cursor: default;
+        justify-content: center;
+    }
+}
+
+.version_text_container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: var(--dark_500_color);
+    gap: 0.2rem;
+    justify-content: center;
+    &.is_cuda {
+        height: 2rem;
+    }
+    &.is_compact {
+        flex-direction: column;
+        gap: 0;
+    }
 }
 
 .version_label {
     font-size: 1.2rem;
-    color: var(--dark_400_color);
+}
+
+.cuda_label {
+    font-size: 0.8rem;
+}
+
+.copy_svg, .check_mark_svg {
+    width: 1.2rem;
+    flex-shrink: 0;
 }
 
 .copy_svg {
-    width: 1.4rem;
-    color: var(--dark_500_color);
+    color: var(--dark_700_color);
 }
 
 .check_mark_svg {
-    width: 1.4rem;
     color: var(--primary_300_color);
 }

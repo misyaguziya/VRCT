@@ -1,0 +1,36 @@
+.tooltipWrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tooltipBox {
+    position: absolute;
+    z-index: 1500;
+    pointer-events: none;
+    background-color: var(--dark_700_color, rgba(97, 97, 97, 0.92));
+    color: var(--dark_basic_text_color, #fff);
+    border-radius: 0.4rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 1.1rem;
+    line-height: 1.4em;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    animation: fadeIn 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.1s; // small delay
+}
+
+.placement-top {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: var(--margin-bottom, 0.8rem);
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}

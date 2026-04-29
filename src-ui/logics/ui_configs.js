@@ -3,7 +3,8 @@ export const ui_configs = {
     mic_threshold_max: 2000,
     speaker_threshold_min: 0,
     speaker_threshold_max: 4000,
-    overlay_small_log: {
+    // Shared overlay config (used by both small and large log)
+    _overlay_log_config: {
         x_pos: { step: 0.05, min: -0.5, max: 0.5 },
         y_pos: { step: 0.05, min: -0.8, max: 0.8 },
         z_pos: { step: 0.05, min: -0.5, max: 1.5 },
@@ -12,17 +13,11 @@ export const ui_configs = {
         z_rotation: { min: -180, max: 180, step: 5 },
         ui_scaling: { step: 10, min: 40, max: 200 },
     },
-    overlay_large_log: {
-        x_pos: { step: 0.05, min: -0.5, max: 0.5 },
-        y_pos: { step: 0.05, min: -0.8, max: 0.8 },
-        z_pos: { step: 0.05, min: -0.5, max: 1.5 },
-        x_rotation: { min: -180, max: 180, step: 5 },
-        y_rotation: { min: -180, max: 180, step: 5 },
-        z_rotation: { min: -180, max: 180, step: 5 },
-        ui_scaling: { step: 10, min: 40, max: 200 },
-    },
+    get overlay_small_log() { return this._overlay_log_config; },
+    get overlay_large_log() { return this._overlay_log_config; },
 
-    overlay_small_log_default_settings: {
+    // Shared overlay default settings base
+    _overlay_log_default_settings_base: {
         x_pos: 0.0,
         y_pos: 0.0,
         z_pos: 0.0,
@@ -33,23 +28,16 @@ export const ui_configs = {
         fadeout_duration: 2,
         opacity: 1.0,
         ui_scaling: 1.0,
-        tracker: "HMD",
     },
-    overlay_large_log_default_settings: {
-        x_pos: 0.0,
-        y_pos: 0.0,
-        z_pos: 0.0,
-        x_rotation: 0.0,
-        y_rotation: 0.0,
-        z_rotation: 0.0,
-        display_duration: 5,
-        fadeout_duration: 2,
-        opacity: 1.0,
-        ui_scaling: 1.0,
-        tracker: "LeftHand",
+    get overlay_small_log_default_settings() {
+        return { ...this._overlay_log_default_settings_base, tracker: "HMD" };
+    },
+    get overlay_large_log_default_settings() {
+        return { ...this._overlay_log_default_settings_base, tracker: "LeftHand" };
     },
 
-    send_message_format_parts: {
+    // Shared message format parts base
+    _default_message_format_parts: {
         message: {
             prefix: "",
             suffix: ""
@@ -62,19 +50,8 @@ export const ui_configs = {
         },
         translation_first: false,
     },
-    received_message_format_parts: {
-        message: {
-            prefix: "",
-            suffix: ""
-        },
-        separator: "\n",
-        translation: {
-            prefix: "",
-            separator: "\n",
-            suffix: ""
-        },
-        translation_first: false,
-    },
+    get send_message_format_parts() { return { ...this._default_message_format_parts }; },
+    get received_message_format_parts() { return { ...this._default_message_format_parts }; },
 
     selectable_ui_languages: [
         {id: "en", label: "English"},

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useI18n } from "@useI18n";
-import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
+import { Tooltip } from "@common_components";
 import styles from "./MessageSubMenuContainer.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
 import RefreshSvg from "@images/refresh_2.svg?react";
@@ -39,7 +39,7 @@ export const MessageSubMenuContainer = (props) => {
     const offset = {
         popper: {
             sx: {
-                [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]: { marginBottom: "0.2em" },
+                marginBottom: "0.2em"
             }
         }
     };

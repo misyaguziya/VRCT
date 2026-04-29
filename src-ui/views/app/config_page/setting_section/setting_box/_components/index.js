@@ -1,5 +1,4 @@
 export { ActionButton } from "./action_button/ActionButton";
-export { ComputeDevice } from "./compute_device/ComputeDevice";
 export { AuthKey } from "./auth_key/AuthKey";
 export { DropdownMenu, MultiDropdownMenu } from "./dropdown_menu/DropdownMenu";
 export { Entry } from "./entry/Entry";

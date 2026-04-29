@@ -1,0 +1,50 @@
+.root {
+    display: inline-block;
+    color: var(--primary_300_color);
+    animation: rotate 1.4s linear infinite;
+
+    &.determinate {
+        animation: none;
+        transform: rotate(-90deg);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+.svg {
+    display: block;
+}
+
+.circle {
+    stroke: currentColor;
+    stroke-dasharray: 80, 200;
+    stroke-dashoffset: 0;
+}
+
+.circleDeterminate {
+    transition: stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.root:not(.determinate) .circle {
+    animation: dash 1.4s ease-in-out infinite;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes dash {
+    0% {
+        stroke-dasharray: 0.1rem, 20.0rem;
+        stroke-dashoffset: 0;
+    }
+    50% {
+        stroke-dasharray: 10.0rem, 20.0rem;
+        stroke-dashoffset: -1.5rem;
+    }
+    100% {
+        stroke-dasharray: 10.0rem, 20.0rem;
+        stroke-dashoffset: -12.5rem;
+    }
+}
