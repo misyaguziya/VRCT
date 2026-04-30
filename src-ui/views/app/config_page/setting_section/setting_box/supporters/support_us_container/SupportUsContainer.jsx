@@ -1,6 +1,5 @@
 import top_img from "@images/supporters/patreon_1600x400px.png";
 import fanbox_logo from "@images/supporters/fanbox_logo.png";
-import kofi_logo from "@images/supporters/kofi_logo.png";
 import patreon_logo from "@images/supporters/patreon_logo.png";
 import styles from "./SupportUsContainer.module.scss";
 import clsx from "clsx";
@@ -15,14 +14,6 @@ export const SupportUsContainer = () => {
                         <img
                             src={fanbox_logo}
                             className={clsx(styles.support_img, styles.fanbox_logo)}
-                        />
-                        <div className={styles.spiral_top}></div>
-                        <div className={styles.spiral_bottom}></div>
-                    </a>
-                    <a className={styles.support_button} href="https://ko-fi.com/vrct_dev" target="_blank" rel="noreferrer">
-                        <img
-                            src={kofi_logo}
-                            className={clsx(styles.support_img, styles.kofi_logo)}
                         />
                         <div className={styles.spiral_top}></div>
                         <div className={styles.spiral_bottom}></div>
