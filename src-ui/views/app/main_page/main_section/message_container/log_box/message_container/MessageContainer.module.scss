@@ -87,6 +87,9 @@
     font-size: 1.4em;
     overflow-wrap: break-word;
     max-width: 100%;
+    // Makes all children selectable under main, but not ruby
+    * { user-select: text; } 
+    rt { user-select: none; }  
 }
 
 .message_second {
