@@ -28,6 +28,12 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 
+def _should_use_vad_filter(vad_filter: bool, whisper_weight_type: Optional[str]) -> bool:
+    return vad_filter or (
+        isinstance(whisper_weight_type, str) and "turbo" in whisper_weight_type.lower()
+    )
+
+
 class AudioTranscriber:
     """Convert queued audio buffers into transcripts.
 
@@ -61,6 +67,7 @@ class AudioTranscriber:
         self.audio_recognizer = Recognizer()
         self.transcription_engine = "Google"
         self.whisper_model = None
+        self.whisper_weight_type = whisper_weight_type
         self.audio_sources: Dict[str, Any] = {
             "sample_rate": source.SAMPLE_RATE,
             "sample_width": source.SAMPLE_WIDTH,
@@ -134,7 +141,7 @@ class AudioTranscriber:
                             without_timestamps=True,
                             task="transcribe",
                             no_repeat_ngram_size=no_repeat_ngram_size,
-                            vad_filter=vad_filter,
+                            vad_filter=_should_use_vad_filter(vad_filter, self.whisper_weight_type),
                             vad_parameters=vad_parameters,
                         )
                         for s in segments:

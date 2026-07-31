@@ -271,6 +271,9 @@ class Controller:
                 )
 
     def micMessage(self, result: dict) -> None:
+        if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
+            return
+
         message = result["text"]
         language = result["language"]
         if isinstance(message, bool) and message is False:
