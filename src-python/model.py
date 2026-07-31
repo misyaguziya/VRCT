@@ -632,44 +632,46 @@ class Model:
         }
 
     @staticmethod
-    def updateSoftware():
+    def _downloadUpdater() -> bool:
         # try to update at most 5 times
         for _ in range(5):
             try:
                 program_name = "update.exe"
                 current_directory = config.PATH_LOCAL
                 res = requests_get(config.UPDATER_URL)
-                assets = res.json()['assets']
-                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
+                assets = res.json().get("assets", [])
+                url = next(
+                    (
+                        asset.get("browser_download_url")
+                        for asset in assets
+                        if asset.get("name") == program_name
+                    ),
+                    None,
+                )
+                if not isinstance(url, str):
+                    raise ValueError(f"{program_name} was not found in the release assets")
                 res = requests_get(url, stream=True)
                 with open(os_path.join(current_directory, program_name), 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
-                break
+                return True
             except Exception:
                 errorLogging()
+        return False
+
+    @staticmethod
+    def updateSoftware():
+        if Model._downloadUpdater() is False:
+            return
         # run updater
-        Popen(program_name, cwd=current_directory)
+        Popen("update.exe", cwd=config.PATH_LOCAL)
 
     @staticmethod
     def updateCudaSoftware():
-        # try to update at most 5 times
-        for _ in range(5):
-            try:
-                program_name = "update.exe"
-                current_directory = config.PATH_LOCAL
-                res = requests_get(config.UPDATER_URL)
-                assets = res.json()['assets']
-                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
-                res = requests_get(url, stream=True)
-                with open(os_path.join(current_directory, program_name), 'wb') as file:
-                    for chunk in res.iter_content(chunk_size=1024*5):
-                        file.write(chunk)
-                break
-            except Exception:
-                errorLogging()
+        if Model._downloadUpdater() is False:
+            return
         # run updater
-        Popen([program_name, "--cuda"], cwd=current_directory)
+        Popen(["update.exe", "--cuda"], cwd=config.PATH_LOCAL)
 
     def getListMicHost(self):
         self.ensure_initialized()
