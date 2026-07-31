@@ -75,7 +75,7 @@ class AudioTranscriber:
             "last_sample": bytes(),
             "last_spoken": None,
             "new_phrase": True,
-            "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData,
+            "process_data_func": self.processSpeakerData if speaker else self.processMicData,
         }
 
         if transcription_engine == "Whisper" and checkWhisperWeight(root, whisper_weight_type) is True:
