@@ -2,9 +2,11 @@ from os import path as os_path
 from deepl import DeepLClient
 try:
     from translators import translate_text as other_web_Translator
+    from translators.server import _bing as bing_translator
     ENABLE_TRANSLATORS = True
 except Exception:
     other_web_Translator = None  # type: ignore
+    bing_translator = None
     ENABLE_TRANSLATORS = False
 
 try:
@@ -17,6 +19,7 @@ try:
     from .translation_ollama import OllamaClient
     from .translation_groq import GroqClient
     from .translation_openrouter import OpenRouterClient
+    from .translation_bing import parse_bing_credentials
 except Exception:
     import sys
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
@@ -29,6 +32,7 @@ except Exception:
     from translation_ollama import OllamaClient
     from translation_groq import GroqClient
     from translation_openrouter import OpenRouterClient
+    from translation_bing import parse_bing_credentials
 
 import ctranslate2
 import transformers
@@ -38,6 +42,9 @@ import warnings
 from typing import Any, Optional, Tuple
 
 warnings.filterwarnings("ignore")
+
+if bing_translator is not None:
+    bing_translator.get_tk = parse_bing_credentials
 
 
 class Translator:
