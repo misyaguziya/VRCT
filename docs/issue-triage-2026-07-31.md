@@ -1,0 +1,242 @@
+# Open Issues Triage (2026-07-31)
+
+対象: <https://github.com/misyaguziya/VRCT/issues?q=sort%3Aupdated-desc+is%3Aissue+state%3Aopen+>
+
+2026-07-31 時点で open issue は 27 件。GitHub の open pull request 2 件は優先度付け対象から除外した。
+
+## 判定基準
+
+- P0: 起動不能、誤送信、クラッシュ、セキュリティ/信頼性毀損。まず手を付ける。
+- P1: コア体験の品質劣化。クラッシュではないが、通話・翻訳・文字起こしの成功率を下げる。
+- P2: 重要な改善要望。ユーザー価値は高いが、現時点では回避策があるか対象範囲が限定的。
+- P3: 大きい機能追加、調査コストが高い要望、情報不足、重複候補、進行中のもの。
+
+## 実装可否の判定軸
+
+設計書と仕様書から、現行 VRCT の軸は「Windows を主対象にしたリアルタイム文字起こし・翻訳・VR 連携」と読める。よって優先度とは別に、各 issue は以下の観点で実装可否を判断する。
+
+- Fit: コア体験の改善か。文字起こし、翻訳、起動、配信、OSC、オーバーレイの信頼性向上なら強く採用。
+- Scope: 現在の対象範囲に収まるか。Windows 主対象から大きく外れるものは、要望が妥当でも即実装しない。
+- Cost: 保守コストが継続的に増えるか。新しい推論基盤、OS、GPU スタック追加は高コスト。
+- Safety: 誤送信、クラッシュ、情報漏えい、誤検知リスクを下げるか。ここは最優先で採用。
+- Evidence: 再現手順、ログ、複数報告があるか。証拠が薄いものは `needs-info` で止める。
+
+## 実装判断ステータス
+
+- Adopt: 設計に合っており、優先度順に実装する。
+- Review: 設計適合はあるが、仕様の切り方や回避策を確認してから決める。
+- Defer: 要望は妥当だが、今のロードマップでは後ろに置く。
+- Reject: 現行設計から外れるか、保守コストに見合わないため積極的には実装しない。
+- Close: 重複、PR 対応済み、情報不足解消なしで終了候補。
+
+## 先にやる整理
+
+- Issue #50 と #102 は同系統の `NoneType.close` 系エラーに見える。先に重複か同根かを確認し、同じ原因なら片方に集約する。
+- Issue #90 と #98 はどちらも「起動しない」系。再現条件とログ取得方法をテンプレ化して追加情報を取りたい。
+- Issue #89 は open PR #95 と対応関係があるため、仕様差分を確認して `blocked-by-pr` 扱いで良い。
+- Issue #93 は本文が実質空なので、一定期間で追加情報がなければ close 候補。
+
+## 実装判断の初期案
+
+### Adopt
+
+- #94 AV detection when using Bing
+- #50 / #102 `NoneType.close` 系クラッシュ
+- #98 / #90 起動不能
+- #87 turbo モデルの誤送信系挙動
+- #63 Google 音声認識フリーズ
+- #76 音声認識失敗率
+- #91 Translation engine limit error
+- #104 token refresh 導線
+- #103 音声認識フィードバック不足
+
+### Review
+
+- #77 I downloaded it, but it's not used.
+  理由: 起票内容が曖昧で、インストーラー問題なのか配置仕様の誤解なのか未確定。
+
+- #96 Add a simplified installation program
+  理由: プロダクト普及には効くが、配布戦略の判断が必要。
+
+- #100 custom server setting for speech recognition
+  理由: コア価値には沿うが、外部 STT の接続面をどこまで開くか設計判断が要る。
+
+- #99 prevent automatically switching to Whisper
+  理由: フォールバック設計の一部なので、UX と失敗耐性のバランス確認が必要。
+
+- #54 Limit transcribed message length In/Out
+  理由: 効果は高いが、表示側で切るか認識結果側で正規化するかを決める必要がある。
+
+- #27 SE on sending an OSC message
+  理由: 情報漏えい抑止の補助策として筋は良いが、まず誤送信そのものを潰す方が先。
+
+### Defer
+
+- #89 Custom API Address
+  理由: open PR #95 の結果待ち。
+
+- #81 An error occurred, but it works properly
+  理由: 進行中で緊急度が低い。
+
+- #23 Exclude word from translation
+  理由: 進行中のため新規優先度付けは不要。
+
+- #97 cohere transcribe
+- #78 HY-MT1.5-1.8B
+- #75 canary-qwen-2.5b
+- #37 SeamlessM4T
+- #17 whisper direct translation
+  理由: いずれもモデル/プロバイダ追加やパイプライン変更で、既存の品質問題より後ろに置く。
+
+### Reject 候補
+
+- #88 AMD GPU Support VIA RocM
+  理由: 現仕様は Windows 主対象で、ROCm は OS/GPU/依存配布の検証面まで一気に広がる。需要がさらに強くならない限り、今は採らない判断が妥当。
+
+- #82 end-to-end multimodal translation with direct audio input
+  理由: 現行の STT -> 翻訳パイプラインから大きく外れた別系統アーキテクチャになる。面白いが、現 backlog の延長ではなく別プロダクト級の検討。
+
+- #92 Cannot build on linux
+  理由: issue 自体は正当だが、現仕様では Windows 主対象。Linux ビルドを公式に支えるかを先に決めない限り、個別修正で追わない方が良い。
+
+### Close 候補
+
+- #93 本文が空に近い feature request
+  理由: 情報不足。
+
+- #89 PR #95 がマージされ、仕様差分が問題なければ close。
+- #50 / #102 が同一原因なら片方を duplicate close。
+- #90 / #98 が同一原因なら片方を duplicate close。
+
+## 推奨優先順位
+
+### P0
+
+- #94 [Bug]: AV detection when using Bing
+  理由: セキュリティソフト検知は実害が大きく、継続利用の信頼を壊す。false positive でも最優先で説明責任が必要。
+  推奨対応: 再現条件の切り分け、sidecar 実行方式の確認、既知問題として README/issue コメントで暫定案内。
+
+- #50 Speaker 2 Log generating error / #102 Volume check crashes with AttributeError: 'NoneType' object has no attribute 'close'
+  理由: 音声関連の操作で即時エラー。古い #50 はコメント数も多く、未解決のまま再発している可能性が高い。
+  推奨対応: 重複整理後に 1 件へ寄せて根本修正。回帰確認対象に追加。
+
+- #98 [Bug]: VRCT is not opening for some reason / #90 [Bug]: app doesn't open at all
+  理由: 起動不能は最重要。報告数は多くないが、発生したユーザーは完全に利用不能。
+  推奨対応: ログ未生成時の診断手順を先に整備し、再現ログ収集を優先。
+
+- #87 [Bug]: Transcriptor turbo models
+  理由: マイクオフでもランダム文が送られる報告で、誤送信・スパムにつながる。コア機能の信頼性を損なう。
+  推奨対応: turbo 系モデルを一時的に非推奨化するか、送信抑止のガードを検討。
+
+### P1
+
+- #63 [Bug]: Transcription Freezes with Google Engine in Bad Network
+  理由: ネットワーク劣化時に文字起こし停止とトグル固着。通話中に詰まるタイプの不具合で影響が大きい。
+  推奨対応: タイムアウト、再試行、状態復旧の見直し。
+
+- #76 [Bug]: Most of time when i speak it fail to detect my voice and transcribe it
+  理由: 文字起こし成功率の低下は主要価値に直結する。長期未解決でもある。
+  推奨対応: デバイス条件、VAD 閾値、言語条件の切り分けを行う。
+
+- #91 Error: undefined - Translation engine limit error
+  理由: エラーメッセージが不明瞭で、復旧方法も見えない。翻訳基盤の失敗時 UX が悪い。
+  推奨対応: エラー分類の改善と、レート制限時の案内/再試行設計を見直す。
+
+- #104 [Feature]: Add a button to refresh tokens
+  理由: 無料 API 利用時の復旧導線として実用性が高い。#91 に近い失敗体験の緩和策にもなる。
+  推奨対応: 自動再試行より先に手動リフレッシュ導線を追加するのが小さく効く。
+
+- #103 [Bug]: Lack of Speech Recognition Feedback Makes Debugging Difficult
+  理由: 直接の障害ではないが、音声入力不調の自己診断を難しくしている。#76 などの切り分けにも効く。
+  推奨対応: 入力レベル表示、認識状態表示、失敗理由の UI 露出を検討。
+
+- #77 I downloaded it, but it's not used.
+  理由: 配布・導入系の不具合の可能性がある。記述は曖昧だが、インストーラー/配置不良なら入口で離脱する。
+  推奨対応: 追加情報依頼。再現できるなら P0 寄せ。
+
+### P2
+
+- #96 [Feature]: Add a simplified installation program
+  理由: 導入障壁の低下は効果が高いが、不具合修正より後。
+  推奨対応: 配布方式の改善案をまとめてから着手。
+
+- #100 Can you add a custom server setting for speech recognition?
+  理由: ローカル/LAN 逃がしは実益があるが、設計範囲が広い。
+  推奨対応: まず translation 側の既存設定との整合を整理。
+
+- #99 [Feature]: Is it possible to prevent it from automatically switching to Whisper?
+  理由: 地域・接続条件依存だが、Whisper 自動切替による負荷増を避けたい要望は理解できる。
+  推奨対応: 自動フォールバック無効化の設定追加を検討。
+
+- #54 [Feature]: Limit transcribed message length In/Out
+  理由: 誤認識時の表示崩れを抑える UX 改善。影響は明確で実装も比較的小さそう。
+  推奨対応: 最大文字数と連続文字圧縮のどちらが有効かを先に決める。
+
+- #92 Cannot build on linux, Failed to build 'SpeechRecognition'
+  理由: 対象ユーザーは限定されるが、ビルド不能は開発体験として重い。コメントも多い。
+  推奨対応: 正式サポート範囲を明示し、未サポートなら issue 上で明確化。対応するなら依存パッケージ固定を検討。
+
+### P3
+
+- #89 Custom API Address
+  理由: 要望自体は価値が高いが、open PR #95 が対応中。
+  推奨対応: PR レビュー優先。マージ後に issue を close できるか確認。
+
+- #81 [Bug]: An error occurred, but it works properly
+  理由: `in progress` 付きで、致命度も比較的低い。
+  推奨対応: 既存作業の継続。
+
+- #88 [Feature]: AMD GPU Support VIA RocM
+  理由: 要望は妥当だが、実装・配布・検証コストが大きい。
+  推奨対応: 需要観測を続け、設計調査タスクへ分離。
+
+- #82 [Feature]: Support end-to-end multimodal translation with direct audio input
+  理由: 戦略的には面白いが、大規模機能で現行不具合対応とは別レーン。
+  推奨対応: 将来構想として別ドキュメント化。
+
+- #97 [Feature]: Can “cohere transcribe” be added as well?
+  理由: プロバイダ追加の 1 件。差し込み優先度は低い。
+  推奨対応: 需要が複数件出るまで保留。
+
+- #78 [Feature]: Support for HY-MT1.5-1.8B
+  理由: モデル追加要望。既存不具合の解消より後。
+  推奨対応: モデル追加要望をまとめて評価する。
+
+- #75 [Feature]: Support for canary-qwen-2.5b
+  理由: 同上。個別モデル追加としては後順位。
+  推奨対応: #78 と同じキューにまとめる。
+
+- #37 Feature Request: Verify Transcription and traduction upgrade to the newer SeamlessM4T Model
+  理由: 技術調査枠。緊急性は低い。
+  推奨対応: モデル戦略を見直す時に再評価。
+
+- #27 Feature Request: SE on sending an OSC message
+  理由: 価値はあるが、まずは誤送信を起こす既存バグ修正が先。
+  推奨対応: OSC 周辺改善の束で扱う。
+
+- #23 [Feature Request] Exclude word from translation
+  理由: `in progress`。新規着手優先度は低い。
+  推奨対応: 実装継続か、進捗が止まっているなら status 更新。
+
+- #17 Feature Request: Use direct translation feature of whisper
+  理由: 機能追加としては筋が良いが、今の backlog では後ろ。
+  推奨対応: whisper 系改善の中で再検討。
+
+- #93 [Feature]: (Please note that the title must be in English)
+  理由: 要望内容が実質不明。
+  推奨対応: 追加情報依頼後、反応がなければ close 候補。
+
+## 直近の実行順
+
+1. #94 の真偽確認と暫定アナウンス。
+2. #50 / #102 の重複整理と root cause 調査。
+3. #98 / #90 の起動不能調査テンプレ整備。
+4. #87, #63, #76, #91 を「音声認識/翻訳の信頼性改善」束としてまとめて対処。
+5. #104 と #103 を復旧導線・診断性改善として小さく拾う。
+6. #89, #81, #23 は進行中扱いを維持しつつ棚卸し。
+
+## 補足
+
+- もし issue ラベル運用を強化するなら、`priority:p0` `priority:p1` `needs-info` `duplicate` `blocked-by-pr` を追加すると運用しやすい。
+- 「モデル追加要望」は個別に捌かず、互換性・実装工数・需要をまとめて評価する backlog を別管理した方が良い。
+- 追加で `decision:adopt` `decision:review` `decision:defer` `decision:reject` を置くと、「優先度は高いが今は実装しない」を表現しやすい。
