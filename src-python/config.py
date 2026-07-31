@@ -38,6 +38,33 @@ except Exception:  # pragma: no cover - optional runtime
 
 from utils import errorLogging, validateDictStructure, getComputeDeviceList
 
+_LEGACY_VAD_PARAMETERS = {
+    "threshold": 0.5,
+    "neg_threshold": None,
+    "min_speech_duration_ms": 0,
+    "max_speech_duration_s": float("inf"),
+    "min_silence_duration_ms": 2000,
+    "speech_pad_ms": 400,
+}
+_DEFAULT_VAD_PARAMETERS = {
+    "threshold": 0.25,
+    "neg_threshold": 0.10,
+    "min_speech_duration_ms": 64,
+    "max_speech_duration_s": float("inf"),
+    "min_silence_duration_ms": 768,
+    "speech_pad_ms": 160,
+}
+
+
+def _migrate_vad_defaults(config_data: Dict[str, Any]) -> None:
+    for source in ("MIC", "SPEAKER"):
+        filter_key = f"{source}_VAD_FILTER"
+        parameters_key = f"{source}_VAD_PARAMETERS"
+        if config_data.get(filter_key) is False and config_data.get(parameters_key) == _LEGACY_VAD_PARAMETERS:
+            config_data[filter_key] = True
+            config_data[parameters_key] = copy.deepcopy(_DEFAULT_VAD_PARAMETERS)
+
+
 json_serializable_vars = {}
 def json_serializable(var_name):
     def decorator(func):
@@ -902,15 +929,8 @@ class Config:
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._MIC_NO_REPEAT_NGRAM_SIZE = 0
-        self._MIC_VAD_FILTER = False
-        self._MIC_VAD_PARAMETERS = {
-            "threshold": 0.5,
-            "neg_threshold": None,
-            "min_speech_duration_ms": 0,
-            "max_speech_duration_s": float("inf"),
-            "min_silence_duration_ms": 2000,
-            "speech_pad_ms": 400,
-        }
+        self._MIC_VAD_FILTER = True
+        self._MIC_VAD_PARAMETERS = copy.deepcopy(_DEFAULT_VAD_PARAMETERS)
         self._AUTO_SPEAKER_SELECT = True
         try:
             if device_manager is not None:
@@ -929,15 +949,8 @@ class Config:
         self._SPEAKER_AVG_LOGPROB = -0.8
         self._SPEAKER_NO_SPEECH_PROB = 0.6
         self._SPEAKER_NO_REPEAT_NGRAM_SIZE = 0
-        self._SPEAKER_VAD_FILTER = False
-        self._SPEAKER_VAD_PARAMETERS = {
-            "threshold": 0.5,
-            "neg_threshold": None,
-            "min_speech_duration_ms": 0,
-            "max_speech_duration_s": float("inf"),
-            "min_silence_duration_ms": 2000,
-            "speech_pad_ms": 400,
-        }
+        self._SPEAKER_VAD_FILTER = True
+        self._SPEAKER_VAD_PARAMETERS = copy.deepcopy(_DEFAULT_VAD_PARAMETERS)
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
@@ -1038,6 +1051,7 @@ class Config:
                 if fp.readable() and fp.seek(0, 2) > 0:
                     fp.seek(0)
                     self._config_data = json_load(fp)
+                    _migrate_vad_defaults(self._config_data)
 
                     for key, value in self._config_data.items():
                         # 読み込み時: serialize=True かつ readonlyでない Descriptor のみ反映。

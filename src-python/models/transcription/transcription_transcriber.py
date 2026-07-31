@@ -6,6 +6,7 @@ either the Google web recognizer (online) or a local Whisper model (offline).
 
 import time
 from io import BytesIO
+from queue import Empty
 from threading import Event
 import wave
 from typing import Any, Dict, List, Optional, Union
@@ -100,6 +101,12 @@ class AudioTranscriber:
             return False
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+        while True:
+            try:
+                audio, time_spoken = audio_queue.get_nowait()
+                self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+            except Empty:
+                break
 
         confidences: List[Dict[str, Any]] = [{"confidence": 0, "text": "", "language": None}]
         try:
@@ -134,8 +141,8 @@ class AudioTranscriber:
                             audio_data,
                             beam_size=5,
                             temperature=0.0,
-                            log_prob_threshold=-0.8,
-                            no_speech_threshold=0.6,
+                            log_prob_threshold=avg_logprob,
+                            no_speech_threshold=no_speech_prob,
                             language=source_language,
                             word_timestamps=False,
                             without_timestamps=True,

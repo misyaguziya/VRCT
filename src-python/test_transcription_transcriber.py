@@ -1,8 +1,11 @@
 import unittest
-from unittest.mock import patch
+import copy
+from datetime import datetime, timedelta
+from queue import Queue
+from unittest.mock import MagicMock, patch
 
-from controller import Controller
 from models.transcription.transcription_transcriber import AudioTranscriber, _should_use_vad_filter
+from config import _DEFAULT_VAD_PARAMETERS, _LEGACY_VAD_PARAMETERS, _migrate_vad_defaults
 
 
 class FakeAudioSource:
@@ -34,6 +37,90 @@ class TestWhisperVadFilter(unittest.TestCase):
         self.assertFalse(_should_use_vad_filter(False, "large-v3"))
         self.assertTrue(_should_use_vad_filter(True, "large-v3"))
 
+    def test_migrates_untouched_legacy_vad_defaults(self) -> None:
+        config_data = {
+            "MIC_VAD_FILTER": False,
+            "MIC_VAD_PARAMETERS": copy.deepcopy(_LEGACY_VAD_PARAMETERS),
+            "SPEAKER_VAD_FILTER": False,
+            "SPEAKER_VAD_PARAMETERS": copy.deepcopy(_LEGACY_VAD_PARAMETERS),
+        }
+
+        _migrate_vad_defaults(config_data)
+
+        self.assertTrue(config_data["MIC_VAD_FILTER"])
+        self.assertEqual(config_data["MIC_VAD_PARAMETERS"], _DEFAULT_VAD_PARAMETERS)
+        self.assertTrue(config_data["SPEAKER_VAD_FILTER"])
+        self.assertEqual(config_data["SPEAKER_VAD_PARAMETERS"], _DEFAULT_VAD_PARAMETERS)
+
+    def test_preserves_custom_vad_settings(self) -> None:
+        custom_parameters = copy.deepcopy(_LEGACY_VAD_PARAMETERS)
+        custom_parameters["threshold"] = 0.4
+        config_data = {
+            "MIC_VAD_FILTER": False,
+            "MIC_VAD_PARAMETERS": custom_parameters,
+        }
+
+        _migrate_vad_defaults(config_data)
+
+        self.assertFalse(config_data["MIC_VAD_FILTER"])
+        self.assertEqual(config_data["MIC_VAD_PARAMETERS"], custom_parameters)
+
+
+class TestWhisperQueueProcessing(unittest.TestCase):
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_coalesces_queued_audio_before_transcribing(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put((b"\x01\x00", now))
+        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100)))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertTrue(audio_queue.empty())
+        audio = transcriber.whisper_model.transcribe.call_args.args[0]
+        self.assertEqual(audio.tolist(), [1 / 32768, 2 / 32768])
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_coalescing_preserves_phrase_boundaries(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put((b"\x01\x00", now))
+        audio_queue.put((b"\x02\x00", now + timedelta(seconds=4)))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        audio = transcriber.whisper_model.transcribe.call_args.args[0]
+        self.assertEqual(audio.tolist(), [2 / 32768])
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_passes_configured_thresholds_to_whisper(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(
+            audio_queue,
+            ["Japanese"],
+            ["Japan"],
+            avg_logprob=-0.55,
+            no_speech_prob=0.42,
+        )
+
+        kwargs = transcriber.whisper_model.transcribe.call_args.kwargs
+        self.assertEqual(kwargs["log_prob_threshold"], -0.55)
+        self.assertEqual(kwargs["no_speech_threshold"], 0.42)
+
 
 class TestMutedMicMessage(unittest.TestCase):
     @patch("controller.model")
@@ -43,6 +130,8 @@ class TestMutedMicMessage(unittest.TestCase):
         config,
         model,
     ) -> None:
+        from controller import Controller
+
         config.VRC_MIC_MUTE_SYNC = True
         model.mic_mute_status = True
 
