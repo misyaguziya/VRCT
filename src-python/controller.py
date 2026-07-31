@@ -2926,8 +2926,10 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startCheckMicEnergy(self.progressBarMicEnergy)
-        self.device_access_status = True
+        try:
+            model.startCheckMicEnergy(self.progressBarMicEnergy)
+        finally:
+            self.device_access_status = True
 
     def startThreadingCheckMicEnergy(self) -> None:
         th_startCheckMicEnergy = Thread(target=self.startCheckMicEnergy)
@@ -2947,8 +2949,10 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
-        self.device_access_status = True
+        try:
+            model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
+        finally:
+            self.device_access_status = True
 
     def startThreadingCheckSpeakerEnergy(self) -> None:
         th_startCheckSpeakerEnergy = Thread(target=self.startCheckSpeakerEnergy)
