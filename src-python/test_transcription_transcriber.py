@@ -150,6 +150,92 @@ class TestWhisperQueueProcessing(unittest.TestCase):
         self.assertEqual(kwargs["log_prob_threshold"], -0.55)
         self.assertEqual(kwargs["no_speech_threshold"], 0.42)
 
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_preserves_multiple_structured_final_segments_in_order(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.side_effect = [
+            ([MagicMock(text="first", avg_logprob=0.0, no_speech_prob=0.0)], MagicMock(language_probability=1.0)),
+            ([MagicMock(text="second", avg_logprob=0.0, no_speech_prob=0.0)], MagicMock(language_probability=1.0)),
+        ]
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put(AudioQueueItem(audio=b"\x01\x00", recorded_at=now, is_final=True, segment_id=1, speech_ended_at=now))
+        audio_queue.put(AudioQueueItem(audio=b"\x02\x00", recorded_at=now, is_final=True, segment_id=2, speech_ended_at=now))
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        first = transcriber.getTranscript()
+        self.assertEqual(first["text"], "first")
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        second = transcriber.getTranscript()
+        self.assertEqual(second["text"], "second")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_replaces_stale_partial_with_final_for_same_segment(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = (
+            [MagicMock(text="final", avg_logprob=0.0, no_speech_prob=0.0)],
+            MagicMock(language_probability=1.0),
+        )
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put(AudioQueueItem(audio=b"\x01\x00", recorded_at=now, is_final=False, segment_id=3))
+        audio_queue.put(AudioQueueItem(audio=b"\x02\x00", recorded_at=now, is_final=True, segment_id=3, speech_ended_at=now))
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        result = transcriber.getTranscript()
+
+        self.assertEqual(result["text"], "final")
+        audio = transcriber.whisper_model.transcribe.call_args.args[0]
+        self.assertEqual(audio.tolist(), [2 / 32768])
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_speaker_preserves_multiple_structured_final_segments_in_order(self, _) -> None:
+        transcriber = AudioTranscriber(True, FakeAudioSource(), 3, 10, "Google")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.side_effect = [
+            ([MagicMock(text="speaker first", avg_logprob=0.0, no_speech_prob=0.0)], MagicMock(language_probability=1.0)),
+            ([MagicMock(text="speaker second", avg_logprob=0.0, no_speech_prob=0.0)], MagicMock(language_probability=1.0)),
+        ]
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put(AudioQueueItem(audio=b"\x01\x00", recorded_at=now, is_final=True, segment_id=11, speech_ended_at=now))
+        audio_queue.put(AudioQueueItem(audio=b"\x02\x00", recorded_at=now, is_final=True, segment_id=12, speech_ended_at=now))
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        first = transcriber.getTranscript()
+        self.assertEqual(first["text"], "speaker first")
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        second = transcriber.getTranscript()
+        self.assertEqual(second["text"], "speaker second")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_speaker_replaces_stale_partial_with_final_for_same_segment(self, _) -> None:
+        transcriber = AudioTranscriber(True, FakeAudioSource(), 3, 10, "Google")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = (
+            [MagicMock(text="speaker final", avg_logprob=0.0, no_speech_prob=0.0)],
+            MagicMock(language_probability=1.0),
+        )
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put(AudioQueueItem(audio=b"\x01\x00", recorded_at=now, is_final=False, segment_id=13))
+        audio_queue.put(AudioQueueItem(audio=b"\x02\x00", recorded_at=now, is_final=True, segment_id=13, speech_ended_at=now))
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        result = transcriber.getTranscript()
+
+        self.assertEqual(result["text"], "speaker final")
+        audio = transcriber.whisper_model.transcribe.call_args.args[0]
+        self.assertEqual(audio.tolist(), [2 / 32768])
+
 
 class TestMutedMicMessage(unittest.TestCase):
     @patch("controller.model")
@@ -235,6 +321,75 @@ class TestMutedMicMessage(unittest.TestCase):
             200,
             "/run/mic_partial",
             {"id": "transcription-mic-4", "dismiss": True},
+        )
+        self.assertEqual(model.method_calls, [])
+
+
+class TestSpeakerMessage(unittest.TestCase):
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_partial_speaker_result_only_updates_partial_ui(self, config, model) -> None:
+        from controller import Controller
+
+        config.ENABLE_TRANSCRIPTION_RECEIVE = True
+        controller = Controller.__new__(Controller)
+        controller.run_mapping = {"transcription_speaker_partial": "/run/speaker_partial"}
+        controller.run = MagicMock()
+
+        controller.speakerMessage({
+            "text": "partial speaker",
+            "language": "Japanese",
+            "is_final": False,
+            "segment_id": 7,
+            "inference_ms": 10.0,
+            "audio_duration_ms": 900.0,
+        })
+
+        controller.run.assert_called_once()
+        self.assertEqual(controller.run.call_args.args[1], "/run/speaker_partial")
+        self.assertEqual(controller.run.call_args.args[2]["id"], "transcription-speaker-7")
+        self.assertEqual(model.method_calls, [])
+
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_partial_speaker_result_respects_transcription_toggle(self, config, model) -> None:
+        from controller import Controller
+
+        config.ENABLE_TRANSCRIPTION_RECEIVE = False
+        controller = Controller.__new__(Controller)
+        controller.run_mapping = {"transcription_speaker_partial": "/run/speaker_partial"}
+        controller.run = MagicMock()
+
+        controller.speakerMessage({
+            "text": "partial speaker",
+            "language": "Japanese",
+            "is_final": False,
+            "segment_id": 7,
+        })
+
+        controller.run.assert_not_called()
+        self.assertEqual(model.method_calls, [])
+
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_empty_final_speaker_result_dismisses_partial_ui(self, config, model) -> None:
+        from controller import Controller
+
+        controller = Controller.__new__(Controller)
+        controller.run_mapping = {"transcription_speaker_partial": "/run/speaker_partial"}
+        controller.run = MagicMock()
+
+        controller.speakerMessage({
+            "text": "",
+            "language": "Japanese",
+            "is_final": True,
+            "segment_id": 7,
+        })
+
+        controller.run.assert_called_once_with(
+            200,
+            "/run/speaker_partial",
+            {"id": "transcription-speaker-7", "dismiss": True},
         )
         self.assertEqual(model.method_calls, [])
 

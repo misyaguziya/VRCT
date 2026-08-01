@@ -5,6 +5,7 @@ either the Google web recognizer (online) or a local Whisper model (offline).
 """
 
 import time
+from collections import deque
 from io import BytesIO
 from queue import Empty
 from threading import Event
@@ -70,6 +71,7 @@ class AudioTranscriber:
         self.transcription_engine = "Google"
         self.whisper_model = None
         self.whisper_weight_type = whisper_weight_type
+        self.pending_audio_queue_items = deque()
         self.audio_sources: Dict[str, Any] = {
             "sample_rate": source.SAMPLE_RATE,
             "sample_width": source.SAMPLE_WIDTH,
@@ -100,15 +102,39 @@ class AudioTranscriber:
         vad_filter: bool = False,
         vad_parameters: Optional[Union[dict, Any]] = None,
     ) -> bool:
-        if audio_queue.empty():
+        if audio_queue.empty() and not self.pending_audio_queue_items:
             time.sleep(0.01)
             return False
-        self._update_from_queue_item(audio_queue.get())
-        while True:
+
+        if self.pending_audio_queue_items:
+            while True:
+                try:
+                    self._enqueue_audio_queue_item(audio_queue.get_nowait())
+                except Empty:
+                    break
+            self._update_from_queue_item(self.pending_audio_queue_items.popleft())
+        else:
             try:
-                self._update_from_queue_item(audio_queue.get_nowait())
+                first_item = audio_queue.get_nowait()
             except Empty:
-                break
+                time.sleep(0.01)
+                return False
+
+            if isinstance(first_item, AudioQueueItem):
+                self._enqueue_audio_queue_item(first_item)
+                while True:
+                    try:
+                        self._enqueue_audio_queue_item(audio_queue.get_nowait())
+                    except Empty:
+                        break
+                self._update_from_queue_item(self.pending_audio_queue_items.popleft())
+            else:
+                self._update_from_queue_item(first_item)
+                while True:
+                    try:
+                        self._update_from_queue_item(audio_queue.get_nowait())
+                    except Empty:
+                        break
 
         confidences: List[Dict[str, Any]] = [{"confidence": 0, "text": "", "language": None}]
         inference_started_at = time.perf_counter()
@@ -176,6 +202,41 @@ class AudioTranscriber:
         if result["text"] != "":
             self.updateTranscript(result)
         return True
+
+    def _enqueue_audio_queue_item(self, item: Any) -> None:
+        if not isinstance(item, AudioQueueItem):
+            self.pending_audio_queue_items.append(item)
+            return
+
+        if item.is_final:
+            self.pending_audio_queue_items = deque(
+                queued
+                for queued in self.pending_audio_queue_items
+                if not isinstance(queued, AudioQueueItem)
+                or queued.segment_id != item.segment_id
+                or queued.is_final
+            )
+            self.pending_audio_queue_items.append(item)
+            return
+
+        if any(
+            isinstance(queued, AudioQueueItem)
+            and queued.segment_id == item.segment_id
+            and queued.is_final
+            for queued in self.pending_audio_queue_items
+        ):
+            return
+
+        self.pending_audio_queue_items = deque(
+            queued
+            for queued in self.pending_audio_queue_items
+            if not (
+                isinstance(queued, AudioQueueItem)
+                and queued.segment_id == item.segment_id
+                and not queued.is_final
+            )
+        )
+        self.pending_audio_queue_items.append(item)
 
     def _update_from_queue_item(self, item: Any) -> None:
         if isinstance(item, AudioQueueItem):
@@ -265,5 +326,6 @@ class AudioTranscriber:
 
     def clearTranscriptData(self) -> None:
         self.transcript_data.clear()
+        self.pending_audio_queue_items.clear()
         self.audio_sources["last_sample"] = bytes()
         self.audio_sources["new_phrase"] = True
