@@ -307,7 +307,7 @@ class Controller:
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatSendMessage(message):
+            elif model.detectRepeatSendMessage(message, result.get("segment_id")):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -524,7 +524,7 @@ class Controller:
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatReceiveMessage(message):
+            elif model.detectRepeatReceiveMessage(message, result.get("segment_id")):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass

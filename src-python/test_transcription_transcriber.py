@@ -393,6 +393,85 @@ class TestSpeakerMessage(unittest.TestCase):
         )
         self.assertEqual(model.method_calls, [])
 
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_repeated_speaker_text_with_new_segment_still_translates(self, config, model) -> None:
+        from controller import Controller
+
+        config.ENABLE_TRANSLATION = True
+        config.ENABLE_TRANSCRIPTION_RECEIVE = True
+        config.CONVERT_MESSAGE_TO_HIRAGANA = False
+        config.CONVERT_MESSAGE_TO_ROMAJI = False
+        config.OVERLAY_SMALL_LOG = False
+        config.OVERLAY_LARGE_LOG = False
+        config.SEND_RECEIVED_MESSAGE_TO_VRC = False
+        config.LOGGER_FEATURE = False
+        config.SELECTED_TAB_NO = 0
+        config.SELECTED_YOUR_LANGUAGES = {0: {"1": {"language": "Japanese", "enable": True}}}
+        model.checkKeywords.return_value = False
+        model.detectRepeatReceiveMessage.side_effect = [False, False]
+        model.getOutputTranslate.return_value = (["translated"], [True])
+        controller = Controller.__new__(Controller)
+        controller.run_mapping = {"transcription_speaker": "/run/speaker"}
+        controller.run = MagicMock()
+        controller._is_overlay_available = MagicMock(return_value=False)
+
+        payload = {
+            "text": "let's go for a walk",
+            "language": "English",
+            "is_final": True,
+        }
+        controller.speakerMessage({**payload, "segment_id": 21})
+        controller.speakerMessage({**payload, "segment_id": 22})
+
+        self.assertEqual(model.detectRepeatReceiveMessage.call_args_list[0].args, ("let's go for a walk", 21))
+        self.assertEqual(model.detectRepeatReceiveMessage.call_args_list[1].args, ("let's go for a walk", 22))
+        self.assertEqual(model.getOutputTranslate.call_count, 2)
+
+
+class TestRepeatDetection(unittest.TestCase):
+    def test_receive_repeat_allows_same_text_for_new_segment(self) -> None:
+        from model import Model
+
+        model = Model.__new__(Model)
+        model.previous_receive_message = ""
+        model.previous_receive_segment_id = None
+
+        self.assertFalse(model.detectRepeatReceiveMessage("same text", 1))
+        self.assertFalse(model.detectRepeatReceiveMessage("same text", 2))
+        self.assertTrue(model.detectRepeatReceiveMessage("same text", 2))
+
+    def test_receive_repeat_blocks_same_segment_even_if_text_changes(self) -> None:
+        from model import Model
+
+        model = Model.__new__(Model)
+        model.previous_receive_message = ""
+        model.previous_receive_segment_id = None
+
+        self.assertFalse(model.detectRepeatReceiveMessage("first text", 10))
+        self.assertTrue(model.detectRepeatReceiveMessage("updated text", 10))
+
+    def test_send_repeat_allows_same_text_for_new_segment(self) -> None:
+        from model import Model
+
+        model = Model.__new__(Model)
+        model.previous_send_message = ""
+        model.previous_send_segment_id = None
+
+        self.assertFalse(model.detectRepeatSendMessage("same text", 1))
+        self.assertFalse(model.detectRepeatSendMessage("same text", 2))
+        self.assertTrue(model.detectRepeatSendMessage("same text", 2))
+
+    def test_send_repeat_blocks_same_segment_even_if_text_changes(self) -> None:
+        from model import Model
+
+        model = Model.__new__(Model)
+        model.previous_send_message = ""
+        model.previous_send_segment_id = None
+
+        self.assertFalse(model.detectRepeatSendMessage("first text", 10))
+        self.assertTrue(model.detectRepeatSendMessage("updated text", 10))
+
 
 if __name__ == "__main__":
     unittest.main()

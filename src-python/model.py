@@ -117,6 +117,8 @@ class Model:
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
+        self.previous_send_segment_id = None
+        self.previous_receive_segment_id = None
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.translation_history: list[dict] = []
@@ -516,18 +518,26 @@ class Model:
         self.ensure_initialized()
         return len(self.keyword_processor.extract_keywords(message)) != 0
 
-    def detectRepeatSendMessage(self, message):
+    def detectRepeatSendMessage(self, message, segment_id=None):
         repeat_flag = False
-        if self.previous_send_message == message:
+        if segment_id is not None:
+            if self.previous_send_segment_id == segment_id:
+                repeat_flag = True
+        elif self.previous_send_message == message:
             repeat_flag = True
         self.previous_send_message = message
+        self.previous_send_segment_id = segment_id
         return repeat_flag
 
-    def detectRepeatReceiveMessage(self, message):
+    def detectRepeatReceiveMessage(self, message, segment_id=None):
         repeat_flag = False
-        if self.previous_receive_message == message:
+        if segment_id is not None:
+            if self.previous_receive_segment_id == segment_id:
+                repeat_flag = True
+        elif self.previous_receive_message == message:
             repeat_flag = True
         self.previous_receive_message = message
+        self.previous_receive_segment_id = segment_id
         return repeat_flag
 
     def startTransliteration(self):
