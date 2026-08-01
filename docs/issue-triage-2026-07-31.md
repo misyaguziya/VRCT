@@ -240,3 +240,139 @@
 - もし issue ラベル運用を強化するなら、`priority:p0` `priority:p1` `needs-info` `duplicate` `blocked-by-pr` を追加すると運用しやすい。
 - 「モデル追加要望」は個別に捌かず、互換性・実装工数・需要をまとめて評価する backlog を別管理した方が良い。
 - 追加で `decision:adopt` `decision:review` `decision:defer` `decision:reject` を置くと、「優先度は高いが今は実装しない」を表現しやすい。
+
+## P1 コード調査メモ（2026-08-01）
+
+コード変更は行わず、現在の `issue-p0` ブランチを対象に調査した。issue 起票時のリリースは #63 が 3.2.1、#76 が 3.3.2、#91 が 3.4.2、#103 が 3.4.3 であり、現在ブランチには文字起こし改善コミット `27418f3b` と `3c9e6f8f` が含まれる。そのため、起票時の症状と現在残っている問題を分けて扱う必要がある。
+
+### #63 Google 文字起こしフリーズ
+
+確度の高い原因候補:
+
+- `models/transcription/transcription_transcriber.py` の Google 認識は `Recognizer.recognize_google()` を同期呼び出ししている。
+- 導入済み SpeechRecognition 3.10.4.1 では、HTTP の timeout に `Recognizer.operation_timeout` を使用するが、現在の生成直後の値は `None`。応答を無期限に待つ可能性がある。
+- 言語ごとの Google 認識例外は内側の `except Exception: pass` で握り潰され、ログにも UI にも失敗理由が出ない。
+- `model.py` の `stopSpeakerTranscript()` は認識ワーカーを timeout なしで `join()` してから録音を止める。Google 呼び出しが戻らない場合、停止処理も完了しない。
+- `controller.py` の受信停止処理も停止用スレッドを timeout なしで `join()` するため、speaker2Log トグルが固着する報告と整合する。
+
+反証・再現確認:
+
+- Google 認識開始後に接続を遮断または応答を遅延させ、停止要求が一定時間内に返るかを測る。
+- `operation_timeout` を有限値にした場合だけ復旧するなら、HTTP 待機が主因と判断できる。
+
+修正時の最小範囲:
+
+- Google recognizer に有限の `operation_timeout` を設定する。
+- `RequestError`、`UnknownValueError`、timeout を分類し、少なくともログへ残す。
+- 録音停止を先に通知し、ワーカーの `join()` に上限を設ける。
+- 低速・切断中の停止回帰テストを追加する。
+
+### #91 `Error: undefined - Translation engine limit error`
+
+確度の高い原因候補:
+
+- 翻訳失敗時は `model.py` の `getTranslate()` が CTranslate2 へフォールバックし、`controller.py` の `changeToCTranslate2Process()` が元のオンラインエンジンを無効化する。この処理自体は実装済み。
+- mic 翻訳経路だけ、失敗通知を旧形式 `{message, data}` で `/run/error_translation_engine` に送っている。
+- UI の `useReceiveRoutes.js` は status 400 の応答に `result.error_code` を要求するため、mic 経路では `error_code` が `undefined` になる。
+- speaker/chat 経路は `VRCTError.create_error_response(ErrorCode.TRANSLATION_ENGINE_LIMIT)` を使用しており、mic 経路だけ契約が不統一。
+- `translation_translator.py` は翻訳バックエンドの全例外を `False` に変換するため、現在の `TRANSLATION_ENGINE_LIMIT` はレート制限だけでなく、通信障害やプロバイダ内部エラーも含む。
+
+反証・再現確認:
+
+- mic、speaker、chat の各経路で同じ翻訳失敗を発生させ、mic のみ `error_code` が欠落するか確認する。
+
+修正時の最小範囲:
+
+- mic 経路も統一エラーレスポンスへ変更し、契約テストを追加する。
+- 次段階で翻訳失敗の理由を rate limit、network、authentication、provider error に分類する。
+
+### #76 音声を認識しないことが多い
+
+現行コードから確認できる点:
+
+- マイクとスピーカーは現在、VAD が既定で有効。既定値は threshold 0.25、最小音声 64 ms、無音終了 768 ms、前方 padding 160 ms。
+- VAD 有効時は `transcription_recorder.py` がデバイスストリームを直接読み、Silero VAD でセグメント化する。
+- この経路では UI の `MIC_THRESHOLD` と `MIC_AUTOMATIC_THRESHOLD` が録音の採否に使われない。ユーザーが感度スライダーを変更しても、既定の VAD 経路には反映されない。
+- Whisper では録音側 VAD に加え、推論時にも `vad_filter` が渡るため、二段階で音声が棄却される可能性がある。
+- 現在ブランチには録音の正規化、VAD、partial segment、遅延計測の改善が入っているため、3.3.2 の報告がそのまま再現するとは限らない。
+
+未確定事項:
+
+- #76 の環境で VAD 前に音声が弱いのか、VAD で落ちるのか、Google/Whisper が結果を返さないのかはログがなく判別できない。
+- 一律の VAD 閾値変更は誤送信を増やすため、実測前には行わない。
+
+追加依頼する情報:
+
+- 最新版での再現有無、入力デバイス名、Windows の入力レベル、マイク距離、失敗する発話の長さ。
+- VAD 有効/無効、Google/Whisper の組み合わせごとの成功率。
+- 可能なら同じ音声サンプルを現在の `evaluate_transcription.py` で比較する。
+
+### #103 音声認識フィードバック不足
+
+現在ブランチで追加済みのもの:
+
+- VAD の segment ID、partial/final transcript、`inference_ms`、`audio_duration_ms` をバックエンドから UI へ送る経路がある。
+- partial transcript の upsert/dismiss 用 UI ルートとテストがある。
+
+現在も不足しているもの:
+
+- 音声取得、VAD 判定、認識エンジン送信、認識成功/棄却を区別する状態表示がない。
+- Google の言語ごとの失敗は握り潰されるため、失敗理由がログに残らない。
+- 設定画面の音量メーターは文字起こし本体とは別 recorder を使用する。音量表示が動いても、実際の文字起こしパイプライン通過は保証しない。
+- VAD 有効時には energy threshold が録音採否に使われないため、UI が実際の判定方式を正しく説明できていない。
+
+判断:
+
+- issue 全体が未実装という状態ではなく、partial 表示と基本メトリクスは先行対応済み。
+- 残作業はエラー可視化、VAD 状態の観測、実パイプラインと一致した入力フィードバック。
+
+### #104 token refresh 導線
+
+コード上の整理:
+
+- Google/Bing の無料翻訳は、VRCT が更新可能な OAuth refresh token を保持しているわけではない。
+- 翻訳失敗時に行っているのは、選択中オンラインエンジンの status を `False` にし、CTranslate2 へ切り替える処理。
+- 起動時には各翻訳エンジンを並列に疎通・認証確認するが、実行中に同じ確認を再実行する共通エンドポイントはない。
+
+仕様案:
+
+- 表示名は「Refresh token」ではなく「Retry online translation engines」または「翻訳エンジンを再接続」が実態に近い。
+- 操作時にオンラインエンジンを再疎通し、利用可能 status を更新する。
+- 成功時に直前のエンジンへ自動で戻すか、選択肢へ復帰させるだけにするかは仕様決定が必要。
+- #91 のエラー分類と同時に扱うと、再試行対象と待機時間を決めやすい。
+
+### #77 インストール後に利用できない
+
+コード上の配布方式:
+
+- NSIS は `currentUser` install で、既定の配置先は `%LOCALAPPDATA%\VRCT`。
+- インストーラーにアプリ一式を完全同梱せず、実行時に `https://huggingface.co/ms-software/VRCT/resolve/main/VRCT.zip` を取得して展開する。
+- ダウンロード失敗時はインストールを `Abort` する。
+- `VRCT.zip` は 2026-08-01 の調査時点で到達可能。release workflow も同じ asset を更新する設計。
+- スタートメニューショートカットは作成される。デスクトップショートカットは GUI 上の選択または silent/passive オプションに依存する。
+
+判断:
+
+- 恒常的な asset 欠落より、地域・プロキシ・セキュリティ製品による Hugging Face ダウンロード失敗、またはデスクトップショートカットを「installation file」と表現している可能性が高い。
+- 本文だけでは不具合か操作上の誤解か確定できないため `needs-info` が妥当。
+
+追加依頼する情報:
+
+- `%LOCALAPPDATA%\VRCT` の有無とファイル一覧。
+- インストーラー詳細画面の最終メッセージ、AV の検疫履歴、Hugging Face URL へブラウザで到達できるか。
+- スタートメニューから起動できるか、デスクトップアイコンだけがないのか。
+
+### 調査時の検証
+
+- `src-python` を import root にして `test_audio_pipeline.py`、`test_transcription_recorder.py`、`test_transcription_transcriber.py` を実行し、28 件すべて成功。
+- Google の低速・切断、停止要求中のブロック、翻訳エラー形式は既存テストに含まれない。
+- 調査中のコード変更なし。調査前から `.gitignore` に未コミット変更あり。
+
+### 再開時の推奨順序
+
+1. #63 に有限 timeout と停止回帰テストを追加する。
+2. #91 の mic エラー形式を統一し、mic/speaker/chat の契約テストを追加する。
+3. #91 と #104 をまとめ、オンライン翻訳エンジンの失敗分類と再接続仕様を決める。
+4. 最新ブランチで #76 を再現し、VAD 前・VAD 後・認識後のどこで落ちるか計測する。
+5. #103 は既存 partial 表示を前提に、VAD 状態と失敗理由の可視化へ範囲を絞る。
+6. #77 は追加情報が来るまで `needs-info` とする。
