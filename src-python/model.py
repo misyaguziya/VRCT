@@ -738,12 +738,14 @@ class Model:
                 energy_threshold=config.MIC_THRESHOLD,
                 dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
                 phrase_time_limit=record_timeout,
+                vad_filter=config.MIC_VAD_FILTER,
+                vad_parameters=config.MIC_VAD_PARAMETERS,
             )
             # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
             self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
             self.mic_transcriber = AudioTranscriber(
                 speaker=False,
-                source=self.mic_audio_recorder.source,
+                source=self.mic_audio_recorder,
                 phrase_timeout=phrase_timeout,
                 max_phrases=config.MIC_MAX_PHRASES,
                 transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
@@ -933,12 +935,14 @@ class Model:
                 energy_threshold=config.SPEAKER_THRESHOLD,
                 dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
                 phrase_time_limit=record_timeout,
+                vad_filter=config.SPEAKER_VAD_FILTER,
+                vad_parameters=config.SPEAKER_VAD_PARAMETERS,
             )
             # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
             self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
             self.speaker_transcriber = AudioTranscriber(
                 speaker=True,
-                source=self.speaker_audio_recorder.source,
+                source=self.speaker_audio_recorder,
                 phrase_timeout=phrase_timeout,
                 max_phrases=config.SPEAKER_MAX_PHRASES,
                 transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,

@@ -274,6 +274,12 @@ class Controller:
         if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
             return
 
+        if result.get("is_final", True) is False:
+            if config.ENABLE_TRANSCRIPTION_SEND is not True:
+                return
+            self._emitPartialTranscript("mic", result)
+            return
+
         message = result["text"]
         language = result["language"]
         if isinstance(message, bool) and message is False:
@@ -285,6 +291,9 @@ class Controller:
                     "data": None
                 },
             )
+
+        elif isinstance(message, str) and len(message) == 0:
+            self._dismissPartialTranscript("mic", result)
 
         elif isinstance(message, str) and len(message) > 0:
             model.telemetryTrackCoreFeature("mic_speech_to_text")
@@ -387,6 +396,7 @@ class Controller:
                     200,
                     self.run_mapping["transcription_mic"],
                     {
+                        "id": self._transcriptSegmentId("mic", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message
@@ -446,7 +456,49 @@ class Controller:
 
             model.addTranslationHistory("mic", message)
 
+    def _transcriptSegmentId(self, source: str, result: dict) -> str | None:
+        segment_id = result.get("segment_id")
+        return f"transcription-{source}-{segment_id}" if segment_id is not None else None
+
+    def _emitPartialTranscript(self, source: str, result: dict) -> None:
+        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
+        if endpoint is None:
+            return
+        self.run(
+            200,
+            endpoint,
+            {
+                "id": self._transcriptSegmentId(source, result),
+                "original": {"message": result.get("text", ""), "transliteration": []},
+                "translations": [],
+                "metrics": {
+                    "inference_ms": result.get("inference_ms"),
+                    "audio_duration_ms": result.get("audio_duration_ms"),
+                },
+            },
+        )
+
+    def _dismissPartialTranscript(self, source: str, result: dict) -> None:
+        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
+        transcript_id = self._transcriptSegmentId(source, result)
+        if endpoint is None or transcript_id is None:
+            return
+        self.run(
+            200,
+            endpoint,
+            {
+                "id": transcript_id,
+                "dismiss": True,
+            },
+        )
+
     def speakerMessage(self, result:dict) -> None:
+        if result.get("is_final", True) is False:
+            if config.ENABLE_TRANSCRIPTION_RECEIVE is not True:
+                return
+            self._emitPartialTranscript("speaker", result)
+            return
+
         message = result["text"]
         language = result["language"]
         if isinstance(message, bool) and message is False:
@@ -458,6 +510,8 @@ class Controller:
                     "data": None
                 },
             )
+        elif isinstance(message, str) and len(message) == 0:
+            self._dismissPartialTranscript("speaker", result)
         elif isinstance(message, str) and len(message) > 0:
             model.telemetryTrackCoreFeature("speaker_speech_to_text")
             translation = []
@@ -607,6 +661,7 @@ class Controller:
                     200,
                     self.run_mapping["transcription_speaker"],
                     {
+                        "id": self._transcriptSegmentId("speaker", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message

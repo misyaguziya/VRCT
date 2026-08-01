@@ -12,7 +12,7 @@ import wave
 from typing import Any, Dict, List, Optional, Union
 from speech_recognition import Recognizer, AudioData, AudioFile
 from speech_recognition.exceptions import UnknownValueError
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pyaudiowpatch import get_sample_size, paInt16
 from .transcription_languages import transcription_lang
 from .transcription_whisper import getWhisperModel, checkWhisperWeight
@@ -21,6 +21,7 @@ import torch
 import numpy as np
 from pydub import AudioSegment
 from utils import errorLogging
+from .audio_pipeline import AudioQueueItem
 
 import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
@@ -76,6 +77,9 @@ class AudioTranscriber:
             "last_sample": bytes(),
             "last_spoken": None,
             "new_phrase": True,
+            "segment_id": None,
+            "is_final": True,
+            "speech_ended_at": None,
             "process_data_func": self.processSpeakerData if speaker else self.processMicData,
         }
 
@@ -99,16 +103,15 @@ class AudioTranscriber:
         if audio_queue.empty():
             time.sleep(0.01)
             return False
-        audio, time_spoken = audio_queue.get()
-        self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+        self._update_from_queue_item(audio_queue.get())
         while True:
             try:
-                audio, time_spoken = audio_queue.get_nowait()
-                self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+                self._update_from_queue_item(audio_queue.get_nowait())
             except Empty:
                 break
 
         confidences: List[Dict[str, Any]] = [{"confidence": 0, "text": "", "language": None}]
+        inference_started_at = time.perf_counter()
         try:
             audio_data = self.audio_sources["process_data_func"]()
             match self.transcription_engine:
@@ -169,9 +172,41 @@ class AudioTranscriber:
             pass
 
         result = max(confidences, key=lambda x: x["confidence"])
+        result.update(self._result_metadata(inference_started_at))
         if result["text"] != "":
             self.updateTranscript(result)
         return True
+
+    def _update_from_queue_item(self, item: Any) -> None:
+        if isinstance(item, AudioQueueItem):
+            source_info = self.audio_sources
+            source_info["new_phrase"] = source_info["segment_id"] != item.segment_id
+            source_info["segment_id"] = item.segment_id
+            source_info["last_sample"] = item.audio
+            source_info["last_spoken"] = item.recorded_at
+            source_info["is_final"] = item.is_final
+            source_info["speech_ended_at"] = item.speech_ended_at
+            return
+
+        audio, time_spoken = item
+        self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+        self.audio_sources["is_final"] = True
+        self.audio_sources["speech_ended_at"] = time_spoken
+
+    def _result_metadata(self, inference_started_at: float) -> Dict[str, Any]:
+        source_info = self.audio_sources
+        inference_ms = (time.perf_counter() - inference_started_at) * 1000
+        speech_ended_at = source_info["speech_ended_at"]
+        end_to_result_ms = None
+        if speech_ended_at is not None:
+            end_to_result_ms = max(0.0, (datetime.now() - speech_ended_at).total_seconds() * 1000)
+        return {
+            "is_final": source_info["is_final"],
+            "segment_id": source_info["segment_id"],
+            "inference_ms": inference_ms,
+            "end_to_result_ms": end_to_result_ms,
+            "audio_duration_ms": len(source_info["last_sample"]) / 2 / 16000 * 1000,
+        }
 
     def updateLastSampleAndPhraseStatus(self, data: bytes, time_spoken) -> None:
         source_info = self.audio_sources

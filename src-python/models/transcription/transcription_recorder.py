@@ -5,10 +5,13 @@ They intentionally keep a thin API so the rest of the system can mock them
 in tests.
 """
 
-from typing import Any
+import audioop
+import threading
+from typing import Any, Optional
 from speech_recognition import Recognizer, Microphone
-from pyaudiowpatch import get_sample_size, paInt16
 from datetime import datetime
+from .audio_pipeline import AudioQueueItem, Pcm16MonoNormalizer, StreamingVadSegmenter
+from utils import errorLogging
 
 
 def _validate_audio_source(source: Any) -> Any:
@@ -71,7 +74,7 @@ class SelectedSpeakerRecorder(BaseRecorder):
             speaker=True,
             device_index=int(device.get('index', -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
-            chunk_size=get_sample_size(paInt16),
+            chunk_size=1024,
             channels=int(device.get("maxInputChannels", 1)),
         )
         super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
@@ -133,6 +136,8 @@ class BaseEnergyAndAudioRecorder:
         phrase_time_limit: int,
         phrase_timeout: int,
         record_timeout: int,
+        vad_filter: bool = False,
+        vad_parameters: Optional[dict[str, Any]] = None,
     ) -> None:
         self.recorder = Recognizer()
         self.recorder.energy_threshold = energy_threshold
@@ -146,14 +151,38 @@ class BaseEnergyAndAudioRecorder:
             raise ValueError("audio source can't be None")
 
         self.source = source
+        self.SAMPLE_RATE = 16000
+        self.SAMPLE_WIDTH = 2
+        self.channels = 1
+        self.normalizer = Pcm16MonoNormalizer(
+            sample_rate=source.SAMPLE_RATE,
+            sample_width=source.SAMPLE_WIDTH,
+            channels=getattr(source, "channels", 1),
+        )
+        parameters = vad_parameters or {}
+        self.vad_segmenter = StreamingVadSegmenter(
+            positive_threshold=float(parameters.get("threshold", 0.25)),
+            negative_threshold=float(parameters.get("neg_threshold") or 0.10),
+            redemption_frames=max(1, round(int(parameters.get("min_silence_duration_ms", 768)) / 32)),
+            min_speech_frames=max(1, round(int(parameters.get("min_speech_duration_ms", 64)) / 32)),
+            pre_speech_pad_frames=max(0, round(int(parameters.get("speech_pad_ms", 160)) / 32)),
+        ) if vad_filter else None
 
     def adjustForNoise(self) -> None:
         with self.source:
             self.recorder.adjust_for_ambient_noise(self.source)
 
     def recordIntoQueue(self, audio_queue: Any, energy_queue: Any = None) -> None:
+        if self.vad_segmenter is not None:
+            self.stop, self.pause, self.resume = self._recordVadIntoQueue(audio_queue, energy_queue)
+            return
+
         def audioRecordCallback(_, audio):
-            audio_queue.put((audio.get_raw_data(), datetime.now()))
+            recorded_at = datetime.now()
+            normalized_audio = self.normalizer.process(audio.get_raw_data())
+            if not normalized_audio:
+                return
+            audio_queue.put((normalized_audio, recorded_at))
 
         def energyRecordCallback(energy):
             energy_queue.put(energy)
@@ -167,6 +196,84 @@ class BaseEnergyAndAudioRecorder:
             record_timeout=self.record_timeout,
         )
 
+    def _recordVadIntoQueue(self, audio_queue: Any, energy_queue: Any = None):
+        running = threading.Event()
+        running.set()
+        paused = threading.Event()
+        partial_interval_ms = max(250.0, float(self.phrase_time_limit or 1) * 1000)
+
+        def emit_segment(segment, recorded_at: datetime) -> None:
+            audio_queue.put(AudioQueueItem(
+                audio=segment.audio,
+                recorded_at=recorded_at,
+                is_final=segment.is_final,
+                segment_id=segment.segment_id,
+                speech_ended_at=recorded_at if segment.is_final else None,
+            ))
+
+        def threadedListen() -> None:
+            last_partial_duration_ms = 0.0
+            was_paused = False
+            try:
+                with self.source:
+                    while running.is_set():
+                        raw_audio = self.source.stream.read(self.source.CHUNK)
+                        if paused.is_set():
+                            if not was_paused:
+                                recorded_at = datetime.now()
+                                segment = self.vad_segmenter.flush()
+                                if segment is not None:
+                                    emit_segment(segment, recorded_at)
+                                self.normalizer.reset()
+                                last_partial_duration_ms = 0.0
+                            was_paused = True
+                            continue
+                        was_paused = False
+
+                        normalized_audio = self.normalizer.process(raw_audio)
+                        if not normalized_audio:
+                            continue
+                        if energy_queue is not None:
+                            energy_queue.put(audioop.rms(normalized_audio, 2))
+
+                        recorded_at = datetime.now()
+                        for segment in self.vad_segmenter.process(normalized_audio):
+                            emit_segment(segment, recorded_at)
+                            last_partial_duration_ms = 0.0
+
+                        partial = self.vad_segmenter.snapshot()
+                        if partial is not None and partial.duration_ms >= last_partial_duration_ms + partial_interval_ms:
+                            emit_segment(partial, recorded_at)
+                            last_partial_duration_ms = partial.duration_ms
+            except EOFError:
+                pass
+            except Exception:
+                errorLogging()
+            finally:
+                recorded_at = datetime.now()
+                segment = self.vad_segmenter.flush()
+                if segment is not None:
+                    emit_segment(segment, recorded_at)
+                self.normalizer.reset()
+                paused.clear()
+                running.clear()
+
+        listener_thread = threading.Thread(target=threadedListen, daemon=True)
+        listener_thread.start()
+
+        def stopper(wait_for_stop: bool = True) -> None:
+            running.clear()
+            if wait_for_stop:
+                listener_thread.join(timeout=5.0)
+
+        def pauser() -> None:
+            paused.set()
+
+        def resumer() -> None:
+            paused.clear()
+
+        return stopper, pauser, resumer
+
 
 class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
     def __init__(
@@ -177,6 +284,8 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         phrase_time_limit: int,
         phrase_timeout: int = 1,
         record_timeout: int = 5,
+        vad_filter: bool = False,
+        vad_parameters: Optional[dict[str, Any]] = None,
     ) -> None:
         source = _create_microphone(
             {},
@@ -190,6 +299,8 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             phrase_time_limit=phrase_time_limit,
             phrase_timeout=phrase_timeout,
             record_timeout=record_timeout,
+            vad_filter=vad_filter,
+            vad_parameters=vad_parameters,
         )
         # self.adjustForNoise()
 
@@ -203,6 +314,8 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         phrase_time_limit: int,
         phrase_timeout: int = 1,
         record_timeout: int = 5,
+        vad_filter: bool = False,
+        vad_parameters: Optional[dict[str, Any]] = None,
     ) -> None:
 
         source = _create_microphone(
@@ -210,7 +323,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             speaker=True,
             device_index=int(device.get('index', -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
-            chunk_size=get_sample_size(paInt16),
+            chunk_size=1024,
             channels=int(device.get("maxInputChannels", 1)),
         )
         super().__init__(
@@ -220,5 +333,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             phrase_time_limit=phrase_time_limit,
             phrase_timeout=phrase_timeout,
             record_timeout=record_timeout,
+            vad_filter=vad_filter,
+            vad_parameters=vad_parameters,
         )
         # self.adjustForNoise()

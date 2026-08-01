@@ -4,7 +4,10 @@ from datetime import datetime, timedelta
 from queue import Queue
 from unittest.mock import MagicMock, patch
 
+import numpy as np
+
 from models.transcription.transcription_transcriber import AudioTranscriber, _should_use_vad_filter
+from models.transcription.audio_pipeline import AudioQueueItem
 from config import _DEFAULT_VAD_PARAMETERS, _LEGACY_VAD_PARAMETERS, _migrate_vad_defaults
 
 
@@ -26,6 +29,16 @@ class TestAudioProcessingSelection(unittest.TestCase):
         transcriber = AudioTranscriber(True, FakeAudioSource(), 3, 10, "Google")
 
         self.assertEqual(transcriber.audio_sources["process_data_func"], transcriber.processSpeakerData)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_reads_normalized_speaker_pcm_as_mono(self, _) -> None:
+        transcriber = AudioTranscriber(True, FakeAudioSource(), 3, 10, "Google")
+        pcm = np.array([1000, -1000], dtype="<i2").tobytes()
+        transcriber.audio_sources["last_sample"] = pcm
+
+        result = transcriber.processSpeakerData()
+
+        self.assertEqual(result.get_raw_data(), pcm)
 
 
 class TestWhisperVadFilter(unittest.TestCase):
@@ -67,6 +80,22 @@ class TestWhisperVadFilter(unittest.TestCase):
 
 
 class TestWhisperQueueProcessing(unittest.TestCase):
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_accepts_structured_partial_queue_item(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        recorded_at = datetime.now()
+
+        transcriber._update_from_queue_item(AudioQueueItem(
+            audio=b"\x01\x00",
+            recorded_at=recorded_at,
+            is_final=False,
+            segment_id=8,
+        ))
+
+        self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00")
+        self.assertEqual(transcriber.audio_sources["segment_id"], 8)
+        self.assertFalse(transcriber.audio_sources["is_final"])
+
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
     def test_coalesces_queued_audio_before_transcribing(self, _) -> None:
         transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
@@ -137,6 +166,76 @@ class TestMutedMicMessage(unittest.TestCase):
 
         Controller.__new__(Controller).micMessage({})
 
+        self.assertEqual(model.method_calls, [])
+
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_partial_mic_result_only_updates_partial_ui(self, config, model) -> None:
+        from controller import Controller
+
+        config.VRC_MIC_MUTE_SYNC = False
+        config.ENABLE_TRANSCRIPTION_SEND = True
+        controller = Controller.__new__(Controller)
+        controller.run_mapping = {"transcription_mic_partial": "/run/mic_partial"}
+        controller.run = MagicMock()
+
+        controller.micMessage({
+            "text": "partial",
+            "language": "Japanese",
+            "is_final": False,
+            "segment_id": 4,
+            "inference_ms": 12.0,
+            "audio_duration_ms": 1000.0,
+        })
+
+        controller.run.assert_called_once()
+        self.assertEqual(controller.run.call_args.args[1], "/run/mic_partial")
+        self.assertEqual(controller.run.call_args.args[2]["id"], "transcription-mic-4")
+        self.assertEqual(model.method_calls, [])
+
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_partial_mic_result_respects_transcription_toggle(self, config, model) -> None:
+        from controller import Controller
+
+        config.VRC_MIC_MUTE_SYNC = False
+        config.ENABLE_TRANSCRIPTION_SEND = False
+        controller = Controller.__new__(Controller)
+        controller.run_mapping = {"transcription_mic_partial": "/run/mic_partial"}
+        controller.run = MagicMock()
+
+        controller.micMessage({
+            "text": "partial",
+            "language": "Japanese",
+            "is_final": False,
+            "segment_id": 4,
+        })
+
+        controller.run.assert_not_called()
+        self.assertEqual(model.method_calls, [])
+
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_empty_final_mic_result_dismisses_partial_ui(self, config, model) -> None:
+        from controller import Controller
+
+        config.VRC_MIC_MUTE_SYNC = False
+        controller = Controller.__new__(Controller)
+        controller.run_mapping = {"transcription_mic_partial": "/run/mic_partial"}
+        controller.run = MagicMock()
+
+        controller.micMessage({
+            "text": "",
+            "language": "Japanese",
+            "is_final": True,
+            "segment_id": 4,
+        })
+
+        controller.run.assert_called_once_with(
+            200,
+            "/run/mic_partial",
+            {"id": "transcription-mic-4", "dismiss": True},
+        )
         self.assertEqual(model.method_calls, [])
 
 
