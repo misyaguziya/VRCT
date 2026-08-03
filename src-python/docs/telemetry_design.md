@@ -1,5 +1,13 @@
 # VRCT Python Sidecar テレメトリ（Aptabase）実装設計書
 
+> **2026-08 改訂**: Aptabase 無料枠（20k events/月）に収めるため、送信イベントを
+> `app_started`（日次 1 回）と `error`（error_code ごと日次 1 回）の 2 種類のみに削減した。
+> 旧仕様の `core_feature` / `app_closed` は廃止。日次デデュープはプロセス再起動を跨いで
+> 有効になるよう、`<PATH_LOCAL>/telemetry_state.json` に永続化する。
+> 以降の章の一部（イベント一覧・API 一覧など）は旧仕様の記述が残っているが、
+> 実装は本注記の内容を正とする。
+
+
 ## 目次
 1. [概要](#概要)
 2. [基本方針](#基本方針)

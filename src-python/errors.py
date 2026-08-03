@@ -5,8 +5,28 @@
 すべてのエラーを一元管理し、エンドポイントとエラーコードの対応を明確にする。
 """
 
-from typing import Any, Optional, Dict
+from typing import Any, Callable, Optional, Dict
 from enum import Enum
+
+
+# エラー生成時に通知される optional なフック（テレメトリ等）。
+# errors.py から model への逆依存を避けるため、model 側から登録する。
+_error_report_hooks: list = []
+
+
+def register_error_report_hook(hook: Callable[[str], None]) -> None:
+    """error_code (str) を受け取るフックを登録する。多重登録は防止される。"""
+    if hook not in _error_report_hooks:
+        _error_report_hooks.append(hook)
+
+
+def _notify_error_hooks(error_code: str) -> None:
+    for hook in _error_report_hooks:
+        try:
+            hook(error_code)
+        except Exception:
+            # フック失敗は本体処理に影響させない
+            pass
 
 
 class ErrorCode(str, Enum):
@@ -487,8 +507,8 @@ class VRCTError:
             エラーレスポンス辞書
         """
         metadata = ERROR_METADATA.get(error_code, ERROR_METADATA[ErrorCode.GENERAL_UNKNOWN])
-        
-        return {
+
+        response = {
             "status": 400,
             "result": {
                 "error_code": error_code.value,
@@ -499,6 +519,8 @@ class VRCTError:
                 "severity": metadata["severity"],
             }
         }
+        _notify_error_hooks(error_code.value)
+        return response
     
     @staticmethod
     def create_exception_error_response(
