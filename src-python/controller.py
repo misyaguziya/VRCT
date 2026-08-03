@@ -271,6 +271,22 @@ class Controller:
                 )
 
     def micMessage(self, result: dict) -> None:
+        if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
+            return
+
+        if result.get("is_final", True) is False:
+            if config.ENABLE_TRANSCRIPTION_SEND is not True:
+                return
+            self._emitPartialTranscript("mic", result)
+            return
+
+        if result.get("recognition_error") is True:
+            self.run(
+                200,
+                self.run_mapping["transcription_recognition_error"],
+                {"message": "Mic speech recognition request failed. Check your network connection.", "data": None},
+            )
+
         message = result["text"]
         language = result["language"]
         if isinstance(message, bool) and message is False:
@@ -282,6 +298,9 @@ class Controller:
                     "data": None
                 },
             )
+
+        elif isinstance(message, str) and len(message) == 0:
+            self._dismissPartialTranscript("mic", result)
 
         elif isinstance(message, str) and len(message) > 0:
             model.telemetryTrackCoreFeature("mic_speech_to_text")
@@ -295,7 +314,7 @@ class Controller:
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatSendMessage(message):
+            elif model.detectRepeatSendMessage(message, result.get("segment_id")):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -305,13 +324,14 @@ class Controller:
                     translation, success = model.getInputTranslate(message, source_language=language)
                     if all(success) is not True:
                         self.changeToCTranslate2Process()
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_ENGINE_LIMIT,
+                            data=None
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_engine"],
-                            {
-                                "message":"Translation engine limit error",
-                                "data": None
-                            },
+                            error_response["result"],
                         )
                     else:
                         pass
@@ -384,6 +404,7 @@ class Controller:
                     200,
                     self.run_mapping["transcription_mic"],
                     {
+                        "id": self._transcriptSegmentId("mic", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message
@@ -443,7 +464,56 @@ class Controller:
 
             model.addTranslationHistory("mic", message)
 
+    def _transcriptSegmentId(self, source: str, result: dict) -> str | None:
+        segment_id = result.get("segment_id")
+        return f"transcription-{source}-{segment_id}" if segment_id is not None else None
+
+    def _emitPartialTranscript(self, source: str, result: dict) -> None:
+        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
+        if endpoint is None:
+            return
+        self.run(
+            200,
+            endpoint,
+            {
+                "id": self._transcriptSegmentId(source, result),
+                "original": {"message": result.get("text", ""), "transliteration": []},
+                "translations": [],
+                "metrics": {
+                    "inference_ms": result.get("inference_ms"),
+                    "audio_duration_ms": result.get("audio_duration_ms"),
+                },
+            },
+        )
+
+    def _dismissPartialTranscript(self, source: str, result: dict) -> None:
+        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
+        transcript_id = self._transcriptSegmentId(source, result)
+        if endpoint is None or transcript_id is None:
+            return
+        self.run(
+            200,
+            endpoint,
+            {
+                "id": transcript_id,
+                "dismiss": True,
+            },
+        )
+
     def speakerMessage(self, result:dict) -> None:
+        if result.get("is_final", True) is False:
+            if config.ENABLE_TRANSCRIPTION_RECEIVE is not True:
+                return
+            self._emitPartialTranscript("speaker", result)
+            return
+
+        if result.get("recognition_error") is True:
+            self.run(
+                200,
+                self.run_mapping["transcription_recognition_error"],
+                {"message": "Speaker speech recognition request failed. Check your network connection.", "data": None},
+            )
+
         message = result["text"]
         language = result["language"]
         if isinstance(message, bool) and message is False:
@@ -455,6 +525,8 @@ class Controller:
                     "data": None
                 },
             )
+        elif isinstance(message, str) and len(message) == 0:
+            self._dismissPartialTranscript("speaker", result)
         elif isinstance(message, str) and len(message) > 0:
             model.telemetryTrackCoreFeature("speaker_speech_to_text")
             translation = []
@@ -467,7 +539,7 @@ class Controller:
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatReceiveMessage(message):
+            elif model.detectRepeatReceiveMessage(message, result.get("segment_id")):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -604,6 +676,7 @@ class Controller:
                     200,
                     self.run_mapping["transcription_speaker"],
                     {
+                        "id": self._transcriptSegmentId("speaker", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message
@@ -2923,8 +2996,10 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startCheckMicEnergy(self.progressBarMicEnergy)
-        self.device_access_status = True
+        try:
+            model.startCheckMicEnergy(self.progressBarMicEnergy)
+        finally:
+            self.device_access_status = True
 
     def startThreadingCheckMicEnergy(self) -> None:
         th_startCheckMicEnergy = Thread(target=self.startCheckMicEnergy)
@@ -2944,8 +3019,10 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
-        self.device_access_status = True
+        try:
+            model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
+        finally:
+            self.device_access_status = True
 
     def startThreadingCheckSpeakerEnergy(self) -> None:
         th_startCheckSpeakerEnergy = Thread(target=self.startCheckSpeakerEnergy)

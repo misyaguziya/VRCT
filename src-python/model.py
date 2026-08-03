@@ -34,7 +34,9 @@ from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
 from models.clipboard.clipboard import Clipboard
 from models.telemetry import Telemetry
-from utils import errorLogging, setupLogger
+from utils import errorLogging, setupLogger, printLog
+
+TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 
 class threadFnc(Thread):
     """A tiny Thread wrapper that repeatedly calls a function.
@@ -117,6 +119,8 @@ class Model:
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
+        self.previous_send_segment_id = None
+        self.previous_receive_segment_id = None
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.translation_history: list[dict] = []
@@ -516,18 +520,26 @@ class Model:
         self.ensure_initialized()
         return len(self.keyword_processor.extract_keywords(message)) != 0
 
-    def detectRepeatSendMessage(self, message):
+    def detectRepeatSendMessage(self, message, segment_id=None):
         repeat_flag = False
-        if self.previous_send_message == message:
+        if segment_id is not None:
+            if self.previous_send_segment_id == segment_id:
+                repeat_flag = True
+        elif self.previous_send_message == message:
             repeat_flag = True
         self.previous_send_message = message
+        self.previous_send_segment_id = segment_id
         return repeat_flag
 
-    def detectRepeatReceiveMessage(self, message):
+    def detectRepeatReceiveMessage(self, message, segment_id=None):
         repeat_flag = False
-        if self.previous_receive_message == message:
+        if segment_id is not None:
+            if self.previous_receive_segment_id == segment_id:
+                repeat_flag = True
+        elif self.previous_receive_message == message:
             repeat_flag = True
         self.previous_receive_message = message
+        self.previous_receive_segment_id = segment_id
         return repeat_flag
 
     def startTransliteration(self):
@@ -632,44 +644,46 @@ class Model:
         }
 
     @staticmethod
-    def updateSoftware():
+    def _downloadUpdater() -> bool:
         # try to update at most 5 times
         for _ in range(5):
             try:
                 program_name = "update.exe"
                 current_directory = config.PATH_LOCAL
                 res = requests_get(config.UPDATER_URL)
-                assets = res.json()['assets']
-                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
+                assets = res.json().get("assets", [])
+                url = next(
+                    (
+                        asset.get("browser_download_url")
+                        for asset in assets
+                        if asset.get("name") == program_name
+                    ),
+                    None,
+                )
+                if not isinstance(url, str):
+                    raise ValueError(f"{program_name} was not found in the release assets")
                 res = requests_get(url, stream=True)
                 with open(os_path.join(current_directory, program_name), 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
-                break
+                return True
             except Exception:
                 errorLogging()
+        return False
+
+    @staticmethod
+    def updateSoftware():
+        if Model._downloadUpdater() is False:
+            return
         # run updater
-        Popen(program_name, cwd=current_directory)
+        Popen("update.exe", cwd=config.PATH_LOCAL)
 
     @staticmethod
     def updateCudaSoftware():
-        # try to update at most 5 times
-        for _ in range(5):
-            try:
-                program_name = "update.exe"
-                current_directory = config.PATH_LOCAL
-                res = requests_get(config.UPDATER_URL)
-                assets = res.json()['assets']
-                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
-                res = requests_get(url, stream=True)
-                with open(os_path.join(current_directory, program_name), 'wb') as file:
-                    for chunk in res.iter_content(chunk_size=1024*5):
-                        file.write(chunk)
-                break
-            except Exception:
-                errorLogging()
+        if Model._downloadUpdater() is False:
+            return
         # run updater
-        Popen([program_name, "--cuda"], cwd=current_directory)
+        Popen(["update.exe", "--cuda"], cwd=config.PATH_LOCAL)
 
     def getListMicHost(self):
         self.ensure_initialized()
@@ -736,12 +750,14 @@ class Model:
                 energy_threshold=config.MIC_THRESHOLD,
                 dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
                 phrase_time_limit=record_timeout,
+                vad_filter=config.MIC_VAD_FILTER,
+                vad_parameters=config.MIC_VAD_PARAMETERS,
             )
             # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
             self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
             self.mic_transcriber = AudioTranscriber(
                 speaker=False,
-                source=self.mic_audio_recorder.source,
+                source=self.mic_audio_recorder,
                 phrase_timeout=phrase_timeout,
                 max_phrases=config.MIC_MAX_PHRASES,
                 transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
@@ -769,6 +785,7 @@ class Model:
                         )
                         if res:
                             result = self.mic_transcriber.getTranscript()
+                            result["recognition_error"] = self.mic_transcriber.last_recognition_error
                             fnc(result)
                 except Exception:
                     errorLogging()
@@ -854,7 +871,9 @@ class Model:
         self.ensure_initialized()
         if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
-            self.mic_print_transcript.join()
+            self.mic_print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+            if self.mic_print_transcript.is_alive():
+                printLog("Mic transcription thread did not terminate within timeout")
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.resume()
@@ -931,12 +950,14 @@ class Model:
                 energy_threshold=config.SPEAKER_THRESHOLD,
                 dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
                 phrase_time_limit=record_timeout,
+                vad_filter=config.SPEAKER_VAD_FILTER,
+                vad_parameters=config.SPEAKER_VAD_PARAMETERS,
             )
             # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
             self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
             self.speaker_transcriber = AudioTranscriber(
                 speaker=True,
-                source=self.speaker_audio_recorder.source,
+                source=self.speaker_audio_recorder,
                 phrase_timeout=phrase_timeout,
                 max_phrases=config.SPEAKER_MAX_PHRASES,
                 transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
@@ -964,6 +985,7 @@ class Model:
                         )
                         if res:
                             result = self.speaker_transcriber.getTranscript()
+                            result["recognition_error"] = self.speaker_transcriber.last_recognition_error
                             fnc(result)
                 except Exception:
                     errorLogging()
@@ -998,7 +1020,9 @@ class Model:
         self.ensure_initialized()
         if isinstance(self.speaker_print_transcript, threadFnc):
             self.speaker_print_transcript.stop()
-            self.speaker_print_transcript.join()
+            self.speaker_print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+            if self.speaker_print_transcript.is_alive():
+                printLog("Speaker transcription thread did not terminate within timeout")
             self.speaker_print_transcript = None
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
             self.speaker_audio_recorder.stop()
