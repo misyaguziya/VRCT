@@ -29,7 +29,7 @@ class TestMicTranslationEngineLimitContract(unittest.TestCase):
 
     @patch("controller.model.detectRepeatSendMessage", return_value=False)
     @patch("controller.model.checkKeywords", return_value=False)
-    @patch("controller.model.telemetryTrackCoreFeature", lambda *_: None)
+    @patch("controller.model.telemetryTrackError", lambda *_: None)
     @patch("controller.model.getInputTranslate", return_value=([], [False]))
     def test_mic_translation_limit_includes_error_code(self, *_mocks) -> None:
         self.controller.micMessage({"text": "hello", "language": "English", "is_final": True})

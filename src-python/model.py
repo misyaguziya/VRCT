@@ -1335,24 +1335,27 @@ class Model:
             errorLogging()
             return False
 
-    def telemetryInit(self, enabled: bool, app_version: str):
+    def telemetryInit(self, enabled: bool, app_version: str, storage_path: str = None):
         """Model 内で Telemetry を初期化"""
-        self.telemetry.init(enabled=enabled, app_version=app_version)
+        if storage_path is None:
+            try:
+                storage_path = os_path.join(config.PATH_LOCAL, "telemetry_state.json")
+            except Exception:
+                storage_path = None
+        self.telemetry.init(enabled=enabled, app_version=app_version, storage_path=storage_path)
 
     def telemetryShutdown(self):
         """Model cleanup on application shutdown."""
-        # Telemetry 終了（app_closed 送信）
         if hasattr(self, "telemetry") and self.telemetry:
             self.telemetry.shutdown()
 
-    def telemetryTrack(self, event: str, payload: dict = None):
-        """汎用テレメトリイベント送信 (Model ラッパー)"""
+    def telemetryTrackError(self, error_code: str):
+        """エラーコードのテレメトリ送信 (Model ラッパー)。日次デデュープ済み。"""
         if hasattr(self, "telemetry") and self.telemetry:
-            self.telemetry.track(event, payload)
-
-    def telemetryTrackCoreFeature(self, feature: str):
-        """コア機能テレメトリイベント送信 (Model ラッパー)"""
-        if hasattr(self, "telemetry") and self.telemetry:
-            self.telemetry.track_core_feature(feature)
+            self.telemetry.track_error(error_code)
 
 model = Model()
+
+# エラー生成時にテレメトリへ通知するフックを登録する（日次デデュープ済み）
+from errors import register_error_report_hook  # noqa: E402
+register_error_report_hook(model.telemetryTrackError)
