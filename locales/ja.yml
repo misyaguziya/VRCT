@@ -355,10 +355,34 @@ config_page:
             label: "VRCT CPU/GPUバージョンの切り替え"
         enable_websocket:
             label: "WebSocketサーバーを有効にする"
+            locked_by_obs_browser_source: "OBSブラウザソースを無効にしてから変更してください"
         websocket_host:
             label: "WebSocket Host"
         websocket_port:
             label: "WebSocket Port"
+        obs_browser_source:
+            section_label: "OBS ブラウザソース"
+        enable_obs_browser_source:
+            label: "OBS ブラウザソースを有効化"
+            desc: "OBS（ブラウザソース）向けに翻訳を表示するオーバーレイページをホストし、一定時間後にフェードアウトします。"
+        obs_browser_source_url:
+            label: "OBS URL（クリックでコピー）"
+        obs_browser_source_port:
+            label: "OBS ポート"
+        obs_browser_source_max_messages:
+            label: "最大メッセージ数"
+        obs_browser_source_display_duration:
+            label: "表示時間（秒）"
+        obs_browser_source_fadeout_duration:
+            label: "フェードアウト時間（秒）"
+        obs_browser_source_font_size:
+            label: "フォントサイズ（px）"
+        obs_browser_source_font_color:
+            label: "フォント色（#RRGGBB）"
+        obs_browser_source_font_outline_thickness:
+            label: "縁取りの太さ（px）"
+        obs_browser_source_font_outline_color:
+            label: "縁取りの色（#RRGGBB）"
 
     notifications:
         save_success: "設定を保存しました。"
