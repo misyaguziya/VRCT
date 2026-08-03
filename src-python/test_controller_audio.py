@@ -41,6 +41,51 @@ class TestMicTranslationEngineLimitContract(unittest.TestCase):
         self.assertEqual(result.get("error_code"), "TRANSLATION_ENGINE_LIMIT")
 
 
+class TestRecognitionErrorVisibility(unittest.TestCase):
+    """Issue #103: surface Google recognition failures instead of silent drops."""
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+        self.controller.run_mapping = {"transcription_recognition_error": "transcription_recognition_error"}
+        self.calls = []
+        self.controller.run = lambda status, endpoint, result: self.calls.append((status, endpoint, result))
+
+        self._original_vrc_mic_mute_sync = config.VRC_MIC_MUTE_SYNC
+        config.VRC_MIC_MUTE_SYNC = False
+
+    def tearDown(self) -> None:
+        config.VRC_MIC_MUTE_SYNC = self._original_vrc_mic_mute_sync
+
+    def test_mic_recognition_error_emits_system_notification(self) -> None:
+        self.controller.micMessage({
+            "text": "", "language": None, "is_final": True, "recognition_error": True,
+        })
+
+        self.assertEqual(len(self.calls), 1)
+        status, endpoint, result = self.calls[0]
+        self.assertEqual(status, 200)
+        self.assertEqual(endpoint, "transcription_recognition_error")
+        self.assertIn("Mic", result["message"])
+
+    def test_speaker_recognition_error_emits_system_notification(self) -> None:
+        self.controller.speakerMessage({
+            "text": "", "language": None, "is_final": True, "recognition_error": True,
+        })
+
+        self.assertEqual(len(self.calls), 1)
+        status, endpoint, result = self.calls[0]
+        self.assertEqual(status, 200)
+        self.assertEqual(endpoint, "transcription_recognition_error")
+        self.assertIn("Speaker", result["message"])
+
+    def test_no_notification_when_recognition_succeeds(self) -> None:
+        self.controller.micMessage({
+            "text": "", "language": None, "is_final": True, "recognition_error": False,
+        })
+
+        self.assertEqual(self.calls, [])
+
+
 class TestAudioDeviceAccessLock(unittest.TestCase):
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)

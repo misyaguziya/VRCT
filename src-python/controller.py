@@ -280,6 +280,13 @@ class Controller:
             self._emitPartialTranscript("mic", result)
             return
 
+        if result.get("recognition_error") is True:
+            self.run(
+                200,
+                self.run_mapping["transcription_recognition_error"],
+                {"message": "Mic speech recognition request failed. Check your network connection.", "data": None},
+            )
+
         message = result["text"]
         language = result["language"]
         if isinstance(message, bool) and message is False:
@@ -499,6 +506,13 @@ class Controller:
                 return
             self._emitPartialTranscript("speaker", result)
             return
+
+        if result.get("recognition_error") is True:
+            self.run(
+                200,
+                self.run_mapping["transcription_recognition_error"],
+                {"message": "Speaker speech recognition request failed. Check your network connection.", "data": None},
+            )
 
         message = result["text"]
         language = result["language"]

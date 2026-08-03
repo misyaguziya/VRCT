@@ -70,6 +70,32 @@ class TestGoogleRecognizerTimeout(unittest.TestCase):
 
         mock_error_logging.assert_called_once()
 
+    @patch("models.transcription.transcription_transcriber.errorLogging")
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_flags_recognition_error_for_ui_visibility(self, _, __) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.audio_recognizer.recognize_google = MagicMock(
+            side_effect=RequestError("recognition connection failed: timed out")
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertTrue(transcriber.last_recognition_error)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_clears_recognition_error_flag_after_a_successful_call(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.last_recognition_error = True
+        transcriber.audio_recognizer.recognize_google = MagicMock(return_value=("hello", 0.9))
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertFalse(transcriber.last_recognition_error)
+
 
 class TestWhisperVadFilter(unittest.TestCase):
     def test_enables_vad_for_turbo_models(self) -> None:

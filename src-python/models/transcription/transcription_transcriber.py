@@ -68,6 +68,7 @@ class AudioTranscriber:
         self.max_phrases = max_phrases
         self.transcript_data: List[Dict[str, Any]] = []
         self.transcript_changed_event = Event()
+        self.last_recognition_error = False
         self.audio_recognizer = Recognizer()
         self.audio_recognizer.operation_timeout = GOOGLE_RECOGNIZE_TIMEOUT_SECONDS
         self.transcription_engine = "Google"
@@ -144,6 +145,7 @@ class AudioTranscriber:
             audio_data = self.audio_sources["process_data_func"]()
             match self.transcription_engine:
                 case "Google":
+                    self.last_recognition_error = False
                     for language, country in zip(languages, countries):
                         try:
                             text, confidence = self.audio_recognizer.recognize_google(
@@ -155,6 +157,7 @@ class AudioTranscriber:
                         except UnknownValueError:
                             pass
                         except Exception:
+                            self.last_recognition_error = True
                             errorLogging()
                 case "Whisper":
                     audio_data = np.frombuffer(

@@ -326,6 +326,25 @@
 - issue 全体が未実装という状態ではなく、partial 表示と基本メトリクスは先行対応済み。
 - 残作業はエラー可視化、VAD 状態の観測、実パイプラインと一致した入力フィードバック。
 
+#### 2026-08-03 issue本文確認と対応方針
+
+issue本文（報告者 mikufilck、環境 Windows 11／中国、v3.4.3）を確認した。症状は「発話の多くが認識されない・再現条件が不明」で#76と重なるが、報告の焦点は「音声認識パイプラインのどの段階で失敗しているか分かるUIフィードバックが一切ない」点。ログ・スクリーンショットの提供はなし。
+
+再現困難な「認識精度」そのものの原因調査は#76と同様に保留する。一方で「見える化」は再現ログがなくても着手できるため、次の範囲に限定して先行対応した。
+
+- `AudioTranscriber`（[transcription_transcriber.py](../src-python/models/transcription/transcription_transcriber.py)）に `last_recognition_error` フラグを追加。Google認識で `UnknownValueError` 以外の例外（タイムアウト・`RequestError` など）が発生したら都度セットし、次呼び出し開始時にリセットする。
+- `model.py` の `sendMicTranscript`/`sendSpeakerTranscript` がこのフラグを結果 dict に `recognition_error` として付加してコントローラへ渡す。
+- `controller.py` の `micMessage`/`speakerMessage` が `recognition_error` を検知したら、新規エンドポイント `/run/transcription_recognition_error`（`word_filter` と同じシステムメッセージ表示経路）でユーザーに一過性通知を出す。
+- フロントエンドは既存の `addSystemMessageLog_FromBackend` をそのまま再利用（[useReceiveRoutes.js](../src-ui/logics/useReceiveRoutes.js)）。
+
+この対応により「認識エンジンへ送信したが失敗した」ことは可視化されたが、以下は引き続き未着手（別途仕様判断が必要な残作業として保留）。
+
+- リアルタイム音量メーターと実際の文字起こしパイプラインの統合（現状は別recorder）。
+- VAD判定（音声区間検出）の状態そのものの可視化。
+- Whisperエンジン側の失敗可視化（今回はGoogleエンジンのみ対象）。
+
+「発話が認識されない」というバグ本体（#76）は原因が判明してから再度着手する。
+
 ### #104 token refresh 導線
 
 コード上の整理:

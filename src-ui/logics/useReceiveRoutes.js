@@ -46,6 +46,7 @@ export const STATIC_ROUTE_META_LIST = [
 
     // System Messages
     { endpoint: "/run/word_filter", ns: common, hook_name: "useMessage", method_name: "addSystemMessageLog_FromBackend" },
+    { endpoint: "/run/transcription_recognition_error", ns: common, hook_name: "useMessage", method_name: "addSystemMessageLog_FromBackend" },
 
 
     // Volume

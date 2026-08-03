@@ -785,6 +785,7 @@ class Model:
                         )
                         if res:
                             result = self.mic_transcriber.getTranscript()
+                            result["recognition_error"] = self.mic_transcriber.last_recognition_error
                             fnc(result)
                 except Exception:
                     errorLogging()
@@ -984,6 +985,7 @@ class Model:
                         )
                         if res:
                             result = self.speaker_transcriber.getTranscript()
+                            result["recognition_error"] = self.speaker_transcriber.last_recognition_error
                             fnc(result)
                 except Exception:
                     errorLogging()

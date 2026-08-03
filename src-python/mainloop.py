@@ -36,6 +36,7 @@ run_mapping = {
     "error_transcription_speaker_vram_overflow":"/run/error_transcription_speaker_vram_overflow",
 
     "word_filter":"/run/word_filter",
+    "transcription_recognition_error":"/run/transcription_recognition_error",
 
     "download_progress_ctranslate2_weight":"/run/download_progress_ctranslate2_weight",
     "downloaded_ctranslate2_weight":"/run/downloaded_ctranslate2_weight",
