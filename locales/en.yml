@@ -355,10 +355,34 @@ config_page:
             label: "Switch VRCT To CPU/GPU Version"
         enable_websocket:
             label: "Enable WebSocket Server"
+            locked_by_obs_browser_source: "Disable OBS Browser Source to change this"
         websocket_host:
             label: "WebSocket Host"
         websocket_port:
             label: "WebSocket Port"
+        obs_browser_source:
+            section_label: "OBS Browser Source"
+        enable_obs_browser_source:
+            label: "Enable OBS Browser Source"
+            desc: "Host a local overlay page for OBS (Browser Source) that shows translations and fades out over time."
+        obs_browser_source_url:
+            label: "OBS URL (click to copy)"
+        obs_browser_source_port:
+            label: "OBS Port"
+        obs_browser_source_max_messages:
+            label: "Max Messages"
+        obs_browser_source_display_duration:
+            label: "Display Duration (sec)"
+        obs_browser_source_fadeout_duration:
+            label: "Fade-out Duration (sec)"
+        obs_browser_source_font_size:
+            label: "Font Size (px)"
+        obs_browser_source_font_color:
+            label: "Font Color (#RRGGBB)"
+        obs_browser_source_font_outline_thickness:
+            label: "Outline Thickness (px)"
+        obs_browser_source_font_outline_color:
+            label: "Outline Color (#RRGGBB)"
 
     notifications:
         save_success: "Settings have been saved."
