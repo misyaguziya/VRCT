@@ -332,10 +332,10 @@ issue本文（報告者 mikufilck、環境 Windows 11／中国、v3.4.3）を確
 
 再現困難な「認識精度」そのものの原因調査は#76と同様に保留する。一方で「見える化」は再現ログがなくても着手できるため、次の範囲に限定して先行対応した。
 
-- `AudioTranscriber`（[transcription_transcriber.py](../src-python/models/transcription/transcription_transcriber.py)）に `last_recognition_error` フラグを追加。Google認識で `UnknownValueError` 以外の例外（タイムアウト・`RequestError` など）が発生したら都度セットし、次呼び出し開始時にリセットする。
+- `AudioTranscriber`（[transcription_transcriber.py](../models/transcription/transcription_transcriber.py)）に `last_recognition_error` フラグを追加。Google認識で `UnknownValueError` 以外の例外（タイムアウト・`RequestError` など）が発生したら都度セットし、次呼び出し開始時にリセットする。
 - `model.py` の `sendMicTranscript`/`sendSpeakerTranscript` がこのフラグを結果 dict に `recognition_error` として付加してコントローラへ渡す。
 - `controller.py` の `micMessage`/`speakerMessage` が `recognition_error` を検知したら、新規エンドポイント `/run/transcription_recognition_error`（`word_filter` と同じシステムメッセージ表示経路）でユーザーに一過性通知を出す。
-- フロントエンドは既存の `addSystemMessageLog_FromBackend` をそのまま再利用（[useReceiveRoutes.js](../src-ui/logics/useReceiveRoutes.js)）。
+- フロントエンドは既存の `addSystemMessageLog_FromBackend` をそのまま再利用（[useReceiveRoutes.js](../../src-ui/logics/useReceiveRoutes.js)）。
 
 この対応により「認識エンジンへ送信したが失敗した」ことは可視化されたが、以下は引き続き未着手（別途仕様判断が必要な残作業として保留）。
 
@@ -364,7 +364,7 @@ issue本文（報告者 mikufilck、環境 Windows 11／中国、v3.4.3）を確
 
 issue本文（報告者 HenBian、2026-07-29、Windows 11／カナダ）を確認した。要望は「無料APIのレート制限で無効化されたプロバイダーを、再起動せずに再初期化できるボタンを設定画面に追加してほしい」というもの。「token」という語は実際の OAuth refresh token ではなく、上記の再疎通導線を指していると判断できる。issue自体は上記の仕様案どおりで、認識のズレはない。
 
-現状のコード調査で、対象ロジックが `controller.py` の `init()`（起動時に一度だけ呼ばれるメソッド）内、[controller.py:3238-3419](../src-python/controller.py#L3238-L3419) に埋め込まれていることを確認した。翻訳エンジンごとの疎通・認証確認と `SELECTABLE_TRANSLATION_ENGINE_STATUS` 更新が約180行のクロージャとして書かれており、`init()` 以外から呼び出す手段がない。そのため実装するには次が必要になる。
+現状のコード調査で、対象ロジックが `controller.py` の `init()`（起動時に一度だけ呼ばれるメソッド）内、[controller.py:3238-3419](../controller.py#L3238-L3419) に埋め込まれていることを確認した。翻訳エンジンごとの疎通・認証確認と `SELECTABLE_TRANSLATION_ENGINE_STATUS` 更新が約180行のクロージャとして書かれており、`init()` 以外から呼び出す手段がない。そのため実装するには次が必要になる。
 
 - このブロックを `checkTranslationEnginesStatus()` 等の独立メソッドへ切り出す（`init()` からも新規エンドポイントからも呼べるようにするリファクタ）。
 - 新規 run_mapping エンドポイント（例: `retry_translation_engines`）を追加し、結果を `translation_engines` / `selected_translation_engines` として UI へ再送信する。
