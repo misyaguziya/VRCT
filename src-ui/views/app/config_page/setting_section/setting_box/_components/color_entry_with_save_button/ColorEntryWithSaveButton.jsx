@@ -1,11 +1,9 @@
-import { useMemo, useState } from "react";
-import Popover from "@mui/material/Popover";
-import ClickAwayListener from "@mui/material/ClickAwayListener";
-import CircularProgress from "@mui/material/CircularProgress";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
 import styles from "./ColorEntryWithSaveButton.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
+import { CircularProgress } from "@common_components";
 import { useI18n } from "@useI18n";
 import { clsx } from "clsx";
 
@@ -14,7 +12,9 @@ const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 export const ColorEntryWithSaveButton = (props) => {
     const { t } = useI18n();
     const is_disabled = props.state === "pending";
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [is_open, setIsOpen] = useState(false);
+    const popover_ref = useRef(null);
+    const swatch_ref = useRef(null);
 
     const current_color = useMemo(() => {
         if (typeof props.variable !== "string") return "";
@@ -33,13 +33,13 @@ export const ColorEntryWithSaveButton = (props) => {
         props.onChangeFunction?.(color);
     };
 
-    const openPicker = (event) => {
+    const openPicker = () => {
         if (is_disabled) return;
-        setAnchorEl(event.currentTarget);
+        setIsOpen(true);
     };
 
     const closePicker = () => {
-        setAnchorEl(null);
+        setIsOpen(false);
     };
 
     const saveFunction = () => {
@@ -47,7 +47,23 @@ export const ColorEntryWithSaveButton = (props) => {
         props.saveFunction();
     };
 
-    const is_open = Boolean(anchorEl);
+    useEffect(() => {
+        if (!is_open) return;
+        const onDocumentMouseDown = (event) => {
+            if (popover_ref.current?.contains(event.target)) return;
+            if (swatch_ref.current?.contains(event.target)) return;
+            closePicker();
+        };
+        const onKeyDown = (event) => {
+            if (event.key === "Escape") closePicker();
+        };
+        document.addEventListener("mousedown", onDocumentMouseDown);
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", onDocumentMouseDown);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [is_open]);
 
     const swatch_button_class_names = clsx(styles.swatch_button, {
         [styles.is_disabled]: is_disabled,
@@ -65,14 +81,24 @@ export const ColorEntryWithSaveButton = (props) => {
                 ui_variable={props.variable}
                 is_disabled={is_disabled}
             />
-            <button
-                className={swatch_button_class_names}
-                type="button"
-                aria-label="Open color picker"
-                onClick={openPicker}
-            >
-                <span className={styles.swatch} style={{ backgroundColor: swatch_color }} />
-            </button>
+            <div className={styles.swatch_wrapper}>
+                <button
+                    ref={swatch_ref}
+                    className={swatch_button_class_names}
+                    type="button"
+                    aria-label="Open color picker"
+                    onClick={openPicker}
+                >
+                    <span className={styles.swatch} style={{ backgroundColor: swatch_color }} />
+                </button>
+                {is_open && (
+                    <div ref={popover_ref} className={styles.popover_paper}>
+                        <div className={styles.popover_content}>
+                            <HexColorPicker color={picker_color} onChange={onPickerChange} />
+                        </div>
+                    </div>
+                )}
+            </div>
             <button className={save_button_class_names} onClick={saveFunction}>
                 {is_disabled ? (
                     <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }} />
@@ -80,21 +106,6 @@ export const ColorEntryWithSaveButton = (props) => {
                     <p className={styles.save_button_label}>{t("config_page.translation.deepl_auth_key.save")}</p>
                 )}
             </button>
-
-            <Popover
-                open={is_open}
-                anchorEl={anchorEl}
-                onClose={closePicker}
-                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-                transformOrigin={{ vertical: "top", horizontal: "left" }}
-                PaperProps={{ className: styles.popover_paper }}
-            >
-                <ClickAwayListener onClickAway={closePicker}>
-                    <div className={styles.popover_content}>
-                        <HexColorPicker color={picker_color} onChange={onPickerChange} />
-                    </div>
-                </ClickAwayListener>
-            </Popover>
         </div>
     );
 };

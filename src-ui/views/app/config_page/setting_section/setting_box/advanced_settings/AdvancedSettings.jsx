@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 

@@ -64,11 +64,21 @@
     font-size: 1.4rem;
 }
 
+.swatch_wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
 .popover_paper {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    z-index: 1000;
     padding: 1.2rem;
     background-color: var(--dark_950_color);
     border: 0.1rem solid var(--dark_800_color);
     border-radius: 0.8rem;
+    box-shadow: 0 0.4rem 1.6rem rgba(0, 0, 0, 0.4);
 }
 
 .popover_content {
