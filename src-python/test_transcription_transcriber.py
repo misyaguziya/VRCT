@@ -6,7 +6,13 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from models.transcription.transcription_transcriber import AudioTranscriber, _should_use_vad_filter
+from speech_recognition.exceptions import RequestError
+
+from models.transcription.transcription_transcriber import (
+    AudioTranscriber,
+    GOOGLE_RECOGNIZE_TIMEOUT_SECONDS,
+    _should_use_vad_filter,
+)
 from models.transcription.audio_pipeline import AudioQueueItem
 from config import _DEFAULT_VAD_PARAMETERS, _LEGACY_VAD_PARAMETERS, _migrate_vad_defaults
 
@@ -39,6 +45,30 @@ class TestAudioProcessingSelection(unittest.TestCase):
         result = transcriber.processSpeakerData()
 
         self.assertEqual(result.get_raw_data(), pcm)
+
+
+class TestGoogleRecognizerTimeout(unittest.TestCase):
+    """Issue #63: Google recognition must not block indefinitely on a bad network."""
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_recognizer_has_finite_operation_timeout(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+
+        self.assertEqual(transcriber.audio_recognizer.operation_timeout, GOOGLE_RECOGNIZE_TIMEOUT_SECONDS)
+
+    @patch("models.transcription.transcription_transcriber.errorLogging")
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_request_error_is_logged_instead_of_swallowed(self, _, mock_error_logging) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.audio_recognizer.recognize_google = MagicMock(
+            side_effect=RequestError("recognition connection failed: timed out")
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        mock_error_logging.assert_called_once()
 
 
 class TestWhisperVadFilter(unittest.TestCase):

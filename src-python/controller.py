@@ -317,13 +317,14 @@ class Controller:
                     translation, success = model.getInputTranslate(message, source_language=language)
                     if all(success) is not True:
                         self.changeToCTranslate2Process()
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_ENGINE_LIMIT,
+                            data=None
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_engine"],
-                            {
-                                "message":"Translation engine limit error",
-                                "data": None
-                            },
+                            error_response["result"],
                         )
                     else:
                         pass

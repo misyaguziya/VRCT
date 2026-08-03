@@ -34,7 +34,9 @@ from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
 from models.clipboard.clipboard import Clipboard
 from models.telemetry import Telemetry
-from utils import errorLogging, setupLogger
+from utils import errorLogging, setupLogger, printLog
+
+TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 
 class threadFnc(Thread):
     """A tiny Thread wrapper that repeatedly calls a function.
@@ -868,7 +870,9 @@ class Model:
         self.ensure_initialized()
         if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
-            self.mic_print_transcript.join()
+            self.mic_print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+            if self.mic_print_transcript.is_alive():
+                printLog("Mic transcription thread did not terminate within timeout")
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.resume()
@@ -1014,7 +1018,9 @@ class Model:
         self.ensure_initialized()
         if isinstance(self.speaker_print_transcript, threadFnc):
             self.speaker_print_transcript.stop()
-            self.speaker_print_transcript.join()
+            self.speaker_print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+            if self.speaker_print_transcript.is_alive():
+                printLog("Speaker transcription thread did not terminate within timeout")
             self.speaker_print_transcript = None
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
             self.speaker_audio_recorder.stop()

@@ -29,6 +29,7 @@ warnings.simplefilter('ignore', RuntimeWarning)
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
+GOOGLE_RECOGNIZE_TIMEOUT_SECONDS = 10
 
 
 def _should_use_vad_filter(vad_filter: bool, whisper_weight_type: Optional[str]) -> bool:
@@ -68,6 +69,7 @@ class AudioTranscriber:
         self.transcript_data: List[Dict[str, Any]] = []
         self.transcript_changed_event = Event()
         self.audio_recognizer = Recognizer()
+        self.audio_recognizer.operation_timeout = GOOGLE_RECOGNIZE_TIMEOUT_SECONDS
         self.transcription_engine = "Google"
         self.whisper_model = None
         self.whisper_weight_type = whisper_weight_type
@@ -150,8 +152,10 @@ class AudioTranscriber:
                                 with_confidence=True
                                 )
                             confidences.append({"confidence": confidence, "text": text, "language": language})
-                        except Exception:
+                        except UnknownValueError:
                             pass
+                        except Exception:
+                            errorLogging()
                 case "Whisper":
                     audio_data = np.frombuffer(
                         audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16
