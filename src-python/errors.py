@@ -89,6 +89,8 @@ class ErrorCode(str, Enum):
     AUTH_GEMINI_FAILED = "AUTH_GEMINI_FAILED"
     AUTH_OPENAI_INVALID = "AUTH_OPENAI_INVALID"
     AUTH_OPENAI_FAILED = "AUTH_OPENAI_FAILED"
+    AUTH_OPENAI_COMPATIBLE_INVALID = "AUTH_OPENAI_COMPATIBLE_INVALID"
+    AUTH_OPENAI_COMPATIBLE_FAILED = "AUTH_OPENAI_COMPATIBLE_FAILED"
     AUTH_GROQ_INVALID = "AUTH_GROQ_INVALID"
     AUTH_GROQ_FAILED = "AUTH_GROQ_FAILED"
     AUTH_OPENROUTER_INVALID = "AUTH_OPENROUTER_INVALID"
@@ -100,6 +102,7 @@ class ErrorCode(str, Enum):
     MODEL_PLAMO_INVALID = "MODEL_PLAMO_INVALID"
     MODEL_GEMINI_INVALID = "MODEL_GEMINI_INVALID"
     MODEL_OPENAI_INVALID = "MODEL_OPENAI_INVALID"
+    MODEL_OPENAI_COMPATIBLE_INVALID = "MODEL_OPENAI_COMPATIBLE_INVALID"
     MODEL_GROQ_INVALID = "MODEL_GROQ_INVALID"
     MODEL_OPENROUTER_INVALID = "MODEL_OPENROUTER_INVALID"
     MODEL_LMSTUDIO_INVALID = "MODEL_LMSTUDIO_INVALID"
@@ -111,6 +114,7 @@ class ErrorCode(str, Enum):
     CONNECTION_LMSTUDIO_FAILED = "CONNECTION_LMSTUDIO_FAILED"
     CONNECTION_OLLAMA_FAILED = "CONNECTION_OLLAMA_FAILED"
     CONNECTION_LMSTUDIO_URL_INVALID = "CONNECTION_LMSTUDIO_URL_INVALID"
+    CONNECTION_OPENAI_COMPATIBLE_URL_INVALID = "CONNECTION_OPENAI_COMPATIBLE_URL_INVALID"
     
     # ============================================================================
     # WebSocketエラー (WEBSOCKET_*)
@@ -362,6 +366,18 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "error",
         "user_action_required": True,
     },
+    ErrorCode.AUTH_OPENAI_COMPATIBLE_INVALID: {
+        "category": ErrorCategory.AUTH,
+        "message": "OpenAI-compatible auth key is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.AUTH_OPENAI_COMPATIBLE_FAILED: {
+        "category": ErrorCategory.AUTH,
+        "message": "Authentication failure of OpenAI-compatible endpoint (check URL and auth key)",
+        "severity": "error",
+        "user_action_required": True,
+    },
     ErrorCode.AUTH_GROQ_INVALID: {
         "category": ErrorCategory.AUTH,
         "message": "Groq auth key is not valid",
@@ -406,6 +422,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "warning",
         "user_action_required": True,
     },
+    ErrorCode.MODEL_OPENAI_COMPATIBLE_INVALID: {
+        "category": ErrorCategory.MODEL,
+        "message": "OpenAI-compatible model is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
     ErrorCode.MODEL_GROQ_INVALID: {
         "category": ErrorCategory.MODEL,
         "message": "Groq model is not valid",
@@ -447,6 +469,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
     ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID: {
         "category": ErrorCategory.CONNECTION,
         "message": "LMStudio URL is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID: {
+        "category": ErrorCategory.CONNECTION,
+        "message": "OpenAI-compatible endpoint URL is not valid",
         "severity": "warning",
         "user_action_required": True,
     },
@@ -674,6 +702,16 @@ ENDPOINT_ERROR_MAPPING: Dict[str, Dict[str, ErrorCode]] = {
     },
     "/set/data/selected_openai_model": {
         "INVALID": ErrorCode.MODEL_OPENAI_INVALID,
+    },
+    "/set/data/openai_compatible_auth_key": {
+        "INVALID": ErrorCode.AUTH_OPENAI_COMPATIBLE_INVALID,
+        "FAILED": ErrorCode.AUTH_OPENAI_COMPATIBLE_FAILED,
+    },
+    "/set/data/openai_compatible_url": {
+        "INVALID": ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID,
+    },
+    "/set/data/selected_openai_compatible_model": {
+        "INVALID": ErrorCode.MODEL_OPENAI_COMPATIBLE_INVALID,
     },
     "/set/data/groq_auth_key": {
         "INVALID": ErrorCode.AUTH_GROQ_INVALID,

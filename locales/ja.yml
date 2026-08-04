@@ -193,6 +193,14 @@ config_page:
             label: "LMStudio モデルを選択"
             connection_required: "LMStudio との接続が必要"
 
+        openai_compatible_url:
+            label: "OpenAI 互換エンドポイント URL"
+            desc: "公式 OpenAI 以外を指定した場合は、料金・セキュリティ・モデル互換性を自己責任で確認してください。"
+        openai_compatible_auth_key:
+            label: "OpenAI 互換 認証キー"
+        select_openai_compatible_model:
+            label: "OpenAI 互換モデルを選択"
+
         ollama_connection_check:
             label: "Ollama との接続確認"
         select_ollama_model:

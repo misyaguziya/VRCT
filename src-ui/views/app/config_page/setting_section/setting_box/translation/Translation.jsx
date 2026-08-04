@@ -56,6 +56,10 @@ export const Translation = () => {
 
             <OllamaConnectionCheck_Box />
             <OllamaModelContainer />
+
+            <OpenAICompatibleURL_Box />
+            <OpenAICompatibleAuthKey_Box />
+            <OpenAICompatibleModelContainer />
         </>
     );
 };
@@ -589,6 +593,91 @@ const OllamaModelContainer = () => {
             selectFunction={selectFunction}
             state={currentSelectedOllamaModel.state}
             is_disabled={!currentIsOllamaConnected.data}
+        />
+    );
+};
+
+const OpenAICompatibleURL_Box = () => {
+    const { t } = useI18n();
+    const { currentOpenAICompatibleURL, setOpenAICompatibleURL } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOpenAICompatibleURL.data,
+        state: currentOpenAICompatibleURL.state,
+        setFunction: setOpenAICompatibleURL,
+        deleteFunction: () => setOpenAICompatibleURL("https://api.openai.com/v1"),
+    });
+
+    return (
+        <>
+            <EntryWithSaveButtonContainer
+                label={t("config_page.translation.openai_compatible_url.label")}
+                desc={t("config_page.translation.openai_compatible_url.desc")}
+                variable={variable}
+                saveFunction={saveFunction}
+                onChangeFunction={onChangeFunction}
+                state={currentOpenAICompatibleURL.state}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const OpenAICompatibleAuthKey_Box = () => {
+    const { t } = useI18n();
+    const {
+        currentOpenAICompatibleAuthKey,
+        setOpenAICompatibleAuthKey,
+        deleteOpenAICompatibleAuthKey,
+    } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOpenAICompatibleAuthKey.data,
+        state: currentOpenAICompatibleAuthKey.state,
+        setFunction: setOpenAICompatibleAuthKey,
+        deleteFunction: deleteOpenAICompatibleAuthKey,
+    });
+
+    return (
+        <>
+            <AuthKeyContainer
+                label={t("config_page.translation.openai_compatible_auth_key.label")}
+                variable={variable}
+                state={currentOpenAICompatibleAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const OpenAICompatibleModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableOpenAICompatibleModelList,
+
+        currentSelectedOpenAICompatibleModel,
+        setSelectedOpenAICompatibleModel,
+
+        currentOpenAICompatibleAuthKey,
+    } = useTranslation();
+
+    const selectFunction = (selected_data) => {
+        setSelectedOpenAICompatibleModel(selected_data.selected_id);
+    };
+
+    const selected_label = (!currentOpenAICompatibleAuthKey.data && !currentSelectedOpenAICompatibleModel.data)
+        ? t("config_page.common.correct_auth_key_required")
+        : currentSelectedOpenAICompatibleModel.data;
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_openai_compatible_model"
+            label={t("config_page.translation.select_openai_compatible_model.label")}
+            selected_id={selected_label}
+            list={currentSelectableOpenAICompatibleModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedOpenAICompatibleModel.state}
+            is_disabled={!currentOpenAICompatibleAuthKey.data}
         />
     );
 };

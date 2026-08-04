@@ -193,6 +193,14 @@ config_page:
             label: "Select LMStudio Model"
             connection_required: "LMStudio Connection Required"
 
+        openai_compatible_url:
+            label: "OpenAI-Compatible Endpoint URL"
+            desc: "When pointing at a non-official endpoint, verify pricing, security and model compatibility at your own risk."
+        openai_compatible_auth_key:
+            label: "OpenAI-Compatible Auth Key"
+        select_openai_compatible_model:
+            label: "Select OpenAI-Compatible Model"
+
         ollama_connection_check:
             label: "Check Ollama Connection"
         select_ollama_model:

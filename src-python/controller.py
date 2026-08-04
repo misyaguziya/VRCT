@@ -2258,6 +2258,178 @@ class Controller:
             )
         return response
 
+    # ------------------------------------------------------------------
+    # OpenAI-compatible endpoint (URL + Auth Key)
+    # ------------------------------------------------------------------
+    @staticmethod
+    def getOpenAICompatibleAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["OpenAI_Compatible"]}
+
+    def setOpenAICompatibleAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Compatible Auth Key", data)
+        translator_name = "OpenAI_Compatible"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.AUTH_OPENAI_COMPATIBLE_INVALID,
+                    data=None
+                )
+            else:
+                result = model.authenticationTranslatorOpenAICompatibleAuthKey(
+                    auth_key=data,
+                    base_url=config.OPENAI_COMPATIBLE_URL,
+                )
+                if result is True:
+                    model_list = model.getTranslatorOpenAICompatibleModelList()
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.AUTH_OPENAI_COMPATIBLE_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.AUTH_KEYS
+                        auth_keys[translator_name] = data
+                        config.AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                        config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = model_list
+                        self.run(200, self.run_mapping["selectable_openai_compatible_model_list"], config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST)
+                        if config.SELECTED_OPENAI_COMPATIBLE_MODEL not in config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST:
+                            config.SELECTED_OPENAI_COMPATIBLE_MODEL = config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST[0]
+                        model.setTranslatorOpenAICompatibleModel(model=config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+                        self.run(200, self.run_mapping["selected_openai_compatible_model"], config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+                        model.updateTranslatorOpenAICompatibleClient()
+                        self.updateTranslationEngineAndEngineList()
+                        response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_OPENAI_COMPATIBLE_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delOpenAICompatibleAuthKey()
+        return response
+
+    def delOpenAICompatibleAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "OpenAI_Compatible"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
+        config.SELECTED_OPENAI_COMPATIBLE_MODEL = None
+        self.run(200, self.run_mapping["selectable_openai_compatible_model_list"], config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_openai_compatible_model"], config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
+    @staticmethod
+    def getOpenAICompatibleURL(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OPENAI_COMPATIBLE_URL}
+
+    def setOpenAICompatibleURL(self, data, *args, **kwargs) -> dict:
+        """URL 変更時は「認証成功後に URL を確定」する順序を守る。
+
+        Auth Key が未設定の場合は URL だけ保存して終わる（次回 Auth Key 入力時に検証される）。
+        """
+        printLog("Set OpenAI Compatible URL", data)
+        translator_name = "OpenAI_Compatible"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                data = "https://api.openai.com/v1"
+
+            auth_key = config.AUTH_KEYS[translator_name]
+
+            if not auth_key:
+                # Auth Key 未設定：URL のみ更新して終了
+                config.OPENAI_COMPATIBLE_URL = data
+                return {"status":200, "result":config.OPENAI_COMPATIBLE_URL}
+
+            result = model.authenticationTranslatorOpenAICompatibleAuthKey(
+                auth_key=auth_key,
+                base_url=data,
+            )
+            if result is True:
+                model_list = model.getTranslatorOpenAICompatibleModelList()
+                if len(model_list) == 0:
+                    # URL は疎通したが翻訳可能モデルが 0 件
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+                    config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
+                    config.SELECTED_OPENAI_COMPATIBLE_MODEL = None
+                    self.run(200, self.run_mapping["selectable_openai_compatible_model_list"], config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_openai_compatible_model"], config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+                    self.updateTranslationEngineAndEngineList()
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_OPENAI_COMPATIBLE_FAILED,
+                        data=config.OPENAI_COMPATIBLE_URL
+                    )
+                else:
+                    config.OPENAI_COMPATIBLE_URL = data
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = model_list
+                    self.run(200, self.run_mapping["selectable_openai_compatible_model_list"], config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST)
+                    if config.SELECTED_OPENAI_COMPATIBLE_MODEL not in config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST:
+                        config.SELECTED_OPENAI_COMPATIBLE_MODEL = config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST[0]
+                    model.setTranslatorOpenAICompatibleModel(model=config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+                    self.run(200, self.run_mapping["selected_openai_compatible_model"], config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+                    model.updateTranslatorOpenAICompatibleClient()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.OPENAI_COMPATIBLE_URL}
+            else:
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+                config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
+                config.SELECTED_OPENAI_COMPATIBLE_MODEL = None
+                self.run(200, self.run_mapping["selectable_openai_compatible_model_list"], config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_openai_compatible_model"], config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+                self.updateTranslationEngineAndEngineList()
+                response = VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID,
+                    data=config.OPENAI_COMPATIBLE_URL
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.OPENAI_COMPATIBLE_URL
+            )
+        return response
+
+    def getOpenAICompatibleModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST}
+
+    def getOpenAICompatibleModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_OPENAI_COMPATIBLE_MODEL}
+
+    def setOpenAICompatibleModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Compatible Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorOpenAICompatibleModel(model=data)
+            if result is True:
+                config.SELECTED_OPENAI_COMPATIBLE_MODEL = data
+                model.setTranslatorOpenAICompatibleModel(model=config.SELECTED_OPENAI_COMPATIBLE_MODEL)
+                model.updateTranslatorOpenAICompatibleClient()
+                response = {"status":200, "result":config.SELECTED_OPENAI_COMPATIBLE_MODEL}
+            else:
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_OPENAI_COMPATIBLE_INVALID,
+                    data=config.SELECTED_OPENAI_COMPATIBLE_MODEL
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_OPENAI_COMPATIBLE_MODEL
+            )
+        return response
+
     def getTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
         return {"status":200, "result":model.getTranslatorOllamaConnected()}
 
@@ -3494,6 +3666,19 @@ class Controller:
                                 if len(model_list) > 0:
                                     selected_model = config.SELECTED_LMSTUDIO_MODEL if config.SELECTED_LMSTUDIO_MODEL in model_list else model_list[0]
                                     status = True
+                    case "OpenAI_Compatible":
+                        auth_key = config.AUTH_KEYS.get("OpenAI_Compatible")
+                        if auth_key and config.OPENAI_COMPATIBLE_URL:
+                            if model.authenticationTranslatorOpenAICompatibleAuthKey(
+                                auth_key=auth_key,
+                                base_url=config.OPENAI_COMPATIBLE_URL,
+                            ) is True:
+                                model_list = model.getTranslatorOpenAICompatibleModelList()
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_OPENAI_COMPATIBLE_MODEL if config.SELECTED_OPENAI_COMPATIBLE_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
                     case "Ollama":
                         if model.authenticationTranslatorOllama() is True:
                             model_list = model.getTranslatorOllamaModelList()
@@ -3545,6 +3730,9 @@ class Controller:
             if engine == "LMStudio" and not status:
                 config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
                 config.SELECTED_LMSTUDIO_MODEL = None
+            if engine == "OpenAI_Compatible" and not status:
+                config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
+                config.SELECTED_OPENAI_COMPATIBLE_MODEL = None
             if engine == "Ollama" and not status:
                 config.SELECTABLE_OLLAMA_MODEL_LIST = []
                 config.SELECTED_OLLAMA_MODEL = None
@@ -3582,6 +3770,11 @@ class Controller:
                         config.SELECTED_LMSTUDIO_MODEL = selected_model
                         model.setTranslatorLMStudioModel(selected_model)
                         model.updateTranslatorLMStudioClient()
+                    case "OpenAI_Compatible":
+                        config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = model_list
+                        config.SELECTED_OPENAI_COMPATIBLE_MODEL = selected_model
+                        model.setTranslatorOpenAICompatibleModel(selected_model)
+                        model.updateTranslatorOpenAICompatibleClient()
                     case "Ollama":
                         config.SELECTABLE_OLLAMA_MODEL_LIST = model_list
                         config.SELECTED_OLLAMA_MODEL = selected_model

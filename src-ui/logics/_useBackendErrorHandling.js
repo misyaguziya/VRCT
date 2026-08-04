@@ -57,6 +57,10 @@ export const _useBackendErrorHandling = () => {
         updateLMStudioURL,
         updateSelectedLMStudioModel,
 
+        updateOpenAICompatibleURL,
+        updateOpenAICompatibleAuthKey,
+        updateSelectedOpenAICompatibleModel,
+
         updateSelectedOllamaModel,
     } = useTranslation();
 
@@ -212,6 +216,11 @@ export const _useBackendErrorHandling = () => {
                 updateOpenRouterAuthKey(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
+            case "AUTH_OPENAI_COMPATIBLE_INVALID":
+            case "AUTH_OPENAI_COMPATIBLE_FAILED":
+                updateOpenAICompatibleAuthKey(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
 
             // ============================================================================
             // モデル選択エラー (MODEL_*)
@@ -240,6 +249,10 @@ export const _useBackendErrorHandling = () => {
                 updateSelectedLMStudioModel(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
+            case "MODEL_OPENAI_COMPATIBLE_INVALID":
+                updateSelectedOpenAICompatibleModel(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
             case "MODEL_OLLAMA_INVALID":
                 updateSelectedOllamaModel(data);
                 showNotification_Error(message, { category_id: error_code });
@@ -258,6 +271,10 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "CONNECTION_LMSTUDIO_URL_INVALID":
                 updateLMStudioURL(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "CONNECTION_OPENAI_COMPATIBLE_URL_INVALID":
+                updateOpenAICompatibleURL(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
 

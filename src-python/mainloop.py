@@ -67,6 +67,8 @@ run_mapping = {
     "selected_openrouter_model":"/run/selected_openrouter_model",
     "selectable_lmstudio_model_list":"/run/selectable_lmstudio_model_list",
     "selected_lmstudio_model":"/run/selected_lmstudio_model",
+    "selectable_openai_compatible_model_list":"/run/selectable_openai_compatible_model_list",
+    "selected_openai_compatible_model":"/run/selected_openai_compatible_model",
     "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
     "selected_ollama_model":"/run/selected_ollama_model",
 
@@ -240,6 +242,15 @@ mapping = {
     "/set/data/selected_lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
     "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
     "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
+
+    "/get/data/openai_compatible_auth_key": {"status": True, "variable":controller.getOpenAICompatibleAuthKey},
+    "/set/data/openai_compatible_auth_key": {"status": True, "variable":controller.setOpenAICompatibleAuthKey},
+    "/delete/data/openai_compatible_auth_key": {"status": True, "variable":controller.delOpenAICompatibleAuthKey},
+    "/get/data/openai_compatible_url": {"status": True, "variable":controller.getOpenAICompatibleURL},
+    "/set/data/openai_compatible_url": {"status": True, "variable":controller.setOpenAICompatibleURL},
+    "/get/data/selectable_openai_compatible_model_list": {"status": True, "variable":controller.getOpenAICompatibleModelList},
+    "/get/data/selected_openai_compatible_model": {"status": True, "variable":controller.getOpenAICompatibleModel},
+    "/set/data/selected_openai_compatible_model": {"status": True, "variable":controller.setOpenAICompatibleModel},
 
     "/get/data/connected_ollama": {"status": True, "variable":controller.getTranslatorOllamaConnection},
     "/run/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
