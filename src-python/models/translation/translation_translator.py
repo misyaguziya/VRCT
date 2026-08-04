@@ -428,7 +428,7 @@ class Translator:
                 match weight_type:
                     case "m2m100_418M-ct2-int8" | "m2m100_1.2B-ct2-int8":
                         target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
-                    case "nllb-200-distilled-1.3B-ct2-int8" | "nllb-200-3.3B-ct2-int8":
+                    case "nllb-200-distilled-600M-ct2-int8" | "nllb-200-distilled-1.3B-ct2-int8" | "nllb-200-3.3B-ct2-int8":
                         target_prefix = [target_language]
                     case _:
                         return False
