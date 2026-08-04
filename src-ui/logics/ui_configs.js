@@ -97,6 +97,7 @@ export const translator_status = [
 export const ctranslate2_weight_type_status = [
     { id: "m2m100_418M-ct2-int8", capacity: "418MB"},
     { id: "m2m100_1.2B-ct2-int8", capacity: "1.2GB"},
+    { id: "nllb-200-distilled-600M-ct2-int8", capacity: "600MB"},
     { id: "nllb-200-distilled-1.3B-ct2-int8", capacity: "1.3GB"},
     { id: "nllb-200-3.3B-ct2-int8", capacity: "3.3GB"},
 ].map(item => ({ ...item, is_downloaded: false, progress: null }));

@@ -173,9 +173,9 @@ else:
 ```python
 # ローカルモデルの読み込み
 translator.changeCTranslate2Model(
-    path=".",                    # アプリケーションルート
-    model_type="small",          # smallモデル使用
-    device="cuda",               # GPU使用
+    path=".",                                      # アプリケーションルート
+    model_type="nllb-200-distilled-600M-ct2-int8", # weight_type（デフォルトモデル）
+    device="cuda",                                 # GPU使用
     device_index=0,
     compute_type="float16"       # 半精度で高速化
 )
@@ -240,7 +240,7 @@ if translator.isChangedTranslatorParameters():
     print("翻訳設定が変更されています")
     
     # 設定変更の適用（例：モデル再読み込み）
-    translator.changeCTranslate2Model(".", "small", "cpu")
+    translator.changeCTranslate2Model(".", "nllb-200-distilled-600M-ct2-int8", "cpu")
     
     # フラグのリセット
     translator.setChangedTranslatorParameters(False)
@@ -280,37 +280,28 @@ if translator.isChangedTranslatorParameters():
 
 ## CTranslate2詳細
 
-### 対応モデル
+### 対応モデル（weight_type）
+実体の定義は `translation_utils.py` の `ctranslate2_weights` にある（詳細は [translation_utils.md](translation_utils.md) 参照）。`weight_type` の値がそのまま `config.CTRANSLATE2_WEIGHT_TYPE` / UI選択肢のキーになる。
+
+| weight_type | ベースモデル | サイズ目安 | 備考 |
+|---|---|---|---|
+| `m2m100_418M-ct2-int8` | M2M100 418M | ~418MB | レガシー。オフライン翻訳フォールバックの旧デフォルト |
+| `m2m100_1.2B-ct2-int8` | M2M100 1.2B | ~1.2GB | レガシー |
+| `nllb-200-distilled-600M-ct2-int8` | NLLB-200 distilled 600M | ~600MB | **新規インストール時のデフォルト**。m2m100より翻訳精度が高くCPUでも実用速度 |
+| `nllb-200-distilled-1.3B-ct2-int8` | NLLB-200 distilled 1.3B | ~1.3GB | 高精度・高負荷 |
+| `nllb-200-3.3B-ct2-int8` | NLLB-200 3.3B | ~3.3GB | 最高精度・高メモリ要求 |
+
+NLLB系モデルは Flores-200 言語コード（例: `jpn_Jpan`, `eng_Latn`）を使用し、`translateCTranslate2()` 内では `target_prefix` にそのままターゲット言語コードを渡す（m2m100系は `tokenizer.lang_code_to_token[...]` でトークン変換してから渡す点が異なる）。両者の分岐は次の通り：
+
 ```python
-ctranslate2_weights = {
-    "small": {
-        "url": "m2m100_418m.zip",
-        "directory_name": "m2m100_418m", 
-        "tokenizer": "facebook/m2m100_418M"
-    },
-    "large": {
-        "url": "m2m100_12b.zip", 
-        "directory_name": "m2m100_12b",
-        "tokenizer": "facebook/m2m100_1.2b"
-    }
-}
+match weight_type:
+    case "m2m100_418M-ct2-int8" | "m2m100_1.2B-ct2-int8":
+        target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+    case "nllb-200-distilled-600M-ct2-int8" | "nllb-200-distilled-1.3B-ct2-int8" | "nllb-200-3.3B-ct2-int8":
+        target_prefix = [target_language]
+    case _:
+        return False
 ```
-
-### パフォーマンス特性
-
-#### small モデル
-- **サイズ**: ~400MB
-- **メモリ**: ~1GB RAM
-- **VRAM**: ~500MB（CUDA使用時）
-- **速度**: 高速
-- **精度**: 良好
-
-#### large モデル
-- **サイズ**: ~4.8GB
-- **メモリ**: ~6GB RAM  
-- **VRAM**: ~3GB（CUDA使用時）
-- **速度**: 中程度
-- **精度**: 高品質
 
 ### 計算タイプ設定
 ```python
@@ -358,7 +349,7 @@ def robust_translation(translator, message, source_lang, target_lang):
     # オンライン翻訳が全て失敗した場合、ローカル翻訳にフォールバック
     try:
         if not translator.isLoadedCTranslate2Model():
-            translator.changeCTranslate2Model(".", "small", "cpu")
+            translator.changeCTranslate2Model(".", "nllb-200-distilled-600M-ct2-int8", "cpu")
             
         result = translator.translate("CTranslate2", source_lang, target_lang, "", message)
         if result != False:
@@ -392,9 +383,13 @@ def robust_translation(translator, message, source_lang, target_lang):
 root/
 └── weights/
     └── ctranslate2/
-        ├── m2m100_418m/     # smallモデル
-        └── m2m100_12b/      # largeモデル
+        ├── m2m100_418M-ct2-int8/
+        ├── m2m100_1.2B-ct2-int8/
+        ├── nllb-200-distilled-600M-ct2-int8/   # デフォルト（新規インストール時）
+        ├── nllb-200-distilled-1.3B-ct2-int8/
+        └── nllb-200-3.3B-ct2-int8/
 ```
+ディレクトリ名は `weight_type` ごとに `translation_utils.ctranslate2_weights[weight_type]["directory_name"]` で決まる（詳細は [translation_utils.md](translation_utils.md)）。
 
 ## 注意事項
 
@@ -413,6 +408,25 @@ root/
 - `controller.py`: 翻訳制御インターフェース
 
 ## 最近の更新
+
+### 2026-08-04: NLLB-200 distilled 600M をデフォルトのオフライン翻訳モデルに追加
+
+#### 背景
+オンライン翻訳が利用できない場合のフォールバックとして使用していた m2m100（418M）は翻訳精度が低いという課題があった。NLLB-200 は Flores-200 の200言語をカバーし、同程度のモデルサイズでもM2M100より高精度な翻訳が期待できる。
+
+#### 変更内容
+- `translation_utils.ctranslate2_weights` に `nllb-200-distilled-600M-ct2-int8`（`JustFrederik/nllb-200-distilled-600M-ct2-int8`）を追加
+- `translateCTranslate2()` の `weight_type` 分岐に新モデルキーを追加（既存のNLLB系分岐に合流、Flores-200コードをそのまま `target_prefix` として使用）
+- `languages.yml` の `CTranslate2` セクションに、既存の `nllb-200-distilled-1.3B-ct2-int8` と同じ `&nllb_langs` アンカーを参照するエントリを追加
+- `config.py` の `CTRANSLATE2_WEIGHT_TYPE` デフォルト値を `m2m100_418M-ct2-int8` から `nllb-200-distilled-600M-ct2-int8` に変更（**新規インストールのみ適用**。既存ユーザーは `config.json` に保存済みの値が優先されるため影響なし）
+- `src-ui/logics/ui_configs.js` の `ctranslate2_weight_type_status` に表示用エントリ（`600MB`）を追加。ラベルはUI側で `id (capacity)` から動的生成されるため個別の表示名対応は不要
+
+#### 影響
+| 項目 | 内容 |
+|------|------|
+| 翻訳精度 | オフラインフォールバック翻訳の精度向上（新規インストール） |
+| 既存ユーザー | config.json 保存済みの選択値を維持、影響なし。設定画面から手動でNLLB-200へ切替可能 |
+| m2m100 | 引き続き選択肢として利用可能（削除しない） |
 
 ### 2025-12-10: Groq API および OpenRouter API サポート追加
 

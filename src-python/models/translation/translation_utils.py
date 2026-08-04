@@ -36,6 +36,11 @@ ctranslate2_weights = {
         "directory_name": "m2m100_1.2B-ct2-int8",
         "tokenizer": "facebook/m2m100_1.2B",
     },
+    "nllb-200-distilled-600M-ct2-int8": {
+        "hf_repo": "JustFrederik/nllb-200-distilled-600M-ct2-int8",
+        "directory_name": "nllb-200-distilled-600M-ct2-int8",
+        "tokenizer": "facebook/nllb-200-distilled-600M",
+    },
     "nllb-200-distilled-1.3B-ct2-int8": {
         "hf_repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
         "directory_name": "nllb-200-distilled-1.3B-ct2-int8",
