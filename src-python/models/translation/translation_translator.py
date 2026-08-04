@@ -15,6 +15,7 @@ try:
     from .translation_plamo import PlamoClient
     from .translation_gemini import GeminiClient
     from .translation_openai import OpenAIClient
+    from .translation_openai_compatible import OpenAICompatibleClient
     from .translation_lmstudio import LMStudioClient
     from .translation_ollama import OllamaClient
     from .translation_groq import GroqClient
@@ -28,6 +29,7 @@ except Exception:
     from translation_plamo import PlamoClient
     from translation_gemini import GeminiClient
     from translation_openai import OpenAIClient
+    from translation_openai_compatible import OpenAICompatibleClient
     from translation_lmstudio import LMStudioClient
     from translation_ollama import OllamaClient
     from translation_groq import GroqClient
@@ -61,6 +63,7 @@ class Translator:
         self.plamo_client: Optional[PlamoClient] = None
         self.gemini_client: Optional[GeminiClient] = None
         self.openai_client: Optional[OpenAIClient] = None
+        self.openai_compatible_client: Optional[OpenAICompatibleClient] = None
         self.groq_client: Optional[GroqClient] = None
         self.openrouter_client: Optional[OpenRouterClient] = None
         self.lmstudio_client: LMStudioClient[LMStudioClient] = None
@@ -191,6 +194,35 @@ class Translator:
     def updateOpenAIClient(self) -> None:
         """Update the OpenAI client (fetch available models)."""
         self.openai_client.updateClient()
+
+    def authenticationOpenAICompatibleAuthKey(self, auth_key: str, base_url: str | None = None, root_path: str = None) -> bool:
+        """Authenticate an OpenAI-compatible endpoint with the provided key and base URL.
+
+        `base_url` は必須想定（None の場合は公式エンドポイントにフォールバック）。
+        Returns True on success, False on failure.
+        """
+        self.openai_compatible_client = OpenAICompatibleClient(base_url=base_url, root_path=root_path)
+        if self.openai_compatible_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.openai_compatible_client = None
+            return False
+
+    def getOpenAICompatibleModelList(self) -> list[str]:
+        """Get available OpenAI-compatible endpoint models."""
+        if self.openai_compatible_client is None:
+            return []
+        return self.openai_compatible_client.getModelList()
+
+    def setOpenAICompatibleModel(self, model: str) -> bool:
+        """Change the OpenAI-compatible model used for translation."""
+        if self.openai_compatible_client is None:
+            return False
+        return self.openai_compatible_client.setModel(model)
+
+    def updateOpenAICompatibleClient(self) -> None:
+        """Update the OpenAI-compatible client (fetch available models)."""
+        self.openai_compatible_client.updateClient()
 
     def authenticationGroqAuthKey(self, auth_key: str, root_path: str = None) -> bool:
         """Authenticate Groq API with the provided key.
@@ -504,6 +536,17 @@ class Translator:
                         if context_history:
                             self.openai_client.setContextHistory(context_history)
                         result = self.openai_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "OpenAI_Compatible":
+                    if self.openai_compatible_client is None:
+                        result = False
+                    else:
+                        if context_history:
+                            self.openai_compatible_client.setContextHistory(context_history)
+                        result = self.openai_compatible_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,

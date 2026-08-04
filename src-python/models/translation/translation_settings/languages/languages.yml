@@ -767,6 +767,10 @@ LMStudio:
   source: *openai_langs
   target: *openai_langs
 
+OpenAI_Compatible:
+  source: *openai_langs
+  target: *openai_langs
+
 Ollama:
   source: *openai_langs
   target: *openai_langs

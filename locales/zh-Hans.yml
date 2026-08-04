@@ -193,6 +193,14 @@ config_page:
             label:
             connection_required:
 
+        openai_compatible_url:
+            label:
+            desc:
+        openai_compatible_auth_key:
+            label:
+        select_openai_compatible_model:
+            label:
+
         ollama_connection_check:
             label:
         select_ollama_model:

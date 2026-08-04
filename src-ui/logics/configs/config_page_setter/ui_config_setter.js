@@ -399,6 +399,42 @@ export const SETTINGS_ARRAY = [
         add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "selected_lmstudio_model",
     },
+    // OpenAI Compatible (URL + Auth Key)
+    {
+        Category: "Translation",
+        Base_Name: "OpenAICompatibleURL",
+        default_value: "https://api.openai.com/v1",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "openai_compatible_url",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "OpenAICompatibleAuthKey",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set_delete",
+        base_endpoint_name: "openai_compatible_auth_key",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectableOpenAICompatibleModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_openai_compatible_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedOpenAICompatibleModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_openai_compatible_model",
+    },
     // Ollama
     {
         Category: "Translation",

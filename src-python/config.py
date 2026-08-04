@@ -665,6 +665,7 @@ class Config:
     SELECTABLE_GROQ_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENROUTER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENROUTER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
 
     # --- Save Json Data (ManagedProperty-based) ---
@@ -716,13 +717,18 @@ class Config:
     SPEAKER_VAD_PARAMETERS = ManagedProperty('SPEAKER_VAD_PARAMETERS', type_=dict, mutable_tracking=True)
 
     # --- Auth and API settings ---
+    # 旧 config.json との後方互換のため、不足キーは既定値（None）で補完し、余剰キーは無視する。
     AUTH_KEYS = ValidatedProperty('AUTH_KEYS',
         validator=lambda val, inst: (
-            {k: (v if isinstance(v, str) else inst.AUTH_KEYS.get(k)) for k, v in val.items()}
-            if isinstance(val, dict) and set(val.keys()) == set(inst.AUTH_KEYS.keys()) else None
+            {
+                k: (val[k] if (k in val and isinstance(val[k], (str, type(None)))) else inst.AUTH_KEYS.get(k))
+                for k in inst.AUTH_KEYS.keys()
+            }
+            if isinstance(val, dict) else None
         )
     )
     LMSTUDIO_URL = ManagedProperty('LMSTUDIO_URL', type_=str)
+    OPENAI_COMPATIBLE_URL = ManagedProperty('OPENAI_COMPATIBLE_URL', type_=str)
 
     # --- Transcription settings ---
     SELECTED_TRANSCRIPTION_COMPUTE_TYPE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_TYPE', _selected_transcription_compute_type_validator)
@@ -778,6 +784,7 @@ class Config:
     SELECTED_GROQ_MODEL = ManagedProperty('SELECTED_GROQ_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_MODEL_LIST'))
     SELECTED_OPENROUTER_MODEL = ManagedProperty('SELECTED_OPENROUTER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENROUTER_MODEL_LIST'))
     SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
+    SELECTED_OPENAI_COMPATIBLE_MODEL = ManagedProperty('SELECTED_OPENAI_COMPATIBLE_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'))
     SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
 
     # --- Translation and language settings ---
@@ -860,6 +867,7 @@ class Config:
         self._SELECTABLE_GROQ_MODEL_LIST = []
         self._SELECTABLE_OPENROUTER_MODEL_LIST = []
         self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
         self._SELECTABLE_OLLAMA_MODEL_LIST = []
 
         # Save Json Data
@@ -969,6 +977,7 @@ class Config:
             "Plamo_API": None,
             "Gemini_API": None,
             "OpenAI_API": None,
+            "OpenAI_Compatible": None,
             "Groq_API": None,
             "OpenRouter_API": None,
         }
@@ -983,6 +992,8 @@ class Config:
         self._SELECTED_OPENROUTER_MODEL = None
         self._LMSTUDIO_URL = "http://127.0.0.1:1234/v1"
         self._SELECTED_LMSTUDIO_MODEL = None
+        self._OPENAI_COMPATIBLE_URL = "https://api.openai.com/v1"
+        self._SELECTED_OPENAI_COMPATIBLE_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
@@ -1102,6 +1113,7 @@ class Config:
             ('SELECTED_GROQ_MODEL', 'SELECTABLE_GROQ_MODEL_LIST'),
             ('SELECTED_OPENROUTER_MODEL', 'SELECTABLE_OPENROUTER_MODEL_LIST'),
             ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
+            ('SELECTED_OPENAI_COMPATIBLE_MODEL', 'SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'),
             ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
         ]
         for sel_attr, list_attr in pairs:

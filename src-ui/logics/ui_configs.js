@@ -91,6 +91,7 @@ export const translator_status = [
     { id: "OpenRouter_API", label: `OpenRouter API`, is_available: false },
     { id: "LMStudio", label: `LMStudio`, is_available: false },
     { id: "Ollama", label: `Ollama`, is_available: false },
+    { id: "OpenAI_Compatible", label: `OpenAI Compatible`, is_available: false },
 ];
 
 export const ctranslate2_weight_type_status = [

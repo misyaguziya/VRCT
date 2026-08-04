@@ -265,6 +265,24 @@ class Model:
         self.ensure_initialized()
         self.translator.updateOpenAIClient()
 
+    def authenticationTranslatorOpenAICompatibleAuthKey(self, auth_key: str, base_url: Optional[str] = None) -> bool:
+        result = self.translator.authenticationOpenAICompatibleAuthKey(
+            auth_key, base_url=base_url, root_path=config.PATH_LOCAL
+        )
+        return result
+
+    def getTranslatorOpenAICompatibleModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOpenAICompatibleModelList()
+
+    def setTranslatorOpenAICompatibleModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        return self.translator.setOpenAICompatibleModel(model=model)
+
+    def updateTranslatorOpenAICompatibleClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOpenAICompatibleClient()
+
     def authenticationTranslatorGroqAuthKey(self, auth_key: str) -> bool:
         result = self.translator.authenticationGroqAuthKey(auth_key, root_path=config.PATH_LOCAL)
         return result
