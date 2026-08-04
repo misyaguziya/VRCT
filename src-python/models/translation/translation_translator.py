@@ -52,7 +52,7 @@ if bing_translator is not None:
 class Translator:
     """High-level translator facade.
 
-    This class wraps multiple backends (DeepL, DeepL API, Google, Bing, Papago,
+    This class wraps multiple backends (DeepL API, Google, Bing, Papago,
     and CTranslate2 local models). Optional dependencies may be unavailable at
     runtime; methods degrade gracefully and return False or an empty string on
     failure (kept compatible with existing behavior).
@@ -489,14 +489,6 @@ class Translator:
             result: Any = ""
             source_language, target_language = self.getLanguageCode(translator_name, weight_type, target_country, source_language, target_language)
             match translator_name:
-                case "DeepL":
-                    if self.is_enable_translators is True and other_web_Translator is not None:
-                        result = other_web_Translator(
-                            query_text=message,
-                            translator="deepl",
-                            from_language=source_language,
-                            to_language=target_language,
-                        )
                 case "DeepL_API":
                     if self.is_enable_translators is True:
                         if self.deepl_client is None:
