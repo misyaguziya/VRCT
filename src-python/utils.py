@@ -5,18 +5,6 @@ import traceback
 import logging
 from logging.handlers import RotatingFileHandler
 
-try:
-    import torch
-except Exception:
-    torch = None  # type: ignore
-
-try:
-    from ctranslate2 import get_supported_compute_types
-except Exception:
-    # Fallback: if ctranslate2 is not installed, provide a safe stub.
-    def get_supported_compute_types(device: str, device_index: int) -> List[str]:
-        return []
-
 import requests
 import ipaddress
 import socket
@@ -95,6 +83,17 @@ def getComputeDeviceList() -> List[Dict[str, Any]]:
     The returned list contains dicts describing CPU and (if available)
     CUDA devices. This function is defensive to missing optional packages.
     """
+    try:
+        from ctranslate2 import get_supported_compute_types
+    except Exception:
+        def get_supported_compute_types(device: str, device_index: int) -> List[str]:
+            return []
+
+    try:
+        import torch
+    except Exception:
+        torch = None  # type: ignore
+
     compute_types: List[Dict[str, Any]] = [
         {
             "device": "cpu",
@@ -137,9 +136,15 @@ def getBestComputeType(device: str, device_index: int) -> str:
     Falls back to "float32" when no preferred type is available.
     """
     try:
+        from ctranslate2 import get_supported_compute_types
         compute_types = set(get_supported_compute_types(device, device_index))
     except Exception:
         compute_types = set()
+
+    try:
+        import torch
+    except Exception:
+        torch = None  # type: ignore
 
     try:
         device_name = "cpu" if device == "cpu" else (torch.cuda.get_device_name(device_index) if torch is not None else "")

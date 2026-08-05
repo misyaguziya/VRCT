@@ -5,7 +5,6 @@ from json import load as json_load
 from json import dump as json_dump
 import threading
 from typing import Optional, Dict, Any
-import torch
 
 # Guard optional, potentially heavy or platform-specific imports so importing
 # config.py doesn't raise in environments missing those packages.
@@ -838,6 +837,7 @@ class Config:
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
+        import torch
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]

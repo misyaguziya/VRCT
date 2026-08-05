@@ -1,13 +1,34 @@
 from os import path as os_path
 from deepl import DeepLClient
-try:
-    from translators import translate_text as other_web_Translator
-    from translators.server import _bing as bing_translator
-    ENABLE_TRANSLATORS = True
-except Exception:
-    other_web_Translator = None  # type: ignore
-    bing_translator = None
-    ENABLE_TRANSLATORS = False
+
+_translators_loaded = False
+other_web_Translator = None  # type: ignore
+bing_translator = None
+ENABLE_TRANSLATORS = True
+
+
+def _ensureTranslatorsLoaded() -> None:
+    """Lazily import the (heavy) `translators` package on first use.
+
+    Importing `translators` at module scope adds noticeable time to process
+    startup even when web-based translation engines are never used, so it is
+    deferred until a caller actually needs it.
+    """
+    global _translators_loaded, other_web_Translator, bing_translator, ENABLE_TRANSLATORS
+    if _translators_loaded:
+        return
+    _translators_loaded = True
+    try:
+        from translators import translate_text as _translate_text
+        from translators.server import _bing as _bing
+        other_web_Translator = _translate_text
+        bing_translator = _bing
+        bing_translator.get_tk = parse_bing_credentials
+        ENABLE_TRANSLATORS = True
+    except Exception:
+        other_web_Translator = None
+        bing_translator = None
+        ENABLE_TRANSLATORS = False
 
 try:
     from .translation_languages import translation_lang
@@ -36,17 +57,12 @@ except Exception:
     from translation_openrouter import OpenRouterClient
     from translation_bing import parse_bing_credentials
 
-import ctranslate2
-import transformers
 from utils import errorLogging, getBestComputeType
 
 import warnings
 from typing import Any, Optional, Tuple
 
 warnings.filterwarnings("ignore")
-
-if bing_translator is not None:
-    bing_translator.get_tk = parse_bing_credentials
 
 
 class Translator:
@@ -382,6 +398,9 @@ class Translator:
         This sets internal translator/tokenizer objects and flips
         ``is_loaded_ctranslate2_model`` on success.
         """
+        import ctranslate2
+        import transformers
+
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
         tokenizer = ctranslate2_weights[model_type]["tokenizer"]
@@ -588,7 +607,8 @@ class Translator:
                             output_lang=target_language,
                         )
                 case "Google":
-                    if self.is_enable_translators is True and other_web_Translator is not None:
+                    _ensureTranslatorsLoaded()
+                    if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
                             translator="google",
@@ -596,7 +616,8 @@ class Translator:
                             to_language=target_language,
                         )
                 case "Bing":
-                    if self.is_enable_translators is True and other_web_Translator is not None:
+                    _ensureTranslatorsLoaded()
+                    if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
                             translator="bing",
@@ -604,7 +625,8 @@ class Translator:
                             to_language=target_language,
                         )
                 case "Papago":
-                    if self.is_enable_translators is True and other_web_Translator is not None:
+                    _ensureTranslatorsLoaded()
+                    if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
                             translator="papago",
