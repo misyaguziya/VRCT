@@ -292,7 +292,7 @@ CTranslate2 モデルがロード済みかチェック。
 **責務:** メッセージの翻訳
 
 **パラメータ:**
-- `translator_name`: "CTranslate2", "DeepL", "DeepL_API" 等
+- `translator_name`: "CTranslate2", "DeepL_API" 等
 - `source_language`: 元言語（"ja", "en" 等）
 - `target_language`: 翻訳先言語
 - `target_country`: 翻訳先国（方言対応用）

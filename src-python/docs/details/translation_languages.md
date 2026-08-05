@@ -2,13 +2,13 @@
 
 ## 概要
 
-翻訳エンジンが対応する言語コードのマッピングテーブルを提供するモジュールです。複数の翻訳エンジン（DeepL、Google、Bing、Papago等）の言語コード仕様の差異を吸収し、統一的な翻訳言語管理を実現します。
+翻訳エンジンが対応する言語コードのマッピングテーブルを提供するモジュールです。複数の翻訳エンジン（DeepL API、Google、Bing、Papago等）の言語コード仕様の差異を吸収し、統一的な翻訳言語管理を実現します。
 
 ## 主要機能
 
 ### 多エンジン対応
 
-- DeepL（無料版・API版）
+- DeepL API
 - Google Translate
 - Microsoft Translator（Bing）
 - Papago Translator
@@ -30,28 +30,6 @@ translation_lang: Dict[str, Dict[str, Dict[str, str]]] = {
         "source": {"言語名": "言語コード", ...},
         "target": {"言語名": "言語コード", ...}
     }
-}
-```
-
-### DeepL翻訳エンジン（無料版）
-
-```python
-translation_lang["DeepL"] = {
-    "source": {
-        "Arabic": "ar", "Bulgarian": "bg", "Czech": "cs", "Danish": "da",
-        "German": "de", "Greek": "el", "English": "en", "Spanish": "es",
-        "Estonian": "et", "Finnish": "fi", "French": "fr", "Irish": "ga",
-        "Croatian": "hr", "Hungarian": "hu", "Indonesian": "id", 
-        "Icelandic": "is", "Italian": "it", "Japanese": "ja",
-        "Korean": "ko", "Lithuanian": "lt", "Latvian": "lv",
-        "Maltese": "mt", "Bokmal": "nb", "Dutch": "nl",
-        "Norwegian": "no", "Polish": "pl", "Portuguese": "pt",
-        "Romanian": "ro", "Russian": "ru", "Slovak": "sk",
-        "Slovenian": "sl", "Swedish": "sv", "Turkish": "tr",
-        "Ukrainian": "uk", "Chinese Simplified": "zh",
-        "Chinese Traditional": "zh"
-    },
-    "target": {/* 同じマッピング */}
 }
 ```
 
@@ -125,8 +103,8 @@ translation_lang["DeepL_API"] = {
 from models.translation.translation_languages import translation_lang
 
 # DeepLで日本語から英語への翻訳
-deepl_source = translation_lang["DeepL"]["source"]["Japanese"]  # "ja"
-deepl_target = translation_lang["DeepL"]["target"]["English"]   # "en"
+deepl_source = translation_lang["DeepL_API"]["source"]["Japanese"]  # "ja"
+deepl_target = translation_lang["DeepL_API"]["target"]["English"]   # "en"
 
 # DeepL APIで地域固有の英語指定
 deepl_api_target = translation_lang["DeepL_API"]["target"]["English American"]  # "en-US"
@@ -149,7 +127,7 @@ def get_supported_languages(engine_name):
     return None
 
 # 使用例
-deepl_langs = get_supported_languages("DeepL")
+deepl_langs = get_supported_languages("DeepL_API")
 print(f"DeepL対応言語数: {len(deepl_langs['common'])}")
 ```
 
@@ -170,7 +148,7 @@ def convert_language_code(language_name, from_engine, to_engine, direction="sour
         return None
 
 # 使用例：DeepLからGoogle Translateへの変換
-google_code = convert_language_code("Japanese", "DeepL", "Google", "target")
+google_code = convert_language_code("Japanese", "DeepL_API", "Google", "target")
 ```
 
 ### 翻訳システムでの統合利用
@@ -218,17 +196,11 @@ engines = manager.get_compatible_engines("Japanese", "English")
 print(f"対応エンジン: {engines}")
 
 # 特定エンジンでの言語コード取得
-ja_code = manager.get_language_code("DeepL", "Japanese", "source")
-en_code = manager.get_language_code("DeepL", "English", "target")
+ja_code = manager.get_language_code("DeepL_API", "Japanese", "source")
+en_code = manager.get_language_code("DeepL_API", "English", "target")
 ```
 
 ## エンジン別特徴
-
-### DeepL（無料版）
-
-- **強み**: 高精度、自然な翻訳
-- **制限**: 月間使用量制限、API制限
-- **対応**: 26言語
 
 ### DeepL API（有料版）
 
@@ -298,8 +270,8 @@ translation_lang["NewEngine"] = {
 
 ```python
 # 既存エンジンへの新言語追加
-translation_lang["DeepL"]["source"]["Hindi"] = "hi"
-translation_lang["DeepL"]["target"]["Hindi"] = "hi"
+translation_lang["DeepL_API"]["source"]["Hindi"] = "hi"
+translation_lang["DeepL_API"]["target"]["Hindi"] = "hi"
 ```
 
 ## エラーハンドリング

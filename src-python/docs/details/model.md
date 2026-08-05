@@ -87,7 +87,7 @@ VRCTアプリケーションの中核となるModelクラスを定義するモ�
 
 ### 翻訳機能
 
-- 複数の翻訳エンジン対応（DeepL、Google、CTranslate2等）
+- 複数の翻訳エンジン対応（DeepL API、Google、CTranslate2等）
 - 言語自動検出
 - バッチ翻訳処理
 

@@ -2,12 +2,12 @@
 
 ## 概要
 
-複数の翻訳エンジンを統合管理する高レベル翻訳インターフェースです。DeepL、Google、Bing、Papago、CTranslate2などの多様な翻訳サービスを統一的に扱い、エラー時の自動フォールバック機能と認証管理を提供します。
+複数の翻訳エンジンを統合管理する高レベル翻訳インターフェースです。DeepL API、Google、Bing、Papago、CTranslate2などの多様な翻訳サービスを統一的に扱い、エラー時の自動フォールバック機能と認証管理を提供します。
 
 ## 主要機能
 
 ### 多エンジン統合
-- DeepL（無料版・API版）
+- DeepL API
 - Google Translate（Webスクレイピング）
 - Microsoft Translator（Bing）
 - Papago Translator
@@ -65,7 +65,7 @@ translate(translator_name: str, source_language: str, target_language: str,
 統一翻訳インターフェース
 
 #### パラメータ
-- **translator_name**: 翻訳エンジン名（"DeepL", "Google", "CTranslate2"等）
+- **translator_name**: 翻訳エンジン名（"DeepL_API", "Google", "CTranslate2"等）
 - **source_language**: 送信元言語
 - **target_language**: 送信先言語
 - **target_country**: 送信先国・地域
@@ -203,7 +203,7 @@ else:
 def safe_translate(translator, message, source_lang="Japanese", target_lang="English"):
     """安全な翻訳処理"""
     # 翻訳エンジンの優先順位
-    engines = ["DeepL_API", "DeepL", "Google", "CTranslate2"]
+    engines = ["DeepL_API", "Google", "CTranslate2"]
     
     for engine in engines:
         try:
@@ -253,12 +253,6 @@ if translator.isChangedTranslatorParameters():
 - **速度**: 高速
 - **制限**: API使用料、月間制限
 - **対応**: 26言語、地域別対応
-
-### DeepL（無料）
-- **精度**: 高品質
-- **速度**: 中程度
-- **制限**: 月間使用量制限、文字数制限
-- **対応**: 26言語
 
 ### Google Translate
 - **精度**: 良好
@@ -335,7 +329,7 @@ compute_type = "int8_float16"  # メモリ効率重視
 def robust_translation(translator, message, source_lang, target_lang):
     """堅牢な翻訳処理"""
     # オンライン翻訳を先に試行
-    online_engines = ["DeepL_API", "DeepL", "Google"]
+    online_engines = ["DeepL_API", "Google"]
     
     for engine in online_engines:
         try:

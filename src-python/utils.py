@@ -189,6 +189,21 @@ def removeLog() -> None:
     except Exception:
         errorLogging()
 
+class TruncatingFileHandler(RotatingFileHandler):
+    """RotatingFileHandler that truncates the log file in place instead of
+    rotating it to a numbered backup (e.g. process.log.1). Creating that
+    backup file was being picked up by Tauri's dev file watcher (src-tauri
+    is inside the watched tree) and triggering a rebuild loop.
+    """
+    def doRollover(self) -> None:
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+        with open(self.baseFilename, "w", encoding=self.encoding):
+            pass
+        if not self.delay:
+            self.stream = self._open()
+
 def setupLogger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
     """
     特定の名前とログファイルを持つロガーを設定します。
@@ -202,10 +217,10 @@ def setupLogger(name: str, log_file: str, level: int = logging.INFO) -> logging.
     max_log_size = 10 * 1024 * 1024  # 10MB
 
     # ハンドラーを作成
-    file_handler = RotatingFileHandler(
+    file_handler = TruncatingFileHandler(
         log_file,
         maxBytes=max_log_size,
-        backupCount=1,
+        backupCount=0,
         encoding="utf-8",
         delay=True
         )
