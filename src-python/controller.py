@@ -3538,6 +3538,11 @@ class Controller:
         self.initializationProgress(1)
 
         # Download weights
+        # 事前チェックの結果（Noneは「未実施」、True/Falseは「ロード検証済み」）。
+        # ダウンロードが発生しなかった場合はこの結果をそのまま使い、後続の
+        # availabilityチェックで同じ重みを二重にロードして検証するのを避ける。
+        ctranslate2_pre_available: Optional[bool] = None
+        whisper_pre_available: Optional[bool] = None
         if connected_network is True:
             printLog("Download CTranslate2 Model Weight")
             # 後方互換用
@@ -3545,7 +3550,8 @@ class Controller:
 
             weight_type = config.CTRANSLATE2_WEIGHT_TYPE
             th_download_ctranslate2 = None
-            if model.checkTranslatorCTranslate2ModelWeight(weight_type) is False:
+            ctranslate2_pre_available = model.checkTranslatorCTranslate2ModelWeight(weight_type)
+            if ctranslate2_pre_available is False:
                 th_download_ctranslate2 = Thread(target=self.downloadCtranslate2Weight, args=(weight_type, False))
                 th_download_ctranslate2.daemon = True
                 th_download_ctranslate2.start()
@@ -3553,22 +3559,32 @@ class Controller:
             printLog("Download Whisper Model Weight")
             weight_type = config.WHISPER_WEIGHT_TYPE
             th_download_whisper = None
-            if model.checkTranscriptionWhisperModelWeight(weight_type) is False:
+            whisper_pre_available = model.checkTranscriptionWhisperModelWeight(weight_type)
+            if whisper_pre_available is False:
                 th_download_whisper = Thread(target=self.downloadWhisperWeight, args=(weight_type, False))
                 th_download_whisper.daemon = True
                 th_download_whisper.start()
 
             if isinstance(th_download_ctranslate2, Thread):
                 th_download_ctranslate2.join()
+                # ダウンロードを行った場合は結果が変わるため再検証が必要
+                ctranslate2_pre_available = None
             if isinstance(th_download_whisper, Thread):
                 th_download_whisper.join()
+                whisper_pre_available = None
 
         # Check and disable/enable AI models (parallel)
+        # 上の事前チェックで「ロード検証済みかつダウンロード不要」と分かっている場合は
+        # 同じ重みファイルをもう一度ロードして検証するのを避け、その結果を再利用する。
 
         def check_ctranslate2() -> bool:
+            if ctranslate2_pre_available is True:
+                return True
             return model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is True
 
         def check_whisper() -> bool:
+            if whisper_pre_available is True:
+                return True
             return model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is True
 
         with ThreadPoolExecutor(max_workers=2) as executor:

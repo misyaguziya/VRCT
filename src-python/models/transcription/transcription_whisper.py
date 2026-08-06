@@ -12,10 +12,8 @@ The functions are defensive: failures are caught and reported by the caller.
 from os import path as os_path, makedirs as os_makedirs
 from requests import get as requests_get
 from typing import Callable, Optional
-import huggingface_hub
-from faster_whisper import WhisperModel
 import logging
-from utils import getBestComputeType
+from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
 
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
@@ -71,6 +69,11 @@ def checkWhisperWeight(root: str, weight_type: str) -> bool:
     to verify required files exist and are compatible.
     """
     path = os_path.join(root, "weights", "whisper", weight_type)
+
+    if isWeightVerifiedCache(path):
+        return True
+
+    from faster_whisper import WhisperModel
     try:
         WhisperModel(
             path,
@@ -81,6 +84,7 @@ def checkWhisperWeight(root: str, weight_type: str) -> bool:
             num_workers=1,
             local_files_only=True,
         )
+        writeWeightVerifiedCache(path)
         return True
     except Exception:
         return False
@@ -99,6 +103,7 @@ def downloadWhisperWeight(
         callback: progress callback for the main model file
         end_callback: called when download completes
     """
+    import huggingface_hub
     path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
     if not checkWhisperWeight(root, weight_type):
@@ -115,13 +120,14 @@ def getWhisperModel(
     device: str = "cpu",
     device_index: int = 0,
     compute_type: str = "auto",
-) -> WhisperModel:
+):
     """Return a `WhisperModel` instance loaded from local weights.
 
     Raises:
         ValueError: when VRAM shortage is detected (wrapped from RuntimeError)
         Exception: other loading errors are propagated.
     """
+    from faster_whisper import WhisperModel
     path = os_path.join(root, "weights", "whisper", weight_type)
     if compute_type == "auto":
         compute_type = getBestComputeType(device, device_index)
