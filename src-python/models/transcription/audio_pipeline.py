@@ -1,4 +1,5 @@
 import audioop
+import itertools
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
@@ -9,6 +10,12 @@ import numpy as np
 
 TARGET_SAMPLE_RATE = 16000
 FRAME_SAMPLES = 512
+
+# Shared across StreamingVadSegmenter instances so segment ids stay unique even
+# after a mic/speaker session is stopped and a new segmenter instance is created
+# on restart (a fresh instance-local counter would collide with ids already
+# shown in the UI and get treated as an update to the old row instead of a new one).
+_segment_id_counter = itertools.count()
 
 
 @dataclass(frozen=True)
@@ -119,7 +126,7 @@ class StreamingVadSegmenter:
         self._negative_frames = 0
         self._speech_frame_count = 0
         self._speaking = False
-        self._segment_id = 0
+        self._segment_id = next(_segment_id_counter)
 
     @property
     def speaking(self) -> bool:
@@ -161,7 +168,7 @@ class StreamingVadSegmenter:
 
     def reset(self, advance_segment: bool = False) -> None:
         if advance_segment and (self._speaking or self._positive_frames):
-            self._segment_id += 1
+            self._segment_id = next(_segment_id_counter)
         self._remainder = b""
         self._speech_frames = []
         self._positive_frames = 0
@@ -202,6 +209,6 @@ class StreamingVadSegmenter:
         if self._speaking and self._speech_frame_count >= self.min_speech_frames:
             result = SpeechSegment(b"".join(self._speech_frames), self._segment_id, True)
         if self._speaking or self._positive_frames:
-            self._segment_id += 1
+            self._segment_id = next(_segment_id_counter)
         self.reset()
         return result
