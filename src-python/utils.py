@@ -1,6 +1,7 @@
 import base64
 from typing import Any, List, Dict, Optional
 import json
+import os
 import traceback
 import logging
 from logging.handlers import RotatingFileHandler
@@ -8,6 +9,63 @@ from logging.handlers import RotatingFileHandler
 import requests
 import ipaddress
 import socket
+
+_WEIGHT_VERIFIED_MARKER_NAME = ".weight_verified.json"
+
+
+def _collectWeightFileStats(root: str) -> Dict[str, Dict[str, float]]:
+    """Recursively collect {relative_path: {size, mtime}} for files under root.
+
+    mtime is rounded to avoid float round-trip mismatches after JSON (de)serialization.
+    """
+    stats: Dict[str, Dict[str, float]] = {}
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for name in filenames:
+            if name == _WEIGHT_VERIFIED_MARKER_NAME:
+                continue
+            full_path = os.path.join(dirpath, name)
+            rel_path = os.path.relpath(full_path, root).replace("\\", "/")
+            try:
+                st = os.stat(full_path)
+                stats[rel_path] = {"size": st.st_size, "mtime": round(st.st_mtime, 3)}
+            except OSError:
+                continue
+    return stats
+
+
+def isWeightVerifiedCache(root: str) -> bool:
+    """Return True if a weight directory's files exactly match a previously
+    recorded "verified" snapshot (same file set, sizes, and mtimes).
+
+    This lets callers skip an expensive full model load to re-verify weights
+    that haven't changed since the last successful load-based verification.
+    Any change (missing marker, added/removed/modified file) invalidates the
+    cache and forces a real verification.
+    """
+    marker_path = os.path.join(root, _WEIGHT_VERIFIED_MARKER_NAME)
+    if not os.path.isfile(marker_path):
+        return False
+    try:
+        with open(marker_path, "r", encoding="utf-8") as f:
+            recorded = json.load(f).get("verified_files", {})
+    except Exception:
+        return False
+    if not recorded:
+        return False
+    return _collectWeightFileStats(root) == recorded
+
+
+def writeWeightVerifiedCache(root: str) -> None:
+    """Record the current file stats under root as a verified snapshot."""
+    try:
+        stats = _collectWeightFileStats(root)
+        if not stats:
+            return
+        marker_path = os.path.join(root, _WEIGHT_VERIFIED_MARKER_NAME)
+        with open(marker_path, "w", encoding="utf-8") as f:
+            json.dump({"verified_files": stats}, f)
+    except Exception:
+        pass
 
 def validateDictStructure(data: dict, structure: dict) -> bool:
     """

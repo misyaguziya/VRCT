@@ -6,12 +6,12 @@ from typing import Callable
 import yaml
 
 try:
-    from utils import errorLogging, getBestComputeType
+    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
 except Exception:
     import sys
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
-    from utils import errorLogging, getBestComputeType
+    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
 
 
 """Utilities for downloading and verifying CTranslate2 weights and tokenizers.
@@ -67,11 +67,15 @@ def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8")
     weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
     path = os_path.join(root, "weights", "ctranslate2", weight_directory_name)
 
+    if isWeightVerifiedCache(path):
+        return True
+
     try:
         import ctranslate2
         # モデルロード可能かどうかで判定
         compute_type = getBestComputeType("cpu", 0)
         ctranslate2.Translator(path, compute_type=compute_type)
+        writeWeightVerifiedCache(path)
         return True
     except Exception:
         return False
