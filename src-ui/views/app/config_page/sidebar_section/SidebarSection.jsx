@@ -17,6 +17,7 @@ import KeyboardAltSvg from "@images/mui_keyboard_alt.svg?react";
 import ExtensionSvg from "@images/mui_extension.svg?react";
 import CodeBlocksSvg from "@images/mui_code_blocks.svg?react";
 import CrownSvg from "@images/mui_crown.svg?react";
+import RefreshSvg from "@images/refresh.svg?react";
 
 import chat_white_square from "@images/chato_white_square.png";
 
@@ -50,6 +51,7 @@ export const SidebarSection = () => {
                         <Tab tab_id="hotkeys" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="plugins" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="advanced_settings" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
+                        <Tab tab_id="compute_device" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                     </div>
                     <div className={styles.separated_tabs_wrapper}>
                         <Tab tab_id="supporters" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
@@ -73,6 +75,7 @@ const TabIcon = ({ tab_id, className }) => {
         case "hotkeys": return <KeyboardAltSvg className={clsx(className, styles.mui_icon)} />;
         case "plugins": return <ExtensionSvg className={clsx(className, styles.mui_icon)} />;
         case "advanced_settings": return <CodeBlocksSvg className={clsx(className, styles.mui_icon)} />;
+        case "compute_device": return <RefreshSvg className={className} />;
         case "supporters": return <CrownSvg className={clsx(className, styles.mui_icon, styles.supporters_icon)} />;
         case "about_vrct": return <img src={chat_white_square} className={clsx(className, styles.about_vrct_icon)} />;
         default: return null;

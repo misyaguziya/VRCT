@@ -19,10 +19,7 @@ import {
     SectionLabelComponent,
 } from "../_components";
 
-import { useStore_OpenedQuickSetting } from "@store";
-
 import OpenFolderSvg from "@images/open_folder.svg?react";
-import HelpSvg from "@images/help.svg?react";
 import CopySvg from "@images/copy.svg?react";
 
 export const AdvancedSettings = () => {
@@ -32,7 +29,6 @@ export const AdvancedSettings = () => {
                 <OscIpAddressContainer />
                 <OscPortContainer />
                 <OpenConfigFolderContainer />
-                <OpenSwitchComputeDeviceModalContainer />
             </div>
             <WebsocketContainer />
             <ObsBrowserSourceContainer />
@@ -102,25 +98,6 @@ const OpenConfigFolderContainer = () => {
         </>
     );
 };
-
-const OpenSwitchComputeDeviceModalContainer = () => {
-    const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-    const onClickFunction = () => {
-        updateOpenedQuickSetting("update_software");
-    };
-
-    return (
-        <>
-            <ActionButtonContainer
-                label={t("config_page.advanced_settings.switch_compute_device.label")}
-                IconComponent={HelpSvg}
-                onclickFunction={onClickFunction}
-            />
-        </>
-    );
-};
-
 
 const WebsocketContainer = () => {
     return (

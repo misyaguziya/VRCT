@@ -7,6 +7,7 @@ import {
     Transcription,
     Others,
     AdvancedSettings,
+    ComputeDevice,
     Vr,
     Hotkeys,
     Plugins,
@@ -33,6 +34,8 @@ export const SettingBox = () => {
             return <Hotkeys />;
         case "advanced_settings":
             return <AdvancedSettings />;
+        case "compute_device":
+            return <ComputeDevice />;
         case "plugins":
             return <Plugins />;
         case "supporters":
