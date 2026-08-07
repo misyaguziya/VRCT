@@ -122,7 +122,7 @@ _debounce_time: int = 2  # デバウンス時間（秒）
 | `PATH_CONFIG` | str | 設定ファイルパス | `{PATH_LOCAL}/config.json` |
 | `PATH_LOGS` | str | ログディレクトリパス | `{PATH_LOCAL}/logs` |
 | `GITHUB_URL` | str | GitHub API URL | リポジトリURL |
-| `UPDATER_URL` | str | アップデーターAPIの URL | アップデーターURL |
+| `SETUP_DOWNLOAD_URL` | str | Hugging Face上のsetup.exeダウンロードURL | `VRCT_setup.exe` の固定URL |
 | `BOOTH_URL` | str | Booth 販売ページURL | Booth URL |
 | `DOCUMENTS_URL` | str | ドキュメントURL | Notion URL |
 | `DEEPL_AUTH_KEY_PAGE_URL` | str | DeepL認証キー取得ページ | DeepL URL |

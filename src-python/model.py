@@ -664,25 +664,13 @@ class Model:
         }
 
     @staticmethod
-    def _downloadUpdater() -> bool:
-        # try to update at most 5 times
+    def _downloadSetup() -> bool:
+        # try to download at most 5 times
+        program_name = "VRCT_setup.exe"
+        current_directory = config.PATH_LOCAL
         for _ in range(5):
             try:
-                program_name = "update.exe"
-                current_directory = config.PATH_LOCAL
-                res = requests_get(config.UPDATER_URL)
-                assets = res.json().get("assets", [])
-                url = next(
-                    (
-                        asset.get("browser_download_url")
-                        for asset in assets
-                        if asset.get("name") == program_name
-                    ),
-                    None,
-                )
-                if not isinstance(url, str):
-                    raise ValueError(f"{program_name} was not found in the release assets")
-                res = requests_get(url, stream=True)
+                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True)
                 with open(os_path.join(current_directory, program_name), 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
@@ -693,17 +681,17 @@ class Model:
 
     @staticmethod
     def updateSoftware():
-        if Model._downloadUpdater() is False:
+        if Model._downloadSetup() is False:
             return
-        # run updater
-        Popen("update.exe", cwd=config.PATH_LOCAL)
+        # run the NSIS setup wizard, preselecting the CPU edition
+        Popen(["VRCT_setup.exe", "/EDITION=cpu"], cwd=config.PATH_LOCAL)
 
     @staticmethod
     def updateCudaSoftware():
-        if Model._downloadUpdater() is False:
+        if Model._downloadSetup() is False:
             return
-        # run updater
-        Popen(["update.exe", "--cuda"], cwd=config.PATH_LOCAL)
+        # run the NSIS setup wizard, preselecting the GPU edition
+        Popen(["VRCT_setup.exe", "/EDITION=gpu"], cwd=config.PATH_LOCAL)
 
     def getListMicHost(self):
         self.ensure_initialized()

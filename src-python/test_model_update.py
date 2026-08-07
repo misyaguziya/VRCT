@@ -7,12 +7,12 @@ from model import Model
 class TestModelUpdate(unittest.TestCase):
     @patch("model.errorLogging")
     @patch("model.requests_get")
-    def test_does_not_run_updater_when_asset_is_missing(
+    def test_does_not_run_setup_when_download_keeps_failing(
         self,
         requests_get: Mock,
         error_logging: Mock,
     ) -> None:
-        requests_get.return_value.json.return_value = {"assets": []}
+        requests_get.side_effect = Exception("network error")
 
         with patch("model.Popen") as popen:
             Model.updateSoftware()
