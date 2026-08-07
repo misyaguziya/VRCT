@@ -9,11 +9,11 @@ This module exposes small utilities used by the transcription subsystem:
 The functions are defensive: failures are caught and reported by the caller.
 """
 
-from os import path as os_path, makedirs as os_makedirs
+from os import path as os_path, makedirs as os_makedirs, remove as os_remove
 from requests import get as requests_get
 from typing import Callable, Optional
 import logging
-from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
+from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging
 
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
@@ -59,8 +59,15 @@ def downloadFile(url: str, path: str, func: Optional[Callable[[float], None]] = 
                     total_chunk += len(chunk)
                     func(total_chunk / file_size)
     except Exception:
-        # Silent failure here; caller may re-check or log
-        pass
+        errorLogging()
+        # Remove any partial/corrupt file so a retry, or the post-download
+        # WhisperModel verification in checkWhisperWeight, doesn't see stale
+        # truncated bytes left over from the failed attempt.
+        try:
+            if os_path.exists(path):
+                os_remove(path)
+        except Exception:
+            pass
 
 def checkWhisperWeight(root: str, weight_type: str) -> bool:
     """Return True if a Whisper model for `weight_type` is loadable from disk.

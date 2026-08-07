@@ -116,7 +116,7 @@ class ManagedDict(dict):
             if getattr(descriptor, "serialize", True):
                 self._instance.saveConfig(self._property_name, dict(self), immediate_save=self._immediate_save)
         except Exception:
-            pass
+            errorLogging()
 
     def __getitem__(self, key):
         # Always read from internal storage to get latest value
@@ -195,7 +195,7 @@ class ManagedList(list):
             if getattr(descriptor, "serialize", True):
                 self._instance.saveConfig(self._property_name, list(self), immediate_save=self._immediate_save)
         except Exception:
-            pass
+            errorLogging()
 
     def __getitem__(self, index):
         # Always read from internal storage to get latest value
@@ -582,6 +582,7 @@ class Config:
     _config_data: Dict[str, Any] = {}
     _timer: Optional[threading.Timer] = None
     _debounce_time: int = 2
+    _file_lock: threading.Lock = threading.Lock()
 
     def __new__(cls):
         if cls._instance is None:
@@ -604,22 +605,27 @@ class Config:
                 filtered[var_name] = var_func(self)
             except Exception:
                 pass
-        self._config_data = filtered
-        with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
-            json_dump(filtered, fp, indent=4, ensure_ascii=False)
+        with self._file_lock:
+            self._config_data = filtered
+            with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
+                json_dump(filtered, fp, indent=4, ensure_ascii=False)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value
 
-        if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
-            self._timer.cancel()
+        with self._file_lock:
+            if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
+                self._timer.cancel()
+
+            if immediate_save:
+                pass
+            else:
+                self._timer = threading.Timer(self._debounce_time, self.saveConfigToFile)
+                self._timer.daemon = True
+                self._timer.start()
 
         if immediate_save:
             self.saveConfigToFile()
-        else:
-            self._timer = threading.Timer(self._debounce_time, self.saveConfigToFile)
-            self._timer.daemon = True
-            self._timer.start()
 
     # Read Only
     VERSION = ManagedProperty('VERSION', readonly=True, serialize=False)
