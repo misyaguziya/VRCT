@@ -5,6 +5,9 @@ import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
 from os import path as os_path
+from os import getppid as os_getppid
+from os import _exit as os_exit
+from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
 from queue import Queue
@@ -685,6 +688,7 @@ class Model:
             return
         # run the NSIS setup wizard, preselecting the CPU edition
         Popen(["VRCT_setup.exe", "/EDITION=cpu"], cwd=config.PATH_LOCAL)
+        Model._quitApp()
 
     @staticmethod
     def updateCudaSoftware():
@@ -692,6 +696,20 @@ class Model:
             return
         # run the NSIS setup wizard, preselecting the GPU edition
         Popen(["VRCT_setup.exe", "/EDITION=gpu"], cwd=config.PATH_LOCAL)
+        Model._quitApp()
+
+    @staticmethod
+    def _quitApp():
+        # The setup wizard's own running-process check can only kill VRCT
+        # silently or prompt the user for it; quit proactively here so the
+        # app always closes as soon as the wizard has been launched, whether
+        # this was a version update or a CPU/GPU switch.
+        try:
+            psutil_Process(os_getppid()).terminate()
+        except Exception:
+            errorLogging()
+        finally:
+            os_exit(0)
 
     def getListMicHost(self):
         self.ensure_initialized()

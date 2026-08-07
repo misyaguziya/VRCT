@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from model import Model
+from config import config
 
 
 class TestModelUpdate(unittest.TestCase):
@@ -21,6 +22,27 @@ class TestModelUpdate(unittest.TestCase):
         popen.assert_not_called()
         self.assertEqual(requests_get.call_count, 10)
         self.assertEqual(error_logging.call_count, 10)
+
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_quits_app_after_launching_setup(
+        self,
+        requests_get: Mock,
+        popen: Mock,
+        psutil_process: Mock,
+        os_exit: Mock,
+    ) -> None:
+        requests_get.return_value.iter_content.return_value = [b"data"]
+
+        Model.updateCudaSoftware()
+
+        popen.assert_called_once_with(
+            ["VRCT_setup.exe", "/EDITION=gpu"], cwd=config.PATH_LOCAL
+        )
+        psutil_process.return_value.terminate.assert_called_once()
+        os_exit.assert_called_once_with(0)
 
 
 if __name__ == "__main__":
