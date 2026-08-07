@@ -3,6 +3,7 @@ import threading
 import websockets
 from websockets.legacy.server import WebSocketServerProtocol
 from typing import Callable, Set, Optional
+from utils import errorLogging
 
 class WebSocketServer:
     """
@@ -47,7 +48,12 @@ class WebSocketServer:
             async for message in websocket:
                 # メッセージ受信時にコールバック呼び出し
                 if self._message_handler:
-                    self._message_handler(self, websocket, message)
+                    try:
+                        self._message_handler(self, websocket, message)
+                    except Exception:
+                        # A broken handler shouldn't tear down this client's
+                        # connection (or, if unlucky, the whole server task).
+                        errorLogging()
         except websockets.exceptions.ConnectionClosed:
             # クライアントが切断した場合
             pass

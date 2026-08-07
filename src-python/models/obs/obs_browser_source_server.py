@@ -152,6 +152,37 @@ def _build_overlay_html() -> str:
         const asStringArray = (v) =>
           Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.length > 0) : [];
 
+        const HEX_COLOR_RE = /^#[0-9a-fA-F]{{6}}$/;
+
+        const applySettings = (settings) => {{
+          if (!settings || typeof settings !== "object") return;
+          const style = document.documentElement.style;
+
+          if (Number.isFinite(settings.maxMessages) && settings.maxMessages > 0) {{
+            SETTINGS.maxMessages = settings.maxMessages;
+          }}
+          if (Number.isFinite(settings.displayDuration) && settings.displayDuration >= 0) {{
+            SETTINGS.displayDurationMs = settings.displayDuration * 1000;
+            style.setProperty("--display-duration", `${{settings.displayDuration}}s`);
+          }}
+          if (Number.isFinite(settings.fadeoutDuration) && settings.fadeoutDuration >= 0) {{
+            SETTINGS.fadeoutDurationMs = settings.fadeoutDuration * 1000;
+            style.setProperty("--fadeout-duration", `${{settings.fadeoutDuration}}s`);
+          }}
+          if (Number.isFinite(settings.fontSize) && settings.fontSize > 0) {{
+            style.setProperty("--font-size", `${{settings.fontSize}}px`);
+          }}
+          if (typeof settings.fontColor === "string" && HEX_COLOR_RE.test(settings.fontColor)) {{
+            style.setProperty("--font-color", settings.fontColor);
+          }}
+          if (Number.isFinite(settings.outlineThickness) && settings.outlineThickness >= 0) {{
+            style.setProperty("--outline-size", `${{settings.outlineThickness}}px`);
+          }}
+          if (typeof settings.outlineColor === "string" && HEX_COLOR_RE.test(settings.outlineColor)) {{
+            style.setProperty("--outline-color", settings.outlineColor);
+          }}
+        }};
+
         const addMessage = (payload) => {{
           const type = asString(payload?.type) || "MESSAGE";
           const message = asString(payload?.message);
@@ -213,6 +244,10 @@ def _build_overlay_html() -> str:
           ws.addEventListener("message", (event) => {{
             try {{
               const payload = JSON.parse(event.data);
+              if (asString(payload?.type) === "SETTINGS_UPDATED") {{
+                applySettings(payload?.settings);
+                return;
+              }}
               addMessage(payload);
             }} catch (e) {{
               // ignore malformed messages

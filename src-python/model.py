@@ -789,6 +789,13 @@ class Model:
             )
             def sendMicTranscript():
                 try:
+                    if (
+                        isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder)
+                        and self.mic_audio_recorder.device_error_event.is_set()
+                    ):
+                        self.mic_audio_recorder.device_error_event.clear()
+                        fnc({"text": False, "language": None})
+                        return
                     selected_your_languages = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
                     languages = [data["language"] for data in selected_your_languages.values() if data["enable"] is True]
                     countries = [data["country"] for data in selected_your_languages.values() if data["enable"] is True]
@@ -989,6 +996,13 @@ class Model:
             )
             def sendSpeakerTranscript():
                 try:
+                    if (
+                        isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder)
+                        and self.speaker_audio_recorder.device_error_event.is_set()
+                    ):
+                        self.speaker_audio_recorder.device_error_event.clear()
+                        fnc({"text": False, "language": None})
+                        return
                     selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
                     languages = [data["language"] for data in selected_target_languages.values() if data["enable"] is True]
                     countries = [data["country"] for data in selected_target_languages.values() if data["enable"] is True]
@@ -1257,7 +1271,7 @@ class Model:
             self.th_watchdog.join()
             self.th_watchdog = None
 
-    def message_handler(websocket, message):
+    def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""
         pass
 

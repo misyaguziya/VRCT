@@ -1,7 +1,6 @@
 from typing import Callable, Any, List, Optional
-from time import sleep
 from subprocess import Popen
-from threading import Thread
+from threading import Thread, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import re
 from device_manager import device_manager
@@ -21,7 +20,7 @@ class Controller:
         def _noop_run(status: int, endpoint: str, payload: Any = None) -> None:
             return None
         self.run: Callable[[int, str, Any], None] = _noop_run
-        self.device_access_status: bool = True
+        self.device_access_lock: Lock = Lock()
         # Ensure model is initialized at controller startup so existing
         # attribute-based checks (e.g. model.overlay.initialized) continue to work.
         try:
@@ -57,6 +56,13 @@ class Controller:
         Returns:
             dict with status 200 and result True on success.
         """
+        try:
+            # A setting changed in the last few seconds may still be sitting
+            # in the debounce timer rather than on disk; flush it now so a
+            # normal app close never silently drops the change.
+            config.saveConfigToFile()
+        except Exception:
+            errorLogging()
         try:
             model.telemetryShutdown()
             return {"status": 200, "result": True}
@@ -1260,8 +1266,18 @@ class Controller:
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
     def setSelectedMicHost(self, data, *args, **kwargs) -> dict:
+        previously_selected_device = config.SELECTED_MIC_DEVICE
         config.SELECTED_MIC_HOST = data
-        config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
+        # Keep using the same physical device if it is also exposed under the
+        # newly selected host (device names are often duplicated across host
+        # APIs). Only fall back to the host's first device when the
+        # previously selected one isn't available there, so switching hosts
+        # doesn't silently swap the currently used device for an unrelated
+        # "Default Device" entry.
+        if previously_selected_device in model.getListMicDevice():
+            config.SELECTED_MIC_DEVICE = previously_selected_device
+        else:
+            config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             self.stopThreadingCheckMicEnergy()
             self.startThreadingTranscriptionSendMessage()
@@ -2956,9 +2972,7 @@ class Controller:
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
     def startTranscriptionSendMessage(self) -> None:
-        while self.device_access_status is False:
-            sleep(1)
-        self.device_access_status = False
+        self.device_access_lock.acquire()
         try:
             model.startMicTranscript(self.micMessage)
         except Exception as e:
@@ -2989,7 +3003,7 @@ class Controller:
                 # その他のエラーは通常通り処理
                 errorLogging()
         finally:
-            self.device_access_status = True
+            self.device_access_lock.release()
 
     @staticmethod
     def stopTranscriptionSendMessage() -> None:
@@ -3007,9 +3021,7 @@ class Controller:
         th_stopTranscriptionSendMessage.join()
 
     def startTranscriptionReceiveMessage(self) -> None:
-        while self.device_access_status is False:
-            sleep(1)
-        self.device_access_status = False
+        self.device_access_lock.acquire()
         try:
             model.startSpeakerTranscript(self.speakerMessage)
         except Exception as e:
@@ -3040,7 +3052,7 @@ class Controller:
                 # その他のエラーは通常通り処理
                 errorLogging()
         finally:
-            self.device_access_status = True
+            self.device_access_lock.release()
 
     @staticmethod
     def stopTranscriptionReceiveMessage() -> None:
@@ -3161,13 +3173,11 @@ class Controller:
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
 
     def startCheckMicEnergy(self) -> None:
-        while self.device_access_status is False:
-            sleep(1)
-        self.device_access_status = False
+        self.device_access_lock.acquire()
         try:
             model.startCheckMicEnergy(self.progressBarMicEnergy)
         finally:
-            self.device_access_status = True
+            self.device_access_lock.release()
 
     def startThreadingCheckMicEnergy(self) -> None:
         th_startCheckMicEnergy = Thread(target=self.startCheckMicEnergy)
@@ -3184,13 +3194,11 @@ class Controller:
         th_stopCheckMicEnergy.join()
 
     def startCheckSpeakerEnergy(self) -> None:
-        while self.device_access_status is False:
-            sleep(1)
-        self.device_access_status = False
+        self.device_access_lock.acquire()
         try:
             model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
         finally:
-            self.device_access_status = True
+            self.device_access_lock.release()
 
     def startThreadingCheckSpeakerEnergy(self) -> None:
         th_startCheckSpeakerEnergy = Thread(target=self.startCheckSpeakerEnergy)
@@ -3260,6 +3268,12 @@ class Controller:
                     model.stopWebSocketServer()
                     model.startWebSocketServer(data, config.WEBSOCKET_PORT)
                     config.WEBSOCKET_HOST = data
+                    # The OBS overlay's HTTP server must stay bound to the
+                    # same host the WebSocket server now listens on, or the
+                    # overlay page it serves will point at a dead address.
+                    if config.OBS_BROWSER_SOURCE is True:
+                        model.stopObsBrowserSourceServer()
+                        model.startObsBrowserSourceServer(data, int(config.OBS_BROWSER_SOURCE_PORT))
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
                 else:
                     response = VRCTError.create_error_response(
@@ -3316,6 +3330,13 @@ class Controller:
     @staticmethod
     def setDisableWebSocketServer(*args, **kwargs) -> dict:
         if config.WEBSOCKET_SERVER is True:
+            # OBS Browser Source overlay receives its messages through this
+            # WebSocket server; stopping the server without also disabling
+            # OBS Browser Source would leave config.OBS_BROWSER_SOURCE stuck
+            # at True while the overlay silently stops updating.
+            if config.OBS_BROWSER_SOURCE is True:
+                config.OBS_BROWSER_SOURCE = False
+                model.stopObsBrowserSourceServer()
             config.WEBSOCKET_SERVER = False
             model.stopWebSocketServer()
         return {"status":200, "result":config.WEBSOCKET_SERVER}
@@ -3409,48 +3430,70 @@ class Controller:
         config.OBS_BROWSER_SOURCE_PORT = port
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_PORT}
 
+    def _pushObsBrowserSourceSettings(self) -> None:
+        """Notify any already-open OBS overlay pages that display settings
+        changed, so they can apply them live instead of waiting for the
+        next page load (OBS Browser Sources normally cache the page and
+        never refetch it on their own).
+        """
+        if config.OBS_BROWSER_SOURCE is not True:
+            return
+        if model.checkWebSocketServerAlive() is not True:
+            return
+        model.websocketSendMessage({
+            "type": "SETTINGS_UPDATED",
+            "settings": {
+                "maxMessages": config.OBS_BROWSER_SOURCE_MAX_MESSAGES,
+                "displayDuration": config.OBS_BROWSER_SOURCE_DISPLAY_DURATION,
+                "fadeoutDuration": config.OBS_BROWSER_SOURCE_FADEOUT_DURATION,
+                "fontSize": config.OBS_BROWSER_SOURCE_FONT_SIZE,
+                "fontColor": config.OBS_BROWSER_SOURCE_FONT_COLOR,
+                "outlineThickness": config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS,
+                "outlineColor": config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR,
+            },
+        })
+
     @staticmethod
     def getObsBrowserSourceMaxMessages(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
-    @staticmethod
-    def setObsBrowserSourceMaxMessages(data, *args, **kwargs) -> dict:
+    def setObsBrowserSourceMaxMessages(self, data, *args, **kwargs) -> dict:
         config.OBS_BROWSER_SOURCE_MAX_MESSAGES = int(data)
+        self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
     @staticmethod
     def getObsBrowserSourceDisplayDuration(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
-    @staticmethod
-    def setObsBrowserSourceDisplayDuration(data, *args, **kwargs) -> dict:
+    def setObsBrowserSourceDisplayDuration(self, data, *args, **kwargs) -> dict:
         config.OBS_BROWSER_SOURCE_DISPLAY_DURATION = int(data)
+        self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
     @staticmethod
     def getObsBrowserSourceFadeoutDuration(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
-    @staticmethod
-    def setObsBrowserSourceFadeoutDuration(data, *args, **kwargs) -> dict:
+    def setObsBrowserSourceFadeoutDuration(self, data, *args, **kwargs) -> dict:
         config.OBS_BROWSER_SOURCE_FADEOUT_DURATION = int(data)
+        self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
     @staticmethod
     def getObsBrowserSourceFontSize(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
-    @staticmethod
-    def setObsBrowserSourceFontSize(data, *args, **kwargs) -> dict:
+    def setObsBrowserSourceFontSize(self, data, *args, **kwargs) -> dict:
         config.OBS_BROWSER_SOURCE_FONT_SIZE = int(data)
+        self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
     @staticmethod
     def getObsBrowserSourceFontColor(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
 
-    @staticmethod
-    def setObsBrowserSourceFontColor(data, *args, **kwargs) -> dict:
+    def setObsBrowserSourceFontColor(self, data, *args, **kwargs) -> dict:
         color = str(data).strip()
         if not _HEX_COLOR_RE.match(color):
             return VRCTError.create_error_response(
@@ -3458,23 +3501,23 @@ class Controller:
                 data=config.OBS_BROWSER_SOURCE_FONT_COLOR,
             )
         config.OBS_BROWSER_SOURCE_FONT_COLOR = color.upper()
+        self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
 
     @staticmethod
     def getObsBrowserSourceFontOutlineThickness(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
-    @staticmethod
-    def setObsBrowserSourceFontOutlineThickness(data, *args, **kwargs) -> dict:
+    def setObsBrowserSourceFontOutlineThickness(self, data, *args, **kwargs) -> dict:
         config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = int(data)
+        self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
     @staticmethod
     def getObsBrowserSourceFontOutlineColor(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
 
-    @staticmethod
-    def setObsBrowserSourceFontOutlineColor(data, *args, **kwargs) -> dict:
+    def setObsBrowserSourceFontOutlineColor(self, data, *args, **kwargs) -> dict:
         color = str(data).strip()
         if not _HEX_COLOR_RE.match(color):
             return VRCTError.create_error_response(
@@ -3482,6 +3525,7 @@ class Controller:
                 data=config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR,
             )
         config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = color.upper()
+        self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
 
     # Clipboard control

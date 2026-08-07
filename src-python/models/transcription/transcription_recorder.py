@@ -154,6 +154,11 @@ class BaseEnergyAndAudioRecorder:
         self.SAMPLE_RATE = 16000
         self.SAMPLE_WIDTH = 2
         self.channels = 1
+        # Set when the background listener thread dies from an unexpected
+        # stream error (e.g. the device was unplugged) rather than a normal
+        # stop() call, so callers can surface a "device lost" notice instead
+        # of silently going quiet.
+        self.device_error_event = threading.Event()
         self.normalizer = Pcm16MonoNormalizer(
             sample_rate=source.SAMPLE_RATE,
             sample_width=source.SAMPLE_WIDTH,
@@ -248,6 +253,7 @@ class BaseEnergyAndAudioRecorder:
             except EOFError:
                 pass
             except Exception:
+                self.device_error_event.set()
                 errorLogging()
             finally:
                 recorded_at = datetime.now()
