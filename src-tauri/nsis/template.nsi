@@ -470,6 +470,13 @@ Function .onInit
   IfErrors +2 0
     StrCpy $PassiveMode 1
 
+  ; Preselect the CPU/GPU edition page when launched from within the app
+  ; (e.g. "/EDITION=gpu" from the in-app CPU/GPU switch button). The page
+  ; is still shown so the user can change their mind before installing.
+  ${GetOptions} $CMDLINE "/EDITION=" $0
+  IfErrors +2 0
+    StrCpy $SelectedEdition $0
+
   !if "${DISPLAYLANGUAGESELECTOR}" == "true"
     !insertmacro MUI_LANGDLL_DISPLAY
   !endif
