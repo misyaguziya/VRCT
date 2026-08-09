@@ -12,6 +12,7 @@ import {
     RadioButtonContainer,
     DropdownMenuContainer,
     SliderContainer,
+    SwitchBoxContainer,
 } from "../_templates/Templates";
 
 import {
@@ -305,7 +306,33 @@ const Advanced_Container = () => {
             <MicNoSpeechProbContainer />
             <SpeakerAvgLogprobContainer />
             <SpeakerNoSpeechProbContainer />
+            <MicVadFilterContainer />
+            <SpeakerVadFilterContainer />
         </div>
+    );
+};
+
+export const MicVadFilterContainer = () => {
+    const { currentMicVadFilter, toggleMicVadFilter } = useTranscription();
+    return (
+        <SwitchBoxContainer
+            label="Mic VAD Filter"
+            desc="Only send audio to recognition after a silence gap is detected. Disable this if mic transcription stops mid-conversation instead of continuing to transcribe."
+            variable={currentMicVadFilter}
+            toggleFunction={toggleMicVadFilter}
+        />
+    );
+};
+
+export const SpeakerVadFilterContainer = () => {
+    const { currentSpeakerVadFilter, toggleSpeakerVadFilter } = useTranscription();
+    return (
+        <SwitchBoxContainer
+            label="Speaker VAD Filter"
+            desc="Only send audio to recognition after a silence gap is detected. Disable this if speaker transcription stops or shows 'speech recognition request failed' during continuous game/voice audio."
+            variable={currentSpeakerVadFilter}
+            toggleFunction={toggleSpeakerVadFilter}
+        />
     );
 };
 

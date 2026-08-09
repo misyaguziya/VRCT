@@ -313,6 +313,10 @@ mapping = {
     "/get/data/mic_no_speech_prob": {"status": True, "variable":controller.getMicNoSpeechProb},
     "/set/data/mic_no_speech_prob": {"status": True, "variable":controller.setMicNoSpeechProb},
 
+    "/get/data/mic_vad_filter": {"status": True, "variable":controller.getMicVadFilter},
+    "/set/enable/mic_vad_filter": {"status": True, "variable":controller.setEnableMicVadFilter},
+    "/set/disable/mic_vad_filter": {"status": True, "variable":controller.setDisableMicVadFilter},
+
     "/set/enable/check_mic_threshold": {"status": True, "variable":controller.setEnableCheckMicThreshold},
     "/set/disable/check_mic_threshold": {"status": True, "variable":controller.setDisableCheckMicThreshold},
 
@@ -347,6 +351,10 @@ mapping = {
 
     "/get/data/speaker_no_speech_prob": {"status": True, "variable":controller.getSpeakerNoSpeechProb},
     "/set/data/speaker_no_speech_prob": {"status": True, "variable":controller.setSpeakerNoSpeechProb},
+
+    "/get/data/speaker_vad_filter": {"status": True, "variable":controller.getSpeakerVadFilter},
+    "/set/enable/speaker_vad_filter": {"status": True, "variable":controller.setEnableSpeakerVadFilter},
+    "/set/disable/speaker_vad_filter": {"status": True, "variable":controller.setDisableSpeakerVadFilter},
 
     "/set/enable/check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
