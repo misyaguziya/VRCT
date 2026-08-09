@@ -3913,7 +3913,8 @@ class Controller:
                 if osc_query_enabled is True:
                     self.enableOscQuery()
                     if config.VRC_MIC_MUTE_SYNC is True:
-                        self.setEnableVrcMicMuteSync()
+                        model.setMuteSelfStatus()
+                        model.changeMicTranscriptStatus()
                 else:
                     # OSC Query is disabled, so disable VRC some features
                     mute_sync_info_flag = False
