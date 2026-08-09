@@ -1,0 +1,18 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    padding: 1.2rem;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.description {
+    font-size: 1.2rem;
+    opacity: 0.75;
+    line-height: 1.4;
+}
