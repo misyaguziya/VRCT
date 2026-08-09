@@ -37,6 +37,7 @@ from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
+from models.ocr import OcrPipeline
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 
@@ -152,6 +153,7 @@ class Model:
         self.check_mic_energy_fnc: Callable[[float], None] = lambda v: None
         self.check_speaker_energy_fnc: Callable[[float], None] = lambda v: None
         self.clipboard = Clipboard()
+        self.ocr_pipeline: Optional[OcrPipeline] = None
         self.telemetry = Telemetry()
 
         self._inited = True
@@ -1070,6 +1072,62 @@ class Model:
         # if isinstance(self.speaker_get_energy, threadFnc):
         #     self.speaker_get_energy.stop()
         #     self.speaker_get_energy = None
+
+    def startOCRCapture(self, fnc: Callable[[dict], None]) -> bool:
+        """Start the VRChat chat-bubble OCR pipeline.
+
+        The callback receives dicts shaped like mic/speaker transcripts so
+        Controller.ocrMessage can share the mic/speaker translation path.
+        Returns True if the pipeline started, False otherwise.
+        """
+        self.ensure_initialized()
+        if isinstance(self.ocr_pipeline, OcrPipeline):
+            # Already running.
+            return True
+
+        # Resolve source language: "auto" means "use the first enabled tab source language".
+        source_language = config.OCR_SOURCE_LANGUAGE
+        if not isinstance(source_language, str) or source_language.lower() == "auto":
+            try:
+                langs_cfg = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                enabled = [d["language"] for d in langs_cfg.values() if d.get("enable") is True]
+                if enabled:
+                    source_language = enabled[0]
+                else:
+                    source_language = "auto"
+            except Exception:
+                source_language = "auto"
+
+        try:
+            self.ocr_pipeline = OcrPipeline(
+                callback=fnc,
+                source_language=source_language,
+                poll_interval_ms=config.OCR_POLL_INTERVAL_MS,
+                min_confidence=config.OCR_MIN_CONFIDENCE,
+                use_gpu=config.OCR_USE_GPU,
+                min_text_length=config.OCR_BUBBLE_MIN_TEXT_LENGTH,
+                dedup_cooldown_sec=config.OCR_DEDUP_COOLDOWN_SEC,
+            )
+        except Exception:
+            errorLogging()
+            self.ocr_pipeline = None
+            return False
+
+        started = self.ocr_pipeline.start()
+        if not started:
+            self.ocr_pipeline = None
+        return started
+
+    def stopOCRCapture(self) -> None:
+        self.ensure_initialized()
+        pipeline = self.ocr_pipeline
+        if isinstance(pipeline, OcrPipeline):
+            try:
+                pipeline.stop()
+            except Exception:
+                errorLogging()
+        self.ocr_pipeline = None
+        gc.collect()
 
     def startCheckSpeakerEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
         self.ensure_initialized()

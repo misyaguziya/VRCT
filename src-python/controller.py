@@ -711,6 +711,155 @@ class Controller:
 
             model.addTranslationHistory("speaker", message)
 
+    def ocrMessage(self, result: dict) -> None:
+        """Handle a chat-bubble OCR result and route it through translation.
+
+        Mirrors speakerMessage: translate, mirror to UI log and VR
+        overlay, but never sends to VRChat's OSC chatbox — echoing another
+        player's message back into VRChat would be spam / ToS-adjacent.
+        """
+        if config.ENABLE_OCR_CAPTURE is not True:
+            return
+
+        message = result.get("text")
+        language = result.get("language")
+        if not isinstance(message, str) or len(message) == 0:
+            return
+
+        # Language for the translator: falls back to the current tab's source language.
+        source_language = language
+        if not isinstance(source_language, str) or len(source_language) == 0:
+            try:
+                langs_cfg = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                enabled = [d["language"] for d in langs_cfg.values() if d.get("enable") is True]
+                source_language = enabled[0] if enabled else None
+            except Exception:
+                source_language = None
+
+        translation: list = []
+        if model.checkKeywords(message):
+            self.run(
+                200,
+                self.run_mapping["word_filter"],
+                {"message": f"Detected by word filter: {message}"},
+            )
+            return
+        if config.ENABLE_TRANSLATION is True:
+            try:
+                translation, success = model.getOutputTranslate(message, source_language=source_language)
+                if all(success) is not True:
+                    self.changeToCTranslate2Process()
+                    error_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSLATION_ENGINE_LIMIT,
+                        data=None,
+                    )
+                    self.run(
+                        error_response["status"],
+                        self.run_mapping["error_translation_engine"],
+                        error_response["result"],
+                    )
+            except Exception as e:
+                is_vram_error, error_message = model.detectVRAMError(e)
+                if is_vram_error:
+                    error_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSLATION_VRAM_SPEAKER,
+                        data=error_message,
+                    )
+                    self.run(
+                        error_response["status"],
+                        self.run_mapping["error_translation_speaker_vram_overflow"],
+                        error_response["result"],
+                    )
+                    self.setDisableTranslation()
+                    disable_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSLATION_DISABLED_VRAM,
+                        data=False,
+                    )
+                    self.run(
+                        disable_response["status"],
+                        self.run_mapping["enable_translation"],
+                        disable_response["result"],
+                    )
+                    return
+                else:
+                    errorLogging()
+                    return
+
+        transliteration_message: list = []
+        transliteration_translation: list = [[]]
+        segment_id = result.get("segment_id")
+        transcript_id = f"transcription-ocr-{segment_id}" if segment_id is not None else None
+
+        endpoint = self.run_mapping.get("transcription_ocr")
+        if endpoint is not None:
+            self.run(
+                200,
+                endpoint,
+                {
+                    "id": transcript_id,
+                    "original": {
+                        "message": message,
+                        "transliteration": transliteration_message,
+                    },
+                    "translations": [
+                        {
+                            "message": t,
+                            "transliteration": [],
+                        } for t in translation
+                    ],
+                },
+            )
+
+        # Mirror onto VR overlay (large log). Never send to OSC chatbox.
+        if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
+            try:
+                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
+                    overlay_image = model.createOverlayImageLargeLog(
+                        "receive",
+                        None,
+                        None,
+                        translation,
+                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        transliteration_message,
+                        transliteration_translation,
+                    )
+                    model.updateOverlayLargeLog(overlay_image)
+                else:
+                    overlay_image = model.createOverlayImageLargeLog(
+                        "receive",
+                        message,
+                        source_language,
+                        translation,
+                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        transliteration_message,
+                        transliteration_translation,
+                    )
+                    model.updateOverlayLargeLog(overlay_image)
+            except Exception:
+                errorLogging()
+
+        if model.checkWebSocketServerAlive() is True:
+            try:
+                model.websocketSendMessage(
+                    {
+                        "type": "OCR",
+                        "src_languages": config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                        "dst_languages": config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        "message": message,
+                        "translation": translation,
+                        "transliteration": transliteration_translation,
+                    }
+                )
+            except Exception:
+                errorLogging()
+
+        if config.LOGGER_FEATURE is True:
+            translation_text = f" ({'/'.join(translation)})" if translation else ""
+            try:
+                model.logger.info(f"[OCR] {message}{translation_text}")
+            except Exception:
+                pass
+
     def chatMessage(self, data) -> dict:
         id = data["id"]
         message = data["message"]
@@ -3069,6 +3218,34 @@ class Controller:
         th_stopTranscriptionReceiveMessage.start()
         th_stopTranscriptionReceiveMessage.join()
 
+    def startOcrCapture(self) -> None:
+        try:
+            started = model.startOCRCapture(self.ocrMessage)
+            if not started:
+                # Roll back the ENABLE flag so the UI stays in sync.
+                config.ENABLE_OCR_CAPTURE = False
+                endpoint = self.run_mapping.get("enable_ocr_capture")
+                if endpoint is not None:
+                    self.run(500, endpoint, False)
+        except Exception:
+            errorLogging()
+            config.ENABLE_OCR_CAPTURE = False
+
+    @staticmethod
+    def stopOcrCapture() -> None:
+        model.stopOCRCapture()
+
+    def startThreadingOcrCapture(self) -> None:
+        th = Thread(target=self.startOcrCapture)
+        th.daemon = True
+        th.start()
+
+    def stopThreadingOcrCapture(self) -> None:
+        th = Thread(target=self.stopOcrCapture)
+        th.daemon = True
+        th.start()
+        th.join()
+
     @staticmethod
     def replaceExclamationsWithRandom(text):
         # ![...] にマッチする正規表現
@@ -3544,6 +3721,123 @@ class Controller:
         if config.ENABLE_CLIPBOARD is True:
             config.ENABLE_CLIPBOARD = False
         return {"status":200, "result":config.ENABLE_CLIPBOARD}
+
+    # ---------- VRChat chat-bubble OCR settings ----------
+
+    @staticmethod
+    def getEnableOcrCapture(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
+
+    def setEnableOcrCapture(self, *args, **kwargs) -> dict:
+        if config.ENABLE_OCR_CAPTURE is False:
+            config.ENABLE_OCR_CAPTURE = True
+            self.startThreadingOcrCapture()
+        return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
+
+    def setDisableOcrCapture(self, *args, **kwargs) -> dict:
+        if config.ENABLE_OCR_CAPTURE is True:
+            config.ENABLE_OCR_CAPTURE = False
+            self.stopThreadingOcrCapture()
+        return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
+
+    @staticmethod
+    def getOcrEngine(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_ENGINE}
+
+    @staticmethod
+    def setOcrEngine(data, *args, **kwargs) -> dict:
+        config.OCR_ENGINE = str(data)
+        return {"status": 200, "result": config.OCR_ENGINE}
+
+    @staticmethod
+    def getOcrSourceLanguage(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
+
+    @staticmethod
+    def setOcrSourceLanguage(data, *args, **kwargs) -> dict:
+        config.OCR_SOURCE_LANGUAGE = str(data)
+        return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
+
+    @staticmethod
+    def getOcrTargetLanguage(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_TARGET_LANGUAGE}
+
+    @staticmethod
+    def setOcrTargetLanguage(data, *args, **kwargs) -> dict:
+        config.OCR_TARGET_LANGUAGE = str(data)
+        return {"status": 200, "result": config.OCR_TARGET_LANGUAGE}
+
+    @staticmethod
+    def getOcrPollIntervalMs(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_POLL_INTERVAL_MS}
+
+    @staticmethod
+    def setOcrPollIntervalMs(data, *args, **kwargs) -> dict:
+        try:
+            value = int(data)
+        except (TypeError, ValueError):
+            return {"status": 400, "result": config.OCR_POLL_INTERVAL_MS}
+        value = max(100, min(5000, value))
+        config.OCR_POLL_INTERVAL_MS = value
+        return {"status": 200, "result": config.OCR_POLL_INTERVAL_MS}
+
+    @staticmethod
+    def getOcrMinConfidence(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
+
+    @staticmethod
+    def setOcrMinConfidence(data, *args, **kwargs) -> dict:
+        try:
+            value = float(data)
+        except (TypeError, ValueError):
+            return {"status": 400, "result": config.OCR_MIN_CONFIDENCE}
+        value = max(0.1, min(0.99, value))
+        config.OCR_MIN_CONFIDENCE = value
+        return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
+
+    @staticmethod
+    def getOcrUseGpu(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_USE_GPU}
+
+    @staticmethod
+    def setEnableOcrUseGpu(*args, **kwargs) -> dict:
+        if config.OCR_USE_GPU is False:
+            config.OCR_USE_GPU = True
+        return {"status": 200, "result": config.OCR_USE_GPU}
+
+    @staticmethod
+    def setDisableOcrUseGpu(*args, **kwargs) -> dict:
+        if config.OCR_USE_GPU is True:
+            config.OCR_USE_GPU = False
+        return {"status": 200, "result": config.OCR_USE_GPU}
+
+    @staticmethod
+    def getOcrBubbleMinTextLength(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
+
+    @staticmethod
+    def setOcrBubbleMinTextLength(data, *args, **kwargs) -> dict:
+        try:
+            value = int(data)
+        except (TypeError, ValueError):
+            return {"status": 400, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
+        value = max(1, min(50, value))
+        config.OCR_BUBBLE_MIN_TEXT_LENGTH = value
+        return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
+
+    @staticmethod
+    def getOcrDedupCooldownSec(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_DEDUP_COOLDOWN_SEC}
+
+    @staticmethod
+    def setOcrDedupCooldownSec(data, *args, **kwargs) -> dict:
+        try:
+            value = int(data)
+        except (TypeError, ValueError):
+            return {"status": 400, "result": config.OCR_DEDUP_COOLDOWN_SEC}
+        value = max(1, min(120, value))
+        config.OCR_DEDUP_COOLDOWN_SEC = value
+        return {"status": 200, "result": config.OCR_DEDUP_COOLDOWN_SEC}
 
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)

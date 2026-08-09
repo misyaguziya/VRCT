@@ -47,6 +47,7 @@ export const SidebarSection = () => {
                         <Tab tab_id="transcription" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="vr" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="others" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
+                        <Tab tab_id="ocr" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="hotkeys" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="plugins" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="advanced_settings" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
@@ -70,6 +71,7 @@ const TabIcon = ({ tab_id, className }) => {
         case "transcription": return <GraphicEqSvg className={clsx(className, styles.mui_icon)} />;
         case "vr": return <HMDSvg className={clsx(className, styles.mui_icon)} />;
         case "others" : return <DiscoverTuneSvg className={clsx(className, styles.mui_icon)} />;
+        case "ocr": return <GraphicEqSvg className={clsx(className, styles.mui_icon)} />;
         case "hotkeys": return <KeyboardAltSvg className={clsx(className, styles.mui_icon)} />;
         case "plugins": return <ExtensionSvg className={clsx(className, styles.mui_icon)} />;
         case "advanced_settings": return <CodeBlocksSvg className={clsx(className, styles.mui_icon)} />;
@@ -101,6 +103,7 @@ const Tab = (props) => {
         if (props.tab_id === "vr") return "VR";
         if (props.tab_id === "supporters") return "Supporters";
         if (props.tab_id === "about_vrct") return "About VRCT";
+        if (props.tab_id === "ocr") return "OCR";
         return t(`config_page.side_menu_labels.${props.tab_id}`);
     };
 

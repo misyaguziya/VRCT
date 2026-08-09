@@ -12,9 +12,10 @@ a = Analysis(
         ('./../.venv_cuda/Lib/site-packages/zeroconf', 'zeroconf/'),
         ('./../.venv_cuda/Lib/site-packages/openvr', 'openvr/'),
         ('./../.venv_cuda/Lib/site-packages/faster_whisper', 'faster_whisper/'),
-        ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/')
+        ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/'),
+        ('./../.venv_cuda/Lib/site-packages/easyocr', 'easyocr/'),
         ],
-    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline'],
+    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline', 'easyocr', 'cv2', 'mss', 'OpenGL', 'glfw', 'models.ocr'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

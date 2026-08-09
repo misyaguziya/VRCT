@@ -812,6 +812,17 @@ class Config:
     # -- Clipboard control ---
     ENABLE_CLIPBOARD = ManagedProperty('ENABLE_CLIPBOARD', type_=bool)
 
+    # --- VRChat chat-bubble OCR ---
+    ENABLE_OCR_CAPTURE = ManagedProperty('ENABLE_OCR_CAPTURE', type_=bool, serialize=False)
+    OCR_ENGINE = ManagedProperty('OCR_ENGINE', type_=str)
+    OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str)
+    OCR_TARGET_LANGUAGE = ManagedProperty('OCR_TARGET_LANGUAGE', type_=str)
+    OCR_POLL_INTERVAL_MS = ManagedProperty('OCR_POLL_INTERVAL_MS', type_=int)
+    OCR_MIN_CONFIDENCE = ManagedProperty('OCR_MIN_CONFIDENCE', type_=(int, float))
+    OCR_USE_GPU = ManagedProperty('OCR_USE_GPU', type_=bool)
+    OCR_BUBBLE_MIN_TEXT_LENGTH = ManagedProperty('OCR_BUBBLE_MIN_TEXT_LENGTH', type_=int)
+    OCR_DEDUP_COOLDOWN_SEC = ManagedProperty('OCR_DEDUP_COOLDOWN_SEC', type_=int)
+
     def init_config(self):
         # Read Only
         self._VERSION = "3.4.3"
@@ -1080,6 +1091,18 @@ class Config:
         self._OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = "#000000"
         self._ENABLE_CLIPBOARD = False
         self._ENABLE_TELEMETRY = True
+
+        # OCR defaults (VRChat chat-bubble text capture)
+        self._ENABLE_OCR_CAPTURE = False
+        self._OCR_ENGINE = "EasyOCR"
+        # None-like defaults mean "follow existing translation source/target language"
+        self._OCR_SOURCE_LANGUAGE = "auto"
+        self._OCR_TARGET_LANGUAGE = "auto"
+        self._OCR_POLL_INTERVAL_MS = 750
+        self._OCR_MIN_CONFIDENCE = 0.55
+        self._OCR_USE_GPU = True
+        self._OCR_BUBBLE_MIN_TEXT_LENGTH = 2
+        self._OCR_DEDUP_COOLDOWN_SEC = 8
 
     def load_config(self):
         self._config_data = {}

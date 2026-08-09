@@ -756,6 +756,64 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "telemetry",
     },
 
+    // OCR (VRChat chat-bubble capture)
+    {
+        Category: "Ocr",
+        Base_Name: "EnableOcrCapture",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "ocr_capture",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrSourceLanguage",
+        default_value: "auto",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_source_language",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrPollIntervalMs",
+        default_value: 750,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_poll_interval_ms",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrMinConfidence",
+        default_value: 0.55,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_min_confidence",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrUseGpu",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "ocr_use_gpu",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrBubbleMinTextLength",
+        default_value: 2,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_bubble_min_text_length",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrDedupCooldownSec",
+        default_value: 8,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_dedup_cooldown_sec",
+    },
+
     // AdvancedSettings
     {
         Category: "AdvancedSettings",

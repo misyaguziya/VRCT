@@ -36,3 +36,8 @@ SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3
 aptabase==0.1.0
 PyAutoGUI==0.9.54
+easyocr==1.7.2
+opencv-python-headless==4.10.0.84
+mss==9.0.2
+PyOpenGL==3.1.7
+glfw==2.7.0

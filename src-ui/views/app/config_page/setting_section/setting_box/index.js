@@ -9,3 +9,4 @@ export { Hotkeys } from "./hotkeys/Hotkeys";
 export { Plugins } from "./plugins/Plugins";
 export { AboutVrct } from "./about_vrct/AboutVrct";
 export { Supporters } from "./supporters/Supporters";
+export { Ocr } from "./ocr/Ocr";

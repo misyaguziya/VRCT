@@ -41,6 +41,7 @@ export const STATIC_ROUTE_META_LIST = [
     // Message Transcription
     { endpoint: "/run/transcription_send_mic_message", ns: common, hook_name: "useMessage", method_name: "addSentMessageLog" },
     { endpoint: "/run/transcription_receive_speaker_message", ns: common, hook_name: "useMessage", method_name: "addReceivedMessageLog" },
+    { endpoint: "/run/transcription_ocr_message", ns: common, hook_name: "useMessage", method_name: "addReceivedMessageLog" },
     { endpoint: "/run/transcription_send_mic_partial", ns: common, hook_name: "useMessage", method_name: "upsertPartialSentMessageLog" },
     { endpoint: "/run/transcription_receive_speaker_partial", ns: common, hook_name: "useMessage", method_name: "upsertPartialReceivedMessageLog" },
 

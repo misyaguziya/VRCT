@@ -22,6 +22,8 @@ run_mapping = {
     "transcription_speaker":"/run/transcription_receive_speaker_message",
     "transcription_mic_partial":"/run/transcription_send_mic_partial",
     "transcription_speaker_partial":"/run/transcription_receive_speaker_partial",
+    "transcription_ocr":"/run/transcription_ocr_message",
+    "enable_ocr_capture":"/run/enable_ocr_capture",
 
     "check_mic_volume":"/run/check_mic_volume",
     "check_speaker_volume":"/run/check_speaker_volume",
@@ -446,6 +448,28 @@ mapping = {
     "/get/data/clipboard": {"status": True, "variable":controller.getClipboard},
     "/set/enable/clipboard": {"status": True, "variable":controller.setEnableClipboard},
     "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
+
+    # VRChat chat-bubble OCR
+    "/get/data/enable_ocr_capture": {"status": True, "variable":controller.getEnableOcrCapture},
+    "/set/enable/ocr_capture": {"status": True, "variable":controller.setEnableOcrCapture},
+    "/set/disable/ocr_capture": {"status": True, "variable":controller.setDisableOcrCapture},
+    "/get/data/ocr_engine": {"status": True, "variable":controller.getOcrEngine},
+    "/set/data/ocr_engine": {"status": True, "variable":controller.setOcrEngine},
+    "/get/data/ocr_source_language": {"status": True, "variable":controller.getOcrSourceLanguage},
+    "/set/data/ocr_source_language": {"status": True, "variable":controller.setOcrSourceLanguage},
+    "/get/data/ocr_target_language": {"status": True, "variable":controller.getOcrTargetLanguage},
+    "/set/data/ocr_target_language": {"status": True, "variable":controller.setOcrTargetLanguage},
+    "/get/data/ocr_poll_interval_ms": {"status": True, "variable":controller.getOcrPollIntervalMs},
+    "/set/data/ocr_poll_interval_ms": {"status": True, "variable":controller.setOcrPollIntervalMs},
+    "/get/data/ocr_min_confidence": {"status": True, "variable":controller.getOcrMinConfidence},
+    "/set/data/ocr_min_confidence": {"status": True, "variable":controller.setOcrMinConfidence},
+    "/get/data/ocr_use_gpu": {"status": True, "variable":controller.getOcrUseGpu},
+    "/set/enable/ocr_use_gpu": {"status": True, "variable":controller.setEnableOcrUseGpu},
+    "/set/disable/ocr_use_gpu": {"status": True, "variable":controller.setDisableOcrUseGpu},
+    "/get/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.getOcrBubbleMinTextLength},
+    "/set/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.setOcrBubbleMinTextLength},
+    "/get/data/ocr_dedup_cooldown_sec": {"status": True, "variable":controller.getOcrDedupCooldownSec},
+    "/set/data/ocr_dedup_cooldown_sec": {"status": True, "variable":controller.setOcrDedupCooldownSec},
 
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
