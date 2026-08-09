@@ -623,7 +623,7 @@ class Model:
     def startReceiveOSC(self):
         self.ensure_initialized()
         def changeHandlerMute(address, osc_arguments):
-            if config.ENABLE_TRANSCRIPTION_SEND is True:
+            if config.VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mic_mute_status is False:
                     self.mic_mute_status = osc_arguments
                     self.changeMicTranscriptStatus()
