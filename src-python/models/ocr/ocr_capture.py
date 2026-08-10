@@ -52,8 +52,8 @@ class OcrCapture:
     BACKEND_OPENVR = "openvr_mirror"
     BACKEND_NONE = "none"
 
-    def __init__(self) -> None:
-        self._hwnd = HwndCapture()
+    def __init__(self, window_title: str = "VRChat") -> None:
+        self._hwnd = HwndCapture(window_title=window_title)
         self._openvr: Optional[OpenVRMirrorCapture] = None
         self._backend = self.BACKEND_NONE
         self._last_check = 0.0

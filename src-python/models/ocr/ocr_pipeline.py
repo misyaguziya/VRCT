@@ -78,6 +78,7 @@ class OcrPipeline:
         self,
         callback: Callable[[dict], None],
         source_language: str = "auto",
+        window_title: str = "VRChat",
         poll_interval_ms: int = 750,
         min_confidence: float = 0.55,
         use_gpu: bool = True,
@@ -86,6 +87,7 @@ class OcrPipeline:
     ) -> None:
         self._callback = callback
         self._source_language = source_language or "auto"
+        self._window_title = window_title or "VRChat"
         self._poll_interval = max(0.1, poll_interval_ms / 1000.0)
         self._min_confidence = float(min_confidence)
         self._use_gpu = bool(use_gpu)
@@ -109,7 +111,6 @@ class OcrPipeline:
         if self._thread is not None and self._thread.is_alive():
             return True
         self._stop_event.clear()
-        self._capture = OcrCapture()
         langs = resolveEasyocrLangs(self._source_language)
         self._reader = easyocr_engine.getReader(langs, self._use_gpu)
         if self._reader is None:
@@ -129,12 +130,9 @@ class OcrPipeline:
             except Exception:
                 pass
         self._thread = None
-        cap = self._capture
-        if cap is not None:
-            try:
-                cap.close()
-            except Exception:
-                pass
+        # _run() closes self._capture itself before exiting — capture
+        # backends hold OS resources (GDI DCs, OpenVR handles) tied to the
+        # thread that created them, so tearing down from here is unsafe.
         self._capture = None
 
     def _emit(self, text: str) -> None:
@@ -151,16 +149,25 @@ class OcrPipeline:
             errorLogging()
 
     def _run(self) -> None:
-        while not self._stop_event.is_set():
-            start_t = time.monotonic()
+        # Capture backends hold OS resources tied to the creating thread,
+        # so construct on this thread rather than the one that called start().
+        self._capture = OcrCapture(window_title=self._window_title)
+        try:
+            while not self._stop_event.is_set():
+                start_t = time.monotonic()
+                try:
+                    self._tick()
+                except Exception:
+                    errorLogging()
+                elapsed = time.monotonic() - start_t
+                sleep_for = self._poll_interval - elapsed
+                if sleep_for > 0:
+                    self._stop_event.wait(sleep_for)
+        finally:
             try:
-                self._tick()
+                self._capture.close()
             except Exception:
-                errorLogging()
-            elapsed = time.monotonic() - start_t
-            sleep_for = self._poll_interval - elapsed
-            if sleep_for > 0:
-                self._stop_event.wait(sleep_for)
+                pass
 
     def _tick(self) -> None:
         if self._capture is None or self._reader is None:
