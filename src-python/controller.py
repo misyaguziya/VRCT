@@ -3759,6 +3759,18 @@ class Controller:
         return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
 
     @staticmethod
+    def getOcrWindowTitle(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OCR_WINDOW_TITLE}
+
+    @staticmethod
+    def setOcrWindowTitle(data, *args, **kwargs) -> dict:
+        title = str(data).strip()
+        if not title:
+            return {"status": 400, "result": config.OCR_WINDOW_TITLE}
+        config.OCR_WINDOW_TITLE = title
+        return {"status": 200, "result": config.OCR_WINDOW_TITLE}
+
+    @staticmethod
     def getOcrTargetLanguage(*args, **kwargs) -> dict:
         return {"status": 200, "result": config.OCR_TARGET_LANGUAGE}
 

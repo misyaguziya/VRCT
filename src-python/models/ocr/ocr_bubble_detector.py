@@ -24,9 +24,17 @@ from typing import List, Optional, Tuple
 import numpy as np
 
 try:
+    from utils import errorLogging
+except Exception:  # pragma: no cover
+    def errorLogging():
+        import traceback
+        print(traceback.format_exc())
+
+try:
     import cv2  # type: ignore
 except Exception:  # pragma: no cover
     cv2 = None  # type: ignore
+    errorLogging()
 
 
 BBox = Tuple[int, int, int, int]  # (x, y, w, h)

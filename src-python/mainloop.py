@@ -450,7 +450,7 @@ mapping = {
     "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
 
     # VRChat chat-bubble OCR
-    "/get/data/enable_ocr_capture": {"status": True, "variable":controller.getEnableOcrCapture},
+    "/get/data/ocr_capture": {"status": True, "variable":controller.getEnableOcrCapture},
     "/set/enable/ocr_capture": {"status": True, "variable":controller.setEnableOcrCapture},
     "/set/disable/ocr_capture": {"status": True, "variable":controller.setDisableOcrCapture},
     "/get/data/ocr_engine": {"status": True, "variable":controller.getOcrEngine},

@@ -13,11 +13,6 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 try:
-    import easyocr  # type: ignore
-except Exception:  # pragma: no cover
-    easyocr = None  # type: ignore
-
-try:
     from utils import errorLogging, printLog
 except Exception:  # pragma: no cover
     def errorLogging():
@@ -26,6 +21,12 @@ except Exception:  # pragma: no cover
 
     def printLog(*args, **kwargs):
         print(*args, **kwargs)
+
+try:
+    import easyocr  # type: ignore
+except Exception:  # pragma: no cover
+    easyocr = None  # type: ignore
+    errorLogging()
 
 
 _reader_cache: Dict[Tuple[Tuple[str, ...], bool], object] = {}
