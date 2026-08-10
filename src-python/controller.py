@@ -315,6 +315,7 @@ class Controller:
             transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
+                self._dismissPartialTranscript("mic", result)
                 self.run(
                     200,
                     self.run_mapping["word_filter"],
@@ -322,6 +323,7 @@ class Controller:
                 )
                 return
             elif model.detectRepeatSendMessage(message, result.get("segment_id")):
+                self._dismissPartialTranscript("mic", result)
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -538,6 +540,7 @@ class Controller:
             transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
+                self._dismissPartialTranscript("speaker", result)
                 self.run(
                     200,
                     self.run_mapping["word_filter"],
@@ -545,6 +548,7 @@ class Controller:
                 )
                 return
             elif model.detectRepeatReceiveMessage(message, result.get("segment_id")):
+                self._dismissPartialTranscript("speaker", result)
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
