@@ -66,6 +66,9 @@
         align-items: start;
         color: var(--received_300_color);
     }
+    &.ocr_category {
+        color: var(--primary_300_color);
+    }
 }
 
 .message_box {

@@ -1102,6 +1102,7 @@ class Controller:
                 endpoint,
                 {
                     "id": transcript_id,
+                    "source": "ocr",
                     "original": {
                         "message": message,
                         "transliteration": transliteration_message,
