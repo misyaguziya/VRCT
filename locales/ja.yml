@@ -48,6 +48,7 @@ main_page:
         all: "全て"
         sent: "送信"
         received: "受信"
+        received_ocr: "受信 (OCR)"
         system: "システム"
 
         resend_button_on_hover_desc: "長押しで送信"

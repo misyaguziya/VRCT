@@ -48,6 +48,7 @@ main_page:
         all: "All"
         sent: "Sent"
         received: "Received"
+        received_ocr: "Received (OCR)"
         system: "System"
 
         resend_button_on_hover_desc: "Press And Hold To Send"

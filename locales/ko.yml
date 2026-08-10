@@ -48,6 +48,7 @@ main_page:
         all: "전체"
         sent: "전송"
         received: "수신"
+        received_ocr: "수신 (OCR)"
         system: "시스템"
 
         resend_button_on_hover_desc: "길게 눌러서 보내기"

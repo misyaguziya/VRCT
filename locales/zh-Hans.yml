@@ -48,6 +48,7 @@ main_page:
         all: "全部"
         sent: "发送"
         received: "接受"
+        received_ocr: "接受 (OCR)"
         system: "系统"
 
         resend_button_on_hover_desc: "长按发送"

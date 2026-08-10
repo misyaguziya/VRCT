@@ -130,6 +130,7 @@ const generateMessageObject = (data, category, status = "ok") => {
         created_at: generateTimeData(),
         category: category,
         status: status,
+        source: data.source,
         messages: {
             original: data.original,
             translations: data.translations ?? [],
