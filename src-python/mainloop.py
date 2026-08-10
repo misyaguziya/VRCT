@@ -457,6 +457,8 @@ mapping = {
     "/set/data/ocr_engine": {"status": True, "variable":controller.setOcrEngine},
     "/get/data/ocr_source_language": {"status": True, "variable":controller.getOcrSourceLanguage},
     "/set/data/ocr_source_language": {"status": True, "variable":controller.setOcrSourceLanguage},
+    "/get/data/ocr_window_title": {"status": True, "variable":controller.getOcrWindowTitle},
+    "/set/data/ocr_window_title": {"status": True, "variable":controller.setOcrWindowTitle},
     "/get/data/ocr_target_language": {"status": True, "variable":controller.getOcrTargetLanguage},
     "/set/data/ocr_target_language": {"status": True, "variable":controller.setOcrTargetLanguage},
     "/get/data/ocr_poll_interval_ms": {"status": True, "variable":controller.getOcrPollIntervalMs},

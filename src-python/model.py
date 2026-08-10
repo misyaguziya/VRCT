@@ -1102,6 +1102,7 @@ class Model:
             self.ocr_pipeline = OcrPipeline(
                 callback=fnc,
                 source_language=source_language,
+                window_title=config.OCR_WINDOW_TITLE,
                 poll_interval_ms=config.OCR_POLL_INTERVAL_MS,
                 min_confidence=config.OCR_MIN_CONFIDENCE,
                 use_gpu=config.OCR_USE_GPU,

@@ -26,6 +26,11 @@ export const Ocr = () => {
             </div>
 
             <div className={styles.section}>
+                <SectionLabelComponent label="Capture target" />
+                <OcrWindowTitleContainer />
+            </div>
+
+            <div className={styles.section}>
                 <SectionLabelComponent label="Language" />
                 <OcrSourceLanguageContainer />
             </div>
@@ -50,6 +55,18 @@ const EnableOcrCaptureContainer = () => {
             desc="Starts a background loop that captures the VRChat window (or the HMD mirror when SteamVR is running) and translates detected chat bubbles."
             variable={currentEnableOcrCapture}
             toggleFunction={toggleEnableOcrCapture}
+        />
+    );
+};
+
+const OcrWindowTitleContainer = () => {
+    const { currentOcrWindowTitle, setOcrWindowTitle } = useOcr();
+    return (
+        <EntryContainer
+            label="Window name"
+            desc={"Substring match (case-insensitive) against visible window titles. Change this if you run a client whose window isn't titled 'VRChat' (e.g. a modified launcher)."}
+            variable={currentOcrWindowTitle.data}
+            setterFunction={setOcrWindowTitle}
         />
     );
 };

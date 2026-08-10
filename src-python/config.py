@@ -816,6 +816,7 @@ class Config:
     ENABLE_OCR_CAPTURE = ManagedProperty('ENABLE_OCR_CAPTURE', type_=bool, serialize=False)
     OCR_ENGINE = ManagedProperty('OCR_ENGINE', type_=str)
     OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str)
+    OCR_WINDOW_TITLE = ManagedProperty('OCR_WINDOW_TITLE', type_=str)
     OCR_TARGET_LANGUAGE = ManagedProperty('OCR_TARGET_LANGUAGE', type_=str)
     OCR_POLL_INTERVAL_MS = ManagedProperty('OCR_POLL_INTERVAL_MS', type_=int)
     OCR_MIN_CONFIDENCE = ManagedProperty('OCR_MIN_CONFIDENCE', type_=(int, float))
@@ -1098,6 +1099,8 @@ class Config:
         # None-like defaults mean "follow existing translation source/target language"
         self._OCR_SOURCE_LANGUAGE = "auto"
         self._OCR_TARGET_LANGUAGE = "auto"
+        # Substring match against visible window titles (case-insensitive).
+        self._OCR_WINDOW_TITLE = "VRChat"
         self._OCR_POLL_INTERVAL_MS = 750
         self._OCR_MIN_CONFIDENCE = 0.55
         self._OCR_USE_GPU = True

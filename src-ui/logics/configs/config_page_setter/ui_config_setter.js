@@ -767,6 +767,14 @@ export const SETTINGS_ARRAY = [
     },
     {
         Category: "Ocr",
+        Base_Name: "OcrWindowTitle",
+        default_value: "VRChat",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_window_title",
+    },
+    {
+        Category: "Ocr",
         Base_Name: "OcrSourceLanguage",
         default_value: "auto",
         ui_template_id: "input",
