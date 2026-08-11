@@ -284,6 +284,9 @@ class Controller:
 
     def micMessage(self, result: dict) -> None:
         if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
+            # ミュート中は確定結果を破棄するが、表示中のpartial(スピナー)が
+            # 残ったままにならないよう先にdismissしておく
+            self._dismissStalePendingPartialTranscript("mic")
             return
 
         if result.get("is_final", True) is False:
@@ -412,7 +415,7 @@ class Controller:
                         osc_message = self.messageFormatter("SEND", translation, message)
                     model.oscSendMessage(osc_message)
 
-                self._clearPendingPartialTranscript("mic")
+                self._clearPendingPartialTranscript("mic", result)
                 self.run(
                     200,
                     self.run_mapping["transcription_mic"],
@@ -483,14 +486,18 @@ class Controller:
 
     def _emitPartialTranscript(self, source: str, result: dict) -> None:
         endpoint = self.run_mapping.get(f"transcription_{source}_partial")
-        self._pending_partial_transcripts[source] = result
+        transcript_id = self._transcriptSegmentId(source, result)
+        if transcript_id is not None:
+            # source毎に単一スロットではなく transcript_id 毎に保持する。
+            # 推論待ちのセグメントが複数同時に存在しても取りこぼさないようにするため。
+            self._pending_partial_transcripts.setdefault(source, {})[transcript_id] = result
         if endpoint is None:
             return
         self.run(
             200,
             endpoint,
             {
-                "id": self._transcriptSegmentId(source, result),
+                "id": transcript_id,
                 "original": {"message": result.get("text", ""), "transliteration": []},
                 "translations": [],
                 "metrics": {
@@ -501,9 +508,10 @@ class Controller:
         )
 
     def _dismissPartialTranscript(self, source: str, result: dict) -> None:
-        self._pending_partial_transcripts.pop(source, None)
-        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
         transcript_id = self._transcriptSegmentId(source, result)
+        if transcript_id is not None:
+            self._pending_partial_transcripts.get(source, {}).pop(transcript_id, None)
+        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
         if endpoint is None or transcript_id is None:
             return
         self.run(
@@ -515,14 +523,18 @@ class Controller:
             },
         )
 
-    def _clearPendingPartialTranscript(self, source: str) -> None:
-        """Mark the pending partial for `source` as resolved without sending a dismiss."""
-        self._pending_partial_transcripts.pop(source, None)
+    def _clearPendingPartialTranscript(self, source: str, result: dict) -> None:
+        """Mark the pending partial for `source`/`result` as resolved without sending a dismiss."""
+        transcript_id = self._transcriptSegmentId(source, result)
+        if transcript_id is not None:
+            self._pending_partial_transcripts.get(source, {}).pop(transcript_id, None)
 
     def _dismissStalePendingPartialTranscript(self, source: str) -> None:
-        """Dismiss and clear any partial transcript left unresolved by an interrupted stop."""
-        result = self._pending_partial_transcripts.get(source)
-        if result is not None:
+        """Dismiss and clear any partial transcripts left unresolved by an interrupted stop/mute."""
+        pending = self._pending_partial_transcripts.get(source)
+        if not pending:
+            return
+        for result in list(pending.values()):
             self._dismissPartialTranscript(source, result)
 
     def speakerMessage(self, result:dict) -> None:
@@ -697,7 +709,7 @@ class Controller:
                     model.oscSendMessage(osc_message)
 
                 # update textbox message log (Received)
-                self._clearPendingPartialTranscript("speaker")
+                self._clearPendingPartialTranscript("speaker", result)
                 self.run(
                     200,
                     self.run_mapping["transcription_speaker"],
@@ -1452,17 +1464,24 @@ class Controller:
     def getMicVadFilter(*args, **kwargs) -> dict:
         return {"status":200, "result":config.MIC_VAD_FILTER}
 
-    @staticmethod
-    def setEnableMicVadFilter(*args, **kwargs) -> dict:
+    def setEnableMicVadFilter(self, *args, **kwargs) -> dict:
         if config.MIC_VAD_FILTER is False:
             config.MIC_VAD_FILTER = True
+            self._restartMicTranscriptionIfActive()
         return {"status":200, "result":config.MIC_VAD_FILTER}
 
-    @staticmethod
-    def setDisableMicVadFilter(*args, **kwargs) -> dict:
+    def setDisableMicVadFilter(self, *args, **kwargs) -> dict:
         if config.MIC_VAD_FILTER is True:
             config.MIC_VAD_FILTER = False
+            self._restartMicTranscriptionIfActive()
         return {"status":200, "result":config.MIC_VAD_FILTER}
+
+    def _restartMicTranscriptionIfActive(self) -> None:
+        # VADトグルはrecorder/transcriberの起動時パラメータで決まるため、
+        # 稼働中セッションに反映するには再起動が必要
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            self.stopThreadingTranscriptionSendMessage()
+            self.startThreadingTranscriptionSendMessage()
 
     @staticmethod
     def getAutoSpeakerSelect(*args, **kwargs) -> dict:
@@ -1646,17 +1665,24 @@ class Controller:
     def getSpeakerVadFilter(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SPEAKER_VAD_FILTER}
 
-    @staticmethod
-    def setEnableSpeakerVadFilter(*args, **kwargs) -> dict:
+    def setEnableSpeakerVadFilter(self, *args, **kwargs) -> dict:
         if config.SPEAKER_VAD_FILTER is False:
             config.SPEAKER_VAD_FILTER = True
+            self._restartSpeakerTranscriptionIfActive()
         return {"status":200, "result":config.SPEAKER_VAD_FILTER}
 
-    @staticmethod
-    def setDisableSpeakerVadFilter(*args, **kwargs) -> dict:
+    def setDisableSpeakerVadFilter(self, *args, **kwargs) -> dict:
         if config.SPEAKER_VAD_FILTER is True:
             config.SPEAKER_VAD_FILTER = False
+            self._restartSpeakerTranscriptionIfActive()
         return {"status":200, "result":config.SPEAKER_VAD_FILTER}
+
+    def _restartSpeakerTranscriptionIfActive(self) -> None:
+        # VADトグルはrecorder/transcriberの起動時パラメータで決まるため、
+        # 稼働中セッションに反映するには再起動が必要
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.stopThreadingTranscriptionReceiveMessage()
+            self.startThreadingTranscriptionReceiveMessage()
 
     @staticmethod
     def getOscIpAddress(*args, **kwargs) -> dict:

@@ -165,7 +165,21 @@ export const usePlugins = () => {
                 if (relativePath.startsWith('.git') || relativePath.includes('/.git/')) {
                     return;
                 }
-                const filePath = `${targetPath}/${relativePath}`;
+                // Zip Slip対策: 正規化後にtargetPath配下から外れるエントリは無視する
+                const normalizedSegments = relativePath.split('/').reduce((segments, part) => {
+                    if (part === '' || part === '.') return segments;
+                    if (part === '..') {
+                        segments.pop();
+                        return segments;
+                    }
+                    segments.push(part);
+                    return segments;
+                }, []);
+                if (normalizedSegments.length === 0 || relativePath.split('/').includes('..')) {
+                    console.error('Skipping unsafe zip entry:', relativePath);
+                    return;
+                }
+                const filePath = `${targetPath}/${normalizedSegments.join('/')}`;
                 if (entry.dir) {
                     // ディレクトリの場合は mkdir
                     filePromises.push(
@@ -274,7 +288,7 @@ export const usePlugins = () => {
         updatePluginsData((old_value) => {
             const new_value = old_value.data.map((d) => {
                 if (d.plugin_id === target_plugin_id) {
-                    d.is_pending = is_pending;
+                    return { ...d, is_pending };
                 }
                 return d;
             });
@@ -302,8 +316,8 @@ export const usePlugins = () => {
         if (exists) {
             new_value = currentSavedPluginsStatus.data.map((d) => {
                 if (d.plugin_id === target_plugin_id) {
-                    d.is_enabled = is_enabled;
                     notify();
+                    return { ...d, is_enabled };
                 }
                 return d;
             });
@@ -343,7 +357,7 @@ export const usePlugins = () => {
         if (is_exists) {
             new_value = currentSavedPluginsStatus.data.map((d) => {
                 if (d.plugin_id === target_plugin_id) {
-                    d.is_enabled = is_enabled;
+                    return { ...d, is_enabled };
                 }
                 return d;
             });
@@ -379,12 +393,11 @@ export const usePlugins = () => {
 
     const updateTargetPluginData = (target_plugin_id, attribute, value) => {
         updatePluginsData(prev => {
-            prev.data.forEach(plugin => {
-                if (plugin.plugin_id === target_plugin_id) {
-                    plugin[attribute] = value;
-                }
-            });
-            return prev.data;
+            return prev.data.map(plugin =>
+                plugin.plugin_id === target_plugin_id
+                    ? { ...plugin, [attribute]: value }
+                    : plugin
+            );
         });
     }
 

@@ -43,9 +43,19 @@ export const useMainFunction = () => {
             }
         };
         const toggleFn = () => {
+            // updater は data を返す必要がある(returnしないとdataがundefinedになる)。
+            // またsetFn(バックエンドへの送信という副作用)はupdater内で呼ばず、
+            // dataを変更せずstateのみpendingにしてから同期的に外側で呼び出す。
+            let next_enabled;
             updateFn(prev_state => {
-                if (prev_state.state === "ok") setFn(!prev_state.data);
+                if (prev_state.state === "ok") {
+                    next_enabled = !prev_state.data;
+                }
+                return prev_state.data;
             }, { set_state: "pending" });
+            if (next_enabled !== undefined) {
+                setFn(next_enabled);
+            }
         };
         return { setFn, toggleFn };
     };

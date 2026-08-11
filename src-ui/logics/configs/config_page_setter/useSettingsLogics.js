@@ -281,25 +281,30 @@ export const useSliderLogic = ({
         return createMarks(min, max, marks_step, labelFormatter);
     }, [min, max, marks_step, labelFormatter, show_label_values]);
 
+    // setter_timing の値によってuseCallbackの呼び出し数が変わるとHooksルール違反になるため、
+    // 常に同数のuseCallbackを呼び出し、公開する関数だけをsetter_timingで切り替える
+    const onChangeForOnChange = useCallback((value) => {
+        setUiValue(value);
+        debouncedSetter(value);
+    }, [debouncedSetter]);
+
+    const onChangeForCommitted = useCallback((value) => {
+        setUiValue(value);
+    }, []);
+
+    const onChangeCommittedForCommitted = useCallback((value) => {
+        setterFunction(value);
+    }, [setterFunction]);
+
     let onChangeFunction;
     let onChangeCommittedFunction;
 
     if (setter_timing === "on_change") {
-        onChangeFunction = useCallback((value) => {
-            setUiValue(value);
-            debouncedSetter(value);
-        }, [debouncedSetter]);
-
+        onChangeFunction = onChangeForOnChange;
         onChangeCommittedFunction = null;
-
     } else if (setter_timing === "on_change_committed") {
-        onChangeFunction = useCallback((value) => {
-            setUiValue(value);
-        }, []);
-
-        onChangeCommittedFunction = useCallback((value) => {
-            setterFunction(value);
-        }, [setterFunction]);
+        onChangeFunction = onChangeForCommitted;
+        onChangeCommittedFunction = onChangeCommittedForCommitted;
     } else {
         console.error(`Invalid 'setter_timing' value provided to useSliderLogic. Expected 'on_change' or 'on_change_committed'. Received: ${setter_timing}`);
     }
@@ -336,7 +341,10 @@ export const useSaveButtonLogic = ({
 
     const saveFunction = () => {
         if (input_value === "" || input_value === null) {
-            return deleteFunction();
+            if (typeof deleteFunction === "function") {
+                return deleteFunction();
+            }
+            return setFunction(input_value ?? "");
         }
         setFunction(input_value);
     };

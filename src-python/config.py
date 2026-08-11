@@ -1,6 +1,6 @@
 import sys
 import copy
-from os import path as os_path, makedirs as os_makedirs
+from os import path as os_path, makedirs as os_makedirs, replace as os_replace, fsync as os_fsync
 from json import load as json_load
 from json import dump as json_dump
 import threading
@@ -607,8 +607,14 @@ class Config:
                 pass
         with self._file_lock:
             self._config_data = filtered
-            with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
+            # クラッシュ/強制終了時にconfig.jsonが破損しないよう、一時ファイルに書いてから
+            # アトミックにリネームする
+            tmp_path = f"{self.PATH_CONFIG}.tmp"
+            with open(tmp_path, "w", encoding="utf-8") as fp:
                 json_dump(filtered, fp, indent=4, ensure_ascii=False)
+                fp.flush()
+                os_fsync(fp.fileno())
+            os_replace(tmp_path, self.PATH_CONFIG)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value

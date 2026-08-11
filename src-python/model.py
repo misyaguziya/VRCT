@@ -7,6 +7,7 @@ from os import makedirs as os_makedirs
 from os import path as os_path
 from os import getppid as os_getppid
 from os import _exit as os_exit
+from os import remove as os_remove
 from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
@@ -477,7 +478,8 @@ class Model:
         if isinstance(translation, str):
             success_flag = True
         else:
-            while True:
+            max_retries = 20  # 0.1s間隔で最大2秒。CTranslate2が使用不可な場合の無限ループを防ぐ
+            for _ in range(max_retries):
                 translation = self.translator.translate(
                                     translator_name="CTranslate2",
                                     weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
@@ -489,6 +491,9 @@ class Model:
                 if translation is not False:
                     break
                 sleep(0.1)
+            else:
+                errorLogging()
+                translation = message  # フォールバック翻訳も失敗した場合は原文を返す
         return translation, success_flag
 
     def getInputTranslate(self, message, source_language=None):
@@ -671,15 +676,29 @@ class Model:
         # try to download at most 5 times
         program_name = "VRCT_setup.exe"
         current_directory = config.PATH_LOCAL
+        dest_path = os_path.join(current_directory, program_name)
+        # minimum plausible size for a real NSIS installer; guards against
+        # saving/executing a short HTML error page as the installer
+        min_valid_size = 1024 * 1024
         for _ in range(5):
             try:
                 res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True)
-                with open(os_path.join(current_directory, program_name), 'wb') as file:
+                res.raise_for_status()
+                downloaded_size = 0
+                with open(dest_path, 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
+                        downloaded_size += len(chunk)
+                if downloaded_size < min_valid_size:
+                    raise ValueError(f"Downloaded setup file is too small ({downloaded_size} bytes); likely not a valid installer")
                 return True
             except Exception:
                 errorLogging()
+                try:
+                    if os_path.exists(dest_path):
+                        os_remove(dest_path)
+                except Exception:
+                    errorLogging()
         return False
 
     @staticmethod

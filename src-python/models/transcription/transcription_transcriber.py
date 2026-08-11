@@ -206,8 +206,9 @@ class AudioTranscriber:
 
         result = max(confidences, key=lambda x: x["confidence"])
         result.update(self._result_metadata(inference_started_at))
-        if result["text"] != "":
-            self.updateTranscript(result)
+        # 空文字の確定結果もsegment_id等のメタデータ付きで積む。
+        # ここで捨てると呼び出し側がsegment_idを取得できず、対応するpartial表示のdismissが送れなくなる。
+        self.updateTranscript(result)
         return True
 
     def _enqueue_audio_queue_item(self, item: Any) -> None:

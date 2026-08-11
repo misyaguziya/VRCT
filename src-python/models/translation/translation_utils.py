@@ -80,7 +80,7 @@ def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8")
     except Exception:
         return False
 
-def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None):
+def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None) -> bool:
     from huggingface_hub import hf_hub_url, list_repo_files
     hf_repo = ctranslate2_weights[weight_type]["hf_repo"]
     files = list_repo_files(repo_id=hf_repo)
@@ -88,29 +88,44 @@ def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int
     if checkCTranslate2Weight(root, weight_type):
         return True
     os_makedirs(path, exist_ok=True)
+    base_dir = os_path.abspath(path)
 
-    def downloadFile(url: str, file_path: str, func: Callable = None):
+    def downloadFile(url: str, file_path: str, func: Callable = None) -> bool:
         try:
             res = requests_get(url, stream=True)
             res.raise_for_status()
             file_size = int(res.headers.get('content-length', 0))
             total_chunk = 0
+            os_makedirs(os_path.dirname(file_path), exist_ok=True)
             with open(file_path, 'wb') as file:
                 for chunk in res.iter_content(chunk_size=1024*2000):
                     file.write(chunk)
                     if func is not None:
                         total_chunk += len(chunk)
-                        func(total_chunk/file_size)
+                        if file_size > 0:
+                            func(total_chunk/file_size)
+            return True
         except Exception:
             errorLogging()
+            return False
 
+    all_succeeded = True
     for filename in files:
-        file_path = os_path.join(path, filename)
+        # HFのfilenameはリモート由来。".."を含む場合はパストラバーサルの可能性があるため
+        # 正規化して展開先ディレクトリ配下であることを確認してから書き込む
+        normalized = os_path.normpath(filename)
+        file_path = os_path.abspath(os_path.join(path, normalized))
+        if not (file_path == base_dir or file_path.startswith(base_dir + os_path.sep)):
+            errorLogging()
+            all_succeeded = False
+            continue
         url = hf_hub_url(hf_repo, filename)
-        downloadFile(url, file_path, func=callback if filename == "model.bin" else None)
+        if not downloadFile(url, file_path, func=callback if filename == "model.bin" else None):
+            all_succeeded = False
 
     if end_callback is not None:
         end_callback()
+    return all_succeeded
 
 def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-int8"):
     import transformers
