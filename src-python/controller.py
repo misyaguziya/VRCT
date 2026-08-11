@@ -1431,6 +1431,22 @@ class Controller:
         return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
     @staticmethod
+    def getMicVadFilter(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.MIC_VAD_FILTER}
+
+    @staticmethod
+    def setEnableMicVadFilter(*args, **kwargs) -> dict:
+        if config.MIC_VAD_FILTER is False:
+            config.MIC_VAD_FILTER = True
+        return {"status":200, "result":config.MIC_VAD_FILTER}
+
+    @staticmethod
+    def setDisableMicVadFilter(*args, **kwargs) -> dict:
+        if config.MIC_VAD_FILTER is True:
+            config.MIC_VAD_FILTER = False
+        return {"status":200, "result":config.MIC_VAD_FILTER}
+
+    @staticmethod
     def getAutoSpeakerSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
@@ -1607,6 +1623,22 @@ class Controller:
     def setSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
         config.SPEAKER_NO_SPEECH_PROB = float(data)
         return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
+
+    @staticmethod
+    def getSpeakerVadFilter(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SPEAKER_VAD_FILTER}
+
+    @staticmethod
+    def setEnableSpeakerVadFilter(*args, **kwargs) -> dict:
+        if config.SPEAKER_VAD_FILTER is False:
+            config.SPEAKER_VAD_FILTER = True
+        return {"status":200, "result":config.SPEAKER_VAD_FILTER}
+
+    @staticmethod
+    def setDisableSpeakerVadFilter(*args, **kwargs) -> dict:
+        if config.SPEAKER_VAD_FILTER is True:
+            config.SPEAKER_VAD_FILTER = False
+        return {"status":200, "result":config.SPEAKER_VAD_FILTER}
 
     @staticmethod
     def getOscIpAddress(*args, **kwargs) -> dict:
