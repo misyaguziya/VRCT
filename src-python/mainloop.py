@@ -572,6 +572,9 @@ class Main:
         if handler is None:
             response = "Invalid endpoint"
             status = 404
+        elif handler["status"] is False:
+            response = "Locked endpoint"
+            status = 423
         else:
             try:
                 response = handler["variable"](data)

@@ -301,6 +301,20 @@ def setupLogger(name: str, log_file: str, level: int = logging.INFO) -> logging.
 
 process_logger: Optional[logging.Logger] = None
 
+# エンドポイント名にこれらのいずれかが含まれる場合、ログに書き出す値をマスクする
+SENSITIVE_ENDPOINT_MARKERS = ("auth_key", "api_key", "password", "token", "secret")
+
+
+def _isSensitiveEndpoint(endpoint: Any) -> bool:
+    if not isinstance(endpoint, str):
+        return False
+    lowered = endpoint.lower()
+    return any(marker in lowered for marker in SENSITIVE_ENDPOINT_MARKERS)
+
+
+def _maskSensitiveValue(value: Any) -> Any:
+    return "***MASKED***" if value not in (None, "") else value
+
 
 def printLog(log: str, data: Any = None) -> None:
     """Log and print a structured process log message."""
@@ -308,10 +322,11 @@ def printLog(log: str, data: Any = None) -> None:
     if process_logger is None:
         process_logger = setupLogger("process", "process.log", logging.INFO)
 
+    logged_data = _maskSensitiveValue(data) if _isSensitiveEndpoint(log) else data
     response = {
         "status": 348,
         "log": log,
-        "data": str(data),
+        "data": str(logged_data),
     }
     process_logger.info(response)
     serialized = json.dumps(response)
@@ -331,7 +346,12 @@ def printResponse(status: int, endpoint: str, result: Any = None) -> None:
         "endpoint": endpoint,
         "result": result,
     }
-    process_logger.info(response)  # Log the unserialized response
+
+    if _isSensitiveEndpoint(endpoint):
+        logged_response = {**response, "result": _maskSensitiveValue(result)}
+    else:
+        logged_response = response
+    process_logger.info(logged_response)  # Log the (possibly masked) response, never the raw secret
 
     try:
         serialized_response = json.dumps(response)
