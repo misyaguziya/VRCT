@@ -42,6 +42,7 @@ const Mic_Container = () => {
             <MicPhraseTimeout_Box />
             <MicMaxWords_Box />
             <MicWordFilter_Box />
+            <MicVadFilterContainer />
         </div>
     );
 };
@@ -129,6 +130,7 @@ const Speaker_Container = () => {
             <SpeakerRecordTimeout_Box />
             <SpeakerPhraseTimeout_Box />
             <SpeakerMaxWords_Box />
+            <SpeakerVadFilterContainer />
         </div>
     );
 };
@@ -306,18 +308,17 @@ const Advanced_Container = () => {
             <MicNoSpeechProbContainer />
             <SpeakerAvgLogprobContainer />
             <SpeakerNoSpeechProbContainer />
-            <MicVadFilterContainer />
-            <SpeakerVadFilterContainer />
         </div>
     );
 };
 
 export const MicVadFilterContainer = () => {
+    const { t } = useI18n();
     const { currentMicVadFilter, toggleMicVadFilter } = useTranscription();
     return (
         <SwitchBoxContainer
-            label="Mic VAD Filter"
-            desc="Only send audio to recognition after a silence gap is detected. Disable this if mic transcription stops mid-conversation instead of continuing to transcribe."
+            label={t("config_page.transcription.mic_vad_filter.label")}
+            desc={t("config_page.transcription.mic_vad_filter.desc")}
             variable={currentMicVadFilter}
             toggleFunction={toggleMicVadFilter}
         />
@@ -325,11 +326,12 @@ export const MicVadFilterContainer = () => {
 };
 
 export const SpeakerVadFilterContainer = () => {
+    const { t } = useI18n();
     const { currentSpeakerVadFilter, toggleSpeakerVadFilter } = useTranscription();
     return (
         <SwitchBoxContainer
-            label="Speaker VAD Filter"
-            desc="Only send audio to recognition after a silence gap is detected. Disable this if speaker transcription stops or shows 'speech recognition request failed' during continuous game/voice audio."
+            label={t("config_page.transcription.speaker_vad_filter.label")}
+            desc={t("config_page.transcription.speaker_vad_filter.desc")}
             variable={currentSpeakerVadFilter}
             toggleFunction={toggleSpeakerVadFilter}
         />

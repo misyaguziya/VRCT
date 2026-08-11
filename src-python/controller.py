@@ -21,6 +21,10 @@ class Controller:
             return None
         self.run: Callable[[int, str, Any], None] = _noop_run
         self.device_access_lock: Lock = Lock()
+        # Tracks the most recent unresolved partial transcript per source
+        # ("mic"/"speaker") so it can be dismissed if transcription stops
+        # (e.g. config page opened, device switched) before it resolves.
+        self._pending_partial_transcripts: dict = {}
         # Ensure model is initialized at controller startup so existing
         # attribute-based checks (e.g. model.overlay.initialized) continue to work.
         try:
@@ -408,6 +412,7 @@ class Controller:
                         osc_message = self.messageFormatter("SEND", translation, message)
                     model.oscSendMessage(osc_message)
 
+                self._clearPendingPartialTranscript("mic")
                 self.run(
                     200,
                     self.run_mapping["transcription_mic"],
@@ -478,6 +483,7 @@ class Controller:
 
     def _emitPartialTranscript(self, source: str, result: dict) -> None:
         endpoint = self.run_mapping.get(f"transcription_{source}_partial")
+        self._pending_partial_transcripts[source] = result
         if endpoint is None:
             return
         self.run(
@@ -495,6 +501,7 @@ class Controller:
         )
 
     def _dismissPartialTranscript(self, source: str, result: dict) -> None:
+        self._pending_partial_transcripts.pop(source, None)
         endpoint = self.run_mapping.get(f"transcription_{source}_partial")
         transcript_id = self._transcriptSegmentId(source, result)
         if endpoint is None or transcript_id is None:
@@ -507,6 +514,16 @@ class Controller:
                 "dismiss": True,
             },
         )
+
+    def _clearPendingPartialTranscript(self, source: str) -> None:
+        """Mark the pending partial for `source` as resolved without sending a dismiss."""
+        self._pending_partial_transcripts.pop(source, None)
+
+    def _dismissStalePendingPartialTranscript(self, source: str) -> None:
+        """Dismiss and clear any partial transcript left unresolved by an interrupted stop."""
+        result = self._pending_partial_transcripts.get(source)
+        if result is not None:
+            self._dismissPartialTranscript(source, result)
 
     def speakerMessage(self, result:dict) -> None:
         if result.get("is_final", True) is False:
@@ -680,6 +697,7 @@ class Controller:
                     model.oscSendMessage(osc_message)
 
                 # update textbox message log (Received)
+                self._clearPendingPartialTranscript("speaker")
                 self.run(
                     200,
                     self.run_mapping["transcription_speaker"],
@@ -3041,8 +3059,8 @@ class Controller:
         finally:
             self.device_access_lock.release()
 
-    @staticmethod
-    def stopTranscriptionSendMessage() -> None:
+    def stopTranscriptionSendMessage(self) -> None:
+        self._dismissStalePendingPartialTranscript("mic")
         model.stopMicTranscript()
 
     def startThreadingTranscriptionSendMessage(self) -> None:
@@ -3090,8 +3108,8 @@ class Controller:
         finally:
             self.device_access_lock.release()
 
-    @staticmethod
-    def stopTranscriptionReceiveMessage() -> None:
+    def stopTranscriptionReceiveMessage(self) -> None:
+        self._dismissStalePendingPartialTranscript("speaker")
         model.stopSpeakerTranscript()
 
     def startThreadingTranscriptionReceiveMessage(self) -> None:
