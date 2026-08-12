@@ -56,10 +56,35 @@ class Controller:
     
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
-        
+
         Returns:
             dict with status 200 and result True on success.
         """
+        # デバイス監視・録音系スレッドを明示的に停止する。これを怠ると
+        # PyAudio/WASAPI ストリームが open されたままプロセスが終了し、
+        # デバイスハンドルがリークしたり、次回起動時の初期化に影響し得る。
+        # 各停止は個別に例外を握りつぶし、1つの失敗が他の停止処理を
+        # ブロックしないようにする。
+        try:
+            device_manager.stopMonitoring()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopMicTranscript()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopSpeakerTranscript()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopCheckMicEnergy()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopCheckSpeakerEnergy()
+        except Exception:
+            errorLogging()
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a

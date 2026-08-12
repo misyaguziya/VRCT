@@ -23,29 +23,9 @@
 
 ## クラス構造
 
-### BaseRecorder クラス
-```python
-class BaseRecorder:
-    def __init__(self, source: Any, energy_threshold: int, dynamic_energy_threshold: bool, record_timeout: int)
-```
-
-基底レコーダークラス - 共通機能を提供
-
-### SelectedMicRecorder クラス
-```python
-class SelectedMicRecorder(BaseRecorder):
-    def __init__(self, device: dict, energy_threshold: int, dynamic_energy_threshold: bool, record_timeout: int)
-```
-
-選択されたマイクデバイスからの録音
-
-### SelectedSpeakerRecorder クラス
-```python
-class SelectedSpeakerRecorder(BaseRecorder):
-    def __init__(self, device: dict, energy_threshold: int, dynamic_energy_threshold: bool, record_timeout: int)
-```
-
-選択されたスピーカーデバイスからの録音（ループバック）
+> `BaseRecorder` / `SelectedMicRecorder` / `SelectedSpeakerRecorder` (SR の
+> `listen_in_background` を使う旧経路) は未参照のため削除済み。現行の
+> 録音経路は `BaseEnergyAndAudioRecorder` 系のみ。
 
 ### エネルギー監視クラス群
 
@@ -135,7 +115,12 @@ recordIntoQueue(energy_queue: Queue) -> None
 
 ## 使用方法
 
-### 基本的なマイク録音
+> 以下のコード例は旧 `SelectedMicRecorder`/`SelectedSpeakerRecorder` を
+> 前提としており、削除に伴い動作しません。デバイスライフサイクル整理
+> (Step 4/5) 完了後に `SelectedMicEnergyAndAudioRecorder` ベースの例へ
+> 更新予定。
+
+### 基本的なマイク録音 (旧 API・削除済み)
 
 ```python
 from queue import Queue

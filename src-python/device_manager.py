@@ -1,6 +1,15 @@
 from typing import Callable, Dict, List, Optional, Any
 from time import sleep
-from threading import Thread
+from threading import Thread, Lock
+
+# WASAPI/PortAudio 操作 (デバイス列挙・ストリーム open/close) を
+# 直列化するためのプロセス共通ロック。
+# 別スレッドから同一 WASAPI エンドポイントに対して並行にオペレーションを
+# 発行すると PortAudio 内部で待ち合ってデッドロックすることがある
+# (例: monitoring 側の update() でループバックデバイス列挙中に、
+# transcription 側で同じデバイスの loopback stream を open すると hang)。
+# device_manager.update() と recorder の Microphone open で共通に使う。
+pyaudio_op_lock: Lock = Lock()
 
 # Optional, Windows-specific dependencies. Guard imports so module can be imported on non-Windows systems.
 try:
@@ -152,7 +161,9 @@ class DeviceManager:
             return
 
         try:
-            with PyAudio() as p:
+            # ロックで PortAudio/WASAPI の並行操作を防ぐ。
+            # recorder 側の open と衝突するとデッドロックし得る。
+            with pyaudio_op_lock, PyAudio() as p:
                 # gather input devices grouped by host
                 for host_index in range(p.get_host_api_count()):
                     host = p.get_host_api_info_by_index(host_index)
