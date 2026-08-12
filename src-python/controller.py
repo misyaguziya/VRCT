@@ -20,7 +20,16 @@ class Controller:
         def _noop_run(status: int, endpoint: str, payload: Any = None) -> None:
             return None
         self.run: Callable[[int, str, Any], None] = _noop_run
-        self.device_access_lock: Lock = Lock()
+        # マイク/スピーカーそれぞれの文字起こし・エナジー計測の start/stop を
+        # 直列化するロック。mic/speaker で分離しているのは、片方の重い
+        # open/close 中にもう片方が待たされないようにするため。
+        # 非再入の Lock を使う。VRAM エラー発生時に start*Message の except節
+        # が同一スレッド上で停止処理を行う必要があるが、そこでは
+        # _stopTranscriptionSendMessageLocked のようなロック不要の内部版を
+        # 呼ぶことで再入を避けている (公開の stop*Message は自前でロックを
+        # 取るため、start*Message の中から呼ぶとデッドロックする)。
+        self.mic_lifecycle_lock: Lock = Lock()
+        self.speaker_lifecycle_lock: Lock = Lock()
         # Tracks the most recent unresolved partial transcript per source
         # ("mic"/"speaker") so it can be dismissed if transcription stops
         # (e.g. config page opened, device switched) before it resolves.
@@ -3092,80 +3101,89 @@ class Controller:
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
     def startTranscriptionSendMessage(self) -> None:
-        self.device_access_lock.acquire()
-        try:
-            model.startMicTranscript(self.micMessage)
-        except Exception as e:
-            # VRAM不足エラーの検出
-            is_vram_error, error_message = model.detectVRAMError(e)
-            if is_vram_error:
-                response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_VRAM_MIC,
-                    data=error_message
-                )
-                self.run(
-                    response["status"],
-                    self.run_mapping["error_transcription_mic_vram_overflow"],
-                    response["result"],
-                )
-                # ここでマイクの音声認識を停止
-                self.stopTranscriptionSendMessage()
-                disable_response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
-                    data=False
-                )
-                self.run(
-                    disable_response["status"],
-                    self.run_mapping["enable_transcription_send"],
-                    disable_response["result"],
-                )
-            else:
-                # その他のエラーは通常通り処理
-                errorLogging()
-        finally:
-            self.device_access_lock.release()
+        with self.mic_lifecycle_lock:
+            try:
+                model.startMicTranscript(self.micMessage)
+            except Exception as e:
+                # VRAM不足エラーの検出
+                is_vram_error, error_message = model.detectVRAMError(e)
+                if is_vram_error:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_VRAM_MIC,
+                        data=error_message
+                    )
+                    self.run(
+                        response["status"],
+                        self.run_mapping["error_transcription_mic_vram_overflow"],
+                        response["result"],
+                    )
+                    # ここでマイクの音声認識を停止。mic_lifecycle_lock を既に
+                    # 保持しているため、ロックを取り直す公開版
+                    # (stopTranscriptionSendMessage) ではなく内部版を呼ぶ。
+                    self._stopTranscriptionSendMessageLocked()
+                    disable_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
+                        data=False
+                    )
+                    self.run(
+                        disable_response["status"],
+                        self.run_mapping["enable_transcription_send"],
+                        disable_response["result"],
+                    )
+                else:
+                    # その他のエラーは通常通り処理
+                    errorLogging()
 
-    def stopTranscriptionSendMessage(self) -> None:
+    def _stopTranscriptionSendMessageLocked(self) -> None:
+        """mic_lifecycle_lock を既に保持している呼び出し元専用。"""
         self._dismissStalePendingPartialTranscript("mic")
         model.stopMicTranscript()
 
-    def startTranscriptionReceiveMessage(self) -> None:
-        self.device_access_lock.acquire()
-        try:
-            model.startSpeakerTranscript(self.speakerMessage)
-        except Exception as e:
-            # VRAM不足エラーの検出
-            is_vram_error, error_message = model.detectVRAMError(e)
-            if is_vram_error:
-                response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_VRAM_SPEAKER,
-                    data=error_message
-                )
-                self.run(
-                    response["status"],
-                    self.run_mapping["error_transcription_speaker_vram_overflow"],
-                    response["result"],
-                )
-                # ここでスピーカーの音声認識を停止
-                self.stopTranscriptionReceiveMessage()
-                disable_response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
-                    data=False
-                )
-                self.run(
-                    disable_response["status"],
-                    self.run_mapping["enable_transcription_receive"],
-                    disable_response["result"],
-                )
-            else:
-                # その他のエラーは通常通り処理
-                errorLogging()
-        finally:
-            self.device_access_lock.release()
+    def stopTranscriptionSendMessage(self) -> None:
+        with self.mic_lifecycle_lock:
+            self._stopTranscriptionSendMessageLocked()
 
-    def stopTranscriptionReceiveMessage(self) -> None:
+    def startTranscriptionReceiveMessage(self) -> None:
+        with self.speaker_lifecycle_lock:
+            try:
+                model.startSpeakerTranscript(self.speakerMessage)
+            except Exception as e:
+                # VRAM不足エラーの検出
+                is_vram_error, error_message = model.detectVRAMError(e)
+                if is_vram_error:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_VRAM_SPEAKER,
+                        data=error_message
+                    )
+                    self.run(
+                        response["status"],
+                        self.run_mapping["error_transcription_speaker_vram_overflow"],
+                        response["result"],
+                    )
+                    # ここでスピーカーの音声認識を停止 (内部版、詳細は
+                    # startTranscriptionSendMessage 側のコメント参照)
+                    self._stopTranscriptionReceiveMessageLocked()
+                    disable_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
+                        data=False
+                    )
+                    self.run(
+                        disable_response["status"],
+                        self.run_mapping["enable_transcription_receive"],
+                        disable_response["result"],
+                    )
+                else:
+                    # その他のエラーは通常通り処理
+                    errorLogging()
+
+    def _stopTranscriptionReceiveMessageLocked(self) -> None:
+        """speaker_lifecycle_lock を既に保持している呼び出し元専用。"""
         self._dismissStalePendingPartialTranscript("speaker")
         model.stopSpeakerTranscript()
+
+    def stopTranscriptionReceiveMessage(self) -> None:
+        with self.speaker_lifecycle_lock:
+            self._stopTranscriptionReceiveMessageLocked()
 
     @staticmethod
     def replaceExclamationsWithRandom(text):
@@ -3271,24 +3289,20 @@ class Controller:
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
 
     def startCheckMicEnergy(self) -> None:
-        self.device_access_lock.acquire()
-        try:
+        with self.mic_lifecycle_lock:
             model.startCheckMicEnergy(self.progressBarMicEnergy)
-        finally:
-            self.device_access_lock.release()
 
     def stopCheckMicEnergy(self) -> None:
-        model.stopCheckMicEnergy()
+        with self.mic_lifecycle_lock:
+            model.stopCheckMicEnergy()
 
     def startCheckSpeakerEnergy(self) -> None:
-        self.device_access_lock.acquire()
-        try:
+        with self.speaker_lifecycle_lock:
             model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
-        finally:
-            self.device_access_lock.release()
 
     def stopCheckSpeakerEnergy(self) -> None:
-        model.stopCheckSpeakerEnergy()
+        with self.speaker_lifecycle_lock:
+            model.stopCheckSpeakerEnergy()
 
     @staticmethod
     def startThreadingDownloadCtranslate2Weight(weight_type:str, callback:Callable[[float], None], end_callback:Optional[Callable[..., None]] = None) -> None:

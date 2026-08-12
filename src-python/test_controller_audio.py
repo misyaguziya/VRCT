@@ -90,7 +90,8 @@ class TestRecognitionErrorVisibility(unittest.TestCase):
 class TestAudioDeviceAccessLock(unittest.TestCase):
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
-        self.controller.device_access_lock = Lock()
+        self.controller.mic_lifecycle_lock = Lock()
+        self.controller.speaker_lifecycle_lock = Lock()
         self.controller.progressBarMicEnergy = lambda _: None
         self.controller.progressBarSpeakerEnergy = lambda _: None
 
@@ -99,14 +100,14 @@ class TestAudioDeviceAccessLock(unittest.TestCase):
         with self.assertRaisesRegex(OSError, "mic failed"):
             self.controller.startCheckMicEnergy()
 
-        self.assertFalse(self.controller.device_access_lock.locked())
+        self.assertFalse(self.controller.mic_lifecycle_lock.locked())
 
     @patch("controller.model.startCheckSpeakerEnergy", side_effect=OSError("speaker failed"))
     def test_releases_device_access_when_speaker_energy_check_fails(self, _) -> None:
         with self.assertRaisesRegex(OSError, "speaker failed"):
             self.controller.startCheckSpeakerEnergy()
 
-        self.assertFalse(self.controller.device_access_lock.locked())
+        self.assertFalse(self.controller.speaker_lifecycle_lock.locked())
 
 
 if __name__ == "__main__":
