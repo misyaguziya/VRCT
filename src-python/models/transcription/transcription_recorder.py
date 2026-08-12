@@ -7,11 +7,20 @@ in tests.
 
 import audioop
 import threading
+import time
 from typing import Any, Optional
 from speech_recognition import Recognizer, Microphone
 from datetime import datetime
 from .audio_pipeline import AudioQueueItem, Pcm16MonoNormalizer, StreamingVadSegmenter
-from utils import errorLogging
+from utils import errorLogging, printLog
+
+# self.source.stream.read() is a blocking PyAudio call with no built-in
+# timeout. Some devices (notably virtual/loopback devices such as Virtual
+# Desktop Audio) can stop producing data without raising an error, which
+# would otherwise hang the listener thread forever. If no audio has been
+# read for this many seconds, the watchdog forces the stream closed so the
+# blocking read unblocks with an exception instead of hanging indefinitely.
+_STREAM_STALL_TIMEOUT_SEC = 10.0
 
 
 def _validate_audio_source(source: Any) -> Any:
@@ -205,6 +214,8 @@ class BaseEnergyAndAudioRecorder:
         running = threading.Event()
         running.set()
         paused = threading.Event()
+        stopped = threading.Event()
+        last_read_at = [time.monotonic()]
         partial_interval_ms = max(250.0, float(self.phrase_time_limit or 1) * 1000)
 
         def emit_segment(segment, recorded_at: datetime) -> None:
@@ -216,6 +227,25 @@ class BaseEnergyAndAudioRecorder:
                 speech_ended_at=recorded_at if segment.is_final else None,
             ))
 
+        def watchForStall() -> None:
+            # stream.read() below has no timeout of its own; if the device stops
+            # producing data (e.g. a virtual/loopback device stalling) this
+            # forces the stream closed so the blocking read unblocks with an
+            # exception instead of hanging forever.
+            while not stopped.wait(timeout=1.0):
+                if time.monotonic() - last_read_at[0] > _STREAM_STALL_TIMEOUT_SEC:
+                    printLog(
+                        "Audio stream stalled (no data for "
+                        f"{_STREAM_STALL_TIMEOUT_SEC}s); forcing stream close to recover"
+                    )
+                    self.device_error_event.set()
+                    try:
+                        self.source.stream.close()
+                    except Exception:
+                        pass
+                    running.clear()
+                    break
+
         def threadedListen() -> None:
             last_partial_duration_ms = 0.0
             was_paused = False
@@ -223,6 +253,7 @@ class BaseEnergyAndAudioRecorder:
                 with self.source:
                     while running.is_set():
                         raw_audio = self.source.stream.read(self.source.CHUNK)
+                        last_read_at[0] = time.monotonic()
                         if paused.is_set():
                             if not was_paused:
                                 recorded_at = datetime.now()
@@ -263,14 +294,19 @@ class BaseEnergyAndAudioRecorder:
                 self.normalizer.reset()
                 paused.clear()
                 running.clear()
+                stopped.set()
 
         listener_thread = threading.Thread(target=threadedListen, daemon=True)
         listener_thread.start()
+        watchdog_thread = threading.Thread(target=watchForStall, daemon=True)
+        watchdog_thread.start()
 
         def stopper(wait_for_stop: bool = True) -> None:
             running.clear()
+            stopped.set()
             if wait_for_stop:
                 listener_thread.join(timeout=5.0)
+                watchdog_thread.join(timeout=2.0)
 
         def pauser() -> None:
             paused.set()
