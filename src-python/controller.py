@@ -163,31 +163,27 @@ class Controller:
 
     def restartAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.startThreadingTranscriptionSendMessage()
+            self.startTranscriptionSendMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.startCheckMicEnergy(
-                self.progressBarMicEnergy,
-            )
+            self.startCheckMicEnergy()
 
     def restartAccessSpeakerDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessage()
+            self.startTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            model.startCheckSpeakerEnergy(
-                self.progressBarSpeakerEnergy,
-            )
+            self.startCheckSpeakerEnergy()
 
     def stopAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessage()
+            self.stopTranscriptionSendMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.stopCheckMicEnergy()
+            self.stopCheckMicEnergy()
 
     def stopAccessSpeakerDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
+            self.stopTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            model.stopCheckSpeakerEnergy()
+            self.stopCheckSpeakerEnergy()
 
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
@@ -1358,11 +1354,11 @@ class Controller:
         # また旧実装では ENABLE_CHECK_ENERGY_SEND 時に文字起こし側の start を
         # 呼んでおり (コピペミス)、エナジー計測ではなく文字起こしが起動していた。
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessage()
-            self.startThreadingTranscriptionSendMessage()
+            self.stopTranscriptionSendMessage()
+            self.startTranscriptionSendMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            self.stopThreadingCheckMicEnergy()
-            self.startThreadingCheckMicEnergy()
+            self.stopCheckMicEnergy()
+            self.startCheckMicEnergy()
 
     @staticmethod
     def getMicThreshold(*args, **kwargs) -> dict:
@@ -1515,8 +1511,8 @@ class Controller:
         # VADトグルはrecorder/transcriberの起動時パラメータで決まるため、
         # 稼働中セッションに反映するには再起動が必要
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessage()
-            self.startThreadingTranscriptionSendMessage()
+            self.stopTranscriptionSendMessage()
+            self.startTranscriptionSendMessage()
 
     @staticmethod
     def getAutoSpeakerSelect(*args, **kwargs) -> dict:
@@ -1561,11 +1557,11 @@ class Controller:
         # 旧実装は ENABLE_CHECK_ENERGY_RECEIVE 時に文字起こしを起動していた
         # (コピペミス) ため、正しくエナジー計測を再起動する。
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
-            self.startThreadingTranscriptionReceiveMessage()
+            self.stopTranscriptionReceiveMessage()
+            self.startTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            self.stopThreadingCheckSpeakerEnergy()
-            self.startThreadingCheckSpeakerEnergy()
+            self.stopCheckSpeakerEnergy()
+            self.startCheckSpeakerEnergy()
 
     @staticmethod
     def getSpeakerThreshold(*args, **kwargs) -> dict:
@@ -1725,8 +1721,8 @@ class Controller:
         # VADトグルはrecorder/transcriberの起動時パラメータで決まるため、
         # 稼働中セッションに反映するには再起動が必要
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
-            self.startThreadingTranscriptionReceiveMessage()
+            self.stopTranscriptionReceiveMessage()
+            self.startTranscriptionReceiveMessage()
 
     @staticmethod
     def getOscIpAddress(*args, **kwargs) -> dict:
@@ -2892,25 +2888,25 @@ class Controller:
 
     def setEnableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_RECEIVE is False:
-            self.startThreadingCheckSpeakerEnergy()
+            self.startCheckSpeakerEnergy()
             config.ENABLE_CHECK_ENERGY_RECEIVE = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setDisableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            self.stopThreadingCheckSpeakerEnergy()
+            self.stopCheckSpeakerEnergy()
             config.ENABLE_CHECK_ENERGY_RECEIVE = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setEnableCheckMicThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_SEND is False:
-            self.startThreadingCheckMicEnergy()
+            self.startCheckMicEnergy()
             config.ENABLE_CHECK_ENERGY_SEND = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
     def setDisableCheckMicThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            self.stopThreadingCheckMicEnergy()
+            self.stopCheckMicEnergy()
             config.ENABLE_CHECK_ENERGY_SEND = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
@@ -2926,25 +2922,25 @@ class Controller:
 
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_SEND is False:
-            self.startThreadingTranscriptionSendMessage()
+            self.startTranscriptionSendMessage()
             config.ENABLE_TRANSCRIPTION_SEND = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessage()
+            self.stopTranscriptionSendMessage()
             config.ENABLE_TRANSCRIPTION_SEND = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is False:
-            self.startThreadingTranscriptionReceiveMessage()
+            self.startTranscriptionReceiveMessage()
             config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def setDisableTranscriptionReceive(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
+            self.stopTranscriptionReceiveMessage()
             config.ENABLE_TRANSCRIPTION_RECEIVE = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
@@ -3133,17 +3129,6 @@ class Controller:
         self._dismissStalePendingPartialTranscript("mic")
         model.stopMicTranscript()
 
-    def startThreadingTranscriptionSendMessage(self) -> None:
-        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessage)
-        th_startTranscriptionSendMessage.daemon = True
-        th_startTranscriptionSendMessage.start()
-
-    def stopThreadingTranscriptionSendMessage(self) -> None:
-        th_stopTranscriptionSendMessage = Thread(target=self.stopTranscriptionSendMessage)
-        th_stopTranscriptionSendMessage.daemon = True
-        th_stopTranscriptionSendMessage.start()
-        th_stopTranscriptionSendMessage.join()
-
     def startTranscriptionReceiveMessage(self) -> None:
         self.device_access_lock.acquire()
         try:
@@ -3181,17 +3166,6 @@ class Controller:
     def stopTranscriptionReceiveMessage(self) -> None:
         self._dismissStalePendingPartialTranscript("speaker")
         model.stopSpeakerTranscript()
-
-    def startThreadingTranscriptionReceiveMessage(self) -> None:
-        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessage)
-        th_startTranscriptionReceiveMessage.daemon = True
-        th_startTranscriptionReceiveMessage.start()
-
-    def stopThreadingTranscriptionReceiveMessage(self) -> None:
-        th_stopTranscriptionReceiveMessage = Thread(target=self.stopTranscriptionReceiveMessage)
-        th_stopTranscriptionReceiveMessage.daemon = True
-        th_stopTranscriptionReceiveMessage.start()
-        th_stopTranscriptionReceiveMessage.join()
 
     @staticmethod
     def replaceExclamationsWithRandom(text):
@@ -3303,19 +3277,8 @@ class Controller:
         finally:
             self.device_access_lock.release()
 
-    def startThreadingCheckMicEnergy(self) -> None:
-        th_startCheckMicEnergy = Thread(target=self.startCheckMicEnergy)
-        th_startCheckMicEnergy.daemon = True
-        th_startCheckMicEnergy.start()
-
     def stopCheckMicEnergy(self) -> None:
         model.stopCheckMicEnergy()
-
-    def stopThreadingCheckMicEnergy(self) -> None:
-        th_stopCheckMicEnergy = Thread(target=self.stopCheckMicEnergy)
-        th_stopCheckMicEnergy.daemon = True
-        th_stopCheckMicEnergy.start()
-        th_stopCheckMicEnergy.join()
 
     def startCheckSpeakerEnergy(self) -> None:
         self.device_access_lock.acquire()
@@ -3324,19 +3287,8 @@ class Controller:
         finally:
             self.device_access_lock.release()
 
-    def startThreadingCheckSpeakerEnergy(self) -> None:
-        th_startCheckSpeakerEnergy = Thread(target=self.startCheckSpeakerEnergy)
-        th_startCheckSpeakerEnergy.daemon = True
-        th_startCheckSpeakerEnergy.start()
-
     def stopCheckSpeakerEnergy(self) -> None:
         model.stopCheckSpeakerEnergy()
-
-    def stopThreadingCheckSpeakerEnergy(self) -> None:
-        th_stopCheckSpeakerEnergy = Thread(target=self.stopCheckSpeakerEnergy)
-        th_stopCheckSpeakerEnergy.daemon = True
-        th_stopCheckSpeakerEnergy.start()
-        th_stopCheckSpeakerEnergy.join()
 
     @staticmethod
     def startThreadingDownloadCtranslate2Weight(weight_type:str, callback:Callable[[float], None], end_callback:Optional[Callable[..., None]] = None) -> None:

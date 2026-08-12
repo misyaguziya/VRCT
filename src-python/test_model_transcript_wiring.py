@@ -1,5 +1,6 @@
+import threading
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import model as model_module
 from model import model, config
@@ -19,6 +20,32 @@ class _FakeAudioTranscriber:
 
     def getTranscript(self) -> dict:
         return {"text": "", "language": None}
+
+
+class _FakeAudioRecorder:
+    """Stand-in for SelectedMic/SpeakerEnergyAndAudioRecorder.
+
+    model.py checks `isinstance(recorder, SelectedMic/SpeakerEnergyAndAudioRecorder)`
+    in several places (device_error_event polling, stop/resume/pause). Patching
+    the class itself with a plain MagicMock breaks those isinstance() checks
+    (MagicMock instances aren't usable as an isinstance() second argument), so
+    tests substitute this real dummy class instead.
+    """
+
+    def __init__(self, *args, **kwargs) -> None:
+        self.device_error_event = threading.Event()
+
+    def recordIntoQueue(self, *args, **kwargs) -> None:
+        pass
+
+    def resume(self) -> None:
+        pass
+
+    def pause(self) -> None:
+        pass
+
+    def stop(self, *args, **kwargs) -> None:
+        pass
 
 
 class _CapturingThreadFnc:
@@ -47,6 +74,19 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
         self._ensure_initialized_patch = patch.object(model, "ensure_initialized", lambda: None)
         self._ensure_initialized_patch.start()
 
+        # ensure_initialized() is stubbed above, so model.init()'s attribute
+        # setup (mic_print_transcript, mic_audio_recorder, etc.) never runs.
+        # startMicTranscript/startSpeakerTranscript now call stopMicTranscript/
+        # stopSpeakerTranscript defensively before opening a new device, which
+        # reads these attributes, so seed them here rather than relying on
+        # another test in the suite having already called model.init().
+        model.mic_print_transcript = None
+        model.mic_audio_recorder = None
+        model.mic_transcriber = None
+        model.speaker_print_transcript = None
+        model.speaker_audio_recorder = None
+        model.speaker_transcriber = None
+
         # SELECTED_MIC_* / SELECTED_SPEAKER_DEVICE are ValidatedProperty
         # descriptors that reject values not present in the real device list.
         # Bypass validation by writing the private attribute directly so the
@@ -64,19 +104,18 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
         config._SELECTED_MIC_DEVICE = self._original_mic_device
         config._SELECTED_SPEAKER_DEVICE = self._original_speaker_device
         model.mic_print_transcript = None
+        model.mic_audio_recorder = None
         model.speaker_print_transcript = None
+        model.speaker_audio_recorder = None
         model.mic_transcriber = None
         model.speaker_transcriber = None
 
     @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
     @patch("model.AudioTranscriber", _FakeAudioTranscriber)
-    @patch("model.SelectedMicEnergyAndAudioRecorder")
+    @patch("model.SelectedMicEnergyAndAudioRecorder", _FakeAudioRecorder)
     @patch("model.device_manager")
-    def test_mic_result_includes_recognition_error_flag(
-        self, mock_device_manager, mock_recorder_cls
-    ) -> None:
+    def test_mic_result_includes_recognition_error_flag(self, mock_device_manager) -> None:
         mock_device_manager.getMicDevices.return_value = {"TestMicHost": [{"name": "TestMicDevice"}]}
-        mock_recorder_cls.return_value = MagicMock()
 
         received = []
         with patch.object(model, "changeMicTranscriptStatus", lambda: None):
@@ -90,13 +129,10 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
 
     @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
     @patch("model.AudioTranscriber", _FakeAudioTranscriber)
-    @patch("model.SelectedSpeakerEnergyAndAudioRecorder")
+    @patch("model.SelectedSpeakerEnergyAndAudioRecorder", _FakeAudioRecorder)
     @patch("model.device_manager")
-    def test_speaker_result_includes_recognition_error_flag(
-        self, mock_device_manager, mock_recorder_cls
-    ) -> None:
+    def test_speaker_result_includes_recognition_error_flag(self, mock_device_manager) -> None:
         mock_device_manager.getSpeakerDevices.return_value = [{"name": "TestSpeakerDevice"}]
-        mock_recorder_cls.return_value = MagicMock()
 
         received = []
         model.startSpeakerTranscript(lambda result: received.append(result))

@@ -1,4 +1,5 @@
 import unittest
+from threading import Lock
 from unittest.mock import patch
 
 from controller import Controller, config
@@ -89,7 +90,7 @@ class TestRecognitionErrorVisibility(unittest.TestCase):
 class TestAudioDeviceAccessLock(unittest.TestCase):
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
-        self.controller.device_access_status = True
+        self.controller.device_access_lock = Lock()
         self.controller.progressBarMicEnergy = lambda _: None
         self.controller.progressBarSpeakerEnergy = lambda _: None
 
@@ -98,14 +99,14 @@ class TestAudioDeviceAccessLock(unittest.TestCase):
         with self.assertRaisesRegex(OSError, "mic failed"):
             self.controller.startCheckMicEnergy()
 
-        self.assertTrue(self.controller.device_access_status)
+        self.assertFalse(self.controller.device_access_lock.locked())
 
     @patch("controller.model.startCheckSpeakerEnergy", side_effect=OSError("speaker failed"))
     def test_releases_device_access_when_speaker_energy_check_fails(self, _) -> None:
         with self.assertRaisesRegex(OSError, "speaker failed"):
             self.controller.startCheckSpeakerEnergy()
 
-        self.assertTrue(self.controller.device_access_status)
+        self.assertFalse(self.controller.device_access_lock.locked())
 
 
 if __name__ == "__main__":

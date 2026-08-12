@@ -306,7 +306,10 @@ class TestMutedMicMessage(unittest.TestCase):
         config.VRC_MIC_MUTE_SYNC = True
         model.mic_mute_status = True
 
-        Controller.__new__(Controller).micMessage({})
+        controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
+        controller._pending_partial_transcripts = {}
+        controller.micMessage({})
 
         self.assertEqual(model.method_calls, [])
 
@@ -318,6 +321,7 @@ class TestMutedMicMessage(unittest.TestCase):
         config.VRC_MIC_MUTE_SYNC = False
         config.ENABLE_TRANSCRIPTION_SEND = True
         controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
         controller.run_mapping = {"transcription_mic_partial": "/run/mic_partial"}
         controller.run = MagicMock()
 
@@ -343,6 +347,7 @@ class TestMutedMicMessage(unittest.TestCase):
         config.VRC_MIC_MUTE_SYNC = False
         config.ENABLE_TRANSCRIPTION_SEND = False
         controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
         controller.run_mapping = {"transcription_mic_partial": "/run/mic_partial"}
         controller.run = MagicMock()
 
@@ -363,6 +368,7 @@ class TestMutedMicMessage(unittest.TestCase):
 
         config.VRC_MIC_MUTE_SYNC = False
         controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
         controller.run_mapping = {"transcription_mic_partial": "/run/mic_partial"}
         controller.run = MagicMock()
 
@@ -389,6 +395,7 @@ class TestSpeakerMessage(unittest.TestCase):
 
         config.ENABLE_TRANSCRIPTION_RECEIVE = True
         controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
         controller.run_mapping = {"transcription_speaker_partial": "/run/speaker_partial"}
         controller.run = MagicMock()
 
@@ -413,6 +420,7 @@ class TestSpeakerMessage(unittest.TestCase):
 
         config.ENABLE_TRANSCRIPTION_RECEIVE = False
         controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
         controller.run_mapping = {"transcription_speaker_partial": "/run/speaker_partial"}
         controller.run = MagicMock()
 
@@ -432,6 +440,7 @@ class TestSpeakerMessage(unittest.TestCase):
         from controller import Controller
 
         controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
         controller.run_mapping = {"transcription_speaker_partial": "/run/speaker_partial"}
         controller.run = MagicMock()
 
@@ -468,6 +477,7 @@ class TestSpeakerMessage(unittest.TestCase):
         model.detectRepeatReceiveMessage.side_effect = [False, False]
         model.getOutputTranslate.return_value = (["translated"], [True])
         controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {}
         controller.run_mapping = {"transcription_speaker": "/run/speaker"}
         controller.run = MagicMock()
         controller._is_overlay_available = MagicMock(return_value=False)
