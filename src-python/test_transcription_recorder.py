@@ -205,5 +205,44 @@ class TestRecorderAudioPipeline(unittest.TestCase):
         self.assertEqual(partial.segment_id, final.segment_id)
 
 
+class TestRecorderWithoutVad(unittest.TestCase):
+    """VAD 無効 (vad_filter=False) 時、self.vad_segmenter は None のままで、
+    _recordIntoQueueInternal はチャンクをそのままキューに積む raw 経路を通る。
+    以前は speech_recognition の listen_energy_and_audio_in_background に
+    委譲していたが、pyaudio_op_lock で全 PyAudio アクセスを直列化するため
+    自作 listener に統合した。フレーズの区切りは呼び出し側
+    (AudioTranscriber.updateLastSampleAndPhraseStatus) の phrase_timeout に
+    委ねられるため、ここではキューに積まれる形式のみ検証する。
+    """
+
+    def test_pushes_raw_tuples_instead_of_audio_queue_items(self) -> None:
+        recorder = BaseEnergyAndAudioRecorder(
+            FakeStreamAudioSource(3), 300, False, 3, 3, 5, vad_filter=False
+        )
+        self.assertIsNone(recorder.vad_segmenter)
+        queue = Queue()
+
+        recorder.recordIntoQueue(queue)
+        audio, recorded_at = queue.get(timeout=1)
+        recorder.stop()
+
+        self.assertIsInstance(audio, bytes)
+        self.assertGreater(len(audio), 0)
+        self.assertIsNotNone(recorded_at)
+
+    def test_energy_queue_still_populated_without_vad(self) -> None:
+        recorder = BaseEnergyAndAudioRecorder(
+            FakeStreamAudioSource(3), 300, False, 3, 3, 5, vad_filter=False
+        )
+        audio_queue: Queue = Queue()
+        energy_queue: Queue = Queue()
+
+        recorder.recordIntoQueue(audio_queue, energy_queue)
+        energy = energy_queue.get(timeout=1)
+        recorder.stop()
+
+        self.assertIsInstance(energy, int)
+
+
 if __name__ == "__main__":
     unittest.main()

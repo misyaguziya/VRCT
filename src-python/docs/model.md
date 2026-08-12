@@ -1,5 +1,11 @@
 # model.py 設計書
 
+> **2026-08 デバイスライフサイクル整理により一部記述が古い**:
+> `SelectedMicEnergyRecorder`/`SelectedSpeakerEnergyRecorder` は削除され、
+> `startCheckMic/SpeakerEnergy` は `SelectedMic/SpeakerEnergyAndAudioRecorder`
+> (`vad_filter=False`、`audio_queue` に `_DiscardQueue` を渡す) を使うよう
+> 変更されている。詳細は `transcription_recorder.md` を参照。
+
 ## 概要
 
 `model.py` は VRCT アプリケーションのビジネスロジックファサードとして機能し、音声認識、翻訳、オーバーレイ表示、OSC通信、WebSocket通信など、すべてのサブシステムへの統一されたインターフェースを提供する。シングルトンパターンで実装され、重い初期化処理を遅延実行することで、アプリケーションの起動時間を短縮している。

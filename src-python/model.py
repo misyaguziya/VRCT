@@ -25,7 +25,6 @@ from config import config
 from models.translation.translation_translator import Translator
 from models.osc.osc import OSCHandler
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
-from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
@@ -42,6 +41,21 @@ from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
+
+
+class _DiscardQueue(Queue):
+    """Queue that silently drops everything put into it.
+
+    Energy-meter-only recording uses SelectedMic/SpeakerEnergyAndAudioRecorder
+    with vad_filter=False, whose listener always pushes normalized audio
+    chunks into the audio_queue argument even when nobody wants the audio
+    (only the energy_queue is consumed). Passing this instead of a real
+    Queue avoids an unbounded memory leak from chunks nobody ever drains.
+    """
+
+    def put(self, *args, **kwargs) -> None:
+        pass
+
 
 class threadFnc(Thread):
     """A tiny Thread wrapper that repeatedly calls a function.
@@ -967,8 +981,19 @@ class Model:
 
             mic_energy_queue: Queue = Queue()
             mic_device = selected_mic_device[0]
-            self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
-            self.mic_energy_recorder.recordIntoQueue(mic_energy_queue)
+            # エナジーメータ専用でも実体は文字起こしと同じ Recorder を使う。
+            # PyAudio に触るレコーダーの種類を一本化することで、全 open/close
+            # が pyaudio_op_lock 配下の同じ経路を通るようにする
+            # (SR built-in の listen_energy_in_background は経由しない)。
+            # audio 側は誰も読まないため _DiscardQueue に捨てる。
+            self.mic_energy_recorder = SelectedMicEnergyAndAudioRecorder(
+                device=mic_device,
+                energy_threshold=config.MIC_THRESHOLD,
+                dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
+                phrase_time_limit=config.MIC_RECORD_TIMEOUT,
+                vad_filter=False,
+            )
+            self.mic_energy_recorder.recordIntoQueue(_DiscardQueue(), mic_energy_queue)
             self.mic_energy_plot_progressbar = threadFnc(sendMicEnergy)
             self.mic_energy_plot_progressbar.daemon = True
             self.mic_energy_plot_progressbar.start()
@@ -979,8 +1004,7 @@ class Model:
             self.mic_energy_plot_progressbar.stop()
             self.mic_energy_plot_progressbar.join()
             self.mic_energy_plot_progressbar = None
-        if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
-            self.mic_energy_recorder.resume()
+        if isinstance(self.mic_energy_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_energy_recorder.stop()
             self.mic_energy_recorder = None
 
@@ -1124,8 +1148,16 @@ class Model:
 
             speaker_energy_queue: Queue = Queue()
             speaker_device = selected_speaker_device[0]
-            self.speaker_energy_recorder = SelectedSpeakerEnergyRecorder(speaker_device)
-            self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
+            # マイク側と同じ理由で、エナジーメータ専用でも文字起こしと同じ
+            # Recorder を使い、PyAudio open/close の経路を一本化する。
+            self.speaker_energy_recorder = SelectedSpeakerEnergyAndAudioRecorder(
+                device=speaker_device,
+                energy_threshold=config.SPEAKER_THRESHOLD,
+                dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
+                phrase_time_limit=config.SPEAKER_RECORD_TIMEOUT,
+                vad_filter=False,
+            )
+            self.speaker_energy_recorder.recordIntoQueue(_DiscardQueue(), speaker_energy_queue)
             self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy)
             self.speaker_energy_plot_progressbar.daemon = True
             self.speaker_energy_plot_progressbar.start()
@@ -1136,8 +1168,7 @@ class Model:
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar.join()
             self.speaker_energy_plot_progressbar = None
-        if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
-            self.speaker_energy_recorder.resume()
+        if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyAndAudioRecorder):
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 

@@ -19,22 +19,22 @@ from device_manager import pyaudio_op_lock
 # timeout. Some devices (notably virtual/loopback devices such as Virtual
 # Desktop Audio) can stop producing data without raising an error, which
 # would otherwise hang the listener thread forever. If no audio has been
-# read for this many seconds, the watchdog forces the stream closed so the
-# blocking read unblocks with an exception instead of hanging indefinitely.
+# read for this many seconds, the watchdog signals a device error so the
+# pipeline can surface it instead of silently going quiet.
 _STREAM_STALL_TIMEOUT_SEC = 10.0
 
 
 def _validate_audio_source(source: Any) -> Any:
-    # Microphone.__enter__ は内部で PyAudio() を new し WASAPI/PortAudio に触る。
-    # device_manager.update() のデバイス列挙と並行実行するとデッドロックし得るため、
-    # 共有ロックで直列化する。
+    # Microphone.__enter__/__exit__ touch PyAudio/WASAPI. Running this
+    # concurrently with device_manager.update()'s device enumeration (or
+    # another recorder's open) can deadlock inside PortAudio, so every
+    # PyAudio-touching operation in this module is serialized through the
+    # shared pyaudio_op_lock.
     with pyaudio_op_lock:
         source.__enter__()
-        try:
-            if source.stream is None:
-                raise OSError("Audio device could not be opened")
-        finally:
-            source.__exit__(None, None, None)
+        if source.stream is None:
+            raise OSError("Audio device could not be opened")
+        source.__exit__(None, None, None)
     return source
 
 
@@ -48,54 +48,18 @@ def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) ->
             raise OSError("Selected and default audio devices could not be opened") from fallback_error
 
 
-class BaseEnergyRecorder:
-    def __init__(self, source: Any) -> None:
-        self.recorder = Recognizer()
-        self.recorder.energy_threshold = 0
-        self.recorder.dynamic_energy_threshold = False
-        self.record_timeout = 0
-        self.stop = None
-
-        if source is None:
-            raise ValueError("audio source can't be None")
-
-        self.source = source
-
-    def adjustForNoise(self) -> None:
-        with self.source:
-            self.recorder.adjust_for_ambient_noise(self.source)
-
-    def recordIntoQueue(self, energy_queue: Any) -> None:
-        def recordCallback(_, energy):
-            energy_queue.put(energy)
-
-        self.stop, self.pause, self.resume = self.recorder.listen_energy_in_background(self.source, recordCallback)
-
-
-class SelectedMicEnergyRecorder(BaseEnergyRecorder):
-    def __init__(self, device: dict) -> None:
-        source = _create_microphone(
-            {},
-            device_index=int(device.get('index', -1)),
-            sample_rate=int(device.get("defaultSampleRate", 16000)),
-        )
-        super().__init__(source=source)
-        # self.adjustForNoise()
-
-
-class SelectedSpeakerEnergyRecorder(BaseEnergyRecorder):
-    def __init__(self, device: dict) -> None:
-        source = _create_microphone(
-            {"speaker": True},
-            speaker=True,
-            device_index=int(device.get('index', -1)),
-            sample_rate=int(device.get("defaultSampleRate", 16000)),
-            channels=int(device.get("maxInputChannels", 1)),
-        )
-        super().__init__(source=source)
-        # self.adjustForNoise()
-
 class BaseEnergyAndAudioRecorder:
+    """Records audio (optionally VAD-segmented) and/or a raw energy stream
+    from a single physical device.
+
+    Energy-only callers (the config-panel volume meter) and
+    transcription callers (mic/speaker send/receive) both go through this
+    same recorder/listener so a given physical device is only ever opened
+    once, and every PyAudio operation is serialized via pyaudio_op_lock —
+    there is no separate SpeechRecognition-builtin-thread code path left
+    that could race against it.
+    """
+
     def __init__(
         self,
         source: Any,
@@ -152,30 +116,20 @@ class BaseEnergyAndAudioRecorder:
             self.recorder.adjust_for_ambient_noise(self.source)
 
     def recordIntoQueue(self, audio_queue: Any, energy_queue: Any = None) -> None:
-        if self.vad_segmenter is not None:
-            self.stop, self.pause, self.resume = self._recordVadIntoQueue(audio_queue, energy_queue)
-            return
+        self.stop, self.pause, self.resume = self._recordIntoQueueInternal(audio_queue, energy_queue)
 
-        def audioRecordCallback(_, audio):
-            recorded_at = datetime.now()
-            normalized_audio = self.normalizer.process(audio.get_raw_data())
-            if not normalized_audio:
-                return
-            audio_queue.put((normalized_audio, recorded_at))
+    def _recordIntoQueueInternal(self, audio_queue: Any, energy_queue: Any = None):
+        """Single listener loop used for every combination of VAD on/off and
+        energy queue present/absent.
 
-        def energyRecordCallback(energy):
-            energy_queue.put(energy)
-
-        self.stop, self.pause, self.resume = self.recorder.listen_energy_and_audio_in_background(
-            source=self.source,
-            callback=audioRecordCallback,
-            phrase_time_limit=self.phrase_time_limit,
-            callback_energy=energyRecordCallback if energy_queue is not None else None,
-            phrase_timeout=self.phrase_timeout,
-            record_timeout=self.record_timeout,
-        )
-
-    def _recordVadIntoQueue(self, audio_queue: Any, energy_queue: Any = None):
+        With VAD enabled, segments are pushed as AudioQueueItem (partial and
+        final, matching the streaming pipeline). With VAD disabled, each
+        normalized chunk is pushed as a plain (audio_bytes, recorded_at)
+        tuple — the same shape the old SpeechRecognition-builtin path used —
+        and phrase boundaries are left entirely to AudioTranscriber's
+        phrase_timeout logic on the consuming side, so no consumer code
+        needed to change.
+        """
         running = threading.Event()
         running.set()
         paused = threading.Event()
@@ -227,7 +181,7 @@ class BaseEnergyAndAudioRecorder:
                     raw_audio = self.source.stream.read(self.source.CHUNK)
                     last_read_at[0] = time.monotonic()
                     if paused.is_set():
-                        if not was_paused:
+                        if not was_paused and self.vad_segmenter is not None:
                             recorded_at = datetime.now()
                             segment = self.vad_segmenter.flush()
                             if segment is not None:
@@ -245,14 +199,20 @@ class BaseEnergyAndAudioRecorder:
                         energy_queue.put(audioop.rms(normalized_audio, 2))
 
                     recorded_at = datetime.now()
-                    for segment in self.vad_segmenter.process(normalized_audio):
-                        emit_segment(segment, recorded_at)
-                        last_partial_duration_ms = 0.0
+                    if self.vad_segmenter is not None:
+                        for segment in self.vad_segmenter.process(normalized_audio):
+                            emit_segment(segment, recorded_at)
+                            last_partial_duration_ms = 0.0
 
-                    partial = self.vad_segmenter.snapshot()
-                    if partial is not None and partial.duration_ms >= last_partial_duration_ms + partial_interval_ms:
-                        emit_segment(partial, recorded_at)
-                        last_partial_duration_ms = partial.duration_ms
+                        partial = self.vad_segmenter.snapshot()
+                        if partial is not None and partial.duration_ms >= last_partial_duration_ms + partial_interval_ms:
+                            emit_segment(partial, recorded_at)
+                            last_partial_duration_ms = partial.duration_ms
+                    else:
+                        # VAD 無効時は生チャンクをそのままキューに積む。
+                        # フレーズの区切りは AudioTranscriber 側の
+                        # phrase_timeout ロジックに委ねる。
+                        audio_queue.put((normalized_audio, recorded_at))
             except EOFError:
                 pass
             except Exception:
@@ -265,10 +225,11 @@ class BaseEnergyAndAudioRecorder:
                             self.source.__exit__(None, None, None)
                     except Exception:
                         errorLogging()
-                recorded_at = datetime.now()
-                segment = self.vad_segmenter.flush()
-                if segment is not None:
-                    emit_segment(segment, recorded_at)
+                if self.vad_segmenter is not None:
+                    recorded_at = datetime.now()
+                    segment = self.vad_segmenter.flush()
+                    if segment is not None:
+                        emit_segment(segment, recorded_at)
                 self.normalizer.reset()
                 paused.clear()
                 running.clear()
