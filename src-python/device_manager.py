@@ -2,15 +2,6 @@ from typing import Callable, Dict, List, Optional, Any
 from time import sleep
 from threading import Thread, Lock
 
-# WASAPI/PortAudio 操作 (デバイス列挙・ストリーム open/close) を
-# 直列化するためのプロセス共通ロック。
-# 別スレッドから同一 WASAPI エンドポイントに対して並行にオペレーションを
-# 発行すると PortAudio 内部で待ち合ってデッドロックすることがある
-# (例: monitoring 側の update() でループバックデバイス列挙中に、
-# transcription 側で同じデバイスの loopback stream を open すると hang)。
-# device_manager.update() と recorder の Microphone open で共通に使う。
-pyaudio_op_lock: Lock = Lock()
-
 # Optional, Windows-specific dependencies. Guard imports so module can be imported on non-Windows systems.
 try:
     import comtypes
@@ -31,6 +22,16 @@ except Exception:  # pragma: no cover - optional runtime
     AudioUtilities = None  # type: ignore
 
 from utils import errorLogging
+
+# WASAPI/PortAudio 操作 (デバイス列挙・ストリーム open/close) を
+# 直列化するためのプロセス共通ロック。
+# 別スレッドから同一 WASAPI エンドポイントに対して並行にオペレーションを
+# 発行すると PortAudio 内部で待ち合ってデッドロックすることがある
+# (例: monitoring 側の update() でループバックデバイス列挙中に、
+# transcription 側で同じデバイスの loopback stream を open すると hang)。
+# device_manager.update() と recorder の Microphone open で共通に使う。
+pyaudio_op_lock: Lock = Lock()
+
 
 class Client(MMNotificationClient):
     """Callback client used by pycaw to detect device changes.
