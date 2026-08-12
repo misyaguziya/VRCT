@@ -1312,9 +1312,7 @@ class Controller:
             config.SELECTED_MIC_DEVICE = previously_selected_device
         else:
             config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
-        if config.ENABLE_CHECK_ENERGY_SEND is True:
-            self.stopThreadingCheckMicEnergy()
-            self.startThreadingTranscriptionSendMessage()
+        self._reopenMicAudioOnDeviceChange()
         self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
@@ -1324,10 +1322,22 @@ class Controller:
 
     def setSelectedMicDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_DEVICE = data
+        self._reopenMicAudioOnDeviceChange()
+        return {"status":200, "result": config.SELECTED_MIC_DEVICE}
+
+    def _reopenMicAudioOnDeviceChange(self) -> None:
+        # デバイス切り替え時に、稼働中のマイク文字起こし/エナジー計測を
+        # 新デバイスで開き直す。旧処理を先に stop してから start しないと、
+        # 旧 PyAudio ストリームがデバイスを掴んだままとなり、PortAudio 側で
+        # 競合してハングし得る (Windows/WASAPI で顕著)。
+        # また旧実装では ENABLE_CHECK_ENERGY_SEND 時に文字起こし側の start を
+        # 呼んでおり (コピペミス)、エナジー計測ではなく文字起こしが起動していた。
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            self.stopThreadingTranscriptionSendMessage()
+            self.startThreadingTranscriptionSendMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             self.stopThreadingCheckMicEnergy()
-            self.startThreadingTranscriptionSendMessage()
-        return {"status":200, "result": config.SELECTED_MIC_DEVICE}
+            self.startThreadingCheckMicEnergy()
 
     @staticmethod
     def getMicThreshold(*args, **kwargs) -> dict:
@@ -1518,10 +1528,19 @@ class Controller:
 
     def setSelectedSpeakerDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_SPEAKER_DEVICE = data
+        self._reopenSpeakerAudioOnDeviceChange()
+        return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
+
+    def _reopenSpeakerAudioOnDeviceChange(self) -> None:
+        # マイクと同様、稼働中のスピーカー系処理を新デバイスで開き直す。
+        # 旧実装は ENABLE_CHECK_ENERGY_RECEIVE 時に文字起こしを起動していた
+        # (コピペミス) ため、正しくエナジー計測を再起動する。
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.stopThreadingTranscriptionReceiveMessage()
+            self.startThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
             self.stopThreadingCheckSpeakerEnergy()
-            self.startThreadingTranscriptionReceiveMessage()
-        return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
+            self.startThreadingCheckSpeakerEnergy()
 
     @staticmethod
     def getSpeakerThreshold(*args, **kwargs) -> dict:

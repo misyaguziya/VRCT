@@ -772,6 +772,10 @@ class Model:
 
     def startMicTranscript(self, fnc):
         self.ensure_initialized()
+        # 前回の start が明示的な stop なく残っている場合、Recorder が旧デバイスの
+        # PyAudio ストリームを保持し続けており、同一デバイスを開き直すと
+        # PortAudio が競合してハングし得るため、必ず先に停止する。
+        self.stopMicTranscript()
         mic_host_name = config.SELECTED_MIC_HOST
         mic_device_name = config.SELECTED_MIC_DEVICE
 
@@ -937,6 +941,8 @@ class Model:
 
     def startCheckMicEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
         self.ensure_initialized()
+        # 旧エネルギー計測が残っていると PyAudio 競合を招くため先に停止する。
+        self.stopCheckMicEnergy()
         # fnc may be None or a callable. Use cast after checking for None to satisfy type checker.
         if fnc is not None:
             self.check_mic_energy_fnc = cast(Callable[[float], None], fnc)
@@ -980,6 +986,8 @@ class Model:
 
     def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> None:
         self.ensure_initialized()
+        # 旧セッションが残っている場合の PortAudio 競合を防ぐため必ず先に停止する。
+        self.stopSpeakerTranscript()
         speaker_device_name = config.SELECTED_SPEAKER_DEVICE
 
         speaker_device_list = device_manager.getSpeakerDevices()
@@ -1092,6 +1100,8 @@ class Model:
 
     def startCheckSpeakerEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
         self.ensure_initialized()
+        # 旧エネルギー計測が残っていると PyAudio 競合を招くため先に停止する。
+        self.stopCheckSpeakerEnergy()
         # Accept None as default and assign safely with cast after None-check
         if fnc is not None:
             self.check_speaker_energy_fnc = cast(Callable[[float], None], fnc)

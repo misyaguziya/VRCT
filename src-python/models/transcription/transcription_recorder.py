@@ -147,6 +147,7 @@ class BaseEnergyAndAudioRecorder:
         record_timeout: int,
         vad_filter: bool = False,
         vad_parameters: Optional[dict[str, Any]] = None,
+        enable_stall_watchdog: bool = True,
     ) -> None:
         self.recorder = Recognizer()
         self.recorder.energy_threshold = energy_threshold
@@ -155,6 +156,11 @@ class BaseEnergyAndAudioRecorder:
         self.phrase_timeout = phrase_timeout
         self.record_timeout = record_timeout
         self.stop = None
+        # スピーカー(WASAPIループバック)は再生していない間、読み取りが
+        # 単にブロックし続けるだけで「デバイス停滞」ではない。無音を
+        # デバイスエラーとして誤通知しないよう、スピーカー側では
+        # False を渡して watchdog を無効化する。
+        self.enable_stall_watchdog = enable_stall_watchdog
 
         if source is None:
             raise ValueError("audio source can't be None")
@@ -228,21 +234,22 @@ class BaseEnergyAndAudioRecorder:
             ))
 
         def watchForStall() -> None:
-            # stream.read() below has no timeout of its own; if the device stops
-            # producing data (e.g. a virtual/loopback device stalling) this
-            # forces the stream closed so the blocking read unblocks with an
-            # exception instead of hanging forever.
+            # stream.read() は timeout を持たないため、仮想/ループバックデバイス等で
+            # データが来なくなると listener スレッドが read で永久ブロックする。
+            # ここで stream.close() を別スレッドから叩くと、PyAudio/PortAudio (特に
+            # Windows WASAPI) は read/close の同時実行が保証されておらず、
+            # PortAudio 内部ロックでプロセス全体がデッドロックする。
+            # そのため close は叩かず、device_error_event を立ててパイプライン側に
+            # 「デバイスエラー」として通知するに留める。listener 自体は
+            # 停止不能のままリークするが、UIには通常のデバイスエラーとして届き、
+            # 停滞スピナー等は device_error_event 経路で解除される。
             while not stopped.wait(timeout=1.0):
                 if time.monotonic() - last_read_at[0] > _STREAM_STALL_TIMEOUT_SEC:
                     printLog(
                         "Audio stream stalled (no data for "
-                        f"{_STREAM_STALL_TIMEOUT_SEC}s); forcing stream close to recover"
+                        f"{_STREAM_STALL_TIMEOUT_SEC}s); signaling device error"
                     )
                     self.device_error_event.set()
-                    try:
-                        self.source.stream.close()
-                    except Exception:
-                        pass
                     running.clear()
                     break
 
@@ -298,15 +305,18 @@ class BaseEnergyAndAudioRecorder:
 
         listener_thread = threading.Thread(target=threadedListen, daemon=True)
         listener_thread.start()
-        watchdog_thread = threading.Thread(target=watchForStall, daemon=True)
-        watchdog_thread.start()
+        watchdog_thread: Optional[threading.Thread] = None
+        if self.enable_stall_watchdog:
+            watchdog_thread = threading.Thread(target=watchForStall, daemon=True)
+            watchdog_thread.start()
 
         def stopper(wait_for_stop: bool = True) -> None:
             running.clear()
             stopped.set()
             if wait_for_stop:
                 listener_thread.join(timeout=5.0)
-                watchdog_thread.join(timeout=2.0)
+                if watchdog_thread is not None:
+                    watchdog_thread.join(timeout=2.0)
 
         def pauser() -> None:
             paused.set()
@@ -377,5 +387,9 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             record_timeout=record_timeout,
             vad_filter=vad_filter,
             vad_parameters=vad_parameters,
+            # WASAPI ループバックは再生がなければ何時間でも無音でブロックする。
+            # これは正常な状態なので stall watchdog で「デバイスエラー」として
+            # 上げないこと (誤って "No speaker device detected" が出る)。
+            enable_stall_watchdog=False,
         )
         # self.adjustForNoise()
