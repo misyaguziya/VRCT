@@ -261,13 +261,14 @@ class BaseEnergyAndAudioRecorder:
             # self.source.stream は speech_recognition の MicrophoneStream ラッパで、
             # 実 PyAudio stream は .pyaudio_stream 属性経由でアクセスする。
             try:
-                sr_stream = getattr(self.source, "stream", None)
-                pa_stream = getattr(sr_stream, "pyaudio_stream", None) if sr_stream is not None else None
-                if pa_stream is not None and not pa_stream.is_stopped():
-                    pa_stream.stop_stream()
+                with pyaudio_op_lock:
+                    sr_stream = getattr(self.source, "stream", None)
+                    pa_stream = getattr(sr_stream, "pyaudio_stream", None) if sr_stream is not None else None
+                    if pa_stream is not None and not pa_stream.is_stopped():
+                        pa_stream.stop_stream()
             except Exception:
-                # 既に停止済み等の例外は握りつぶし、join に任せる
-                pass
+                # 既に停止済み等、想定内の失敗もあり得るが原因調査のため記録する
+                errorLogging()
             if wait_for_stop:
                 listener_thread.join(timeout=5.0)
                 if watchdog_thread is not None:
