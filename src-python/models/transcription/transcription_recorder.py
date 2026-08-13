@@ -25,27 +25,34 @@ _STREAM_STALL_TIMEOUT_SEC = 10.0
 
 
 def _validate_audio_source(source: Any) -> Any:
-    # Microphone.__enter__/__exit__ touch PyAudio/WASAPI. Running this
-    # concurrently with device_manager.update()'s device enumeration (or
-    # another recorder's open) can deadlock inside PortAudio, so every
-    # PyAudio-touching operation in this module is serialized through the
-    # shared pyaudio_op_lock.
-    with pyaudio_op_lock:
-        source.__enter__()
-        if source.stream is None:
-            raise OSError("Audio device could not be opened")
-        source.__exit__(None, None, None)
+    # 呼び出し元 (_create_microphone) が既に pyaudio_op_lock を保持している
+    # 前提の内部関数。ここではロックを取らない (再入不可の Lock で
+    # 二重取得するとデッドロックするため)。
+    source.__enter__()
+    if source.stream is None:
+        raise OSError("Audio device could not be opened")
+    source.__exit__(None, None, None)
     return source
 
 
 def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -> Any:
-    try:
-        return _validate_audio_source(Microphone(**device_kwargs))
-    except Exception:
+    # speech_recognition の Microphone.__init__ 自体が、コンストラクタ内で
+    # 独自に PyAudio() を new し get_device_count()/get_device_info_by_index()
+    # 等のデバイス列挙を行ってから terminate() する。この呼び出しが
+    # pyaudio_op_lock の外側にあると、mic 側と speaker 側の Microphone(...)
+    # コンストラクタが並行実行され、WASAPI 内部でデッドロックし得る
+    # (実際に mic=CABLE Output, speaker=Steam Streaming Speakers を同時に
+    # 有効化した際にハングを確認済み)。
+    # そのため Microphone(...) の生成から _validate_audio_source による
+    # open/close 疎通確認まで、一貫して同じ pyaudio_op_lock 区間で行う。
+    with pyaudio_op_lock:
         try:
-            return _validate_audio_source(Microphone(**fallback_kwargs))
-        except Exception as fallback_error:
-            raise OSError("Selected and default audio devices could not be opened") from fallback_error
+            return _validate_audio_source(Microphone(**device_kwargs))
+        except Exception:
+            try:
+                return _validate_audio_source(Microphone(**fallback_kwargs))
+            except Exception as fallback_error:
+                raise OSError("Selected and default audio devices could not be opened") from fallback_error
 
 
 class BaseEnergyAndAudioRecorder:
