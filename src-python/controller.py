@@ -12,6 +12,10 @@ from errors import ErrorCode, VRCTError
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 class Controller:
+    # source (mic/speaker) 毎に保持する未解決 partial transcript の上限。
+    # final が来ないまま終わるセグメントが溜まっても無制限に増えないための保険。
+    _MAX_PENDING_PARTIAL_TRANSCRIPTS_PER_SOURCE = 8
+
     def __init__(self) -> None:
         # typed attributes to satisfy static type checkers
         self.init_mapping: dict = {}
@@ -545,7 +549,14 @@ class Controller:
         if transcript_id is not None:
             # source毎に単一スロットではなく transcript_id 毎に保持する。
             # 推論待ちのセグメントが複数同時に存在しても取りこぼさないようにするため。
-            self._pending_partial_transcripts.setdefault(source, {})[transcript_id] = result
+            pending = self._pending_partial_transcripts.setdefault(source, {})
+            pending[transcript_id] = result
+            # final が来ないまま終わるセグメント (デバイスエラー・mute・タブ
+            # 切替等) が積み上がると無制限に増え続けるため、保持数に上限を
+            # 設ける。dict は挿入順を保つので最も古いものから捨てる。
+            while len(pending) > self._MAX_PENDING_PARTIAL_TRANSCRIPTS_PER_SOURCE:
+                _, oldest_result = next(iter(pending.items()))
+                self._dismissPartialTranscript(source, oldest_result)
         if endpoint is None:
             return
         self.run(
