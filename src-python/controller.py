@@ -1377,18 +1377,15 @@ class Controller:
         return {"status":200, "result": config.SELECTED_MIC_DEVICE}
 
     def _reopenMicAudioOnDeviceChange(self) -> None:
-        # デバイス切り替え時に、稼働中のマイク文字起こし/エナジー計測を
-        # 新デバイスで開き直す。旧処理を先に stop してから start しないと、
-        # 旧 PyAudio ストリームがデバイスを掴んだままとなり、PortAudio 側で
-        # 競合してハングし得る (Windows/WASAPI で顕著)。
-        # また旧実装では ENABLE_CHECK_ENERGY_SEND 時に文字起こし側の start を
-        # 呼んでおり (コピペミス)、エナジー計測ではなく文字起こしが起動していた。
-        if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopTranscriptionSendMessage()
-            self.startTranscriptionSendMessage()
-        if config.ENABLE_CHECK_ENERGY_SEND is True:
-            self.stopCheckMicEnergy()
-            self.startCheckMicEnergy()
+        # デバイス切替時、稼働中のマイク Session を Session.reconfigure 経由で
+        # 新デバイスに差し替える。旧実装は feature 単位で stop→start を 2 段
+        # (transcription + energy) 呼んでいたため、両方 ON のときは Recorder が
+        # 2 回 close/open されていた。Session に device 差分検知を入れた今は
+        # 1 呼び出しで済み、config 上のデバイスと現在開いているデバイスが
+        # 同じなら no-op になる。
+        # config は呼び出し元 (setSelectedMicHost/Device) が既に書き換え済み。
+        with self.mic_lifecycle_lock:
+            model.reconfigureMicDevice()
 
     @staticmethod
     def getMicThreshold(*args, **kwargs) -> dict:
@@ -1589,15 +1586,10 @@ class Controller:
         return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
     def _reopenSpeakerAudioOnDeviceChange(self) -> None:
-        # マイクと同様、稼働中のスピーカー系処理を新デバイスで開き直す。
-        # 旧実装は ENABLE_CHECK_ENERGY_RECEIVE 時に文字起こしを起動していた
-        # (コピペミス) ため、正しくエナジー計測を再起動する。
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopTranscriptionReceiveMessage()
-            self.startTranscriptionReceiveMessage()
-        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            self.stopCheckSpeakerEnergy()
-            self.startCheckSpeakerEnergy()
+        # マイクと同様、Session.reconfigure 1 回に縮退。詳細は
+        # _reopenMicAudioOnDeviceChange のコメント参照。
+        with self.speaker_lifecycle_lock:
+            model.reconfigureSpeakerDevice()
 
     @staticmethod
     def getSpeakerThreshold(*args, **kwargs) -> dict:

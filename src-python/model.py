@@ -163,10 +163,26 @@ class _AudioDeviceSession:
         self._energy_progressbar: Optional[threadFnc] = None
         self.transcript_fnc: Optional[Callable[[dict], None]] = None
         self.energy_fnc: Callable[[float], None] = lambda v: None
+        # 現在 Recorder が開いているデバイス (dict) を保持し、
+        # reconfigure() で「同一デバイスかつ features 変化なし」なら no-op
+        # にするために使う。
+        self._active_device: Optional[dict] = None
+
+    @staticmethod
+    def _device_key(device: Optional[dict]) -> Optional[tuple]:
+        """デバイスの同一性判定に使う key。
+
+        pyaudio が返す dict は不安定なフィールド (defaultLowInputLatency 等) を
+        含むため生 dict 比較は使えない。ホスト内で一意な (name, index) の
+        タプルで判定する。
+        """
+        if device is None:
+            return None
+        return (device.get("name"), device.get("index"))
 
     # --- サブクラスが実装するフック -------------------------------------
 
-    def _resolve_device(self) -> Optional[dict]:
+    def _resolve_device(self, override: Optional[dict] = None) -> Optional[dict]:
         raise NotImplementedError
 
     def _create_recorder(self, device: dict, vad_filter: bool):
@@ -180,12 +196,23 @@ class _AudioDeviceSession:
 
     # --- 公開 API ---------------------------------------------------------
 
-    def reconfigure(self, *, transcript: Optional[bool] = None, energy: Optional[bool] = None) -> None:
+    def reconfigure(
+        self,
+        *,
+        transcript: Optional[bool] = None,
+        energy: Optional[bool] = None,
+        device: Optional[dict] = None,
+    ) -> None:
         """transcript/energy を True で有効化、False で無効化、None で現状維持。
 
-        features が変わらない場合でも、既に稼働中であれば作り直す
-        (デバイス切り替えや VAD トグルは、呼び出し側が config を更新して
-        から reconfigure を呼ぶだけで反映される設計)。
+        device を明示指定すると config を読まずそれを使う (Auto 選択で
+        「実使用中エンドポイント」を渡すユースケース)。指定しなければ
+        従来通り config (SELECTED_MIC_HOST/DEVICE 等) から解決する。
+
+        差分検知: 「新 features == 現 features」かつ「解決したデバイス ==
+        _active_device」なら no-op で早期 return。デバイスまたは features
+        が変化した場合のみ stop→start する。これにより device 切替時に
+        Recorder が二重に close/open されることを防ぐ。
         """
         new_features = set(self.features)
         if transcript is True:
@@ -197,13 +224,19 @@ class _AudioDeviceSession:
         elif energy is False:
             new_features.discard("energy")
 
-        was_active = bool(self.features)
+        # override が指定されなければ config から解決 (下位互換)
+        resolved_device = self._resolve_device(override=device)
+
+        same_features = new_features == self.features
+        same_device = self._device_key(resolved_device) == self._device_key(self._active_device)
+        already_running = (not new_features) or (self._recorder is not None)
+        if same_features and same_device and already_running:
+            return
+
         self._stop()
         self.features = new_features
         if self.features:
-            self._start()
-        elif was_active:
-            pass  # 何もしない: 全 feature が無効化された
+            self._start(device=resolved_device)
 
     def pause(self) -> None:
         if self._recorder is not None:
@@ -222,15 +255,22 @@ class _AudioDeviceSession:
 
     # --- 内部実装 ---------------------------------------------------------
 
-    def _start(self) -> None:
-        device = self._resolve_device()
+    def _start(self, *, device: Optional[dict]) -> None:
+        # 呼び出し元 (reconfigure) が _resolve_device で解決済みの
+        # デバイスを渡す。None は「使用可能なデバイス無し」を意味し、
+        # ここで再解決はしない (再解決すると reconfigure の意図した
+        # None → 停止のセマンティクスが壊れる)。
         if device is None:
             if "transcript" in self.features and callable(self.transcript_fnc):
                 self.transcript_fnc({"text": False, "language": None})
             if "energy" in self.features:
                 self.energy_fnc(False)
             self.features = set()
+            self._active_device = None
             return
+
+        # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
+        self._active_device = device
 
         # エナジーのみの場合 VAD は不要 (旧 startCheckMic/SpeakerEnergy の
         # 挙動を踏襲)。文字起こしを含む場合は config の VAD 設定を使う。
@@ -302,6 +342,7 @@ class _AudioDeviceSession:
             self._recorder = None
         self._transcriber = None
         self._audio_queue = None
+        self._active_device = None
 
     def _vad_filter_config(self) -> bool:
         raise NotImplementedError
@@ -310,7 +351,12 @@ class _AudioDeviceSession:
 class MicSession(_AudioDeviceSession):
     _kind = "mic"
 
-    def _resolve_device(self) -> Optional[dict]:
+    def _resolve_device(self, override: Optional[dict] = None) -> Optional[dict]:
+        if override is not None:
+            # NoDevice が明示的に渡された場合は None (デバイス無し) 扱い
+            if override.get("name") == "NoDevice":
+                return None
+            return override
         mic_host_name = config.SELECTED_MIC_HOST
         mic_device_name = config.SELECTED_MIC_DEVICE
         mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
@@ -370,7 +416,11 @@ class MicSession(_AudioDeviceSession):
 class SpeakerSession(_AudioDeviceSession):
     _kind = "speaker"
 
-    def _resolve_device(self) -> Optional[dict]:
+    def _resolve_device(self, override: Optional[dict] = None) -> Optional[dict]:
+        if override is not None:
+            if override.get("name") == "NoDevice":
+                return None
+            return override
         speaker_device_name = config.SELECTED_SPEAKER_DEVICE
         speaker_device_list = device_manager.getSpeakerDevices()
         selected_speaker_device = [d for d in speaker_device_list if d["name"] == speaker_device_name]
@@ -1176,6 +1226,25 @@ class Model:
     def stopCheckSpeakerEnergy(self):
         self.ensure_initialized()
         self._speaker_session.reconfigure(energy=False)
+
+    def reconfigureMicDevice(self, device: Optional[dict] = None) -> None:
+        """稼働中の Mic Session を新デバイスに差し替える。
+
+        features (transcript/energy) は現状維持。device が None の場合は
+        config (SELECTED_MIC_HOST/DEVICE) から解決する。Session 内部で
+        差分検知するため、同一デバイスなら no-op になる。
+
+        呼び出し元は Controller._reopenMicAudioOnDeviceChange (手動切替)
+        および Auto 監視スレッドから (Phase 3 で追加予定) 使う想定。
+        """
+        self.ensure_initialized()
+        self._mic_session.reconfigure(device=device)
+
+    def reconfigureSpeakerDevice(self, device: Optional[dict] = None) -> None:
+        """稼働中の Speaker Session を新デバイスに差し替える。詳細は
+        reconfigureMicDevice のドキュメント参照。"""
+        self.ensure_initialized()
+        self._speaker_session.reconfigure(device=device)
 
     def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict], transliteration_message:Optional[dict] = None, transliteration_translation:Optional[list] = None) -> object:
         self.ensure_initialized()
