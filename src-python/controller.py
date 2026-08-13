@@ -1325,6 +1325,13 @@ class Controller:
         device_manager.setCallbackProcessAfterUpdateMicDevices(
             lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessMicDevices)
         )
+        # ActiveEndpointTracker が「実使用中エンドポイント」の切替を検知
+        # したときは、Session の Recorder を新デバイスに 1 発で差し替える。
+        # tracker スレッドをブロックしないよう worker 経由 + reconfigureMicDevice
+        # (Session の device 差分検知でリソース節約)。
+        device_manager.setCallbackEndpointReconfiguredMic(
+            lambda: model.audio_lifecycle_worker.enqueue(model.reconfigureMicDevice)
+        )
         device_manager.forceUpdateAndSetMicDevices()
         # monitoring スレッドの起動判断は DeviceManager 側に集約
         # (speaker 側の状態を controller で気にする必要はもう無い)
@@ -1342,6 +1349,7 @@ class Controller:
             device_manager.clearCallbackProcessBeforeUpdateMicDevices()
             device_manager.clearCallbackDefaultMicDevice()
             device_manager.clearCallbackProcessAfterUpdateMicDevices()
+            device_manager.clearCallbackEndpointReconfiguredMic()
             # monitoring の停止判断は DeviceManager 側に委譲。
             # speaker 側が active なら monitoring は継続、両方 inactive で
             # 初めて thread が停止する。以前ここで AUTO_SPEAKER_SELECT を
@@ -1559,6 +1567,10 @@ class Controller:
         device_manager.setCallbackProcessAfterUpdateSpeakerDevices(
             lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessSpeakerDevices)
         )
+        # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携)
+        device_manager.setCallbackEndpointReconfiguredSpeaker(
+            lambda: model.audio_lifecycle_worker.enqueue(model.reconfigureSpeakerDevice)
+        )
         device_manager.forceUpdateAndSetSpeakerDevices()
         device_manager.setSpeakerAutoActive(True)
 
@@ -1574,6 +1586,7 @@ class Controller:
             device_manager.clearCallbackProcessBeforeUpdateSpeakerDevices()
             device_manager.clearCallbackDefaultSpeakerDevice()
             device_manager.clearCallbackProcessAfterUpdateSpeakerDevices()
+            device_manager.clearCallbackEndpointReconfiguredSpeaker()
             # 詳細は setDisableAutoMicSelect のコメント参照:
             # monitoring の停止判断は DeviceManager 側に委譲。
             device_manager.setSpeakerAutoActive(False)

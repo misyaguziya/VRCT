@@ -22,6 +22,7 @@ except Exception:  # pragma: no cover - optional runtime
     AudioUtilities = None  # type: ignore
 
 from utils import errorLogging
+from active_endpoint_tracker import ActiveEndpointTracker
 
 # WASAPI/PortAudio 操作 (デバイス列挙・ストリーム open/close) を
 # 直列化するためのプロセス共通ロック。
@@ -127,6 +128,12 @@ class DeviceManager:
         self.callback_process_after_update_mic_devices: Optional[Callable[..., None]] = None
         self.callback_process_before_update_speaker_devices: Optional[Callable[..., None]] = None
         self.callback_process_after_update_speaker_devices: Optional[Callable[..., None]] = None
+        # ActiveEndpointTracker がエンドポイント切替を検知したとき、Session の
+        # Recorder 差し替えをトリガするための callback (Auto 経路専用)。
+        # 既存の default_mic_device callback は config 更新 + UI 通知のみで、
+        # Recorder 側の再開はしない設計のため別チャネルにする。
+        self.callback_endpoint_reconfigured_mic: Optional[Callable[..., None]] = None
+        self.callback_endpoint_reconfigured_speaker: Optional[Callable[..., None]] = None
 
         # Monitoring control
         # `_stop_event` を set すると monitoring スレッドは wait を即抜けて終了する。
@@ -149,6 +156,16 @@ class DeviceManager:
         # 必要だったが、DeviceManager にフラグを持たせることで撤去できる。
         self._mic_auto_active: bool = False
         self._speaker_auto_active: bool = False
+
+        # 「実使用中エンドポイント」を追跡する tracker。Auto がアクティブな
+        # ときのみ起動する。tracker の on_change コールバックは監視スレッド
+        # (別スレッド) から呼ばれ、内部で updateSelectedMicDevice /
+        # updateSelectedSpeakerDevice 相当の callback を発火する。
+        # tracker が None (無音) を返す場合は既存の Multimedia default 検出
+        # (update() → noticeUpdateDevices → setMicDefaultDevice) が生きているので
+        # 何もしない = 前回選択を維持。
+        self._mic_endpoint_tracker: Optional[ActiveEndpointTracker] = None
+        self._speaker_endpoint_tracker: Optional[ActiveEndpointTracker] = None
 
         self._initialized = True
 
@@ -390,16 +407,157 @@ class DeviceManager:
         """Auto Mic Select の有効/無効を DeviceManager 側で受け取る。
 
         監視スレッドの起動/停止判断はここで完結させ、controller 側が
-        相手側 (speaker) の状態を見て判断する必要を無くす。
+        相手側 (speaker) の状態を見て判断する必要を無くす。同時に、
+        アクティブエンドポイント追跡 tracker の起動/停止も切り替える。
         """
         self._mic_auto_active = active
+        if active:
+            self._startMicEndpointTracker()
+        else:
+            self._stopMicEndpointTracker()
         self._syncMonitoringLifecycle()
 
     def setSpeakerAutoActive(self, active: bool) -> None:
         """Auto Speaker Select の有効/無効を DeviceManager 側で受け取る。
         詳細は setMicAutoActive のコメント参照。"""
         self._speaker_auto_active = active
+        if active:
+            self._startSpeakerEndpointTracker()
+        else:
+            self._stopSpeakerEndpointTracker()
         self._syncMonitoringLifecycle()
+
+    def _startMicEndpointTracker(self) -> None:
+        if self._mic_endpoint_tracker is not None:
+            return
+        tracker = ActiveEndpointTracker("capture")
+        tracker.set_on_change_callback(self._onActiveMicEndpointChanged)
+        tracker.start()
+        self._mic_endpoint_tracker = tracker
+
+    def _stopMicEndpointTracker(self) -> None:
+        tracker = self._mic_endpoint_tracker
+        self._mic_endpoint_tracker = None
+        if tracker is not None:
+            tracker.stop()
+
+    def _startSpeakerEndpointTracker(self) -> None:
+        if self._speaker_endpoint_tracker is not None:
+            return
+        tracker = ActiveEndpointTracker("render")
+        tracker.set_on_change_callback(self._onActiveSpeakerEndpointChanged)
+        tracker.start()
+        self._speaker_endpoint_tracker = tracker
+
+    def _stopSpeakerEndpointTracker(self) -> None:
+        tracker = self._speaker_endpoint_tracker
+        self._speaker_endpoint_tracker = None
+        if tracker is not None:
+            tracker.stop()
+
+    def _onActiveMicEndpointChanged(self, endpoint_name: Optional[str]) -> None:
+        """Tracker からのコールバック (別スレッド)。
+
+        アクティブな capture エンドポイント名 (FriendlyName) を受け取り、
+        現在のマイクデバイスリストからマッチする (host, device) を検索、
+        以下の 2 段で反映する:
+          1. callback_default_mic_device: config 更新 + UI 通知
+          2. callback_endpoint_reconfigured_mic: Session の Recorder を新デバイスに差し替え
+        マッチが無い場合は何もしない (Multimedia default 追跡が生きる)。
+        """
+        if endpoint_name is None:
+            return
+        try:
+            host, device_name = self._findMicDeviceByName(endpoint_name)
+        except Exception:
+            errorLogging()
+            return
+        if host is None or device_name is None:
+            return
+        if isinstance(self.callback_default_mic_device, Callable):
+            try:
+                self.callback_default_mic_device(host, device_name)
+            except Exception:
+                errorLogging()
+        if isinstance(self.callback_endpoint_reconfigured_mic, Callable):
+            try:
+                self.callback_endpoint_reconfigured_mic()
+            except Exception:
+                errorLogging()
+
+    def _onActiveSpeakerEndpointChanged(self, endpoint_name: Optional[str]) -> None:
+        """Tracker からのコールバック (別スレッド)。詳細は
+        _onActiveMicEndpointChanged 参照。スピーカー側は loopback デバイス
+        (末尾 " [Loopback]") とのマッピング調整が必要。
+        """
+        if endpoint_name is None:
+            return
+        try:
+            device_name = self._findSpeakerDeviceByName(endpoint_name)
+        except Exception:
+            errorLogging()
+            return
+        if device_name is None:
+            return
+        if isinstance(self.callback_default_speaker_device, Callable):
+            try:
+                self.callback_default_speaker_device(device_name)
+            except Exception:
+                errorLogging()
+        if isinstance(self.callback_endpoint_reconfigured_speaker, Callable):
+            try:
+                self.callback_endpoint_reconfigured_speaker()
+            except Exception:
+                errorLogging()
+
+    def _findMicDeviceByName(self, endpoint_name: str) -> tuple:
+        """FriendlyName に一致するマイクデバイスを (host, device_name) で返す。
+
+        WASAPI ホストを優先する (pycaw の endpoint は WASAPI 世界の名称と
+        1:1 対応、他ホストは名前がトランケートされる可能性)。WASAPI に
+        無ければ全ホストから完全一致を探し、最後に前方一致で救う。
+        """
+        target = endpoint_name.strip()
+        mic_devices = self.mic_devices
+        wasapi_key = None
+        for host in mic_devices.keys():
+            if "WASAPI" in host:
+                wasapi_key = host
+                break
+        if wasapi_key is not None:
+            for d in mic_devices[wasapi_key]:
+                if d.get("name") == target:
+                    return wasapi_key, target
+        # WASAPI 外の完全一致
+        for host, devs in mic_devices.items():
+            for d in devs:
+                if d.get("name") == target:
+                    return host, d["name"]
+        # 前方一致 (MME 系はデバイス名が 31 文字で切られるため)
+        for host, devs in mic_devices.items():
+            for d in devs:
+                name = d.get("name", "")
+                if name and target.startswith(name):
+                    return host, name
+        return None, None
+
+    def _findSpeakerDeviceByName(self, endpoint_name: str) -> Optional[str]:
+        """FriendlyName に一致するスピーカー (loopback) デバイス名を返す。
+
+        pyaudiowpatch のスピーカーデバイス名は "<friendly> [Loopback]" 形式。
+        pycaw の FriendlyName に " [Loopback]" を付けた候補が
+        speaker_devices に存在するかを確認する。
+        """
+        loopback_name = f"{endpoint_name} [Loopback]"
+        for d in self.speaker_devices:
+            if d.get("name") == loopback_name:
+                return loopback_name
+        # 前方一致救済
+        for d in self.speaker_devices:
+            name = d.get("name", "")
+            if name and name.startswith(endpoint_name):
+                return name
+        return None
 
     def _syncMonitoringLifecycle(self) -> None:
         """mic/speaker の active フラグに応じて monitoring スレッドを起動/停止。
@@ -517,6 +675,18 @@ class DeviceManager:
                 self.callback_process_after_update_speaker_devices()
             except Exception:
                 errorLogging()
+
+    def setCallbackEndpointReconfiguredMic(self, callback):
+        self.callback_endpoint_reconfigured_mic = callback
+
+    def clearCallbackEndpointReconfiguredMic(self):
+        self.callback_endpoint_reconfigured_mic = None
+
+    def setCallbackEndpointReconfiguredSpeaker(self, callback):
+        self.callback_endpoint_reconfigured_speaker = callback
+
+    def clearCallbackEndpointReconfiguredSpeaker(self):
+        self.callback_endpoint_reconfigured_speaker = None
 
     def noticeUpdateDevices(self):
         if self.update_flag_default_mic_device is True:
