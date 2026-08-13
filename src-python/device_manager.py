@@ -1,6 +1,6 @@
 from typing import Callable, Dict, List, Optional, Any
 from time import sleep
-from threading import Thread, Lock
+from threading import Thread, Lock, Event
 
 # Optional, Windows-specific dependencies. Guard imports so module can be imported on non-Windows systems.
 try:
@@ -36,32 +36,35 @@ pyaudio_op_lock: Lock = Lock()
 class Client(MMNotificationClient):
     """Callback client used by pycaw to detect device changes.
 
-    This subclass is lightweight: it flips a flag when events arrive so the
-    monitoring loop can break and refresh device lists.
+    COM のコールバックスレッドから呼ばれる。monitoring スレッドは
+    `notify_event` を wait しており、いずれかのイベントで set されると
+    デバイス一覧を再構築する。stop イベント (外部から `stop_event.set()`)
+    でも wait は解ける (`Event.wait` は set 済みならすぐ True を返す)。
     """
 
-    def __init__(self) -> None:
+    def __init__(self, notify_event: Event) -> None:
         # If MMNotificationClient is the placeholder object (non-windows), avoid calling super
         try:
             super().__init__()
         except Exception:
             pass
-        self.loop: bool = True
+        self._notify_event = notify_event
 
     def on_default_device_changed(self, *args: Any, **kwargs: Any) -> None:
-        self.loop = False
+        self._notify_event.set()
 
     def on_device_added(self, *args: Any, **kwargs: Any) -> None:
-        self.loop = False
+        self._notify_event.set()
 
     def on_device_removed(self, *args: Any, **kwargs: Any) -> None:
-        self.loop = False
+        self._notify_event.set()
 
     def on_device_state_changed(self, *args: Any, **kwargs: Any) -> None:
-        self.loop = False
+        self._notify_event.set()
 
-    # def on_property_value_changed(self, device_id, key):
-    #     self.loop = False
+    # on_property_value_changed は登録しない: default endpoint 変更は
+    # on_default_device_changed で拾えており、property イベントは
+    # ボリューム変更などでも発火するため、拾うとポーリングが過剰になる。
 
 class DeviceManager:
     _instance = None
@@ -126,7 +129,16 @@ class DeviceManager:
         self.callback_process_after_update_speaker_devices: Optional[Callable[..., None]] = None
 
         # Monitoring control
-        self.monitoring_flag: bool = False
+        # `_stop_event` を set すると monitoring スレッドは wait を即抜けて終了する。
+        # 従来の `monitoring_flag` (bool) は `sleep` 越しに参照するとタイムラグが
+        # 生じ、stopMonitoring 側で最大 5s の join 待ちが発生していた。Event に
+        # 置き換えたことで stop は即応する。
+        self._stop_event: Event = Event()
+        self._stop_event.set()  # 初期状態は「停止済み」
+        # notify_event は startMonitoring の中で作り直されるが、
+        # stopMonitoring が startMonitoring より先に呼ばれても落ちないよう
+        # ここでダミーを 1 個用意しておく。
+        self._notify_event: Event = Event()
         self.th_monitoring: Optional[Thread] = None
 
         self._initialized = True
@@ -276,19 +288,38 @@ class DeviceManager:
         return update_flag
 
     def monitoring(self):
+        """デバイス変更を監視するスレッド本体。
+
+        フロー:
+          1. COM の endpoint 通知を待つ (通知またはポーリング fallback として最大 2s)
+          2. 通知が来たら Before callback → update() → noticeUpdate → After callback
+          3. stop_event が set されていれば即座に終了
+
+        以前は「COM 通知後、20s ポーリングで変化を待つ」ループがあったが、
+        (a) COM 通知が届いた時点でほぼ確実にデバイス一覧は変化済み、
+        (b) 変化しないケースでは 20s 待ち続けてもリソース浪費なだけ、
+        (c) その間 stop_event を見ないので OFF 応答が遅くなる、という
+        3 点の理由で削除した。update() 一発と noticeUpdate で必要十分。
+        """
         try:
-            while self.monitoring_flag is True:
+            while not self._stop_event.is_set():
                 try:
-                    # Use COM only when available (Windows). If comtypes is not present,
-                    # fall back to periodic polling using PyAudio only.
+                    self._notify_event.clear()
+
+                    # COM が使える環境では endpoint 通知で wait、そうでなければ
+                    # 一定周期のポーリングで代替する。stop_event を wait 相手に
+                    # 混ぜているのは、COM が反応しなくても stop で即抜けるため。
                     if comtypes is not None and AudioUtilities is not None:
                         try:
                             comtypes.CoInitialize()
-                            cb = Client()
+                            cb = Client(self._notify_event)
                             enumerator = AudioUtilities.GetDeviceEnumerator()
                             enumerator.RegisterEndpointNotificationCallback(cb)
-                            while cb.loop is True and self.monitoring_flag is True:
-                                sleep(1)
+                            # 通知 or stop のいずれかで即抜ける。最長 2s の
+                            # タイムアウトは COM が万一通知を落とした場合の保険。
+                            while not self._notify_event.wait(timeout=2.0):
+                                if self._stop_event.is_set():
+                                    break
                             try:
                                 enumerator.UnregisterEndpointNotificationCallback(cb)
                             except Exception:
@@ -296,41 +327,63 @@ class DeviceManager:
                                 pass
                             comtypes.CoUninitialize()
                         except Exception:
-                            # if COM monitoring fails, log and fall through to polling
+                            # COM 監視が失敗したらポーリング fallback に落ちる
                             errorLogging()
+                            self._stop_event.wait(timeout=2.0)
+                    else:
+                        # 非 Windows fallback: 単純ポーリング
+                        self._stop_event.wait(timeout=2.0)
 
-                    # polling and update cycle
+                    if self._stop_event.is_set():
+                        break
+
+                    # 通知を受けた直後のデバイス一覧再構築フェーズ
                     self.runProcessBeforeUpdateMicDevices()
                     self.runProcessBeforeUpdateSpeakerDevices()
-                    sleep(2)
-                    for _ in range(10):
-                        self.update()
-                        if self.checkUpdate():
-                            break
-                        sleep(2)
+                    self.update()
+                    self.checkUpdate()
                     self.noticeUpdateDevices()
                     self.runProcessAfterUpdateMicDevices()
                     self.runProcessAfterUpdateSpeakerDevices()
                 except Exception:
                     errorLogging()
+                    # 個別の例外で暴走ループにならないよう、短い wait を挟む
+                    self._stop_event.wait(timeout=0.5)
         except Exception:
             errorLogging()
 
     def startMonitoring(self):
-        if self.monitoring_flag:
+        # 既に稼働中なら何もしない (冪等)
+        if not self._stop_event.is_set() and self.th_monitoring is not None and self.th_monitoring.is_alive():
             return
-        self.monitoring_flag = True
-        self.th_monitoring = Thread(target=self.monitoring)
-        self.th_monitoring.daemon = True
+        self._stop_event.clear()
+        # notify_event は monitoring スレッド起動と同時に用意する。
+        # COM callback スレッドと monitoring スレッド間のイベント受け渡しに使う。
+        self._notify_event = Event()
+        self.th_monitoring = Thread(target=self.monitoring, daemon=True)
         self.th_monitoring.start()
 
     def stopMonitoring(self):
-        self.monitoring_flag = False
+        """非ブロッキング stop。event を set して短時間だけ join を試みる。
+
+        以前は join(timeout=5) だったが、内部ループが flag を最大 20s 見て
+        いなかったため endpoint 呼び出しが 5s 丸ごとブロックされていた。
+        現在は Event ベースなのでスレッドは即抜ける想定 (数十 ms 以内)。
+        万一 COM 呼び出しなどで抜けが遅れても endpoint を待たせないよう、
+        join タイムアウトは 0.5s に短縮した (daemon スレッドなのでプロセス
+        終了時に確実に片付く)。
+        """
+        self._stop_event.set()
+        # notify_event も併せて set しておくと、COM 通知待ちで止まっている
+        # スレッドが即座に wait を抜ける。
+        notify_event = getattr(self, "_notify_event", None)
+        if isinstance(notify_event, Event):
+            notify_event.set()
         if getattr(self, "th_monitoring", None) is not None:
             try:
-                self.th_monitoring.join(timeout=5)
+                self.th_monitoring.join(timeout=0.5)
             except Exception:
-                # If join fails or thread is not joinable, ignore - it's a best-effort stop
+                # join がスレッド非依存の理由で失敗しても致命的ではない
                 pass
 
     def setCallbackDefaultMicDevice(self, callback):
