@@ -490,6 +490,43 @@ class TestSpeakerMessage(unittest.TestCase):
 
     @patch("controller.model")
     @patch("controller.config")
+    def test_empty_final_speaker_result_falls_back_to_pending_partial_text(self, config, model) -> None:
+        from controller import Controller
+
+        config.ENABLE_TRANSLATION = False
+        config.ENABLE_TRANSCRIPTION_RECEIVE = True
+        config.CONVERT_MESSAGE_TO_HIRAGANA = False
+        config.CONVERT_MESSAGE_TO_ROMAJI = False
+        config.OVERLAY_SMALL_LOG = False
+        config.OVERLAY_LARGE_LOG = False
+        config.SEND_RECEIVED_MESSAGE_TO_VRC = False
+        config.LOGGER_FEATURE = False
+        model.checkKeywords.return_value = False
+        model.detectRepeatReceiveMessage.return_value = False
+        model.checkWebSocketServerAlive.return_value = False
+        controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {
+            "speaker": {"transcription-speaker-7": {"text": "まず先", "language": "Japanese"}}
+        }
+        controller.run_mapping = {"transcription_speaker": "/run/speaker"}
+        controller.run = MagicMock()
+        controller._is_overlay_available = MagicMock(return_value=False)
+
+        controller.speakerMessage({
+            "text": "",
+            "language": "Japanese",
+            "is_final": True,
+            "segment_id": 7,
+        })
+
+        controller.run.assert_called_once()
+        args = controller.run.call_args.args
+        self.assertEqual(args[1], "/run/speaker")
+        self.assertEqual(args[2]["original"]["message"], "まず先")
+        self.assertNotIn("transcription-speaker-7", controller._pending_partial_transcripts.get("speaker", {}))
+
+    @patch("controller.model")
+    @patch("controller.config")
     def test_empty_partial_speaker_result_is_dismissed_not_shown(self, config, model) -> None:
         from controller import Controller
 

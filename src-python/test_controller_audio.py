@@ -12,6 +12,7 @@ class TestMicTranslationEngineLimitContract(unittest.TestCase):
         self.controller = Controller.__new__(Controller)
         self.controller.run_mapping = {"error_translation_engine": "error_translation_engine"}
         self.controller.changeToCTranslate2Process = lambda: None
+        self.controller._pending_partial_transcripts = {}
         self.calls = []
         self.controller.run = lambda status, endpoint, result: self.calls.append((status, endpoint, result))
 
@@ -48,6 +49,7 @@ class TestRecognitionErrorVisibility(unittest.TestCase):
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
         self.controller.run_mapping = {"transcription_recognition_error": "transcription_recognition_error"}
+        self.controller._pending_partial_transcripts = {}
         self.calls = []
         self.controller.run = lambda status, endpoint, result: self.calls.append((status, endpoint, result))
 

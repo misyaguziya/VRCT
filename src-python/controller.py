@@ -334,6 +334,7 @@ class Controller:
 
         message = result["text"]
         language = result["language"]
+        message, language = self._resolveFinalMessage("mic", result, message, language)
         if isinstance(message, bool) and message is False:
             self.run(
                 400,
@@ -514,6 +515,20 @@ class Controller:
         segment_id = result.get("segment_id")
         return f"transcription-{source}-{segment_id}" if segment_id is not None else None
 
+    def _resolveFinalMessage(self, source: str, result: dict, message, language):
+        # final結果が空文字の場合、同じsegment_idの直前のpartialテキストにフォールバックする。
+        # スピーカー音声はマイクと違い自然な無音区切りが来にくく、VAD区間が長くなるほど
+        # 確定リクエストだけがGoogle側の一時的な認識失敗を踏みやすい (直前のpartialでは
+        # 認識できていたのと同じ音声でも起こりうる)。既にUIに表示済みのpartialテキストを
+        # 無駄に破棄しないためのフォールバック。
+        if isinstance(message, str) and len(message) == 0:
+            transcript_id = self._transcriptSegmentId(source, result)
+            pending = self._pending_partial_transcripts.get(source, {}).get(transcript_id) if transcript_id else None
+            pending_text = pending.get("text") if pending else None
+            if isinstance(pending_text, str) and len(pending_text) > 0:
+                return pending_text, pending.get("language", language)
+        return message, language
+
     def _emitPartialTranscript(self, source: str, result: dict) -> None:
         # 音声区間は検出されたが認識エンジンがまだ (あるいは結局) テキストを
         # 返さなかった場合、text は空文字になる。UI側 (upsertTranscriptionMessage)
@@ -593,6 +608,7 @@ class Controller:
 
         message = result["text"]
         language = result["language"]
+        message, language = self._resolveFinalMessage("speaker", result, message, language)
         if isinstance(message, bool) and message is False:
             self.run(
                 400,
