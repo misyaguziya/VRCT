@@ -450,6 +450,9 @@ mapping = {
     "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
 
     # VRChat chat-bubble OCR
+    # Endpoint names must stay in sync with base_endpoint_name in
+    # src-ui/logics/configs/config_page_setter/ui_config_setter.js, which
+    # derives /get/data/<base>, /set/enable/<base> and /set/disable/<base>.
     "/get/data/ocr_capture": {"status": True, "variable":controller.getEnableOcrCapture},
     "/set/enable/ocr_capture": {"status": True, "variable":controller.setEnableOcrCapture},
     "/set/disable/ocr_capture": {"status": True, "variable":controller.setDisableOcrCapture},
@@ -459,8 +462,6 @@ mapping = {
     "/set/data/ocr_source_language": {"status": True, "variable":controller.setOcrSourceLanguage},
     "/get/data/ocr_window_title": {"status": True, "variable":controller.getOcrWindowTitle},
     "/set/data/ocr_window_title": {"status": True, "variable":controller.setOcrWindowTitle},
-    "/get/data/ocr_target_language": {"status": True, "variable":controller.getOcrTargetLanguage},
-    "/set/data/ocr_target_language": {"status": True, "variable":controller.setOcrTargetLanguage},
     "/get/data/ocr_poll_interval_ms": {"status": True, "variable":controller.getOcrPollIntervalMs},
     "/set/data/ocr_poll_interval_ms": {"status": True, "variable":controller.setOcrPollIntervalMs},
     "/get/data/ocr_min_confidence": {"status": True, "variable":controller.getOcrMinConfidence},

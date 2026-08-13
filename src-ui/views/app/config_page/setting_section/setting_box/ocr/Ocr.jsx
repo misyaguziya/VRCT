@@ -1,11 +1,11 @@
 import styles from "./Ocr.module.scss";
 
-import { useOcr } from "@logics_configs";
+import { useOcr, useSaveButtonLogic } from "@logics_configs";
 
 import {
     CheckboxContainer,
     SliderContainer,
-    EntryContainer,
+    EntryWithSaveButtonContainer,
 } from "../_templates/Templates";
 
 import { SectionLabelComponent } from "../_components";
@@ -61,24 +61,50 @@ const EnableOcrCaptureContainer = () => {
 
 const OcrWindowTitleContainer = () => {
     const { currentOcrWindowTitle, setOcrWindowTitle } = useOcr();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOcrWindowTitle.data,
+        state: currentOcrWindowTitle.state,
+        setFunction: setOcrWindowTitle,
+        // useSaveButtonLogic calls deleteFunction() on an empty field; there is
+        // no delete endpoint here, so clearing it restores the default title.
+        deleteFunction: () => setOcrWindowTitle("VRChat"),
+    });
+
     return (
-        <EntryContainer
+        <EntryWithSaveButtonContainer
             label="Window name"
             desc={"Substring match (case-insensitive) against visible window titles. Change this if you run a client whose window isn't titled 'VRChat' (e.g. a modified launcher)."}
-            variable={currentOcrWindowTitle.data}
-            setterFunction={setOcrWindowTitle}
+            variable={variable}
+            saveFunction={saveFunction}
+            onChangeFunction={onChangeFunction}
+            state={currentOcrWindowTitle.state}
+            width="14rem"
         />
     );
 };
 
 const OcrSourceLanguageContainer = () => {
     const { currentOcrSourceLanguage, setOcrSourceLanguage } = useOcr();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOcrSourceLanguage.data,
+        state: currentOcrSourceLanguage.state,
+        setFunction: setOcrSourceLanguage,
+        // useSaveButtonLogic calls deleteFunction() on an empty field; this
+        // setting has no delete endpoint, so clearing it means "back to auto".
+        deleteFunction: () => setOcrSourceLanguage("auto"),
+    });
+
     return (
-        <EntryContainer
+        <EntryWithSaveButtonContainer
             label="OCR source language"
-            desc={"'auto' loads Japanese + English EasyOCR readers. Set to a specific VRCT language name (e.g. 'Japanese', 'English') to load only that reader."}
-            variable={currentOcrSourceLanguage.data}
-            setterFunction={setOcrSourceLanguage}
+            desc={"Language the captured bubbles are written in. 'auto' loads Japanese + English readers. Set a VRCT language name (e.g. 'Japanese') to load only that reader. Applied on the next OCR start."}
+            variable={variable}
+            saveFunction={saveFunction}
+            onChangeFunction={onChangeFunction}
+            state={currentOcrSourceLanguage.state}
+            width="14rem"
         />
     );
 };

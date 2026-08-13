@@ -1085,16 +1085,21 @@ class Model:
             # Already running.
             return True
 
-        # Resolve source language: "auto" means "use the first enabled tab source language".
+        if config.OCR_ENGINE != "EasyOCR":
+            printLog(f"OCR: unsupported engine {config.OCR_ENGINE!r}, refusing to start")
+            return False
+
+        # Resolve source language. OCR reads *other people's* chat bubbles, so
+        # "auto" resolves against SELECTED_TARGET_LANGUAGES (the languages the
+        # other party speaks) — the same side getOutputTranslate treats as its
+        # source. Resolving against SELECTED_YOUR_LANGUAGES here would ask the
+        # translator to go from your own language into your own language.
         source_language = config.OCR_SOURCE_LANGUAGE
         if not isinstance(source_language, str) or source_language.lower() == "auto":
             try:
-                langs_cfg = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                langs_cfg = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
                 enabled = [d["language"] for d in langs_cfg.values() if d.get("enable") is True]
-                if enabled:
-                    source_language = enabled[0]
-                else:
-                    source_language = "auto"
+                source_language = enabled[0] if enabled else "auto"
             except Exception:
                 source_language = "auto"
 

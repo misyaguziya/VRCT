@@ -118,12 +118,29 @@ class OcrCapture:
 
 ## 重複抑制（dedup）
 
-VRChat の吹き出しは 7 秒前後画面に残るため、tick 毎に再翻訳しないよう抑制する必要があります。
+VRChat の吹き出しは数秒〜数十秒画面に残るため、tick 毎に再翻訳しないよう抑制する必要があります。
 
 - テキストを `casefold()` → `blake2b` 8 バイトハッシュ化
-- LRU に `(last_seen_monotonic, bbox_center)` を記録
-- 同一ハッシュがクールダウン期間内（既定 8 秒）に再出現したらスキップ
+- LRU に `(last_seen_monotonic, text, bbox_center)` を記録
+- **クールダウンは「最後に画面で見かけた時刻」から計測**します。吹き出しを見かけるたびにタイムスタンプを更新するため、長く残り続ける吹き出しはクールダウン秒数ごとに再送されるのではなく、**消えてからクールダウン経過後に初めて再送対象**に戻ります
+- OCR のブレ（1〜2 文字の誤認識）で別ハッシュになるケースに備え、既存エントリとの**編集距離 2 以内**を近似重複として同一視します（`_similar()`、追加依存なしの打ち切り付き DP）
 - 30 秒経過した項目は evict
+
+## 1 tick あたりの処理量制限
+
+混雑したワールドや文字の多い UI では候補矩形が数十件になることがあり、全件 OCR するとループが数秒止まって Whisper と GPU を奪い合います。そのため:
+
+- `MAX_CANDIDATES_PER_TICK`（既定 6）で件数を制限（detector が面積降順に並べているので大きい吹き出しが優先されます）
+- `TICK_OCR_BUDGET_RATIO`（既定 0.8）× poll interval を時間予算とし、超過した時点でその tick を打ち切り
+
+## OpenVR セッションの共有について
+
+OpenVR の初期化は**プロセス単位**で、`models/overlay/overlay.py` が既に `openvr.init()` したセッションを保持しています。そのため本モジュールは:
+
+- `openvr.init()` は呼ぶ（既存セッションに合流する形になる）
+- **`openvr.shutdown()` は決して呼ばない** — 呼ぶと VR オーバーレイのセッションまで巻き添えで破棄されるため
+- ミラーテクスチャは**初回に 1 度だけ取得**し、以降フレーム毎に `lockGLSharedTextureForAccess` / `unlockGLSharedTextureForAccess` で囲んで読み出し
+- 失敗時はテクスチャのみ解放して `_initialized` を落とし、次 tick で再取得（SteamVR 再起動やオーバーレイ側 shutdown からの自動復帰）
 
 ## 設定キー
 
@@ -133,8 +150,7 @@ VRChat の吹き出しは 7 秒前後画面に残るため、tick 毎に再翻�
 |---|---|---|---|
 | `ENABLE_OCR_CAPTURE` | bool | False | OCR パイプラインの有効化（serialize=False, 起動毎にオフ） |
 | `OCR_ENGINE` | str | "EasyOCR" | 使用エンジン（将来の切替のため） |
-| `OCR_SOURCE_LANGUAGE` | str | "auto" | ソース言語（"auto" = JP+EN） |
-| `OCR_TARGET_LANGUAGE` | str | "auto" | ターゲット言語（既存翻訳設定に追従） |
+| `OCR_SOURCE_LANGUAGE` | str | "auto" | 読み取り対象の言語（"auto" = 現在タブの target language に追従、リーダーは JP+EN） |
 | `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
 | `OCR_MIN_CONFIDENCE` | float | 0.55 | OCR 信頼度の下限（0.1〜0.99） |
 | `OCR_USE_GPU` | bool | True | GPU 使用（失敗時 CPU 自動フォールバック） |
@@ -179,3 +195,5 @@ Windows + VRCT ビルド前提。詳細は「VR モードでのデスクトッ�
 - **ワールドサインや看板テキスト**を吹き出しと誤検出することがある。位置フィルタ（画面端・下部 HUD 除外）で軽減済みだが完全には防げない
 - **EasyOCR 初回モデル DL**（`~/.EasyOCR/`）中はしばらく無反応に見える。UI 側の進捗表示は未実装（今後の改善候補）
 - **VRChat Desktop モード起動 + SteamVR も起動中** というレアケースでは、OpenVR ミラー側に VRChat の映像が来ないため OCR 対象なしになる（誤翻訳より無害）
+- **設定変更は次回 OCR 開始時に反映**されます（`OCR_SOURCE_LANGUAGE` 等はパイプライン起動時に読み込まれるため、実行中の変更を反映するには一度 OFF→ON が必要）
+- **GLFW の初期化を OCR スレッドから行っている**点は Windows では実用上問題ありませんが、GLFW の公式なスレッド要件（多くの API はメインスレッド呼び出しを想定）からは外れています。将来的にキャプチャ用 GL コンテキストを専用スレッドに集約する余地があります

@@ -726,15 +726,12 @@ class Controller:
         if not isinstance(message, str) or len(message) == 0:
             return
 
-        # Language for the translator: falls back to the current tab's source language.
-        source_language = language
-        if not isinstance(source_language, str) or len(source_language) == 0:
-            try:
-                langs_cfg = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-                enabled = [d["language"] for d in langs_cfg.values() if d.get("enable") is True]
-                source_language = enabled[0] if enabled else None
-            except Exception:
-                source_language = None
+        # Language of the captured bubble. Leaving this None lets
+        # getOutputTranslate fall back to SELECTED_TARGET_LANGUAGES, i.e. the
+        # language the *other* party speaks — which is what we are reading.
+        # Never fall back to SELECTED_YOUR_LANGUAGES here: that would ask the
+        # translator to translate your own language into your own language.
+        source_language = language if isinstance(language, str) and len(language) > 0 else None
 
         translation: list = []
         if model.checkKeywords(message):
@@ -3219,18 +3216,29 @@ class Controller:
         th_stopTranscriptionReceiveMessage.start()
         th_stopTranscriptionReceiveMessage.join()
 
+    def _rollbackOcrCaptureToggle(self) -> None:
+        """Turn the OCR flag back off and push the new state to the UI.
+
+        The frontend routes this push to updateFromBackendEnableOcrCapture,
+        so the toggle flips back instead of being left switched on over a
+        pipeline that never started.
+        """
+        config.ENABLE_OCR_CAPTURE = False
+        try:
+            endpoint = self.run_mapping.get("enable_ocr_capture")
+            if endpoint is not None:
+                self.run(200, endpoint, False)
+        except Exception:
+            errorLogging()
+
     def startOcrCapture(self) -> None:
         try:
             started = model.startOCRCapture(self.ocrMessage)
             if not started:
-                # Roll back the ENABLE flag so the UI stays in sync.
-                config.ENABLE_OCR_CAPTURE = False
-                endpoint = self.run_mapping.get("enable_ocr_capture")
-                if endpoint is not None:
-                    self.run(500, endpoint, False)
+                self._rollbackOcrCaptureToggle()
         except Exception:
             errorLogging()
-            config.ENABLE_OCR_CAPTURE = False
+            self._rollbackOcrCaptureToggle()
 
     @staticmethod
     def stopOcrCapture() -> None:
@@ -3770,15 +3778,6 @@ class Controller:
             return {"status": 400, "result": config.OCR_WINDOW_TITLE}
         config.OCR_WINDOW_TITLE = title
         return {"status": 200, "result": config.OCR_WINDOW_TITLE}
-
-    @staticmethod
-    def getOcrTargetLanguage(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_TARGET_LANGUAGE}
-
-    @staticmethod
-    def setOcrTargetLanguage(data, *args, **kwargs) -> dict:
-        config.OCR_TARGET_LANGUAGE = str(data)
-        return {"status": 200, "result": config.OCR_TARGET_LANGUAGE}
 
     @staticmethod
     def getOcrPollIntervalMs(*args, **kwargs) -> dict:
