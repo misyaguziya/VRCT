@@ -23,7 +23,7 @@
 // orphaned interpreters after a dev restart.
 
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 fn main() {
@@ -40,26 +40,24 @@ fn main() {
         }
     };
 
-    // self_exe: <root>/src-tauri/bin/VRCT-sidecar-<triple>.exe
-    let root = match self_exe
-        .parent() // bin/
-        .and_then(|p| p.parent()) // src-tauri/
-        .and_then(|p| p.parent()) // <root>
-    {
-        Some(p) => p.to_path_buf(),
+    // The exe may be executed from any of:
+    //   <root>/src-tauri/bin/VRCT-sidecar-<triple>.exe   (npm run sidecar-dev drop-in)
+    //   <root>/src-tauri/target/debug/VRCT-sidecar-<triple>.exe   (tauri dev copies it)
+    //   <root>/src-tauri/target/release/VRCT-sidecar-<triple>.exe
+    // Walk upward until we find a directory that looks like the project root
+    // (contains both .venv and src-python/mainloop.py).
+    let root = match find_project_root(&self_exe) {
+        Some(p) => p,
         None => {
             eprintln!(
-                "dev-sidecar: unexpected exe location: {}",
+                "dev-sidecar: could not locate project root above {}. Expected a parent dir containing .venv/ and src-python/mainloop.py.",
                 self_exe.display()
             );
             std::process::exit(127);
         }
     };
 
-    let python = root
-        .join(".venv")
-        .join("Scripts")
-        .join("python.exe");
+    let python = root.join(".venv").join("Scripts").join("python.exe");
     let cwd: PathBuf = root.join("src-python");
     let script = cwd.join("mainloop.py");
 
@@ -101,6 +99,20 @@ fn main() {
     };
 
     std::process::exit(status.code().unwrap_or(1));
+}
+
+fn find_project_root(start: &Path) -> Option<PathBuf> {
+    let mut cursor = start.parent();
+    for _ in 0..10 {
+        let dir = cursor?;
+        if dir.join(".venv").join("Scripts").join("python.exe").exists()
+            && dir.join("src-python").join("mainloop.py").exists()
+        {
+            return Some(dir.to_path_buf());
+        }
+        cursor = dir.parent();
+    }
+    None
 }
 
 #[cfg(windows)]
