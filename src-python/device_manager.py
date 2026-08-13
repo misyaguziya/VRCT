@@ -287,12 +287,13 @@ class DeviceManager:
         self.speaker_devices = buffer_speaker_devices
         self.default_speaker_device = buffer_default_speaker_device
 
-    def checkUpdate(self):
-        """デバイス一覧の差分を検出し、update_flag_* を立てて prev_* を更新する。
+    def _applyDeviceDiffs(self) -> None:
+        """update() 後の一覧と prev_* を比較して update_flag_* を立て、
+        prev_* を最新に置き換える (副作用のみ、戻り値なし)。
 
-        名前は "check" だが実際には副作用 (flag 立て + prev 上書き) を持つ。
-        monitoring ループから 1 回のみ呼ばれる前提。他所から呼ぶと prev_* が
-        意図せず上書きされ、次回の差分検知が不正確になる。
+        monitoring ループからのみ呼ばれる前提。他所から呼ぶと prev_* が
+        意図せず上書きされ、次回の差分検知が不正確になる。以前は
+        `checkUpdate` という副作用の無さそうな名前だったため rename した。
         """
         if self.prev_default_mic_device["device"]["name"] != self.default_mic_device["device"]["name"]:
             self.update_flag_default_mic_device = True
@@ -309,15 +310,6 @@ class DeviceManager:
         if [device['name'] for device in self.prev_speaker_devices] != [device['name'] for device in self.speaker_devices]:
             self.update_flag_speaker_device_list = True
             self.prev_speaker_devices = self.speaker_devices
-
-        update_flag = (
-            self.update_flag_default_mic_device or
-            self.update_flag_default_speaker_device or
-            self.update_flag_host_list or
-            self.update_flag_mic_device_list or
-            self.update_flag_speaker_device_list
-        )
-        return update_flag
 
     def monitoring(self):
         """デバイス変更を監視するスレッド本体。
@@ -379,7 +371,7 @@ class DeviceManager:
                     if self._speaker_auto_active:
                         self.runProcessBeforeUpdateSpeakerDevices()
                     self.update()
-                    self.checkUpdate()
+                    self._applyDeviceDiffs()
                     self.noticeUpdateDevices()
                     if self._mic_auto_active:
                         self.runProcessAfterUpdateMicDevices()
@@ -397,9 +389,12 @@ class DeviceManager:
         if not self._stop_event.is_set() and self.th_monitoring is not None and self.th_monitoring.is_alive():
             return
         self._stop_event.clear()
-        # notify_event は monitoring スレッド起動と同時に用意する。
-        # COM callback スレッドと monitoring スレッド間のイベント受け渡しに使う。
-        self._notify_event = Event()
+        # notify_event は init 時に作った同一インスタンスを再利用し
+        # 状態だけ clear する。以前は毎回 Event() で作り直していたが、
+        # startMonitoring と stopMonitoring が並行実行された場合に
+        # stopMonitoring が古い Event を set し、新しく起動したスレッドは
+        # 新 Event を wait したまま起きられない、という race が発生していた。
+        self._notify_event.clear()
         self.th_monitoring = Thread(target=self.monitoring, daemon=True)
         self.th_monitoring.start()
 
@@ -555,29 +550,29 @@ class DeviceManager:
         WASAPI ホストを優先する (pycaw の endpoint は WASAPI 世界の名称と
         1:1 対応、他ホストは名前がトランケートされる可能性)。WASAPI に
         無ければ全ホストから完全一致を探し、最後に前方一致で救う。
+        比較は両サイドとも strip() 済みの文字列で行う (Realtek 系ドライバ
+        などが device 名に trailing space を含む事例があるため)。
         """
         target = endpoint_name.strip()
         mic_devices = self.mic_devices
-        wasapi_key = None
-        for host in mic_devices.keys():
-            if "WASAPI" in host:
-                wasapi_key = host
-                break
+        wasapi_key = next(
+            (host for host in mic_devices.keys() if "WASAPI" in host), None
+        )
         if wasapi_key is not None:
             for d in mic_devices[wasapi_key]:
-                if d.get("name") == target:
-                    return wasapi_key, target
+                if (d.get("name") or "").strip() == target:
+                    return wasapi_key, d["name"]
         # WASAPI 外の完全一致
         for host, devs in mic_devices.items():
             for d in devs:
-                if d.get("name") == target:
+                if (d.get("name") or "").strip() == target:
                     return host, d["name"]
         # 前方一致 (MME 系はデバイス名が 31 文字で切られるため)
         for host, devs in mic_devices.items():
             for d in devs:
-                name = d.get("name", "")
+                name = (d.get("name") or "").strip()
                 if name and target.startswith(name):
-                    return host, name
+                    return host, d["name"]
         return None, None
 
     def _findSpeakerDeviceByName(self, endpoint_name: str) -> Optional[str]:
@@ -585,17 +580,19 @@ class DeviceManager:
 
         pyaudiowpatch のスピーカーデバイス名は "<friendly> [Loopback]" 形式。
         pycaw の FriendlyName に " [Loopback]" を付けた候補が
-        speaker_devices に存在するかを確認する。
+        speaker_devices に存在するかを確認する。比較は両サイドとも
+        strip() 済みで行う (詳細は _findMicDeviceByName 参照)。
         """
-        loopback_name = f"{endpoint_name} [Loopback]"
+        target = endpoint_name.strip()
+        loopback_target = f"{target} [Loopback]"
         for d in self.speaker_devices:
-            if d.get("name") == loopback_name:
-                return loopback_name
+            if (d.get("name") or "").strip() == loopback_target:
+                return d["name"]
         # 前方一致救済
         for d in self.speaker_devices:
-            name = d.get("name", "")
-            if name and name.startswith(endpoint_name):
-                return name
+            name = (d.get("name") or "").strip()
+            if name and name.startswith(target):
+                return d["name"]
         return None
 
     def _syncMonitoringLifecycle(self) -> None:
@@ -621,11 +618,10 @@ class DeviceManager:
         終了時に確実に片付く)。
         """
         self._stop_event.set()
-        # notify_event も併せて set しておくと、COM 通知待ちで止まっている
-        # スレッドが即座に wait を抜ける。
-        notify_event = getattr(self, "_notify_event", None)
-        if isinstance(notify_event, Event):
-            notify_event.set()
+        # notify_event は init/startMonitoring で確実に生成済み (再代入は
+        # startMonitoring では行わない設計に統一)。COM 通知待ちで止まって
+        # いるスレッドを即座に起こす。
+        self._notify_event.set()
         if getattr(self, "th_monitoring", None) is not None:
             try:
                 self.th_monitoring.join(timeout=0.5)
