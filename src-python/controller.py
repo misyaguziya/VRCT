@@ -1346,7 +1346,7 @@ class Controller:
         # tracker スレッドをブロックしないよう worker 経由 + reconfigureMicDevice
         # (Session の device 差分検知でリソース節約)。
         device_manager.setCallbackEndpointReconfiguredMic(
-            lambda: model.audio_lifecycle_worker.enqueue(model.reconfigureMicDevice)
+            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureMicDeviceLocked)
         )
         device_manager.forceUpdateAndSetMicDevices()
         # monitoring スレッドの起動判断は DeviceManager 側に集約
@@ -1412,6 +1412,13 @@ class Controller:
         # 1 呼び出しで済み、config 上のデバイスと現在開いているデバイスが
         # 同じなら no-op になる。
         # config は呼び出し元 (setSelectedMicHost/Device) が既に書き換え済み。
+        with self.mic_lifecycle_lock:
+            model.reconfigureMicDevice()
+
+    def _reconfigureMicDeviceLocked(self) -> None:
+        # ActiveEndpointTracker からの通知 (setCallbackEndpointReconfiguredMic)
+        # は他の mic_lifecycle_lock 保持経路 (start/stop 系) と直列化されて
+        # いないため、ここで明示的にロックを取る。
         with self.mic_lifecycle_lock:
             model.reconfigureMicDevice()
 
@@ -1585,7 +1592,7 @@ class Controller:
         )
         # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携)
         device_manager.setCallbackEndpointReconfiguredSpeaker(
-            lambda: model.audio_lifecycle_worker.enqueue(model.reconfigureSpeakerDevice)
+            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureSpeakerDeviceLocked)
         )
         device_manager.forceUpdateAndSetSpeakerDevices()
         device_manager.setSpeakerAutoActive(True)
@@ -1621,6 +1628,11 @@ class Controller:
     def _reopenSpeakerAudioOnDeviceChange(self) -> None:
         # マイクと同様、Session.reconfigure 1 回に縮退。詳細は
         # _reopenMicAudioOnDeviceChange のコメント参照。
+        with self.speaker_lifecycle_lock:
+            model.reconfigureSpeakerDevice()
+
+    def _reconfigureSpeakerDeviceLocked(self) -> None:
+        # 詳細は _reconfigureMicDeviceLocked のコメント参照。
         with self.speaker_lifecycle_lock:
             model.reconfigureSpeakerDevice()
 
