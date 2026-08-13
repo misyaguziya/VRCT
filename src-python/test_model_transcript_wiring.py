@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 import model as model_module
-from model import model, config
+from model import model, config, MicSession, SpeakerSession
 
 
 class _FakeAudioTranscriber:
@@ -74,18 +74,12 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
         self._ensure_initialized_patch = patch.object(model, "ensure_initialized", lambda: None)
         self._ensure_initialized_patch.start()
 
-        # ensure_initialized() is stubbed above, so model.init()'s attribute
-        # setup (mic_print_transcript, mic_audio_recorder, etc.) never runs.
-        # startMicTranscript/startSpeakerTranscript now call stopMicTranscript/
-        # stopSpeakerTranscript defensively before opening a new device, which
-        # reads these attributes, so seed them here rather than relying on
-        # another test in the suite having already called model.init().
-        model.mic_print_transcript = None
-        model.mic_audio_recorder = None
-        model.mic_transcriber = None
-        model.speaker_print_transcript = None
-        model.speaker_audio_recorder = None
-        model.speaker_transcriber = None
+        # ensure_initialized() is stubbed above, so model.init()'s
+        # _mic_session/_speaker_session construction never runs; seed them
+        # directly rather than relying on another test in the suite having
+        # already called model.init().
+        model._mic_session = MicSession()
+        model._speaker_session = SpeakerSession()
 
         # SELECTED_MIC_* / SELECTED_SPEAKER_DEVICE are ValidatedProperty
         # descriptors that reject values not present in the real device list.
@@ -103,12 +97,6 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
         config._SELECTED_MIC_HOST = self._original_mic_host
         config._SELECTED_MIC_DEVICE = self._original_mic_device
         config._SELECTED_SPEAKER_DEVICE = self._original_speaker_device
-        model.mic_print_transcript = None
-        model.mic_audio_recorder = None
-        model.speaker_print_transcript = None
-        model.speaker_audio_recorder = None
-        model.mic_transcriber = None
-        model.speaker_transcriber = None
 
     @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
     @patch("model.AudioTranscriber", _FakeAudioTranscriber)

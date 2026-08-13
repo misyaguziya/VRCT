@@ -4,7 +4,7 @@ from threading import Event
 from unittest.mock import patch
 
 import model as model_module
-from model import model, threadFnc
+from model import model, threadFnc, MicSession, SpeakerSession
 
 
 class TestTranscriptStopJoinTimeout(unittest.TestCase):
@@ -16,12 +16,17 @@ class TestTranscriptStopJoinTimeout(unittest.TestCase):
         self._ensure_initialized_patch = patch.object(model, "ensure_initialized", lambda: None)
         self._ensure_initialized_patch.start()
         self._never_stop = Event()
+        # ensure_initialized() is stubbed above, so model.init()'s
+        # _mic_session/_speaker_session construction never runs; seed them
+        # directly rather than relying on another test having called init().
+        model._mic_session = MicSession()
+        model._speaker_session = SpeakerSession()
 
     def tearDown(self) -> None:
         self._never_stop.set()
         self._ensure_initialized_patch.stop()
-        model.mic_print_transcript = None
-        model.speaker_print_transcript = None
+        model._mic_session._print_transcript = None
+        model._speaker_session._print_transcript = None
 
     def _start_stuck_thread(self) -> threadFnc:
         def blocking_fn() -> None:
@@ -36,8 +41,9 @@ class TestTranscriptStopJoinTimeout(unittest.TestCase):
     @patch.object(model_module, "TRANSCRIPT_STOP_JOIN_TIMEOUT", 0.2)
     @patch("model.printLog")
     def test_stop_mic_transcript_returns_when_worker_is_stuck(self, mock_print_log) -> None:
-        model.mic_print_transcript = self._start_stuck_thread()
-        model.mic_audio_recorder = None
+        model._mic_session.features = {"transcript"}
+        model._mic_session._print_transcript = self._start_stuck_thread()
+        model._mic_session._recorder = None
 
         started = time.perf_counter()
         model.stopMicTranscript()
@@ -49,8 +55,9 @@ class TestTranscriptStopJoinTimeout(unittest.TestCase):
     @patch.object(model_module, "TRANSCRIPT_STOP_JOIN_TIMEOUT", 0.2)
     @patch("model.printLog")
     def test_stop_speaker_transcript_returns_when_worker_is_stuck(self, mock_print_log) -> None:
-        model.speaker_print_transcript = self._start_stuck_thread()
-        model.speaker_audio_recorder = None
+        model._speaker_session.features = {"transcript"}
+        model._speaker_session._print_transcript = self._start_stuck_thread()
+        model._speaker_session._recorder = None
 
         started = time.perf_counter()
         model.stopSpeakerTranscript()

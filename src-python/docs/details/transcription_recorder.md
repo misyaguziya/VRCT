@@ -156,6 +156,9 @@ PyAudio を触るため、この設計と相性が悪く、現行コードでは
 - `transcription_transcriber.py` (`AudioTranscriber`): `AudioQueueItem` とタプル両方の
   キューアイテムを受け取り、フレーズを組み立てて認識エンジンに渡す。
 - `device_manager.py`: `pyaudio_op_lock` の定義元、デバイス列挙・監視。
-- `model.py`: `startMic/SpeakerTranscript`（文字起こし）、`startCheckMic/SpeakerEnergy`
-  （エナジーメーター）、`_DiscardQueue` の定義元。
+- `model.py`: `MicSession`/`SpeakerSession` (`_AudioDeviceSession`) が
+  この Recorder のライフサイクルを features (`transcript`/`energy`) 単位で
+  統合管理する。`Model.startMic/SpeakerTranscript`・`startCheckMic/
+  SpeakerEnergy` は Session への薄いラッパー。`_DiscardQueue` の定義元でも
+  ある。詳細は `model.md` を参照。
 - `config.py`: 録音設定管理 (`MIC_THRESHOLD`, `MIC_VAD_FILTER` 等)。

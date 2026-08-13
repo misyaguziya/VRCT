@@ -1311,9 +1311,20 @@ class Controller:
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     def applyAutoMicSelect(self) -> None:
-        device_manager.setCallbackProcessBeforeUpdateMicDevices(self.stopAccessMicDevices)
+        # stopAccessMicDevices/restartAccessMicDevices は mic_lifecycle_lock
+        # を取得しつつ recorder の stop (最大 TRANSCRIPT_STOP_JOIN_TIMEOUT 秒の
+        # join) や PyAudio open を行う重い処理。device_manager.monitoring()
+        # 自身のスレッドで直接実行すると、その間 monitoring が次の COM
+        # デバイス通知を取りこぼす。model.audio_lifecycle_worker 経由で
+        # 専用スレッドに投げることで monitoring は即座に呼び出しから戻れる。
+        # Before/After は同じ worker の FIFO キューで順序が保たれる。
+        device_manager.setCallbackProcessBeforeUpdateMicDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessMicDevices)
+        )
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
-        device_manager.setCallbackProcessAfterUpdateMicDevices(self.restartAccessMicDevices)
+        device_manager.setCallbackProcessAfterUpdateMicDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessMicDevices)
+        )
         device_manager.forceUpdateAndSetMicDevices()
         device_manager.startMonitoring()
 
@@ -1538,9 +1549,15 @@ class Controller:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     def applyAutoSpeakerSelect(self) -> None:
-        device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(self.stopAccessSpeakerDevices)
+        # 詳細は applyAutoMicSelect のコメント参照:
+        # monitoring スレッドをブロックしないよう worker 経由で実行する。
+        device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessSpeakerDevices)
+        )
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
-        device_manager.setCallbackProcessAfterUpdateSpeakerDevices(self.restartAccessSpeakerDevices)
+        device_manager.setCallbackProcessAfterUpdateSpeakerDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessSpeakerDevices)
+        )
         device_manager.forceUpdateAndSetSpeakerDevices()
         device_manager.startMonitoring()
 
