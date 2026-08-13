@@ -69,7 +69,18 @@ class ActiveEndpointTracker:
     SWITCH_RATIO: float = 2.0
     SWITCH_HOLD_SEC: float = 1.0
 
-    def __init__(self, flow: str) -> None:
+    def __init__(self, flow: str, com_lock: Optional[Lock] = None) -> None:
+        """
+        Args:
+            flow: "render" (speaker) または "capture" (mic)
+            com_lock: PyAudio/pycaw の COM 呼び出しを直列化するロック。
+                pyaudio_op_lock を渡すことで、Recorder の open/close と
+                tracker の IAudioMeterInformation 操作が同じ WASAPI
+                エンドポイント上で並行実行されるのを防ぐ (実測でこの
+                並行アクセスにより WASAPI 内部で GIL 保持したまま
+                デッドロックすることを確認)。
+                None を渡すと直列化しない (単体テスト用)。
+        """
         if flow not in ("render", "capture"):
             raise ValueError(f"flow must be 'render' or 'capture', got {flow!r}")
         self._flow: str = flow
@@ -79,6 +90,14 @@ class ActiveEndpointTracker:
             )
         else:
             self._flow_value = 0
+
+        # COM 呼び出し全体を保護するロック (通常は device_manager.pyaudio_op_lock)
+        self._com_lock: Optional[Lock] = com_lock
+
+        # reconfigure 中など、外部から一時的に polling を止めるための Event
+        # (set 状態 = 実行可、clear 状態 = 一時停止)。初期状態は実行可。
+        self._paused: Event = Event()
+        self._paused.set()
 
         self._stop_event: Event = Event()
         self._thread: Optional[Thread] = None
@@ -93,6 +112,13 @@ class ActiveEndpointTracker:
         self._switch_candidate: Optional[tuple] = None
         self._lock: Lock = Lock()
 
+        # Meter キャッシュ: endpoint id → (FriendlyName, IAudioMeterInformation)
+        # Activate は 1 endpoint あたり 1 回だけ (初回検出時)。以降の poll では
+        # GetPeakValue のみ発行することで COM 圧を大幅に削減し、Recorder との
+        # 並行アクセスウィンドウを最小化する。エンドポイントが消えた
+        # (COM error / list から除外) 場合はキャッシュから破棄。
+        self._meter_cache: dict[str, tuple[str, object]] = {}
+
     def set_on_change_callback(self, cb: Optional[Callable[[Optional[str]], None]]) -> None:
         self._on_change_cb = cb
 
@@ -106,16 +132,31 @@ class ActiveEndpointTracker:
         if self._thread is not None and self._thread.is_alive():
             return
         self._stop_event.clear()
+        self._paused.set()  # 開始時は実行可状態
         self._thread = Thread(target=self._run, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
         self._stop_event.set()
+        self._paused.set()  # pause 中でも wait を解いて即抜けさせる
         if self._thread is not None:
             try:
                 self._thread.join(timeout=0.5)
             except Exception:
                 pass
+        # cache を破棄して COM 参照を解放 (次回 start 時に再構築)
+        with self._lock:
+            self._meter_cache.clear()
+
+    def pause(self) -> None:
+        """polling を一時停止する。Recorder の open/close 中に呼び、
+        tracker の COM 呼び出しと衝突しないようにするために使う。
+        """
+        self._paused.clear()
+
+    def resume(self) -> None:
+        """pause 状態を解除する。"""
+        self._paused.set()
 
     # --- 内部実装 ------------------------------------------------------------
 
@@ -127,6 +168,10 @@ class ActiveEndpointTracker:
             return
         try:
             while not self._stop_event.is_set():
+                # pause 中は _paused が set されるまで待つ (stop でも解ける)
+                self._paused.wait()
+                if self._stop_event.is_set():
+                    break
                 try:
                     self._poll_once()
                 except Exception:
@@ -142,13 +187,7 @@ class ActiveEndpointTracker:
 
     def _poll_once(self) -> None:
         now = time.monotonic()
-        endpoints = self._enumerate_endpoints_with_meters()
-        peaks: dict[str, float] = {}
-        for name, meter in endpoints:
-            try:
-                peaks[name] = float(meter.GetPeakValue())
-            except Exception:
-                continue
+        peaks = self._collect_peaks()
 
         with self._lock:
             self._update_history(peaks, now)
@@ -161,6 +200,101 @@ class ActiveEndpointTracker:
                 self._on_change_cb(new_selected)
             except Exception:
                 errorLogging()
+
+    def _collect_peaks(self) -> dict[str, float]:
+        """全アクティブエンドポイントの現ピーク値を {name: peak} で返す。
+
+        Meter cache を活用:
+          - キャッシュにある endpoint → GetPeakValue のみ (超軽量)
+          - 新規 endpoint → Activate してキャッシュに追加
+          - 消えた endpoint → キャッシュから破棄
+        COM 呼び出し全体を pyaudio_op_lock で保護し、Recorder の open/close と
+        並行実行されて WASAPI がデッドロックするのを防ぐ。
+        """
+        peaks: dict[str, float] = {}
+        # 現在の endpoint id リストを取る (Enumerate だけ)
+        current_ids = self._enumerate_endpoint_ids()
+
+        # キャッシュから消えた endpoint を破棄
+        for gone_id in set(self._meter_cache.keys()) - set(current_ids):
+            self._meter_cache.pop(gone_id, None)
+
+        # 各 endpoint について、キャッシュから (or 新規 Activate で) meter を取得
+        for endpoint_id, dev in current_ids:
+            cached = self._meter_cache.get(endpoint_id)
+            if cached is None:
+                # 新規 endpoint: Activate してキャッシュに追加
+                try:
+                    if self._com_lock is not None:
+                        with self._com_lock:
+                            activated = dev.Activate(
+                                IAudioMeterInformation._iid_, CLSCTX_ALL, None
+                            )
+                    else:
+                        activated = dev.Activate(
+                            IAudioMeterInformation._iid_, CLSCTX_ALL, None
+                        )
+                    meter = cast(activated, POINTER(IAudioMeterInformation))
+                    audio_dev = AudioUtilities.CreateDevice(dev)
+                    name = audio_dev.FriendlyName
+                    self._meter_cache[endpoint_id] = (name, meter)
+                except Exception:
+                    # 個別 endpoint の Activate 失敗はスキップ (他は続行)
+                    continue
+                cached = self._meter_cache[endpoint_id]
+
+            name, meter = cached
+            try:
+                if self._com_lock is not None:
+                    with self._com_lock:
+                        peak = float(meter.GetPeakValue())
+                else:
+                    peak = float(meter.GetPeakValue())
+            except Exception:
+                # 取得失敗 → cache を無効化して次回再取得
+                self._meter_cache.pop(endpoint_id, None)
+                continue
+            peaks[name] = peak
+
+        return peaks
+
+    def _enumerate_endpoint_ids(self) -> list:
+        """アクティブな指定 flow の (endpoint_id, IMMDevice) list を返す。
+
+        Enumerate 自体も COM 呼び出しなので pyaudio_op_lock 配下で行う。
+        """
+        result: list = []
+        try:
+            if self._com_lock is not None:
+                with self._com_lock:
+                    result = self._enum_devices_locked()
+            else:
+                result = self._enum_devices_locked()
+        except Exception:
+            errorLogging()
+        return result
+
+    def _enum_devices_locked(self) -> list:
+        enumerator = comtypes.CoCreateInstance(
+            CLSID_MMDeviceEnumerator,
+            IMMDeviceEnumerator,
+            CLSCTX_INPROC_SERVER,
+        )
+        collection = enumerator.EnumAudioEndpoints(
+            self._flow_value, DEVICE_STATE.ACTIVE.value
+        )
+        count = collection.GetCount()
+        result: list = []
+        for i in range(count):
+            dev = collection.Item(i)
+            if dev is None:
+                continue
+            try:
+                endpoint_id = dev.GetId()
+                result.append((endpoint_id, dev))
+            except Exception:
+                continue
+        return result
 
     def _update_history(self, peaks: dict[str, float], now: float) -> None:
         """peaks の内容を _history に追加、ウィンドウ外を破棄、
@@ -222,39 +356,3 @@ class ActiveEndpointTracker:
         self._switch_candidate = None
         return selected
 
-    def _enumerate_endpoints_with_meters(self) -> list[tuple[str, object]]:
-        """(FriendlyName, IAudioMeterInformation) の list を返す。
-
-        アクティブ状態 (DEVICE_STATE.ACTIVE) の指定 flow のエンドポイントのみ。
-        FriendlyName は pyaudiowpatch の device['name'] とマッチする
-        (WASAPI ホスト経由でエンドポイントを見た場合)。
-        """
-        result: list[tuple[str, object]] = []
-        try:
-            enumerator = comtypes.CoCreateInstance(
-                CLSID_MMDeviceEnumerator,
-                IMMDeviceEnumerator,
-                CLSCTX_INPROC_SERVER,
-            )
-            collection = enumerator.EnumAudioEndpoints(
-                self._flow_value, DEVICE_STATE.ACTIVE.value
-            )
-            count = collection.GetCount()
-            for i in range(count):
-                dev = collection.Item(i)
-                if dev is None:
-                    continue
-                try:
-                    audio_dev = AudioUtilities.CreateDevice(dev)
-                    name = audio_dev.FriendlyName
-                    activated = dev.Activate(
-                        IAudioMeterInformation._iid_, CLSCTX_ALL, None
-                    )
-                    meter = cast(activated, POINTER(IAudioMeterInformation))
-                    result.append((name, meter))
-                except Exception:
-                    # 個別デバイスの列挙失敗は無視 (他のデバイスの取得は続行)
-                    continue
-        except Exception:
-            errorLogging()
-        return result

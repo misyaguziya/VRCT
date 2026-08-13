@@ -1234,17 +1234,28 @@ class Model:
         config (SELECTED_MIC_HOST/DEVICE) から解決する。Session 内部で
         差分検知するため、同一デバイスなら no-op になる。
 
-        呼び出し元は Controller._reopenMicAudioOnDeviceChange (手動切替)
-        および Auto 監視スレッドから (Phase 3 で追加予定) 使う想定。
+        Auto 追跡中は device_manager 側の ActiveEndpointTracker が 250ms
+        周期で COM ポーリングしており、Recorder の open/close と並行実行
+        されると WASAPI がデッドロックする (実測確認済み)。reconfigure の
+        前後で tracker を pause/resume することで並行アクセスを排除する。
+        Auto OFF 時は tracker が存在しないので pause/resume は no-op。
         """
         self.ensure_initialized()
-        self._mic_session.reconfigure(device=device)
+        device_manager.pauseMicEndpointTracker()
+        try:
+            self._mic_session.reconfigure(device=device)
+        finally:
+            device_manager.resumeMicEndpointTracker()
 
     def reconfigureSpeakerDevice(self, device: Optional[dict] = None) -> None:
         """稼働中の Speaker Session を新デバイスに差し替える。詳細は
         reconfigureMicDevice のドキュメント参照。"""
         self.ensure_initialized()
-        self._speaker_session.reconfigure(device=device)
+        device_manager.pauseSpeakerEndpointTracker()
+        try:
+            self._speaker_session.reconfigure(device=device)
+        finally:
+            device_manager.resumeSpeakerEndpointTracker()
 
     def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict], transliteration_message:Optional[dict] = None, transliteration_translation:Optional[list] = None) -> object:
         self.ensure_initialized()

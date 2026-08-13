@@ -430,7 +430,9 @@ class DeviceManager:
     def _startMicEndpointTracker(self) -> None:
         if self._mic_endpoint_tracker is not None:
             return
-        tracker = ActiveEndpointTracker("capture")
+        # pyaudio_op_lock を渡して、tracker の COM 呼び出しと Recorder の
+        # open/close が同じ WASAPI エンドポイント上で並行実行されるのを防ぐ。
+        tracker = ActiveEndpointTracker("capture", com_lock=pyaudio_op_lock)
         tracker.set_on_change_callback(self._onActiveMicEndpointChanged)
         tracker.start()
         self._mic_endpoint_tracker = tracker
@@ -444,7 +446,7 @@ class DeviceManager:
     def _startSpeakerEndpointTracker(self) -> None:
         if self._speaker_endpoint_tracker is not None:
             return
-        tracker = ActiveEndpointTracker("render")
+        tracker = ActiveEndpointTracker("render", com_lock=pyaudio_op_lock)
         tracker.set_on_change_callback(self._onActiveSpeakerEndpointChanged)
         tracker.start()
         self._speaker_endpoint_tracker = tracker
@@ -454,6 +456,43 @@ class DeviceManager:
         self._speaker_endpoint_tracker = None
         if tracker is not None:
             tracker.stop()
+
+    def pauseMicEndpointTracker(self) -> None:
+        """外部から tracker を一時停止し、進行中の COM 呼び出しが
+        あれば完了を待つ (Session の reconfigure 前に使用)。
+
+        pause() は次の poll の開始をブロックするだけで、既に走っている
+        _com_lock 内の Activate/GetPeakValue は完了を待たない。ここで
+        pyaudio_op_lock を一瞬 acquire/release することでバリアとして
+        機能させ、以降 Session の Recorder open/close 中に tracker の
+        COM が同時実行されないことを保証する。
+        """
+        tracker = self._mic_endpoint_tracker
+        if tracker is None:
+            return
+        tracker.pause()
+        # バリア: tracker が _com_lock (=pyaudio_op_lock) 保持中なら待つ
+        with pyaudio_op_lock:
+            pass
+
+    def resumeMicEndpointTracker(self) -> None:
+        tracker = self._mic_endpoint_tracker
+        if tracker is not None:
+            tracker.resume()
+
+    def pauseSpeakerEndpointTracker(self) -> None:
+        """スピーカー側 tracker の一時停止。詳細は pauseMicEndpointTracker 参照。"""
+        tracker = self._speaker_endpoint_tracker
+        if tracker is None:
+            return
+        tracker.pause()
+        with pyaudio_op_lock:
+            pass
+
+    def resumeSpeakerEndpointTracker(self) -> None:
+        tracker = self._speaker_endpoint_tracker
+        if tracker is not None:
+            tracker.resume()
 
     def _onActiveMicEndpointChanged(self, endpoint_name: Optional[str]) -> None:
         """Tracker からのコールバック (別スレッド)。
