@@ -141,6 +141,15 @@ class DeviceManager:
         self._notify_event: Event = Event()
         self.th_monitoring: Optional[Thread] = None
 
+        # Auto Select 状態を mic/speaker で独立管理する。
+        # 監視スレッド自体は 1 本 (update() が両方のリストを一括で refresh する
+        # ため分けても大きな利点なし) だが、Before/After callback は各サイド
+        # の active フラグに応じて選択的に発火する。従来は controller 側で
+        # 「相手側が OFF なら monitoring 全体を止める」という相互参照ガードが
+        # 必要だったが、DeviceManager にフラグを持たせることで撤去できる。
+        self._mic_auto_active: bool = False
+        self._speaker_auto_active: bool = False
+
         self._initialized = True
 
         # Best-effort single update: if PyAudio is available, attempt to populate
@@ -262,6 +271,12 @@ class DeviceManager:
         self.default_speaker_device = buffer_default_speaker_device
 
     def checkUpdate(self):
+        """デバイス一覧の差分を検出し、update_flag_* を立てて prev_* を更新する。
+
+        名前は "check" だが実際には副作用 (flag 立て + prev 上書き) を持つ。
+        monitoring ループから 1 回のみ呼ばれる前提。他所から呼ぶと prev_* が
+        意図せず上書きされ、次回の差分検知が不正確になる。
+        """
         if self.prev_default_mic_device["device"]["name"] != self.default_mic_device["device"]["name"]:
             self.update_flag_default_mic_device = True
             self.prev_default_mic_device = self.default_mic_device
@@ -337,14 +352,22 @@ class DeviceManager:
                     if self._stop_event.is_set():
                         break
 
-                    # 通知を受けた直後のデバイス一覧再構築フェーズ
-                    self.runProcessBeforeUpdateMicDevices()
-                    self.runProcessBeforeUpdateSpeakerDevices()
+                    # 通知を受けた直後のデバイス一覧再構築フェーズ。
+                    # Before/After callback は Auto がアクティブな側のみ発火。
+                    # 相手側の Auto は無効な状態でも、update() は両方の
+                    # デバイスリストを refresh する (副作用の少ない読み取り
+                    # なので always-run)。
+                    if self._mic_auto_active:
+                        self.runProcessBeforeUpdateMicDevices()
+                    if self._speaker_auto_active:
+                        self.runProcessBeforeUpdateSpeakerDevices()
                     self.update()
                     self.checkUpdate()
                     self.noticeUpdateDevices()
-                    self.runProcessAfterUpdateMicDevices()
-                    self.runProcessAfterUpdateSpeakerDevices()
+                    if self._mic_auto_active:
+                        self.runProcessAfterUpdateMicDevices()
+                    if self._speaker_auto_active:
+                        self.runProcessAfterUpdateSpeakerDevices()
                 except Exception:
                     errorLogging()
                     # 個別の例外で暴走ループにならないよう、短い wait を挟む
@@ -362,6 +385,33 @@ class DeviceManager:
         self._notify_event = Event()
         self.th_monitoring = Thread(target=self.monitoring, daemon=True)
         self.th_monitoring.start()
+
+    def setMicAutoActive(self, active: bool) -> None:
+        """Auto Mic Select の有効/無効を DeviceManager 側で受け取る。
+
+        監視スレッドの起動/停止判断はここで完結させ、controller 側が
+        相手側 (speaker) の状態を見て判断する必要を無くす。
+        """
+        self._mic_auto_active = active
+        self._syncMonitoringLifecycle()
+
+    def setSpeakerAutoActive(self, active: bool) -> None:
+        """Auto Speaker Select の有効/無効を DeviceManager 側で受け取る。
+        詳細は setMicAutoActive のコメント参照。"""
+        self._speaker_auto_active = active
+        self._syncMonitoringLifecycle()
+
+    def _syncMonitoringLifecycle(self) -> None:
+        """mic/speaker の active フラグに応じて monitoring スレッドを起動/停止。
+
+        少なくとも 1 サイドが active なら起動、両方 inactive なら停止。
+        個々の設定変更 (setMicAutoActive/setSpeakerAutoActive) の後に呼ぶ。
+        """
+        any_active = self._mic_auto_active or self._speaker_auto_active
+        if any_active:
+            self.startMonitoring()
+        else:
+            self.stopMonitoring()
 
     def stopMonitoring(self):
         """非ブロッキング stop。event を set して短時間だけ join を試みる。
