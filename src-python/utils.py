@@ -2,8 +2,10 @@ import base64
 from typing import Any, List, Dict, Optional
 import json
 import os
+import sys
 import traceback
 import logging
+import threading
 from logging.handlers import RotatingFileHandler
 
 import requests
@@ -11,6 +13,29 @@ import ipaddress
 import socket
 
 _WEIGHT_VERIFIED_MARKER_NAME = ".weight_verified.json"
+
+# stdout は Tauri 側が読み取る IPC チャンネルとして使われており、
+# printLog/printResponse は複数スレッド (mainloop の worker 群、
+# MicSession/SpeakerSession の transcript スレッド、
+# AudioLifecycleWorker 等) から高頻度・並行に呼ばれ得る。
+# print(..., flush=True) は内部で複数の write システムコールに
+# 分解され得るため、ロック無しで並行に呼ぶと (特に Windows の名前付き
+# パイプ相手に) 出力が混ざったり、OSError (Errno 22, Invalid argument)
+# を招くことがある。1 プロセス内で書き込みを直列化する。
+_stdout_write_lock = threading.Lock()
+
+
+def _writeStdoutLine(line: str) -> None:
+    """flush 付きで 1 行 stdout に書き込む。スレッド間で直列化し、
+    書き込み自体が失敗しても (パイプ切断等) 呼び出し元には伝播させず、
+    ログにだけ記録する。
+    """
+    try:
+        with _stdout_write_lock:
+            sys.stdout.write(line + "\n")
+            sys.stdout.flush()
+    except Exception:
+        errorLogging()
 
 
 def _collectWeightFileStats(root: str) -> Dict[str, Dict[str, float]]:
@@ -330,7 +355,7 @@ def printLog(log: str, data: Any = None) -> None:
     }
     process_logger.info(response)
     serialized = json.dumps(response)
-    print(serialized, flush=True)
+    _writeStdoutLine(serialized)
 
 def printResponse(status: int, endpoint: str, result: Any = None) -> None:
     """Log and print a structured response object.
@@ -368,9 +393,9 @@ def printResponse(status: int, endpoint: str, result: Any = None) -> None:
             "endpoint": endpoint,
             "result": {"error": "Failed to serialize response", "details": str(e)},
         })
-        print(error_json, flush=True)
+        _writeStdoutLine(error_json)
     else:
-        print(serialized_response, flush=True)
+        _writeStdoutLine(serialized_response)
 
 error_logger: Optional[logging.Logger] = None
 
