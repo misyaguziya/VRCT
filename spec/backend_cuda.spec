@@ -1,5 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+
+_use_upx = os.environ.get("VRCT_PYINSTALLER_UPX") == "1"
+
 
 a = Analysis(
     ['..\\src-python\\mainloop.py'],
@@ -33,7 +37,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=_use_upx,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -47,7 +51,7 @@ coll = COLLECT(
     a.binaries,
     a.datas,
     strip=False,
-    upx=True,
+    upx=_use_upx,
     upx_exclude=[],
     name='.',
 )
