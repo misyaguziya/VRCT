@@ -386,6 +386,36 @@ class TestMutedMicMessage(unittest.TestCase):
         )
         self.assertEqual(model.method_calls, [])
 
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_empty_partial_mic_result_is_dismissed_not_shown(self, config, model) -> None:
+        """音声区間はあるが認識エンジンがまだテキストを返さない (空文字)
+        partial は、UI に「時刻+空文字」の行として表示されてしまうため
+        送らず、既存の pending があれば dismiss する。"""
+        from controller import Controller
+
+        config.VRC_MIC_MUTE_SYNC = False
+        config.ENABLE_TRANSCRIPTION_SEND = True
+        controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {"mic": {"transcription-mic-4": {}}}
+        controller.run_mapping = {"transcription_mic_partial": "/run/mic_partial"}
+        controller.run = MagicMock()
+
+        controller.micMessage({
+            "text": "",
+            "language": "Japanese",
+            "is_final": False,
+            "segment_id": 4,
+        })
+
+        controller.run.assert_called_once_with(
+            200,
+            "/run/mic_partial",
+            {"id": "transcription-mic-4", "dismiss": True},
+        )
+        self.assertNotIn("transcription-mic-4", controller._pending_partial_transcripts.get("mic", {}))
+        self.assertEqual(model.method_calls, [])
+
 
 class TestSpeakerMessage(unittest.TestCase):
     @patch("controller.model")
@@ -456,6 +486,32 @@ class TestSpeakerMessage(unittest.TestCase):
             "/run/speaker_partial",
             {"id": "transcription-speaker-7", "dismiss": True},
         )
+        self.assertEqual(model.method_calls, [])
+
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_empty_partial_speaker_result_is_dismissed_not_shown(self, config, model) -> None:
+        from controller import Controller
+
+        config.ENABLE_TRANSCRIPTION_RECEIVE = True
+        controller = Controller.__new__(Controller)
+        controller._pending_partial_transcripts = {"speaker": {"transcription-speaker-7": {}}}
+        controller.run_mapping = {"transcription_speaker_partial": "/run/speaker_partial"}
+        controller.run = MagicMock()
+
+        controller.speakerMessage({
+            "text": "",
+            "language": "Japanese",
+            "is_final": False,
+            "segment_id": 7,
+        })
+
+        controller.run.assert_called_once_with(
+            200,
+            "/run/speaker_partial",
+            {"id": "transcription-speaker-7", "dismiss": True},
+        )
+        self.assertNotIn("transcription-speaker-7", controller._pending_partial_transcripts.get("speaker", {}))
         self.assertEqual(model.method_calls, [])
 
     @patch("controller.model")

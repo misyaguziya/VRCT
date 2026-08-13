@@ -515,6 +515,16 @@ class Controller:
         return f"transcription-{source}-{segment_id}" if segment_id is not None else None
 
     def _emitPartialTranscript(self, source: str, result: dict) -> None:
+        # 音声区間は検出されたが認識エンジンがまだ (あるいは結局) テキストを
+        # 返さなかった場合、text は空文字になる。UI側 (upsertTranscriptionMessage)
+        # は dismiss:True でない限り payload をそのままメッセージとして表示
+        # するため、空文字を送ると「時刻+空文字」の行が残ってしまう。
+        # 空文字の partial は表示せず、既存の pending があれば dismiss する。
+        text = result.get("text", "")
+        if not text:
+            self._dismissPartialTranscript(source, result)
+            return
+
         endpoint = self.run_mapping.get(f"transcription_{source}_partial")
         transcript_id = self._transcriptSegmentId(source, result)
         if transcript_id is not None:
@@ -528,7 +538,7 @@ class Controller:
             endpoint,
             {
                 "id": transcript_id,
-                "original": {"message": result.get("text", ""), "transliteration": []},
+                "original": {"message": text, "transliteration": []},
                 "translations": [],
                 "metrics": {
                     "inference_ms": result.get("inference_ms"),
