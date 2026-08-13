@@ -42,34 +42,87 @@ except Exception:  # pragma: no cover
         print(*args, **kwargs)
 
 
+# Upper bound on how many candidate rectangles get OCR'd in a single tick,
+# and how long that OCR work may take before the tick yields.
+MAX_CANDIDATES_PER_TICK = 6
+TICK_OCR_BUDGET_RATIO = 0.8
+
+
 def _textHash(text: str) -> str:
     return hashlib.blake2b(text.casefold().encode("utf-8"), digest_size=8).hexdigest()
 
 
+def _similar(a: str, b: str, max_distance: int = 2) -> bool:
+    """Cheap bounded edit-distance check for near-duplicate OCR output.
+
+    OCR jitter across frames flips a character or two, which produces a
+    different hash for what a human reads as the same bubble. Comparing with
+    a small distance budget catches those without a fuzzy-matching dependency.
+    """
+    if a == b:
+        return True
+    if abs(len(a) - len(b)) > max_distance:
+        return False
+    # Classic DP, but bail out as soon as the whole row exceeds the budget.
+    previous = list(range(len(b) + 1))
+    for i, ca in enumerate(a, start=1):
+        current = [i]
+        for j, cb in enumerate(b, start=1):
+            current.append(min(
+                previous[j] + 1,
+                current[j - 1] + 1,
+                previous[j - 1] + (ca != cb),
+            ))
+        if min(current) > max_distance:
+            return False
+        previous = current
+    return previous[-1] <= max_distance
+
+
 class _DedupCache:
-    """LRU-ish cache: text_hash -> (last_seen_monotonic, bbox_center)."""
+    """Recently-seen bubble texts, keyed by hash.
+
+    Entries store the text itself so near-duplicates can be compared, plus
+    the last time the text was *seen* (not the last time it was emitted).
+    Refreshing on every sighting means the cooldown is measured from when a
+    bubble leaves the screen, so a bubble that lingers is translated once
+    rather than re-translated every `cooldown_sec`.
+    """
 
     def __init__(self, max_items: int = 128, evict_after_sec: float = 30.0) -> None:
-        self._items: "OrderedDict[str, tuple[float, tuple[int, int]]]" = OrderedDict()
+        self._items: "OrderedDict[str, tuple[float, str, tuple[int, int]]]" = OrderedDict()
         self._max_items = max_items
         self._evict_after = evict_after_sec
 
     def evictStale(self, now: float) -> None:
-        stale = [k for k, (ts, _) in self._items.items() if (now - ts) > self._evict_after]
+        stale = [k for k, (ts, _, _) in self._items.items() if (now - ts) > self._evict_after]
         for k in stale:
             self._items.pop(k, None)
         while len(self._items) > self._max_items:
             self._items.popitem(last=False)
 
-    def seenRecently(self, text_hash: str, cooldown_sec: float, now: float) -> bool:
-        entry = self._items.get(text_hash)
-        if entry is None:
-            return False
-        last_ts, _ = entry
-        return (now - last_ts) < cooldown_sec
+    def seenRecently(self, text_hash: str, text: str, cooldown_sec: float, now: float) -> bool:
+        """Return True if this text (or a near-duplicate) is still on cooldown.
 
-    def record(self, text_hash: str, bbox_center: tuple, now: float) -> None:
-        self._items[text_hash] = (now, bbox_center)
+        Also refreshes the timestamp of whichever entry matched, so a bubble
+        that stays on screen keeps its cooldown alive instead of re-firing.
+        """
+        entry = self._items.get(text_hash)
+        if entry is not None:
+            last_ts, _, center = entry
+            self._items[text_hash] = (now, text, center)
+            self._items.move_to_end(text_hash)
+            return (now - last_ts) < cooldown_sec
+
+        for key, (last_ts, prev_text, center) in list(self._items.items()):
+            if _similar(text, prev_text):
+                self._items[key] = (now, prev_text, center)
+                self._items.move_to_end(key)
+                return (now - last_ts) < cooldown_sec
+        return False
+
+    def record(self, text_hash: str, text: str, bbox_center: tuple, now: float) -> None:
+        self._items[text_hash] = (now, text, bbox_center)
         self._items.move_to_end(text_hash)
 
 
@@ -89,6 +142,9 @@ class OcrPipeline:
         self._source_language = source_language or "auto"
         self._window_title = window_title or "VRChat"
         self._poll_interval = max(0.1, poll_interval_ms / 1000.0)
+        # Keep OCR work inside a fraction of the poll interval so the loop
+        # stays responsive to stop() and does not run back-to-back.
+        self._tick_budget = self._poll_interval * TICK_OCR_BUDGET_RATIO
         self._min_confidence = float(min_confidence)
         self._use_gpu = bool(use_gpu)
         self._min_text_length = max(1, int(min_text_length))
@@ -179,12 +235,22 @@ class OcrPipeline:
         if not candidates:
             return
 
+        # A noisy frame (busy world, text-heavy UI) can yield dozens of
+        # candidate rectangles. Running OCR on all of them would stall the
+        # loop for seconds and starve the GPU that whisper is sharing, so
+        # only the largest few — which the detector already sorted first —
+        # get an OCR budget on any single tick.
+        candidates = candidates[:MAX_CANDIDATES_PER_TICK]
+
         now = time.monotonic()
         self._dedup.evictStale(now)
+        deadline = now + self._tick_budget
 
         for bbox, crop in candidates:
             if self._stop_event.is_set():
                 return
+            if time.monotonic() > deadline:
+                break
             words = easyocr_engine.readtext_bgr(self._reader, crop, self._min_confidence)
             if not words:
                 continue
@@ -192,11 +258,11 @@ class OcrPipeline:
             if len(merged) < self._min_text_length:
                 continue
             h = _textHash(merged)
-            if self._dedup.seenRecently(h, self._dedup_cooldown, now):
+            if self._dedup.seenRecently(h, merged, self._dedup_cooldown, now):
                 continue
             cx = int(bbox[0] + bbox[2] / 2)
             cy = int(bbox[1] + bbox[3] / 2)
-            self._dedup.record(h, (cx, cy), now)
+            self._dedup.record(h, merged, (cx, cy), now)
             self._emit(merged)
 
     @staticmethod

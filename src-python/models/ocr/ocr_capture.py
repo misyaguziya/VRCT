@@ -66,8 +66,10 @@ class OcrCapture:
 
         want_openvr = _isSteamvrRunning()
         if want_openvr:
-            if self._openvr is None and OpenVRMirrorCapture().isAvailable():
-                self._openvr = OpenVRMirrorCapture()
+            if self._openvr is None:
+                candidate = OpenVRMirrorCapture()
+                if candidate.isAvailable():
+                    self._openvr = candidate
             if self._openvr is not None and self._openvr.isAvailable():
                 if self._backend != self.BACKEND_OPENVR:
                     printLog(f"OCR capture backend -> {self.BACKEND_OPENVR}")
@@ -97,11 +99,17 @@ class OcrCapture:
         try:
             if backend == self.BACKEND_OPENVR and self._openvr is not None:
                 frame = self._openvr.capture()
-                if isFrameBlank(frame):
+                # The compositor only hands back a texture when it is actually
+                # presenting, so an all-black frame here is a legitimately dark
+                # scene (night world, loading screen) rather than a dead
+                # surface. Only reject a truly uniform frame.
+                if isFrameBlank(frame, mean_threshold=0.0, var_threshold=1e-6):
                     return None
                 return frame
             if backend == self.BACKEND_HWND:
                 frame = self._hwnd.capture()
+                # A minimized or occluded window keeps returning a stale black
+                # buffer, so the stricter thresholds earn their keep here.
                 if isFrameBlank(frame):
                     return None
                 return frame
