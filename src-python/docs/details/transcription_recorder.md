@@ -112,9 +112,19 @@ adjustForNoise() -> None
 
 `device_manager.update()` 側も同じロックを取るため、PyAudio/WASAPI への操作
 (デバイス列挙、ストリーム open/close) が同時に走ることはなく、Windows WASAPI 特有の
-「並行操作でデッドロック」を防ぎます。SpeechRecognition ライブラリの built-in background
-listener (`listen_*_in_background`) は内部で独自スレッドを立てて `pyaudio_op_lock` の外側で
-PyAudio を触るため、この設計と相性が悪く、現行コードでは使用していません。
+「並行操作でデッドロック」を防ぎます。
+
+> **2026-08-15 訂正**: 以下は ADR-0004 (ストリーミング/VAD 独自実装の撤退) 直後時点の
+> 記述で、現状と食い違います。実際には `recordIntoQueue` は
+> `misyaguziya/custom_speech_recognition` フォークが提供する
+> `Recognizer.listen_energy_and_audio_in_background`（`listen_in_background` 相当に
+> `callback_energy` フックを足したもの）を使っています。`callback_energy` はフレーズ確定を
+> 待たず生チャンク読み取りのたびに呼ばれ、Config パネルの音量メーターをリアルタイム更新する
+> ために必須です（`listen_in_background` だけではフレーズ確定時にしかエナジー値が取れず、
+> 音量メーターが動かなくなるデグレードが発生していました）。listener スレッド内の
+> `pyaudio_op_lock` の扱いは変わらず、`recordIntoQueue` を呼ぶ側 (Model層) から見た
+> インターフェースにも変更はありません。この節以降の VAD/`StreamingVadSegmenter` に関する
+> 記述は撤退済みの旧設計のままなので、参照時は注意してください（別途ドキュメント刷新予定）。
 
 ## 設定パラメータ
 

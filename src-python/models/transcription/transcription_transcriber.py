@@ -5,7 +5,7 @@ either the Google web recognizer (online) or a local Whisper model (offline).
 
 VAD ストリーミング撤退 (ADR-0004) 以降、キューには
 (raw_bytes, recorded_at) タプルだけが積まれる。フレーズ境界は
-`speech_recognition.listen_in_background` の phrase_time_limit と
+`speech_recognition.listen_energy_and_audio_in_background` の phrase_time_limit と
 AudioTranscriber.updateLastSampleAndPhraseStatus の phrase_timeout で決まる。
 partial (発話中の暫定結果) 通知は行わない。
 """

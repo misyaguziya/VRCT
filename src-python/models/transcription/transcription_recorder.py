@@ -11,12 +11,13 @@ in tests.
   音声データ (audio_queue) とエネルギー (energy_queue) の両方を同時に扱う。
   同一物理デバイスに対する PyAudio Microphone インスタンスは常に 1 つ。
 - 発話区間検出・フレーズ境界・pause/resume/stop は `speech_recognition` の
-  `listen_in_background` に完全に委任する (energy_threshold, phrase_time_limit)。
-  独自 VAD/ストリーミング分割は行わない (ADR-0004 参照)。
+  `listen_energy_and_audio_in_background` に完全に委任する (energy_threshold,
+  phrase_time_limit)。独自 VAD/ストリーミング分割は行わない (ADR-0004 参照)。
+  `callback_energy` フックにより、フレーズ確定を待たず生チャンクごとに
+  エナジー値を取得できる (音量メーターのリアルタイム更新用)。
 - PyAudio 操作は全て `pyaudio_op_lock` の下で行い、WASAPI ロック競合を防ぐ。
 """
 
-import audioop
 import threading
 from typing import Any
 from speech_recognition import Recognizer, Microphone
@@ -54,7 +55,9 @@ def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) ->
             try:
                 return _validate_audio_source(Microphone(**fallback_kwargs))
             except Exception as fallback_error:
-                raise OSError("Selected and default audio devices could not be opened") from fallback_error
+                raise OSError(
+                    "Selected and default audio devices could not be opened"
+                ) from fallback_error
 
 
 class BaseEnergyAndAudioRecorder:
@@ -66,8 +69,12 @@ class BaseEnergyAndAudioRecorder:
     operation is serialized via `pyaudio_op_lock`.
 
     フレーズ境界・エネルギー閾値による発話検出は `speech_recognition` の
-    `listen_in_background` に完全委任する (energy_threshold /
+    `listen_energy_and_audio_in_background` に完全委任する (energy_threshold /
     dynamic_energy_threshold / phrase_time_limit)。独自 VAD は使わない。
+    この API は `listen_in_background` と同じ発話区間検出ロジックを使うが、
+    追加で `callback_energy` フックを持ち、フレーズ確定を待たず生チャンク
+    読み取りのたびにエナジー値を通知できる (config パネルの音量メーターを
+    リアルタイム更新するために必要)。
     """
 
     def __init__(
@@ -105,30 +112,42 @@ class BaseEnergyAndAudioRecorder:
             self.recorder.adjust_for_ambient_noise(self.source)
 
     def recordIntoQueue(self, audio_queue: Any, energy_queue: Any = None) -> None:
-        """listen_in_background で発話区間ごとに audio を audio_queue に、
-        並行して energy_queue が指定されていれば RMS を積む。
+        """listen_energy_and_audio_in_background で発話区間ごとに audio を
+        audio_queue に積む。energy_queue が指定されていれば、フレーズ確定を
+        待たず生チャンク読み取りのたびに RMS を積む (callback_energy)。
 
         audio_queue には (raw_bytes, recorded_at) タプルを push する。
-        フレーズの区切りは listen_in_background の phrase_time_limit と
-        energy_threshold ベースの発話終端検出に委ねる。
+        フレーズの区切りは phrase_time_limit と energy_threshold ベースの
+        発話終端検出に委ねる (listen_in_background と同じロジック)。
         """
 
         def audio_callback(_, audio) -> None:
             try:
                 raw = audio.get_raw_data()
                 audio_queue.put((raw, datetime.now()))
-                if energy_queue is not None:
-                    energy_queue.put(audioop.rms(raw, self.SAMPLE_WIDTH))
             except Exception:
                 # listener スレッドを絶対に殺さない (再入時に stream が
                 # 停止するのを避けるため)
                 errorLogging()
 
+        def energy_callback(energy) -> None:
+            try:
+                energy_queue.put(energy)
+            except Exception:
+                errorLogging()
+
         try:
-            self.stop, self.pause, self.resume = self.recorder.listen_in_background(
-                self.source,
-                audio_callback,
-                phrase_time_limit=self.phrase_time_limit,
+            self.stop, self.pause, self.resume = (
+                self.recorder.listen_energy_and_audio_in_background(
+                    source=self.source,
+                    callback=audio_callback,
+                    phrase_time_limit=self.phrase_time_limit,
+                    callback_energy=energy_callback
+                    if energy_queue is not None
+                    else None,
+                    phrase_timeout=1,
+                    record_timeout=self.record_timeout,
+                )
             )
         except Exception:
             self.device_error_event.set()
@@ -147,7 +166,7 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
     ) -> None:
         source = _create_microphone(
             {},
-            device_index=int(device.get('index', -1)),
+            device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
         )
         super().__init__(
@@ -171,7 +190,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         source = _create_microphone(
             {"speaker": True},
             speaker=True,
-            device_index=int(device.get('index', -1)),
+            device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
             chunk_size=get_sample_size(paInt16),
             channels=int(device.get("maxInputChannels", 1)),

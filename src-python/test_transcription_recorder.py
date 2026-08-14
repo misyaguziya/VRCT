@@ -1,21 +1,27 @@
 """Tests for transcription_recorder.
 
 `BaseEnergyAndAudioRecorder` は speech_recognition.Recognizer を用いた
-`listen_in_background` に発話区間検出とフレーズ境界を委ねる (ADR-0004)。
-このため統合的な入力→キュー投入までの検証は listen_in_background 側の
-ロジックに寄りかかるが、ここでは以下のみを直接テストする:
+`listen_energy_and_audio_in_background` に発話区間検出とフレーズ境界を委ねる
+(ADR-0004)。このため統合的な入力→キュー投入までの検証は
+listen_energy_and_audio_in_background 側のロジックに寄りかかるが、ここでは
+以下のみを直接テストする:
 
 - `_create_microphone` の fallback 動作
-- 公開 API (`recordIntoQueue`) が listen_in_background 側の stop/pause/resume を
-  正しく self.stop/self.pause/self.resume に受け取ること
-- audio callback 内で SAMPLE_WIDTH と audioop.rms が接続されていること
+- 公開 API (`recordIntoQueue`) が listen_energy_and_audio_in_background 側の
+  stop/pause/resume を正しく self.stop/self.pause/self.resume に受け取ること
+- audio callback が audio_queue に生データを積むこと
+- callback_energy が energy_queue にエナジー値を積むこと (フレーズ確定を
+  待たずリアルタイムに呼ばれる想定)
 """
 
 import unittest
 from queue import Queue
 from unittest.mock import patch, MagicMock
 
-from models.transcription.transcription_recorder import BaseEnergyAndAudioRecorder, _create_microphone
+from models.transcription.transcription_recorder import (
+    BaseEnergyAndAudioRecorder,
+    _create_microphone,
+)
 
 
 class FakeAudioSource:
@@ -86,7 +92,9 @@ class TestRecorderPipeline(unittest.TestCase):
         self.assertEqual(recorder.SAMPLE_WIDTH, 2)
         self.assertEqual(recorder.channels, 2)
 
-    def test_recordIntoQueue_wires_listen_in_background_control_handles(self) -> None:
+    def test_recordIntoQueue_wires_listen_energy_and_audio_in_background_control_handles(
+        self,
+    ) -> None:
         recorder = BaseEnergyAndAudioRecorder(
             RecorderAudioSource(),
             energy_threshold=300,
@@ -98,18 +106,22 @@ class TestRecorderPipeline(unittest.TestCase):
         pause = MagicMock(name="pause")
         resume = MagicMock(name="resume")
         recorder.recorder = MagicMock()
-        recorder.recorder.listen_in_background = MagicMock(return_value=(stop, pause, resume))
+        recorder.recorder.listen_energy_and_audio_in_background = MagicMock(
+            return_value=(stop, pause, resume)
+        )
 
         recorder.recordIntoQueue(Queue())
 
         self.assertIs(recorder.stop, stop)
         self.assertIs(recorder.pause, pause)
         self.assertIs(recorder.resume, resume)
-        recorder.recorder.listen_in_background.assert_called_once()
-        _, kwargs = recorder.recorder.listen_in_background.call_args
+        recorder.recorder.listen_energy_and_audio_in_background.assert_called_once()
+        _, kwargs = recorder.recorder.listen_energy_and_audio_in_background.call_args
         self.assertEqual(kwargs.get("phrase_time_limit"), 3)
+        self.assertEqual(kwargs.get("record_timeout"), 5)
+        self.assertIsNone(kwargs.get("callback_energy"))
 
-    def test_audio_callback_pushes_raw_bytes_and_energy(self) -> None:
+    def test_audio_callback_pushes_raw_bytes(self) -> None:
         recorder = BaseEnergyAndAudioRecorder(
             RecorderAudioSource(),
             energy_threshold=300,
@@ -117,29 +129,76 @@ class TestRecorderPipeline(unittest.TestCase):
             phrase_time_limit=3,
             record_timeout=5,
         )
-        captured_callback: dict = {}
+        captured: dict = {}
 
-        def fake_listen(_source, callback, phrase_time_limit=None):
-            captured_callback["fn"] = callback
+        def fake_listen(
+            source,
+            callback,
+            phrase_time_limit=None,
+            callback_energy=None,
+            phrase_timeout=1,
+            record_timeout=5,
+        ):
+            captured["audio_callback"] = callback
+            captured["energy_callback"] = callback_energy
             return (MagicMock(), MagicMock(), MagicMock())
 
         recorder.recorder = MagicMock()
-        recorder.recorder.listen_in_background = fake_listen
+        recorder.recorder.listen_energy_and_audio_in_background = fake_listen
 
         audio_queue: Queue = Queue()
-        energy_queue: Queue = Queue()
-        recorder.recordIntoQueue(audio_queue, energy_queue)
+        recorder.recordIntoQueue(audio_queue)
 
         # Simulate a callback invocation with a fake AudioData-like object
         raw = b"\x10\x00" * 8
         fake_audio = MagicMock()
         fake_audio.get_raw_data.return_value = raw
-        captured_callback["fn"](None, fake_audio)
+        captured["audio_callback"](None, fake_audio)
 
         audio, recorded_at = audio_queue.get(timeout=1)
         self.assertEqual(audio, raw)
         self.assertIsNotNone(recorded_at)
-        self.assertIsInstance(energy_queue.get(timeout=1), int)
+        # energy_queue が指定されていない場合、callback_energy は渡されない
+        self.assertIsNone(captured["energy_callback"])
+
+    def test_energy_callback_pushes_energy_without_waiting_for_phrase(self) -> None:
+        """callback_energy はフレーズ確定を待たず、生チャンクの読み取りの
+        たびに呼ばれる想定 (config パネルの音量メーターのリアルタイム更新に
+        必要)。ここでは recordIntoQueue が callback_energy を正しく energy_queue
+        に接続することだけを検証する。"""
+        recorder = BaseEnergyAndAudioRecorder(
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
+        )
+        captured: dict = {}
+
+        def fake_listen(
+            source,
+            callback,
+            phrase_time_limit=None,
+            callback_energy=None,
+            phrase_timeout=1,
+            record_timeout=5,
+        ):
+            captured["energy_callback"] = callback_energy
+            return (MagicMock(), MagicMock(), MagicMock())
+
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = fake_listen
+
+        energy_queue: Queue = Queue()
+        recorder.recordIntoQueue(Queue(), energy_queue)
+
+        # フレーズが確定していない (audio_callback は一度も呼ばれていない)
+        # 状態でも energy_callback 単体でエナジー値を積めること
+        captured["energy_callback"](123)
+        captured["energy_callback"](456)
+
+        self.assertEqual(energy_queue.get(timeout=1), 123)
+        self.assertEqual(energy_queue.get(timeout=1), 456)
 
     def test_device_error_flagged_when_listen_raises(self) -> None:
         recorder = BaseEnergyAndAudioRecorder(
@@ -150,7 +209,9 @@ class TestRecorderPipeline(unittest.TestCase):
             record_timeout=5,
         )
         recorder.recorder = MagicMock()
-        recorder.recorder.listen_in_background = MagicMock(side_effect=OSError("device gone"))
+        recorder.recorder.listen_energy_and_audio_in_background = MagicMock(
+            side_effect=OSError("device gone")
+        )
 
         with self.assertRaises(OSError):
             recorder.recordIntoQueue(Queue())
