@@ -30,10 +30,6 @@ class Controller:
         # 取るため、start*Message の中から呼ぶとデッドロックする)。
         self.mic_lifecycle_lock: Lock = Lock()
         self.speaker_lifecycle_lock: Lock = Lock()
-        # Tracks the most recent unresolved partial transcript per source
-        # ("mic"/"speaker") so it can be dismissed if transcription stops
-        # (e.g. config page opened, device switched) before it resolves.
-        self._pending_partial_transcripts: dict = {}
         # Ensure model is initialized at controller startup so existing
         # attribute-based checks (e.g. model.overlay.initialized) continue to work.
         try:
@@ -314,15 +310,6 @@ class Controller:
 
     def micMessage(self, result: dict) -> None:
         if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
-            # ミュート中は確定結果を破棄するが、表示中のpartial(スピナー)が
-            # 残ったままにならないよう先にdismissしておく
-            self._dismissStalePendingPartialTranscript("mic")
-            return
-
-        if result.get("is_final", True) is False:
-            if config.ENABLE_TRANSCRIPTION_SEND is not True:
-                return
-            self._emitPartialTranscript("mic", result)
             return
 
         if result.get("recognition_error") is True:
@@ -334,7 +321,6 @@ class Controller:
 
         message = result["text"]
         language = result["language"]
-        message, language = self._resolveFinalMessage("mic", result, message, language)
         if isinstance(message, bool) and message is False:
             self.run(
                 400,
@@ -346,22 +332,20 @@ class Controller:
             )
 
         elif isinstance(message, str) and len(message) == 0:
-            self._dismissPartialTranscript("mic", result)
+            pass
 
         elif isinstance(message, str) and len(message) > 0:
             translation = []
             transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
-                self._dismissPartialTranscript("mic", result)
                 self.run(
                     200,
                     self.run_mapping["word_filter"],
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatSendMessage(message, result.get("segment_id")):
-                self._dismissPartialTranscript("mic", result)
+            elif model.detectRepeatSendMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -446,12 +430,10 @@ class Controller:
                         osc_message = self.messageFormatter("SEND", translation, message)
                     model.oscSendMessage(osc_message)
 
-                self._clearPendingPartialTranscript("mic", result)
                 self.run(
                     200,
                     self.run_mapping["transcription_mic"],
                     {
-                        "id": self._transcriptSegmentId("mic", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message
@@ -511,94 +493,7 @@ class Controller:
 
             model.addTranslationHistory("mic", message)
 
-    def _transcriptSegmentId(self, source: str, result: dict) -> str | None:
-        segment_id = result.get("segment_id")
-        return f"transcription-{source}-{segment_id}" if segment_id is not None else None
-
-    def _resolveFinalMessage(self, source: str, result: dict, message, language):
-        # final結果が空文字の場合、同じsegment_idの直前のpartialテキストにフォールバックする。
-        # スピーカー音声はマイクと違い自然な無音区切りが来にくく、VAD区間が長くなるほど
-        # 確定リクエストだけがGoogle側の一時的な認識失敗を踏みやすい (直前のpartialでは
-        # 認識できていたのと同じ音声でも起こりうる)。既にUIに表示済みのpartialテキストを
-        # 無駄に破棄しないためのフォールバック。
-        if isinstance(message, str) and len(message) == 0:
-            transcript_id = self._transcriptSegmentId(source, result)
-            pending = self._pending_partial_transcripts.get(source, {}).get(transcript_id) if transcript_id else None
-            pending_text = pending.get("text") if pending else None
-            if isinstance(pending_text, str) and len(pending_text) > 0:
-                return pending_text, pending.get("language", language)
-        return message, language
-
-    def _emitPartialTranscript(self, source: str, result: dict) -> None:
-        # 音声区間は検出されたが認識エンジンがまだ (あるいは結局) テキストを
-        # 返さなかった場合、text は空文字になる。UI側 (upsertTranscriptionMessage)
-        # は dismiss:True でない限り payload をそのままメッセージとして表示
-        # するため、空文字を送ると「時刻+空文字」の行が残ってしまう。
-        # 空文字の partial は表示せず、既存の pending があれば dismiss する。
-        text = result.get("text", "")
-        if not text:
-            self._dismissPartialTranscript(source, result)
-            return
-
-        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
-        transcript_id = self._transcriptSegmentId(source, result)
-        if transcript_id is not None:
-            # source毎に単一スロットではなく transcript_id 毎に保持する。
-            # 推論待ちのセグメントが複数同時に存在しても取りこぼさないようにするため。
-            self._pending_partial_transcripts.setdefault(source, {})[transcript_id] = result
-        if endpoint is None:
-            return
-        self.run(
-            200,
-            endpoint,
-            {
-                "id": transcript_id,
-                "original": {"message": text, "transliteration": []},
-                "translations": [],
-                "metrics": {
-                    "inference_ms": result.get("inference_ms"),
-                    "audio_duration_ms": result.get("audio_duration_ms"),
-                },
-            },
-        )
-
-    def _dismissPartialTranscript(self, source: str, result: dict) -> None:
-        transcript_id = self._transcriptSegmentId(source, result)
-        if transcript_id is not None:
-            self._pending_partial_transcripts.get(source, {}).pop(transcript_id, None)
-        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
-        if endpoint is None or transcript_id is None:
-            return
-        self.run(
-            200,
-            endpoint,
-            {
-                "id": transcript_id,
-                "dismiss": True,
-            },
-        )
-
-    def _clearPendingPartialTranscript(self, source: str, result: dict) -> None:
-        """Mark the pending partial for `source`/`result` as resolved without sending a dismiss."""
-        transcript_id = self._transcriptSegmentId(source, result)
-        if transcript_id is not None:
-            self._pending_partial_transcripts.get(source, {}).pop(transcript_id, None)
-
-    def _dismissStalePendingPartialTranscript(self, source: str) -> None:
-        """Dismiss and clear any partial transcripts left unresolved by an interrupted stop/mute."""
-        pending = self._pending_partial_transcripts.get(source)
-        if not pending:
-            return
-        for result in list(pending.values()):
-            self._dismissPartialTranscript(source, result)
-
     def speakerMessage(self, result:dict) -> None:
-        if result.get("is_final", True) is False:
-            if config.ENABLE_TRANSCRIPTION_RECEIVE is not True:
-                return
-            self._emitPartialTranscript("speaker", result)
-            return
-
         if result.get("recognition_error") is True:
             self.run(
                 200,
@@ -608,7 +503,6 @@ class Controller:
 
         message = result["text"]
         language = result["language"]
-        message, language = self._resolveFinalMessage("speaker", result, message, language)
         if isinstance(message, bool) and message is False:
             self.run(
                 400,
@@ -619,21 +513,19 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) == 0:
-            self._dismissPartialTranscript("speaker", result)
+            pass
         elif isinstance(message, str) and len(message) > 0:
             translation = []
             transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
-                self._dismissPartialTranscript("speaker", result)
                 self.run(
                     200,
                     self.run_mapping["word_filter"],
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatReceiveMessage(message, result.get("segment_id")):
-                self._dismissPartialTranscript("speaker", result)
+            elif model.detectRepeatReceiveMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -765,12 +657,10 @@ class Controller:
                     model.oscSendMessage(osc_message)
 
                 # update textbox message log (Received)
-                self._clearPendingPartialTranscript("speaker", result)
                 self.run(
                     200,
                     self.run_mapping["transcription_speaker"],
                     {
-                        "id": self._transcriptSegmentId("speaker", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message
@@ -1346,7 +1236,7 @@ class Controller:
         # tracker スレッドをブロックしないよう worker 経由 + reconfigureMicDevice
         # (Session の device 差分検知でリソース節約)。
         device_manager.setCallbackEndpointReconfiguredMic(
-            lambda: model.audio_lifecycle_worker.enqueue(model.reconfigureMicDevice)
+            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureMicDeviceLocked)
         )
         device_manager.forceUpdateAndSetMicDevices()
         # monitoring スレッドの起動判断は DeviceManager 側に集約
@@ -1412,6 +1302,13 @@ class Controller:
         # 1 呼び出しで済み、config 上のデバイスと現在開いているデバイスが
         # 同じなら no-op になる。
         # config は呼び出し元 (setSelectedMicHost/Device) が既に書き換え済み。
+        with self.mic_lifecycle_lock:
+            model.reconfigureMicDevice()
+
+    def _reconfigureMicDeviceLocked(self) -> None:
+        # ActiveEndpointTracker からの通知 (setCallbackEndpointReconfiguredMic)
+        # は他の mic_lifecycle_lock 保持経路 (start/stop 系) と直列化されて
+        # いないため、ここで明示的にロックを取る。
         with self.mic_lifecycle_lock:
             model.reconfigureMicDevice()
 
@@ -1547,29 +1444,6 @@ class Controller:
         return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
     @staticmethod
-    def getMicVadFilter(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_VAD_FILTER}
-
-    def setEnableMicVadFilter(self, *args, **kwargs) -> dict:
-        if config.MIC_VAD_FILTER is False:
-            config.MIC_VAD_FILTER = True
-            self._restartMicTranscriptionIfActive()
-        return {"status":200, "result":config.MIC_VAD_FILTER}
-
-    def setDisableMicVadFilter(self, *args, **kwargs) -> dict:
-        if config.MIC_VAD_FILTER is True:
-            config.MIC_VAD_FILTER = False
-            self._restartMicTranscriptionIfActive()
-        return {"status":200, "result":config.MIC_VAD_FILTER}
-
-    def _restartMicTranscriptionIfActive(self) -> None:
-        # VADトグルはrecorder/transcriberの起動時パラメータで決まるため、
-        # 稼働中セッションに反映するには再起動が必要
-        if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopTranscriptionSendMessage()
-            self.startTranscriptionSendMessage()
-
-    @staticmethod
     def getAutoSpeakerSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
@@ -1585,7 +1459,7 @@ class Controller:
         )
         # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携)
         device_manager.setCallbackEndpointReconfiguredSpeaker(
-            lambda: model.audio_lifecycle_worker.enqueue(model.reconfigureSpeakerDevice)
+            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureSpeakerDeviceLocked)
         )
         device_manager.forceUpdateAndSetSpeakerDevices()
         device_manager.setSpeakerAutoActive(True)
@@ -1621,6 +1495,11 @@ class Controller:
     def _reopenSpeakerAudioOnDeviceChange(self) -> None:
         # マイクと同様、Session.reconfigure 1 回に縮退。詳細は
         # _reopenMicAudioOnDeviceChange のコメント参照。
+        with self.speaker_lifecycle_lock:
+            model.reconfigureSpeakerDevice()
+
+    def _reconfigureSpeakerDeviceLocked(self) -> None:
+        # 詳細は _reconfigureMicDeviceLocked のコメント参照。
         with self.speaker_lifecycle_lock:
             model.reconfigureSpeakerDevice()
 
@@ -1761,29 +1640,6 @@ class Controller:
     def setSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
         config.SPEAKER_NO_SPEECH_PROB = float(data)
         return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
-
-    @staticmethod
-    def getSpeakerVadFilter(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_VAD_FILTER}
-
-    def setEnableSpeakerVadFilter(self, *args, **kwargs) -> dict:
-        if config.SPEAKER_VAD_FILTER is False:
-            config.SPEAKER_VAD_FILTER = True
-            self._restartSpeakerTranscriptionIfActive()
-        return {"status":200, "result":config.SPEAKER_VAD_FILTER}
-
-    def setDisableSpeakerVadFilter(self, *args, **kwargs) -> dict:
-        if config.SPEAKER_VAD_FILTER is True:
-            config.SPEAKER_VAD_FILTER = False
-            self._restartSpeakerTranscriptionIfActive()
-        return {"status":200, "result":config.SPEAKER_VAD_FILTER}
-
-    def _restartSpeakerTranscriptionIfActive(self) -> None:
-        # VADトグルはrecorder/transcriberの起動時パラメータで決まるため、
-        # 稼働中セッションに反映するには再起動が必要
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopTranscriptionReceiveMessage()
-            self.startTranscriptionReceiveMessage()
 
     @staticmethod
     def getOscIpAddress(*args, **kwargs) -> dict:
@@ -3188,7 +3044,6 @@ class Controller:
 
     def _stopTranscriptionSendMessageLocked(self) -> None:
         """mic_lifecycle_lock を既に保持している呼び出し元専用。"""
-        self._dismissStalePendingPartialTranscript("mic")
         model.stopMicTranscript()
 
     def stopTranscriptionSendMessage(self) -> None:
@@ -3230,7 +3085,6 @@ class Controller:
 
     def _stopTranscriptionReceiveMessageLocked(self) -> None:
         """speaker_lifecycle_lock を既に保持している呼び出し元専用。"""
-        self._dismissStalePendingPartialTranscript("speaker")
         model.stopSpeakerTranscript()
 
     def stopTranscriptionReceiveMessage(self) -> None:

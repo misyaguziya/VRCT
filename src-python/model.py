@@ -46,11 +46,11 @@ TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 class _DiscardQueue(Queue):
     """Queue that silently drops everything put into it.
 
-    Energy-meter-only recording uses SelectedMic/SpeakerEnergyAndAudioRecorder
-    with vad_filter=False, whose listener always pushes normalized audio
-    chunks into the audio_queue argument even when nobody wants the audio
-    (only the energy_queue is consumed). Passing this instead of a real
-    Queue avoids an unbounded memory leak from chunks nobody ever drains.
+    Energy-meter-only recording uses SelectedMic/SpeakerEnergyAndAudioRecorder,
+    whose listener always pushes audio chunks into the audio_queue argument
+    even when nobody wants the audio (only the energy_queue is consumed).
+    Passing this instead of a real Queue avoids an unbounded memory leak
+    from chunks nobody ever drains.
     """
 
     def put(self, *args, **kwargs) -> None:
@@ -185,7 +185,7 @@ class _AudioDeviceSession:
     def _resolve_device(self, override: Optional[dict] = None) -> Optional[dict]:
         raise NotImplementedError
 
-    def _create_recorder(self, device: dict, vad_filter: bool):
+    def _create_recorder(self, device: dict):
         raise NotImplementedError
 
     def _create_transcriber(self) -> AudioTranscriber:
@@ -272,10 +272,7 @@ class _AudioDeviceSession:
         # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
         self._active_device = device
 
-        # エナジーのみの場合 VAD は不要 (旧 startCheckMic/SpeakerEnergy の
-        # 挙動を踏襲)。文字起こしを含む場合は config の VAD 設定を使う。
-        vad_filter = self._vad_filter_config() if "transcript" in self.features else False
-        self._recorder = self._create_recorder(device, vad_filter)
+        self._recorder = self._create_recorder(device)
 
         audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
         energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
@@ -344,9 +341,6 @@ class _AudioDeviceSession:
         self._audio_queue = None
         self._active_device = None
 
-    def _vad_filter_config(self) -> bool:
-        raise NotImplementedError
-
 
 class MicSession(_AudioDeviceSession):
     _kind = "mic"
@@ -365,10 +359,7 @@ class MicSession(_AudioDeviceSession):
             return None
         return selected_mic_device[0]
 
-    def _vad_filter_config(self) -> bool:
-        return config.MIC_VAD_FILTER
-
-    def _create_recorder(self, device: dict, vad_filter: bool):
+    def _create_recorder(self, device: dict):
         record_timeout = config.MIC_RECORD_TIMEOUT
         phrase_timeout = config.MIC_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
@@ -378,8 +369,7 @@ class MicSession(_AudioDeviceSession):
             energy_threshold=config.MIC_THRESHOLD,
             dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
             phrase_time_limit=record_timeout,
-            vad_filter=vad_filter,
-            vad_parameters=config.MIC_VAD_PARAMETERS,
+            record_timeout=record_timeout,
         )
 
     def _create_transcriber(self) -> AudioTranscriber:
@@ -408,8 +398,6 @@ class MicSession(_AudioDeviceSession):
             config.MIC_AVG_LOGPROB,
             config.MIC_NO_SPEECH_PROB,
             config.MIC_NO_REPEAT_NGRAM_SIZE,
-            config.MIC_VAD_FILTER,
-            config.MIC_VAD_PARAMETERS,
         )
 
 
@@ -428,10 +416,7 @@ class SpeakerSession(_AudioDeviceSession):
             return None
         return selected_speaker_device[0]
 
-    def _vad_filter_config(self) -> bool:
-        return config.SPEAKER_VAD_FILTER
-
-    def _create_recorder(self, device: dict, vad_filter: bool):
+    def _create_recorder(self, device: dict):
         record_timeout = config.SPEAKER_RECORD_TIMEOUT
         phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
@@ -441,8 +426,7 @@ class SpeakerSession(_AudioDeviceSession):
             energy_threshold=config.SPEAKER_THRESHOLD,
             dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
             phrase_time_limit=record_timeout,
-            vad_filter=vad_filter,
-            vad_parameters=config.SPEAKER_VAD_PARAMETERS,
+            record_timeout=record_timeout,
         )
 
     def _create_transcriber(self) -> AudioTranscriber:
@@ -471,8 +455,6 @@ class SpeakerSession(_AudioDeviceSession):
             config.SPEAKER_AVG_LOGPROB,
             config.SPEAKER_NO_SPEECH_PROB,
             config.SPEAKER_NO_REPEAT_NGRAM_SIZE,
-            config.SPEAKER_VAD_FILTER,
-            config.SPEAKER_VAD_PARAMETERS,
         )
 
 
@@ -511,8 +493,6 @@ class Model:
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
-        self.previous_send_segment_id = None
-        self.previous_receive_segment_id = None
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.translation_history: list[dict] = []
@@ -931,26 +911,14 @@ class Model:
         self.ensure_initialized()
         return len(self.keyword_processor.extract_keywords(message)) != 0
 
-    def detectRepeatSendMessage(self, message, segment_id=None):
-        repeat_flag = False
-        if segment_id is not None:
-            if self.previous_send_segment_id == segment_id:
-                repeat_flag = True
-        elif self.previous_send_message == message:
-            repeat_flag = True
+    def detectRepeatSendMessage(self, message):
+        repeat_flag = self.previous_send_message == message
         self.previous_send_message = message
-        self.previous_send_segment_id = segment_id
         return repeat_flag
 
-    def detectRepeatReceiveMessage(self, message, segment_id=None):
-        repeat_flag = False
-        if segment_id is not None:
-            if self.previous_receive_segment_id == segment_id:
-                repeat_flag = True
-        elif self.previous_receive_message == message:
-            repeat_flag = True
+    def detectRepeatReceiveMessage(self, message):
+        repeat_flag = self.previous_receive_message == message
         self.previous_receive_message = message
-        self.previous_receive_segment_id = segment_id
         return repeat_flag
 
     def startTransliteration(self):

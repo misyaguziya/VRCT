@@ -607,23 +607,6 @@ export const SETTINGS_ARRAY = [
         logics_template_id: "get_set",
         base_endpoint_name: "speaker_no_speech_prob",
     },
-    {
-        Category: "Transcription",
-        Base_Name: "MicVadFilter",
-        default_value: true,
-        ui_template_id: "toggle",
-        logics_template_id: "toggle_enable_disable",
-        base_endpoint_name: "mic_vad_filter",
-    },
-    {
-        Category: "Transcription",
-        Base_Name: "SpeakerVadFilter",
-        default_value: true,
-        ui_template_id: "toggle",
-        logics_template_id: "toggle_enable_disable",
-        base_endpoint_name: "speaker_vad_filter",
-    },
-
     // Vr
     {
         Category: "Vr",

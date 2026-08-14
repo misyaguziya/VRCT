@@ -42,7 +42,6 @@ const Mic_Container = () => {
             <MicPhraseTimeout_Box />
             <MicMaxWords_Box />
             <MicWordFilter_Box />
-            <MicVadFilterContainer />
         </div>
     );
 };
@@ -130,7 +129,6 @@ const Speaker_Container = () => {
             <SpeakerRecordTimeout_Box />
             <SpeakerPhraseTimeout_Box />
             <SpeakerMaxWords_Box />
-            <SpeakerVadFilterContainer />
         </div>
     );
 };
@@ -309,32 +307,6 @@ const Advanced_Container = () => {
             <SpeakerAvgLogprobContainer />
             <SpeakerNoSpeechProbContainer />
         </div>
-    );
-};
-
-export const MicVadFilterContainer = () => {
-    const { t } = useI18n();
-    const { currentMicVadFilter, toggleMicVadFilter } = useTranscription();
-    return (
-        <SwitchBoxContainer
-            label={t("config_page.transcription.mic_vad_filter.label")}
-            desc={t("config_page.transcription.mic_vad_filter.desc")}
-            variable={currentMicVadFilter}
-            toggleFunction={toggleMicVadFilter}
-        />
-    );
-};
-
-export const SpeakerVadFilterContainer = () => {
-    const { t } = useI18n();
-    const { currentSpeakerVadFilter, toggleSpeakerVadFilter } = useTranscription();
-    return (
-        <SwitchBoxContainer
-            label={t("config_page.transcription.speaker_vad_filter.label")}
-            desc={t("config_page.transcription.speaker_vad_filter.desc")}
-            variable={currentSpeakerVadFilter}
-            toggleFunction={toggleSpeakerVadFilter}
-        />
     );
 };
 
