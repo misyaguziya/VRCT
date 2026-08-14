@@ -58,32 +58,13 @@ export const useMessage = () => {
     };
 
     const addSentMessageLog = (payload) => {
-        upsertTranscriptionMessage(payload, "sent", "ok");
+        const message_object = generateMessageObject(payload, "sent");
+        updateMessageLogs((current) => [...current.data, message_object]);
     };
 
     const addReceivedMessageLog = (payload) => {
-        upsertTranscriptionMessage(payload, "received", "ok");
-    };
-
-    const upsertPartialSentMessageLog = (payload) => {
-        upsertTranscriptionMessage(payload, "sent", "pending");
-    };
-
-    const upsertPartialReceivedMessageLog = (payload) => {
-        upsertTranscriptionMessage(payload, "received", "pending");
-    };
-
-    const upsertTranscriptionMessage = (payload, category, status) => {
-        if (payload.dismiss === true) {
-            updateMessageLogs((current) => current.data.filter((item) => item.id !== payload.id));
-            return;
-        }
-        const message_object = generateMessageObject(payload, category, status);
-        updateMessageLogs((current) => {
-            const exists = current.data.some((item) => item.id === message_object.id);
-            if (!exists) return [...current.data, message_object];
-            return updateItemById(message_object.id, message_object)(current);
-        });
+        const message_object = generateMessageObject(payload, "received");
+        updateMessageLogs((current) => [...current.data, message_object]);
     };
 
     const startTyping = () => {
@@ -106,8 +87,6 @@ export const useMessage = () => {
         updateSentMessageLogById,
         addSentMessageLog,
         addReceivedMessageLog,
-        upsertPartialSentMessageLog,
-        upsertPartialReceivedMessageLog,
 
         currentMessageInputValue,
         updateMessageInputValue,
