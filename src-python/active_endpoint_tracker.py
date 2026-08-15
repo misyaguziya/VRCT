@@ -19,6 +19,19 @@ Windows のオーディオ API (pycaw 経由の IAudioMeterInformation) で
     - 全エンドポイントが SILENT_THRESHOLD 以下なら None を返す。
       呼び出し側は既存の Multimedia default 追跡にフォールバックする想定
       (このモジュール自身は default を知らない)。
+
+既知の制限 (2026-08-15 調査確定):
+    Windows の IAudioMeterInformation は、capture (マイク) エンドポイントに
+    限り、そのデバイスを能動的に使っているクライアント (自プロセス/他プロセス
+    問わず) が存在しないと GetPeakValue が常に 0 を返す。VRCT は選択中の
+    マイク 1 台しか開かないため、非選択の候補マイクは基本的に誰にも掴まれて
+    おらず、Auto Mic Select の「音声検出による自動切替」は実運用ではほぼ
+    発火しない (他アプリが該当マイクを掴んでいる場合のみ機能する)。
+    render (スピーカー) 側はこの制限を受けない (他アプリが出力していれば
+    非選択デバイスでもピークが取れる) ため、Auto Speaker Select は正常に
+    機能する。この非対称性はコードのバグではなく WASAPI の仕様であり、
+    対応するにはマイク候補を能動的に短時間 open してサンプリングする設計
+    変更が必要 (ユーザー確認の結果、現時点では対応不要と判断し据え置き)。
 """
 
 from __future__ import annotations
