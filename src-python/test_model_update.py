@@ -34,7 +34,10 @@ class TestModelUpdate(unittest.TestCase):
         psutil_process: Mock,
         os_exit: Mock,
     ) -> None:
-        requests_get.return_value.iter_content.return_value = [b"data"]
+        # _downloadSetup() rejects downloads under 1MB as a likely non-installer
+        # payload (e.g. an HTML error page), so the mocked download must clear
+        # that threshold for the happy path this test exercises.
+        requests_get.return_value.iter_content.return_value = [b"data" * 300_000]
 
         Model.updateCudaSoftware()
 

@@ -1,6 +1,6 @@
 import sys
 import copy
-from os import path as os_path, makedirs as os_makedirs
+from os import path as os_path, makedirs as os_makedirs, replace as os_replace, fsync as os_fsync
 from json import load as json_load
 from json import dump as json_dump
 import threading
@@ -37,31 +37,10 @@ except Exception:  # pragma: no cover - optional runtime
 
 from utils import errorLogging, validateDictStructure, getComputeDeviceList
 
-_LEGACY_VAD_PARAMETERS = {
-    "threshold": 0.5,
-    "neg_threshold": None,
-    "min_speech_duration_ms": 0,
-    "max_speech_duration_s": float("inf"),
-    "min_silence_duration_ms": 2000,
-    "speech_pad_ms": 400,
-}
-_DEFAULT_VAD_PARAMETERS = {
-    "threshold": 0.25,
-    "neg_threshold": 0.10,
-    "min_speech_duration_ms": 64,
-    "max_speech_duration_s": float("inf"),
-    "min_silence_duration_ms": 768,
-    "speech_pad_ms": 160,
-}
-
-
-def _migrate_vad_defaults(config_data: Dict[str, Any]) -> None:
-    for source in ("MIC", "SPEAKER"):
-        filter_key = f"{source}_VAD_FILTER"
-        parameters_key = f"{source}_VAD_PARAMETERS"
-        if config_data.get(filter_key) is False and config_data.get(parameters_key) == _LEGACY_VAD_PARAMETERS:
-            config_data[filter_key] = True
-            config_data[parameters_key] = copy.deepcopy(_DEFAULT_VAD_PARAMETERS)
+# NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
+# 対応する migration ヘルパは ADR-0004 でストリーミング/VAD 独自実装を撤退した際に
+# 削除された。フレーズ境界検出は speech_recognition.listen_in_background の
+# energy_threshold + phrase_time_limit に完全委任している。
 
 
 json_serializable_vars = {}
@@ -607,8 +586,14 @@ class Config:
                 pass
         with self._file_lock:
             self._config_data = filtered
-            with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
+            # クラッシュ/強制終了時にconfig.jsonが破損しないよう、一時ファイルに書いてから
+            # アトミックにリネームする
+            tmp_path = f"{self.PATH_CONFIG}.tmp"
+            with open(tmp_path, "w", encoding="utf-8") as fp:
                 json_dump(filtered, fp, indent=4, ensure_ascii=False)
+                fp.flush()
+                os_fsync(fp.fileno())
+            os_replace(tmp_path, self.PATH_CONFIG)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value
@@ -699,8 +684,6 @@ class Config:
     MIC_AVG_LOGPROB = ManagedProperty('MIC_AVG_LOGPROB', type_=(int, float))
     MIC_NO_SPEECH_PROB = ManagedProperty('MIC_NO_SPEECH_PROB', type_=(int, float))
     MIC_NO_REPEAT_NGRAM_SIZE = ManagedProperty('MIC_NO_REPEAT_NGRAM_SIZE', type_=int)
-    MIC_VAD_FILTER = ManagedProperty('MIC_VAD_FILTER', type_=bool)
-    MIC_VAD_PARAMETERS = ManagedProperty('MIC_VAD_PARAMETERS', type_=dict, mutable_tracking=True)
     HOTKEYS = ValidatedProperty('HOTKEYS',
         validator=lambda val, inst: (
             {k: (v if (isinstance(v, list) or v is None) else inst.HOTKEYS.get(k))
@@ -718,8 +701,6 @@ class Config:
     SPEAKER_AVG_LOGPROB = ManagedProperty('SPEAKER_AVG_LOGPROB', type_=(int, float))
     SPEAKER_NO_SPEECH_PROB = ManagedProperty('SPEAKER_NO_SPEECH_PROB', type_=(int, float))
     SPEAKER_NO_REPEAT_NGRAM_SIZE = ManagedProperty('SPEAKER_NO_REPEAT_NGRAM_SIZE', type_=int)
-    SPEAKER_VAD_FILTER = ManagedProperty('SPEAKER_VAD_FILTER', type_=bool)
-    SPEAKER_VAD_PARAMETERS = ManagedProperty('SPEAKER_VAD_PARAMETERS', type_=dict, mutable_tracking=True)
 
     # --- Auth and API settings ---
     # 旧 config.json との後方互換のため、不足キーは既定値（None）で補完し、余剰キーは無視する。
@@ -954,8 +935,6 @@ class Config:
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._MIC_NO_REPEAT_NGRAM_SIZE = 0
-        self._MIC_VAD_FILTER = True
-        self._MIC_VAD_PARAMETERS = copy.deepcopy(_DEFAULT_VAD_PARAMETERS)
         self._AUTO_SPEAKER_SELECT = True
         try:
             if device_manager is not None:
@@ -974,8 +953,6 @@ class Config:
         self._SPEAKER_AVG_LOGPROB = -0.8
         self._SPEAKER_NO_SPEECH_PROB = 0.6
         self._SPEAKER_NO_REPEAT_NGRAM_SIZE = 0
-        self._SPEAKER_VAD_FILTER = True
-        self._SPEAKER_VAD_PARAMETERS = copy.deepcopy(_DEFAULT_VAD_PARAMETERS)
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
@@ -1088,7 +1065,6 @@ class Config:
                 if fp.readable() and fp.seek(0, 2) > 0:
                     fp.seek(0)
                     self._config_data = json_load(fp)
-                    _migrate_vad_defaults(self._config_data)
 
                     for key, value in self._config_data.items():
                         # 読み込み時: serialize=True かつ readonlyでない Descriptor のみ反映。

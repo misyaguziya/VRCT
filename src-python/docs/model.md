@@ -1,5 +1,33 @@
 # model.py 設計書
 
+> **2026-08 デバイスライフサイクル整理により大幅に古い**:
+> マイク/スピーカーの文字起こし・エナジー計測に関する記述
+> (`mic_print_transcript`/`mic_audio_recorder`/`mic_transcriber`/
+> `mic_energy_recorder`/`mic_energy_plot_progressbar` などの個別属性、
+> `check_mic_energy_fnc`/`check_speaker_energy_fnc`、
+> `SelectedMicEnergyRecorder`/`SelectedSpeakerEnergyRecorder`) は
+> 全て **`MicSession`/`SpeakerSession`** (`model.py` 内の
+> `_AudioDeviceSession` サブクラス) に統合された。
+>
+> - 1 物理デバイスにつき Recorder (PyAudio `Microphone`) は常に 1 つ。
+>   文字起こしとエナジー計測を同時に有効にしても、同じ Recorder に
+>   `features = {"transcript", "energy"}` として相乗りする
+>   (以前は各々が独立した Recorder を持ち、2 つの Microphone が
+>   並立し得た)。
+> - `Model.startMicTranscript`/`stopMicTranscript`/`startCheckMicEnergy`/
+>   `stopCheckMicEnergy` (speaker 側も同様) は外部シグネチャそのままに、
+>   内部で `self._mic_session.reconfigure(transcript=.., energy=..)` を
+>   呼ぶ薄いラッパーになっている。
+> - `device_manager.monitoring()` の Before/After コールバックは
+>   `Model.audio_lifecycle_worker` (`AudioLifecycleWorker`) 経由で
+>   非同期実行される。monitoring スレッド自体は enqueue するだけで
+>   即座に戻り、次の COM デバイス通知を取りこぼさない。
+>
+> 詳細設計はこのファイルの本文ではなく `model.py` 自体のコメント
+> (`_AudioDeviceSession`/`MicSession`/`SpeakerSession`/
+> `AudioLifecycleWorker` のクラスDocstring) を参照。
+> `transcription_recorder.md` も合わせて参照。
+
 ## 概要
 
 `model.py` は VRCT アプリケーションのビジネスロジックファサードとして機能し、音声認識、翻訳、オーバーレイ表示、OSC通信、WebSocket通信など、すべてのサブシステムへの統一されたインターフェースを提供する。シングルトンパターンで実装され、重い初期化処理を遅延実行することで、アプリケーションの起動時間を短縮している。

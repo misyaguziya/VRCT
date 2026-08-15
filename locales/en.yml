@@ -225,6 +225,9 @@ config_page:
             desc: "If a registered word is detected, the message will not be sent. To add multiple words at once, separate them with ',' (comma).\n*Duplicate words will not be registered."
             add_button_label: "Add"
             count_desc: "Words Currently Registered: {{count}}"
+        mic_vad_filter:
+            label: "Mic VAD Filter"
+            desc: "Only send audio to recognition after a silence gap is detected. Disable this if mic transcription stops mid-conversation instead of continuing to transcribe."
         speaker_record_timeout:
             label: "Speaker Record Timeout"
             desc: "Detects silence and, when the specified number of seconds has passed, considers the speaker input to have ended. (Second(s))"
@@ -234,6 +237,9 @@ config_page:
         speaker_max_phrase:
             label: "Speaker Max Words"
             desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs."
+        speaker_vad_filter:
+            label: "Speaker VAD Filter"
+            desc: "Only send audio to recognition after a silence gap is detected. Disable this if speaker transcription stops or shows 'speech recognition request failed' during continuous game/voice audio."
         select_transcription_engine:
             label: "Transcription Engine Used For Speech Recognition"
         whisper_weight_type:

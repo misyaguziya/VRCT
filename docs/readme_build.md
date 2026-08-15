@@ -99,6 +99,38 @@ CPU版と同様ですが、CUDA対応のPythonバックエンドをビルドし�
 npm run dev-ui
 ```
 
+### 高速開発ビルド（推奨: 日常検証用）
+
+PyInstaller によるバックエンド再パッケージを毎回スキップし、`.venv` の
+Python を直接 sidecar として起動する高速ループです。Python コードを
+修正した検証も、プロセス再起動だけで反映されます（数分 → 数秒）。
+
+```bash
+npm run dev-fast
+```
+
+このコマンドは以下を実行します:
+
+1. 実行中のプロセスを終了 (`task-kill`)
+2. dev 用 sidecar ラッパー（`utils/dev_sidecar/`, Rust 製の薄いバイナリ）を
+   ビルドして `src-tauri/bin/` に配置 (`sidecar-dev`)
+3. Vite と Tauri の開発サーバー起動 (`dev-ui`)
+
+前提:
+
+- `npm run setup-python` 済みで `.venv/Scripts/python.exe` が存在すること
+- Rust ツールチェーン (`cargo`) が使えること（既に Tauri で必要）
+
+配布 EXE と同一挙動になる根拠:
+
+- Python コード側は `_internal/...` バンドルパスと開発ツリー相対パスの
+  両対応が入っており、venv 直起動でもリソース探索が正しく解決される
+  （`src-python/models/overlay/overlay_image.py` ほか）
+- Tauri 側の sidecar 起動ロジックは共通のまま（EXE ファイル名は不変）
+
+依存ライブラリを追加/更新した場合や、配布形式そのものを確認したい場合は
+従来の `npm run dev` / `npm run build` を使ってください。
+
 ## リリースビルド
 
 配布用のインストーラーを作成するビルドです。
@@ -317,6 +349,27 @@ npm run clean
 - `src-tauri/bin/`
 - `src-tauri/target/`
 
+Rust のインクリメンタルビルド結果 (`src-tauri/target/`) を残したい場合は
+`--soft` 版を使ってください:
+
+```bash
+npm run clean-soft
+```
+
+こちらは `build/`, `dist/`, `src-tauri/bin/` のみを削除します。
+
+### PyInstaller のオプション環境変数
+
+`build-python` / `build-python-cuda` は以下の環境変数で挙動を切り替えられます:
+
+- `VRCT_PYINSTALLER_CLEAN=1` — PyInstaller に `--clean` を渡し、
+  Analysis キャッシュを破棄してからビルド（依存追加時・リリース前確認用）。
+  既定では付与しないので、2 回目以降のビルドは Analysis キャッシュが効いて
+  数倍速くなります。
+- `VRCT_PYINSTALLER_UPX=1` — 生成物を UPX で圧縮（配布サイズを最小化したい
+  リリース時のみ）。既定は無効。UPX 圧縮はビルド時間と初回起動時間の両方を
+  伸ばすため、開発中は無効を推奨します。
+
 ### プロセスの強制終了
 
 ```bash
@@ -332,7 +385,8 @@ VRCT/
 ├── bat/                    # バッチスクリプト
 │   ├── build.bat          # CPU版Pythonビルド
 │   ├── build_cuda.bat     # CUDA版Pythonビルド
-│   └── install.bat        # Python環境セットアップ
+│   ├── install.bat        # Python環境セットアップ
+│   └── sidecar_dev.bat    # dev-fast用sidecarラッパービルド
 ├── spec/                   # PyInstallerスペックファイル
 │   ├── backend.spec       # CPU版ビルド設定
 │   └── backend_cuda.spec  # CUDA版ビルド設定
@@ -343,6 +397,7 @@ VRCT/
 ├── src-ui/               # Reactフロントエンドソースコード
 ├── utils/                # ユーティリティスクリプト
 │   ├── clean.py         # クリーンアップスクリプト
+│   ├── dev_sidecar/     # dev-fast用のvenv直起動ラッパー(Rust)
 │   ├── task_kill.py     # プロセス終了スクリプト
 │   ├── update_version.py # バージョン更新スクリプト
 │   └── zip.py           # ZIPパッケージング

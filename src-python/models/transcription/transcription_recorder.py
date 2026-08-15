@@ -3,18 +3,34 @@
 These classes provide small adapters that push raw audio bytes into queues.
 They intentionally keep a thin API so the rest of the system can mock them
 in tests.
+
+デバイスライフサイクル整理と VAD ストリーミング撤退 (ADR-0004) の結果、
+現在の設計は以下の通り:
+
+- `BaseEnergyAndAudioRecorder` が mic/speaker 共通の唯一の Recorder として、
+  音声データ (audio_queue) とエネルギー (energy_queue) の両方を同時に扱う。
+  同一物理デバイスに対する PyAudio Microphone インスタンスは常に 1 つ。
+- 発話区間検出・フレーズ境界・pause/resume/stop は `speech_recognition` の
+  `listen_energy_and_audio_in_background` に完全に委任する (energy_threshold,
+  phrase_time_limit)。独自 VAD/ストリーミング分割は行わない (ADR-0004 参照)。
+  `callback_energy` フックにより、フレーズ確定を待たず生チャンクごとに
+  エナジー値を取得できる (音量メーターのリアルタイム更新用)。
+- PyAudio 操作は全て `pyaudio_op_lock` の下で行い、WASAPI ロック競合を防ぐ。
 """
 
-import audioop
 import threading
-from typing import Any, Optional
+from typing import Any
 from speech_recognition import Recognizer, Microphone
+from pyaudiowpatch import get_sample_size, paInt16
 from datetime import datetime
-from .audio_pipeline import AudioQueueItem, Pcm16MonoNormalizer, StreamingVadSegmenter
 from utils import errorLogging
+from device_manager import pyaudio_op_lock
 
 
 def _validate_audio_source(source: Any) -> Any:
+    # 呼び出し元 (_create_microphone) が既に pyaudio_op_lock を保持している
+    # 前提の内部関数。ここではロックを取らない (再入不可の Lock で
+    # 二重取得するとデッドロックするため)。
     source.__enter__()
     if source.stream is None:
         raise OSError("Audio device could not be opened")
@@ -23,262 +39,120 @@ def _validate_audio_source(source: Any) -> Any:
 
 
 def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -> Any:
-    try:
-        return _validate_audio_source(Microphone(**device_kwargs))
-    except Exception:
+    # speech_recognition の Microphone.__init__ 自体が、コンストラクタ内で
+    # 独自に PyAudio() を new し get_device_count()/get_device_info_by_index()
+    # 等のデバイス列挙を行ってから terminate() する。この呼び出しが
+    # pyaudio_op_lock の外側にあると、mic 側と speaker 側の Microphone(...)
+    # コンストラクタが並行実行され、WASAPI 内部でデッドロックし得る
+    # (実際に mic=CABLE Output, speaker=Steam Streaming Speakers を同時に
+    # 有効化した際にハングを確認済み)。
+    # そのため Microphone(...) の生成から _validate_audio_source による
+    # open/close 疎通確認まで、一貫して同じ pyaudio_op_lock 区間で行う。
+    with pyaudio_op_lock:
         try:
-            return _validate_audio_source(Microphone(**fallback_kwargs))
-        except Exception as fallback_error:
-            raise OSError("Selected and default audio devices could not be opened") from fallback_error
+            return _validate_audio_source(Microphone(**device_kwargs))
+        except Exception:
+            try:
+                return _validate_audio_source(Microphone(**fallback_kwargs))
+            except Exception as fallback_error:
+                raise OSError(
+                    "Selected and default audio devices could not be opened"
+                ) from fallback_error
 
-
-class BaseRecorder:
-    def __init__(self, source: Any, energy_threshold: int, dynamic_energy_threshold: bool, record_timeout: int) -> None:
-        self.recorder = Recognizer()
-        self.recorder.energy_threshold = energy_threshold
-        self.recorder.dynamic_energy_threshold = dynamic_energy_threshold
-        self.record_timeout = record_timeout
-        self.stop = None
-
-        if source is None:
-            raise ValueError("audio source can't be None")
-
-        self.source = source
-
-    def adjustForNoise(self) -> None:
-        with self.source:
-            self.recorder.adjust_for_ambient_noise(self.source)
-
-    def recordIntoQueue(self, audio_queue: Any) -> None:
-        def record_callback(_, audio):
-            audio_queue.put((audio.get_raw_data(), datetime.now()))
-
-        self.stop, self.pause, self.resume = self.recorder.listen_in_background(self.source, record_callback, phrase_time_limit=self.record_timeout)
-
-
-class SelectedMicRecorder(BaseRecorder):
-    def __init__(self, device: dict, energy_threshold: int, dynamic_energy_threshold: bool, record_timeout: int) -> None:
-        source = _create_microphone(
-            {},
-            device_index=int(device.get('index', -1)),
-            sample_rate=int(device.get("defaultSampleRate", 16000)),
-        )
-        super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
-        # self.adjustForNoise()
-
-
-class SelectedSpeakerRecorder(BaseRecorder):
-    def __init__(self, device: dict, energy_threshold: int, dynamic_energy_threshold: bool, record_timeout: int) -> None:
-        source = _create_microphone(
-            {"speaker": True},
-            speaker=True,
-            device_index=int(device.get('index', -1)),
-            sample_rate=int(device.get("defaultSampleRate", 16000)),
-            chunk_size=1024,
-            channels=int(device.get("maxInputChannels", 1)),
-        )
-        super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
-        # self.adjustForNoise()
-
-class BaseEnergyRecorder:
-    def __init__(self, source: Any) -> None:
-        self.recorder = Recognizer()
-        self.recorder.energy_threshold = 0
-        self.recorder.dynamic_energy_threshold = False
-        self.record_timeout = 0
-        self.stop = None
-
-        if source is None:
-            raise ValueError("audio source can't be None")
-
-        self.source = source
-
-    def adjustForNoise(self) -> None:
-        with self.source:
-            self.recorder.adjust_for_ambient_noise(self.source)
-
-    def recordIntoQueue(self, energy_queue: Any) -> None:
-        def recordCallback(_, energy):
-            energy_queue.put(energy)
-
-        self.stop, self.pause, self.resume = self.recorder.listen_energy_in_background(self.source, recordCallback)
-
-
-class SelectedMicEnergyRecorder(BaseEnergyRecorder):
-    def __init__(self, device: dict) -> None:
-        source = _create_microphone(
-            {},
-            device_index=int(device.get('index', -1)),
-            sample_rate=int(device.get("defaultSampleRate", 16000)),
-        )
-        super().__init__(source=source)
-        # self.adjustForNoise()
-
-
-class SelectedSpeakerEnergyRecorder(BaseEnergyRecorder):
-    def __init__(self, device: dict) -> None:
-        source = _create_microphone(
-            {"speaker": True},
-            speaker=True,
-            device_index=int(device.get('index', -1)),
-            sample_rate=int(device.get("defaultSampleRate", 16000)),
-            channels=int(device.get("maxInputChannels", 1)),
-        )
-        super().__init__(source=source)
-        # self.adjustForNoise()
 
 class BaseEnergyAndAudioRecorder:
+    """Records audio and/or a raw energy stream from a single physical device.
+
+    Energy-only callers (the config-panel volume meter) and transcription
+    callers (mic/speaker send/receive) both go through this same recorder
+    so a given physical device is only ever opened once. Every PyAudio
+    operation is serialized via `pyaudio_op_lock`.
+
+    フレーズ境界・エネルギー閾値による発話検出は `speech_recognition` の
+    `listen_energy_and_audio_in_background` に完全委任する (energy_threshold /
+    dynamic_energy_threshold / phrase_time_limit)。独自 VAD は使わない。
+    この API は `listen_in_background` と同じ発話区間検出ロジックを使うが、
+    追加で `callback_energy` フックを持ち、フレーズ確定を待たず生チャンク
+    読み取りのたびにエナジー値を通知できる (config パネルの音量メーターを
+    リアルタイム更新するために必要)。
+    """
+
     def __init__(
         self,
         source: Any,
         energy_threshold: int,
         dynamic_energy_threshold: bool,
         phrase_time_limit: int,
-        phrase_timeout: int,
         record_timeout: int,
-        vad_filter: bool = False,
-        vad_parameters: Optional[dict[str, Any]] = None,
     ) -> None:
         self.recorder = Recognizer()
         self.recorder.energy_threshold = energy_threshold
         self.recorder.dynamic_energy_threshold = dynamic_energy_threshold
         self.phrase_time_limit = phrase_time_limit
-        self.phrase_timeout = phrase_timeout
         self.record_timeout = record_timeout
         self.stop = None
+        self.pause = None
+        self.resume = None
 
         if source is None:
             raise ValueError("audio source can't be None")
 
         self.source = source
-        self.SAMPLE_RATE = 16000
-        self.SAMPLE_WIDTH = 2
-        self.channels = 1
+        self.SAMPLE_RATE = source.SAMPLE_RATE
+        self.SAMPLE_WIDTH = source.SAMPLE_WIDTH
+        self.channels = getattr(source, "channels", 1)
         # Set when the background listener thread dies from an unexpected
         # stream error (e.g. the device was unplugged) rather than a normal
         # stop() call, so callers can surface a "device lost" notice instead
         # of silently going quiet.
         self.device_error_event = threading.Event()
-        self.normalizer = Pcm16MonoNormalizer(
-            sample_rate=source.SAMPLE_RATE,
-            sample_width=source.SAMPLE_WIDTH,
-            channels=getattr(source, "channels", 1),
-        )
-        parameters = vad_parameters or {}
-        self.vad_segmenter = StreamingVadSegmenter(
-            positive_threshold=float(parameters.get("threshold", 0.25)),
-            negative_threshold=float(parameters.get("neg_threshold") or 0.10),
-            redemption_frames=max(1, round(int(parameters.get("min_silence_duration_ms", 768)) / 32)),
-            min_speech_frames=max(1, round(int(parameters.get("min_speech_duration_ms", 64)) / 32)),
-            pre_speech_pad_frames=max(0, round(int(parameters.get("speech_pad_ms", 160)) / 32)),
-        ) if vad_filter else None
 
     def adjustForNoise(self) -> None:
         with self.source:
             self.recorder.adjust_for_ambient_noise(self.source)
 
     def recordIntoQueue(self, audio_queue: Any, energy_queue: Any = None) -> None:
-        if self.vad_segmenter is not None:
-            self.stop, self.pause, self.resume = self._recordVadIntoQueue(audio_queue, energy_queue)
-            return
+        """listen_energy_and_audio_in_background で発話区間ごとに audio を
+        audio_queue に積む。energy_queue が指定されていれば、フレーズ確定を
+        待たず生チャンク読み取りのたびに RMS を積む (callback_energy)。
 
-        def audioRecordCallback(_, audio):
-            recorded_at = datetime.now()
-            normalized_audio = self.normalizer.process(audio.get_raw_data())
-            if not normalized_audio:
-                return
-            audio_queue.put((normalized_audio, recorded_at))
+        audio_queue には (raw_bytes, recorded_at) タプルを push する。
+        フレーズの区切りは phrase_time_limit と energy_threshold ベースの
+        発話終端検出に委ねる (listen_in_background と同じロジック)。
+        """
 
-        def energyRecordCallback(energy):
-            energy_queue.put(energy)
-
-        self.stop, self.pause, self.resume = self.recorder.listen_energy_and_audio_in_background(
-            source=self.source,
-            callback=audioRecordCallback,
-            phrase_time_limit=self.phrase_time_limit,
-            callback_energy=energyRecordCallback if energy_queue is not None else None,
-            phrase_timeout=self.phrase_timeout,
-            record_timeout=self.record_timeout,
-        )
-
-    def _recordVadIntoQueue(self, audio_queue: Any, energy_queue: Any = None):
-        running = threading.Event()
-        running.set()
-        paused = threading.Event()
-        partial_interval_ms = max(250.0, float(self.phrase_time_limit or 1) * 1000)
-
-        def emit_segment(segment, recorded_at: datetime) -> None:
-            audio_queue.put(AudioQueueItem(
-                audio=segment.audio,
-                recorded_at=recorded_at,
-                is_final=segment.is_final,
-                segment_id=segment.segment_id,
-                speech_ended_at=recorded_at if segment.is_final else None,
-            ))
-
-        def threadedListen() -> None:
-            last_partial_duration_ms = 0.0
-            was_paused = False
+        def audio_callback(_, audio) -> None:
             try:
-                with self.source:
-                    while running.is_set():
-                        raw_audio = self.source.stream.read(self.source.CHUNK)
-                        if paused.is_set():
-                            if not was_paused:
-                                recorded_at = datetime.now()
-                                segment = self.vad_segmenter.flush()
-                                if segment is not None:
-                                    emit_segment(segment, recorded_at)
-                                self.normalizer.reset()
-                                last_partial_duration_ms = 0.0
-                            was_paused = True
-                            continue
-                        was_paused = False
-
-                        normalized_audio = self.normalizer.process(raw_audio)
-                        if not normalized_audio:
-                            continue
-                        if energy_queue is not None:
-                            energy_queue.put(audioop.rms(normalized_audio, 2))
-
-                        recorded_at = datetime.now()
-                        for segment in self.vad_segmenter.process(normalized_audio):
-                            emit_segment(segment, recorded_at)
-                            last_partial_duration_ms = 0.0
-
-                        partial = self.vad_segmenter.snapshot()
-                        if partial is not None and partial.duration_ms >= last_partial_duration_ms + partial_interval_ms:
-                            emit_segment(partial, recorded_at)
-                            last_partial_duration_ms = partial.duration_ms
-            except EOFError:
-                pass
+                raw = audio.get_raw_data()
+                audio_queue.put((raw, datetime.now()))
             except Exception:
-                self.device_error_event.set()
+                # listener スレッドを絶対に殺さない (再入時に stream が
+                # 停止するのを避けるため)
                 errorLogging()
-            finally:
-                recorded_at = datetime.now()
-                segment = self.vad_segmenter.flush()
-                if segment is not None:
-                    emit_segment(segment, recorded_at)
-                self.normalizer.reset()
-                paused.clear()
-                running.clear()
 
-        listener_thread = threading.Thread(target=threadedListen, daemon=True)
-        listener_thread.start()
+        def energy_callback(energy) -> None:
+            try:
+                energy_queue.put(energy)
+            except Exception:
+                errorLogging()
 
-        def stopper(wait_for_stop: bool = True) -> None:
-            running.clear()
-            if wait_for_stop:
-                listener_thread.join(timeout=5.0)
-
-        def pauser() -> None:
-            paused.set()
-
-        def resumer() -> None:
-            paused.clear()
-
-        return stopper, pauser, resumer
+        try:
+            self.stop, self.pause, self.resume = (
+                self.recorder.listen_energy_and_audio_in_background(
+                    source=self.source,
+                    callback=audio_callback,
+                    phrase_time_limit=self.phrase_time_limit,
+                    callback_energy=energy_callback
+                    if energy_queue is not None
+                    else None,
+                    phrase_timeout=1,
+                    record_timeout=self.record_timeout,
+                )
+            )
+        except Exception:
+            self.device_error_event.set()
+            errorLogging()
+            raise
 
 
 class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
@@ -288,14 +162,11 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         energy_threshold: int,
         dynamic_energy_threshold: bool,
         phrase_time_limit: int,
-        phrase_timeout: int = 1,
         record_timeout: int = 5,
-        vad_filter: bool = False,
-        vad_parameters: Optional[dict[str, Any]] = None,
     ) -> None:
         source = _create_microphone(
             {},
-            device_index=int(device.get('index', -1)),
+            device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
         )
         super().__init__(
@@ -303,12 +174,8 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             energy_threshold=energy_threshold,
             dynamic_energy_threshold=dynamic_energy_threshold,
             phrase_time_limit=phrase_time_limit,
-            phrase_timeout=phrase_timeout,
             record_timeout=record_timeout,
-            vad_filter=vad_filter,
-            vad_parameters=vad_parameters,
         )
-        # self.adjustForNoise()
 
 
 class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
@@ -318,18 +185,14 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         energy_threshold: int,
         dynamic_energy_threshold: bool,
         phrase_time_limit: int,
-        phrase_timeout: int = 1,
         record_timeout: int = 5,
-        vad_filter: bool = False,
-        vad_parameters: Optional[dict[str, Any]] = None,
     ) -> None:
-
         source = _create_microphone(
             {"speaker": True},
             speaker=True,
-            device_index=int(device.get('index', -1)),
+            device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
-            chunk_size=1024,
+            chunk_size=get_sample_size(paInt16),
             channels=int(device.get("maxInputChannels", 1)),
         )
         super().__init__(
@@ -337,9 +200,5 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             energy_threshold=energy_threshold,
             dynamic_energy_threshold=dynamic_energy_threshold,
             phrase_time_limit=phrase_time_limit,
-            phrase_timeout=phrase_timeout,
             record_timeout=record_timeout,
-            vad_filter=vad_filter,
-            vad_parameters=vad_parameters,
         )
-        # self.adjustForNoise()

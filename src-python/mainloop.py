@@ -20,8 +20,6 @@ run_mapping = {
 
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
-    "transcription_mic_partial":"/run/transcription_send_mic_partial",
-    "transcription_speaker_partial":"/run/transcription_receive_speaker_partial",
 
     "check_mic_volume":"/run/check_mic_volume",
     "check_speaker_volume":"/run/check_speaker_volume",
@@ -313,6 +311,7 @@ mapping = {
     "/get/data/mic_no_speech_prob": {"status": True, "variable":controller.getMicNoSpeechProb},
     "/set/data/mic_no_speech_prob": {"status": True, "variable":controller.setMicNoSpeechProb},
 
+
     "/set/enable/check_mic_threshold": {"status": True, "variable":controller.setEnableCheckMicThreshold},
     "/set/disable/check_mic_threshold": {"status": True, "variable":controller.setDisableCheckMicThreshold},
 
@@ -347,6 +346,7 @@ mapping = {
 
     "/get/data/speaker_no_speech_prob": {"status": True, "variable":controller.getSpeakerNoSpeechProb},
     "/set/data/speaker_no_speech_prob": {"status": True, "variable":controller.setSpeakerNoSpeechProb},
+
 
     "/set/enable/check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
@@ -564,6 +564,9 @@ class Main:
         if handler is None:
             response = "Invalid endpoint"
             status = 404
+        elif handler["status"] is False:
+            response = "Locked endpoint"
+            status = 423
         else:
             try:
                 response = handler["variable"](data)

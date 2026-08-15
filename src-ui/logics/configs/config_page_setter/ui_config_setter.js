@@ -607,7 +607,6 @@ export const SETTINGS_ARRAY = [
         logics_template_id: "get_set",
         base_endpoint_name: "speaker_no_speech_prob",
     },
-
     // Vr
     {
         Category: "Vr",

@@ -58,3 +58,4 @@ config.json
 CLAUDE.md
 .claude/
 docs/adr/
+src-python/docs/ref/

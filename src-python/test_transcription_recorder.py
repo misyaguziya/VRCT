@@ -1,10 +1,27 @@
-import unittest
-from threading import Event
-from queue import Queue
-from unittest.mock import patch
+"""Tests for transcription_recorder.
 
-from models.transcription.audio_pipeline import AudioQueueItem, StreamingVadSegmenter
-from models.transcription.transcription_recorder import BaseEnergyAndAudioRecorder, _create_microphone
+`BaseEnergyAndAudioRecorder` は speech_recognition.Recognizer を用いた
+`listen_energy_and_audio_in_background` に発話区間検出とフレーズ境界を委ねる
+(ADR-0004)。このため統合的な入力→キュー投入までの検証は
+listen_energy_and_audio_in_background 側のロジックに寄りかかるが、ここでは
+以下のみを直接テストする:
+
+- `_create_microphone` の fallback 動作
+- 公開 API (`recordIntoQueue`) が listen_energy_and_audio_in_background 側の
+  stop/pause/resume を正しく self.stop/self.pause/self.resume に受け取ること
+- audio callback が audio_queue に生データを積むこと
+- callback_energy が energy_queue にエナジー値を積むこと (フレーズ確定を
+  待たずリアルタイムに呼ばれる想定)
+"""
+
+import unittest
+from queue import Queue
+from unittest.mock import patch, MagicMock
+
+from models.transcription.transcription_recorder import (
+    BaseEnergyAndAudioRecorder,
+    _create_microphone,
+)
 
 
 class FakeAudioSource:
@@ -23,6 +40,12 @@ class FakeAudioSource:
         if self.stream is None:
             raise AttributeError("'NoneType' object has no attribute 'close'")
         self.stream = None
+
+
+class RecorderAudioSource:
+    SAMPLE_RATE = 48000
+    SAMPLE_WIDTH = 2
+    channels = 2
 
 
 class TestCreateMicrophone(unittest.TestCase):
@@ -55,154 +78,144 @@ class TestCreateMicrophone(unittest.TestCase):
         self.assertFalse(default_source.exit_called)
 
 
-class RecorderAudioSource:
-    SAMPLE_RATE = 48000
-    SAMPLE_WIDTH = 2
-    channels = 2
-
-
-class FakeStreamAudioSource:
-    SAMPLE_RATE = 16000
-    SAMPLE_WIDTH = 2
-    channels = 1
-    CHUNK = 512
-
-    def __init__(self, frames: int) -> None:
-        self.frames = frames
-        self.stream = self
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_):
-        return None
-
-    def read(self, _) -> bytes:
-        if self.frames == 0:
-            raise EOFError
-        self.frames -= 1
-        return b"\xe8\x03" * 512
-
-
-class BlockingStreamAudioSource(FakeStreamAudioSource):
-    def __init__(self, frames: int, block_after_reads: int) -> None:
-        super().__init__(frames)
-        self.block_after_reads = block_after_reads
-        self.read_count = 0
-        self.release_event = Event()
-
-    def read(self, chunk_size) -> bytes:
-        if self.read_count >= self.block_after_reads:
-            self.release_event.wait(timeout=1)
-        self.read_count += 1
-        return super().read(chunk_size)
-
-    def release(self) -> None:
-        self.release_event.set()
-
-
-class ProbabilitySequence:
-    def __init__(self, values: list[float]) -> None:
-        self.values = iter(values)
-
-    def __call__(self, _) -> float:
-        return next(self.values)
-
-
-class TestRecorderAudioPipeline(unittest.TestCase):
-    def test_exposes_normalized_output_format(self) -> None:
+class TestRecorderPipeline(unittest.TestCase):
+    def test_exposes_source_sample_format(self) -> None:
         recorder = BaseEnergyAndAudioRecorder(
-            RecorderAudioSource(), 300, False, 3, 3, 5, vad_filter=True
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
         )
 
-        self.assertEqual(recorder.SAMPLE_RATE, 16000)
+        self.assertEqual(recorder.SAMPLE_RATE, 48000)
         self.assertEqual(recorder.SAMPLE_WIDTH, 2)
-        self.assertEqual(recorder.channels, 1)
-        self.assertIsInstance(recorder.vad_segmenter, StreamingVadSegmenter)
+        self.assertEqual(recorder.channels, 2)
 
-    def test_streams_final_vad_segment_from_device_frames(self) -> None:
+    def test_recordIntoQueue_wires_listen_energy_and_audio_in_background_control_handles(
+        self,
+    ) -> None:
         recorder = BaseEnergyAndAudioRecorder(
-            FakeStreamAudioSource(6), 300, False, 3, 3, 5, vad_filter=True
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
         )
-        recorder.vad_segmenter = StreamingVadSegmenter(
-            ProbabilitySequence([0.0, 0.3, 0.4, 0.5, 0.05, 0.05]),
-            redemption_frames=2,
-            min_speech_frames=2,
-            pre_speech_pad_frames=1,
+        stop = MagicMock(name="stop")
+        pause = MagicMock(name="pause")
+        resume = MagicMock(name="resume")
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = MagicMock(
+            return_value=(stop, pause, resume)
         )
-        queue = Queue()
 
-        recorder.recordIntoQueue(queue)
-        item = queue.get(timeout=1)
-        recorder.stop()
+        recorder.recordIntoQueue(Queue())
 
-        self.assertIsInstance(item, AudioQueueItem)
-        self.assertTrue(item.is_final)
-        self.assertGreater(len(item.audio), 0)
+        self.assertIs(recorder.stop, stop)
+        self.assertIs(recorder.pause, pause)
+        self.assertIs(recorder.resume, resume)
+        recorder.recorder.listen_energy_and_audio_in_background.assert_called_once()
+        _, kwargs = recorder.recorder.listen_energy_and_audio_in_background.call_args
+        self.assertEqual(kwargs.get("phrase_time_limit"), 3)
+        self.assertEqual(kwargs.get("record_timeout"), 5)
+        self.assertIsNone(kwargs.get("callback_energy"))
 
-    def test_streams_partial_snapshot_during_long_speech(self) -> None:
+    def test_audio_callback_pushes_raw_bytes(self) -> None:
         recorder = BaseEnergyAndAudioRecorder(
-            FakeStreamAudioSource(10), 300, False, 0.25, 3, 5, vad_filter=True
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
         )
-        recorder.vad_segmenter = StreamingVadSegmenter(
-            ProbabilitySequence([0.0] + [0.5] * 9),
-            redemption_frames=2,
-            min_speech_frames=2,
-            pre_speech_pad_frames=1,
-        )
-        queue = Queue()
+        captured: dict = {}
 
-        recorder.recordIntoQueue(queue)
-        item = queue.get(timeout=1)
-        recorder.stop()
+        def fake_listen(
+            source,
+            callback,
+            phrase_time_limit=None,
+            callback_energy=None,
+            phrase_timeout=1,
+            record_timeout=5,
+        ):
+            captured["audio_callback"] = callback
+            captured["energy_callback"] = callback_energy
+            return (MagicMock(), MagicMock(), MagicMock())
 
-        self.assertIsInstance(item, AudioQueueItem)
-        self.assertFalse(item.is_final)
-        self.assertGreaterEqual(len(item.audio) / 2 / 16000, 0.25)
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = fake_listen
 
-    def test_flushes_final_segment_when_stream_stops_without_trailing_silence(self) -> None:
+        audio_queue: Queue = Queue()
+        recorder.recordIntoQueue(audio_queue)
+
+        # Simulate a callback invocation with a fake AudioData-like object
+        raw = b"\x10\x00" * 8
+        fake_audio = MagicMock()
+        fake_audio.get_raw_data.return_value = raw
+        captured["audio_callback"](None, fake_audio)
+
+        audio, recorded_at = audio_queue.get(timeout=1)
+        self.assertEqual(audio, raw)
+        self.assertIsNotNone(recorded_at)
+        # energy_queue が指定されていない場合、callback_energy は渡されない
+        self.assertIsNone(captured["energy_callback"])
+
+    def test_energy_callback_pushes_energy_without_waiting_for_phrase(self) -> None:
+        """callback_energy はフレーズ確定を待たず、生チャンクの読み取りの
+        たびに呼ばれる想定 (config パネルの音量メーターのリアルタイム更新に
+        必要)。ここでは recordIntoQueue が callback_energy を正しく energy_queue
+        に接続することだけを検証する。"""
         recorder = BaseEnergyAndAudioRecorder(
-            FakeStreamAudioSource(3), 300, False, 3, 3, 5, vad_filter=True
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
         )
-        recorder.vad_segmenter = StreamingVadSegmenter(
-            ProbabilitySequence([0.0, 0.3, 0.4]),
-            redemption_frames=2,
-            min_speech_frames=2,
-            pre_speech_pad_frames=1,
-        )
-        queue = Queue()
+        captured: dict = {}
 
-        recorder.recordIntoQueue(queue)
-        item = queue.get(timeout=1)
-        recorder.stop()
+        def fake_listen(
+            source,
+            callback,
+            phrase_time_limit=None,
+            callback_energy=None,
+            phrase_timeout=1,
+            record_timeout=5,
+        ):
+            captured["energy_callback"] = callback_energy
+            return (MagicMock(), MagicMock(), MagicMock())
 
-        self.assertIsInstance(item, AudioQueueItem)
-        self.assertTrue(item.is_final)
-        self.assertGreater(len(item.audio), 0)
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = fake_listen
 
-    def test_flushes_current_segment_when_paused(self) -> None:
-        source = BlockingStreamAudioSource(20, block_after_reads=10)
+        energy_queue: Queue = Queue()
+        recorder.recordIntoQueue(Queue(), energy_queue)
+
+        # フレーズが確定していない (audio_callback は一度も呼ばれていない)
+        # 状態でも energy_callback 単体でエナジー値を積めること
+        captured["energy_callback"](123)
+        captured["energy_callback"](456)
+
+        self.assertEqual(energy_queue.get(timeout=1), 123)
+        self.assertEqual(energy_queue.get(timeout=1), 456)
+
+    def test_device_error_flagged_when_listen_raises(self) -> None:
         recorder = BaseEnergyAndAudioRecorder(
-            source, 300, False, 0.25, 3, 5, vad_filter=True
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
         )
-        recorder.vad_segmenter = StreamingVadSegmenter(
-            ProbabilitySequence([0.0] + [0.5] * 19),
-            redemption_frames=2,
-            min_speech_frames=2,
-            pre_speech_pad_frames=1,
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = MagicMock(
+            side_effect=OSError("device gone")
         )
-        queue = Queue()
 
-        recorder.recordIntoQueue(queue)
-        partial = queue.get(timeout=1)
-        recorder.pause()
-        source.release()
-        final = queue.get(timeout=1)
-        recorder.stop()
-
-        self.assertFalse(partial.is_final)
-        self.assertTrue(final.is_final)
-        self.assertEqual(partial.segment_id, final.segment_id)
+        with self.assertRaises(OSError):
+            recorder.recordIntoQueue(Queue())
+        self.assertTrue(recorder.device_error_event.is_set())
 
 
 if __name__ == "__main__":

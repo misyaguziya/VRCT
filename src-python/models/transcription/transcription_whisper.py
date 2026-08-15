@@ -114,9 +114,27 @@ def downloadWhisperWeight(
     path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
     if not checkWhisperWeight(root, weight_type):
+        repo_id = _MODELS[weight_type]
+        # _FILENAMES は複数の変換元リポジトリ (Systran, Zoont, deepdml 等)
+        # に共通する候補の和集合。実際のファイル構成はリポジトリごとに
+        # 異なる (例: Systran 系は vocabulary.txt のみ、Zoont/deepdml 系は
+        # preprocessor_config.json/vocabulary.json を含み vocabulary.txt が
+        # 無い) ため、存在しないファイルを固定リストのままダウンロードしよ
+        # うとすると 404 になる。実在するファイルのみに絞り込む。
+        try:
+            available_files = set(huggingface_hub.list_repo_files(repo_id))
+        except Exception:
+            errorLogging()
+            # 一覧取得に失敗した場合は従来通り全候補で試す (完全に
+            # ダウンロードできなくても checkWhisperWeight 側の
+            # WhisperModel ロード検証で最終的に弾かれる)。
+            available_files = set(_FILENAMES)
+
         for filename in _FILENAMES:
+            if filename not in available_files:
+                continue
             file_path = os_path.join(path, filename)
-            url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
+            url = huggingface_hub.hf_hub_url(repo_id, filename)
             downloadFile(url, file_path, func=callback if filename == "model.bin" else None)
     if callable(end_callback):
         end_callback()

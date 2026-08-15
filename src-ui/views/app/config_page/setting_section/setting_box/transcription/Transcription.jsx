@@ -12,6 +12,7 @@ import {
     RadioButtonContainer,
     DropdownMenuContainer,
     SliderContainer,
+    SwitchBoxContainer,
 } from "../_templates/Templates";
 
 import {

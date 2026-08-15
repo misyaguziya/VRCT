@@ -20,7 +20,16 @@ class Controller:
         def _noop_run(status: int, endpoint: str, payload: Any = None) -> None:
             return None
         self.run: Callable[[int, str, Any], None] = _noop_run
-        self.device_access_lock: Lock = Lock()
+        # マイク/スピーカーそれぞれの文字起こし・エナジー計測の start/stop を
+        # 直列化するロック。mic/speaker で分離しているのは、片方の重い
+        # open/close 中にもう片方が待たされないようにするため。
+        # 非再入の Lock を使う。VRAM エラー発生時に start*Message の except節
+        # が同一スレッド上で停止処理を行う必要があるが、そこでは
+        # _stopTranscriptionSendMessageLocked のようなロック不要の内部版を
+        # 呼ぶことで再入を避けている (公開の stop*Message は自前でロックを
+        # 取るため、start*Message の中から呼ぶとデッドロックする)。
+        self.mic_lifecycle_lock: Lock = Lock()
+        self.speaker_lifecycle_lock: Lock = Lock()
         # Ensure model is initialized at controller startup so existing
         # attribute-based checks (e.g. model.overlay.initialized) continue to work.
         try:
@@ -52,10 +61,35 @@ class Controller:
     
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
-        
+
         Returns:
             dict with status 200 and result True on success.
         """
+        # デバイス監視・録音系スレッドを明示的に停止する。これを怠ると
+        # PyAudio/WASAPI ストリームが open されたままプロセスが終了し、
+        # デバイスハンドルがリークしたり、次回起動時の初期化に影響し得る。
+        # 各停止は個別に例外を握りつぶし、1つの失敗が他の停止処理を
+        # ブロックしないようにする。
+        try:
+            device_manager.stopMonitoring()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopMicTranscript()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopSpeakerTranscript()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopCheckMicEnergy()
+        except Exception:
+            errorLogging()
+        try:
+            model.stopCheckSpeakerEnergy()
+        except Exception:
+            errorLogging()
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a
@@ -134,31 +168,27 @@ class Controller:
 
     def restartAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.startThreadingTranscriptionSendMessage()
+            self.startTranscriptionSendMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.startCheckMicEnergy(
-                self.progressBarMicEnergy,
-            )
+            self.startCheckMicEnergy()
 
     def restartAccessSpeakerDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessage()
+            self.startTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            model.startCheckSpeakerEnergy(
-                self.progressBarSpeakerEnergy,
-            )
+            self.startCheckSpeakerEnergy()
 
     def stopAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessage()
+            self.stopTranscriptionSendMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.stopCheckMicEnergy()
+            self.stopCheckMicEnergy()
 
     def stopAccessSpeakerDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
+            self.stopTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            model.stopCheckSpeakerEnergy()
+            self.stopCheckSpeakerEnergy()
 
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
@@ -282,12 +312,6 @@ class Controller:
         if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
             return
 
-        if result.get("is_final", True) is False:
-            if config.ENABLE_TRANSCRIPTION_SEND is not True:
-                return
-            self._emitPartialTranscript("mic", result)
-            return
-
         if result.get("recognition_error") is True:
             self.run(
                 200,
@@ -308,22 +332,20 @@ class Controller:
             )
 
         elif isinstance(message, str) and len(message) == 0:
-            self._dismissPartialTranscript("mic", result)
+            pass
 
         elif isinstance(message, str) and len(message) > 0:
             translation = []
             transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
-                self._dismissPartialTranscript("mic", result)
                 self.run(
                     200,
                     self.run_mapping["word_filter"],
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatSendMessage(message, result.get("segment_id")):
-                self._dismissPartialTranscript("mic", result)
+            elif model.detectRepeatSendMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -412,7 +434,6 @@ class Controller:
                     200,
                     self.run_mapping["transcription_mic"],
                     {
-                        "id": self._transcriptSegmentId("mic", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message
@@ -472,49 +493,7 @@ class Controller:
 
             model.addTranslationHistory("mic", message)
 
-    def _transcriptSegmentId(self, source: str, result: dict) -> str | None:
-        segment_id = result.get("segment_id")
-        return f"transcription-{source}-{segment_id}" if segment_id is not None else None
-
-    def _emitPartialTranscript(self, source: str, result: dict) -> None:
-        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
-        if endpoint is None:
-            return
-        self.run(
-            200,
-            endpoint,
-            {
-                "id": self._transcriptSegmentId(source, result),
-                "original": {"message": result.get("text", ""), "transliteration": []},
-                "translations": [],
-                "metrics": {
-                    "inference_ms": result.get("inference_ms"),
-                    "audio_duration_ms": result.get("audio_duration_ms"),
-                },
-            },
-        )
-
-    def _dismissPartialTranscript(self, source: str, result: dict) -> None:
-        endpoint = self.run_mapping.get(f"transcription_{source}_partial")
-        transcript_id = self._transcriptSegmentId(source, result)
-        if endpoint is None or transcript_id is None:
-            return
-        self.run(
-            200,
-            endpoint,
-            {
-                "id": transcript_id,
-                "dismiss": True,
-            },
-        )
-
     def speakerMessage(self, result:dict) -> None:
-        if result.get("is_final", True) is False:
-            if config.ENABLE_TRANSCRIPTION_RECEIVE is not True:
-                return
-            self._emitPartialTranscript("speaker", result)
-            return
-
         if result.get("recognition_error") is True:
             self.run(
                 200,
@@ -534,21 +513,19 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) == 0:
-            self._dismissPartialTranscript("speaker", result)
+            pass
         elif isinstance(message, str) and len(message) > 0:
             translation = []
             transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
-                self._dismissPartialTranscript("speaker", result)
                 self.run(
                     200,
                     self.run_mapping["word_filter"],
                     {"message":f"Detected by word filter: {message}"},
                 )
                 return
-            elif model.detectRepeatReceiveMessage(message, result.get("segment_id")):
-                self._dismissPartialTranscript("speaker", result)
+            elif model.detectRepeatReceiveMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
@@ -684,7 +661,6 @@ class Controller:
                     200,
                     self.run_mapping["transcription_speaker"],
                     {
-                        "id": self._transcriptSegmentId("speaker", result),
                         "original": {
                             "message": message,
                             "transliteration": transliteration_message
@@ -1241,11 +1217,31 @@ class Controller:
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     def applyAutoMicSelect(self) -> None:
-        device_manager.setCallbackProcessBeforeUpdateMicDevices(self.stopAccessMicDevices)
+        # stopAccessMicDevices/restartAccessMicDevices は mic_lifecycle_lock
+        # を取得しつつ recorder の stop や PyAudio open を行う重い処理。
+        # device_manager.monitoring() 自身のスレッドで直接実行すると、その間
+        # monitoring が次の COM デバイス通知を取りこぼす。
+        # model.audio_lifecycle_worker 経由で専用スレッドに投げることで
+        # monitoring は即座に呼び出しから戻れる。Before/After は同じ worker の
+        # FIFO キューで順序が保たれる。
+        device_manager.setCallbackProcessBeforeUpdateMicDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessMicDevices)
+        )
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
-        device_manager.setCallbackProcessAfterUpdateMicDevices(self.restartAccessMicDevices)
+        device_manager.setCallbackProcessAfterUpdateMicDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessMicDevices)
+        )
+        # ActiveEndpointTracker が「実使用中エンドポイント」の切替を検知
+        # したときは、Session の Recorder を新デバイスに 1 発で差し替える。
+        # tracker スレッドをブロックしないよう worker 経由 + reconfigureMicDevice
+        # (Session の device 差分検知でリソース節約)。
+        device_manager.setCallbackEndpointReconfiguredMic(
+            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureMicDeviceLocked)
+        )
         device_manager.forceUpdateAndSetMicDevices()
-        device_manager.startMonitoring()
+        # monitoring スレッドの起動判断は DeviceManager 側に集約
+        # (speaker 側の状態を controller で気にする必要はもう無い)
+        device_manager.setMicAutoActive(True)
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_MIC_SELECT is False:
@@ -1255,13 +1251,16 @@ class Controller:
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
-        if config.AUTO_SPEAKER_SELECT is False:
-            device_manager.stopMonitoring()
-
         if config.AUTO_MIC_SELECT is True:
             device_manager.clearCallbackProcessBeforeUpdateMicDevices()
             device_manager.clearCallbackDefaultMicDevice()
             device_manager.clearCallbackProcessAfterUpdateMicDevices()
+            device_manager.clearCallbackEndpointReconfiguredMic()
+            # monitoring の停止判断は DeviceManager 側に委譲。
+            # speaker 側が active なら monitoring は継続、両方 inactive で
+            # 初めて thread が停止する。以前ここで AUTO_SPEAKER_SELECT を
+            # 見てから stopMonitoring を叩いていた相互参照は不要になった。
+            device_manager.setMicAutoActive(False)
             config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
@@ -1282,9 +1281,7 @@ class Controller:
             config.SELECTED_MIC_DEVICE = previously_selected_device
         else:
             config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
-        if config.ENABLE_CHECK_ENERGY_SEND is True:
-            self.stopThreadingCheckMicEnergy()
-            self.startThreadingTranscriptionSendMessage()
+        self._reopenMicAudioOnDeviceChange()
         self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
@@ -1294,10 +1291,26 @@ class Controller:
 
     def setSelectedMicDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_DEVICE = data
-        if config.ENABLE_CHECK_ENERGY_SEND is True:
-            self.stopThreadingCheckMicEnergy()
-            self.startThreadingTranscriptionSendMessage()
+        self._reopenMicAudioOnDeviceChange()
         return {"status":200, "result": config.SELECTED_MIC_DEVICE}
+
+    def _reopenMicAudioOnDeviceChange(self) -> None:
+        # デバイス切替時、稼働中のマイク Session を Session.reconfigure 経由で
+        # 新デバイスに差し替える。旧実装は feature 単位で stop→start を 2 段
+        # (transcription + energy) 呼んでいたため、両方 ON のときは Recorder が
+        # 2 回 close/open されていた。Session に device 差分検知を入れた今は
+        # 1 呼び出しで済み、config 上のデバイスと現在開いているデバイスが
+        # 同じなら no-op になる。
+        # config は呼び出し元 (setSelectedMicHost/Device) が既に書き換え済み。
+        with self.mic_lifecycle_lock:
+            model.reconfigureMicDevice()
+
+    def _reconfigureMicDeviceLocked(self) -> None:
+        # ActiveEndpointTracker からの通知 (setCallbackEndpointReconfiguredMic)
+        # は他の mic_lifecycle_lock 保持経路 (start/stop 系) と直列化されて
+        # いないため、ここで明示的にロックを取る。
+        with self.mic_lifecycle_lock:
+            model.reconfigureMicDevice()
 
     @staticmethod
     def getMicThreshold(*args, **kwargs) -> dict:
@@ -1435,11 +1448,21 @@ class Controller:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     def applyAutoSpeakerSelect(self) -> None:
-        device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(self.stopAccessSpeakerDevices)
+        # 詳細は applyAutoMicSelect のコメント参照:
+        # monitoring スレッドをブロックしないよう worker 経由で実行する。
+        device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessSpeakerDevices)
+        )
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
-        device_manager.setCallbackProcessAfterUpdateSpeakerDevices(self.restartAccessSpeakerDevices)
+        device_manager.setCallbackProcessAfterUpdateSpeakerDevices(
+            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessSpeakerDevices)
+        )
+        # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携)
+        device_manager.setCallbackEndpointReconfiguredSpeaker(
+            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureSpeakerDeviceLocked)
+        )
         device_manager.forceUpdateAndSetSpeakerDevices()
-        device_manager.startMonitoring()
+        device_manager.setSpeakerAutoActive(True)
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_SPEAKER_SELECT is False:
@@ -1449,13 +1472,14 @@ class Controller:
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
-        if config.AUTO_MIC_SELECT is False:
-            device_manager.stopMonitoring()
-
         if config.AUTO_SPEAKER_SELECT is True:
             device_manager.clearCallbackProcessBeforeUpdateSpeakerDevices()
             device_manager.clearCallbackDefaultSpeakerDevice()
             device_manager.clearCallbackProcessAfterUpdateSpeakerDevices()
+            device_manager.clearCallbackEndpointReconfiguredSpeaker()
+            # 詳細は setDisableAutoMicSelect のコメント参照:
+            # monitoring の停止判断は DeviceManager 側に委譲。
+            device_manager.setSpeakerAutoActive(False)
             config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
@@ -1465,10 +1489,19 @@ class Controller:
 
     def setSelectedSpeakerDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_SPEAKER_DEVICE = data
-        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            self.stopThreadingCheckSpeakerEnergy()
-            self.startThreadingTranscriptionReceiveMessage()
+        self._reopenSpeakerAudioOnDeviceChange()
         return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
+
+    def _reopenSpeakerAudioOnDeviceChange(self) -> None:
+        # マイクと同様、Session.reconfigure 1 回に縮退。詳細は
+        # _reopenMicAudioOnDeviceChange のコメント参照。
+        with self.speaker_lifecycle_lock:
+            model.reconfigureSpeakerDevice()
+
+    def _reconfigureSpeakerDeviceLocked(self) -> None:
+        # 詳細は _reconfigureMicDeviceLocked のコメント参照。
+        with self.speaker_lifecycle_lock:
+            model.reconfigureSpeakerDevice()
 
     @staticmethod
     def getSpeakerThreshold(*args, **kwargs) -> dict:
@@ -2772,25 +2805,25 @@ class Controller:
 
     def setEnableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_RECEIVE is False:
-            self.startThreadingCheckSpeakerEnergy()
+            self.startCheckSpeakerEnergy()
             config.ENABLE_CHECK_ENERGY_RECEIVE = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setDisableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            self.stopThreadingCheckSpeakerEnergy()
+            self.stopCheckSpeakerEnergy()
             config.ENABLE_CHECK_ENERGY_RECEIVE = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setEnableCheckMicThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_SEND is False:
-            self.startThreadingCheckMicEnergy()
+            self.startCheckMicEnergy()
             config.ENABLE_CHECK_ENERGY_SEND = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
     def setDisableCheckMicThreshold(self, *args, **kwargs) -> dict:
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            self.stopThreadingCheckMicEnergy()
+            self.stopCheckMicEnergy()
             config.ENABLE_CHECK_ENERGY_SEND = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
@@ -2806,25 +2839,25 @@ class Controller:
 
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_SEND is False:
-            self.startThreadingTranscriptionSendMessage()
+            self.startTranscriptionSendMessage()
             config.ENABLE_TRANSCRIPTION_SEND = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessage()
+            self.stopTranscriptionSendMessage()
             config.ENABLE_TRANSCRIPTION_SEND = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is False:
-            self.startThreadingTranscriptionReceiveMessage()
+            self.startTranscriptionReceiveMessage()
             config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def setDisableTranscriptionReceive(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
+            self.stopTranscriptionReceiveMessage()
             config.ENABLE_TRANSCRIPTION_RECEIVE = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
@@ -2976,102 +3009,87 @@ class Controller:
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
     def startTranscriptionSendMessage(self) -> None:
-        self.device_access_lock.acquire()
-        try:
-            model.startMicTranscript(self.micMessage)
-        except Exception as e:
-            # VRAM不足エラーの検出
-            is_vram_error, error_message = model.detectVRAMError(e)
-            if is_vram_error:
-                response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_VRAM_MIC,
-                    data=error_message
-                )
-                self.run(
-                    response["status"],
-                    self.run_mapping["error_transcription_mic_vram_overflow"],
-                    response["result"],
-                )
-                # ここでマイクの音声認識を停止
-                self.stopTranscriptionSendMessage()
-                disable_response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
-                    data=False
-                )
-                self.run(
-                    disable_response["status"],
-                    self.run_mapping["enable_transcription_send"],
-                    disable_response["result"],
-                )
-            else:
-                # その他のエラーは通常通り処理
-                errorLogging()
-        finally:
-            self.device_access_lock.release()
+        with self.mic_lifecycle_lock:
+            try:
+                model.startMicTranscript(self.micMessage)
+            except Exception as e:
+                # VRAM不足エラーの検出
+                is_vram_error, error_message = model.detectVRAMError(e)
+                if is_vram_error:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_VRAM_MIC,
+                        data=error_message
+                    )
+                    self.run(
+                        response["status"],
+                        self.run_mapping["error_transcription_mic_vram_overflow"],
+                        response["result"],
+                    )
+                    # ここでマイクの音声認識を停止。mic_lifecycle_lock を既に
+                    # 保持しているため、ロックを取り直す公開版
+                    # (stopTranscriptionSendMessage) ではなく内部版を呼ぶ。
+                    self._stopTranscriptionSendMessageLocked()
+                    disable_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
+                        data=False
+                    )
+                    self.run(
+                        disable_response["status"],
+                        self.run_mapping["enable_transcription_send"],
+                        disable_response["result"],
+                    )
+                else:
+                    # その他のエラーは通常通り処理
+                    errorLogging()
 
-    @staticmethod
-    def stopTranscriptionSendMessage() -> None:
+    def _stopTranscriptionSendMessageLocked(self) -> None:
+        """mic_lifecycle_lock を既に保持している呼び出し元専用。"""
         model.stopMicTranscript()
 
-    def startThreadingTranscriptionSendMessage(self) -> None:
-        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessage)
-        th_startTranscriptionSendMessage.daemon = True
-        th_startTranscriptionSendMessage.start()
-
-    def stopThreadingTranscriptionSendMessage(self) -> None:
-        th_stopTranscriptionSendMessage = Thread(target=self.stopTranscriptionSendMessage)
-        th_stopTranscriptionSendMessage.daemon = True
-        th_stopTranscriptionSendMessage.start()
-        th_stopTranscriptionSendMessage.join()
+    def stopTranscriptionSendMessage(self) -> None:
+        with self.mic_lifecycle_lock:
+            self._stopTranscriptionSendMessageLocked()
 
     def startTranscriptionReceiveMessage(self) -> None:
-        self.device_access_lock.acquire()
-        try:
-            model.startSpeakerTranscript(self.speakerMessage)
-        except Exception as e:
-            # VRAM不足エラーの検出
-            is_vram_error, error_message = model.detectVRAMError(e)
-            if is_vram_error:
-                response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_VRAM_SPEAKER,
-                    data=error_message
-                )
-                self.run(
-                    response["status"],
-                    self.run_mapping["error_transcription_speaker_vram_overflow"],
-                    response["result"],
-                )
-                # ここでスピーカーの音声認識を停止
-                self.stopTranscriptionReceiveMessage()
-                disable_response = VRCTError.create_error_response(
-                    ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
-                    data=False
-                )
-                self.run(
-                    disable_response["status"],
-                    self.run_mapping["enable_transcription_receive"],
-                    disable_response["result"],
-                )
-            else:
-                # その他のエラーは通常通り処理
-                errorLogging()
-        finally:
-            self.device_access_lock.release()
+        with self.speaker_lifecycle_lock:
+            try:
+                model.startSpeakerTranscript(self.speakerMessage)
+            except Exception as e:
+                # VRAM不足エラーの検出
+                is_vram_error, error_message = model.detectVRAMError(e)
+                if is_vram_error:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_VRAM_SPEAKER,
+                        data=error_message
+                    )
+                    self.run(
+                        response["status"],
+                        self.run_mapping["error_transcription_speaker_vram_overflow"],
+                        response["result"],
+                    )
+                    # ここでスピーカーの音声認識を停止 (内部版、詳細は
+                    # startTranscriptionSendMessage 側のコメント参照)
+                    self._stopTranscriptionReceiveMessageLocked()
+                    disable_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
+                        data=False
+                    )
+                    self.run(
+                        disable_response["status"],
+                        self.run_mapping["enable_transcription_receive"],
+                        disable_response["result"],
+                    )
+                else:
+                    # その他のエラーは通常通り処理
+                    errorLogging()
 
-    @staticmethod
-    def stopTranscriptionReceiveMessage() -> None:
+    def _stopTranscriptionReceiveMessageLocked(self) -> None:
+        """speaker_lifecycle_lock を既に保持している呼び出し元専用。"""
         model.stopSpeakerTranscript()
 
-    def startThreadingTranscriptionReceiveMessage(self) -> None:
-        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessage)
-        th_startTranscriptionReceiveMessage.daemon = True
-        th_startTranscriptionReceiveMessage.start()
-
-    def stopThreadingTranscriptionReceiveMessage(self) -> None:
-        th_stopTranscriptionReceiveMessage = Thread(target=self.stopTranscriptionReceiveMessage)
-        th_stopTranscriptionReceiveMessage.daemon = True
-        th_stopTranscriptionReceiveMessage.start()
-        th_stopTranscriptionReceiveMessage.join()
+    def stopTranscriptionReceiveMessage(self) -> None:
+        with self.speaker_lifecycle_lock:
+            self._stopTranscriptionReceiveMessageLocked()
 
     @staticmethod
     def replaceExclamationsWithRandom(text):
@@ -3177,46 +3195,20 @@ class Controller:
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
 
     def startCheckMicEnergy(self) -> None:
-        self.device_access_lock.acquire()
-        try:
+        with self.mic_lifecycle_lock:
             model.startCheckMicEnergy(self.progressBarMicEnergy)
-        finally:
-            self.device_access_lock.release()
-
-    def startThreadingCheckMicEnergy(self) -> None:
-        th_startCheckMicEnergy = Thread(target=self.startCheckMicEnergy)
-        th_startCheckMicEnergy.daemon = True
-        th_startCheckMicEnergy.start()
 
     def stopCheckMicEnergy(self) -> None:
-        model.stopCheckMicEnergy()
-
-    def stopThreadingCheckMicEnergy(self) -> None:
-        th_stopCheckMicEnergy = Thread(target=self.stopCheckMicEnergy)
-        th_stopCheckMicEnergy.daemon = True
-        th_stopCheckMicEnergy.start()
-        th_stopCheckMicEnergy.join()
+        with self.mic_lifecycle_lock:
+            model.stopCheckMicEnergy()
 
     def startCheckSpeakerEnergy(self) -> None:
-        self.device_access_lock.acquire()
-        try:
+        with self.speaker_lifecycle_lock:
             model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
-        finally:
-            self.device_access_lock.release()
-
-    def startThreadingCheckSpeakerEnergy(self) -> None:
-        th_startCheckSpeakerEnergy = Thread(target=self.startCheckSpeakerEnergy)
-        th_startCheckSpeakerEnergy.daemon = True
-        th_startCheckSpeakerEnergy.start()
 
     def stopCheckSpeakerEnergy(self) -> None:
-        model.stopCheckSpeakerEnergy()
-
-    def stopThreadingCheckSpeakerEnergy(self) -> None:
-        th_stopCheckSpeakerEnergy = Thread(target=self.stopCheckSpeakerEnergy)
-        th_stopCheckSpeakerEnergy.daemon = True
-        th_stopCheckSpeakerEnergy.start()
-        th_stopCheckSpeakerEnergy.join()
+        with self.speaker_lifecycle_lock:
+            model.stopCheckSpeakerEnergy()
 
     @staticmethod
     def startThreadingDownloadCtranslate2Weight(weight_type:str, callback:Callable[[float], None], end_callback:Optional[Callable[..., None]] = None) -> None:
