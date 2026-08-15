@@ -52,6 +52,18 @@ jobs:
           $VERSION_NUM = $TAG_WITH_V -replace "^v", ""
           echo "VERSION=$VERSION_NUM" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
+      - name: Determine release channel
+        id: channel
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_name }}" -match "-(beta|rc)") {
+            echo "is_beta=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            echo "hf_repo=ms-software/VRCT-beta" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          } else {
+            echo "is_beta=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            echo "hf_repo=ms-software/VRCT" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
+
       - name: Upload to Hugging Face Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -65,9 +77,9 @@ jobs:
           Copy-Item -Path ./VRCT_cuda.zip -Destination "$UPLOAD_DIR/VRCT_cuda.zip"
           Copy-Item -Path "./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe" -Destination "$UPLOAD_DIR/VRCT_setup.exe"
 
-          hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ms-software/VRCT $UPLOAD_DIR
+          hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ${{ steps.channel.outputs.hf_repo }} $UPLOAD_DIR
 
-          hf repo tag create ms-software/VRCT ${{ github.ref_name }} --repo-type model --message "Release ${{ github.ref_name }}"
+          hf repo tag create ${{ steps.channel.outputs.hf_repo }} ${{ github.ref_name }} --repo-type model --message "Release ${{ github.ref_name }}"
 
           Remove-Item -Recurse -Force $UPLOAD_DIR
 
@@ -80,7 +92,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ env.VERSION }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.channel.outputs.is_beta }}
 
       - name: Upload Release Asset (NSIS Installer)
         uses: actions/upload-release-asset@v1

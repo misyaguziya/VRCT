@@ -465,6 +465,52 @@ npm run task-kill
 2. `npm run update-version` を実行
 3. 自動的に `tauri.conf.json` と `config.py` が更新される
 
+## β版リリース
+
+実際のリリースは `.github/workflows/release.yml` が `v*` タグのpushで自動実行しますが、
+タグ名に `-beta` または `-rc` を含めることで、公開先を本番と分離したβ版として配布できます。
+
+### リリース手順
+
+1. `package.json` の `version` を `3.5.0-beta.1` のようなpre-release識別子付きの値にする
+2. `npm run update-version` を実行(通常のビルド/リリースコマンド内で自動実行されるため手動実行は不要)
+3. `v3.5.0-beta.1` のようなタグを打ってpush
+
+```bash
+git tag v3.5.0-beta.1
+git push origin v3.5.0-beta.1
+```
+
+### 本番版との違い
+
+| 項目 | 本番版 (`v3.5.0`) | β版 (`v3.5.0-beta.1`) |
+|---|---|---|
+| GitHub Release | `prerelease: false` | `prerelease: true` |
+| Hugging Face公開先 | `ms-software/VRCT` | `ms-software/VRCT-beta` |
+| インストーラー(setup.exe)の既定ダウンロード元 | `ms-software/VRCT` | `ms-software/VRCT-beta`(バージョン文字列の `-beta`/`-rc` から自動判定) |
+
+> **事前準備**: β用のHugging Faceリポジトリ `ms-software/VRCT-beta` は
+> CIでは自動作成されないため、初回は手動で作成しておく必要があります。
+
+### 旧バージョンへのロールバック
+
+GitHub Releasesで配布されるsetup.exeは、実行時にHugging Faceから本体一式を
+ダウンロードするダウンローダー形式です。そのため、通常はGitHub Releasesの
+古いバージョンのsetup.exeを取得しても、その時点の最新版がインストールされてしまいます。
+
+特定バージョンに固定してインストールしたい場合は、`/VERSION=` 引数を付けて
+setup.exeを実行してください(setup.exe自体はどのバージョンのものでも構いません):
+
+```bash
+VRCT_setup.exe /VERSION=3.4.2
+```
+
+指定したバージョン文字列に `-beta` または `-rc` が含まれる場合は自動的に
+β用リポジトリ(`ms-software/VRCT-beta`)から、それ以外は本番リポジトリ
+(`ms-software/VRCT`)から該当バージョンのタグを参照してダウンロードします。
+指定したバージョンがHugging Face上に存在しない場合はダウンロードに失敗し、
+インストールが中断されます。
+
 ### リリースパッケージの内容
 
 ZIPファイルには以下が含まれます:

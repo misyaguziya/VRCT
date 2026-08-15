@@ -465,6 +465,7 @@ FunctionEnd
 !macroend
 
 Var PassiveMode
+Var TargetVersion
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode
   IfErrors +2 0
@@ -476,6 +477,13 @@ Function .onInit
   ${GetOptions} $CMDLINE "/EDITION=" $0
   IfErrors +2 0
     StrCpy $SelectedEdition $0
+
+  ; Pin the downloaded app package to a specific released version instead of
+  ; always fetching the latest from the HF "main" revision (e.g.
+  ; "/VERSION=3.4.2" for rollback). Falls back to latest when omitted.
+  ${GetOptions} $CMDLINE "/VERSION=" $0
+  IfErrors +2 0
+    StrCpy $TargetVersion $0
 
   !if "${DISPLAYLANGUAGESELECTOR}" == "true"
     !insertmacro MUI_LANGDLL_DISPLAY
@@ -635,7 +643,8 @@ Section Install
 
   !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
   ; 指定のURLからファイルをダウンロード
-  !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
+  !define SOFTWARE_RELEASE_REPO "ms-software/VRCT"
+  !define SOFTWARE_RELEASE_REPO_BETA "ms-software/VRCT-beta"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
   Var /GLOBAL i
@@ -647,13 +656,40 @@ Section Install
   Var /GLOBAL dl_tick
   Var /GLOBAL dl_percent
   Var /GLOBAL dl_xfersize
+  Var /GLOBAL release_revision
+  Var /GLOBAL release_repo
+  Var /GLOBAL effective_version
+  Var /GLOBAL beta_marker_pos
   ${If} $SelectedEdition == "gpu"
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
   ${Else}
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
   ${EndIf}
 
-  StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
+  ; Pin to a specific released version's HF tag (e.g. "/VERSION=3.4.2" -> tag
+  ; "v3.4.2") when requested for rollback; otherwise fetch the latest from main.
+  ${If} $TargetVersion != ""
+    StrCpy $release_revision "v$TargetVersion"
+    StrCpy $effective_version $TargetVersion
+  ${Else}
+    StrCpy $release_revision "main"
+    StrCpy $effective_version "${VERSION}"
+  ${EndIf}
+
+  ; Beta versions (e.g. "3.5.0-beta.1") are published to a separate HF repo,
+  ; not the production one -- route both the default fetch and any /VERSION=
+  ; rollback target there based on the version string itself.
+  ${StrLoc} $beta_marker_pos $effective_version "-beta" ">"
+  ${If} $beta_marker_pos == ""
+    ${StrLoc} $beta_marker_pos $effective_version "-rc" ">"
+  ${EndIf}
+  ${If} $beta_marker_pos == ""
+    StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+  ${Else}
+    StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+  ${EndIf}
+
+  StrCpy $cmder_dl "https://huggingface.co/$release_repo/resolve/$release_revision/$file_name"
   DetailPrint "Got URL : $cmder_dl"
 
   ; NScurl (libcurl-based) replaces inetc::get, which is limited to files under
@@ -699,7 +735,7 @@ Section Install
         DetailPrint "Download interrupted ($0), retrying ($dl_retries/3)..."
         Goto download_retry
       ${Else}
-        DetailPrint "Download Failed ($0)"
+        DetailPrint "Download Failed ($0) from $release_repo @ '$release_revision' -- if this was a /VERSION= rollback, check that the version exists."
         Abort
       ${EndIf}
     ${EndIf}
