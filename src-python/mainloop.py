@@ -126,6 +126,11 @@ mapping = {
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
     "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
 
+    "/get/data/selectable_release_channels": {"status": True, "variable":controller.getSelectableReleaseChannels},
+    "/get/data/release_channel": {"status": True, "variable":controller.getSelectedReleaseChannel},
+    "/set/data/release_channel": {"status": True, "variable":controller.setSelectedReleaseChannel},
+    "/get/data/available_releases": {"status": True, "variable":controller.listAvailableReleases},
+
     "/run/send_message_box": {"status": False, "variable":controller.sendMessageBox},
     "/run/typing_message_box": {"status": False, "variable":controller.typingMessageBox},
     "/run/stop_typing_message_box": {"status": False, "variable":controller.stopTypingMessageBox},
