@@ -563,6 +563,16 @@ class Config:
     _debounce_time: int = 2
     _file_lock: threading.Lock = threading.Lock()
 
+    # Hugging Face repos hosting the NSIS setup.exe per release channel; see
+    # docs/readme_build.md "β版リリース" and .github/workflows/release.yml.
+    _HF_REPO_STABLE = "ms-software/VRCT"
+    _HF_REPO_BETA = "ms-software/VRCT-beta"
+
+    @property
+    def SETUP_DOWNLOAD_URL(self) -> str:
+        repo = self._HF_REPO_BETA if self.SELECTED_RELEASE_CHANNEL == "beta" else self._HF_REPO_STABLE
+        return f"https://huggingface.co/{repo}/resolve/main/VRCT_setup.exe"
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Config, cls).__new__(cls)
@@ -618,7 +628,9 @@ class Config:
     PATH_CONFIG = ManagedProperty('PATH_CONFIG', readonly=True, serialize=False)
     PATH_LOGS = ManagedProperty('PATH_LOGS', readonly=True, serialize=False)
     GITHUB_URL = ManagedProperty('GITHUB_URL', readonly=True, serialize=False)
-    SETUP_DOWNLOAD_URL = ManagedProperty('SETUP_DOWNLOAD_URL', readonly=True, serialize=False)
+    GITHUB_RELEASES_LIST_URL = ManagedProperty('GITHUB_RELEASES_LIST_URL', readonly=True, serialize=False)
+    MIN_SUPPORTED_VERSION = ManagedProperty('MIN_SUPPORTED_VERSION', readonly=True, serialize=False)
+    SELECTABLE_RELEASE_CHANNEL_LIST = ManagedProperty('SELECTABLE_RELEASE_CHANNEL_LIST', readonly=True, serialize=False)
     MAX_MIC_THRESHOLD = ManagedProperty('MAX_MIC_THRESHOLD', readonly=True, serialize=False)
     MAX_SPEAKER_THRESHOLD = ManagedProperty('MAX_SPEAKER_THRESHOLD', readonly=True, serialize=False)
     WATCHDOG_TIMEOUT = ManagedProperty('WATCHDOG_TIMEOUT', readonly=True, serialize=False)
@@ -761,6 +773,7 @@ class Config:
     # --- Selection properties with validation (ManagedProperty) ---
     SELECTED_TAB_NO = ManagedProperty('SELECTED_TAB_NO', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TAB_NO_LIST)
     SELECTED_TRANSCRIPTION_ENGINE = ManagedProperty('SELECTED_TRANSCRIPTION_ENGINE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TRANSCRIPTION_ENGINE_LIST)
+    SELECTED_RELEASE_CHANNEL = ManagedProperty('SELECTED_RELEASE_CHANNEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_RELEASE_CHANNEL_LIST)
     USE_EXCLUDE_WORDS = ManagedProperty('USE_EXCLUDE_WORDS', type_=bool)
     CTRANSLATE2_WEIGHT_TYPE = ManagedProperty('CTRANSLATE2_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST)
     WHISPER_WEIGHT_TYPE = ManagedProperty('WHISPER_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST)
@@ -804,7 +817,12 @@ class Config:
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
-        self._SETUP_DOWNLOAD_URL = "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe"
+        self._GITHUB_RELEASES_LIST_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases"
+        # VRCT 3.4.2 fails to start (fixed in 3.4.3); exclude it from version
+        # selection/update detection instead of letting users install it.
+        self._MIN_SUPPORTED_VERSION = "3.4.3"
+        self._SELECTABLE_RELEASE_CHANNEL_LIST = ["stable", "beta"]
+        self._SELECTED_RELEASE_CHANNEL = "stable"
 
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000

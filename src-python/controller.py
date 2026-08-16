@@ -2,6 +2,7 @@ from typing import Callable, Any, List, Optional
 from subprocess import Popen
 from threading import Thread, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import asdict
 import re
 from device_manager import device_manager
 from config import config
@@ -1067,6 +1068,24 @@ class Controller:
     def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
         config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
+
+    @staticmethod
+    def getSelectableReleaseChannels(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_RELEASE_CHANNEL_LIST}
+
+    @staticmethod
+    def getSelectedReleaseChannel(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_RELEASE_CHANNEL}
+
+    @staticmethod
+    def setSelectedReleaseChannel(data, *args, **kwargs) -> dict:
+        config.SELECTED_RELEASE_CHANNEL = str(data)
+        return {"status":200, "result":config.SELECTED_RELEASE_CHANNEL}
+
+    @staticmethod
+    def listAvailableReleases(*args, **kwargs) -> dict:
+        releases = model.listAvailableReleases()
+        return {"status":200, "result":[asdict(r) for r in releases]}
 
     @staticmethod
     def getConvertMessageToRomaji(*args, **kwargs) -> dict:
@@ -2928,14 +2947,16 @@ class Controller:
                 }
             }
 
-    def updateSoftware(self, *args, **kwargs) -> dict:
-        th_start_update_software = Thread(target=model.updateSoftware)
+    def updateSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
+        target_version = str(data) if data else None
+        th_start_update_software = Thread(target=model.updateSoftware, args=(target_version,))
         th_start_update_software.daemon = True
         th_start_update_software.start()
         return {"status":200, "result":True}
 
-    def updateCudaSoftware(self, *args, **kwargs) -> dict:
-        th_start_update_cuda_software = Thread(target=model.updateCudaSoftware)
+    def updateCudaSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
+        target_version = str(data) if data else None
+        th_start_update_cuda_software = Thread(target=model.updateCudaSoftware, args=(target_version,))
         th_start_update_cuda_software.daemon = True
         th_start_update_cuda_software.start()
         return {"status":200, "result":True}
