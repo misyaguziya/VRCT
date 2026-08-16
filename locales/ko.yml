@@ -329,6 +329,12 @@ config_page:
             label:
             desc:
             aptabase_privacy_policy_label:
+        section_label_updates:
+        release_channel:
+            label:
+            desc:
+            stable:
+            beta:
 
     hotkeys:
         toggle_vrct_visibility:

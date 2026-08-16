@@ -335,6 +335,12 @@ config_page:
             label: "Support Our Development"
             desc: "Sends usage data so our developers can grin and say 'Thanks for using it!' while improving the app.\n* No personal info or conversation content is ever sent."
             aptabase_privacy_policy_label: "Aptabase Privacy Policy"
+        section_label_updates: "Updates"
+        release_channel:
+            label: "Release Channel"
+            desc: "Beta gets new features earlier but may be less stable. Switching back to Stable does not downgrade your current install by itself."
+            stable: "Stable"
+            beta: "Beta"
 
     hotkeys:
         toggle_vrct_visibility:
