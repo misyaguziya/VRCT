@@ -1,15 +1,21 @@
 .button_wrapper {
     padding: 1.6rem;
     border-radius: 0.4rem;
-    &:hover {
+    &:hover:not(.is_clicked) {
         background-color: var(--dark_825_color);
     }
-    &:active {
+    &:active:not(.is_clicked) {
         background-color: var(--dark_900_color);
+    }
+    &.is_clicked {
+        cursor: default;
     }
 }
 
 .button_svg {
     width: 2.4rem;
     color: var(--dark_400_color);
+    &.is_clicked {
+        color: var(--primary_300_color);
+    }
 }
