@@ -77,6 +77,7 @@ class ErrorCode(str, Enum):
     VALIDATION_SPEAKER_MAX_PHRASES = "VALIDATION_SPEAKER_MAX_PHRASES"
     VALIDATION_INVALID_IP = "VALIDATION_INVALID_IP"
     VALIDATION_CANNOT_SET_IP = "VALIDATION_CANNOT_SET_IP"
+    VALIDATION_OSC_PORT_INVALID = "VALIDATION_OSC_PORT_INVALID"
     
     # ============================================================================
     # 認証エラー (AUTH_*)
@@ -121,6 +122,7 @@ class ErrorCode(str, Enum):
     # ============================================================================
     WEBSOCKET_HOST_INVALID = "WEBSOCKET_HOST_INVALID"
     WEBSOCKET_PORT_UNAVAILABLE = "WEBSOCKET_PORT_UNAVAILABLE"
+    WEBSOCKET_PORT_INVALID = "WEBSOCKET_PORT_INVALID"
     WEBSOCKET_SERVER_UNAVAILABLE = "WEBSOCKET_SERVER_UNAVAILABLE"
 
     # ============================================================================
@@ -131,6 +133,11 @@ class ErrorCode(str, Enum):
     OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE = "OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE"
     OBS_BROWSER_SOURCE_FONT_COLOR_INVALID = "OBS_BROWSER_SOURCE_FONT_COLOR_INVALID"
     OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID = "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID"
+    OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID = "OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID"
+    OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID = "OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID"
+    OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID = "OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID"
+    OBS_BROWSER_SOURCE_FONT_SIZE_INVALID = "OBS_BROWSER_SOURCE_FONT_SIZE_INVALID"
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID = "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID"
     
     # ============================================================================
     # VRC連携エラー (VRC_*)
@@ -316,7 +323,13 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "error",
         "user_action_required": True,
     },
-    
+    ErrorCode.VALIDATION_OSC_PORT_INVALID: {
+        "category": ErrorCategory.VALIDATION,
+        "message": "OSC port must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # 認証エラー
     ErrorCode.AUTH_DEEPL_LENGTH: {
         "category": ErrorCategory.AUTH,
@@ -492,6 +505,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "error",
         "user_action_required": True,
     },
+    ErrorCode.WEBSOCKET_PORT_INVALID: {
+        "category": ErrorCategory.WEBSOCKET,
+        "message": "WebSocket server port must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
     ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE: {
         "category": ErrorCategory.WEBSOCKET,
         "message": "WebSocket server host or port is not available",
@@ -530,7 +549,37 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "warning",
         "user_action_required": True,
     },
-    
+    ErrorCode.OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source max messages must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source display duration must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source fadeout duration must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_SIZE_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source font size must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source outline thickness must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # VRC連携エラー
     ErrorCode.VRC_MIC_MUTE_SYNC_OSC_DISABLED: {
         "category": ErrorCategory.VRC,
