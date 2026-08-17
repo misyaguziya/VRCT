@@ -8,8 +8,13 @@ import { useI18n } from "@useI18n";
 import { clsx } from "clsx";
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
-const PICKER_GAP_PX = 4;
-const VIEWPORT_PADDING_PX = 8;
+const PICKER_GAP_REM = 0.4;
+const VIEWPORT_PADDING_REM = 0.8;
+
+const remToPx = (rem) => {
+    const root_font_size = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    return rem * root_font_size;
+};
 
 export const ColorEntryWithSaveButton = (props) => {
     const { t } = useI18n();
@@ -52,22 +57,33 @@ export const ColorEntryWithSaveButton = (props) => {
 
     useLayoutEffect(() => {
         if (!is_open) return;
-        const swatch = swatch_ref.current;
-        const popover = popover_ref.current;
-        if (!swatch || !popover) return;
 
-        const swatch_rect = swatch.getBoundingClientRect();
-        const popover_height = popover.offsetHeight;
-        const popover_width = popover.offsetWidth;
+        const updatePlacement = () => {
+            const swatch = swatch_ref.current;
+            const popover = popover_ref.current;
+            if (!swatch || !popover) return;
 
-        const space_below = window.innerHeight - swatch_rect.bottom - PICKER_GAP_PX - VIEWPORT_PADDING_PX;
-        const space_above = swatch_rect.top - PICKER_GAP_PX - VIEWPORT_PADDING_PX;
-        const space_right = window.innerWidth - swatch_rect.left - VIEWPORT_PADDING_PX;
+            const swatch_rect = swatch.getBoundingClientRect();
+            const popover_height = popover.offsetHeight;
+            const popover_width = popover.offsetWidth;
+            const gap = remToPx(PICKER_GAP_REM);
+            const viewport_padding = remToPx(VIEWPORT_PADDING_REM);
 
-        setPlacement({
-            open_above: space_below < popover_height && space_above > space_below,
-            align_end: space_right < popover_width,
-        });
+            const space_below = window.innerHeight - swatch_rect.bottom - gap - viewport_padding;
+            const space_above = swatch_rect.top - gap - viewport_padding;
+            const space_right = window.innerWidth - swatch_rect.left - viewport_padding;
+
+            setPlacement({
+                open_above: space_below < popover_height && space_above > space_below,
+                align_end: space_right < popover_width,
+            });
+        };
+
+        updatePlacement();
+        window.addEventListener("resize", updatePlacement);
+        return () => {
+            window.removeEventListener("resize", updatePlacement);
+        };
     }, [is_open]);
 
     useEffect(() => {
