@@ -353,7 +353,7 @@ export const useSaveButtonLogic = ({
         if (state === "pending") return;
         setInputValue(variable);
 
-    }, [variable]);
+    }, [variable, state]);
 
     return {
         variable: input_value,
