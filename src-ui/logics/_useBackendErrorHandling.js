@@ -68,12 +68,18 @@ export const _useBackendErrorHandling = () => {
 
     const {
         updateOscIpAddress,
+        updateOscPort,
         updateEnableWebsocket,
         updateWebsocketHost,
         updateWebsocketPort,
         updateEnableObsBrowserSource,
         updateObsBrowserSourcePort,
+        updateObsBrowserSourceMaxMessages,
+        updateObsBrowserSourceDisplayDuration,
+        updateObsBrowserSourceFadeoutDuration,
+        updateObsBrowserSourceFontSize,
         updateObsBrowserSourceFontColor,
+        updateObsBrowserSourceFontOutlineThickness,
         updateObsBrowserSourceFontOutlineColor,
     } = useAdvancedSettings();
 
@@ -177,6 +183,10 @@ export const _useBackendErrorHandling = () => {
                 } else {
                     updateOscIpAddress(data);
                 }
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "VALIDATION_OSC_PORT_INVALID":
+                updateOscPort(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
 
@@ -286,6 +296,7 @@ export const _useBackendErrorHandling = () => {
                 showNotification_Error(message, { category_id: error_code });
                 return;
             case "WEBSOCKET_PORT_UNAVAILABLE":
+            case "WEBSOCKET_PORT_INVALID":
                 updateWebsocketPort(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
@@ -309,8 +320,28 @@ export const _useBackendErrorHandling = () => {
                 updateEnableObsBrowserSource(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
+            case "OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID":
+                updateObsBrowserSourceMaxMessages(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID":
+                updateObsBrowserSourceDisplayDuration(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID":
+                updateObsBrowserSourceFadeoutDuration(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_SIZE_INVALID":
+                updateObsBrowserSourceFontSize(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
             case "OBS_BROWSER_SOURCE_FONT_COLOR_INVALID":
                 updateObsBrowserSourceFontColor(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID":
+                updateObsBrowserSourceFontOutlineThickness(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
             case "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID":

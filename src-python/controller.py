@@ -1130,7 +1130,15 @@ class Controller:
 
     @staticmethod
     def setTransparency(data, *args, **kwargs) -> dict:
-        config.TRANSPARENCY = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.TRANSPARENCY,
+                custom_message="Transparency must be a number",
+            )
+        config.TRANSPARENCY = value
         return {"status":200, "result":config.TRANSPARENCY}
 
     @staticmethod
@@ -1139,7 +1147,15 @@ class Controller:
 
     @staticmethod
     def setUiScaling(data, *args, **kwargs) -> dict:
-        config.UI_SCALING = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.UI_SCALING,
+                custom_message="UI scaling must be a number",
+            )
+        config.UI_SCALING = value
         return {"status":200, "result":config.UI_SCALING}
 
     @staticmethod
@@ -1148,7 +1164,15 @@ class Controller:
 
     @staticmethod
     def setTextboxUiScaling(data, *args, **kwargs) -> dict:
-        config.TEXTBOX_UI_SCALING = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.TEXTBOX_UI_SCALING,
+                custom_message="Textbox UI scaling must be a number",
+            )
+        config.TEXTBOX_UI_SCALING = value
         return {"status":200, "result":config.TEXTBOX_UI_SCALING}
 
     @staticmethod
@@ -1431,7 +1455,15 @@ class Controller:
 
     @staticmethod
     def setMicAvgLogprob(data, *args, **kwargs) -> dict:
-        config.MIC_AVG_LOGPROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.MIC_AVG_LOGPROB,
+                custom_message="Mic average logprob must be a number",
+            )
+        config.MIC_AVG_LOGPROB = value
         return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
     @staticmethod
@@ -1440,7 +1472,15 @@ class Controller:
 
     @staticmethod
     def setMicNoSpeechProb(data, *args, **kwargs) -> dict:
-        config.MIC_NO_SPEECH_PROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.MIC_NO_SPEECH_PROB,
+                custom_message="Mic no-speech probability must be a number",
+            )
+        config.MIC_NO_SPEECH_PROB = value
         return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
     @staticmethod
@@ -1629,7 +1669,15 @@ class Controller:
 
     @staticmethod
     def setSpeakerAvgLogprob(data, *args, **kwargs) -> dict:
-        config.SPEAKER_AVG_LOGPROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.SPEAKER_AVG_LOGPROB,
+                custom_message="Speaker average logprob must be a number",
+            )
+        config.SPEAKER_AVG_LOGPROB = value
         return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
     @staticmethod
@@ -1638,7 +1686,15 @@ class Controller:
 
     @staticmethod
     def setSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
-        config.SPEAKER_NO_SPEECH_PROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.SPEAKER_NO_SPEECH_PROB,
+                custom_message="Speaker no-speech probability must be a number",
+            )
+        config.SPEAKER_NO_SPEECH_PROB = value
         return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
     @staticmethod
@@ -1679,7 +1735,15 @@ class Controller:
 
     @staticmethod
     def setOscPort(data, *args, **kwargs) -> dict:
-        config.OSC_PORT = int(data)
+        try:
+            port = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.VALIDATION_OSC_PORT_INVALID,
+                data=config.OSC_PORT,
+                custom_message="OSC port must be a number",
+            )
+        config.OSC_PORT = port
         model.setOscPort(config.OSC_PORT)
         return {"status":200, "result":config.OSC_PORT}
 
@@ -3285,16 +3349,25 @@ class Controller:
 
     @staticmethod
     def setWebSocketPort(data, *args, **kwargs) -> dict:
+        try:
+            port = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_PORT_INVALID,
+                data=config.WEBSOCKET_PORT,
+                custom_message="WebSocket port must be a number",
+            )
+
         if model.checkWebSocketServerAlive() is False:
-            config.WEBSOCKET_PORT = int(data)
+            config.WEBSOCKET_PORT = port
             response = {"status":200, "result":config.WEBSOCKET_PORT}
         else:
-            if int(data) == config.WEBSOCKET_PORT:
+            if port == config.WEBSOCKET_PORT:
                 return {"status":200, "result":config.WEBSOCKET_PORT}
-            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, int(data)) is True:
+            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
                 model.stopWebSocketServer()
-                model.startWebSocketServer(config.WEBSOCKET_HOST, int(data))
-                config.WEBSOCKET_PORT = int(data)
+                model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+                config.WEBSOCKET_PORT = port
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
             else:
                 response = VRCTError.create_error_response(
@@ -3454,7 +3527,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
     def setObsBrowserSourceMaxMessages(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_MAX_MESSAGES = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID,
+                data=config.OBS_BROWSER_SOURCE_MAX_MESSAGES,
+                custom_message="OBS Browser Source max messages must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_MAX_MESSAGES = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
@@ -3463,7 +3544,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
     def setObsBrowserSourceDisplayDuration(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_DISPLAY_DURATION = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID,
+                data=config.OBS_BROWSER_SOURCE_DISPLAY_DURATION,
+                custom_message="OBS Browser Source display duration must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_DISPLAY_DURATION = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
@@ -3472,7 +3561,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
     def setObsBrowserSourceFadeoutDuration(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_FADEOUT_DURATION = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FADEOUT_DURATION,
+                custom_message="OBS Browser Source fadeout duration must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_FADEOUT_DURATION = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
@@ -3481,7 +3578,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
     def setObsBrowserSourceFontSize(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_FONT_SIZE = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FONT_SIZE_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FONT_SIZE,
+                custom_message="OBS Browser Source font size must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_FONT_SIZE = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
@@ -3505,7 +3610,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
     def setObsBrowserSourceFontOutlineThickness(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS,
+                custom_message="OBS Browser Source outline thickness must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
