@@ -24,6 +24,7 @@ import { useStore_OpenedQuickSetting } from "@store";
 import OpenFolderSvg from "@images/open_folder.svg?react";
 import HelpSvg from "@images/help.svg?react";
 import CopySvg from "@images/copy.svg?react";
+import CheckMarkSvg from "@images/check_mark.svg?react";
 
 export const AdvancedSettings = () => {
     return (
@@ -97,6 +98,8 @@ const OpenConfigFolderContainer = () => {
             <ActionButtonContainer
                 label={t("config_page.advanced_settings.open_config_filepath.label")}
                 IconComponent={OpenFolderSvg}
+                ClickedIconComponent={CheckMarkSvg}
+                clicked_duration={1000}
                 onclickFunction={openFolder_ConfigFile}
             />
         </>
@@ -245,11 +248,7 @@ const ObsBrowserSourceUrlContainer = () => {
     const url = `http://${host}:${currentObsBrowserSourcePort.data}/obs`;
 
     const copyUrlToClipboard = async () => {
-        try {
-            await navigator.clipboard.writeText(url);
-        } catch (e) {
-            // ignore
-        }
+        await navigator.clipboard.writeText(url);
     };
 
     return (
@@ -257,6 +256,8 @@ const ObsBrowserSourceUrlContainer = () => {
             label={t("config_page.advanced_settings.obs_browser_source_url.label")}
             desc={url}
             IconComponent={CopySvg}
+            ClickedIconComponent={CheckMarkSvg}
+            clicked_duration={1000}
             onclickFunction={copyUrlToClipboard}
         />
     );
