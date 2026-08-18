@@ -1,6 +1,7 @@
 from os import path as os_path
 from os import makedirs as os_makedirs
 from os import rename as os_rename
+from shutil import rmtree as shutil_rmtree
 from requests import get as requests_get
 from typing import Callable
 import yaml
@@ -60,7 +61,12 @@ def backwardCompatibleRenameWeightsDir(root: str):
     for weight_type_old, weight_type_new in legacy_dirs.items():
         path = os_path.join(root, "weights", "ctranslate2", weight_type_new)
         old_path = os_path.join(root, "weights", "ctranslate2", weight_type_old)
-        if os_path.isdir(old_path):
+        if not os_path.isdir(old_path):
+            continue
+        if os_path.isdir(path):
+            # 新形式のディレクトリが既に存在する場合、旧形式は不要になったディスク領域なので削除する
+            shutil_rmtree(old_path)
+        else:
             os_rename(old_path, path)
 
 def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8"):
