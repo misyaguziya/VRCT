@@ -20,11 +20,19 @@ in tests.
 
 import threading
 from typing import Any
-from speech_recognition import Recognizer, Microphone
-from pyaudiowpatch import get_sample_size, paInt16
+from speech_recognition import AudioSource, Recognizer, Microphone
 from datetime import datetime
-from utils import errorLogging
+from utils import errorLogging, printLog
 from device_manager import pyaudio_op_lock
+
+# 直前に同じ物理デバイスを force-stop した直後は、WASAPI 側の解放が
+# 完了しておらず Microphone.__enter__ 内の PyAudio.open() がブロックし
+# たまま返らないことがある (open() 自体にタイムアウトが無い)。
+# mainloop のハンドラワーカーは少数 (DEFAULT_WORKER_COUNT) しかなく、
+# ここで無期限にブロックすると mic/speaker 以外の操作も含めてアプリ
+# 全体が無応答になる。そのため open() は別スレッドで実行し、規定時間
+# 内に完了しなければタイムアウトとして扱う。
+_MIC_OPEN_TIMEOUT_SEC = 8.0
 
 
 def _validate_audio_source(source: Any) -> Any:
@@ -38,7 +46,46 @@ def _validate_audio_source(source: Any) -> Any:
     return source
 
 
-def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -> Any:
+class _LockedAudioSource(AudioSource):
+    """speech_recognition の AudioSource をラップし、`__enter__`/`__exit__`
+    (実際の PyAudio ストリーム open/close) だけを pyaudio_op_lock で
+    直列化する。
+
+    `_create_microphone` は疎通確認用の使い捨て open/close
+    (`_validate_audio_source`) を pyaudio_op_lock 配下で行うが、実際に
+    listen で使う本番ストリームは別物で、`recordIntoQueue` が呼ぶ
+    `listen_energy_and_audio_in_background` 内の `with source as s:`
+    (listener スレッド自身) や `adjustForNoise` の `with self.source:`
+    が個別に open/close する。ここは pyaudio_op_lock の外側だったため、
+    mic と speaker の listener スレッドが起動タイミング次第で完全に
+    無保護で並行 open し、WASAPI が壊れて `PyAudio.__init__` 内で
+    access violation を起こすことを faulthandler の crash_trace.log で
+    実際に確認した (2026-08-19)。読み取りループ自体は絞らず、open/close
+    の瞬間だけをロックすることで、性能への影響を open/close 頻度のみに
+    抑える。
+    """
+
+    def __init__(self, source: Any) -> None:
+        # AudioSource を継承するのは listen_energy_and_audio_in_background
+        # の `assert isinstance(source, AudioSource)` を通すためだけ。
+        # AudioSource.__init__ は "抽象クラスです" として
+        # NotImplementedError を送出するガードなので、意図的に呼ばない。
+        self._source = source
+
+    def __enter__(self) -> Any:
+        with pyaudio_op_lock:
+            self._source.__enter__()
+        return self._source
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Any:
+        with pyaudio_op_lock:
+            return self._source.__exit__(exc_type, exc_value, traceback)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._source, name)
+
+
+def _open_with_fallback(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -> Any:
     # speech_recognition の Microphone.__init__ 自体が、コンストラクタ内で
     # 独自に PyAudio() を new し get_device_count()/get_device_info_by_index()
     # 等のデバイス列挙を行ってから terminate() する。この呼び出しが
@@ -58,6 +105,37 @@ def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) ->
                 raise OSError(
                     "Selected and default audio devices could not be opened"
                 ) from fallback_error
+
+
+def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -> Any:
+    result: dict[str, Any] = {}
+    done = threading.Event()
+
+    def _run() -> None:
+        try:
+            result["source"] = _open_with_fallback(fallback_kwargs, **device_kwargs)
+        except Exception as error:  # noqa: BLE001 - re-raised on the caller's thread below
+            result["error"] = error
+        finally:
+            done.set()
+
+    # daemon=True: タイムアウトした場合、このスレッドが実際に open() から
+    # 返ってくる保証はない (PyAudio に安全な中断手段が無い)。join せず
+    # 諦めて呼び出し元に制御を返す。稀にしか起きない想定なので、
+    # 中断されなかったスレッドは daemon のままリークさせておく。
+    threading.Thread(target=_run, daemon=True, name="mic-open").start()
+
+    if not done.wait(timeout=_MIC_OPEN_TIMEOUT_SEC):
+        printLog(
+            f"Timed out after {_MIC_OPEN_TIMEOUT_SEC}s opening audio device "
+            f"(device_kwargs={device_kwargs}); the previous stream on this "
+            "device may still be releasing"
+        )
+        raise OSError("Timed out opening audio device")
+
+    if "error" in result:
+        raise result["error"]
+    return _LockedAudioSource(result["source"])
 
 
 class BaseEnergyAndAudioRecorder:
@@ -137,22 +215,52 @@ class BaseEnergyAndAudioRecorder:
                 errorLogging()
 
         try:
-            self.stop, self.pause, self.resume = (
-                self.recorder.listen_energy_and_audio_in_background(
-                    source=self.source,
-                    callback=audio_callback,
-                    phrase_time_limit=self.phrase_time_limit,
-                    callback_energy=energy_callback
-                    if energy_queue is not None
-                    else None,
-                    phrase_timeout=1,
-                    record_timeout=self.record_timeout,
-                )
+            stop, pause, resume = self.recorder.listen_energy_and_audio_in_background(
+                source=self.source,
+                callback=audio_callback,
+                phrase_time_limit=self.phrase_time_limit,
+                callback_energy=energy_callback if energy_queue is not None else None,
+                phrase_timeout=1,
+                record_timeout=self.record_timeout,
             )
         except Exception:
             self.device_error_event.set()
             errorLogging()
             raise
+
+        def stopper(wait_for_stop: bool = True) -> None:
+            # speech_recognition 側の stopper は listener スレッドの
+            # join() にタイムアウトを持たない。listener は
+            # self.source.stream.read() でブロックしており、WASAPI
+            # ループバックの無音時などデータが来なくなると read() は
+            # 返らず、stop() が永久にブロックしてしまう
+            # (過去に 9665bb5a で判明・修正され、ADR-0004 の保持リスト
+            #  でも forward-port 対象とされていたが、VAD 実装ごと revert
+            #  された際に一緒に失われていた)。
+            # Pa_StopStream (pyaudio_stream.stop_stream) は稼働中の
+            # ストリームを別スレッドから止める用途の API で、進行中の
+            # read を強制的に返させる。Pa_CloseStream と異なり別スレッド
+            # から呼んでもデッドロックしない。self.source.stream は
+            # speech_recognition の MicrophoneStream ラッパで、実 PyAudio
+            # stream は .pyaudio_stream 属性経由でアクセスする。
+            try:
+                with pyaudio_op_lock:
+                    sr_stream = getattr(self.source, "stream", None)
+                    pa_stream = (
+                        getattr(sr_stream, "pyaudio_stream", None)
+                        if sr_stream is not None
+                        else None
+                    )
+                    if pa_stream is not None and not pa_stream.is_stopped():
+                        pa_stream.stop_stream()
+            except Exception:
+                # 既に停止済み等、想定内の失敗もあり得るが原因調査のため記録する
+                errorLogging()
+            stop(wait_for_stop=wait_for_stop)
+
+        self.stop = stopper
+        self.pause = pause
+        self.resume = resume
 
 
 class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
@@ -192,7 +300,6 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             speaker=True,
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
-            chunk_size=get_sample_size(paInt16),
             channels=int(device.get("maxInputChannels", 1)),
         )
         super().__init__(

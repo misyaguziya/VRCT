@@ -1,6 +1,7 @@
 import sys
 import json
 import time
+import faulthandler
 from typing import Any, Tuple
 from threading import Thread, Event, Lock
 from queue import Queue, Empty
@@ -9,6 +10,16 @@ from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
 
 logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+
+# WASAPI/PyAudio 領域でネイティブクラッシュ (access violation 等) が
+# プロセスごと落ちる不具合を追跡中。faulthandler は Windows の
+# UnhandledExceptionFilter にフックし、通常の Python 例外処理では
+# 捕捉できないネイティブフォルト発生時にも、その瞬間の全スレッドの
+# Python コールスタックを crash_trace.log に書き出す。WER
+# (Windows Error Reporting) はフォルトアドレスしか記録せず、かつ
+# 同一アプリの短時間repeated crashを間引くため、こちらを一次情報源とする。
+_crash_trace_file = open("crash_trace.log", "a", encoding="utf-8")
+faulthandler.enable(file=_crash_trace_file, all_threads=True)
 
 run_mapping = {
     "enable_translation":"/run/enable_translation",

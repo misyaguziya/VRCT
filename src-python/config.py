@@ -807,7 +807,7 @@ class Config:
         self._SETUP_DOWNLOAD_URL = "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe"
 
         self._MAX_MIC_THRESHOLD = 2000
-        self._MAX_SPEAKER_THRESHOLD = 4000
+        self._MAX_SPEAKER_THRESHOLD = 2000
         self._WATCHDOG_TIMEOUT = 60
         self._WATCHDOG_INTERVAL = 20
 

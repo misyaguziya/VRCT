@@ -58,7 +58,7 @@ except Exception:  # pragma: no cover - Windows/pycaw が無い環境
     comtypes = None  # type: ignore
     _PYCAW_AVAILABLE = False
 
-from utils import errorLogging
+from utils import errorLogging, printLog
 
 
 class _MeterEntry(NamedTuple):
@@ -92,6 +92,11 @@ class ActiveEndpointTracker:
     SILENT_THRESHOLD: float = 0.001
     SWITCH_RATIO: float = 2.0
     SWITCH_HOLD_SEC: float = 1.0
+    # _run() の1周期は poll (COM呼び出し) + 最大 POLL_INTERVAL_SEC の wait。
+    # 0.5s だと COM 呼び出しが少し長引いただけで join がタイムアウトし得た
+    # (実測: 通常 poll は数ms〜数十msだが、デバイス列挙が絡むと長くなる
+    # ことがある)。2.0s あれば通常の poll 周期に対して十分な余裕がある。
+    STOP_JOIN_TIMEOUT_SEC: float = 2.0
 
     def __init__(self, flow: str, com_lock: Optional[Lock] = None) -> None:
         """
@@ -167,9 +172,25 @@ class ActiveEndpointTracker:
         self._paused.set()  # pause 中でも wait を解いて即抜けさせる
         if self._thread is not None:
             try:
-                self._thread.join(timeout=0.5)
+                self._thread.join(timeout=self.STOP_JOIN_TIMEOUT_SEC)
             except Exception:
                 pass
+            if self._thread.is_alive():
+                # スレッドが時間内に終わらなかった場合、_run() の finally
+                # (CoUninitialize と _meter_cache.clear()) がいつ実行される
+                # か分からないまま呼び出し元に制御を返すことになる。COM
+                # ポインタを保持したまま参照が破棄されると、GC が別スレッド
+                # (かつ CoUninitialize 済み) で __del__ を実行し、
+                # access violation を起こしうる (実機で確認済みの経路)。
+                # 完全な防止は「tracker スレッドが終わるまで待つ」以外に
+                # 無いため、ここでは可視化のみ行う: 発生頻度が分かれば
+                # STOP_JOIN_TIMEOUT_SEC の再調整や設計変更の判断材料になる。
+                printLog(
+                    f"ActiveEndpointTracker({self._flow}): stop() timed out after "
+                    f"{self.STOP_JOIN_TIMEOUT_SEC}s; tracker thread is still running "
+                    "(likely blocked in a COM call). COM cleanup will happen "
+                    "whenever it eventually returns, if ever."
+                )
         # cache のクリアは tracker スレッド自身が _run() の finally で行う。
         # ここで外部スレッドから clear すると、join が timeout した (tracker
         # がまだ COM 呼び出しで滞留) 場合に dict の並行変更で RuntimeError
