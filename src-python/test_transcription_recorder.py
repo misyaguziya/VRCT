@@ -14,14 +14,19 @@ listen_energy_and_audio_in_background 側のロジックに寄りかかるが、
   待たずリアルタイムに呼ばれる想定)
 """
 
+import threading
 import unittest
 from queue import Queue
 from unittest.mock import patch, MagicMock
 
+from speech_recognition import AudioSource
+
 from models.transcription.transcription_recorder import (
     BaseEnergyAndAudioRecorder,
     _create_microphone,
+    _LockedAudioSource,
 )
+from device_manager import pyaudio_op_lock
 
 
 class FakeAudioSource:
@@ -59,7 +64,10 @@ class TestCreateMicrophone(unittest.TestCase):
         ):
             source = _create_microphone({}, device_index=10)
 
-        self.assertIs(source, default_source)
+        # _create_microphone は生の source を _LockedAudioSource でラップして
+        # 返す (open/close を pyaudio_op_lock で直列化するため、詳細は
+        # TestLockedAudioSource 参照)。中身の同一性で検証する。
+        self.assertIs(source._source, default_source)
         self.assertFalse(selected_source.exit_called)
         self.assertTrue(default_source.exit_called)
 
@@ -76,6 +84,91 @@ class TestCreateMicrophone(unittest.TestCase):
 
         self.assertFalse(selected_source.exit_called)
         self.assertFalse(default_source.exit_called)
+
+    def test_raises_timeout_error_instead_of_blocking_forever(self) -> None:
+        """直前に force-stop した直後の同一デバイス再オープンで
+        PyAudio.open() がハングすると (WASAPI 側の解放待ち)、
+        _create_microphone はタイムアウトして OSError を投げる必要がある。
+        mainloop のハンドラワーカーは少数しかなく、ここで無期限に
+        ブロックするとアプリ全体が無応答になるため (実機で確認済み)。
+        """
+        never_returns = threading.Event()
+
+        class HangingSource:
+            def __enter__(self):
+                never_returns.wait()  # 呼び出し元のタイムアウトより確実に長く待つ
+                return self
+
+            def __exit__(self, exc_type, exc_value, traceback) -> None:
+                pass
+
+        with patch(
+            "models.transcription.transcription_recorder.Microphone",
+            return_value=HangingSource(),
+        ):
+            with patch(
+                "models.transcription.transcription_recorder._MIC_OPEN_TIMEOUT_SEC",
+                0.05,
+            ):
+                with self.assertRaisesRegex(OSError, "Timed out"):
+                    _create_microphone({}, device_index=10)
+
+        never_returns.set()  # リークしたバックグラウンドスレッドを解放する
+
+
+class TestLockedAudioSource(unittest.TestCase):
+    """mic/speaker の listener スレッドが本番ストリームを open する瞬間
+    (`with source as s:` = __enter__/__exit__) を pyaudio_op_lock で
+    直列化できているかを検証する。この保護が無いと、mic と speaker の
+    listener が起動タイミング次第で完全に無保護で並行 open し、WASAPI
+    が壊れて access violation (プロセスクラッシュ) を起こすことを
+    faulthandler の crash_trace.log で実際に確認済み (2026-08-19)。
+    """
+
+    def test_is_recognized_as_an_audio_source(self) -> None:
+        # speech_recognition.listen_energy_and_audio_in_background は
+        # `assert isinstance(source, AudioSource)` で弾くため、ラッパー
+        # 自身が AudioSource のサブクラスである必要がある。
+        wrapped = _LockedAudioSource(FakeAudioSource(opens=True))
+        self.assertIsInstance(wrapped, AudioSource)
+
+    def test_enter_exit_hold_pyaudio_op_lock(self) -> None:
+        inner = FakeAudioSource(opens=True)
+        lock_held_during_enter = []
+        lock_held_during_exit = []
+
+        original_enter = FakeAudioSource.__enter__
+        original_exit = FakeAudioSource.__exit__
+
+        def spying_enter(self):
+            lock_held_during_enter.append(pyaudio_op_lock.locked())
+            return original_enter(self)
+
+        def spying_exit(self, exc_type, exc_value, traceback):
+            lock_held_during_exit.append(pyaudio_op_lock.locked())
+            return original_exit(self, exc_type, exc_value, traceback)
+
+        with patch.object(FakeAudioSource, "__enter__", spying_enter):
+            with patch.object(FakeAudioSource, "__exit__", spying_exit):
+                wrapped = _LockedAudioSource(inner)
+                with wrapped as s:
+                    self.assertIs(s, inner)
+                    # 読み取りループの間は解放されている (open/close の
+                    # 瞬間だけを絞る設計であり、ずっと保持しない)。
+                    self.assertFalse(pyaudio_op_lock.locked())
+
+        self.assertEqual(lock_held_during_enter, [True])
+        self.assertEqual(lock_held_during_exit, [True])
+        self.assertFalse(pyaudio_op_lock.locked())
+
+    def test_attribute_access_proxies_to_wrapped_source(self) -> None:
+        inner = FakeAudioSource(opens=True)
+        inner.SAMPLE_RATE = 48000
+        wrapped = _LockedAudioSource(inner)
+
+        self.assertEqual(wrapped.SAMPLE_RATE, 48000)
+        with wrapped:
+            self.assertIs(wrapped.stream, inner.stream)
 
 
 class TestRecorderPipeline(unittest.TestCase):
@@ -112,7 +205,11 @@ class TestRecorderPipeline(unittest.TestCase):
 
         recorder.recordIntoQueue(Queue())
 
-        self.assertIs(recorder.stop, stop)
+        # self.stop は生の stop をそのまま公開するのではなく、
+        # Pa_StopStream で read() の詰まりを解いてから委譲するラッパ
+        # (stopper) になる (無限 join のハング対策、詳細はテスト
+        # test_stop_force_stops_stream_before_delegating 参照)。
+        self.assertIsNot(recorder.stop, stop)
         self.assertIs(recorder.pause, pause)
         self.assertIs(recorder.resume, resume)
         recorder.recorder.listen_energy_and_audio_in_background.assert_called_once()
@@ -120,6 +217,61 @@ class TestRecorderPipeline(unittest.TestCase):
         self.assertEqual(kwargs.get("phrase_time_limit"), 3)
         self.assertEqual(kwargs.get("record_timeout"), 5)
         self.assertIsNone(kwargs.get("callback_energy"))
+
+        recorder.stop()
+        stop.assert_called_once_with(wait_for_stop=True)
+
+    def test_stop_force_stops_stream_before_delegating(self) -> None:
+        """listener が stream.read() でブロックしていると、speech_recognition
+        側の stop (listener_thread.join() にタイムアウト無し) が永久に
+        返らない (WASAPI ループバック無音時などで実際に発生を確認済み、
+        過去に 9665bb5a で修正されたが VAD 実装ごとの revert で失われて
+        いた)。stop() は委譲前に Pa_StopStream で read() の詰まりを解く
+        必要がある。"""
+        recorder = BaseEnergyAndAudioRecorder(
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
+        )
+        stop = MagicMock(name="stop")
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = MagicMock(
+            return_value=(stop, MagicMock(), MagicMock())
+        )
+        recorder.recordIntoQueue(Queue())
+
+        pyaudio_stream = MagicMock(name="pyaudio_stream")
+        pyaudio_stream.is_stopped.return_value = False
+        recorder.source.stream = MagicMock(pyaudio_stream=pyaudio_stream)
+
+        recorder.stop(wait_for_stop=False)
+
+        pyaudio_stream.stop_stream.assert_called_once()
+        stop.assert_called_once_with(wait_for_stop=False)
+
+    def test_stop_tolerates_missing_stream(self) -> None:
+        """まだ source.stream が None (listener 起動直後など) でも
+        stop() が例外を出さずに委譲まで進むこと。"""
+        recorder = BaseEnergyAndAudioRecorder(
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
+        )
+        stop = MagicMock(name="stop")
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = MagicMock(
+            return_value=(stop, MagicMock(), MagicMock())
+        )
+        recorder.recordIntoQueue(Queue())
+        recorder.source.stream = None
+
+        recorder.stop()
+
+        stop.assert_called_once_with(wait_for_stop=True)
 
     def test_audio_callback_pushes_raw_bytes(self) -> None:
         recorder = BaseEnergyAndAudioRecorder(
