@@ -70,6 +70,25 @@ class Controller:
         # デバイスハンドルがリークしたり、次回起動時の初期化に影響し得る。
         # 各停止は個別に例外を握りつぶし、1つの失敗が他の停止処理を
         # ブロックしないようにする。
+        #
+        # Auto Mic/Speaker Select の ActiveEndpointTracker は
+        # setMicAutoActive(False)/setSpeakerAutoActive(False) を呼ばない
+        # 限り止まらない (stopMonitoring は別スレッドの監視ループのみを
+        # 止める)。ここで止めずに終了すると、tracker が COM 呼び出しの
+        # 途中でプロセスごと終了することになり、CoUninitialize されない
+        # まま COM ポインタが破棄されて access violation
+        # (Exception ignored in: _compointer_base.__del__) を起こす経路が
+        # 残る。stopMonitoring() より前に呼ぶ: 後で呼ぶと
+        # _syncMonitoringLifecycle() が「もう片方はまだ active」と見て
+        # 監視スレッドを再起動してしまう。
+        try:
+            device_manager.setMicAutoActive(False)
+        except Exception:
+            errorLogging()
+        try:
+            device_manager.setSpeakerAutoActive(False)
+        except Exception:
+            errorLogging()
         try:
             device_manager.stopMonitoring()
         except Exception:

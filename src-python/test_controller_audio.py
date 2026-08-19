@@ -112,5 +112,65 @@ class TestAudioDeviceAccessLock(unittest.TestCase):
         self.assertFalse(self.controller.speaker_lifecycle_lock.locked())
 
 
+class TestShutdownStopsAutoSelectTrackers(unittest.TestCase):
+    """Auto Mic/Speaker Select 有効時、ActiveEndpointTracker は
+    setMicAutoActive(False)/setSpeakerAutoActive(False) を呼ばない限り
+    止まらない (stopMonitoring は別スレッドの監視ループのみを止める)。
+    shutdown() でこれを呼ばずに終了すると、tracker が COM 呼び出しの
+    途中でプロセスごと終了しうる (CoUninitialize されないまま COM
+    ポインタが破棄され access violation につながる経路、実機で確認済み)。
+    """
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+
+    @patch("controller.model.telemetryShutdown", return_value=None)
+    @patch("controller.config.saveConfigToFile", return_value=None)
+    @patch("controller.model.stopCheckSpeakerEnergy", return_value=None)
+    @patch("controller.model.stopCheckMicEnergy", return_value=None)
+    @patch("controller.model.stopSpeakerTranscript", return_value=None)
+    @patch("controller.model.stopMicTranscript", return_value=None)
+    @patch("controller.device_manager")
+    def test_stops_both_trackers_before_stopping_monitoring(self, mock_device_manager, *_mocks) -> None:
+        calls = []
+        mock_device_manager.setMicAutoActive.side_effect = lambda active: calls.append(
+            ("setMicAutoActive", active)
+        )
+        mock_device_manager.setSpeakerAutoActive.side_effect = lambda active: calls.append(
+            ("setSpeakerAutoActive", active)
+        )
+        mock_device_manager.stopMonitoring.side_effect = lambda: calls.append(("stopMonitoring",))
+
+        result = self.controller.shutdown()
+
+        self.assertEqual(result, {"status": 200, "result": True})
+        self.assertIn(("setMicAutoActive", False), calls)
+        self.assertIn(("setSpeakerAutoActive", False), calls)
+        # tracker を明示停止してから stopMonitoring() を呼ぶこと
+        # (逆順だと _syncMonitoringLifecycle が「もう片方はまだ active」と
+        # 見て監視スレッドを再起動してしまう、詳細は shutdown() のコメント参照)。
+        self.assertLess(calls.index(("setMicAutoActive", False)), calls.index(("stopMonitoring",)))
+        self.assertLess(calls.index(("setSpeakerAutoActive", False)), calls.index(("stopMonitoring",)))
+
+    @patch("controller.errorLogging")
+    @patch("controller.model.telemetryShutdown", return_value=None)
+    @patch("controller.config.saveConfigToFile", return_value=None)
+    @patch("controller.model.stopCheckSpeakerEnergy", return_value=None)
+    @patch("controller.model.stopCheckMicEnergy", return_value=None)
+    @patch("controller.model.stopSpeakerTranscript", return_value=None)
+    @patch("controller.model.stopMicTranscript", return_value=None)
+    @patch("controller.device_manager")
+    def test_other_shutdown_steps_still_run_if_tracker_stop_raises(
+        self, mock_device_manager, _mock_error_logging, *_mocks
+    ) -> None:
+        mock_device_manager.setMicAutoActive.side_effect = RuntimeError("boom")
+
+        result = self.controller.shutdown()
+
+        self.assertEqual(result, {"status": 200, "result": True})
+        mock_device_manager.setSpeakerAutoActive.assert_called_once_with(False)
+        mock_device_manager.stopMonitoring.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()
