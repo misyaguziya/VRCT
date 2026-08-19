@@ -25,6 +25,8 @@ from models.transcription.transcription_recorder import (
     BaseEnergyAndAudioRecorder,
     _create_microphone,
     _LockedAudioSource,
+    SelectedMicEnergyAndAudioRecorder,
+    SelectedSpeakerEnergyAndAudioRecorder,
 )
 from device_manager import pyaudio_op_lock
 
@@ -169,6 +171,74 @@ class TestLockedAudioSource(unittest.TestCase):
         self.assertEqual(wrapped.SAMPLE_RATE, 48000)
         with wrapped:
             self.assertIs(wrapped.stream, inner.stream)
+
+
+class TestRecorderChunkSize(unittest.TestCase):
+    """SelectedSpeakerEnergyAndAudioRecorder は以前
+    `chunk_size=get_sample_size(paInt16)` (=2, 1サンプルのバイト数であって
+    フレーム数ではない) を渡していた。Microphone のデフォルト chunk_size
+    は 1024 フレームだが、これにより speaker 側だけ 1 回の read が 2
+    フレームに縮小し、極端に細切れな audioop.rms() 計算になって音量
+    メーターが激しくばらついていた (mic 側は chunk_size を渡していない
+    ため影響を受けない、実機で確認済みの症状と一致)。
+    Microphone に渡る chunk_size が意図せず小さくならないことを保証する。
+    """
+
+    def test_speaker_recorder_does_not_override_chunk_size(self) -> None:
+        selected_source = FakeAudioSource(opens=True)
+        selected_source.SAMPLE_RATE = 48000
+        selected_source.SAMPLE_WIDTH = 2
+        selected_source.channels = 2
+
+        with patch(
+            "models.transcription.transcription_recorder.Microphone"
+        ) as mock_microphone:
+            mock_microphone.return_value = selected_source
+            SelectedSpeakerEnergyAndAudioRecorder(
+                device={"index": 3, "defaultSampleRate": 48000, "maxInputChannels": 2},
+                energy_threshold=300,
+                dynamic_energy_threshold=False,
+                phrase_time_limit=3,
+            )
+
+        _args, kwargs = mock_microphone.call_args
+        self.assertNotIn("chunk_size", kwargs)
+
+    def test_mic_and_speaker_recorders_use_the_same_chunk_size(self) -> None:
+        """マイク側は元々 chunk_size を渡していない (=デフォルト 1024)。
+        スピーカー側もそれに揃えるべきなので、Microphone に渡る kwargs の
+        差分が chunk_size に関するものではないことを確認する。"""
+        mic_source = FakeAudioSource(opens=True)
+        mic_source.SAMPLE_RATE = 16000
+        mic_source.SAMPLE_WIDTH = 2
+        mic_source.channels = 1
+        speaker_source = FakeAudioSource(opens=True)
+        speaker_source.SAMPLE_RATE = 48000
+        speaker_source.SAMPLE_WIDTH = 2
+        speaker_source.channels = 2
+
+        with patch(
+            "models.transcription.transcription_recorder.Microphone"
+        ) as mock_microphone:
+            mock_microphone.side_effect = [mic_source, speaker_source]
+
+            SelectedMicEnergyAndAudioRecorder(
+                device={"index": 1, "defaultSampleRate": 16000},
+                energy_threshold=300,
+                dynamic_energy_threshold=False,
+                phrase_time_limit=3,
+            )
+            SelectedSpeakerEnergyAndAudioRecorder(
+                device={"index": 2, "defaultSampleRate": 48000, "maxInputChannels": 2},
+                energy_threshold=300,
+                dynamic_energy_threshold=False,
+                phrase_time_limit=3,
+            )
+
+        mic_kwargs = mock_microphone.call_args_list[0].kwargs
+        speaker_kwargs = mock_microphone.call_args_list[1].kwargs
+        self.assertNotIn("chunk_size", mic_kwargs)
+        self.assertNotIn("chunk_size", speaker_kwargs)
 
 
 class TestRecorderPipeline(unittest.TestCase):

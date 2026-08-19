@@ -21,7 +21,6 @@ in tests.
 import threading
 from typing import Any
 from speech_recognition import AudioSource, Recognizer, Microphone
-from pyaudiowpatch import get_sample_size, paInt16
 from datetime import datetime
 from utils import errorLogging, printLog
 from device_manager import pyaudio_op_lock
@@ -301,7 +300,6 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             speaker=True,
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
-            chunk_size=get_sample_size(paInt16),
             channels=int(device.get("maxInputChannels", 1)),
         )
         super().__init__(
