@@ -1,3 +1,5 @@
+import atexit
+import os
 import sys
 import json
 import time
@@ -18,8 +20,27 @@ logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 # Python コールスタックを crash_trace.log に書き出す。WER
 # (Windows Error Reporting) はフォルトアドレスしか記録せず、かつ
 # 同一アプリの短時間repeated crashを間引くため、こちらを一次情報源とする。
-_crash_trace_file = open("crash_trace.log", "a", encoding="utf-8")
+# faulthandler は enable() 時点で fd を掴むため遅延 open できず、
+# クラッシュ無しの通常終了でも 0 バイトのファイルが残る。運用上のゴミ
+# 化を避けるため、atexit で「書き込みが無ければ削除」する。
+_crash_trace_path = "crash_trace.log"
+_crash_trace_file = open(_crash_trace_path, "a", encoding="utf-8")
 faulthandler.enable(file=_crash_trace_file, all_threads=True)
+
+
+def _cleanupCrashTraceIfEmpty() -> None:
+    try:
+        _crash_trace_file.close()
+    except Exception:
+        pass
+    try:
+        if os.path.exists(_crash_trace_path) and os.path.getsize(_crash_trace_path) == 0:
+            os.remove(_crash_trace_path)
+    except Exception:
+        pass
+
+
+atexit.register(_cleanupCrashTraceIfEmpty)
 
 run_mapping = {
     "enable_translation":"/run/enable_translation",

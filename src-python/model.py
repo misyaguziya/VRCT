@@ -1,3 +1,4 @@
+import atexit
 import copy
 import asyncio
 import faulthandler
@@ -8,6 +9,7 @@ from os import path as os_path
 from os import getppid as os_getppid
 from os import _exit as os_exit
 from os import remove as os_remove
+from os import stat as os_stat
 from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
@@ -51,8 +53,27 @@ TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 # フロントエンドから ~WATCHDOG_INTERVAL 秒ごとに来る)、その周期を超えて
 # 次の feed が来なければ、その時点の全スレッドスタックを
 # freeze_trace.log に書き出す (exit=False なのでプロセスは落とさない)。
-_freeze_trace_file = open("freeze_trace.log", "a", encoding="utf-8")
+# faulthandler は enable/dump_traceback_later 時点で fd を掴むため
+# 遅延 open できず、フリーズ無しの通常終了でも 0 バイトのファイルが
+# 残る。運用上のゴミ化を避けるため atexit で「書き込みが無ければ削除」する。
+_freeze_trace_path = "freeze_trace.log"
+_freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
 _FREEZE_DUMP_MARGIN_SEC = 15
+
+
+def _cleanupFreezeTraceIfEmpty() -> None:
+    try:
+        _freeze_trace_file.close()
+    except Exception:
+        pass
+    try:
+        if os_path.exists(_freeze_trace_path) and os_stat(_freeze_trace_path).st_size == 0:
+            os_remove(_freeze_trace_path)
+    except Exception:
+        pass
+
+
+atexit.register(_cleanupFreezeTraceIfEmpty)
 
 
 class _DiscardQueue(Queue):
