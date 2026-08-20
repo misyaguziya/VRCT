@@ -27,8 +27,6 @@ import numpy as np
 from pydub import AudioSegment
 from utils import errorLogging
 
-# NOTE (benchmark/eager-imports): 元は transcribeAudioQueue の Whisper 分岐で
-# 関数スコープ import していたが、起動時間計測のためモジュールトップに移動。
 try:
     import torch  # noqa: F401
 except Exception:

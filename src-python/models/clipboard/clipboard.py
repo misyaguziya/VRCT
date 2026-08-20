@@ -12,9 +12,8 @@ except ImportError:
     def printLog(data, *args, **kwargs):
         print(data, *args, **kwargs)
 
-# NOTE (benchmark/eager-imports): 元は各関数スコープで遅延 import していた
-# クリップボード/ウィンドウ操作依存ライブラリを、起動時間計測のため
-# モジュールトップに移動。
+# Optional deps; None fallback lets clipboard/window helpers no-op when the
+# package is unavailable.
 try:
     import psutil  # noqa: F401
 except Exception:

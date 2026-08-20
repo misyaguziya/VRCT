@@ -1,35 +1,6 @@
 from os import path as os_path
 from deepl import DeepLClient
 
-_translators_loaded = False
-other_web_Translator = None  # type: ignore
-bing_translator = None
-ENABLE_TRANSLATORS = True
-
-
-def _ensureTranslatorsLoaded() -> None:
-    """Lazily import the (heavy) `translators` package on first use.
-
-    Importing `translators` at module scope adds noticeable time to process
-    startup even when web-based translation engines are never used, so it is
-    deferred until a caller actually needs it.
-    """
-    global _translators_loaded, other_web_Translator, bing_translator, ENABLE_TRANSLATORS
-    if _translators_loaded:
-        return
-    _translators_loaded = True
-    try:
-        from translators import translate_text as _translate_text
-        from translators.server import _bing as _bing
-        other_web_Translator = _translate_text
-        bing_translator = _bing
-        bing_translator.get_tk = parse_bing_credentials
-        ENABLE_TRANSLATORS = True
-    except Exception:
-        other_web_Translator = None
-        bing_translator = None
-        ENABLE_TRANSLATORS = False
-
 try:
     from .translation_languages import translation_lang
     from .translation_utils import ctranslate2_weights
@@ -43,13 +14,21 @@ except Exception:
 
 from utils import errorLogging, getBestComputeType
 
+try:
+    from translators import translate_text as other_web_Translator
+    from translators.server import _bing as bing_translator
+    bing_translator.get_tk = parse_bing_credentials
+    ENABLE_TRANSLATORS = True
+except Exception:
+    other_web_Translator = None  # type: ignore
+    bing_translator = None
+    ENABLE_TRANSLATORS = False
+
 import warnings
 from typing import Any, Optional, Tuple
 
 warnings.filterwarnings("ignore")
 
-# NOTE (benchmark/eager-imports): 元は _loadCTranslate2Model の関数スコープで
-# import していたが、起動時間計測のためモジュールトップに移動。
 try:
     import ctranslate2  # noqa: F401
 except Exception:
@@ -60,149 +39,49 @@ try:
 except Exception:
     transformers = None  # type: ignore
 
-# NOTE (benchmark/eager-imports): 元は各プロバイダの初回認証時に遅延 import
-# していた LLM クライアント SDK 群を、起動時間計測のためモジュールトップで
-# 事前 import する。langchain_google_genai などは秒単位で遅い import なので、
-# ここで一度にまとめて計上されるようになる。既存の _import*Client 関数は
-# 呼び出し互換のため残す (import 済みなので 2 回目以降のコストはゼロ)。
+# 各プロバイダの LLM クライアント SDK は起動時にまとめて import する。
+# try/except は Python パッケージ vs スクリプト実行の両方で動かすため
+# (`from .module` と `from module` の両パターン)。PyInstaller の import
+# scanner が静的に検出できるよう `from ... import Class` の形を維持する。
 try:
-    from .translation_plamo import PlamoClient as _PlamoClient  # noqa: F401
+    from .translation_plamo import PlamoClient
 except Exception:
-    try:
-        from translation_plamo import PlamoClient as _PlamoClient  # noqa: F401
-    except Exception:
-        _PlamoClient = None  # type: ignore
+    from translation_plamo import PlamoClient
 
 try:
-    from .translation_gemini import GeminiClient as _GeminiClient  # noqa: F401
+    from .translation_gemini import GeminiClient
 except Exception:
-    try:
-        from translation_gemini import GeminiClient as _GeminiClient  # noqa: F401
-    except Exception:
-        _GeminiClient = None  # type: ignore
+    from translation_gemini import GeminiClient
 
 try:
-    from .translation_openai import OpenAIClient as _OpenAIClient  # noqa: F401
+    from .translation_openai import OpenAIClient
 except Exception:
-    try:
-        from translation_openai import OpenAIClient as _OpenAIClient  # noqa: F401
-    except Exception:
-        _OpenAIClient = None  # type: ignore
+    from translation_openai import OpenAIClient
 
 try:
-    from .translation_openai_compatible import OpenAICompatibleClient as _OpenAICompatibleClient  # noqa: F401
+    from .translation_openai_compatible import OpenAICompatibleClient
 except Exception:
-    try:
-        from translation_openai_compatible import OpenAICompatibleClient as _OpenAICompatibleClient  # noqa: F401
-    except Exception:
-        _OpenAICompatibleClient = None  # type: ignore
+    from translation_openai_compatible import OpenAICompatibleClient
 
 try:
-    from .translation_groq import GroqClient as _GroqClient  # noqa: F401
+    from .translation_groq import GroqClient
 except Exception:
-    try:
-        from translation_groq import GroqClient as _GroqClient  # noqa: F401
-    except Exception:
-        _GroqClient = None  # type: ignore
+    from translation_groq import GroqClient
 
 try:
-    from .translation_openrouter import OpenRouterClient as _OpenRouterClient  # noqa: F401
+    from .translation_openrouter import OpenRouterClient
 except Exception:
-    try:
-        from translation_openrouter import OpenRouterClient as _OpenRouterClient  # noqa: F401
-    except Exception:
-        _OpenRouterClient = None  # type: ignore
+    from translation_openrouter import OpenRouterClient
 
 try:
-    from .translation_lmstudio import LMStudioClient as _LMStudioClient  # noqa: F401
+    from .translation_lmstudio import LMStudioClient
 except Exception:
-    try:
-        from translation_lmstudio import LMStudioClient as _LMStudioClient  # noqa: F401
-    except Exception:
-        _LMStudioClient = None  # type: ignore
+    from translation_lmstudio import LMStudioClient
 
 try:
-    from .translation_ollama import OllamaClient as _OllamaClient  # noqa: F401
+    from .translation_ollama import OllamaClient
 except Exception:
-    try:
-        from translation_ollama import OllamaClient as _OllamaClient  # noqa: F401
-    except Exception:
-        _OllamaClient = None  # type: ignore
-
-# Each provider module (translation_gemini.py, translation_openai.py, ...)
-# imports its SDK (openai, langchain_openai, langchain_google_genai, ...) at
-# module scope, and those SDK imports are individually slow (multi-second
-# for some, e.g. langchain_google_genai). Importing them all eagerly here
-# made every process startup pay for every provider even when the user has
-# configured at most one or two, so each is deferred until the user
-# actually authenticates with that provider. The imports below are kept as
-# static `from .module import Class` statements (rather than importlib with a
-# dynamic module name) so PyInstaller's import scanner can still detect and
-# bundle them.
-
-
-def _importPlamoClient():
-    try:
-        from .translation_plamo import PlamoClient
-    except Exception:
-        from translation_plamo import PlamoClient
-    return PlamoClient
-
-
-def _importGeminiClient():
-    try:
-        from .translation_gemini import GeminiClient
-    except Exception:
-        from translation_gemini import GeminiClient
-    return GeminiClient
-
-
-def _importOpenAIClient():
-    try:
-        from .translation_openai import OpenAIClient
-    except Exception:
-        from translation_openai import OpenAIClient
-    return OpenAIClient
-
-
-def _importOpenAICompatibleClient():
-    try:
-        from .translation_openai_compatible import OpenAICompatibleClient
-    except Exception:
-        from translation_openai_compatible import OpenAICompatibleClient
-    return OpenAICompatibleClient
-
-
-def _importGroqClient():
-    try:
-        from .translation_groq import GroqClient
-    except Exception:
-        from translation_groq import GroqClient
-    return GroqClient
-
-
-def _importOpenRouterClient():
-    try:
-        from .translation_openrouter import OpenRouterClient
-    except Exception:
-        from translation_openrouter import OpenRouterClient
-    return OpenRouterClient
-
-
-def _importLMStudioClient():
-    try:
-        from .translation_lmstudio import LMStudioClient
-    except Exception:
-        from translation_lmstudio import LMStudioClient
-    return LMStudioClient
-
-
-def _importOllamaClient():
-    try:
-        from .translation_ollama import OllamaClient
-    except Exception:
-        from translation_ollama import OllamaClient
-    return OllamaClient
+    from translation_ollama import OllamaClient
 
 
 class Translator:
@@ -215,19 +94,6 @@ class Translator:
     """
 
     def __init__(self) -> None:
-        # translators パッケージの import はここで実行する (Translator は
-        # Model.init() から生成されるため、実質的に起動時 import になる)。
-        # 従来 translate() 内から遅延 import していたが、その経路では
-        # translators → niquests → niquests.extensions.revocation の @dataclass
-        # が Python の暗黙 GC (generation 2) を発火し、ActiveEndpointTracker が
-        # 別スレッド (CoInitialize 済み apartment) で保持している comtypes の
-        # COM ポインタを、CoInitialize していない翻訳スレッド上で __del__ →
-        # Release() させて access violation を起こすことを crash_trace.log で
-        # 2026-08-20 に確認した。Translator インスタンス生成時点では
-        # ActiveEndpointTracker はまだ起動しておらず (ユーザーが Auto Select を
-        # 有効化するまで起動しない) 、tracker 由来の COM ポインタが未生成なため、
-        # この時点で dataclass 処理が GC を起こしても安全に完了する。
-        _ensureTranslatorsLoaded()
         self.is_enable_translators = ENABLE_TRANSLATORS
         self.deepl_client: Optional[DeepLClient] = None
         self.plamo_client: Optional[Any] = None
@@ -266,7 +132,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        PlamoClient = _importPlamoClient()
         self.plamo_client = PlamoClient(root_path=root_path)
         if self.plamo_client.setAuthKey(auth_key):
             return True
@@ -301,7 +166,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        GeminiClient = _importGeminiClient()
         self.gemini_client = GeminiClient(root_path=root_path)
         if self.gemini_client.setAuthKey(auth_key):
             return True
@@ -337,7 +201,6 @@ class Translator:
         base_url を指定することで互換エンドポイント (例: Azure OpenAI 互換, Proxy) にも対応可能。
         Returns True on success, False on failure.
         """
-        OpenAIClient = _importOpenAIClient()
         self.openai_client = OpenAIClient(base_url=base_url, root_path=root_path)
         if self.openai_client.setAuthKey(auth_key):
             return True
@@ -373,7 +236,6 @@ class Translator:
         `base_url` は必須想定（None の場合は公式エンドポイントにフォールバック）。
         Returns True on success, False on failure.
         """
-        OpenAICompatibleClient = _importOpenAICompatibleClient()
         self.openai_compatible_client = OpenAICompatibleClient(base_url=base_url, root_path=root_path)
         if self.openai_compatible_client.setAuthKey(auth_key):
             return True
@@ -402,7 +264,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        GroqClient = _importGroqClient()
         self.groq_client = GroqClient(root_path=root_path)
         if self.groq_client.setAuthKey(auth_key):
             return True
@@ -437,7 +298,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        OpenRouterClient = _importOpenRouterClient()
         self.openrouter_client = OpenRouterClient(root_path=root_path)
         if self.openrouter_client.setAuthKey(auth_key):
             return True
@@ -479,7 +339,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        LMStudioClient = _importLMStudioClient()
         self.lmstudio_client = LMStudioClient(base_url=base_url, root_path=root_path)
         result = self.lmstudio_client.setBaseURL(base_url)
         if result is False:
@@ -521,7 +380,6 @@ class Translator:
 
         Returns True if Ollama is reachable, False otherwise.
         """
-        OllamaClient = _importOllamaClient()
         self.ollama_client = OllamaClient(root_path=root_path)
         result = self.ollama_client.authenticationCheck()
         if result is False:
@@ -768,7 +626,6 @@ class Translator:
                             output_lang=target_language,
                         )
                 case "Google":
-                    _ensureTranslatorsLoaded()
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
@@ -777,7 +634,6 @@ class Translator:
                             to_language=target_language,
                         )
                 case "Bing":
-                    _ensureTranslatorsLoaded()
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
@@ -786,7 +642,6 @@ class Translator:
                             to_language=target_language,
                         )
                 case "Papago":
-                    _ensureTranslatorsLoaded()
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,

@@ -12,10 +12,8 @@ import requests
 import ipaddress
 import socket
 
-# NOTE (benchmark/eager-imports): 元は getComputeDeviceList / getBestComputeType
-# 内部で関数スコープ import していた重量ライブラリを、起動時間計測のため
-# モジュールトップに引き上げている。try/except は元の遅延 import が
-# except 側にフォールバックを持っていたため踏襲。
+# Optional runtime dependencies. `None` fallback lets non-GPU / no-ctranslate2
+# environments keep the app running with reduced feature set.
 try:
     from ctranslate2 import get_supported_compute_types as _ct2_get_supported_compute_types  # noqa: F401
 except Exception:

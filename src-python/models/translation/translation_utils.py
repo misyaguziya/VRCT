@@ -14,9 +14,8 @@ except Exception:
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
 
-# NOTE (benchmark/eager-imports): 元は checkCTranslate2Weight /
-# downloadCTranslate2Weight / downloadCTranslate2Tokenizer の関数スコープで
-# import していたが、起動時間計測のためモジュールトップに移動。
+# Optional runtime deps; None fallback disables the corresponding features
+# (check/download/tokenizer) when the package is unavailable.
 try:
     import ctranslate2  # noqa: F401
 except Exception:

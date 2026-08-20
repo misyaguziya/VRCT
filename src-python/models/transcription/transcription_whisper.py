@@ -15,10 +15,8 @@ from typing import Callable, Optional
 import logging
 from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging
 
-# NOTE (benchmark/eager-imports): 元は checkWhisperWeight / downloadWhisperWeight /
-# getWhisperModel の関数スコープで import していたが、起動時間計測のため
-# モジュールトップに移動。faster_whisper が無い環境ではロード時に例外を握り
-# つぶし、後段の checkWhisperWeight などが False を返す既存挙動と揃える。
+# Optional deps; None fallback lets checkWhisperWeight etc. return False
+# gracefully when the package is missing.
 try:
     from faster_whisper import WhisperModel  # noqa: F401
 except Exception:
