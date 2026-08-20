@@ -15,6 +15,18 @@ from typing import Callable, Optional
 import logging
 from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging
 
+# Optional deps; None fallback lets checkWhisperWeight etc. return False
+# gracefully when the package is missing.
+try:
+    from faster_whisper import WhisperModel  # noqa: F401
+except Exception:
+    WhisperModel = None  # type: ignore
+
+try:
+    import huggingface_hub  # noqa: F401
+except Exception:
+    huggingface_hub = None  # type: ignore
+
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
 
@@ -80,7 +92,8 @@ def checkWhisperWeight(root: str, weight_type: str) -> bool:
     if isWeightVerifiedCache(path):
         return True
 
-    from faster_whisper import WhisperModel
+    if WhisperModel is None:
+        return False
     try:
         WhisperModel(
             path,
@@ -110,7 +123,6 @@ def downloadWhisperWeight(
         callback: progress callback for the main model file
         end_callback: called when download completes
     """
-    import huggingface_hub
     path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
     if not checkWhisperWeight(root, weight_type):
@@ -152,7 +164,8 @@ def getWhisperModel(
         ValueError: when VRAM shortage is detected (wrapped from RuntimeError)
         Exception: other loading errors are propagated.
     """
-    from faster_whisper import WhisperModel
+    if WhisperModel is None:
+        raise RuntimeError("faster_whisper is not installed")
     path = os_path.join(root, "weights", "whisper", weight_type)
     if compute_type == "auto":
         compute_type = getBestComputeType(device, device_index)
