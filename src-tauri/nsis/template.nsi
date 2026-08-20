@@ -780,10 +780,27 @@ Function .onInstSuccess
       nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" "$R0"
   run_done:
 
-  StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage"}'
-  FileOpen $0 "$INSTDIR\config.json" w
-  FileWrite $0 $1
-  FileClose $0
+  ; インストーラで選んだ UI 言語を config.json に反映する。
+  ; 既存の config.json がある場合は nsJSON で読み込み UI_LANGUAGE のみ差し替え、
+  ; 他ユーザー設定 (API キー・翻訳エンジン・音声デバイス設定など) を保持する。
+  ; 無い場合は新規に {"UI_LANGUAGE": "..."} を作成する。
+  ; パース失敗時 (壊れた config.json) は上書きしない — Python 側の load_config が
+  ; 破損検出して既定値で再構築する。
+  ${If} ${FileExists} "$INSTDIR\config.json"
+    ClearErrors
+    nsJSON::Set /file "$INSTDIR\config.json"
+    ${If} ${Errors}
+      Goto instsuccess_config_done
+    ${EndIf}
+    nsJSON::Set `UI_LANGUAGE` /value `"$SelectedLangage"`
+    nsJSON::Serialize /format /file "$INSTDIR\config.json"
+  ${Else}
+    StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage"}'
+    FileOpen $0 "$INSTDIR\config.json" w
+    FileWrite $0 $1
+    FileClose $0
+  ${EndIf}
+  instsuccess_config_done:
 FunctionEnd
 
 Function un.onInit
@@ -842,26 +859,26 @@ Section Uninstall
     Delete "$INSTDIR\\{{this}}"
   {{/each}}
 
-  ; Dlete config.json
-  Delete "$INSTDIR\config.json"
-
-  ; Delete process.log
-  Delete "$INSTDIR\process.log"
-
-  ; Delete errror.log
-  Delete "$INSTDIR\error.log"
+  ; ユーザーデータ (config.json / ログ / weights) は既定では保持する。
+  ; 上書きインストール時 (PageLeaveReinstall が既存 uninstaller を呼ぶ) にも
+  ; この Section が実行されるため、無条件削除すると全設定が失われる。
+  ; 完全削除は「Delete AppData」チェックが入った場合のみ。
+  ${If} $DeleteAppDataCheckboxState == 1
+    Delete "$INSTDIR\config.json"
+    Delete "$INSTDIR\process.log"
+    Delete "$INSTDIR\error.log"
+    Delete "$INSTDIR\crash_trace.log"
+    Delete "$INSTDIR\freeze_trace.log"
+    Delete "$INSTDIR\telemetry_state.json"
+    RmDir /r "$INSTDIR\logs"
+    RmDir /r "$INSTDIR\weights"
+  ${EndIf}
 
   ; Delete update.exe
   Delete "$INSTDIR\update.exe"
 
-  ; Delete _internal folder
+  ; Delete _internal folder (アプリ本体の一部なので常に削除)
   RmDir /r "$INSTDIR\_internal"
-
-  ; Delete log folder
-  RmDir /r "$INSTDIR\logs"
-
-  ; Delete weights folder
-  RmDir /r "$INSTDIR\weights"
 
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"
