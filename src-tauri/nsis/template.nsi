@@ -780,27 +780,18 @@ Function .onInstSuccess
       nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" "$R0"
   run_done:
 
-  ; インストーラで選んだ UI 言語を config.json に反映する。
-  ; 既存の config.json がある場合は nsJSON で読み込み UI_LANGUAGE のみ差し替え、
-  ; 他ユーザー設定 (API キー・翻訳エンジン・音声デバイス設定など) を保持する。
-  ; 無い場合は新規に {"UI_LANGUAGE": "..."} を作成する。
-  ; パース失敗時 (壊れた config.json) は上書きしない — Python 側の load_config が
-  ; 破損検出して既定値で再構築する。
-  ${If} ${FileExists} "$INSTDIR\config.json"
-    ClearErrors
-    nsJSON::Set /file "$INSTDIR\config.json"
-    ${If} ${Errors}
-      Goto instsuccess_config_done
-    ${EndIf}
-    nsJSON::Set `UI_LANGUAGE` /value `"$SelectedLangage"`
-    nsJSON::Serialize /format /file "$INSTDIR\config.json"
-  ${Else}
-    StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage"}'
-    FileOpen $0 "$INSTDIR\config.json" w
-    FileWrite $0 $1
-    FileClose $0
-  ${EndIf}
-  instsuccess_config_done:
+  ; インストーラで選んだ UI 言語を config.json に直接書き込まない。
+  ; config.json は Python 側が UTF-8 (BOM無し、ensure_ascii=False) で書くため
+  ; 日本語等の非ASCII文字を含み得るが、NSIS の nsJSON プラグインでこれを
+  ; 読み込むと実機で確実にパース失敗することを診断ログで確認した
+  ; (2026-08-21)。そのため NSIS 側では JSON を一切パースせず、選択言語
+  ; コード (常に ASCII: en/ja/ko/zh-Hant/zh-Hans) だけを書いた単純なテキスト
+  ; マーカーファイルを置く。実際の config.json への反映は起動時に Python 側
+  ; (config.py の load_config) が行う — 既に動作実績のある json 読み書き
+  ; パスをそのまま使えるため、エンコーディング起因の失敗が起こらない。
+  FileOpen $0 "$INSTDIR\installer_language.txt" w
+  FileWrite $0 "$SelectedLangage"
+  FileClose $0
 FunctionEnd
 
 Function un.onInit
@@ -873,6 +864,12 @@ Section Uninstall
     RmDir /r "$INSTDIR\logs"
     RmDir /r "$INSTDIR\weights"
   ${EndIf}
+
+  ; インストーラが起動時 UI 言語受け渡し用に置くマーカーファイル。
+  ; ユーザー設定ではなく一度きりの信号ファイルなので DeleteAppData の
+  ; 有無に関わらず常に削除する (アプリを一度も起動せずアンインストール
+  ; された場合、Python 側の消費・自己削除が走らず残るケアも兼ねる)。
+  Delete "$INSTDIR\installer_language.txt"
 
   ; Delete update.exe
   Delete "$INSTDIR\update.exe"
