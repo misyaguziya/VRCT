@@ -21,8 +21,19 @@ except Exception:  # pragma: no cover - optional runtime
     MMNotificationClient = object  # type: ignore
     AudioUtilities = None  # type: ignore
 
-from utils import errorLogging
+from utils import errorLogging, printLog
 from active_endpoint_tracker import ActiveEndpointTracker
+
+# pauseMicEndpointTracker/pauseSpeakerEndpointTracker のバリア待ちの上限。
+# tracker の COM 呼び出し (Activate/GetPeakValue 等) には現状タイムアウトが
+# 無く、理論上ハングし得る (active_endpoint_tracker.py の ActiveEndpointTracker
+# クラスdocstring参照)。ハングした場合、このバリアを無期限待ちにしていると
+# 呼び出し元 (mainloop のハンドラワーカースレッド、本数が限られている) が
+# 永久にブロックされ、他の全リクエスト処理までアプリごと無応答になる。
+# タイムアウトしても根本のロック保持スレッドが解放されるわけではない
+# (COM 呼び出し自体は止められない) ため完全な解決ではないが、少なくとも
+# ハンドラワーカーを解放してアプリの他機能を無応答にしないための緩和策。
+_PAUSE_BARRIER_TIMEOUT_SEC = 5.0
 
 # WASAPI/PortAudio 操作 (デバイス列挙・ストリーム open/close) を
 # 直列化するためのプロセス共通ロック。
@@ -467,8 +478,16 @@ class DeviceManager:
             return
         tracker.pause()
         # バリア: tracker が _com_lock (=pyaudio_op_lock) 保持中なら待つ
-        with pyaudio_op_lock:
-            pass
+        # (上限あり、詳細は _PAUSE_BARRIER_TIMEOUT_SEC のコメント参照)
+        acquired = pyaudio_op_lock.acquire(timeout=_PAUSE_BARRIER_TIMEOUT_SEC)
+        if acquired:
+            pyaudio_op_lock.release()
+        else:
+            printLog(
+                f"pauseMicEndpointTracker: barrier timed out after "
+                f"{_PAUSE_BARRIER_TIMEOUT_SEC}s waiting for pyaudio_op_lock; "
+                "a COM call may be stuck. Proceeding without the barrier."
+            )
 
     def resumeMicEndpointTracker(self) -> None:
         tracker = self._mic_endpoint_tracker
@@ -481,8 +500,15 @@ class DeviceManager:
         if tracker is None:
             return
         tracker.pause()
-        with pyaudio_op_lock:
-            pass
+        acquired = pyaudio_op_lock.acquire(timeout=_PAUSE_BARRIER_TIMEOUT_SEC)
+        if acquired:
+            pyaudio_op_lock.release()
+        else:
+            printLog(
+                f"pauseSpeakerEndpointTracker: barrier timed out after "
+                f"{_PAUSE_BARRIER_TIMEOUT_SEC}s waiting for pyaudio_op_lock; "
+                "a COM call may be stuck. Proceeding without the barrier."
+            )
 
     def resumeSpeakerEndpointTracker(self) -> None:
         tracker = self._speaker_endpoint_tracker

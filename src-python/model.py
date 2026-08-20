@@ -1,6 +1,7 @@
+import atexit
 import copy
-import gc
 import asyncio
+import faulthandler
 import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
@@ -8,6 +9,7 @@ from os import path as os_path
 from os import getppid as os_getppid
 from os import _exit as os_exit
 from os import remove as os_remove
+from os import stat as os_stat
 from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
@@ -41,6 +43,37 @@ from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
+
+# フリーズ調査用の恒久計装。mainloop.py の faulthandler.enable() は
+# ネイティブフォルト (access violation 等) 発生時にしか全スレッドの
+# コールスタックを記録しない。今回問題になっている「クラッシュではなく
+# 無応答のまま固まる」ケースはネイティブフォルトを伴わないため、それとは
+# 別に dump_traceback_later でタイムアウト検知のスタックダンプを取る。
+# feedWatchdog() が呼ばれるたびにタイマーを再武装し (呼び出しは
+# フロントエンドから ~WATCHDOG_INTERVAL 秒ごとに来る)、その周期を超えて
+# 次の feed が来なければ、その時点の全スレッドスタックを
+# freeze_trace.log に書き出す (exit=False なのでプロセスは落とさない)。
+# faulthandler は enable/dump_traceback_later 時点で fd を掴むため
+# 遅延 open できず、フリーズ無しの通常終了でも 0 バイトのファイルが
+# 残る。運用上のゴミ化を避けるため atexit で「書き込みが無ければ削除」する。
+_freeze_trace_path = "freeze_trace.log"
+_freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
+_FREEZE_DUMP_MARGIN_SEC = 15
+
+
+def _cleanupFreezeTraceIfEmpty() -> None:
+    try:
+        _freeze_trace_file.close()
+    except Exception:
+        pass
+    try:
+        if os_path.exists(_freeze_trace_path) and os_stat(_freeze_trace_path).st_size == 0:
+            os_remove(_freeze_trace_path)
+    except Exception:
+        pass
+
+
+atexit.register(_cleanupFreezeTraceIfEmpty)
 
 
 class _DiscardQueue(Queue):
@@ -302,7 +335,12 @@ class _AudioDeviceSession:
                 while not audio_queue.empty():
                     audio_queue.get()
                 self._transcriber = None
-                gc.collect()
+                # 明示 gc.collect() は呼ばない: ActiveEndpointTracker が別スレッド
+                # (CoInitialize 済み apartment) で保持している comtypes の COM
+                # ポインタが、この _print_transcript スレッド (CoInitialize
+                # していない) 上で __del__ → Release() されて access violation
+                # を起こすことを crash_trace.log で 2026-08-19 に確認した。
+                # 参照が実際に不要になれば通常の GC が回収する。
 
             self._print_transcript = threadFnc(sendTranscript, end_fnc=endTranscript)
             self._print_transcript.daemon = True
@@ -1374,10 +1412,25 @@ class Model:
         self.th_watchdog = threadFnc(self.watchdog.start)
         self.th_watchdog.daemon = True
         self.th_watchdog.start()
+        self._armFreezeDump()
 
     def feedWatchdog(self):
         self.ensure_initialized()
         self.watchdog.feed()
+        self._armFreezeDump()
+
+    def _armFreezeDump(self):
+        """次の feed が freeze 判定になるより前に、全スレッドスタックを
+        freeze_trace.log へ書き出すタイマーを (再) 武装する。呼ぶたびに
+        以前のタイマーは自動的に上書きされる (faulthandler の仕様)。
+        """
+        timeout = self.watchdog.interval + _FREEZE_DUMP_MARGIN_SEC
+        try:
+            faulthandler.dump_traceback_later(
+                timeout, repeat=False, file=_freeze_trace_file, exit=False
+            )
+        except Exception:
+            errorLogging()
 
     def setWatchdogCallback(self, callback):
         self.ensure_initialized()
@@ -1389,6 +1442,10 @@ class Model:
             self.th_watchdog.stop()
             self.th_watchdog.join()
             self.th_watchdog = None
+        try:
+            faulthandler.cancel_dump_traceback_later()
+        except Exception:
+            errorLogging()
 
     def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""

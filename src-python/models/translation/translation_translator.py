@@ -134,6 +134,20 @@ class Translator:
     """
 
     def __init__(self) -> None:
+        # translators パッケージの import はここで実行する (Translator は
+        # Model.init() から生成されるため、実質的に起動時 import になる)。
+        # 従来 translate() 内から遅延 import していたが、その経路では
+        # translators → niquests → niquests.extensions.revocation の @dataclass
+        # が Python の暗黙 GC (generation 2) を発火し、ActiveEndpointTracker が
+        # 別スレッド (CoInitialize 済み apartment) で保持している comtypes の
+        # COM ポインタを、CoInitialize していない翻訳スレッド上で __del__ →
+        # Release() させて access violation を起こすことを crash_trace.log で
+        # 2026-08-20 に確認した。Translator インスタンス生成時点では
+        # ActiveEndpointTracker はまだ起動しておらず (ユーザーが Auto Select を
+        # 有効化するまで起動しない) 、tracker 由来の COM ポインタが未生成なため、
+        # この時点で dataclass 処理が GC を起こしても安全に完了する。
+        _ensureTranslatorsLoaded()
+        self.is_enable_translators = ENABLE_TRANSLATORS
         self.deepl_client: Optional[DeepLClient] = None
         self.plamo_client: Optional[Any] = None
         self.gemini_client: Optional[Any] = None
@@ -149,7 +163,6 @@ class Translator:
         self.ctranslate2_tokenizer: Any = None
         self.is_loaded_ctranslate2_model: bool = False
         self.is_changed_translator_parameters: bool = False
-        self.is_enable_translators: bool = ENABLE_TRANSLATORS
 
     def authenticationDeepLAuthKey(self, auth_key: str) -> bool:
         """Authenticate DeepL API with the provided key.
