@@ -1362,6 +1362,13 @@ class Controller:
         else:
             config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
         self._reopenMicAudioOnDeviceChange()
+        # host が切り替わると新ホストの selectable_mic_device_list を
+        # UI に push しないと、ドロップダウンが旧ホストのデバイス名一覧の
+        # ままになり、そこから選ばれた名前は新ホストの
+        # _mic_device_validator で弾かれて config が更新されない
+        # (setSelectedMicDevice が事実上 no-op になる)。selected_mic_device
+        # と一緒に必ずリストも再送する。
+        self.run(200, self.run_mapping["selectable_mic_device_list"], model.getListMicDevice())
         self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
