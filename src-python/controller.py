@@ -3,6 +3,7 @@ from subprocess import Popen
 from threading import Thread, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import re
+import time
 from device_manager import device_manager
 from config import config
 from model import model
@@ -10,6 +11,34 @@ from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValid
 from errors import ErrorCode, VRCTError
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+# モデルダウンロード進捗の間引きしきい値。translation_utils.downloadFile /
+# transcription_whisper.downloadFile は 2MB チャンクごとに progressBar を
+# 呼ぶため、~2GB の重みで 900+ 回の logging バーストが発生する。
+# CTranslate2 と Whisper が同時にダウンロードされると process.log の
+# ハンドラロック競合で feedWatchdog が 35s 遅延するのを freeze_trace.log で
+# 2026-08-20 に観測した。前回報告から MIN_DELTA 以上進んだ、または
+# MIN_INTERVAL_SEC 以上経過した場合のみ forward する (0% / 100% は必ず送る)。
+_DOWNLOAD_PROGRESS_MIN_DELTA = 0.01
+_DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
+
+
+def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
+    """DownloadCTranslate2 / DownloadWhisper の progressBar 用スロットル。
+
+    handler は `_last_progress: float` と `_last_time: float` 属性を持つ
+    インスタンス。100% 到達時は必ず True を返す (完了通知が抜けないよう)。
+    """
+    now = time.monotonic()
+    if (
+        progress >= 1.0
+        or (progress - handler._last_progress) >= _DOWNLOAD_PROGRESS_MIN_DELTA
+        or (now - handler._last_time) >= _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC
+    ):
+        handler._last_progress = progress
+        handler._last_time = now
+        return True
+    return False
 
 class Controller:
     def __init__(self) -> None:
@@ -264,8 +293,12 @@ class Controller:
             self.run_mapping = run_mapping
             self.weight_type = weight_type
             self.run = run
+            self._last_progress = -1.0
+            self._last_time = 0.0
 
         def progressBar(self, progress) -> None:
+            if not _shouldEmitDownloadProgress(self, progress):
+                return
             printLog("CTranslate2 Weight Download Progress", progress)
             self.run(
                 200,
@@ -298,8 +331,12 @@ class Controller:
             self.run_mapping = run_mapping
             self.weight_type = weight_type
             self.run = run
+            self._last_progress = -1.0
+            self._last_time = 0.0
 
         def progressBar(self, progress) -> None:
+            if not _shouldEmitDownloadProgress(self, progress):
+                return
             printLog("Whisper Weight Download Progress", progress)
             self.run(
                 200,
