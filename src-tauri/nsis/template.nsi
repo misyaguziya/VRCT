@@ -780,9 +780,17 @@ Function .onInstSuccess
       nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" "$R0"
   run_done:
 
-  StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage"}'
-  FileOpen $0 "$INSTDIR\config.json" w
-  FileWrite $0 $1
+  ; インストーラで選んだ UI 言語を config.json に直接書き込まない。
+  ; config.json は Python 側が UTF-8 (BOM無し、ensure_ascii=False) で書くため
+  ; 日本語等の非ASCII文字を含み得るが、NSIS の nsJSON プラグインでこれを
+  ; 読み込むと実機で確実にパース失敗することを診断ログで確認した
+  ; (2026-08-21)。そのため NSIS 側では JSON を一切パースせず、選択言語
+  ; コード (常に ASCII: en/ja/ko/zh-Hant/zh-Hans) だけを書いた単純なテキスト
+  ; マーカーファイルを置く。実際の config.json への反映は起動時に Python 側
+  ; (config.py の load_config) が行う — 既に動作実績のある json 読み書き
+  ; パスをそのまま使えるため、エンコーディング起因の失敗が起こらない。
+  FileOpen $0 "$INSTDIR\installer_language.txt" w
+  FileWrite $0 "$SelectedLangage"
   FileClose $0
 FunctionEnd
 
@@ -842,26 +850,32 @@ Section Uninstall
     Delete "$INSTDIR\\{{this}}"
   {{/each}}
 
-  ; Dlete config.json
-  Delete "$INSTDIR\config.json"
+  ; ユーザーデータ (config.json / ログ / weights) は既定では保持する。
+  ; 上書きインストール時 (PageLeaveReinstall が既存 uninstaller を呼ぶ) にも
+  ; この Section が実行されるため、無条件削除すると全設定が失われる。
+  ; 完全削除は「Delete AppData」チェックが入った場合のみ。
+  ${If} $DeleteAppDataCheckboxState == 1
+    Delete "$INSTDIR\config.json"
+    Delete "$INSTDIR\process.log"
+    Delete "$INSTDIR\error.log"
+    Delete "$INSTDIR\crash_trace.log"
+    Delete "$INSTDIR\freeze_trace.log"
+    Delete "$INSTDIR\telemetry_state.json"
+    RmDir /r "$INSTDIR\logs"
+    RmDir /r "$INSTDIR\weights"
+  ${EndIf}
 
-  ; Delete process.log
-  Delete "$INSTDIR\process.log"
-
-  ; Delete errror.log
-  Delete "$INSTDIR\error.log"
+  ; インストーラが起動時 UI 言語受け渡し用に置くマーカーファイル。
+  ; ユーザー設定ではなく一度きりの信号ファイルなので DeleteAppData の
+  ; 有無に関わらず常に削除する (アプリを一度も起動せずアンインストール
+  ; された場合、Python 側の消費・自己削除が走らず残るケアも兼ねる)。
+  Delete "$INSTDIR\installer_language.txt"
 
   ; Delete update.exe
   Delete "$INSTDIR\update.exe"
 
-  ; Delete _internal folder
+  ; Delete _internal folder (アプリ本体の一部なので常に削除)
   RmDir /r "$INSTDIR\_internal"
-
-  ; Delete log folder
-  RmDir /r "$INSTDIR\logs"
-
-  ; Delete weights folder
-  RmDir /r "$INSTDIR\weights"
 
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"
