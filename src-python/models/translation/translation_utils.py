@@ -14,6 +14,25 @@ except Exception:
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
 
+# NOTE (benchmark/eager-imports): 元は checkCTranslate2Weight /
+# downloadCTranslate2Weight / downloadCTranslate2Tokenizer の関数スコープで
+# import していたが、起動時間計測のためモジュールトップに移動。
+try:
+    import ctranslate2  # noqa: F401
+except Exception:
+    ctranslate2 = None  # type: ignore
+
+try:
+    from huggingface_hub import hf_hub_url, list_repo_files  # noqa: F401
+except Exception:
+    hf_hub_url = None  # type: ignore
+    list_repo_files = None  # type: ignore
+
+try:
+    import transformers  # noqa: F401
+except Exception:
+    transformers = None  # type: ignore
+
 
 """Utilities for downloading and verifying CTranslate2 weights and tokenizers.
 
@@ -77,7 +96,8 @@ def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8")
         return True
 
     try:
-        import ctranslate2
+        if ctranslate2 is None:
+            return False
         # モデルロード可能かどうかで判定
         compute_type = getBestComputeType("cpu", 0)
         ctranslate2.Translator(path, compute_type=compute_type)
@@ -87,7 +107,8 @@ def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8")
         return False
 
 def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None) -> bool:
-    from huggingface_hub import hf_hub_url, list_repo_files
+    if hf_hub_url is None or list_repo_files is None:
+        return False
     hf_repo = ctranslate2_weights[weight_type]["hf_repo"]
     files = list_repo_files(repo_id=hf_repo)
     path = os_path.join(root, "weights", "ctranslate2", ctranslate2_weights[weight_type]["directory_name"])
@@ -134,7 +155,8 @@ def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int
     return all_succeeded
 
 def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-int8"):
-    import transformers
+    if transformers is None:
+        return
     directory_name = ctranslate2_weights[weight_type]["directory_name"]
     tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
     tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")

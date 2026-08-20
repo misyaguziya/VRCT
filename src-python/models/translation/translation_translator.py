@@ -48,6 +48,87 @@ from typing import Any, Optional, Tuple
 
 warnings.filterwarnings("ignore")
 
+# NOTE (benchmark/eager-imports): 元は _loadCTranslate2Model の関数スコープで
+# import していたが、起動時間計測のためモジュールトップに移動。
+try:
+    import ctranslate2  # noqa: F401
+except Exception:
+    ctranslate2 = None  # type: ignore
+
+try:
+    import transformers  # noqa: F401
+except Exception:
+    transformers = None  # type: ignore
+
+# NOTE (benchmark/eager-imports): 元は各プロバイダの初回認証時に遅延 import
+# していた LLM クライアント SDK 群を、起動時間計測のためモジュールトップで
+# 事前 import する。langchain_google_genai などは秒単位で遅い import なので、
+# ここで一度にまとめて計上されるようになる。既存の _import*Client 関数は
+# 呼び出し互換のため残す (import 済みなので 2 回目以降のコストはゼロ)。
+try:
+    from .translation_plamo import PlamoClient as _PlamoClient  # noqa: F401
+except Exception:
+    try:
+        from translation_plamo import PlamoClient as _PlamoClient  # noqa: F401
+    except Exception:
+        _PlamoClient = None  # type: ignore
+
+try:
+    from .translation_gemini import GeminiClient as _GeminiClient  # noqa: F401
+except Exception:
+    try:
+        from translation_gemini import GeminiClient as _GeminiClient  # noqa: F401
+    except Exception:
+        _GeminiClient = None  # type: ignore
+
+try:
+    from .translation_openai import OpenAIClient as _OpenAIClient  # noqa: F401
+except Exception:
+    try:
+        from translation_openai import OpenAIClient as _OpenAIClient  # noqa: F401
+    except Exception:
+        _OpenAIClient = None  # type: ignore
+
+try:
+    from .translation_openai_compatible import OpenAICompatibleClient as _OpenAICompatibleClient  # noqa: F401
+except Exception:
+    try:
+        from translation_openai_compatible import OpenAICompatibleClient as _OpenAICompatibleClient  # noqa: F401
+    except Exception:
+        _OpenAICompatibleClient = None  # type: ignore
+
+try:
+    from .translation_groq import GroqClient as _GroqClient  # noqa: F401
+except Exception:
+    try:
+        from translation_groq import GroqClient as _GroqClient  # noqa: F401
+    except Exception:
+        _GroqClient = None  # type: ignore
+
+try:
+    from .translation_openrouter import OpenRouterClient as _OpenRouterClient  # noqa: F401
+except Exception:
+    try:
+        from translation_openrouter import OpenRouterClient as _OpenRouterClient  # noqa: F401
+    except Exception:
+        _OpenRouterClient = None  # type: ignore
+
+try:
+    from .translation_lmstudio import LMStudioClient as _LMStudioClient  # noqa: F401
+except Exception:
+    try:
+        from translation_lmstudio import LMStudioClient as _LMStudioClient  # noqa: F401
+    except Exception:
+        _LMStudioClient = None  # type: ignore
+
+try:
+    from .translation_ollama import OllamaClient as _OllamaClient  # noqa: F401
+except Exception:
+    try:
+        from translation_ollama import OllamaClient as _OllamaClient  # noqa: F401
+    except Exception:
+        _OllamaClient = None  # type: ignore
+
 # Each provider module (translation_gemini.py, translation_openai.py, ...)
 # imports its SDK (openai, langchain_openai, langchain_google_genai, ...) at
 # module scope, and those SDK imports are individually slow (multi-second
@@ -478,8 +559,8 @@ class Translator:
         This sets internal translator/tokenizer objects and flips
         ``is_loaded_ctranslate2_model`` on success.
         """
-        import ctranslate2
-        import transformers
+        if ctranslate2 is None or transformers is None:
+            return
 
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]

@@ -12,6 +12,21 @@ import requests
 import ipaddress
 import socket
 
+# NOTE (benchmark/eager-imports): 元は getComputeDeviceList / getBestComputeType
+# 内部で関数スコープ import していた重量ライブラリを、起動時間計測のため
+# モジュールトップに引き上げている。try/except は元の遅延 import が
+# except 側にフォールバックを持っていたため踏襲。
+try:
+    from ctranslate2 import get_supported_compute_types as _ct2_get_supported_compute_types  # noqa: F401
+except Exception:
+    def _ct2_get_supported_compute_types(device: str, device_index: int) -> List[str]:  # type: ignore
+        return []
+
+try:
+    import torch  # noqa: F401
+except Exception:
+    torch = None  # type: ignore
+
 _WEIGHT_VERIFIED_MARKER_NAME = ".weight_verified.json"
 
 # stdout は Tauri 側が読み取る IPC チャンネルとして使われており、
@@ -166,16 +181,7 @@ def getComputeDeviceList() -> List[Dict[str, Any]]:
     The returned list contains dicts describing CPU and (if available)
     CUDA devices. This function is defensive to missing optional packages.
     """
-    try:
-        from ctranslate2 import get_supported_compute_types
-    except Exception:
-        def get_supported_compute_types(device: str, device_index: int) -> List[str]:
-            return []
-
-    try:
-        import torch
-    except Exception:
-        torch = None  # type: ignore
+    get_supported_compute_types = _ct2_get_supported_compute_types
 
     compute_types: List[Dict[str, Any]] = [
         {
@@ -219,15 +225,9 @@ def getBestComputeType(device: str, device_index: int) -> str:
     Falls back to "float32" when no preferred type is available.
     """
     try:
-        from ctranslate2 import get_supported_compute_types
-        compute_types = set(get_supported_compute_types(device, device_index))
+        compute_types = set(_ct2_get_supported_compute_types(device, device_index))
     except Exception:
         compute_types = set()
-
-    try:
-        import torch
-    except Exception:
-        torch = None  # type: ignore
 
     try:
         device_name = "cpu" if device == "cpu" else (torch.cuda.get_device_name(device_index) if torch is not None else "")
