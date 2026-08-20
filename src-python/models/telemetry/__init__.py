@@ -11,6 +11,22 @@ import asyncio
 import threading
 from typing import Optional
 
+# Aptabase → httpx → httpcore → anyio の依存チェーンで、httpx.AsyncClient の
+# aclose() が最終的に anyio._core._eventloop.get_async_backend() を呼び、
+# そこで anyio._backends._asyncio が遅延 import される。この遅延 import は
+# @dataclass を大量に評価するため Python の暗黙 GC (generation 2) を発火し、
+# ActiveEndpointTracker が保持している comtypes の COM ポインタを、
+# CoInitialize していないテレメトリスレッド上で __del__ → Release() させて
+# access violation を起こす。この経路は telemetry.shutdown() の
+# _shutdown_async() 中に確定的に踏まれる (crash_trace.log 2026-08-20)。
+# 本モジュールは Model.__init__ 経由で起動時に import されるため、
+# ここで anyio backend も事前 import しておけば、shutdown 時の遅延 import
+# は発生せず GC トリガも消える。
+try:
+    import anyio._backends._asyncio  # noqa: F401
+except Exception:
+    pass
+
 # Allow running as a script for quick verification.
 try:
     from .state import TelemetryState
