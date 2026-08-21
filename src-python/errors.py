@@ -5,8 +5,28 @@
 すべてのエラーを一元管理し、エンドポイントとエラーコードの対応を明確にする。
 """
 
-from typing import Any, Optional, Dict
+from typing import Any, Callable, Optional, Dict
 from enum import Enum
+
+
+# エラー生成時に通知される optional なフック（テレメトリ等）。
+# errors.py から model への逆依存を避けるため、model 側から登録する。
+_error_report_hooks: list = []
+
+
+def register_error_report_hook(hook: Callable[[str], None]) -> None:
+    """error_code (str) を受け取るフックを登録する。多重登録は防止される。"""
+    if hook not in _error_report_hooks:
+        _error_report_hooks.append(hook)
+
+
+def _notify_error_hooks(error_code: str) -> None:
+    for hook in _error_report_hooks:
+        try:
+            hook(error_code)
+        except Exception:
+            # フック失敗は本体処理に影響させない
+            pass
 
 
 class ErrorCode(str, Enum):
@@ -57,6 +77,7 @@ class ErrorCode(str, Enum):
     VALIDATION_SPEAKER_MAX_PHRASES = "VALIDATION_SPEAKER_MAX_PHRASES"
     VALIDATION_INVALID_IP = "VALIDATION_INVALID_IP"
     VALIDATION_CANNOT_SET_IP = "VALIDATION_CANNOT_SET_IP"
+    VALIDATION_OSC_PORT_INVALID = "VALIDATION_OSC_PORT_INVALID"
     
     # ============================================================================
     # 認証エラー (AUTH_*)
@@ -69,6 +90,8 @@ class ErrorCode(str, Enum):
     AUTH_GEMINI_FAILED = "AUTH_GEMINI_FAILED"
     AUTH_OPENAI_INVALID = "AUTH_OPENAI_INVALID"
     AUTH_OPENAI_FAILED = "AUTH_OPENAI_FAILED"
+    AUTH_OPENAI_COMPATIBLE_INVALID = "AUTH_OPENAI_COMPATIBLE_INVALID"
+    AUTH_OPENAI_COMPATIBLE_FAILED = "AUTH_OPENAI_COMPATIBLE_FAILED"
     AUTH_GROQ_INVALID = "AUTH_GROQ_INVALID"
     AUTH_GROQ_FAILED = "AUTH_GROQ_FAILED"
     AUTH_OPENROUTER_INVALID = "AUTH_OPENROUTER_INVALID"
@@ -80,6 +103,7 @@ class ErrorCode(str, Enum):
     MODEL_PLAMO_INVALID = "MODEL_PLAMO_INVALID"
     MODEL_GEMINI_INVALID = "MODEL_GEMINI_INVALID"
     MODEL_OPENAI_INVALID = "MODEL_OPENAI_INVALID"
+    MODEL_OPENAI_COMPATIBLE_INVALID = "MODEL_OPENAI_COMPATIBLE_INVALID"
     MODEL_GROQ_INVALID = "MODEL_GROQ_INVALID"
     MODEL_OPENROUTER_INVALID = "MODEL_OPENROUTER_INVALID"
     MODEL_LMSTUDIO_INVALID = "MODEL_LMSTUDIO_INVALID"
@@ -91,13 +115,29 @@ class ErrorCode(str, Enum):
     CONNECTION_LMSTUDIO_FAILED = "CONNECTION_LMSTUDIO_FAILED"
     CONNECTION_OLLAMA_FAILED = "CONNECTION_OLLAMA_FAILED"
     CONNECTION_LMSTUDIO_URL_INVALID = "CONNECTION_LMSTUDIO_URL_INVALID"
+    CONNECTION_OPENAI_COMPATIBLE_URL_INVALID = "CONNECTION_OPENAI_COMPATIBLE_URL_INVALID"
     
     # ============================================================================
     # WebSocketエラー (WEBSOCKET_*)
     # ============================================================================
     WEBSOCKET_HOST_INVALID = "WEBSOCKET_HOST_INVALID"
     WEBSOCKET_PORT_UNAVAILABLE = "WEBSOCKET_PORT_UNAVAILABLE"
+    WEBSOCKET_PORT_INVALID = "WEBSOCKET_PORT_INVALID"
     WEBSOCKET_SERVER_UNAVAILABLE = "WEBSOCKET_SERVER_UNAVAILABLE"
+
+    # ============================================================================
+    # OBS Browser Sourceエラー (OBS_BROWSER_SOURCE_*)
+    # ============================================================================
+    OBS_BROWSER_SOURCE_HOST_UNAVAILABLE = "OBS_BROWSER_SOURCE_HOST_UNAVAILABLE"
+    OBS_BROWSER_SOURCE_PORT_UNAVAILABLE = "OBS_BROWSER_SOURCE_PORT_UNAVAILABLE"
+    OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE = "OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE"
+    OBS_BROWSER_SOURCE_FONT_COLOR_INVALID = "OBS_BROWSER_SOURCE_FONT_COLOR_INVALID"
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID = "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID"
+    OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID = "OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID"
+    OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID = "OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID"
+    OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID = "OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID"
+    OBS_BROWSER_SOURCE_FONT_SIZE_INVALID = "OBS_BROWSER_SOURCE_FONT_SIZE_INVALID"
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID = "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID"
     
     # ============================================================================
     # VRC連携エラー (VRC_*)
@@ -122,6 +162,7 @@ class ErrorCategory(str, Enum):
     MODEL = "model"
     CONNECTION = "connection"
     WEBSOCKET = "websocket"
+    OBS_BROWSER_SOURCE = "obs_browser_source"
     VRC = "vrc"
     GENERAL = "general"
 
@@ -282,7 +323,13 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "error",
         "user_action_required": True,
     },
-    
+    ErrorCode.VALIDATION_OSC_PORT_INVALID: {
+        "category": ErrorCategory.VALIDATION,
+        "message": "OSC port must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # 認証エラー
     ErrorCode.AUTH_DEEPL_LENGTH: {
         "category": ErrorCategory.AUTH,
@@ -332,6 +379,18 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "error",
         "user_action_required": True,
     },
+    ErrorCode.AUTH_OPENAI_COMPATIBLE_INVALID: {
+        "category": ErrorCategory.AUTH,
+        "message": "OpenAI-compatible auth key is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.AUTH_OPENAI_COMPATIBLE_FAILED: {
+        "category": ErrorCategory.AUTH,
+        "message": "Authentication failure of OpenAI-compatible endpoint (check URL and auth key)",
+        "severity": "error",
+        "user_action_required": True,
+    },
     ErrorCode.AUTH_GROQ_INVALID: {
         "category": ErrorCategory.AUTH,
         "message": "Groq auth key is not valid",
@@ -373,6 +432,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
     ErrorCode.MODEL_OPENAI_INVALID: {
         "category": ErrorCategory.MODEL,
         "message": "OpenAI model is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.MODEL_OPENAI_COMPATIBLE_INVALID: {
+        "category": ErrorCategory.MODEL,
+        "message": "OpenAI-compatible model is not valid",
         "severity": "warning",
         "user_action_required": True,
     },
@@ -420,6 +485,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "warning",
         "user_action_required": True,
     },
+    ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID: {
+        "category": ErrorCategory.CONNECTION,
+        "message": "OpenAI-compatible endpoint URL is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
     
     # WebSocketエラー
     ErrorCode.WEBSOCKET_HOST_INVALID: {
@@ -434,13 +505,81 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "error",
         "user_action_required": True,
     },
+    ErrorCode.WEBSOCKET_PORT_INVALID: {
+        "category": ErrorCategory.WEBSOCKET,
+        "message": "WebSocket server port must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
     ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE: {
         "category": ErrorCategory.WEBSOCKET,
         "message": "WebSocket server host or port is not available",
         "severity": "error",
         "user_action_required": True,
     },
-    
+
+    # OBS Browser Source errors
+    ErrorCode.OBS_BROWSER_SOURCE_HOST_UNAVAILABLE: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source server host is not available",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_PORT_UNAVAILABLE: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source server port is not available",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source server is not available",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_COLOR_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source font color is not valid (#RRGGBB)",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source outline color is not valid (#RRGGBB)",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source max messages must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source display duration must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source fadeout duration must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_SIZE_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source font size must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source outline thickness must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # VRC連携エラー
     ErrorCode.VRC_MIC_MUTE_SYNC_OSC_DISABLED: {
         "category": ErrorCategory.VRC,
@@ -487,8 +626,8 @@ class VRCTError:
             エラーレスポンス辞書
         """
         metadata = ERROR_METADATA.get(error_code, ERROR_METADATA[ErrorCode.GENERAL_UNKNOWN])
-        
-        return {
+
+        response = {
             "status": 400,
             "result": {
                 "error_code": error_code.value,
@@ -499,6 +638,8 @@ class VRCTError:
                 "severity": metadata["severity"],
             }
         }
+        _notify_error_hooks(error_code.value)
+        return response
     
     @staticmethod
     def create_exception_error_response(
@@ -611,6 +752,16 @@ ENDPOINT_ERROR_MAPPING: Dict[str, Dict[str, ErrorCode]] = {
     "/set/data/selected_openai_model": {
         "INVALID": ErrorCode.MODEL_OPENAI_INVALID,
     },
+    "/set/data/openai_compatible_auth_key": {
+        "INVALID": ErrorCode.AUTH_OPENAI_COMPATIBLE_INVALID,
+        "FAILED": ErrorCode.AUTH_OPENAI_COMPATIBLE_FAILED,
+    },
+    "/set/data/openai_compatible_url": {
+        "INVALID": ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID,
+    },
+    "/set/data/selected_openai_compatible_model": {
+        "INVALID": ErrorCode.MODEL_OPENAI_COMPATIBLE_INVALID,
+    },
     "/set/data/groq_auth_key": {
         "INVALID": ErrorCode.AUTH_GROQ_INVALID,
         "FAILED": ErrorCode.AUTH_GROQ_FAILED,
@@ -649,6 +800,18 @@ ENDPOINT_ERROR_MAPPING: Dict[str, Dict[str, ErrorCode]] = {
     },
     "/set/enable/websocket_server": {
         "UNAVAILABLE": ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+    },
+    "/set/enable/obs_browser_source": {
+        "UNAVAILABLE": ErrorCode.OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE,
+    },
+    "/set/data/obs_browser_source_port": {
+        "UNAVAILABLE": ErrorCode.OBS_BROWSER_SOURCE_PORT_UNAVAILABLE,
+    },
+    "/set/data/obs_browser_source_font_color": {
+        "INVALID": ErrorCode.OBS_BROWSER_SOURCE_FONT_COLOR_INVALID,
+    },
+    "/set/data/obs_browser_source_font_outline_color": {
+        "INVALID": ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID,
     },
     "/set/enable/vrc_mic_mute_sync": {
         "OSC_DISABLED": ErrorCode.VRC_MIC_MUTE_SYNC_OSC_DISABLED,

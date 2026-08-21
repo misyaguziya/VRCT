@@ -1,20 +1,36 @@
 from os import path as os_path
 from os import makedirs as os_makedirs
 from os import rename as os_rename
+from shutil import rmtree as shutil_rmtree
 from requests import get as requests_get
 from typing import Callable
-import transformers
-import ctranslate2
-from huggingface_hub import hf_hub_url, list_repo_files
 import yaml
 
 try:
-    from utils import errorLogging, getBestComputeType
+    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
 except Exception:
     import sys
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
-    from utils import errorLogging, getBestComputeType
+    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
+
+# Optional runtime deps; None fallback disables the corresponding features
+# (check/download/tokenizer) when the package is unavailable.
+try:
+    import ctranslate2  # noqa: F401
+except Exception:
+    ctranslate2 = None  # type: ignore
+
+try:
+    from huggingface_hub import hf_hub_url, list_repo_files  # noqa: F401
+except Exception:
+    hf_hub_url = None  # type: ignore
+    list_repo_files = None  # type: ignore
+
+try:
+    import transformers  # noqa: F401
+except Exception:
+    transformers = None  # type: ignore
 
 
 """Utilities for downloading and verifying CTranslate2 weights and tokenizers.
@@ -35,6 +51,11 @@ ctranslate2_weights = {
         "hf_repo": "jncraton/m2m100_1.2B-ct2-int8",
         "directory_name": "m2m100_1.2B-ct2-int8",
         "tokenizer": "facebook/m2m100_1.2B",
+    },
+    "nllb-200-distilled-600M-ct2-int8": {
+        "hf_repo": "JustFrederik/nllb-200-distilled-600M-ct2-int8",
+        "directory_name": "nllb-200-distilled-600M-ct2-int8",
+        "tokenizer": "facebook/nllb-200-distilled-600M",
     },
     "nllb-200-distilled-1.3B-ct2-int8": {
         "hf_repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
@@ -58,53 +79,83 @@ def backwardCompatibleRenameWeightsDir(root: str):
     for weight_type_old, weight_type_new in legacy_dirs.items():
         path = os_path.join(root, "weights", "ctranslate2", weight_type_new)
         old_path = os_path.join(root, "weights", "ctranslate2", weight_type_old)
-        if os_path.isdir(old_path):
+        if not os_path.isdir(old_path):
+            continue
+        if os_path.isdir(path):
+            # 新形式のディレクトリが既に存在する場合、旧形式は不要になったディスク領域なので削除する
+            shutil_rmtree(old_path)
+        else:
             os_rename(old_path, path)
 
 def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8"):
     weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
     path = os_path.join(root, "weights", "ctranslate2", weight_directory_name)
 
+    if isWeightVerifiedCache(path):
+        return True
+
     try:
+        if ctranslate2 is None:
+            return False
         # モデルロード可能かどうかで判定
         compute_type = getBestComputeType("cpu", 0)
         ctranslate2.Translator(path, compute_type=compute_type)
+        writeWeightVerifiedCache(path)
         return True
     except Exception:
         return False
 
-def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None):
+def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None) -> bool:
+    if hf_hub_url is None or list_repo_files is None:
+        return False
     hf_repo = ctranslate2_weights[weight_type]["hf_repo"]
     files = list_repo_files(repo_id=hf_repo)
     path = os_path.join(root, "weights", "ctranslate2", ctranslate2_weights[weight_type]["directory_name"])
     if checkCTranslate2Weight(root, weight_type):
         return True
     os_makedirs(path, exist_ok=True)
+    base_dir = os_path.abspath(path)
 
-    def downloadFile(url: str, file_path: str, func: Callable = None):
+    def downloadFile(url: str, file_path: str, func: Callable = None) -> bool:
         try:
             res = requests_get(url, stream=True)
             res.raise_for_status()
             file_size = int(res.headers.get('content-length', 0))
             total_chunk = 0
+            os_makedirs(os_path.dirname(file_path), exist_ok=True)
             with open(file_path, 'wb') as file:
                 for chunk in res.iter_content(chunk_size=1024*2000):
                     file.write(chunk)
                     if func is not None:
                         total_chunk += len(chunk)
-                        func(total_chunk/file_size)
+                        if file_size > 0:
+                            func(total_chunk/file_size)
+            return True
         except Exception:
             errorLogging()
+            return False
 
+    all_succeeded = True
     for filename in files:
-        file_path = os_path.join(path, filename)
+        # HFのfilenameはリモート由来。".."を含む場合はパストラバーサルの可能性があるため
+        # 正規化して展開先ディレクトリ配下であることを確認してから書き込む
+        normalized = os_path.normpath(filename)
+        file_path = os_path.abspath(os_path.join(path, normalized))
+        if not (file_path == base_dir or file_path.startswith(base_dir + os_path.sep)):
+            errorLogging()
+            all_succeeded = False
+            continue
         url = hf_hub_url(hf_repo, filename)
-        downloadFile(url, file_path, func=callback if filename == "model.bin" else None)
+        if not downloadFile(url, file_path, func=callback if filename == "model.bin" else None):
+            all_succeeded = False
 
     if end_callback is not None:
         end_callback()
+    return all_succeeded
 
 def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-int8"):
+    if transformers is None:
+        return
     directory_name = ctranslate2_weights[weight_type]["directory_name"]
     tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
     tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")

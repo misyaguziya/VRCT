@@ -193,6 +193,14 @@ config_page:
             label: "Select LMStudio Model"
             connection_required: "LMStudio Connection Required"
 
+        openai_compatible_url:
+            label: "OpenAI-Compatible Endpoint URL"
+            desc: "When pointing at a non-official endpoint, verify pricing, security and model compatibility at your own risk."
+        openai_compatible_auth_key:
+            label: "OpenAI-Compatible Auth Key"
+        select_openai_compatible_model:
+            label: "Select OpenAI-Compatible Model"
+
         ollama_connection_check:
             label: "Check Ollama Connection"
         select_ollama_model:
@@ -217,6 +225,9 @@ config_page:
             desc: "If a registered word is detected, the message will not be sent. To add multiple words at once, separate them with ',' (comma).\n*Duplicate words will not be registered."
             add_button_label: "Add"
             count_desc: "Words Currently Registered: {{count}}"
+        mic_vad_filter:
+            label: "Mic VAD Filter"
+            desc: "Only send audio to recognition after a silence gap is detected. Disable this if mic transcription stops mid-conversation instead of continuing to transcribe."
         speaker_record_timeout:
             label: "Speaker Record Timeout"
             desc: "Detects silence and, when the specified number of seconds has passed, considers the speaker input to have ended. (Second(s))"
@@ -226,6 +237,9 @@ config_page:
         speaker_max_phrase:
             label: "Speaker Max Words"
             desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs."
+        speaker_vad_filter:
+            label: "Speaker VAD Filter"
+            desc: "Only send audio to recognition after a silence gap is detected. Disable this if speaker transcription stops or shows 'speech recognition request failed' during continuous game/voice audio."
         select_transcription_engine:
             label: "Transcription Engine Used For Speech Recognition"
         whisper_weight_type:
@@ -355,10 +369,34 @@ config_page:
             label: "Switch VRCT To CPU/GPU Version"
         enable_websocket:
             label: "Enable WebSocket Server"
+            locked_by_obs_browser_source: "Disable OBS Browser Source to change this"
         websocket_host:
             label: "WebSocket Host"
         websocket_port:
             label: "WebSocket Port"
+        obs_browser_source:
+            section_label: "OBS Browser Source"
+        enable_obs_browser_source:
+            label: "Enable OBS Browser Source"
+            desc: "Host a local overlay page for OBS (Browser Source) that shows translations and fades out over time."
+        obs_browser_source_url:
+            label: "OBS URL (click to copy)"
+        obs_browser_source_port:
+            label: "OBS Port"
+        obs_browser_source_max_messages:
+            label: "Max Messages"
+        obs_browser_source_display_duration:
+            label: "Display Duration (sec)"
+        obs_browser_source_fadeout_duration:
+            label: "Fade-out Duration (sec)"
+        obs_browser_source_font_size:
+            label: "Font Size (px)"
+        obs_browser_source_font_color:
+            label: "Font Color (#RRGGBB)"
+        obs_browser_source_font_outline_thickness:
+            label: "Outline Thickness (px)"
+        obs_browser_source_font_outline_color:
+            label: "Outline Color (#RRGGBB)"
 
     notifications:
         save_success: "Settings have been saved."

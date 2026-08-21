@@ -59,12 +59,12 @@ export const useMessage = () => {
 
     const addSentMessageLog = (payload) => {
         const message_object = generateMessageObject(payload, "sent");
-        addMessageLogs(message_object);
+        updateMessageLogs((current) => [...current.data, message_object]);
     };
 
     const addReceivedMessageLog = (payload) => {
         const message_object = generateMessageObject(payload, "received");
-        addMessageLogs(message_object);
+        updateMessageLogs((current) => [...current.data, message_object]);
     };
 
     const startTyping = () => {
@@ -103,12 +103,12 @@ const generateTimeData = () => {
     );
 };
 
-const generateMessageObject = (data, category) => {
+const generateMessageObject = (data, category, status = "ok") => {
     return {
-        id: crypto.randomUUID(),
+        id: data.id ?? crypto.randomUUID(),
         created_at: generateTimeData(),
         category: category,
-        status: "ok",
+        status: status,
         messages: {
             original: data.original,
             translations: data.translations ?? [],
@@ -119,8 +119,17 @@ const generateMessageObject = (data, category) => {
 const updateItemById = (id, updated_data) => (current_items) => {
     return current_items.data.map(item => {
         if (item.id === id) {
-            item.status = "ok";
-            if (updated_data.translations) item.messages.translations = updated_data.translations;
+            if (updated_data.messages) {
+                return { ...item, ...updated_data, created_at: item.created_at };
+            }
+            return {
+                ...item,
+                status: "ok",
+                messages: {
+                    ...item.messages,
+                    translations: updated_data.translations ?? item.messages.translations,
+                },
+            };
         }
         return item;
     });

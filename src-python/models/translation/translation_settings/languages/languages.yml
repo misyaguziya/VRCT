@@ -1,44 +1,6 @@
 # Translation Language Mappings
 # Each backend defines source (input) and target (output) language codes
 
-DeepL:
-  source: &deepl_langs
-    Arabic: ar
-    Bulgarian: bg
-    Czech: cs
-    Danish: da
-    German: de
-    Greek: el
-    English: en
-    Spanish: es
-    Estonian: et
-    Finnish: fi
-    French: fr
-    Irish: ga
-    Croatian: hr
-    Hungarian: hu
-    Indonesian: id
-    Italian: it
-    Japanese: ja
-    Korean: ko
-    Lithuanian: lt
-    Latvian: lv
-    Maltese: mt
-    Norwegian: 'no'
-    Dutch: nl
-    Polish: pl
-    Portuguese: pt
-    Romanian: ro
-    Russian: ru
-    Slovak: sk
-    Slovenian: sl
-    Swedish: sv
-    Turkish: tr
-    Ukrainian: uk
-    Chinese Simplified: zh
-    Chinese Traditional: zh
-  target: *deepl_langs
-
 DeepL_API:
   source:
     Japanese: ja
@@ -624,6 +586,9 @@ CTranslate2:
   nllb-200-3.3B-ct2-int8:
     source: *nllb_langs
     target: *nllb_langs
+  nllb-200-distilled-600M-ct2-int8:
+    source: *nllb_langs
+    target: *nllb_langs
 
 Plamo_API:
   source: &plamo_langs
@@ -764,6 +729,10 @@ OpenAI_API:
   target: *openai_langs
 
 LMStudio:
+  source: *openai_langs
+  target: *openai_langs
+
+OpenAI_Compatible:
   source: *openai_langs
   target: *openai_langs
 

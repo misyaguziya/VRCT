@@ -1,11 +1,10 @@
 import sys
 import copy
-from os import path as os_path, makedirs as os_makedirs
+from os import path as os_path, makedirs as os_makedirs, replace as os_replace, fsync as os_fsync, remove as os_remove
 from json import load as json_load
 from json import dump as json_dump
 import threading
 from typing import Optional, Dict, Any
-import torch
 
 # Guard optional, potentially heavy or platform-specific imports so importing
 # config.py doesn't raise in environments missing those packages.
@@ -37,6 +36,12 @@ except Exception:  # pragma: no cover - optional runtime
     whisper_models = {}  # type: ignore
 
 from utils import errorLogging, validateDictStructure, getComputeDeviceList
+
+# NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
+# 対応する migration ヘルパは ADR-0004 でストリーミング/VAD 独自実装を撤退した際に
+# 削除された。フレーズ境界検出は speech_recognition.listen_in_background の
+# energy_threshold + phrase_time_limit に完全委任している。
+
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -90,7 +95,7 @@ class ManagedDict(dict):
             if getattr(descriptor, "serialize", True):
                 self._instance.saveConfig(self._property_name, dict(self), immediate_save=self._immediate_save)
         except Exception:
-            pass
+            errorLogging()
 
     def __getitem__(self, key):
         # Always read from internal storage to get latest value
@@ -169,7 +174,7 @@ class ManagedList(list):
             if getattr(descriptor, "serialize", True):
                 self._instance.saveConfig(self._property_name, list(self), immediate_save=self._immediate_save)
         except Exception:
-            pass
+            errorLogging()
 
     def __getitem__(self, index):
         # Always read from internal storage to get latest value
@@ -556,6 +561,7 @@ class Config:
     _config_data: Dict[str, Any] = {}
     _timer: Optional[threading.Timer] = None
     _debounce_time: int = 2
+    _file_lock: threading.Lock = threading.Lock()
 
     def __new__(cls):
         if cls._instance is None:
@@ -578,22 +584,33 @@ class Config:
                 filtered[var_name] = var_func(self)
             except Exception:
                 pass
-        self._config_data = filtered
-        with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
-            json_dump(filtered, fp, indent=4, ensure_ascii=False)
+        with self._file_lock:
+            self._config_data = filtered
+            # クラッシュ/強制終了時にconfig.jsonが破損しないよう、一時ファイルに書いてから
+            # アトミックにリネームする
+            tmp_path = f"{self.PATH_CONFIG}.tmp"
+            with open(tmp_path, "w", encoding="utf-8") as fp:
+                json_dump(filtered, fp, indent=4, ensure_ascii=False)
+                fp.flush()
+                os_fsync(fp.fileno())
+            os_replace(tmp_path, self.PATH_CONFIG)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value
 
-        if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
-            self._timer.cancel()
+        with self._file_lock:
+            if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
+                self._timer.cancel()
+
+            if immediate_save:
+                pass
+            else:
+                self._timer = threading.Timer(self._debounce_time, self.saveConfigToFile)
+                self._timer.daemon = True
+                self._timer.start()
 
         if immediate_save:
             self.saveConfigToFile()
-        else:
-            self._timer = threading.Timer(self._debounce_time, self.saveConfigToFile)
-            self._timer.daemon = True
-            self._timer.start()
 
     # Read Only
     VERSION = ManagedProperty('VERSION', readonly=True, serialize=False)
@@ -601,7 +618,7 @@ class Config:
     PATH_CONFIG = ManagedProperty('PATH_CONFIG', readonly=True, serialize=False)
     PATH_LOGS = ManagedProperty('PATH_LOGS', readonly=True, serialize=False)
     GITHUB_URL = ManagedProperty('GITHUB_URL', readonly=True, serialize=False)
-    UPDATER_URL = ManagedProperty('UPDATER_URL', readonly=True, serialize=False)
+    SETUP_DOWNLOAD_URL = ManagedProperty('SETUP_DOWNLOAD_URL', readonly=True, serialize=False)
     MAX_MIC_THRESHOLD = ManagedProperty('MAX_MIC_THRESHOLD', readonly=True, serialize=False)
     MAX_SPEAKER_THRESHOLD = ManagedProperty('MAX_SPEAKER_THRESHOLD', readonly=True, serialize=False)
     WATCHDOG_TIMEOUT = ManagedProperty('WATCHDOG_TIMEOUT', readonly=True, serialize=False)
@@ -638,6 +655,7 @@ class Config:
     SELECTABLE_GROQ_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENROUTER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENROUTER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
 
     # --- Save Json Data (ManagedProperty-based) ---
@@ -666,8 +684,6 @@ class Config:
     MIC_AVG_LOGPROB = ManagedProperty('MIC_AVG_LOGPROB', type_=(int, float))
     MIC_NO_SPEECH_PROB = ManagedProperty('MIC_NO_SPEECH_PROB', type_=(int, float))
     MIC_NO_REPEAT_NGRAM_SIZE = ManagedProperty('MIC_NO_REPEAT_NGRAM_SIZE', type_=int)
-    MIC_VAD_FILTER = ManagedProperty('MIC_VAD_FILTER', type_=bool)
-    MIC_VAD_PARAMETERS = ManagedProperty('MIC_VAD_PARAMETERS', type_=dict, mutable_tracking=True)
     HOTKEYS = ValidatedProperty('HOTKEYS',
         validator=lambda val, inst: (
             {k: (v if (isinstance(v, list) or v is None) else inst.HOTKEYS.get(k))
@@ -685,17 +701,20 @@ class Config:
     SPEAKER_AVG_LOGPROB = ManagedProperty('SPEAKER_AVG_LOGPROB', type_=(int, float))
     SPEAKER_NO_SPEECH_PROB = ManagedProperty('SPEAKER_NO_SPEECH_PROB', type_=(int, float))
     SPEAKER_NO_REPEAT_NGRAM_SIZE = ManagedProperty('SPEAKER_NO_REPEAT_NGRAM_SIZE', type_=int)
-    SPEAKER_VAD_FILTER = ManagedProperty('SPEAKER_VAD_FILTER', type_=bool)
-    SPEAKER_VAD_PARAMETERS = ManagedProperty('SPEAKER_VAD_PARAMETERS', type_=dict, mutable_tracking=True)
 
     # --- Auth and API settings ---
+    # 旧 config.json との後方互換のため、不足キーは既定値（None）で補完し、余剰キーは無視する。
     AUTH_KEYS = ValidatedProperty('AUTH_KEYS',
         validator=lambda val, inst: (
-            {k: (v if isinstance(v, str) else inst.AUTH_KEYS.get(k)) for k, v in val.items()}
-            if isinstance(val, dict) and set(val.keys()) == set(inst.AUTH_KEYS.keys()) else None
+            {
+                k: (val[k] if (k in val and isinstance(val[k], (str, type(None)))) else inst.AUTH_KEYS.get(k))
+                for k in inst.AUTH_KEYS.keys()
+            }
+            if isinstance(val, dict) else None
         )
     )
     LMSTUDIO_URL = ManagedProperty('LMSTUDIO_URL', type_=str)
+    OPENAI_COMPATIBLE_URL = ManagedProperty('OPENAI_COMPATIBLE_URL', type_=str)
 
     # --- Transcription settings ---
     SELECTED_TRANSCRIPTION_COMPUTE_TYPE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_TYPE', _selected_transcription_compute_type_validator)
@@ -725,6 +744,17 @@ class Config:
     WEBSOCKET_HOST = ManagedProperty('WEBSOCKET_HOST', type_=str)
     WEBSOCKET_PORT = ManagedProperty('WEBSOCKET_PORT', type_=int)
 
+    # --- OBS Browser Source (overlay for OBS) ---
+    OBS_BROWSER_SOURCE = ManagedProperty('OBS_BROWSER_SOURCE', type_=bool)
+    OBS_BROWSER_SOURCE_PORT = ManagedProperty('OBS_BROWSER_SOURCE_PORT', type_=int)
+    OBS_BROWSER_SOURCE_MAX_MESSAGES = ManagedProperty('OBS_BROWSER_SOURCE_MAX_MESSAGES', type_=int)
+    OBS_BROWSER_SOURCE_DISPLAY_DURATION = ManagedProperty('OBS_BROWSER_SOURCE_DISPLAY_DURATION', type_=int)
+    OBS_BROWSER_SOURCE_FADEOUT_DURATION = ManagedProperty('OBS_BROWSER_SOURCE_FADEOUT_DURATION', type_=int)
+    OBS_BROWSER_SOURCE_FONT_SIZE = ManagedProperty('OBS_BROWSER_SOURCE_FONT_SIZE', type_=int)
+    OBS_BROWSER_SOURCE_FONT_COLOR = ManagedProperty('OBS_BROWSER_SOURCE_FONT_COLOR', type_=str)
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = ManagedProperty('OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS', type_=int)
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = ManagedProperty('OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR', type_=str)
+
     # --- Telemetry Settings ---
     ENABLE_TELEMETRY = ManagedProperty('ENABLE_TELEMETRY', type_=bool)
 
@@ -740,6 +770,7 @@ class Config:
     SELECTED_GROQ_MODEL = ManagedProperty('SELECTED_GROQ_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_MODEL_LIST'))
     SELECTED_OPENROUTER_MODEL = ManagedProperty('SELECTED_OPENROUTER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENROUTER_MODEL_LIST'))
     SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
+    SELECTED_OPENAI_COMPATIBLE_MODEL = ManagedProperty('SELECTED_OPENAI_COMPATIBLE_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'))
     SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
 
     # --- Translation and language settings ---
@@ -773,10 +804,10 @@ class Config:
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
-        self._UPDATER_URL = "https://api.github.com/repos/misyaguziya/VRCT_updater/releases/latest"
+        self._SETUP_DOWNLOAD_URL = "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe"
 
         self._MAX_MIC_THRESHOLD = 2000
-        self._MAX_SPEAKER_THRESHOLD = 4000
+        self._MAX_SPEAKER_THRESHOLD = 2000
         self._WATCHDOG_TIMEOUT = 60
         self._WATCHDOG_INTERVAL = 20
 
@@ -793,7 +824,8 @@ class Config:
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
-        self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
+        from utils import torch as _torch  # type: ignore
+        self._COMPUTE_MODE = "cuda" if (_torch is not None and _torch.cuda.is_available()) else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
 
@@ -822,6 +854,7 @@ class Config:
         self._SELECTABLE_GROQ_MODEL_LIST = []
         self._SELECTABLE_OPENROUTER_MODEL_LIST = []
         self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
         self._SELECTABLE_OLLAMA_MODEL_LIST = []
 
         # Save Json Data
@@ -902,15 +935,6 @@ class Config:
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._MIC_NO_REPEAT_NGRAM_SIZE = 0
-        self._MIC_VAD_FILTER = False
-        self._MIC_VAD_PARAMETERS = {
-            "threshold": 0.5,
-            "neg_threshold": None,
-            "min_speech_duration_ms": 0,
-            "max_speech_duration_s": float("inf"),
-            "min_silence_duration_ms": 2000,
-            "speech_pad_ms": 400,
-        }
         self._AUTO_SPEAKER_SELECT = True
         try:
             if device_manager is not None:
@@ -929,15 +953,6 @@ class Config:
         self._SPEAKER_AVG_LOGPROB = -0.8
         self._SPEAKER_NO_SPEECH_PROB = 0.6
         self._SPEAKER_NO_REPEAT_NGRAM_SIZE = 0
-        self._SPEAKER_VAD_FILTER = False
-        self._SPEAKER_VAD_PARAMETERS = {
-            "threshold": 0.5,
-            "neg_threshold": None,
-            "min_speech_duration_ms": 0,
-            "max_speech_duration_s": float("inf"),
-            "min_silence_duration_ms": 2000,
-            "speech_pad_ms": 400,
-        }
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
@@ -945,13 +960,14 @@ class Config:
             "Plamo_API": None,
             "Gemini_API": None,
             "OpenAI_API": None,
+            "OpenAI_Compatible": None,
             "Groq_API": None,
             "OpenRouter_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
-        self._CTRANSLATE2_WEIGHT_TYPE = "m2m100_418M-ct2-int8"
+        self._CTRANSLATE2_WEIGHT_TYPE = "nllb-200-distilled-600M-ct2-int8"
         self._SELECTED_PLAMO_MODEL = None
         self._SELECTED_GEMINI_MODEL = None
         self._SELECTED_OPENAI_MODEL = None
@@ -959,6 +975,8 @@ class Config:
         self._SELECTED_OPENROUTER_MODEL = None
         self._LMSTUDIO_URL = "http://127.0.0.1:1234/v1"
         self._SELECTED_LMSTUDIO_MODEL = None
+        self._OPENAI_COMPATIBLE_URL = "https://api.openai.com/v1"
+        self._SELECTED_OPENAI_COMPATIBLE_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
@@ -1028,6 +1046,15 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
+        self._OBS_BROWSER_SOURCE = False
+        self._OBS_BROWSER_SOURCE_PORT = 2232
+        self._OBS_BROWSER_SOURCE_MAX_MESSAGES = 14
+        self._OBS_BROWSER_SOURCE_DISPLAY_DURATION = 60
+        self._OBS_BROWSER_SOURCE_FADEOUT_DURATION = 12
+        self._OBS_BROWSER_SOURCE_FONT_SIZE = 40
+        self._OBS_BROWSER_SOURCE_FONT_COLOR = "#FFFFFF"
+        self._OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = 3
+        self._OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = "#000000"
         self._ENABLE_CLIPBOARD = False
         self._ENABLE_TELEMETRY = True
 
@@ -1058,6 +1085,28 @@ class Config:
                         except Exception:
                             errorLogging()
 
+        # インストーラ (NSIS) が選択した UI 言語の反映。NSIS 側は config.json
+        # を直接 JSON パースせず (UTF-8/非ASCII文字を含む既存ファイルで
+        # nsJSON プラグインのパースが実機で確実に失敗することを確認済み、
+        # 2026-08-21)、常に ASCII な言語コードだけを書いたこのマーカー
+        # ファイルを置く。存在すれば検証の上 UI_LANGUAGE に反映し、
+        # 一度使ったら削除する (以後のアプリ内言語変更をこのファイルが
+        # 上書きし続けないようにするため)。
+        installer_language_marker = os_path.join(self._PATH_LOCAL, "installer_language.txt")
+        if os_path.isfile(installer_language_marker):
+            try:
+                with open(installer_language_marker, 'r', encoding="utf-8") as fp:
+                    selected_language = fp.read().strip()
+                if selected_language in self._SELECTABLE_UI_LANGUAGE_LIST:
+                    self.UI_LANGUAGE = selected_language
+            except Exception:
+                errorLogging()
+            finally:
+                try:
+                    os_remove(installer_language_marker)
+                except Exception:
+                    errorLogging()
+
         self.saveConfigToFile()
 
     def revalidate_selected_models(self):
@@ -1068,6 +1117,7 @@ class Config:
             ('SELECTED_GROQ_MODEL', 'SELECTABLE_GROQ_MODEL_LIST'),
             ('SELECTED_OPENROUTER_MODEL', 'SELECTABLE_OPENROUTER_MODEL_LIST'),
             ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
+            ('SELECTED_OPENAI_COMPATIBLE_MODEL', 'SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'),
             ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
         ]
         for sel_attr, list_attr in pairs:

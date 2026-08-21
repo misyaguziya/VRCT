@@ -170,6 +170,44 @@ Function PageLeaveChooseLanguage
     ${EndIf}
 FunctionEnd
 
+; 4-2. Choose CPU/GPU edition page
+Var RadioCpuEdition
+Var RadioGpuEdition
+Var DialogChooseEdition
+Var SelectedEdition
+Page custom PageChooseEdition PageLeaveChooseEdition
+Function PageChooseEdition
+    !insertmacro MUI_HEADER_TEXT "Initial Settings" "Choose the version of VRCT to install (can be changed later by reinstalling)."
+    nsDialogs::Create 1018
+    Pop $DialogChooseEdition
+
+    ${If} $DialogChooseEdition == error
+        Abort
+    ${EndIf}
+
+    ${NSD_CreateRadioButton} 0 20u 100% 12u "CPU version (smaller download, works on any PC)"
+    Pop $RadioCpuEdition
+    ${NSD_CreateRadioButton} 0 40u 100% 12u "GPU version (requires an NVIDIA GPU, larger download, faster recognition)"
+    Pop $RadioGpuEdition
+
+    ${If} $SelectedEdition == "gpu"
+        SendMessage $RadioGpuEdition ${BM_SETCHECK} ${BST_CHECKED} 0
+    ${Else}
+        SendMessage $RadioCpuEdition ${BM_SETCHECK} ${BST_CHECKED} 0
+    ${EndIf}
+
+    nsDialogs::Show
+FunctionEnd
+
+Function PageLeaveChooseEdition
+    ${NSD_GetState} $RadioGpuEdition $0
+    ${If} $0 == ${BST_CHECKED}
+        StrCpy $SelectedEdition "gpu"
+    ${Else}
+        StrCpy $SelectedEdition "cpu"
+    ${EndIf}
+FunctionEnd
+
 !insertmacro MUI_PAGE_COMPONENTS
 
 ; 4-4. Custom page to ask user if he wants to reinstall/uninstall
@@ -432,6 +470,13 @@ Function .onInit
   IfErrors +2 0
     StrCpy $PassiveMode 1
 
+  ; Preselect the CPU/GPU edition page when launched from within the app
+  ; (e.g. "/EDITION=gpu" from the in-app CPU/GPU switch button). The page
+  ; is still shown so the user can change their mind before installing.
+  ${GetOptions} $CMDLINE "/EDITION=" $0
+  IfErrors +2 0
+    StrCpy $SelectedEdition $0
+
   !if "${DISPLAYLANGUAGESELECTOR}" == "true"
     !insertmacro MUI_LANGDLL_DISPLAY
   !endif
@@ -592,25 +637,87 @@ Section Install
   ; 指定のURLからファイルをダウンロード
   !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
+  !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
   Var /GLOBAL i
   Var /GLOBAL cmder_dl
   Var /GLOBAL cmder_version
   Var /GLOBAL file_name
-  StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
+  Var /GLOBAL dl_retries
+  Var /GLOBAL dl_transfer_id
+  Var /GLOBAL dl_tick
+  Var /GLOBAL dl_percent
+  Var /GLOBAL dl_xfersize
+  ${If} $SelectedEdition == "gpu"
+    StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
+  ${Else}
+    StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
+  ${EndIf}
 
   StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
   DetailPrint "Got URL : $cmder_dl"
 
+  ; NScurl (libcurl-based) replaces inetc::get, which is limited to files under
+  ; 2GB -- the GPU package is ~3.5GB. /BACKGROUND queues the transfer and
+  ; returns immediately so this loop can poll and print real progress
+  ; (percent + MB via NScurl::query) instead of blocking silently for
+  ; several minutes; /RESUME lets a retry continue from where it left off
+  ; rather than restart the whole transfer.
   DetailPrint "Downloading $file_name..."
-  inetc::get $cmder_dl "$TEMP\$file_name" /end
-  Pop $0
-  StrCmp "$0" "OK" dlok
-  DetailPrint "Download Failed $0"
-  Abort
+  Delete "$TEMP\$file_name"
+  StrCpy $dl_retries 0
+  download_retry:
+    NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
+    Pop $dl_transfer_id
+
+    StrCpy $dl_tick 0
+    download_wait:
+      Sleep 1000
+      NScurl::query /ID $dl_transfer_id "@STATUS@"
+      Pop $0
+      ${If} $0 != "Complete"
+        IntOp $dl_tick $dl_tick + 1
+        ${If} $dl_tick >= 5
+          StrCpy $dl_tick 0
+          NScurl::query /ID $dl_transfer_id "@PERCENT@"
+          Pop $dl_percent
+          NScurl::query /ID $dl_transfer_id "@XFERSIZE@"
+          Pop $dl_xfersize
+          DetailPrint "Downloading $file_name... $dl_xfersize ($dl_percent%)"
+        ${EndIf}
+        Goto download_wait
+      ${EndIf}
+
+    ; The transfer is queued/complete as soon as NScurl::http returns a transfer
+    ; ID, so NScurl::wait here only blocks for the (already-elapsed) tail end;
+    ; it pushes nothing to the stack -- the actual result is read via @ERROR@.
+    NScurl::wait /ID $dl_transfer_id /END
+    NScurl::query /ID $dl_transfer_id "@ERROR@"
+    Pop $0
+    ${If} $0 != "OK"
+      IntOp $dl_retries $dl_retries + 1
+      ${If} $dl_retries < 3
+        DetailPrint "Download interrupted ($0), retrying ($dl_retries/3)..."
+        Goto download_retry
+      ${Else}
+        DetailPrint "Download Failed ($0)"
+        Abort
+      ${EndIf}
+    ${EndIf}
 
   dlok:
   DetailPrint "Extracting $file_name ..."
   nsisunz::UnzipToStack "$TEMP\$file_name" $INSTDIR
+
+  ; nsisunz's return value isn't checked here (its stack protocol for
+  ; UnzipToStack isn't reliably documented and this call is shared with the
+  ; CPU install path, which has worked untouched), so instead verify directly
+  ; that the extraction actually produced the app rather than trusting a
+  ; silent success -- otherwise a corrupt/incomplete zip results in an
+  ; installer that reports success with an empty install directory.
+  ${IfNot} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+    DetailPrint "Extraction failed: $INSTDIR\${MAINBINARYNAME}.exe not found after extracting $file_name"
+    Abort
+  ${EndIf}
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
@@ -673,9 +780,17 @@ Function .onInstSuccess
       nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" "$R0"
   run_done:
 
-  StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage"}'
-  FileOpen $0 "$INSTDIR\config.json" w
-  FileWrite $0 $1
+  ; インストーラで選んだ UI 言語を config.json に直接書き込まない。
+  ; config.json は Python 側が UTF-8 (BOM無し、ensure_ascii=False) で書くため
+  ; 日本語等の非ASCII文字を含み得るが、NSIS の nsJSON プラグインでこれを
+  ; 読み込むと実機で確実にパース失敗することを診断ログで確認した
+  ; (2026-08-21)。そのため NSIS 側では JSON を一切パースせず、選択言語
+  ; コード (常に ASCII: en/ja/ko/zh-Hant/zh-Hans) だけを書いた単純なテキスト
+  ; マーカーファイルを置く。実際の config.json への反映は起動時に Python 側
+  ; (config.py の load_config) が行う — 既に動作実績のある json 読み書き
+  ; パスをそのまま使えるため、エンコーディング起因の失敗が起こらない。
+  FileOpen $0 "$INSTDIR\installer_language.txt" w
+  FileWrite $0 "$SelectedLangage"
   FileClose $0
 FunctionEnd
 
@@ -735,26 +850,32 @@ Section Uninstall
     Delete "$INSTDIR\\{{this}}"
   {{/each}}
 
-  ; Dlete config.json
-  Delete "$INSTDIR\config.json"
+  ; ユーザーデータ (config.json / ログ / weights) は既定では保持する。
+  ; 上書きインストール時 (PageLeaveReinstall が既存 uninstaller を呼ぶ) にも
+  ; この Section が実行されるため、無条件削除すると全設定が失われる。
+  ; 完全削除は「Delete AppData」チェックが入った場合のみ。
+  ${If} $DeleteAppDataCheckboxState == 1
+    Delete "$INSTDIR\config.json"
+    Delete "$INSTDIR\process.log"
+    Delete "$INSTDIR\error.log"
+    Delete "$INSTDIR\crash_trace.log"
+    Delete "$INSTDIR\freeze_trace.log"
+    Delete "$INSTDIR\telemetry_state.json"
+    RmDir /r "$INSTDIR\logs"
+    RmDir /r "$INSTDIR\weights"
+  ${EndIf}
 
-  ; Delete process.log
-  Delete "$INSTDIR\process.log"
-
-  ; Delete errror.log
-  Delete "$INSTDIR\error.log"
+  ; インストーラが起動時 UI 言語受け渡し用に置くマーカーファイル。
+  ; ユーザー設定ではなく一度きりの信号ファイルなので DeleteAppData の
+  ; 有無に関わらず常に削除する (アプリを一度も起動せずアンインストール
+  ; された場合、Python 側の消費・自己削除が走らず残るケアも兼ねる)。
+  Delete "$INSTDIR\installer_language.txt"
 
   ; Delete update.exe
   Delete "$INSTDIR\update.exe"
 
-  ; Delete _internal folder
+  ; Delete _internal folder (アプリ本体の一部なので常に削除)
   RmDir /r "$INSTDIR\_internal"
-
-  ; Delete log folder
-  RmDir /r "$INSTDIR\logs"
-
-  ; Delete weights folder
-  RmDir /r "$INSTDIR\weights"
 
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"

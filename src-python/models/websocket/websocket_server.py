@@ -3,6 +3,7 @@ import threading
 import websockets
 from websockets.legacy.server import WebSocketServerProtocol
 from typing import Callable, Set, Optional
+from utils import errorLogging
 
 class WebSocketServer:
     """
@@ -47,13 +48,18 @@ class WebSocketServer:
             async for message in websocket:
                 # メッセージ受信時にコールバック呼び出し
                 if self._message_handler:
-                    self._message_handler(self, websocket, message)
+                    try:
+                        self._message_handler(self, websocket, message)
+                    except Exception:
+                        # A broken handler shouldn't tear down this client's
+                        # connection (or, if unlucky, the whole server task).
+                        errorLogging()
         except websockets.exceptions.ConnectionClosed:
             # クライアントが切断した場合
             pass
         finally:
-            # 切断時に集合から削除
-            self.clients.remove(websocket)
+            # 切断時に集合から削除(既に削除済みでも例外にならないようdiscardを使用)
+            self.clients.discard(websocket)
 
     async def _broadcast_async(self, message: str):
         """
@@ -164,15 +170,18 @@ class WebSocketServer:
         """
         self.is_running = False
         if self._loop:
-            # サーバーのlistenを停止し、ループ停止をスケジュール
-            self._loop.call_soon_threadsafe(self._server.close)
-            # None をキューに入れて_send_loopを抜けさせる
-            self._loop.call_soon_threadsafe(self._send_queue.put_nowait, None)
+            # start()直後、_run_loopのセットアップ(setup_server)が完了する前に
+            # stop()が呼ばれるとself._server/self._send_queueがまだNoneのことがあるためガードする
+            if self._server is not None:
+                self._loop.call_soon_threadsafe(self._server.close)
+            if self._send_queue is not None:
+                # None をキューに入れて_send_loopを抜けさせる
+                self._loop.call_soon_threadsafe(self._send_queue.put_nowait, None)
             # ループ停止
             self._loop.call_soon_threadsafe(self._loop.stop)
-        # スレッドの終了を待つ
+        # スレッドの終了を待つ(無期限ブロックを避けるためタイムアウトを設定)
         if self._thread:
-            self._thread.join()
+            self._thread.join(timeout=5.0)
 
 if __name__ == "__main__":
     # テスト用の簡単なメッセージハンドラ

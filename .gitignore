@@ -49,3 +49,13 @@ dist-ssr
 /build
 error.txt
 config.json
+
+
+# Personal Claude Code settings (not shared with the team)
+.claude/settings.local.json
+
+# Claude Code environment setup (not committed)
+CLAUDE.md
+.claude/
+docs/adr/
+src-python/docs/ref/

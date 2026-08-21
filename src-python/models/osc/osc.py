@@ -169,7 +169,8 @@ class OSCHandler:
         self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher)
         Thread(target=self.oscServerServe, daemon=True).start()
 
-        while True:
+        max_retries = 5
+        for attempt in range(max_retries):
             try:
                 # osc_server_name + UTC timestamp でユニークなサービス名を生成
                 service_name = f"{self.osc_query_service_name}:{int(time.time())}"
@@ -181,6 +182,10 @@ class OSCHandler:
                 break
             except Exception:
                 errorLogging()
+                self.osc_query_service = None
+                if attempt == max_retries - 1:
+                    # OSCQueryのセットアップは断念するが、OSCサーバ自体は動作を続ける
+                    break
                 sleep(1)
 
     def oscServerServe(self) -> None:

@@ -1,10 +1,16 @@
+import atexit
 import copy
-import gc
 import asyncio
+import faulthandler
 import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
 from os import path as os_path
+from os import getppid as os_getppid
+from os import _exit as os_exit
+from os import remove as os_remove
+from os import stat as os_stat
+from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
 from queue import Queue
@@ -21,7 +27,6 @@ from config import config
 from models.translation.translation_translator import Translator
 from models.osc.osc import OSCHandler
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
-from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
@@ -32,9 +37,58 @@ from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
+from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
 from models.telemetry import Telemetry
-from utils import errorLogging, setupLogger
+from utils import errorLogging, setupLogger, printLog
+
+TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
+
+# フリーズ調査用の恒久計装。mainloop.py の faulthandler.enable() は
+# ネイティブフォルト (access violation 等) 発生時にしか全スレッドの
+# コールスタックを記録しない。今回問題になっている「クラッシュではなく
+# 無応答のまま固まる」ケースはネイティブフォルトを伴わないため、それとは
+# 別に dump_traceback_later でタイムアウト検知のスタックダンプを取る。
+# feedWatchdog() が呼ばれるたびにタイマーを再武装し (呼び出しは
+# フロントエンドから ~WATCHDOG_INTERVAL 秒ごとに来る)、その周期を超えて
+# 次の feed が来なければ、その時点の全スレッドスタックを
+# freeze_trace.log に書き出す (exit=False なのでプロセスは落とさない)。
+# faulthandler は enable/dump_traceback_later 時点で fd を掴むため
+# 遅延 open できず、フリーズ無しの通常終了でも 0 バイトのファイルが
+# 残る。運用上のゴミ化を避けるため atexit で「書き込みが無ければ削除」する。
+_freeze_trace_path = "freeze_trace.log"
+_freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
+_FREEZE_DUMP_MARGIN_SEC = 15
+
+
+def _cleanupFreezeTraceIfEmpty() -> None:
+    try:
+        _freeze_trace_file.close()
+    except Exception:
+        pass
+    try:
+        if os_path.exists(_freeze_trace_path) and os_stat(_freeze_trace_path).st_size == 0:
+            os_remove(_freeze_trace_path)
+    except Exception:
+        pass
+
+
+atexit.register(_cleanupFreezeTraceIfEmpty)
+
+
+class _DiscardQueue(Queue):
+    """Queue that silently drops everything put into it.
+
+    Energy-meter-only recording uses SelectedMic/SpeakerEnergyAndAudioRecorder,
+    whose listener always pushes audio chunks into the audio_queue argument
+    even when nobody wants the audio (only the energy_queue is consumed).
+    Passing this instead of a real Queue avoids an unbounded memory leak
+    from chunks nobody ever drains.
+    """
+
+    def put(self, *args, **kwargs) -> None:
+        pass
+
 
 class threadFnc(Thread):
     """A tiny Thread wrapper that repeatedly calls a function.
@@ -80,6 +134,368 @@ class threadFnc(Thread):
                     errorLogging()
         return
 
+
+class AudioLifecycleWorker:
+    """デバイス変化に伴う recorder の stop/start を専用スレッドで直列実行する。
+
+    device_manager.monitoring() は Before/After コールバック
+    (Controller.stopAccess*Devices / restartAccess*Devices) を自分の
+    スレッド上で同期的に呼んでいた。これらは mic/speaker の
+    stop (最大 TRANSCRIPT_STOP_JOIN_TIMEOUT 秒の join) や PyAudio open を
+    含む重い処理のため、monitoring スレッドがその間ブロックされ、次の
+    COM デバイス通知を取りこぼす窓ができていた。
+    ここに enqueue することで monitoring スレッドは即座に呼び出しから
+    戻れる。関数は FIFO で 1 つずつ実行されるため、
+    Before → (デバイス列挙) → After の順序自体は保たれる。
+    """
+
+    def __init__(self) -> None:
+        self._queue: "Queue[Callable[[], None]]" = Queue()
+        self._thread = Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def enqueue(self, fn: Callable[[], None]) -> None:
+        self._queue.put(fn)
+
+    def _run(self) -> None:
+        while True:
+            fn = self._queue.get()
+            try:
+                fn()
+            except Exception:
+                errorLogging()
+
+
+class _AudioDeviceSession:
+    """1つの物理デバイス (マイクまたはスピーカー) に対する Recorder の
+    ライフサイクルを、features ("transcript"/"energy") 単位で統合管理する。
+
+    以前は文字起こし用と音量メーター用でそれぞれ独立に
+    SelectedMic/SpeakerEnergyAndAudioRecorder (= 独立した PyAudio
+    Microphone) を生成・破棄しており、Config パネルで音量メーターを
+    表示しながら文字起こしを ON にすると、同一物理デバイスに 2 つの
+    Microphone が並立し得た。ここでは常に features の和集合に対して
+    単一の Recorder を保持することでこれを防ぐ。
+
+    このクラスは抽象基底で、マイク/スピーカー固有の設定 (config キー・
+    Recorder クラス・AudioTranscriber の speaker フラグ) はサブクラスで
+    _config / _recorder_cls 等として与える。
+
+    呼び出し元 (Model) が Controller.mic/speaker_lifecycle_lock で
+    直列化している前提とし、このクラス自体はロックを持たない。
+    """
+
+    _kind: str = ""  # "mic" / "speaker" — ログ・エラーメッセージ用
+
+    def __init__(self) -> None:
+        self.features: set[str] = set()
+        self._recorder = None
+        self._transcriber: Optional[AudioTranscriber] = None
+        self._audio_queue: Optional[Queue] = None
+        self._print_transcript: Optional[threadFnc] = None
+        self._energy_progressbar: Optional[threadFnc] = None
+        self.transcript_fnc: Optional[Callable[[dict], None]] = None
+        self.energy_fnc: Callable[[float], None] = lambda v: None
+        # 現在 Recorder が開いているデバイス (dict) を保持し、
+        # reconfigure() で「同一デバイスかつ features 変化なし」なら no-op
+        # にするために使う。
+        self._active_device: Optional[dict] = None
+
+    @staticmethod
+    def _device_key(device: Optional[dict]) -> Optional[tuple]:
+        """デバイスの同一性判定に使う key。
+
+        pyaudio が返す dict は不安定なフィールド (defaultLowInputLatency 等) を
+        含むため生 dict 比較は使えない。ホスト内で一意な (name, index) の
+        タプルで判定する。
+        """
+        if device is None:
+            return None
+        return (device.get("name"), device.get("index"))
+
+    # --- サブクラスが実装するフック -------------------------------------
+
+    def _resolve_device(self, override: Optional[dict] = None) -> Optional[dict]:
+        raise NotImplementedError
+
+    def _create_recorder(self, device: dict):
+        raise NotImplementedError
+
+    def _create_transcriber(self) -> AudioTranscriber:
+        raise NotImplementedError
+
+    def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
+        raise NotImplementedError
+
+    # --- 公開 API ---------------------------------------------------------
+
+    def reconfigure(
+        self,
+        *,
+        transcript: Optional[bool] = None,
+        energy: Optional[bool] = None,
+        device: Optional[dict] = None,
+    ) -> None:
+        """transcript/energy を True で有効化、False で無効化、None で現状維持。
+
+        device を明示指定すると config を読まずそれを使う (Auto 選択で
+        「実使用中エンドポイント」を渡すユースケース)。指定しなければ
+        従来通り config (SELECTED_MIC_HOST/DEVICE 等) から解決する。
+
+        差分検知: 「新 features == 現 features」かつ「解決したデバイス ==
+        _active_device」なら no-op で早期 return。デバイスまたは features
+        が変化した場合のみ stop→start する。これにより device 切替時に
+        Recorder が二重に close/open されることを防ぐ。
+        """
+        new_features = set(self.features)
+        if transcript is True:
+            new_features.add("transcript")
+        elif transcript is False:
+            new_features.discard("transcript")
+        if energy is True:
+            new_features.add("energy")
+        elif energy is False:
+            new_features.discard("energy")
+
+        # override が指定されなければ config から解決 (下位互換)
+        resolved_device = self._resolve_device(override=device)
+
+        same_features = new_features == self.features
+        same_device = self._device_key(resolved_device) == self._device_key(self._active_device)
+        already_running = (not new_features) or (self._recorder is not None)
+        if same_features and same_device and already_running:
+            return
+
+        self._stop()
+        self.features = new_features
+        if self.features:
+            self._start(device=resolved_device)
+
+    def pause(self) -> None:
+        if self._recorder is not None:
+            self._recorder.pause()
+
+    def resume(self) -> None:
+        if isinstance(self._audio_queue, Queue):
+            while not self._audio_queue.empty():
+                self._audio_queue.get()
+        if self._recorder is not None:
+            self._recorder.resume()
+
+    @property
+    def device_error_event(self):
+        return self._recorder.device_error_event if self._recorder is not None else None
+
+    # --- 内部実装 ---------------------------------------------------------
+
+    def _start(self, *, device: Optional[dict]) -> None:
+        # 呼び出し元 (reconfigure) が _resolve_device で解決済みの
+        # デバイスを渡す。None は「使用可能なデバイス無し」を意味し、
+        # ここで再解決はしない (再解決すると reconfigure の意図した
+        # None → 停止のセマンティクスが壊れる)。
+        if device is None:
+            if "transcript" in self.features and callable(self.transcript_fnc):
+                self.transcript_fnc({"text": False, "language": None})
+            if "energy" in self.features:
+                self.energy_fnc(False)
+            self.features = set()
+            self._active_device = None
+            return
+
+        # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
+        self._active_device = device
+
+        self._recorder = self._create_recorder(device)
+
+        audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
+        energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
+        self._audio_queue = audio_queue
+        self._recorder.recordIntoQueue(audio_queue, energy_queue)
+
+        if "transcript" in self.features:
+            self._transcriber = self._create_transcriber()
+            transcriber = self._transcriber
+            recorder = self._recorder
+
+            def sendTranscript() -> None:
+                try:
+                    if recorder.device_error_event.is_set():
+                        recorder.device_error_event.clear()
+                        if callable(self.transcript_fnc):
+                            self.transcript_fnc({"text": False, "language": None})
+                        return
+                    if self._transcribe(transcriber, audio_queue) and callable(self.transcript_fnc):
+                        result = transcriber.getTranscript()
+                        result["recognition_error"] = transcriber.last_recognition_error
+                        self.transcript_fnc(result)
+                except Exception:
+                    errorLogging()
+
+            def endTranscript() -> None:
+                while not audio_queue.empty():
+                    audio_queue.get()
+                self._transcriber = None
+                # 明示 gc.collect() は呼ばない: ActiveEndpointTracker が別スレッド
+                # (CoInitialize 済み apartment) で保持している comtypes の COM
+                # ポインタが、この _print_transcript スレッド (CoInitialize
+                # していない) 上で __del__ → Release() されて access violation
+                # を起こすことを crash_trace.log で 2026-08-19 に確認した。
+                # 参照が実際に不要になれば通常の GC が回収する。
+
+            self._print_transcript = threadFnc(sendTranscript, end_fnc=endTranscript)
+            self._print_transcript.daemon = True
+            self._print_transcript.start()
+
+        if "energy" in self.features:
+            def sendEnergy() -> None:
+                if not energy_queue.empty():
+                    energy = energy_queue.get()
+                    try:
+                        self.energy_fnc(energy)
+                    except Exception:
+                        errorLogging()
+                sleep(0.01)
+
+            self._energy_progressbar = threadFnc(sendEnergy)
+            self._energy_progressbar.daemon = True
+            self._energy_progressbar.start()
+
+    def _stop(self) -> None:
+        if isinstance(self._print_transcript, threadFnc):
+            self._print_transcript.stop()
+            self._print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+            if self._print_transcript.is_alive():
+                printLog(f"{self._kind.capitalize()} transcription thread did not terminate within timeout")
+            self._print_transcript = None
+        if isinstance(self._energy_progressbar, threadFnc):
+            self._energy_progressbar.stop()
+            self._energy_progressbar.join()
+            self._energy_progressbar = None
+        if self._recorder is not None:
+            self._recorder.resume()
+            self._recorder.stop()
+            self._recorder = None
+        self._transcriber = None
+        self._audio_queue = None
+        self._active_device = None
+
+
+class MicSession(_AudioDeviceSession):
+    _kind = "mic"
+
+    def _resolve_device(self, override: Optional[dict] = None) -> Optional[dict]:
+        if override is not None:
+            # NoDevice が明示的に渡された場合は None (デバイス無し) 扱い
+            if override.get("name") == "NoDevice":
+                return None
+            return override
+        mic_host_name = config.SELECTED_MIC_HOST
+        mic_device_name = config.SELECTED_MIC_DEVICE
+        mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
+        selected_mic_device = [d for d in mic_device_list if d["name"] == mic_device_name]
+        if not selected_mic_device or mic_device_name == "NoDevice":
+            return None
+        return selected_mic_device[0]
+
+    def _create_recorder(self, device: dict):
+        record_timeout = config.MIC_RECORD_TIMEOUT
+        phrase_timeout = config.MIC_PHRASE_TIMEOUT
+        if record_timeout > phrase_timeout:
+            record_timeout = phrase_timeout
+        return SelectedMicEnergyAndAudioRecorder(
+            device=device,
+            energy_threshold=config.MIC_THRESHOLD,
+            dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
+            phrase_time_limit=record_timeout,
+            record_timeout=record_timeout,
+        )
+
+    def _create_transcriber(self) -> AudioTranscriber:
+        phrase_timeout = config.MIC_PHRASE_TIMEOUT
+        return AudioTranscriber(
+            speaker=False,
+            source=self._recorder,
+            phrase_timeout=phrase_timeout,
+            max_phrases=config.MIC_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+            root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
+            device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
+            device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+            compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+        )
+
+    def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
+        selected_your_languages = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+        languages = [d["language"] for d in selected_your_languages.values() if d["enable"] is True]
+        countries = [d["country"] for d in selected_your_languages.values() if d["enable"] is True]
+        return transcriber.transcribeAudioQueue(
+            queue,
+            languages,
+            countries,
+            config.MIC_AVG_LOGPROB,
+            config.MIC_NO_SPEECH_PROB,
+            config.MIC_NO_REPEAT_NGRAM_SIZE,
+        )
+
+
+class SpeakerSession(_AudioDeviceSession):
+    _kind = "speaker"
+
+    def _resolve_device(self, override: Optional[dict] = None) -> Optional[dict]:
+        if override is not None:
+            if override.get("name") == "NoDevice":
+                return None
+            return override
+        speaker_device_name = config.SELECTED_SPEAKER_DEVICE
+        speaker_device_list = device_manager.getSpeakerDevices()
+        selected_speaker_device = [d for d in speaker_device_list if d["name"] == speaker_device_name]
+        if not selected_speaker_device or speaker_device_name == "NoDevice":
+            return None
+        return selected_speaker_device[0]
+
+    def _create_recorder(self, device: dict):
+        record_timeout = config.SPEAKER_RECORD_TIMEOUT
+        phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
+        if record_timeout > phrase_timeout:
+            record_timeout = phrase_timeout
+        return SelectedSpeakerEnergyAndAudioRecorder(
+            device=device,
+            energy_threshold=config.SPEAKER_THRESHOLD,
+            dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
+            phrase_time_limit=record_timeout,
+            record_timeout=record_timeout,
+        )
+
+    def _create_transcriber(self) -> AudioTranscriber:
+        phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
+        return AudioTranscriber(
+            speaker=True,
+            source=self._recorder,
+            phrase_timeout=phrase_timeout,
+            max_phrases=config.SPEAKER_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+            root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
+            device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
+            device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+            compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+        )
+
+    def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
+        selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+        languages = [d["language"] for d in selected_target_languages.values() if d["enable"] is True]
+        countries = [d["country"] for d in selected_target_languages.values() if d["enable"] is True]
+        return transcriber.transcribeAudioQueue(
+            queue,
+            languages,
+            countries,
+            config.SPEAKER_AVG_LOGPROB,
+            config.SPEAKER_NO_SPEECH_PROB,
+            config.SPEAKER_NO_REPEAT_NGRAM_SIZE,
+        )
+
+
 class Model:
     _instance = None
 
@@ -104,16 +520,14 @@ class Model:
 
         self.logger = None
         self.th_check_device = None
-        self.mic_print_transcript = None
-        self.mic_audio_recorder = None
-        self.mic_transcriber = None
-        self.mic_energy_recorder = None
-        self.mic_energy_plot_progressbar = None
-        self.speaker_print_transcript = None
-        self.speaker_audio_recorder = None
-        self.speaker_transcriber = None
-        self.speaker_energy_recorder = None
-        self.speaker_energy_plot_progressbar = None
+        # マイク/スピーカーそれぞれの文字起こし・エナジー計測は
+        # _AudioDeviceSession (MicSession/SpeakerSession) に集約されている。
+        # 1 物理デバイスにつき Recorder (= PyAudio Microphone) が常に
+        # 1 つだけになるよう、features (transcript/energy) の和集合を
+        # session が管理する。
+        self._mic_session = MicSession()
+        self._speaker_session = SpeakerSession()
+        self.audio_lifecycle_worker = AudioLifecycleWorker()
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
@@ -130,7 +544,6 @@ class Model:
         }
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
-        self.mic_audio_queue = None
         self.mic_mute_status = None
         self.transliterator = None
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
@@ -139,9 +552,7 @@ class Model:
         self.websocket_server_loop = False
         self.websocket_server_alive = False
         self.th_websocket_server = None
-        # default no-op callbacks for energy check functions
-        self.check_mic_energy_fnc: Callable[[float], None] = lambda v: None
-        self.check_speaker_energy_fnc: Callable[[float], None] = lambda v: None
+        self.obs_browser_source_server = None
         self.clipboard = Clipboard()
         self.telemetry = Telemetry()
 
@@ -258,6 +669,24 @@ class Model:
     def updateTranslatorOpenAIClient(self) -> None:
         self.ensure_initialized()
         self.translator.updateOpenAIClient()
+
+    def authenticationTranslatorOpenAICompatibleAuthKey(self, auth_key: str, base_url: Optional[str] = None) -> bool:
+        result = self.translator.authenticationOpenAICompatibleAuthKey(
+            auth_key, base_url=base_url, root_path=config.PATH_LOCAL
+        )
+        return result
+
+    def getTranslatorOpenAICompatibleModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOpenAICompatibleModelList()
+
+    def setTranslatorOpenAICompatibleModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        return self.translator.setOpenAICompatibleModel(model=model)
+
+    def updateTranslatorOpenAICompatibleClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOpenAICompatibleClient()
 
     def authenticationTranslatorGroqAuthKey(self, auth_key: str) -> bool:
         result = self.translator.authenticationGroqAuthKey(auth_key, root_path=config.PATH_LOCAL)
@@ -450,7 +879,8 @@ class Model:
         if isinstance(translation, str):
             success_flag = True
         else:
-            while True:
+            max_retries = 20  # 0.1s間隔で最大2秒。CTranslate2が使用不可な場合の無限ループを防ぐ
+            for _ in range(max_retries):
                 translation = self.translator.translate(
                                     translator_name="CTranslate2",
                                     weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
@@ -462,6 +892,9 @@ class Model:
                 if translation is not False:
                     break
                 sleep(0.1)
+            else:
+                errorLogging()
+                translation = message  # フォールバック翻訳も失敗した場合は原文を返す
         return translation, success_flag
 
     def getInputTranslate(self, message, source_language=None):
@@ -517,16 +950,12 @@ class Model:
         return len(self.keyword_processor.extract_keywords(message)) != 0
 
     def detectRepeatSendMessage(self, message):
-        repeat_flag = False
-        if self.previous_send_message == message:
-            repeat_flag = True
+        repeat_flag = self.previous_send_message == message
         self.previous_send_message = message
         return repeat_flag
 
     def detectRepeatReceiveMessage(self, message):
-        repeat_flag = False
-        if self.previous_receive_message == message:
-            repeat_flag = True
+        repeat_flag = self.previous_receive_message == message
         self.previous_receive_message = message
         return repeat_flag
 
@@ -588,7 +1017,7 @@ class Model:
     def startReceiveOSC(self):
         self.ensure_initialized()
         def changeHandlerMute(address, osc_arguments):
-            if config.ENABLE_TRANSCRIPTION_SEND is True:
+            if config.VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mic_mute_status is False:
                     self.mic_mute_status = osc_arguments
                     self.changeMicTranscriptStatus()
@@ -632,44 +1061,63 @@ class Model:
         }
 
     @staticmethod
-    def updateSoftware():
-        # try to update at most 5 times
+    def _downloadSetup() -> bool:
+        # try to download at most 5 times
+        program_name = "VRCT_setup.exe"
+        current_directory = config.PATH_LOCAL
+        dest_path = os_path.join(current_directory, program_name)
+        # minimum plausible size for a real NSIS installer; guards against
+        # saving/executing a short HTML error page as the installer
+        min_valid_size = 1024 * 1024
         for _ in range(5):
             try:
-                program_name = "update.exe"
-                current_directory = config.PATH_LOCAL
-                res = requests_get(config.UPDATER_URL)
-                assets = res.json()['assets']
-                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
-                res = requests_get(url, stream=True)
-                with open(os_path.join(current_directory, program_name), 'wb') as file:
+                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True)
+                res.raise_for_status()
+                downloaded_size = 0
+                with open(dest_path, 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
-                break
+                        downloaded_size += len(chunk)
+                if downloaded_size < min_valid_size:
+                    raise ValueError(f"Downloaded setup file is too small ({downloaded_size} bytes); likely not a valid installer")
+                return True
             except Exception:
                 errorLogging()
-        # run updater
-        Popen(program_name, cwd=current_directory)
+                try:
+                    if os_path.exists(dest_path):
+                        os_remove(dest_path)
+                except Exception:
+                    errorLogging()
+        return False
+
+    @staticmethod
+    def updateSoftware():
+        if Model._downloadSetup() is False:
+            return
+        # run the NSIS setup wizard, preselecting the CPU edition
+        Popen(["VRCT_setup.exe", "/EDITION=cpu"], cwd=config.PATH_LOCAL)
+        Model._quitApp()
 
     @staticmethod
     def updateCudaSoftware():
-        # try to update at most 5 times
-        for _ in range(5):
-            try:
-                program_name = "update.exe"
-                current_directory = config.PATH_LOCAL
-                res = requests_get(config.UPDATER_URL)
-                assets = res.json()['assets']
-                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
-                res = requests_get(url, stream=True)
-                with open(os_path.join(current_directory, program_name), 'wb') as file:
-                    for chunk in res.iter_content(chunk_size=1024*5):
-                        file.write(chunk)
-                break
-            except Exception:
-                errorLogging()
-        # run updater
-        Popen([program_name, "--cuda"], cwd=current_directory)
+        if Model._downloadSetup() is False:
+            return
+        # run the NSIS setup wizard, preselecting the GPU edition
+        Popen(["VRCT_setup.exe", "/EDITION=gpu"], cwd=config.PATH_LOCAL)
+        Model._quitApp()
+
+    @staticmethod
+    def _quitApp():
+        # The setup wizard's own running-process check can only kill VRCT
+        # silently or prompt the user for it; quit proactively here so the
+        # app always closes as soon as the wizard has been launched, whether
+        # this was a version update or a CPU/GPU switch.
+        try:
+            psutil_Process(os_getppid()).terminate()
+        except Exception:
+            errorLogging()
+        finally:
+            os_exit(0)
 
     def getListMicHost(self):
         self.ensure_initialized()
@@ -713,118 +1161,18 @@ class Model:
 
     def startMicTranscript(self, fnc):
         self.ensure_initialized()
-        mic_host_name = config.SELECTED_MIC_HOST
-        mic_device_name = config.SELECTED_MIC_DEVICE
-
-        mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
-        selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
-
-        if len(selected_mic_device) == 0 or mic_device_name == "NoDevice":
-            fnc({"text": False, "language": None})
-        else:
-            self.mic_audio_queue = Queue()
-            # self.mic_energy_queue = Queue()
-
-            mic_device = selected_mic_device[0]
-            record_timeout = config.MIC_RECORD_TIMEOUT
-            phrase_timeout = config.MIC_PHRASE_TIMEOUT
-            if record_timeout > phrase_timeout:
-                record_timeout = phrase_timeout
-
-            self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(
-                device=mic_device,
-                energy_threshold=config.MIC_THRESHOLD,
-                dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
-                phrase_time_limit=record_timeout,
-            )
-            # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
-            self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
-            self.mic_transcriber = AudioTranscriber(
-                speaker=False,
-                source=self.mic_audio_recorder.source,
-                phrase_timeout=phrase_timeout,
-                max_phrases=config.MIC_MAX_PHRASES,
-                transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
-                root=config.PATH_LOCAL,
-                whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-                device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
-                device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
-                compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
-            )
-            def sendMicTranscript():
-                try:
-                    selected_your_languages = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-                    languages = [data["language"] for data in selected_your_languages.values() if data["enable"] is True]
-                    countries = [data["country"] for data in selected_your_languages.values() if data["enable"] is True]
-                    if isinstance(self.mic_transcriber, AudioTranscriber) is True:
-                        res = self.mic_transcriber.transcribeAudioQueue(
-                            self.mic_audio_queue,
-                            languages,
-                            countries,
-                            config.MIC_AVG_LOGPROB,
-                            config.MIC_NO_SPEECH_PROB,
-                            config.MIC_NO_REPEAT_NGRAM_SIZE,
-                            config.MIC_VAD_FILTER,
-                            config.MIC_VAD_PARAMETERS,
-                        )
-                        if res:
-                            result = self.mic_transcriber.getTranscript()
-                            fnc(result)
-                except Exception:
-                    errorLogging()
-
-            def endMicTranscript():
-                while not self.mic_audio_queue.empty():
-                    self.mic_audio_queue.get()
-                # while not self.mic_energy_queue.empty():
-                #     self.mic_energy_queue.get()
-                self.mic_transcriber = None
-                gc.collect()
-
-            # def sendMicEnergy():
-            #     if mic_energy_queue.empty() is False:
-            #         energy = mic_energy_queue.get()
-            #         # print("mic energy:", energy)
-            #         try:
-            #             fnc(energy)
-            #         except Exception:
-            #             pass
-            #     sleep(0.01)
-
-            self.mic_print_transcript = threadFnc(sendMicTranscript, end_fnc=endMicTranscript)
-            self.mic_print_transcript.daemon = True
-            self.mic_print_transcript.start()
-
-            # self.mic_get_energy = threadFnc(sendMicEnergy)
-            # self.mic_get_energy.daemon = True
-            # self.mic_get_energy.start()
-
+        self._mic_session.transcript_fnc = fnc
+        self._mic_session.reconfigure(transcript=True)
+        if "transcript" in self._mic_session.features:
             self.changeMicTranscriptStatus()
 
     def resumeMicTranscript(self):
         self.ensure_initialized()
-        # キューをクリア
-        if isinstance(self.mic_audio_queue, Queue):
-            while not self.mic_audio_queue.empty():
-                self.mic_audio_queue.get()
-
-        # 文字起こしを再開
-        # if isinstance(self.mic_print_transcript, threadFnc):
-        #     self.mic_print_transcript.resume()
-
-        # 音声のレコードを再開
-        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.resume()
+        self._mic_session.resume()
 
     def pauseMicTranscript(self):
         self.ensure_initialized()
-        # 文字起こしを一時停止
-        # if isinstance(self.mic_print_transcript, threadFnc):
-        #     self.mic_print_transcript.pause()
-
-        # 音声のレコードを一時停止
-        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.pause()
+        self._mic_session.pause()
 
     # VRAM 不足エラーを検出するメソッドを追加
     def detectVRAMError(self, error):
@@ -852,201 +1200,68 @@ class Model:
 
     def stopMicTranscript(self):
         self.ensure_initialized()
-        if isinstance(self.mic_print_transcript, threadFnc):
-            self.mic_print_transcript.stop()
-            self.mic_print_transcript.join()
-            self.mic_print_transcript = None
-        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.resume()
-            self.mic_audio_recorder.stop()
-            self.mic_audio_recorder = None
-        # if isinstance(self.mic_get_energy, threadFnc):
-        #     self.mic_get_energy.stop()
-        #     self.mic_get_energy = None
+        self._mic_session.reconfigure(transcript=False)
 
     def startCheckMicEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
         self.ensure_initialized()
         # fnc may be None or a callable. Use cast after checking for None to satisfy type checker.
         if fnc is not None:
-            self.check_mic_energy_fnc = cast(Callable[[float], None], fnc)
-
-        mic_host_name = config.SELECTED_MIC_HOST
-        mic_device_name = config.SELECTED_MIC_DEVICE
-
-        mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
-        selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
-
-        if len(selected_mic_device) == 0 or mic_device_name == "NoDevice":
-            self.check_mic_energy_fnc(False)
-        else:
-            def sendMicEnergy():
-                if mic_energy_queue.empty() is False:
-                    energy = mic_energy_queue.get()
-                    try:
-                        self.check_mic_energy_fnc(energy)
-                    except Exception:
-                        errorLogging()
-                sleep(0.01)
-
-            mic_energy_queue: Queue = Queue()
-            mic_device = selected_mic_device[0]
-            self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
-            self.mic_energy_recorder.recordIntoQueue(mic_energy_queue)
-            self.mic_energy_plot_progressbar = threadFnc(sendMicEnergy)
-            self.mic_energy_plot_progressbar.daemon = True
-            self.mic_energy_plot_progressbar.start()
+            self._mic_session.energy_fnc = cast(Callable[[float], None], fnc)
+        self._mic_session.reconfigure(energy=True)
 
     def stopCheckMicEnergy(self):
         self.ensure_initialized()
-        if isinstance(self.mic_energy_plot_progressbar, threadFnc):
-            self.mic_energy_plot_progressbar.stop()
-            self.mic_energy_plot_progressbar.join()
-            self.mic_energy_plot_progressbar = None
-        if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
-            self.mic_energy_recorder.resume()
-            self.mic_energy_recorder.stop()
-            self.mic_energy_recorder = None
+        self._mic_session.reconfigure(energy=False)
 
     def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> None:
         self.ensure_initialized()
-        speaker_device_name = config.SELECTED_SPEAKER_DEVICE
-
-        speaker_device_list = device_manager.getSpeakerDevices()
-        selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
-
-        if len(selected_speaker_device) == 0 or speaker_device_name == "NoDevice":
-            # fnc may be None; only call if callable
-            if callable(fnc):
-                fnc({"text": False, "language": None})
-        else:
-            speaker_audio_queue: Queue = Queue()
-            speaker_device = selected_speaker_device[0]
-            record_timeout = config.SPEAKER_RECORD_TIMEOUT
-            phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
-            if record_timeout > phrase_timeout:
-                record_timeout = phrase_timeout
-
-            self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
-                device=speaker_device,
-                energy_threshold=config.SPEAKER_THRESHOLD,
-                dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
-                phrase_time_limit=record_timeout,
-            )
-            # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
-            self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
-            self.speaker_transcriber = AudioTranscriber(
-                speaker=True,
-                source=self.speaker_audio_recorder.source,
-                phrase_timeout=phrase_timeout,
-                max_phrases=config.SPEAKER_MAX_PHRASES,
-                transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
-                root=config.PATH_LOCAL,
-                whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-                device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
-                device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
-                compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
-            )
-            def sendSpeakerTranscript():
-                try:
-                    selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-                    languages = [data["language"] for data in selected_target_languages.values() if data["enable"] is True]
-                    countries = [data["country"] for data in selected_target_languages.values() if data["enable"] is True]
-                    if isinstance(self.speaker_transcriber, AudioTranscriber) is True:
-                        res = self.speaker_transcriber.transcribeAudioQueue(
-                            speaker_audio_queue,
-                            languages,
-                            countries,
-                            config.SPEAKER_AVG_LOGPROB,
-                            config.SPEAKER_NO_SPEECH_PROB,
-                            config.SPEAKER_NO_REPEAT_NGRAM_SIZE,
-                            config.SPEAKER_VAD_FILTER,
-                            config.SPEAKER_VAD_PARAMETERS,
-                        )
-                        if res:
-                            result = self.speaker_transcriber.getTranscript()
-                            fnc(result)
-                except Exception:
-                    errorLogging()
-
-            def endSpeakerTranscript():
-                while not speaker_audio_queue.empty():
-                    speaker_audio_queue.get()
-                # while not speaker_energy_queue.empty():
-                #     speaker_energy_queue.get()
-                self.speaker_transcriber = None
-                gc.collect()
-
-            # def sendSpeakerEnergy():
-            #     if speaker_energy_queue.empty() is False:
-            #         energy = speaker_energy_queue.get()
-            #         # print("speaker energy:", energy)
-            #         try:
-            #             fnc(energy)
-            #         except Exception:
-            #             pass
-            #     sleep(0.01)
-
-            self.speaker_print_transcript = threadFnc(sendSpeakerTranscript, end_fnc=endSpeakerTranscript)
-            self.speaker_print_transcript.daemon = True
-            self.speaker_print_transcript.start()
-
-            # self.speaker_get_energy = threadFnc(sendSpeakerEnergy)
-            # self.speaker_get_energy.daemon = True
-            # self.speaker_get_energy.start()
+        self._speaker_session.transcript_fnc = fnc
+        self._speaker_session.reconfigure(transcript=True)
 
     def stopSpeakerTranscript(self):
         self.ensure_initialized()
-        if isinstance(self.speaker_print_transcript, threadFnc):
-            self.speaker_print_transcript.stop()
-            self.speaker_print_transcript.join()
-            self.speaker_print_transcript = None
-        if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
-            self.speaker_audio_recorder.stop()
-            self.speaker_audio_recorder = None
-        # if isinstance(self.speaker_get_energy, threadFnc):
-        #     self.speaker_get_energy.stop()
-        #     self.speaker_get_energy = None
+        self._speaker_session.reconfigure(transcript=False)
 
     def startCheckSpeakerEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
         self.ensure_initialized()
         # Accept None as default and assign safely with cast after None-check
         if fnc is not None:
-            self.check_speaker_energy_fnc = cast(Callable[[float], None], fnc)
-
-        speaker_device_name = config.SELECTED_SPEAKER_DEVICE
-        speaker_device_list = device_manager.getSpeakerDevices()
-        selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
-
-        if len(selected_speaker_device) == 0 or speaker_device_name == "NoDevice":
-            self.check_speaker_energy_fnc(False)
-        else:
-            def sendSpeakerEnergy():
-                if not speaker_energy_queue.empty():
-                    energy = speaker_energy_queue.get()
-                    try:
-                        self.check_speaker_energy_fnc(energy)
-                    except Exception:
-                        errorLogging()
-                sleep(0.01)
-
-            speaker_energy_queue: Queue = Queue()
-            speaker_device = selected_speaker_device[0]
-            self.speaker_energy_recorder = SelectedSpeakerEnergyRecorder(speaker_device)
-            self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
-            self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy)
-            self.speaker_energy_plot_progressbar.daemon = True
-            self.speaker_energy_plot_progressbar.start()
+            self._speaker_session.energy_fnc = cast(Callable[[float], None], fnc)
+        self._speaker_session.reconfigure(energy=True)
 
     def stopCheckSpeakerEnergy(self):
         self.ensure_initialized()
-        if isinstance(self.speaker_energy_plot_progressbar, threadFnc):
-            self.speaker_energy_plot_progressbar.stop()
-            self.speaker_energy_plot_progressbar.join()
-            self.speaker_energy_plot_progressbar = None
-        if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
-            self.speaker_energy_recorder.resume()
-            self.speaker_energy_recorder.stop()
-            self.speaker_energy_recorder = None
+        self._speaker_session.reconfigure(energy=False)
+
+    def reconfigureMicDevice(self, device: Optional[dict] = None) -> None:
+        """稼働中の Mic Session を新デバイスに差し替える。
+
+        features (transcript/energy) は現状維持。device が None の場合は
+        config (SELECTED_MIC_HOST/DEVICE) から解決する。Session 内部で
+        差分検知するため、同一デバイスなら no-op になる。
+
+        Auto 追跡中は device_manager 側の ActiveEndpointTracker が 250ms
+        周期で COM ポーリングしており、Recorder の open/close と並行実行
+        されると WASAPI がデッドロックする (実測確認済み)。reconfigure の
+        前後で tracker を pause/resume することで並行アクセスを排除する。
+        Auto OFF 時は tracker が存在しないので pause/resume は no-op。
+        """
+        self.ensure_initialized()
+        device_manager.pauseMicEndpointTracker()
+        try:
+            self._mic_session.reconfigure(device=device)
+        finally:
+            device_manager.resumeMicEndpointTracker()
+
+    def reconfigureSpeakerDevice(self, device: Optional[dict] = None) -> None:
+        """稼働中の Speaker Session を新デバイスに差し替える。詳細は
+        reconfigureMicDevice のドキュメント参照。"""
+        self.ensure_initialized()
+        device_manager.pauseSpeakerEndpointTracker()
+        try:
+            self._speaker_session.reconfigure(device=device)
+        finally:
+            device_manager.resumeSpeakerEndpointTracker()
 
     def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict], transliteration_message:Optional[dict] = None, transliteration_translation:Optional[list] = None) -> object:
         self.ensure_initialized()
@@ -1197,10 +1412,25 @@ class Model:
         self.th_watchdog = threadFnc(self.watchdog.start)
         self.th_watchdog.daemon = True
         self.th_watchdog.start()
+        self._armFreezeDump()
 
     def feedWatchdog(self):
         self.ensure_initialized()
         self.watchdog.feed()
+        self._armFreezeDump()
+
+    def _armFreezeDump(self):
+        """次の feed が freeze 判定になるより前に、全スレッドスタックを
+        freeze_trace.log へ書き出すタイマーを (再) 武装する。呼ぶたびに
+        以前のタイマーは自動的に上書きされる (faulthandler の仕様)。
+        """
+        timeout = self.watchdog.interval + _FREEZE_DUMP_MARGIN_SEC
+        try:
+            faulthandler.dump_traceback_later(
+                timeout, repeat=False, file=_freeze_trace_file, exit=False
+            )
+        except Exception:
+            errorLogging()
 
     def setWatchdogCallback(self, callback):
         self.ensure_initialized()
@@ -1212,8 +1442,12 @@ class Model:
             self.th_watchdog.stop()
             self.th_watchdog.join()
             self.th_watchdog = None
+        try:
+            faulthandler.cancel_dump_traceback_later()
+        except Exception:
+            errorLogging()
 
-    def message_handler(websocket, message):
+    def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""
         pass
 
@@ -1283,6 +1517,52 @@ class Model:
         self.ensure_initialized()
         return self.websocket_server_alive
 
+    def startObsBrowserSourceServer(self, host: str, port: int) -> None:
+        """Start the local HTTP server used as an OBS Browser Source."""
+        self.ensure_initialized()
+
+        try:
+            if (
+                isinstance(self.obs_browser_source_server, ObsBrowserSourceServer)
+                and self.obs_browser_source_server.is_running
+                and self.obs_browser_source_server.host == host
+                and self.obs_browser_source_server.port == port
+            ):
+                return
+        except Exception:
+            # If anything goes wrong while checking state, restart.
+            pass
+
+        self.stopObsBrowserSourceServer()
+
+        try:
+            self.obs_browser_source_server = ObsBrowserSourceServer(host=host, port=port)
+            self.obs_browser_source_server.start()
+        except Exception:
+            errorLogging()
+            self.obs_browser_source_server = None
+
+    def stopObsBrowserSourceServer(self) -> None:
+        self.ensure_initialized()
+        try:
+            if isinstance(self.obs_browser_source_server, ObsBrowserSourceServer):
+                self.obs_browser_source_server.stop()
+        except Exception:
+            errorLogging()
+        finally:
+            self.obs_browser_source_server = None
+
+    def checkObsBrowserSourceServerAlive(self) -> bool:
+        self.ensure_initialized()
+        try:
+            return (
+                isinstance(self.obs_browser_source_server, ObsBrowserSourceServer)
+                and self.obs_browser_source_server.is_running
+            )
+        except Exception:
+            errorLogging()
+            return False
+
     def websocketSendMessage(self, message_dict:dict):
         """
         WebSocketサーバーから全クライアントにメッセージを送信する
@@ -1311,24 +1591,32 @@ class Model:
             errorLogging()
             return False
 
-    def telemetryInit(self, enabled: bool, app_version: str):
+    def telemetryInit(self, enabled: bool, app_version: str, storage_path: str = None):
         """Model 内で Telemetry を初期化"""
-        self.telemetry.init(enabled=enabled, app_version=app_version)
+        if storage_path is None:
+            try:
+                storage_path = os_path.join(config.PATH_LOCAL, "telemetry_state.json")
+            except Exception:
+                storage_path = None
+        self.telemetry.init(enabled=enabled, app_version=app_version, storage_path=storage_path)
 
     def telemetryShutdown(self):
         """Model cleanup on application shutdown."""
-        # Telemetry 終了（app_closed 送信）
         if hasattr(self, "telemetry") and self.telemetry:
             self.telemetry.shutdown()
 
-    def telemetryTrack(self, event: str, payload: dict = None):
-        """汎用テレメトリイベント送信 (Model ラッパー)"""
+    def telemetryTrackError(self, error_code: str):
+        """エラーコードのテレメトリ送信 (Model ラッパー)。日次デデュープ済み。"""
         if hasattr(self, "telemetry") and self.telemetry:
-            self.telemetry.track(event, payload)
+            self.telemetry.track_error(error_code)
 
-    def telemetryTrackCoreFeature(self, feature: str):
-        """コア機能テレメトリイベント送信 (Model ラッパー)"""
+    def telemetryTouchActivity(self):
+        """テレメトリアクティビティ更新 (Model ラッパー)"""
         if hasattr(self, "telemetry") and self.telemetry:
-            self.telemetry.track_core_feature(feature)
+            self.telemetry.touch_activity()
 
 model = Model()
+
+# エラー生成時にテレメトリへ通知するフックを登録する（日次デデュープ済み）
+from errors import register_error_report_hook  # noqa: E402
+register_error_report_hook(model.telemetryTrackError)

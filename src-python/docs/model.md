@@ -1,5 +1,33 @@
 # model.py 設計書
 
+> **2026-08 デバイスライフサイクル整理により大幅に古い**:
+> マイク/スピーカーの文字起こし・エナジー計測に関する記述
+> (`mic_print_transcript`/`mic_audio_recorder`/`mic_transcriber`/
+> `mic_energy_recorder`/`mic_energy_plot_progressbar` などの個別属性、
+> `check_mic_energy_fnc`/`check_speaker_energy_fnc`、
+> `SelectedMicEnergyRecorder`/`SelectedSpeakerEnergyRecorder`) は
+> 全て **`MicSession`/`SpeakerSession`** (`model.py` 内の
+> `_AudioDeviceSession` サブクラス) に統合された。
+>
+> - 1 物理デバイスにつき Recorder (PyAudio `Microphone`) は常に 1 つ。
+>   文字起こしとエナジー計測を同時に有効にしても、同じ Recorder に
+>   `features = {"transcript", "energy"}` として相乗りする
+>   (以前は各々が独立した Recorder を持ち、2 つの Microphone が
+>   並立し得た)。
+> - `Model.startMicTranscript`/`stopMicTranscript`/`startCheckMicEnergy`/
+>   `stopCheckMicEnergy` (speaker 側も同様) は外部シグネチャそのままに、
+>   内部で `self._mic_session.reconfigure(transcript=.., energy=..)` を
+>   呼ぶ薄いラッパーになっている。
+> - `device_manager.monitoring()` の Before/After コールバックは
+>   `Model.audio_lifecycle_worker` (`AudioLifecycleWorker`) 経由で
+>   非同期実行される。monitoring スレッド自体は enqueue するだけで
+>   即座に戻り、次の COM デバイス通知を取りこぼさない。
+>
+> 詳細設計はこのファイルの本文ではなく `model.py` 自体のコメント
+> (`_AudioDeviceSession`/`MicSession`/`SpeakerSession`/
+> `AudioLifecycleWorker` のクラスDocstring) を参照。
+> `transcription_recorder.md` も合わせて参照。
+
 ## 概要
 
 `model.py` は VRCT アプリケーションのビジネスロジックファサードとして機能し、音声認識、翻訳、オーバーレイ表示、OSC通信、WebSocket通信など、すべてのサブシステムへの統一されたインターフェースを提供する。シングルトンパターンで実装され、重い初期化処理を遅延実行することで、アプリケーションの起動時間を短縮している。
@@ -292,7 +320,7 @@ CTranslate2 モデルがロード済みかチェック。
 **責務:** メッセージの翻訳
 
 **パラメータ:**
-- `translator_name`: "CTranslate2", "DeepL", "DeepL_API" 等
+- `translator_name`: "CTranslate2", "DeepL_API" 等
 - `source_language`: 元言語（"ja", "en" 等）
 - `target_language`: 翻訳先言語
 - `target_country`: 翻訳先国（方言対応用）
@@ -938,15 +966,15 @@ return {
 
 ##### `updateSoftware() -> None`
 
-**責務:** 通常版のアップデート実行
+**責務:** CPU版へのアップデート/切替実行
 
 **処理:**
-1. アップデーターをダウンロード（最大5回リトライ）
-2. `Popen()` でアップデーターを起動
-3. 現在のプロセスを終了
+1. Hugging Faceから `VRCT_setup.exe`（NSISインストーラー）をダウンロード（最大5回リトライ）
+2. `Popen(["VRCT_setup.exe", "/EDITION=cpu"])` でセットアップウィザードを起動（CPU版が初期選択された状態で表示される）
+3. 実行中のVRCT本体の終了確認・再起動は起動されたセットアップウィザード側が行う
 
 ##### `updateCudaSoftware() -> None`
-CUDA版のアップデート実行（`--cuda` オプション付きでアップデーターを起動）。
+GPU版へのアップデート/切替実行。`updateSoftware()`と同様だが `/EDITION=gpu` 付きでセットアップウィザードを起動し、GPU版が初期選択された状態で表示される。
 
 ---
 

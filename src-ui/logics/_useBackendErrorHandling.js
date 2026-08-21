@@ -57,6 +57,10 @@ export const _useBackendErrorHandling = () => {
         updateLMStudioURL,
         updateSelectedLMStudioModel,
 
+        updateOpenAICompatibleURL,
+        updateOpenAICompatibleAuthKey,
+        updateSelectedOpenAICompatibleModel,
+
         updateSelectedOllamaModel,
     } = useTranslation();
 
@@ -64,9 +68,19 @@ export const _useBackendErrorHandling = () => {
 
     const {
         updateOscIpAddress,
+        updateOscPort,
         updateEnableWebsocket,
         updateWebsocketHost,
         updateWebsocketPort,
+        updateEnableObsBrowserSource,
+        updateObsBrowserSourcePort,
+        updateObsBrowserSourceMaxMessages,
+        updateObsBrowserSourceDisplayDuration,
+        updateObsBrowserSourceFadeoutDuration,
+        updateObsBrowserSourceFontSize,
+        updateObsBrowserSourceFontColor,
+        updateObsBrowserSourceFontOutlineThickness,
+        updateObsBrowserSourceFontOutlineColor,
     } = useAdvancedSettings();
 
     const {
@@ -164,7 +178,15 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "VALIDATION_INVALID_IP":
             case "VALIDATION_CANNOT_SET_IP":
-                updateOscIpAddress(data);
+                if (endpoint === "/set/data/websocket_host") {
+                    updateWebsocketHost(data);
+                } else {
+                    updateOscIpAddress(data);
+                }
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "VALIDATION_OSC_PORT_INVALID":
+                updateOscPort(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
 
@@ -204,6 +226,11 @@ export const _useBackendErrorHandling = () => {
                 updateOpenRouterAuthKey(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
+            case "AUTH_OPENAI_COMPATIBLE_INVALID":
+            case "AUTH_OPENAI_COMPATIBLE_FAILED":
+                updateOpenAICompatibleAuthKey(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
 
             // ============================================================================
             // モデル選択エラー (MODEL_*)
@@ -232,6 +259,10 @@ export const _useBackendErrorHandling = () => {
                 updateSelectedLMStudioModel(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
+            case "MODEL_OPENAI_COMPATIBLE_INVALID":
+                updateSelectedOpenAICompatibleModel(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
             case "MODEL_OLLAMA_INVALID":
                 updateSelectedOllamaModel(data);
                 showNotification_Error(message, { category_id: error_code });
@@ -252,6 +283,10 @@ export const _useBackendErrorHandling = () => {
                 updateLMStudioURL(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
+            case "CONNECTION_OPENAI_COMPATIBLE_URL_INVALID":
+                updateOpenAICompatibleURL(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
 
             // ============================================================================
             // WebSocketエラー (WEBSOCKET_*)
@@ -261,11 +296,56 @@ export const _useBackendErrorHandling = () => {
                 showNotification_Error(message, { category_id: error_code });
                 return;
             case "WEBSOCKET_PORT_UNAVAILABLE":
+            case "WEBSOCKET_PORT_INVALID":
                 updateWebsocketPort(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
             case "WEBSOCKET_SERVER_UNAVAILABLE":
                 updateEnableWebsocket(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+
+            // ============================================================================
+            // OBS Browser Sourceエラー (OBS_BROWSER_SOURCE_*)
+            // ============================================================================
+            case "OBS_BROWSER_SOURCE_HOST_UNAVAILABLE":
+                updateWebsocketHost(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_PORT_UNAVAILABLE":
+                updateObsBrowserSourcePort(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE":
+                updateEnableObsBrowserSource(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID":
+                updateObsBrowserSourceMaxMessages(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID":
+                updateObsBrowserSourceDisplayDuration(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID":
+                updateObsBrowserSourceFadeoutDuration(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_SIZE_INVALID":
+                updateObsBrowserSourceFontSize(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_COLOR_INVALID":
+                updateObsBrowserSourceFontColor(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID":
+                updateObsBrowserSourceFontOutlineThickness(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID":
+                updateObsBrowserSourceFontOutlineColor(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
 

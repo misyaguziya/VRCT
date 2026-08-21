@@ -50,7 +50,7 @@ export const useLanguageSettings = () => {
 
 
     const getSelectedYourLanguages = () => {
-        pendingSelectedPresetTabNumber();
+        pendingSelectedYourLanguages();
         asyncStdoutToPython("/get/data/selected_your_languages");
     };
 
@@ -77,30 +77,52 @@ export const useLanguageSettings = () => {
 
     const setSelectedTargetLanguages = (selected_language_data) => {
         pendingSelectedTargetLanguages();
-        let send_obj = currentSelectedTargetLanguages.data;
-        send_obj[currentSelectedPresetTabNumber.data][selected_language_data.target_key].language = selected_language_data.language,
-        send_obj[currentSelectedPresetTabNumber.data][selected_language_data.target_key].country = selected_language_data.country,
+        const tab_no = currentSelectedPresetTabNumber.data;
+        const target_key = selected_language_data.target_key;
+        const send_obj = {
+            ...currentSelectedTargetLanguages.data,
+            [tab_no]: {
+                ...currentSelectedTargetLanguages.data[tab_no],
+                [target_key]: {
+                    ...currentSelectedTargetLanguages.data[tab_no][target_key],
+                    language: selected_language_data.language,
+                    country: selected_language_data.country,
+                },
+            },
+        };
         asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
     };
 
     const addTargetLanguage = () => {
         pendingSelectedTargetLanguages();
-        let send_obj = currentSelectedTargetLanguages.data;
-        let target_key = "2";
-        if (send_obj[currentSelectedPresetTabNumber.data]["2"].enable === true) {
-            target_key = "3";
-        }
-        send_obj[currentSelectedPresetTabNumber.data][target_key].enable = true,
+        const tab_no = currentSelectedPresetTabNumber.data;
+        const target_key = currentSelectedTargetLanguages.data[tab_no]["2"].enable === true ? "3" : "2";
+        const send_obj = {
+            ...currentSelectedTargetLanguages.data,
+            [tab_no]: {
+                ...currentSelectedTargetLanguages.data[tab_no],
+                [target_key]: {
+                    ...currentSelectedTargetLanguages.data[tab_no][target_key],
+                    enable: true,
+                },
+            },
+        };
         asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
     };
     const removeTargetLanguage = () => {
         pendingSelectedTargetLanguages();
-        let send_obj = currentSelectedTargetLanguages.data;
-        let target_key = "3";
-        if (send_obj[currentSelectedPresetTabNumber.data]["3"].enable === false) {
-            target_key = "2";
-        }
-        send_obj[currentSelectedPresetTabNumber.data][target_key].enable = false,
+        const tab_no = currentSelectedPresetTabNumber.data;
+        const target_key = currentSelectedTargetLanguages.data[tab_no]["3"].enable === false ? "2" : "3";
+        const send_obj = {
+            ...currentSelectedTargetLanguages.data,
+            [tab_no]: {
+                ...currentSelectedTargetLanguages.data[tab_no],
+                [target_key]: {
+                    ...currentSelectedTargetLanguages.data[tab_no][target_key],
+                    enable: false,
+                },
+            },
+        };
         asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
     };
 
@@ -127,8 +149,10 @@ export const useLanguageSettings = () => {
 
     const setSelectedTranslationEngines = (selected_translator) => {
         pendingSelectedTranslationEngines();
-        let send_obj = currentSelectedTranslationEngines.data;
-        send_obj[currentSelectedPresetTabNumber.data] = selected_translator;
+        const send_obj = {
+            ...currentSelectedTranslationEngines.data,
+            [currentSelectedPresetTabNumber.data]: selected_translator,
+        };
         asyncStdoutToPython("/set/data/selected_translation_engines", send_obj);
     };
 

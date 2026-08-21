@@ -273,6 +273,20 @@ class TestMainloop():
                     "http://invalid_host:9999/v1",
                 ])
                 expected_status = [200, 400]
+            case "/set/data/openai_compatible_auth_key":
+                data = "OPENAI_COMPATIBLE_DUMMY_KEY"
+                expected_status = [200, 400]
+            case "/set/data/openai_compatible_url":
+                data = random.choice([
+                    "https://api.openai.com/v1",
+                    "http://127.0.0.1:1234/v1",
+                    "http://localhost:11434/v1",
+                ])
+                expected_status = [200, 400]
+            case "/set/data/selected_openai_compatible_model":
+                self.config_dict["openai_compatible_model_list"], _ = self.main.handleRequest("/get/data/selectable_openai_compatible_model_list", None)
+                model_list = self.config_dict.get("openai_compatible_model_list", [])
+                data = random.choice(model_list) if model_list else None
             case "/set/data/selected_ollama_model":
                 self.config_dict["ollama_model_list"], _ = self.main.handleRequest("/get/data/selectable_ollama_model_list", None)
                 model_list = self.config_dict.get("ollama_model_list", [])

@@ -1,25 +1,109 @@
 import base64
 from typing import Any, List, Dict, Optional
 import json
+import os
+import sys
 import traceback
 import logging
+import threading
 from logging.handlers import RotatingFileHandler
-
-try:
-    import torch
-except Exception:
-    torch = None  # type: ignore
-
-try:
-    from ctranslate2 import get_supported_compute_types
-except Exception:
-    # Fallback: if ctranslate2 is not installed, provide a safe stub.
-    def get_supported_compute_types(device: str, device_index: int) -> List[str]:
-        return []
 
 import requests
 import ipaddress
 import socket
+
+# Optional runtime dependencies. `None` fallback lets non-GPU / no-ctranslate2
+# environments keep the app running with reduced feature set.
+try:
+    from ctranslate2 import get_supported_compute_types as _ct2_get_supported_compute_types  # noqa: F401
+except Exception:
+    def _ct2_get_supported_compute_types(device: str, device_index: int) -> List[str]:  # type: ignore
+        return []
+
+try:
+    import torch  # noqa: F401
+except Exception:
+    torch = None  # type: ignore
+
+_WEIGHT_VERIFIED_MARKER_NAME = ".weight_verified.json"
+
+# stdout は Tauri 側が読み取る IPC チャンネルとして使われており、
+# printLog/printResponse は複数スレッド (mainloop の worker 群、
+# MicSession/SpeakerSession の transcript スレッド、
+# AudioLifecycleWorker 等) から高頻度・並行に呼ばれ得る。
+# print(..., flush=True) は内部で複数の write システムコールに
+# 分解され得るため、ロック無しで並行に呼ぶと (特に Windows の名前付き
+# パイプ相手に) 出力が混ざったり、OSError (Errno 22, Invalid argument)
+# を招くことがある。1 プロセス内で書き込みを直列化する。
+_stdout_write_lock = threading.Lock()
+
+
+def _writeStdoutLine(line: str) -> None:
+    """flush 付きで 1 行 stdout に書き込む。スレッド間で直列化し、
+    書き込み自体が失敗しても (パイプ切断等) 呼び出し元には伝播させず、
+    ログにだけ記録する。
+    """
+    try:
+        with _stdout_write_lock:
+            sys.stdout.write(line + "\n")
+            sys.stdout.flush()
+    except Exception:
+        errorLogging()
+
+
+def _collectWeightFileStats(root: str) -> Dict[str, Dict[str, float]]:
+    """Recursively collect {relative_path: {size, mtime}} for files under root.
+
+    mtime is rounded to avoid float round-trip mismatches after JSON (de)serialization.
+    """
+    stats: Dict[str, Dict[str, float]] = {}
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for name in filenames:
+            if name == _WEIGHT_VERIFIED_MARKER_NAME:
+                continue
+            full_path = os.path.join(dirpath, name)
+            rel_path = os.path.relpath(full_path, root).replace("\\", "/")
+            try:
+                st = os.stat(full_path)
+                stats[rel_path] = {"size": st.st_size, "mtime": round(st.st_mtime, 3)}
+            except OSError:
+                continue
+    return stats
+
+
+def isWeightVerifiedCache(root: str) -> bool:
+    """Return True if a weight directory's files exactly match a previously
+    recorded "verified" snapshot (same file set, sizes, and mtimes).
+
+    This lets callers skip an expensive full model load to re-verify weights
+    that haven't changed since the last successful load-based verification.
+    Any change (missing marker, added/removed/modified file) invalidates the
+    cache and forces a real verification.
+    """
+    marker_path = os.path.join(root, _WEIGHT_VERIFIED_MARKER_NAME)
+    if not os.path.isfile(marker_path):
+        return False
+    try:
+        with open(marker_path, "r", encoding="utf-8") as f:
+            recorded = json.load(f).get("verified_files", {})
+    except Exception:
+        return False
+    if not recorded:
+        return False
+    return _collectWeightFileStats(root) == recorded
+
+
+def writeWeightVerifiedCache(root: str) -> None:
+    """Record the current file stats under root as a verified snapshot."""
+    try:
+        stats = _collectWeightFileStats(root)
+        if not stats:
+            return
+        marker_path = os.path.join(root, _WEIGHT_VERIFIED_MARKER_NAME)
+        with open(marker_path, "w", encoding="utf-8") as f:
+            json.dump({"verified_files": stats}, f)
+    except Exception:
+        pass
 
 def validateDictStructure(data: dict, structure: dict) -> bool:
     """
@@ -95,6 +179,8 @@ def getComputeDeviceList() -> List[Dict[str, Any]]:
     The returned list contains dicts describing CPU and (if available)
     CUDA devices. This function is defensive to missing optional packages.
     """
+    get_supported_compute_types = _ct2_get_supported_compute_types
+
     compute_types: List[Dict[str, Any]] = [
         {
             "device": "cpu",
@@ -137,7 +223,7 @@ def getBestComputeType(device: str, device_index: int) -> str:
     Falls back to "float32" when no preferred type is available.
     """
     try:
-        compute_types = set(get_supported_compute_types(device, device_index))
+        compute_types = set(_ct2_get_supported_compute_types(device, device_index))
     except Exception:
         compute_types = set()
 
@@ -189,6 +275,21 @@ def removeLog() -> None:
     except Exception:
         errorLogging()
 
+class TruncatingFileHandler(RotatingFileHandler):
+    """RotatingFileHandler that truncates the log file in place instead of
+    rotating it to a numbered backup (e.g. process.log.1). Creating that
+    backup file was being picked up by Tauri's dev file watcher (src-tauri
+    is inside the watched tree) and triggering a rebuild loop.
+    """
+    def doRollover(self) -> None:
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+        with open(self.baseFilename, "w", encoding=self.encoding):
+            pass
+        if not self.delay:
+            self.stream = self._open()
+
 def setupLogger(name: str, log_file: str, level: int = logging.INFO) -> logging.Logger:
     """
     特定の名前とログファイルを持つロガーを設定します。
@@ -202,10 +303,10 @@ def setupLogger(name: str, log_file: str, level: int = logging.INFO) -> logging.
     max_log_size = 10 * 1024 * 1024  # 10MB
 
     # ハンドラーを作成
-    file_handler = RotatingFileHandler(
+    file_handler = TruncatingFileHandler(
         log_file,
         maxBytes=max_log_size,
-        backupCount=1,
+        backupCount=0,
         encoding="utf-8",
         delay=True
         )
@@ -223,6 +324,20 @@ def setupLogger(name: str, log_file: str, level: int = logging.INFO) -> logging.
 
 process_logger: Optional[logging.Logger] = None
 
+# エンドポイント名にこれらのいずれかが含まれる場合、ログに書き出す値をマスクする
+SENSITIVE_ENDPOINT_MARKERS = ("auth_key", "api_key", "password", "token", "secret")
+
+
+def _isSensitiveEndpoint(endpoint: Any) -> bool:
+    if not isinstance(endpoint, str):
+        return False
+    lowered = endpoint.lower()
+    return any(marker in lowered for marker in SENSITIVE_ENDPOINT_MARKERS)
+
+
+def _maskSensitiveValue(value: Any) -> Any:
+    return "***MASKED***" if value not in (None, "") else value
+
 
 def printLog(log: str, data: Any = None) -> None:
     """Log and print a structured process log message."""
@@ -230,14 +345,15 @@ def printLog(log: str, data: Any = None) -> None:
     if process_logger is None:
         process_logger = setupLogger("process", "process.log", logging.INFO)
 
+    logged_data = _maskSensitiveValue(data) if _isSensitiveEndpoint(log) else data
     response = {
         "status": 348,
         "log": log,
-        "data": str(data),
+        "data": str(logged_data),
     }
     process_logger.info(response)
     serialized = json.dumps(response)
-    print(serialized, flush=True)
+    _writeStdoutLine(serialized)
 
 def printResponse(status: int, endpoint: str, result: Any = None) -> None:
     """Log and print a structured response object.
@@ -253,7 +369,12 @@ def printResponse(status: int, endpoint: str, result: Any = None) -> None:
         "endpoint": endpoint,
         "result": result,
     }
-    process_logger.info(response)  # Log the unserialized response
+
+    if _isSensitiveEndpoint(endpoint):
+        logged_response = {**response, "result": _maskSensitiveValue(result)}
+    else:
+        logged_response = response
+    process_logger.info(logged_response)  # Log the (possibly masked) response, never the raw secret
 
     try:
         serialized_response = json.dumps(response)
@@ -270,9 +391,9 @@ def printResponse(status: int, endpoint: str, result: Any = None) -> None:
             "endpoint": endpoint,
             "result": {"error": "Failed to serialize response", "details": str(e)},
         })
-        print(error_json, flush=True)
+        _writeStdoutLine(error_json)
     else:
-        print(serialized_response, flush=True)
+        _writeStdoutLine(serialized_response)
 
 error_logger: Optional[logging.Logger] = None
 

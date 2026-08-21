@@ -15,17 +15,24 @@ export const StartPythonController = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
     const { asyncFetchFonts } = useAsyncFetchFonts();
+    const { asyncStdoutToPython } = useStdoutToPython();
 
     useEffect(() => {
+        let watchdog_interval_id = null;
         if (!hasRunRef.current) {
             asyncStartPython().then(() => {
-                startFeedingToWatchDogController();
+                watchdog_interval_id = startFeedingToWatchDogController(asyncStdoutToPython);
                 asyncFetchFonts();
             }).catch((err) => {
                 console.error(err);
             });
         }
-        return () => hasRunRef.current = true;
+        return () => {
+            hasRunRef.current = true;
+            if (watchdog_interval_id !== null) {
+                clearInterval(watchdog_interval_id);
+            }
+        };
     }, []);
 
     return null;
@@ -74,9 +81,8 @@ const useAsyncFetchFonts = () => {
     return { asyncFetchFonts };
 };
 
-const startFeedingToWatchDogController = () => {
-    const { asyncStdoutToPython } = useStdoutToPython();
-    setInterval(() => {
+const startFeedingToWatchDogController = (asyncStdoutToPython) => {
+    return setInterval(() => {
         asyncStdoutToPython("/run/feed_watchdog");
     }, 20000); // 20000ミリ秒 = 20秒
 };

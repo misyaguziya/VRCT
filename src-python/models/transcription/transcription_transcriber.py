@@ -2,13 +2,20 @@
 
 This class focuses on converting incoming raw audio buffers into text using
 either the Google web recognizer (online) or a local Whisper model (offline).
+
+VAD ストリーミング撤退 (ADR-0004) 以降、キューには
+(raw_bytes, recorded_at) タプルだけが積まれる。フレーズ境界は
+`speech_recognition.listen_energy_and_audio_in_background` の phrase_time_limit と
+AudioTranscriber.updateLastSampleAndPhraseStatus の phrase_timeout で決まる。
+partial (発話中の暫定結果) 通知は行わない。
 """
 
 import time
 from io import BytesIO
+from queue import Empty
 from threading import Event
 import wave
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from speech_recognition import Recognizer, AudioData, AudioFile
 from speech_recognition.exceptions import UnknownValueError
 from datetime import timedelta
@@ -16,16 +23,21 @@ from pyaudiowpatch import get_sample_size, paInt16
 from .transcription_languages import transcription_lang
 from .transcription_whisper import getWhisperModel, checkWhisperWeight
 
-import torch
 import numpy as np
 from pydub import AudioSegment
 from utils import errorLogging
+
+try:
+    import torch  # noqa: F401
+except Exception:
+    torch = None  # type: ignore
 
 import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
+GOOGLE_RECOGNIZE_TIMEOUT_SECONDS = 10
 
 
 class AudioTranscriber:
@@ -35,9 +47,6 @@ class AudioTranscriber:
     - speaker: bool
     - phrase_timeout: int
     - max_phrases: int
-
-    Methods are intentionally permissive about input types to match the
-    existing codebase; this wrapper adds typing for clarity.
     """
 
     def __init__(
@@ -58,9 +67,12 @@ class AudioTranscriber:
         self.max_phrases = max_phrases
         self.transcript_data: List[Dict[str, Any]] = []
         self.transcript_changed_event = Event()
+        self.last_recognition_error = False
         self.audio_recognizer = Recognizer()
+        self.audio_recognizer.operation_timeout = GOOGLE_RECOGNIZE_TIMEOUT_SECONDS
         self.transcription_engine = "Google"
         self.whisper_model = None
+        self.whisper_weight_type = whisper_weight_type
         self.audio_sources: Dict[str, Any] = {
             "sample_rate": source.SAMPLE_RATE,
             "sample_width": source.SAMPLE_WIDTH,
@@ -68,7 +80,7 @@ class AudioTranscriber:
             "last_sample": bytes(),
             "last_spoken": None,
             "new_phrase": True,
-            "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData,
+            "process_data_func": self.processSpeakerData if speaker else self.processMicData,
         }
 
         if transcription_engine == "Whisper" and checkWhisperWeight(root, whisper_weight_type) is True:
@@ -85,35 +97,45 @@ class AudioTranscriber:
         avg_logprob: float = -0.8,
         no_speech_prob: float = 0.6,
         no_repeat_ngram_size: int = 0,
-        vad_filter: bool = False,
-        vad_parameters: Optional[Union[dict, Any]] = None,
     ) -> bool:
-        if audio_queue.empty():
+        try:
+            audio, time_spoken = audio_queue.get_nowait()
+        except Empty:
             time.sleep(0.01)
             return False
-        audio, time_spoken = audio_queue.get()
+        # まとめて drain して最新まで反映する (backlog を残さない)
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+        while True:
+            try:
+                audio, time_spoken = audio_queue.get_nowait()
+            except Empty:
+                break
+            self.updateLastSampleAndPhraseStatus(audio, time_spoken)
 
         confidences: List[Dict[str, Any]] = [{"confidence": 0, "text": "", "language": None}]
         try:
             audio_data = self.audio_sources["process_data_func"]()
             match self.transcription_engine:
                 case "Google":
+                    self.last_recognition_error = False
                     for language, country in zip(languages, countries):
                         try:
                             text, confidence = self.audio_recognizer.recognize_google(
                                 audio_data,
                                 language=transcription_lang[language][country][self.transcription_engine],
                                 with_confidence=True
-                                )
+                            )
                             confidences.append({"confidence": confidence, "text": text, "language": language})
-                        except Exception:
+                        except UnknownValueError:
                             pass
+                        except Exception:
+                            self.last_recognition_error = True
+                            errorLogging()
                 case "Whisper":
                     audio_data = np.frombuffer(
                         audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16
                     ).flatten().astype(np.float32) / 32768.0
-                    if isinstance(audio_data, torch.Tensor):
+                    if torch is not None and isinstance(audio_data, torch.Tensor):
                         audio_data = audio_data.detach().numpy()
 
                     for language, country in zip(languages, countries):
@@ -127,15 +149,13 @@ class AudioTranscriber:
                             audio_data,
                             beam_size=5,
                             temperature=0.0,
-                            log_prob_threshold=-0.8,
-                            no_speech_threshold=0.6,
+                            log_prob_threshold=avg_logprob,
+                            no_speech_threshold=no_speech_prob,
                             language=source_language,
                             word_timestamps=False,
                             without_timestamps=True,
                             task="transcribe",
                             no_repeat_ngram_size=no_repeat_ngram_size,
-                            vad_filter=vad_filter,
-                            vad_parameters=vad_parameters,
                         )
                         for s in segments:
                             if s.avg_logprob < avg_logprob or s.no_speech_prob > no_speech_prob:
@@ -151,8 +171,6 @@ class AudioTranscriber:
             pass
         except Exception:
             errorLogging()
-        finally:
-            pass
 
         result = max(confidences, key=lambda x: x["confidence"])
         if result["text"] != "":

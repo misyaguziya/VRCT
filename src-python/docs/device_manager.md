@@ -975,6 +975,33 @@ def applyAutoMicSelect(self) -> None:
 
 ---
 
+## ActiveEndpointTracker による「音声検出ベース」の自動切替（既知の制限）
+
+上記のシーケンスは「OS の既定デバイスが変わったとき」に追従する経路。
+これとは別に `active_endpoint_tracker.ActiveEndpointTracker` が
+`_startMicEndpointTracker`/`_startSpeakerEndpointTracker`
+(`setMicAutoActive`/`setSpeakerAutoActive` が呼ばれたときに起動) を通じて、
+「今実際に音が出ている/拾われているエンドポイント」を pycaw の
+`IAudioMeterInformation.GetPeakValue` のポーリングで追跡し、OS既定と無関係に
+Recorder を切り替える経路も存在する（詳細は `active_endpoint_tracker.py`
+冒頭のdocstring参照）。
+
+**既知の制限 (2026-08-15 実機調査で確定):**
+`GetPeakValue` は capture (マイク) エンドポイントに限り、そのデバイスを
+能動的に使っているクライアントが他に存在しないと常に 0 を返す。VRCT は
+選択中のマイク 1 台しか開かないため、非選択の候補マイクは基本的に誰にも
+掴まれておらず、ActiveEndpointTracker による「音声検出での自動切替」は
+実運用ではほぼ発火しない（他アプリが該当マイクを掴んでいる場合のみ機能する）。
+render (スピーカー) 側はこの制限を受けないため（他アプリが出力していれば
+非選択デバイスでもピークが取れる）、Auto Speaker Select は正常に機能する。
+
+OS既定デバイス追従（本セクション冒頭のシーケンス）は mic/speaker とも
+影響を受けず、通常通り動作する。対応するにはマイク候補を能動的に短時間
+open してサンプリングする設計変更が必要だが、ユーザー確認の結果、現時点
+では対応不要と判断し据え置いている。
+
+---
+
 ## エラーハンドリング戦略
 
 ### 1. import 時のエラー

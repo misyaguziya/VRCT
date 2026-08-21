@@ -1,6 +1,9 @@
+import atexit
+import os
 import sys
 import json
 import time
+import faulthandler
 from typing import Any, Tuple
 from threading import Thread, Event, Lock
 from queue import Queue, Empty
@@ -9,6 +12,35 @@ from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
 
 logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
+
+# WASAPI/PyAudio 領域でネイティブクラッシュ (access violation 等) が
+# プロセスごと落ちる不具合を追跡中。faulthandler は Windows の
+# UnhandledExceptionFilter にフックし、通常の Python 例外処理では
+# 捕捉できないネイティブフォルト発生時にも、その瞬間の全スレッドの
+# Python コールスタックを crash_trace.log に書き出す。WER
+# (Windows Error Reporting) はフォルトアドレスしか記録せず、かつ
+# 同一アプリの短時間repeated crashを間引くため、こちらを一次情報源とする。
+# faulthandler は enable() 時点で fd を掴むため遅延 open できず、
+# クラッシュ無しの通常終了でも 0 バイトのファイルが残る。運用上のゴミ
+# 化を避けるため、atexit で「書き込みが無ければ削除」する。
+_crash_trace_path = "crash_trace.log"
+_crash_trace_file = open(_crash_trace_path, "a", encoding="utf-8")
+faulthandler.enable(file=_crash_trace_file, all_threads=True)
+
+
+def _cleanupCrashTraceIfEmpty() -> None:
+    try:
+        _crash_trace_file.close()
+    except Exception:
+        pass
+    try:
+        if os.path.exists(_crash_trace_path) and os.path.getsize(_crash_trace_path) == 0:
+            os.remove(_crash_trace_path)
+    except Exception:
+        pass
+
+
+atexit.register(_cleanupCrashTraceIfEmpty)
 
 run_mapping = {
     "enable_translation":"/run/enable_translation",
@@ -34,6 +66,7 @@ run_mapping = {
     "error_transcription_speaker_vram_overflow":"/run/error_transcription_speaker_vram_overflow",
 
     "word_filter":"/run/word_filter",
+    "transcription_recognition_error":"/run/transcription_recognition_error",
 
     "download_progress_ctranslate2_weight":"/run/download_progress_ctranslate2_weight",
     "downloaded_ctranslate2_weight":"/run/downloaded_ctranslate2_weight",
@@ -64,6 +97,8 @@ run_mapping = {
     "selected_openrouter_model":"/run/selected_openrouter_model",
     "selectable_lmstudio_model_list":"/run/selectable_lmstudio_model_list",
     "selected_lmstudio_model":"/run/selected_lmstudio_model",
+    "selectable_openai_compatible_model_list":"/run/selectable_openai_compatible_model_list",
+    "selected_openai_compatible_model":"/run/selected_openai_compatible_model",
     "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
     "selected_ollama_model":"/run/selected_ollama_model",
 
@@ -238,6 +273,15 @@ mapping = {
     "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
     "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
 
+    "/get/data/openai_compatible_auth_key": {"status": True, "variable":controller.getOpenAICompatibleAuthKey},
+    "/set/data/openai_compatible_auth_key": {"status": True, "variable":controller.setOpenAICompatibleAuthKey},
+    "/delete/data/openai_compatible_auth_key": {"status": True, "variable":controller.delOpenAICompatibleAuthKey},
+    "/get/data/openai_compatible_url": {"status": True, "variable":controller.getOpenAICompatibleURL},
+    "/set/data/openai_compatible_url": {"status": True, "variable":controller.setOpenAICompatibleURL},
+    "/get/data/selectable_openai_compatible_model_list": {"status": True, "variable":controller.getOpenAICompatibleModelList},
+    "/get/data/selected_openai_compatible_model": {"status": True, "variable":controller.getOpenAICompatibleModel},
+    "/set/data/selected_openai_compatible_model": {"status": True, "variable":controller.setOpenAICompatibleModel},
+
     "/get/data/connected_ollama": {"status": True, "variable":controller.getTranslatorOllamaConnection},
     "/run/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
     "/get/data/selectable_ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
@@ -299,6 +343,7 @@ mapping = {
     "/get/data/mic_no_speech_prob": {"status": True, "variable":controller.getMicNoSpeechProb},
     "/set/data/mic_no_speech_prob": {"status": True, "variable":controller.setMicNoSpeechProb},
 
+
     "/set/enable/check_mic_threshold": {"status": True, "variable":controller.setEnableCheckMicThreshold},
     "/set/disable/check_mic_threshold": {"status": True, "variable":controller.setDisableCheckMicThreshold},
 
@@ -333,6 +378,7 @@ mapping = {
 
     "/get/data/speaker_no_speech_prob": {"status": True, "variable":controller.getSpeakerNoSpeechProb},
     "/set/data/speaker_no_speech_prob": {"status": True, "variable":controller.setSpeakerNoSpeechProb},
+
 
     "/set/enable/check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
@@ -406,6 +452,27 @@ mapping = {
     "/get/data/websocket_server": {"status": True, "variable":controller.getWebSocketServer},
     "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
     "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
+
+    # OBS Browser Source Settings
+    "/get/data/obs_browser_source": {"status": True, "variable":controller.getObsBrowserSource},
+    "/set/enable/obs_browser_source": {"status": True, "variable":controller.setEnableObsBrowserSource},
+    "/set/disable/obs_browser_source": {"status": True, "variable":controller.setDisableObsBrowserSource},
+    "/get/data/obs_browser_source_port": {"status": True, "variable":controller.getObsBrowserSourcePort},
+    "/set/data/obs_browser_source_port": {"status": True, "variable":controller.setObsBrowserSourcePort},
+    "/get/data/obs_browser_source_max_messages": {"status": True, "variable":controller.getObsBrowserSourceMaxMessages},
+    "/set/data/obs_browser_source_max_messages": {"status": True, "variable":controller.setObsBrowserSourceMaxMessages},
+    "/get/data/obs_browser_source_display_duration": {"status": True, "variable":controller.getObsBrowserSourceDisplayDuration},
+    "/set/data/obs_browser_source_display_duration": {"status": True, "variable":controller.setObsBrowserSourceDisplayDuration},
+    "/get/data/obs_browser_source_fadeout_duration": {"status": True, "variable":controller.getObsBrowserSourceFadeoutDuration},
+    "/set/data/obs_browser_source_fadeout_duration": {"status": True, "variable":controller.setObsBrowserSourceFadeoutDuration},
+    "/get/data/obs_browser_source_font_size": {"status": True, "variable":controller.getObsBrowserSourceFontSize},
+    "/set/data/obs_browser_source_font_size": {"status": True, "variable":controller.setObsBrowserSourceFontSize},
+    "/get/data/obs_browser_source_font_color": {"status": True, "variable":controller.getObsBrowserSourceFontColor},
+    "/set/data/obs_browser_source_font_color": {"status": True, "variable":controller.setObsBrowserSourceFontColor},
+    "/get/data/obs_browser_source_font_outline_thickness": {"status": True, "variable":controller.getObsBrowserSourceFontOutlineThickness},
+    "/set/data/obs_browser_source_font_outline_thickness": {"status": True, "variable":controller.setObsBrowserSourceFontOutlineThickness},
+    "/get/data/obs_browser_source_font_outline_color": {"status": True, "variable":controller.getObsBrowserSourceFontOutlineColor},
+    "/set/data/obs_browser_source_font_outline_color": {"status": True, "variable":controller.setObsBrowserSourceFontOutlineColor},
 
     # Clipboard Settings
     "/get/data/clipboard": {"status": True, "variable":controller.getClipboard},
@@ -529,6 +596,9 @@ class Main:
         if handler is None:
             response = "Invalid endpoint"
             status = 404
+        elif handler["status"] is False:
+            response = "Locked endpoint"
+            status = 423
         else:
             try:
                 response = handler["variable"](data)

@@ -9,13 +9,23 @@ This module exposes small utilities used by the transcription subsystem:
 The functions are defensive: failures are caught and reported by the caller.
 """
 
-from os import path as os_path, makedirs as os_makedirs
+from os import path as os_path, makedirs as os_makedirs, remove as os_remove
 from requests import get as requests_get
 from typing import Callable, Optional
-import huggingface_hub
-from faster_whisper import WhisperModel
 import logging
-from utils import getBestComputeType
+from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging
+
+# Optional deps; None fallback lets checkWhisperWeight etc. return False
+# gracefully when the package is missing.
+try:
+    from faster_whisper import WhisperModel  # noqa: F401
+except Exception:
+    WhisperModel = None  # type: ignore
+
+try:
+    import huggingface_hub  # noqa: F401
+except Exception:
+    huggingface_hub = None  # type: ignore
 
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
@@ -61,8 +71,15 @@ def downloadFile(url: str, path: str, func: Optional[Callable[[float], None]] = 
                     total_chunk += len(chunk)
                     func(total_chunk / file_size)
     except Exception:
-        # Silent failure here; caller may re-check or log
-        pass
+        errorLogging()
+        # Remove any partial/corrupt file so a retry, or the post-download
+        # WhisperModel verification in checkWhisperWeight, doesn't see stale
+        # truncated bytes left over from the failed attempt.
+        try:
+            if os_path.exists(path):
+                os_remove(path)
+        except Exception:
+            pass
 
 def checkWhisperWeight(root: str, weight_type: str) -> bool:
     """Return True if a Whisper model for `weight_type` is loadable from disk.
@@ -71,6 +88,12 @@ def checkWhisperWeight(root: str, weight_type: str) -> bool:
     to verify required files exist and are compatible.
     """
     path = os_path.join(root, "weights", "whisper", weight_type)
+
+    if isWeightVerifiedCache(path):
+        return True
+
+    if WhisperModel is None:
+        return False
     try:
         WhisperModel(
             path,
@@ -81,6 +104,7 @@ def checkWhisperWeight(root: str, weight_type: str) -> bool:
             num_workers=1,
             local_files_only=True,
         )
+        writeWeightVerifiedCache(path)
         return True
     except Exception:
         return False
@@ -102,9 +126,27 @@ def downloadWhisperWeight(
     path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
     if not checkWhisperWeight(root, weight_type):
+        repo_id = _MODELS[weight_type]
+        # _FILENAMES は複数の変換元リポジトリ (Systran, Zoont, deepdml 等)
+        # に共通する候補の和集合。実際のファイル構成はリポジトリごとに
+        # 異なる (例: Systran 系は vocabulary.txt のみ、Zoont/deepdml 系は
+        # preprocessor_config.json/vocabulary.json を含み vocabulary.txt が
+        # 無い) ため、存在しないファイルを固定リストのままダウンロードしよ
+        # うとすると 404 になる。実在するファイルのみに絞り込む。
+        try:
+            available_files = set(huggingface_hub.list_repo_files(repo_id))
+        except Exception:
+            errorLogging()
+            # 一覧取得に失敗した場合は従来通り全候補で試す (完全に
+            # ダウンロードできなくても checkWhisperWeight 側の
+            # WhisperModel ロード検証で最終的に弾かれる)。
+            available_files = set(_FILENAMES)
+
         for filename in _FILENAMES:
+            if filename not in available_files:
+                continue
             file_path = os_path.join(path, filename)
-            url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
+            url = huggingface_hub.hf_hub_url(repo_id, filename)
             downloadFile(url, file_path, func=callback if filename == "model.bin" else None)
     if callable(end_callback):
         end_callback()
@@ -115,13 +157,15 @@ def getWhisperModel(
     device: str = "cpu",
     device_index: int = 0,
     compute_type: str = "auto",
-) -> WhisperModel:
+):
     """Return a `WhisperModel` instance loaded from local weights.
 
     Raises:
         ValueError: when VRAM shortage is detected (wrapped from RuntimeError)
         Exception: other loading errors are propagated.
     """
+    if WhisperModel is None:
+        raise RuntimeError("faster_whisper is not installed")
     path = os_path.join(root, "weights", "whisper", weight_type)
     if compute_type == "auto":
         compute_type = getBestComputeType(device, device_index)

@@ -2,7 +2,7 @@ export const ui_configs = {
     mic_threshold_min: 0,
     mic_threshold_max: 2000,
     speaker_threshold_min: 0,
-    speaker_threshold_max: 4000,
+    speaker_threshold_max: 2000,
     // Shared overlay config (used by both small and large log)
     _overlay_log_config: {
         x_pos: { step: 0.05, min: -0.5, max: 0.5 },
@@ -82,7 +82,6 @@ export const translator_status = [
     { id: "Google", label: "Google", is_available: false },
     { id: "Bing", label: "Bing", is_available: false },
     { id: "Papago", label: "Papago", is_available: false },
-    { id: "DeepL", label: "DeepL", is_available: false },
     { id: "DeepL_API", label: `DeepL API`, is_available: false },
     { id: "Plamo_API", label: `Plamo API`, is_available: false },
     { id: "Gemini_API", label: `Gemini API`, is_available: false },
@@ -91,11 +90,13 @@ export const translator_status = [
     { id: "OpenRouter_API", label: `OpenRouter API`, is_available: false },
     { id: "LMStudio", label: `LMStudio`, is_available: false },
     { id: "Ollama", label: `Ollama`, is_available: false },
+    { id: "OpenAI_Compatible", label: `OpenAI Compatible`, is_available: false },
 ];
 
 export const ctranslate2_weight_type_status = [
     { id: "m2m100_418M-ct2-int8", capacity: "418MB"},
     { id: "m2m100_1.2B-ct2-int8", capacity: "1.2GB"},
+    { id: "nllb-200-distilled-600M-ct2-int8", capacity: "600MB"},
     { id: "nllb-200-distilled-1.3B-ct2-int8", capacity: "1.3GB"},
     { id: "nllb-200-3.3B-ct2-int8", capacity: "3.3GB"},
 ].map(item => ({ ...item, is_downloaded: false, progress: null }));

@@ -1,5 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+
+# UPX compression roughly doubles the PyInstaller collect step and adds
+# a few seconds to sidecar startup. Default to disabled so ordinary
+# rebuilds are fast; release scripts can opt in by setting
+# VRCT_PYINSTALLER_UPX=1.
+_use_upx = os.environ.get("VRCT_PYINSTALLER_UPX") == "1"
+
 
 a = Analysis(
     ['..\\src-python\\mainloop.py'],
@@ -14,7 +22,7 @@ a = Analysis(
         ('./../.venv/Lib/site-packages/faster_whisper', 'faster_whisper/'),
         ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/')
         ],
-    hiddenimports=[],
+    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -33,7 +41,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=_use_upx,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -47,7 +55,7 @@ coll = COLLECT(
     a.binaries,
     a.datas,
     strip=False,
-    upx=True,
+    upx=_use_upx,
     upx_exclude=[],
     name='.',
 )

@@ -131,7 +131,11 @@ def loadTranslationLanguages(path: str, force: bool = False) -> Dict[str, Any]:
                     "target": value["target"],
                 }
 
-        translation_lang = validated
+        # モジュールグローバルを再代入すると、これより前に
+        # `from ... import translation_lang` していたモジュールは古い(空の)dictを
+        # 掴んだままになる。参照を維持するためin-placeで更新する。
+        translation_lang.clear()
+        translation_lang.update(validated)
         _loaded = True
         return translation_lang
 
