@@ -10,10 +10,26 @@ try:
 except ImportError:
     Aptabase = None
 
+try:
+    from build_channel import BUILD_CHANNEL
+except ImportError:
+    import os
+    import sys
+
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+    from build_channel import BUILD_CHANNEL
+
 
 class AptabaseWrapper:
-    APP_KEY = "A-US-6044063021"
-    
+    # stable/beta で別の Aptabase プロジェクトを使う。どちらを使うかは
+    # build_channel.BUILD_CHANNEL の1行だけで切り替える（マージ時の
+    # APP_KEY 取り違えを防ぐため）。
+    APP_KEYS = {
+        "stable": "A-US-3414271507",
+        "beta": "A-US-6044063021",
+    }
+    APP_KEY = APP_KEYS[BUILD_CHANNEL]
+
     def __init__(self):
         self.client = None
         # Suppress noisy logs from the Aptabase SDK (only CRITICAL allowed)
