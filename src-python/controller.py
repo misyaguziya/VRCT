@@ -1090,13 +1090,10 @@ class Controller:
 
     def setSelectedTranslationEngines(self, data:dict, *args, **kwargs) -> dict:
         config.SELECTED_TRANSLATION_ENGINES = data
-        # Resolve the engine first (availability / same-language checks can
-        # still downgrade it to CTranslate2), then validate the language
-        # against whichever engine actually ends up active - not the one
-        # the user merely requested.
+        # Resolves the engine (availability / same-language checks can still
+        # downgrade it to CTranslate2) and then validates the language
+        # against whichever engine actually ends up active.
         self.updateTranslationEngineAndEngineList()
-        engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
-        self.fallbackUnsupportedLanguagesForEngine(config.SELECTED_TAB_NO, engine)
         return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
     @staticmethod
@@ -3293,6 +3290,17 @@ class Controller:
                 engines[config.SELECTED_TAB_NO] = "CTranslate2"
                 config.SELECTED_TRANSLATION_ENGINES = engines
                 break
+
+        # CTranslate2 is the engine everything above falls back to, but it
+        # doesn't support every language either (e.g. Arabic isn't in the
+        # nllb-200 weight tables). When even CTranslate2 can't handle the
+        # current language selection, there's no further engine to fall
+        # back to - reset the language itself instead, or the UI ends up
+        # with a selected engine that's simultaneously shown as
+        # unavailable/greyed out.
+        final_engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
+        if self.fallbackUnsupportedLanguagesForEngine(config.SELECTED_TAB_NO, final_engine):
+            selectable_engines = self.getTranslationEngines()["result"]
 
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
