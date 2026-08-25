@@ -774,23 +774,22 @@ class Model:
         self.logger.disabled = True
         self.logger = None
 
-    def getListLanguageAndCountry(self, engine: str = None):
-        """List languages the UI may offer for selection.
+    def getListLanguageAndCountry(self):
+        """List every language any translation engine supports for the UI.
 
-        If `engine` is given, only languages that engine actually supports
-        for translation are included (mirrors the reverse filtering already
-        done for the engine-selector list in findTranslationEngines()).
-        Otherwise every language any translation engine supports is
-        included (used only as a fallback when no engine context exists).
+        Deliberately NOT filtered to the currently selected engine: a user
+        should be able to pick any language up front, and if the selected
+        engine doesn't support it, the engine falls back instead (see
+        Controller.updateTranslationEngineAndEngineList()). Filtering this
+        list by engine instead forces users to switch to a
+        broadly-compatible engine first, pick the language, then switch
+        back - exactly the friction this list avoids.
         """
         transcription_langs = list(transcription_lang.keys())
-        if engine is not None:
-            translation_langs = list(self.getTranslationLanguagesForEngine(engine))
-        else:
-            translation_langs = []
-            for tl_key in translation_lang.keys():
-                translation_langs.extend(self.getTranslationLanguagesForEngine(tl_key))
-            translation_langs = list(set(translation_langs))
+        translation_langs = []
+        for tl_key in translation_lang.keys():
+            translation_langs.extend(self.getTranslationLanguagesForEngine(tl_key))
+        translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
         languages = []
@@ -815,6 +814,24 @@ class Model:
 
     def isLanguageSupportedByEngine(self, engine: str, language: str) -> bool:
         return language in self.getTranslationLanguagesForEngine(engine)
+
+    def pickDefaultLanguageForEngine(self, engine: str, avoid_languages) -> dict:
+        """Pick a language `engine` supports, preferring Japanese then
+        English (the app's own defaults), and avoiding anything in
+        `avoid_languages` so the pick can't collide with another slot
+        (e.g. resetting the source language to the same value as an
+        already-fine enabled target).
+        """
+        avoid_languages = set(avoid_languages)
+        for language, country in (("Japanese", "Japan"), ("English", "United States")):
+            if language not in avoid_languages and self.isLanguageSupportedByEngine(engine, language):
+                return {"language": language, "country": country}
+        for language in self.getTranslationLanguagesForEngine(engine):
+            if language not in avoid_languages and language in transcription_lang:
+                return {"language": language, "country": next(iter(transcription_lang[language]))}
+        # Every language this engine supports is already taken by another
+        # slot - nothing to pick that wouldn't collide.
+        return None
 
     def findTranslationEngines(self, source_lang, target_lang, engines_status):
         selectable_engines = [key for key, value in engines_status.items() if value is True]
@@ -889,12 +906,11 @@ class Model:
                 )
 
         # 翻訳失敗時のフェールセーフ処理
+        # translation is None: 選択言語がこのエンジンで未対応（エンジン自体の障害ではない）
+        # translation is False: エンジン側の実際の障害（レート制限・通信・認証・プロバイダエラー等）
         if isinstance(translation, str):
             success_flag = True
         else:
-            # translation is None: 選択言語がこのエンジンで未対応（エンジン自体の障害ではない）
-            # translation is False: エンジン側の実際の障害（レート制限・通信・認証・プロバイダエラー等）
-            success_flag = translation is None
             max_retries = 20  # 0.1s間隔で最大2秒。CTranslate2が使用不可な場合の無限ループを防ぐ
             for _ in range(max_retries):
                 translation = self.translator.translate(
@@ -910,9 +926,17 @@ class Model:
                 if translation is None:
                     break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
                 sleep(0.1)
-            if not isinstance(translation, str):
+            if isinstance(translation, str):
+                success_flag = True
+            elif translation is None:
+                # どちらのエンジンもこの言語ペアに未対応なだけ。実障害ではない。
+                success_flag = True
+                translation = message
+            else:
+                # CTranslate2フォールバック自体が実際に失敗した。
+                success_flag = False
                 errorLogging()
-                translation = message  # フォールバック翻訳も失敗した場合は原文を返す
+                translation = message
         return translation, success_flag
 
     def getInputTranslate(self, message, source_language=None):

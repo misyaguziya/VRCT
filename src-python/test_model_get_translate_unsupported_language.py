@@ -69,6 +69,50 @@ class TestGetTranslateSuccessFlagSemantics(unittest.TestCase):
         self.assertEqual(translation, "hello")  # falls back to original message
         self.assertFalse(success_flag, "a real backend failure must still be reported as a failure")
 
+    def test_unsupported_on_both_engines_is_not_reported_as_engine_failure(self) -> None:
+        # Neither the requested engine nor the CTranslate2 fallback support
+        # this language pair - expected, not an engine failure.
+        self.model.translator = type(
+            "T", (), {"translate": staticmethod(lambda **kwargs: None)}
+        )()
+
+        with patch("model.errorLogging") as mock_error_logging:
+            translation, success_flag = self.model.getTranslate(
+                translator_name="Bing",
+                source_language="Arabic",
+                target_language="Klingon",
+                target_country="Qo'noS",
+                message="hello",
+            )
+
+        self.assertEqual(translation, "hello")  # falls back to the original message
+        self.assertTrue(success_flag, "both engines lacking the language pair is not an engine failure")
+        mock_error_logging.assert_not_called()
+
+    def test_fallback_failure_after_unsupported_primary_is_still_reported_as_failure(self) -> None:
+        # The requested engine reports the language unsupported (None), but
+        # the CTranslate2 fallback then hits a genuine backend failure
+        # (False) - success_flag must reflect that real failure, not the
+        # primary engine's unrelated "unsupported" result.
+        self.model.translator = type(
+            "T", (), {"translate": staticmethod(lambda **kwargs: (
+                None if kwargs["translator_name"] == "Bing" else False
+            ))}
+        )()
+
+        with patch("model.errorLogging") as mock_error_logging, patch("model.sleep"):
+            translation, success_flag = self.model.getTranslate(
+                translator_name="Bing",
+                source_language="Arabic",
+                target_language="Japanese",
+                target_country="Japan",
+                message="hello",
+            )
+
+        self.assertEqual(translation, "hello")
+        self.assertFalse(success_flag, "a genuine CTranslate2 fallback failure must not be masked as success")
+        mock_error_logging.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()
