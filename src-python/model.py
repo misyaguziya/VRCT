@@ -879,6 +879,9 @@ class Model:
         if isinstance(translation, str):
             success_flag = True
         else:
+            # translation is None: 選択言語がこのエンジンで未対応（エンジン自体の障害ではない）
+            # translation is False: エンジン側の実際の障害（レート制限・通信・認証・プロバイダエラー等）
+            success_flag = translation is None
             max_retries = 20  # 0.1s間隔で最大2秒。CTranslate2が使用不可な場合の無限ループを防ぐ
             for _ in range(max_retries):
                 translation = self.translator.translate(
@@ -889,10 +892,12 @@ class Model:
                                     target_country=target_country,
                                     message=message
                             )
-                if translation is not False:
+                if isinstance(translation, str):
                     break
+                if translation is None:
+                    break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
                 sleep(0.1)
-            else:
+            if not isinstance(translation, str):
                 errorLogging()
                 translation = message  # フォールバック翻訳も失敗した場合は原文を返す
         return translation, success_flag
