@@ -37,6 +37,44 @@ class TestCTranslate2WeightDefinitions(unittest.TestCase):
         self.assertEqual(nllb_600m["target"], nllb_1_3b["target"])
         self.assertEqual(nllb_600m["source"]["Japanese"], "jpn_Jpan")
 
+    def test_nllb_uses_plain_language_names_shared_with_other_engines(self) -> None:
+        """FLORES-200 (nllb's language table) names dialects/scripts more
+        granularly than the rest of this file's engines do (e.g. "Standard
+        Arabic" vs. everyone else's plain "Arabic"). Where nllb's standard
+        variant is what every other engine means by the plain name, the key
+        must match - otherwise CTranslate2 looks like it doesn't support a
+        language it actually does, and the engine gets treated as
+        unavailable for it (see kiroku.zip bug report follow-up)."""
+        with open(LANGUAGES_YAML_PATH, encoding="utf-8") as fp:
+            languages = yaml.safe_load(fp)
+        nllb_source = languages["CTranslate2"]["nllb-200-distilled-600M-ct2-int8"]["source"]
+
+        # Reference set: every other engine's plain language names, plus
+        # CTranslate2's own m2m100 weight types (which - unlike nllb's
+        # FLORES-200 table - already use the same plain naming as the rest
+        # of the app).
+        reference_names = set()
+        for engine, cfg in languages.items():
+            if engine == "CTranslate2":
+                reference_names.update(cfg["m2m100_418M-ct2-int8"]["source"].keys())
+                continue
+            reference_names.update(cfg["source"].keys())
+            reference_names.update(cfg.get("target", {}).keys())
+
+        for language in ["Arabic", "Persian", "Norwegian", "Uzbek", "Latvian", "Malay",
+                          "Tibetan", "Azerbaijani", "Pashto", "Yiddish", "Mongolian",
+                          "Malagasy", "Albanian", "Oromo", "Kurdish"]:
+            self.assertIn(
+                language, reference_names,
+                f"test setup error: {language!r} is expected to also appear in another engine",
+            )
+            self.assertIn(
+                language, nllb_source,
+                f"nllb-200 has no plain {language!r} entry - it's likely hiding under a "
+                "dialect/script-qualified key (e.g. 'Standard Arabic') that other engines "
+                "don't use, making CTranslate2 look unsupported for a language it does support",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

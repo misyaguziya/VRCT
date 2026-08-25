@@ -29,6 +29,17 @@ from typing import Any, Optional, Tuple
 
 warnings.filterwarnings("ignore")
 
+
+class UnsupportedLanguageError(Exception):
+    """Raised when a language is not supported by the selected translator.
+
+    Distinct from a translator backend failure (rate limit, network,
+    authentication, provider error) so callers do not disable the
+    translation engine just because the user picked a language it
+    doesn't cover.
+    """
+    pass
+
 try:
     import ctranslate2  # noqa: F401
 except Exception:
@@ -482,27 +493,36 @@ class Translator:
         """Resolve a friendly language name to translator-specific codes.
 
         Returns (source_code, target_code).
+
+        Raises:
+            UnsupportedLanguageError: `source_language`/`target_language` is
+                not in this translator's supported language table.
         """
-        match translator_name:
-            case "DeepL_API":
-                if target_language == "English":
-                    if target_country in ["United States", "Canada", "Philippines"]:
-                        target_language = "English American"
-                    else:
-                        target_language = "English British"
-                elif target_language == "Portuguese":
-                    if target_country in ["Portugal"]:
-                        target_language = "Portuguese European"
-                    else:
-                        target_language = "Portuguese Brazilian"
-                source_language = translation_lang[translator_name]["source"][source_language]
-                target_language = translation_lang[translator_name]["target"][target_language]
-            case "CTranslate2":
-                source_language = translation_lang[translator_name][weight_type]["source"][source_language]
-                target_language = translation_lang[translator_name][weight_type]["target"][target_language]
-            case _:
-                source_language = translation_lang[translator_name]["source"][source_language]
-                target_language = translation_lang[translator_name]["target"][target_language]
+        try:
+            match translator_name:
+                case "DeepL_API":
+                    if target_language == "English":
+                        if target_country in ["United States", "Canada", "Philippines"]:
+                            target_language = "English American"
+                        else:
+                            target_language = "English British"
+                    elif target_language == "Portuguese":
+                        if target_country in ["Portugal"]:
+                            target_language = "Portuguese European"
+                        else:
+                            target_language = "Portuguese Brazilian"
+                    source_language = translation_lang[translator_name]["source"][source_language]
+                    target_language = translation_lang[translator_name]["target"][target_language]
+                case "CTranslate2":
+                    source_language = translation_lang[translator_name][weight_type]["source"][source_language]
+                    target_language = translation_lang[translator_name][weight_type]["target"][target_language]
+                case _:
+                    source_language = translation_lang[translator_name]["source"][source_language]
+                    target_language = translation_lang[translator_name]["target"][target_language]
+        except KeyError as e:
+            raise UnsupportedLanguageError(
+                f"{translator_name} does not support language {e} (source={source_language!r}, target={target_language!r})"
+            ) from e
         return source_language, target_language
 
     def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str, context_history: Optional[list[dict]] = None) -> Any:
@@ -517,8 +537,11 @@ class Translator:
             message: Text to translate
             context_history: Optional conversation context (Chat/Mic/Speaker messages)
 
-        Returns translated string on success, or False on failure. When
-        source_language == target_language the original message is returned.
+        Returns translated string on success. Returns None if the language
+        pair is not supported by this translator (not a backend failure).
+        Returns False on an actual backend failure (rate limit, network,
+        authentication, provider error). When source_language ==
+        target_language the original message is returned.
         """
         try:
             if source_language == target_language:
@@ -656,6 +679,8 @@ class Translator:
                         target_language=target_language,
                         weight_type=weight_type,
                         )
+        except UnsupportedLanguageError:
+            result = None
         except Exception:
             errorLogging()
             result = False
