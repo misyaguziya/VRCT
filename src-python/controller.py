@@ -2,6 +2,7 @@ from typing import Callable, Any, List, Optional
 from subprocess import Popen
 from threading import Thread, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import copy
 import re
 import time
 from device_manager import device_manager
@@ -1069,7 +1070,8 @@ class Controller:
 
     @staticmethod
     def getListLanguageAndCountry(*args, **kwargs) -> dict:
-        return {"status":200, "result": model.getListLanguageAndCountry()}
+        engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
+        return {"status":200, "result": model.getListLanguageAndCountry(engine)}
 
     @staticmethod
     def getMicHostList(*args, **kwargs) -> dict:
@@ -1087,9 +1089,11 @@ class Controller:
     def getSelectedTranslationEngines(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
 
-    @staticmethod
-    def setSelectedTranslationEngines(data:dict, *args, **kwargs) -> dict:
+    def setSelectedTranslationEngines(self, data:dict, *args, **kwargs) -> dict:
         config.SELECTED_TRANSLATION_ENGINES = data
+        engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
+        self.fallbackUnsupportedLanguagesForEngine(config.SELECTED_TAB_NO, engine)
+        self.updateTranslationEngineAndEngineList()
         return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
     @staticmethod
@@ -3289,6 +3293,49 @@ class Controller:
 
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
+        self.run(
+            200,
+            self.run_mapping["selectable_language_list"],
+            model.getListLanguageAndCountry(config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]),
+        )
+
+    def fallbackUnsupportedLanguagesForEngine(self, tab_no: str, engine: str) -> bool:
+        """Reset any language on `tab_no` that `engine` doesn't support back
+        to the default language (Japanese source / English target).
+
+        This is the mirror of updateTranslationEngineAndEngineList(), which
+        falls the ENGINE back to CTranslate2 when the LANGUAGE changes to
+        something the current engine doesn't support. Without this,
+        changing the engine first and leaving an unsupported language in
+        place goes unnoticed until a translation is actually attempted.
+
+        Returns True if any language was reset.
+        """
+        changed = False
+
+        your_languages = copy.deepcopy(config.SELECTED_YOUR_LANGUAGES)
+        your_language = your_languages[tab_no]["1"]
+        if not model.isLanguageSupportedByEngine(engine, your_language["language"]):
+            your_languages[tab_no]["1"] = {"language": "Japanese", "country": "Japan", "enable": True}
+            config.SELECTED_YOUR_LANGUAGES = your_languages
+            changed = True
+
+        target_languages = copy.deepcopy(config.SELECTED_TARGET_LANGUAGES)
+        target_changed = False
+        for target_language in target_languages[tab_no].values():
+            if target_language["enable"] is True and not model.isLanguageSupportedByEngine(engine, target_language["language"]):
+                target_language["language"] = "English"
+                target_language["country"] = "United States"
+                target_changed = True
+        if target_changed:
+            config.SELECTED_TARGET_LANGUAGES = target_languages
+            changed = True
+
+        if changed:
+            self.run(200, self.run_mapping["selected_your_languages"], config.SELECTED_YOUR_LANGUAGES)
+            self.run(200, self.run_mapping["selected_target_languages"], config.SELECTED_TARGET_LANGUAGES)
+
+        return changed
 
     def updateDownloadedWhisperModelWeight(self) -> None:
         # キャッシュされた結果を使用（起動時の重複チェックを回避）

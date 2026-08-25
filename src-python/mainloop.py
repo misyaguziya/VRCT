@@ -81,6 +81,9 @@ run_mapping = {
 
     "selected_translation_engines":"/run/selected_translation_engines",
     "translation_engines":"/run/translation_engines",
+    "selectable_language_list":"/run/selectable_language_list",
+    "selected_your_languages":"/run/selected_your_languages",
+    "selected_target_languages":"/run/selected_target_languages",
 
     "selected_translation_compute_type":"/run/selected_translation_compute_type",
     "selected_transcription_compute_type":"/run/selected_transcription_compute_type",

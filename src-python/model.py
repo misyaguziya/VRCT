@@ -774,17 +774,23 @@ class Model:
         self.logger.disabled = True
         self.logger = None
 
-    def getListLanguageAndCountry(self):
+    def getListLanguageAndCountry(self, engine: str = None):
+        """List languages the UI may offer for selection.
+
+        If `engine` is given, only languages that engine actually supports
+        for translation are included (mirrors the reverse filtering already
+        done for the engine-selector list in findTranslationEngines()).
+        Otherwise every language any translation engine supports is
+        included (used only as a fallback when no engine context exists).
+        """
         transcription_langs = list(transcription_lang.keys())
-        translation_langs = []
-        for tl_key in translation_lang.keys():
-            if tl_key == "CTranslate2":
-                for lang in translation_lang[tl_key][config.CTRANSLATE2_WEIGHT_TYPE]["source"]:
-                    translation_langs.append(lang)
-            else:
-                for lang in translation_lang[tl_key]["source"]:
-                    translation_langs.append(lang)
-        translation_langs = list(set(translation_langs))
+        if engine is not None:
+            translation_langs = list(self.getTranslationLanguagesForEngine(engine))
+        else:
+            translation_langs = []
+            for tl_key in translation_lang.keys():
+                translation_langs.extend(self.getTranslationLanguagesForEngine(tl_key))
+            translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
         languages = []
@@ -799,17 +805,24 @@ class Model:
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
 
+    def getTranslationLanguagesForEngine(self, engine: str) -> list[str]:
+        """Friendly language names `engine` supports as a source language."""
+        if engine == "CTranslate2":
+            languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
+        else:
+            languages = translation_lang.get(engine, {}).get("source", {})
+        return list(languages.keys())
+
+    def isLanguageSupportedByEngine(self, engine: str, language: str) -> bool:
+        return language in self.getTranslationLanguagesForEngine(engine)
+
     def findTranslationEngines(self, source_lang, target_lang, engines_status):
         selectable_engines = [key for key, value in engines_status.items() if value is True]
         compatible_engines = []
         for engine in list(translation_lang.keys()):
-            if engine == "CTranslate2":
-                languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
-            else:
-                languages = translation_lang.get(engine, {}).get("source", {})
+            language_list = self.getTranslationLanguagesForEngine(engine)
             source_langs = [e["language"] for e in list(source_lang.values()) if e["enable"] is True]
             target_langs = [e["language"] for e in list(target_lang.values()) if e["enable"] is True]
-            language_list = list(languages.keys())
 
             if all(e in language_list for e in source_langs) and all(e in language_list for e in target_langs):
                 if engine in selectable_engines:
