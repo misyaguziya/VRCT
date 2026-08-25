@@ -27,6 +27,11 @@ import numpy as np
 from pydub import AudioSegment
 from utils import errorLogging
 
+try:
+    import torch  # noqa: F401
+except Exception:
+    torch = None  # type: ignore
+
 import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
 
@@ -130,8 +135,7 @@ class AudioTranscriber:
                     audio_data = np.frombuffer(
                         audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16
                     ).flatten().astype(np.float32) / 32768.0
-                    import torch
-                    if isinstance(audio_data, torch.Tensor):
+                    if torch is not None and isinstance(audio_data, torch.Tensor):
                         audio_data = audio_data.detach().numpy()
 
                     for language, country in zip(languages, countries):

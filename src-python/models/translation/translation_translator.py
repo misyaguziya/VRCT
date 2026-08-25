@@ -1,35 +1,6 @@
 from os import path as os_path
 from deepl import DeepLClient
 
-_translators_loaded = False
-other_web_Translator = None  # type: ignore
-bing_translator = None
-ENABLE_TRANSLATORS = True
-
-
-def _ensureTranslatorsLoaded() -> None:
-    """Lazily import the (heavy) `translators` package on first use.
-
-    Importing `translators` at module scope adds noticeable time to process
-    startup even when web-based translation engines are never used, so it is
-    deferred until a caller actually needs it.
-    """
-    global _translators_loaded, other_web_Translator, bing_translator, ENABLE_TRANSLATORS
-    if _translators_loaded:
-        return
-    _translators_loaded = True
-    try:
-        from translators import translate_text as _translate_text
-        from translators.server import _bing as _bing
-        other_web_Translator = _translate_text
-        bing_translator = _bing
-        bing_translator.get_tk = parse_bing_credentials
-        ENABLE_TRANSLATORS = True
-    except Exception:
-        other_web_Translator = None
-        bing_translator = None
-        ENABLE_TRANSLATORS = False
-
 try:
     from .translation_languages import translation_lang
     from .translation_utils import ctranslate2_weights
@@ -43,85 +14,85 @@ except Exception:
 
 from utils import errorLogging, getBestComputeType
 
+try:
+    from translators import translate_text as other_web_Translator
+    from translators.server import _bing as bing_translator
+    bing_translator.get_tk = parse_bing_credentials
+    ENABLE_TRANSLATORS = True
+except Exception:
+    other_web_Translator = None  # type: ignore
+    bing_translator = None
+    ENABLE_TRANSLATORS = False
+
 import warnings
 from typing import Any, Optional, Tuple
 
 warnings.filterwarnings("ignore")
 
-# Each provider module (translation_gemini.py, translation_openai.py, ...)
-# imports its SDK (openai, langchain_openai, langchain_google_genai, ...) at
-# module scope, and those SDK imports are individually slow (multi-second
-# for some, e.g. langchain_google_genai). Importing them all eagerly here
-# made every process startup pay for every provider even when the user has
-# configured at most one or two, so each is deferred until the user
-# actually authenticates with that provider. The imports below are kept as
-# static `from .module import Class` statements (rather than importlib with a
-# dynamic module name) so PyInstaller's import scanner can still detect and
-# bundle them.
 
+class UnsupportedLanguageError(Exception):
+    """Raised when a language is not supported by the selected translator.
 
-def _importPlamoClient():
-    try:
-        from .translation_plamo import PlamoClient
-    except Exception:
-        from translation_plamo import PlamoClient
-    return PlamoClient
+    Distinct from a translator backend failure (rate limit, network,
+    authentication, provider error) so callers do not disable the
+    translation engine just because the user picked a language it
+    doesn't cover.
+    """
+    pass
 
+try:
+    import ctranslate2  # noqa: F401
+except Exception:
+    ctranslate2 = None  # type: ignore
 
-def _importGeminiClient():
-    try:
-        from .translation_gemini import GeminiClient
-    except Exception:
-        from translation_gemini import GeminiClient
-    return GeminiClient
+try:
+    import transformers  # noqa: F401
+except Exception:
+    transformers = None  # type: ignore
 
+# 各プロバイダの LLM クライアント SDK は起動時にまとめて import する。
+# try/except は Python パッケージ vs スクリプト実行の両方で動かすため
+# (`from .module` と `from module` の両パターン)。PyInstaller の import
+# scanner が静的に検出できるよう `from ... import Class` の形を維持する。
+try:
+    from .translation_plamo import PlamoClient
+except Exception:
+    from translation_plamo import PlamoClient
 
-def _importOpenAIClient():
-    try:
-        from .translation_openai import OpenAIClient
-    except Exception:
-        from translation_openai import OpenAIClient
-    return OpenAIClient
+try:
+    from .translation_gemini import GeminiClient
+except Exception:
+    from translation_gemini import GeminiClient
 
+try:
+    from .translation_openai import OpenAIClient
+except Exception:
+    from translation_openai import OpenAIClient
 
-def _importOpenAICompatibleClient():
-    try:
-        from .translation_openai_compatible import OpenAICompatibleClient
-    except Exception:
-        from translation_openai_compatible import OpenAICompatibleClient
-    return OpenAICompatibleClient
+try:
+    from .translation_openai_compatible import OpenAICompatibleClient
+except Exception:
+    from translation_openai_compatible import OpenAICompatibleClient
 
+try:
+    from .translation_groq import GroqClient
+except Exception:
+    from translation_groq import GroqClient
 
-def _importGroqClient():
-    try:
-        from .translation_groq import GroqClient
-    except Exception:
-        from translation_groq import GroqClient
-    return GroqClient
+try:
+    from .translation_openrouter import OpenRouterClient
+except Exception:
+    from translation_openrouter import OpenRouterClient
 
+try:
+    from .translation_lmstudio import LMStudioClient
+except Exception:
+    from translation_lmstudio import LMStudioClient
 
-def _importOpenRouterClient():
-    try:
-        from .translation_openrouter import OpenRouterClient
-    except Exception:
-        from translation_openrouter import OpenRouterClient
-    return OpenRouterClient
-
-
-def _importLMStudioClient():
-    try:
-        from .translation_lmstudio import LMStudioClient
-    except Exception:
-        from translation_lmstudio import LMStudioClient
-    return LMStudioClient
-
-
-def _importOllamaClient():
-    try:
-        from .translation_ollama import OllamaClient
-    except Exception:
-        from translation_ollama import OllamaClient
-    return OllamaClient
+try:
+    from .translation_ollama import OllamaClient
+except Exception:
+    from translation_ollama import OllamaClient
 
 
 class Translator:
@@ -134,6 +105,7 @@ class Translator:
     """
 
     def __init__(self) -> None:
+        self.is_enable_translators = ENABLE_TRANSLATORS
         self.deepl_client: Optional[DeepLClient] = None
         self.plamo_client: Optional[Any] = None
         self.gemini_client: Optional[Any] = None
@@ -149,7 +121,6 @@ class Translator:
         self.ctranslate2_tokenizer: Any = None
         self.is_loaded_ctranslate2_model: bool = False
         self.is_changed_translator_parameters: bool = False
-        self.is_enable_translators: bool = ENABLE_TRANSLATORS
 
     def authenticationDeepLAuthKey(self, auth_key: str) -> bool:
         """Authenticate DeepL API with the provided key.
@@ -172,7 +143,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        PlamoClient = _importPlamoClient()
         self.plamo_client = PlamoClient(root_path=root_path)
         if self.plamo_client.setAuthKey(auth_key):
             return True
@@ -207,7 +177,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        GeminiClient = _importGeminiClient()
         self.gemini_client = GeminiClient(root_path=root_path)
         if self.gemini_client.setAuthKey(auth_key):
             return True
@@ -243,7 +212,6 @@ class Translator:
         base_url を指定することで互換エンドポイント (例: Azure OpenAI 互換, Proxy) にも対応可能。
         Returns True on success, False on failure.
         """
-        OpenAIClient = _importOpenAIClient()
         self.openai_client = OpenAIClient(base_url=base_url, root_path=root_path)
         if self.openai_client.setAuthKey(auth_key):
             return True
@@ -279,7 +247,6 @@ class Translator:
         `base_url` は必須想定（None の場合は公式エンドポイントにフォールバック）。
         Returns True on success, False on failure.
         """
-        OpenAICompatibleClient = _importOpenAICompatibleClient()
         self.openai_compatible_client = OpenAICompatibleClient(base_url=base_url, root_path=root_path)
         if self.openai_compatible_client.setAuthKey(auth_key):
             return True
@@ -308,7 +275,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        GroqClient = _importGroqClient()
         self.groq_client = GroqClient(root_path=root_path)
         if self.groq_client.setAuthKey(auth_key):
             return True
@@ -343,7 +309,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        OpenRouterClient = _importOpenRouterClient()
         self.openrouter_client = OpenRouterClient(root_path=root_path)
         if self.openrouter_client.setAuthKey(auth_key):
             return True
@@ -385,7 +350,6 @@ class Translator:
 
         Returns True on success, False on failure.
         """
-        LMStudioClient = _importLMStudioClient()
         self.lmstudio_client = LMStudioClient(base_url=base_url, root_path=root_path)
         result = self.lmstudio_client.setBaseURL(base_url)
         if result is False:
@@ -427,7 +391,6 @@ class Translator:
 
         Returns True if Ollama is reachable, False otherwise.
         """
-        OllamaClient = _importOllamaClient()
         self.ollama_client = OllamaClient(root_path=root_path)
         result = self.ollama_client.authenticationCheck()
         if result is False:
@@ -465,8 +428,8 @@ class Translator:
         This sets internal translator/tokenizer objects and flips
         ``is_loaded_ctranslate2_model`` on success.
         """
-        import ctranslate2
-        import transformers
+        if ctranslate2 is None or transformers is None:
+            return
 
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
@@ -530,27 +493,36 @@ class Translator:
         """Resolve a friendly language name to translator-specific codes.
 
         Returns (source_code, target_code).
+
+        Raises:
+            UnsupportedLanguageError: `source_language`/`target_language` is
+                not in this translator's supported language table.
         """
-        match translator_name:
-            case "DeepL_API":
-                if target_language == "English":
-                    if target_country in ["United States", "Canada", "Philippines"]:
-                        target_language = "English American"
-                    else:
-                        target_language = "English British"
-                elif target_language == "Portuguese":
-                    if target_country in ["Portugal"]:
-                        target_language = "Portuguese European"
-                    else:
-                        target_language = "Portuguese Brazilian"
-                source_language = translation_lang[translator_name]["source"][source_language]
-                target_language = translation_lang[translator_name]["target"][target_language]
-            case "CTranslate2":
-                source_language = translation_lang[translator_name][weight_type]["source"][source_language]
-                target_language = translation_lang[translator_name][weight_type]["target"][target_language]
-            case _:
-                source_language = translation_lang[translator_name]["source"][source_language]
-                target_language = translation_lang[translator_name]["target"][target_language]
+        try:
+            match translator_name:
+                case "DeepL_API":
+                    if target_language == "English":
+                        if target_country in ["United States", "Canada", "Philippines"]:
+                            target_language = "English American"
+                        else:
+                            target_language = "English British"
+                    elif target_language == "Portuguese":
+                        if target_country in ["Portugal"]:
+                            target_language = "Portuguese European"
+                        else:
+                            target_language = "Portuguese Brazilian"
+                    source_language = translation_lang[translator_name]["source"][source_language]
+                    target_language = translation_lang[translator_name]["target"][target_language]
+                case "CTranslate2":
+                    source_language = translation_lang[translator_name][weight_type]["source"][source_language]
+                    target_language = translation_lang[translator_name][weight_type]["target"][target_language]
+                case _:
+                    source_language = translation_lang[translator_name]["source"][source_language]
+                    target_language = translation_lang[translator_name]["target"][target_language]
+        except KeyError as e:
+            raise UnsupportedLanguageError(
+                f"{translator_name} does not support language {e} (source={source_language!r}, target={target_language!r})"
+            ) from e
         return source_language, target_language
 
     def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str, context_history: Optional[list[dict]] = None) -> Any:
@@ -565,8 +537,11 @@ class Translator:
             message: Text to translate
             context_history: Optional conversation context (Chat/Mic/Speaker messages)
 
-        Returns translated string on success, or False on failure. When
-        source_language == target_language the original message is returned.
+        Returns translated string on success. Returns None if the language
+        pair is not supported by this translator (not a backend failure).
+        Returns False on an actual backend failure (rate limit, network,
+        authentication, provider error). When source_language ==
+        target_language the original message is returned.
         """
         try:
             if source_language == target_language:
@@ -674,7 +649,6 @@ class Translator:
                             output_lang=target_language,
                         )
                 case "Google":
-                    _ensureTranslatorsLoaded()
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
@@ -683,7 +657,6 @@ class Translator:
                             to_language=target_language,
                         )
                 case "Bing":
-                    _ensureTranslatorsLoaded()
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
@@ -692,7 +665,6 @@ class Translator:
                             to_language=target_language,
                         )
                 case "Papago":
-                    _ensureTranslatorsLoaded()
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
@@ -707,6 +679,8 @@ class Translator:
                         target_language=target_language,
                         weight_type=weight_type,
                         )
+        except UnsupportedLanguageError:
+            result = None
         except Exception:
             errorLogging()
             result = False

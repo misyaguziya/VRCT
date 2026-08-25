@@ -388,7 +388,7 @@ CTranslate2:
       Akan: aka_Latn
       Amharic: amh_Ethi
       North Levantine Arabic: apc_Arab
-      Standard Arabic: arb_Arab
+      Arabic: arb_Arab
       Modern Standard Arabic (Romanized): arb_Latn
       Najdi Arabic: ars_Arab
       Moroccan Arabic: ary_Arab
@@ -398,7 +398,7 @@ CTranslate2:
       Awadhi: awa_Deva
       Central Aymara: ayr_Latn
       South Azerbaijani: azb_Arab
-      North Azerbaijani: azj_Latn
+      Azerbaijani: azj_Latn
       Bashkir: bak_Cyrl
       Bambara: bam_Latn
       Balinese: ban_Latn
@@ -408,7 +408,7 @@ CTranslate2:
       Bhojpuri: bho_Deva
       Banjar (Arabic script): bjn_Arab
       Banjar (Latin script): bjn_Latn
-      Standard Tibetan: bod_Tibt
+      Tibetan: bod_Tibt
       Bosnian: bos_Latn
       Buginese: bug_Latn
       Bulgarian: bul_Cyrl
@@ -416,7 +416,7 @@ CTranslate2:
       Cebuano: ceb_Latn
       Czech: ces_Latn
       Chokwe: cjk_Latn
-      Central Kurdish: ckb_Arab
+      Central Kurdish (Sorani): ckb_Arab
       Crimean Tatar: crh_Latn
       Welsh: cym_Latn
       Danish: dan_Latn
@@ -474,7 +474,7 @@ CTranslate2:
       Kinyarwanda: kin_Latn
       Kyrgyz: kir_Cyrl
       Kimbundu: kmb_Latn
-      Northern Kurdish: kmr_Latn
+      Kurdish: kmr_Latn
       Kikongo: kon_Latn
       Korean: kor_Hang
       Lao: lao_Laoo
@@ -489,7 +489,7 @@ CTranslate2:
       Ganda: lug_Latn
       Luo: luo_Latn
       Mizo: lus_Latn
-      Standard Latvian: lvs_Latn
+      Latvian: lvs_Latn
       Magahi: mag_Deva
       Maithili: mai_Deva
       Malayalam: mal_Mlym
@@ -497,31 +497,31 @@ CTranslate2:
       Minangkabau (Arabic script): min_Arab
       Minangkabau (Latin script): min_Latn
       Macedonian: mkd_Cyrl
-      Plateau Malagasy: plt_Latn
+      Malagasy: plt_Latn
       Maltese: mlt_Latn
       Meitei (Bengali script): mni_Beng
-      Halh Mongolian: khk_Cyrl
+      Mongolian: khk_Cyrl
       Mossi: mos_Latn
       Maori: mri_Latn
       Burmese: mya_Mymr
       Dutch: nld_Latn
       Norwegian Nynorsk: nno_Latn
-      Norwegian Bokmål: nob_Latn
+      Norwegian: nob_Latn
       Nepali: npi_Deva
       Northern Sotho: nso_Latn
       Nuer: nus_Latn
       Nyanja: nya_Latn
       Occitan: oci_Latn
-      West Central Oromo: gaz_Latn
+      Oromo: gaz_Latn
       Odia: ory_Orya
       Pangasinan: pag_Latn
       Eastern Panjabi: pan_Guru
       Papiamento: pap_Latn
-      Western Persian: pes_Arab
+      Persian: pes_Arab
       Polish: pol_Latn
       Portuguese: por_Latn
       Dari: prs_Arab
-      Southern Pashto: pbt_Arab
+      Pashto: pbt_Arab
       Ayacucho Quechua: quy_Latn
       Romanian: ron_Latn
       Rundi: run_Latn
@@ -540,7 +540,7 @@ CTranslate2:
       Somali: som_Latn
       Southern Sotho: sot_Latn
       Spanish: spa_Latn
-      Tosk Albanian: als_Latn
+      Albanian: als_Latn
       Sardinian: srd_Latn
       Serbian: srp_Cyrl
       Swati: ssw_Latn
@@ -569,18 +569,18 @@ CTranslate2:
       Ukrainian: ukr_Cyrl
       Umbundu: umb_Latn
       Urdu: urd_Arab
-      Northern Uzbek: uzn_Latn
+      Uzbek: uzn_Latn
       Venetian: vec_Latn
       Vietnamese: vie_Latn
       Waray: war_Latn
       Wolof: wol_Latn
       Xhosa: xho_Latn
-      Eastern Yiddish: ydd_Hebr
+      Yiddish: ydd_Hebr
       Yoruba: yor_Latn
       Yue Chinese: yue_Hant
       Chinese Simplified: zho_Hans
       Chinese Traditional: zho_Hant
-      Standard Malay: zsm_Latn
+      Malay: zsm_Latn
       Zulu: zul_Latn
     target: *nllb_langs
   nllb-200-3.3B-ct2-int8:

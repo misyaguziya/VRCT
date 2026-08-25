@@ -3,7 +3,9 @@ from subprocess import Popen
 from threading import Thread, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
+import copy
 import re
+import time
 from device_manager import device_manager
 from config import config
 from model import model
@@ -11,6 +13,34 @@ from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValid
 from errors import ErrorCode, VRCTError
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+# モデルダウンロード進捗の間引きしきい値。translation_utils.downloadFile /
+# transcription_whisper.downloadFile は 2MB チャンクごとに progressBar を
+# 呼ぶため、~2GB の重みで 900+ 回の logging バーストが発生する。
+# CTranslate2 と Whisper が同時にダウンロードされると process.log の
+# ハンドラロック競合で feedWatchdog が 35s 遅延するのを freeze_trace.log で
+# 2026-08-20 に観測した。前回報告から MIN_DELTA 以上進んだ、または
+# MIN_INTERVAL_SEC 以上経過した場合のみ forward する (0% / 100% は必ず送る)。
+_DOWNLOAD_PROGRESS_MIN_DELTA = 0.01
+_DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
+
+
+def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
+    """DownloadCTranslate2 / DownloadWhisper の progressBar 用スロットル。
+
+    handler は `_last_progress: float` と `_last_time: float` 属性を持つ
+    インスタンス。100% 到達時は必ず True を返す (完了通知が抜けないよう)。
+    """
+    now = time.monotonic()
+    if (
+        progress >= 1.0
+        or (progress - handler._last_progress) >= _DOWNLOAD_PROGRESS_MIN_DELTA
+        or (now - handler._last_time) >= _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC
+    ):
+        handler._last_progress = progress
+        handler._last_time = now
+        return True
+    return False
 
 class Controller:
     def __init__(self) -> None:
@@ -71,6 +101,25 @@ class Controller:
         # デバイスハンドルがリークしたり、次回起動時の初期化に影響し得る。
         # 各停止は個別に例外を握りつぶし、1つの失敗が他の停止処理を
         # ブロックしないようにする。
+        #
+        # Auto Mic/Speaker Select の ActiveEndpointTracker は
+        # setMicAutoActive(False)/setSpeakerAutoActive(False) を呼ばない
+        # 限り止まらない (stopMonitoring は別スレッドの監視ループのみを
+        # 止める)。ここで止めずに終了すると、tracker が COM 呼び出しの
+        # 途中でプロセスごと終了することになり、CoUninitialize されない
+        # まま COM ポインタが破棄されて access violation
+        # (Exception ignored in: _compointer_base.__del__) を起こす経路が
+        # 残る。stopMonitoring() より前に呼ぶ: 後で呼ぶと
+        # _syncMonitoringLifecycle() が「もう片方はまだ active」と見て
+        # 監視スレッドを再起動してしまう。
+        try:
+            device_manager.setMicAutoActive(False)
+        except Exception:
+            errorLogging()
+        try:
+            device_manager.setSpeakerAutoActive(False)
+        except Exception:
+            errorLogging()
         try:
             device_manager.stopMonitoring()
         except Exception:
@@ -246,8 +295,12 @@ class Controller:
             self.run_mapping = run_mapping
             self.weight_type = weight_type
             self.run = run
+            self._last_progress = -1.0
+            self._last_time = 0.0
 
         def progressBar(self, progress) -> None:
+            if not _shouldEmitDownloadProgress(self, progress):
+                return
             printLog("CTranslate2 Weight Download Progress", progress)
             self.run(
                 200,
@@ -280,8 +333,12 @@ class Controller:
             self.run_mapping = run_mapping
             self.weight_type = weight_type
             self.run = run
+            self._last_progress = -1.0
+            self._last_time = 0.0
 
         def progressBar(self, progress) -> None:
+            if not _shouldEmitDownloadProgress(self, progress):
+                return
             printLog("Whisper Weight Download Progress", progress)
             self.run(
                 200,
@@ -1032,9 +1089,12 @@ class Controller:
     def getSelectedTranslationEngines(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
 
-    @staticmethod
-    def setSelectedTranslationEngines(data:dict, *args, **kwargs) -> dict:
+    def setSelectedTranslationEngines(self, data:dict, *args, **kwargs) -> dict:
         config.SELECTED_TRANSLATION_ENGINES = data
+        # Resolves the engine (availability / same-language checks can still
+        # downgrade it to CTranslate2) and then validates the language
+        # against whichever engine actually ends up active.
+        self.updateTranslationEngineAndEngineList()
         return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
     @staticmethod
@@ -1149,7 +1209,15 @@ class Controller:
 
     @staticmethod
     def setTransparency(data, *args, **kwargs) -> dict:
-        config.TRANSPARENCY = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.TRANSPARENCY,
+                custom_message="Transparency must be a number",
+            )
+        config.TRANSPARENCY = value
         return {"status":200, "result":config.TRANSPARENCY}
 
     @staticmethod
@@ -1158,7 +1226,15 @@ class Controller:
 
     @staticmethod
     def setUiScaling(data, *args, **kwargs) -> dict:
-        config.UI_SCALING = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.UI_SCALING,
+                custom_message="UI scaling must be a number",
+            )
+        config.UI_SCALING = value
         return {"status":200, "result":config.UI_SCALING}
 
     @staticmethod
@@ -1167,7 +1243,15 @@ class Controller:
 
     @staticmethod
     def setTextboxUiScaling(data, *args, **kwargs) -> dict:
-        config.TEXTBOX_UI_SCALING = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.TEXTBOX_UI_SCALING,
+                custom_message="Textbox UI scaling must be a number",
+            )
+        config.TEXTBOX_UI_SCALING = value
         return {"status":200, "result":config.TEXTBOX_UI_SCALING}
 
     @staticmethod
@@ -1301,6 +1385,13 @@ class Controller:
         else:
             config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
         self._reopenMicAudioOnDeviceChange()
+        # host が切り替わると新ホストの selectable_mic_device_list を
+        # UI に push しないと、ドロップダウンが旧ホストのデバイス名一覧の
+        # ままになり、そこから選ばれた名前は新ホストの
+        # _mic_device_validator で弾かれて config が更新されない
+        # (setSelectedMicDevice が事実上 no-op になる)。selected_mic_device
+        # と一緒に必ずリストも再送する。
+        self.run(200, self.run_mapping["selectable_mic_device_list"], model.getListMicDevice())
         self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
@@ -1450,7 +1541,15 @@ class Controller:
 
     @staticmethod
     def setMicAvgLogprob(data, *args, **kwargs) -> dict:
-        config.MIC_AVG_LOGPROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.MIC_AVG_LOGPROB,
+                custom_message="Mic average logprob must be a number",
+            )
+        config.MIC_AVG_LOGPROB = value
         return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
     @staticmethod
@@ -1459,7 +1558,15 @@ class Controller:
 
     @staticmethod
     def setMicNoSpeechProb(data, *args, **kwargs) -> dict:
-        config.MIC_NO_SPEECH_PROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.MIC_NO_SPEECH_PROB,
+                custom_message="Mic no-speech probability must be a number",
+            )
+        config.MIC_NO_SPEECH_PROB = value
         return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
     @staticmethod
@@ -1648,7 +1755,15 @@ class Controller:
 
     @staticmethod
     def setSpeakerAvgLogprob(data, *args, **kwargs) -> dict:
-        config.SPEAKER_AVG_LOGPROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.SPEAKER_AVG_LOGPROB,
+                custom_message="Speaker average logprob must be a number",
+            )
+        config.SPEAKER_AVG_LOGPROB = value
         return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
     @staticmethod
@@ -1657,7 +1772,15 @@ class Controller:
 
     @staticmethod
     def setSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
-        config.SPEAKER_NO_SPEECH_PROB = float(data)
+        try:
+            value = float(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.GENERAL_EXCEPTION,
+                data=config.SPEAKER_NO_SPEECH_PROB,
+                custom_message="Speaker no-speech probability must be a number",
+            )
+        config.SPEAKER_NO_SPEECH_PROB = value
         return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
     @staticmethod
@@ -1698,7 +1821,15 @@ class Controller:
 
     @staticmethod
     def setOscPort(data, *args, **kwargs) -> dict:
-        config.OSC_PORT = int(data)
+        try:
+            port = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.VALIDATION_OSC_PORT_INVALID,
+                data=config.OSC_PORT,
+                custom_message="OSC port must be a number",
+            )
+        config.OSC_PORT = port
         model.setOscPort(config.OSC_PORT)
         return {"status":200, "result":config.OSC_PORT}
 
@@ -3177,12 +3308,89 @@ class Controller:
         your_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]
         for target_language in config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO].values():
             if your_language["language"] == target_language["language"] and target_language["enable"] is True:
-                engines[config.SELECTED_TAB_NO] = "CTranslate2"
+                engine = "CTranslate2"
+                engines[config.SELECTED_TAB_NO] = engine
                 config.SELECTED_TRANSLATION_ENGINES = engines
                 break
 
+        # CTranslate2 is the engine everything above falls back to, but it
+        # doesn't support every language either (e.g. Arabic isn't in the
+        # nllb-200 weight tables). When even CTranslate2 can't handle the
+        # current language selection, there's no further engine to fall
+        # back to - reset the language itself instead, or the UI ends up
+        # with a selected engine that's simultaneously shown as
+        # unavailable/greyed out.
+        if self.fallbackUnsupportedLanguagesForEngine(config.SELECTED_TAB_NO, engine):
+            selectable_engines = self.getTranslationEngines()["result"]
+
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
+
+    def fallbackUnsupportedLanguagesForEngine(self, tab_no: str, engine: str) -> bool:
+        """Reset any language on `tab_no` that `engine` doesn't support back
+        to a default language `engine` does support (preferring Japanese
+        source / English target, the app's own defaults).
+
+        This is the mirror of updateTranslationEngineAndEngineList(), which
+        falls the ENGINE back to CTranslate2 when the LANGUAGE changes to
+        something the current engine doesn't support. Without this,
+        changing the engine first and leaving an unsupported language in
+        place goes unnoticed until a translation is actually attempted.
+
+        The default is chosen to avoid the tab's other enabled language
+        slots: resetting the source straight to "Japanese" while an enabled
+        target is already "Japanese" would make source == target, which
+        updateTranslationEngineAndEngineList() treats as a reason to force
+        the engine back to CTranslate2 - silently undoing the very engine
+        selection this fallback exists to preserve.
+
+        Returns True if any language was reset.
+        """
+        changed = False
+
+        your_languages = copy.deepcopy(config.SELECTED_YOUR_LANGUAGES)
+        target_languages = copy.deepcopy(config.SELECTED_TARGET_LANGUAGES)
+
+        your_language = your_languages[tab_no]["1"]
+        enabled_target_languages = {
+            target_language["language"]
+            for target_language in target_languages[tab_no].values()
+            if target_language["enable"] is True
+        }
+        if not model.isLanguageSupportedByEngine(engine, your_language["language"]):
+            default = model.pickDefaultLanguageForEngine(engine, enabled_target_languages)
+            if default is not None:
+                your_languages[tab_no]["1"] = {**default, "enable": True}
+                config.SELECTED_YOUR_LANGUAGES = your_languages
+                changed = True
+                your_language = your_languages[tab_no]["1"]
+
+        target_changed = False
+        # Accumulate languages already spoken for as we go, so two
+        # simultaneously-unsupported enabled targets can't both get reset
+        # to the same default language.
+        taken_languages = {your_language["language"]}
+        for target_language in target_languages[tab_no].values():
+            if target_language["enable"] is not True:
+                continue
+            if model.isLanguageSupportedByEngine(engine, target_language["language"]):
+                taken_languages.add(target_language["language"])
+                continue
+            default = model.pickDefaultLanguageForEngine(engine, taken_languages)
+            if default is not None:
+                target_language["language"] = default["language"]
+                target_language["country"] = default["country"]
+                target_changed = True
+            taken_languages.add(target_language["language"])
+        if target_changed:
+            config.SELECTED_TARGET_LANGUAGES = target_languages
+            changed = True
+
+        if changed:
+            self.run(200, self.run_mapping["selected_your_languages"], config.SELECTED_YOUR_LANGUAGES)
+            self.run(200, self.run_mapping["selected_target_languages"], config.SELECTED_TARGET_LANGUAGES)
+
+        return changed
 
     def updateDownloadedWhisperModelWeight(self) -> None:
         # キャッシュされた結果を使用（起動時の重複チェックを回避）
@@ -3306,16 +3514,25 @@ class Controller:
 
     @staticmethod
     def setWebSocketPort(data, *args, **kwargs) -> dict:
+        try:
+            port = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_PORT_INVALID,
+                data=config.WEBSOCKET_PORT,
+                custom_message="WebSocket port must be a number",
+            )
+
         if model.checkWebSocketServerAlive() is False:
-            config.WEBSOCKET_PORT = int(data)
+            config.WEBSOCKET_PORT = port
             response = {"status":200, "result":config.WEBSOCKET_PORT}
         else:
-            if int(data) == config.WEBSOCKET_PORT:
+            if port == config.WEBSOCKET_PORT:
                 return {"status":200, "result":config.WEBSOCKET_PORT}
-            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, int(data)) is True:
+            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
                 model.stopWebSocketServer()
-                model.startWebSocketServer(config.WEBSOCKET_HOST, int(data))
-                config.WEBSOCKET_PORT = int(data)
+                model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+                config.WEBSOCKET_PORT = port
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
             else:
                 response = VRCTError.create_error_response(
@@ -3475,7 +3692,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
     def setObsBrowserSourceMaxMessages(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_MAX_MESSAGES = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_MAX_MESSAGES_INVALID,
+                data=config.OBS_BROWSER_SOURCE_MAX_MESSAGES,
+                custom_message="OBS Browser Source max messages must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_MAX_MESSAGES = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
@@ -3484,7 +3709,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
     def setObsBrowserSourceDisplayDuration(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_DISPLAY_DURATION = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_DISPLAY_DURATION_INVALID,
+                data=config.OBS_BROWSER_SOURCE_DISPLAY_DURATION,
+                custom_message="OBS Browser Source display duration must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_DISPLAY_DURATION = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
@@ -3493,7 +3726,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
     def setObsBrowserSourceFadeoutDuration(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_FADEOUT_DURATION = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FADEOUT_DURATION_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FADEOUT_DURATION,
+                custom_message="OBS Browser Source fadeout duration must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_FADEOUT_DURATION = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
@@ -3502,7 +3743,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
     def setObsBrowserSourceFontSize(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_FONT_SIZE = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FONT_SIZE_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FONT_SIZE,
+                custom_message="OBS Browser Source font size must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_FONT_SIZE = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
@@ -3526,7 +3775,15 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
     def setObsBrowserSourceFontOutlineThickness(self, data, *args, **kwargs) -> dict:
-        config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = int(data)
+        try:
+            value = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS,
+                custom_message="OBS Browser Source outline thickness must be a number",
+            )
+        config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = value
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 

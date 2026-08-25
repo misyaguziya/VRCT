@@ -1,6 +1,6 @@
 import sys
 import copy
-from os import path as os_path, makedirs as os_makedirs, replace as os_replace, fsync as os_fsync
+from os import path as os_path, makedirs as os_makedirs, replace as os_replace, fsync as os_fsync, remove as os_remove
 from json import load as json_load
 from json import dump as json_dump
 import threading
@@ -825,7 +825,7 @@ class Config:
         self._SELECTED_RELEASE_CHANNEL = "stable"
 
         self._MAX_MIC_THRESHOLD = 2000
-        self._MAX_SPEAKER_THRESHOLD = 4000
+        self._MAX_SPEAKER_THRESHOLD = 2000
         self._WATCHDOG_TIMEOUT = 60
         self._WATCHDOG_INTERVAL = 20
 
@@ -842,8 +842,8 @@ class Config:
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
-        import torch
-        self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
+        from utils import torch as _torch  # type: ignore
+        self._COMPUTE_MODE = "cuda" if (_torch is not None and _torch.cuda.is_available()) else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
 
@@ -1102,6 +1102,28 @@ class Config:
                                 continue
                         except Exception:
                             errorLogging()
+
+        # インストーラ (NSIS) が選択した UI 言語の反映。NSIS 側は config.json
+        # を直接 JSON パースせず (UTF-8/非ASCII文字を含む既存ファイルで
+        # nsJSON プラグインのパースが実機で確実に失敗することを確認済み、
+        # 2026-08-21)、常に ASCII な言語コードだけを書いたこのマーカー
+        # ファイルを置く。存在すれば検証の上 UI_LANGUAGE に反映し、
+        # 一度使ったら削除する (以後のアプリ内言語変更をこのファイルが
+        # 上書きし続けないようにするため)。
+        installer_language_marker = os_path.join(self._PATH_LOCAL, "installer_language.txt")
+        if os_path.isfile(installer_language_marker):
+            try:
+                with open(installer_language_marker, 'r', encoding="utf-8") as fp:
+                    selected_language = fp.read().strip()
+                if selected_language in self._SELECTABLE_UI_LANGUAGE_LIST:
+                    self.UI_LANGUAGE = selected_language
+            except Exception:
+                errorLogging()
+            finally:
+                try:
+                    os_remove(installer_language_marker)
+                except Exception:
+                    errorLogging()
 
         self.saveConfigToFile()
 

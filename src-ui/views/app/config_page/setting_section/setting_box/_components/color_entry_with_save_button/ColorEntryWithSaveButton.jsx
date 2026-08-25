@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
 import styles from "./ColorEntryWithSaveButton.module.scss";
@@ -8,11 +8,19 @@ import { useI18n } from "@useI18n";
 import { clsx } from "clsx";
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const PICKER_GAP_REM = 0.4;
+const VIEWPORT_PADDING_REM = 0.8;
+
+const remToPx = (rem) => {
+    const root_font_size = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    return rem * root_font_size;
+};
 
 export const ColorEntryWithSaveButton = (props) => {
     const { t } = useI18n();
     const is_disabled = props.state === "pending";
     const [is_open, setIsOpen] = useState(false);
+    const [placement, setPlacement] = useState({ open_above: true, align_end: true });
     const popover_ref = useRef(null);
     const swatch_ref = useRef(null);
 
@@ -47,6 +55,37 @@ export const ColorEntryWithSaveButton = (props) => {
         props.saveFunction();
     };
 
+    useLayoutEffect(() => {
+        if (!is_open) return;
+
+        const updatePlacement = () => {
+            const swatch = swatch_ref.current;
+            const popover = popover_ref.current;
+            if (!swatch || !popover) return;
+
+            const swatch_rect = swatch.getBoundingClientRect();
+            const popover_height = popover.offsetHeight;
+            const popover_width = popover.offsetWidth;
+            const gap = remToPx(PICKER_GAP_REM);
+            const viewport_padding = remToPx(VIEWPORT_PADDING_REM);
+
+            const space_below = window.innerHeight - swatch_rect.bottom - gap - viewport_padding;
+            const space_above = swatch_rect.top - gap - viewport_padding;
+            const space_right = window.innerWidth - swatch_rect.left - viewport_padding;
+
+            setPlacement({
+                open_above: space_below < popover_height && space_above > space_below,
+                align_end: space_right < popover_width,
+            });
+        };
+
+        updatePlacement();
+        window.addEventListener("resize", updatePlacement);
+        return () => {
+            window.removeEventListener("resize", updatePlacement);
+        };
+    }, [is_open]);
+
     useEffect(() => {
         if (!is_open) return;
         const onDocumentMouseDown = (event) => {
@@ -73,6 +112,13 @@ export const ColorEntryWithSaveButton = (props) => {
         [styles.is_disabled]: is_disabled,
     });
 
+    const popover_paper_class_names = clsx(styles.popover_paper, {
+        [styles.open_above]: placement.open_above,
+        [styles.open_below]: !placement.open_above,
+        [styles.align_end]: placement.align_end,
+        [styles.align_start]: !placement.align_end,
+    });
+
     return (
         <div className={styles.container}>
             <_Entry
@@ -92,7 +138,7 @@ export const ColorEntryWithSaveButton = (props) => {
                     <span className={styles.swatch} style={{ backgroundColor: swatch_color }} />
                 </button>
                 {is_open && (
-                    <div ref={popover_ref} className={styles.popover_paper}>
+                    <div ref={popover_ref} className={popover_paper_class_names}>
                         <div className={styles.popover_content}>
                             <HexColorPicker color={picker_color} onChange={onPickerChange} />
                         </div>

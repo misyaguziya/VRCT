@@ -12,6 +12,28 @@ except ImportError:
     def printLog(data, *args, **kwargs):
         print(data, *args, **kwargs)
 
+# Optional deps; None fallback lets clipboard/window helpers no-op when the
+# package is unavailable.
+try:
+    import psutil  # noqa: F401
+except Exception:
+    psutil = None  # type: ignore
+
+try:
+    import pyperclip  # noqa: F401
+except Exception:
+    pyperclip = None  # type: ignore
+
+try:
+    import tkinter as tk  # noqa: F401
+except Exception:
+    tk = None  # type: ignore
+
+try:
+    import pyautogui  # noqa: F401
+except Exception:
+    pyautogui = None  # type: ignore
+
 def checkSteamvrRunning() -> bool:
     _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
     return _proc_name in (p.name() for p in process_iter())
@@ -51,9 +73,7 @@ if sys.platform == 'win32':
         def _cb(hwnd, lParam):
             pid = wintypes.DWORD()
             user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-            try:
-                import psutil
-            except Exception:
+            if psutil is None:
                 return True
             try:
                 p = psutil.Process(pid.value)
@@ -87,16 +107,18 @@ def copy_to_clipboard_windows(text: str) -> bool:
         return False
 
 def copy_to_clipboard_pyperclip(text: str) -> bool:
+    if pyperclip is None:
+        return False
     try:
-        import pyperclip
         pyperclip.copy(text)
         return True
     except Exception:
         return False
 
 def copy_to_clipboard_tk(text: str) -> bool:
+    if tk is None:
+        return False
     try:
-        import tkinter as tk
         r = tk.Tk()
         r.withdraw()
         r.clipboard_clear()
@@ -118,9 +140,7 @@ def copy_to_clipboard(text: str) -> bool:
     return False
 
 def paste_via_pyautogui(countdown: int = 0) -> bool:
-    try:
-        import pyautogui
-    except Exception:
+    if pyautogui is None:
         printLog('pyautogui not installed. Install with: pip install pyautogui')
         return False
 

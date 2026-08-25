@@ -1,6 +1,7 @@
 from os import path as os_path
 from os import makedirs as os_makedirs
 from os import rename as os_rename
+from shutil import rmtree as shutil_rmtree
 from requests import get as requests_get
 from typing import Callable
 import yaml
@@ -12,6 +13,24 @@ except Exception:
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
+
+# Optional runtime deps; None fallback disables the corresponding features
+# (check/download/tokenizer) when the package is unavailable.
+try:
+    import ctranslate2  # noqa: F401
+except Exception:
+    ctranslate2 = None  # type: ignore
+
+try:
+    from huggingface_hub import hf_hub_url, list_repo_files  # noqa: F401
+except Exception:
+    hf_hub_url = None  # type: ignore
+    list_repo_files = None  # type: ignore
+
+try:
+    import transformers  # noqa: F401
+except Exception:
+    transformers = None  # type: ignore
 
 
 """Utilities for downloading and verifying CTranslate2 weights and tokenizers.
@@ -60,7 +79,12 @@ def backwardCompatibleRenameWeightsDir(root: str):
     for weight_type_old, weight_type_new in legacy_dirs.items():
         path = os_path.join(root, "weights", "ctranslate2", weight_type_new)
         old_path = os_path.join(root, "weights", "ctranslate2", weight_type_old)
-        if os_path.isdir(old_path):
+        if not os_path.isdir(old_path):
+            continue
+        if os_path.isdir(path):
+            # 新形式のディレクトリが既に存在する場合、旧形式は不要になったディスク領域なので削除する
+            shutil_rmtree(old_path)
+        else:
             os_rename(old_path, path)
 
 def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8"):
@@ -71,7 +95,8 @@ def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8")
         return True
 
     try:
-        import ctranslate2
+        if ctranslate2 is None:
+            return False
         # モデルロード可能かどうかで判定
         compute_type = getBestComputeType("cpu", 0)
         ctranslate2.Translator(path, compute_type=compute_type)
@@ -81,7 +106,8 @@ def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8")
         return False
 
 def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None) -> bool:
-    from huggingface_hub import hf_hub_url, list_repo_files
+    if hf_hub_url is None or list_repo_files is None:
+        return False
     hf_repo = ctranslate2_weights[weight_type]["hf_repo"]
     files = list_repo_files(repo_id=hf_repo)
     path = os_path.join(root, "weights", "ctranslate2", ctranslate2_weights[weight_type]["directory_name"])
@@ -128,7 +154,8 @@ def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int
     return all_succeeded
 
 def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-int8"):
-    import transformers
+    if transformers is None:
+        return
     directory_name = ctranslate2_weights[weight_type]["directory_name"]
     tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
     tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")

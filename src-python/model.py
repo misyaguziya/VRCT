@@ -1,6 +1,7 @@
+import atexit
 import copy
-import gc
 import asyncio
+import faulthandler
 import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
@@ -8,6 +9,7 @@ from os import path as os_path
 from os import getppid as os_getppid
 from os import _exit as os_exit
 from os import remove as os_remove
+from os import stat as os_stat
 from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
@@ -42,6 +44,37 @@ from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
+
+# フリーズ調査用の恒久計装。mainloop.py の faulthandler.enable() は
+# ネイティブフォルト (access violation 等) 発生時にしか全スレッドの
+# コールスタックを記録しない。今回問題になっている「クラッシュではなく
+# 無応答のまま固まる」ケースはネイティブフォルトを伴わないため、それとは
+# 別に dump_traceback_later でタイムアウト検知のスタックダンプを取る。
+# feedWatchdog() が呼ばれるたびにタイマーを再武装し (呼び出しは
+# フロントエンドから ~WATCHDOG_INTERVAL 秒ごとに来る)、その周期を超えて
+# 次の feed が来なければ、その時点の全スレッドスタックを
+# freeze_trace.log に書き出す (exit=False なのでプロセスは落とさない)。
+# faulthandler は enable/dump_traceback_later 時点で fd を掴むため
+# 遅延 open できず、フリーズ無しの通常終了でも 0 バイトのファイルが
+# 残る。運用上のゴミ化を避けるため atexit で「書き込みが無ければ削除」する。
+_freeze_trace_path = "freeze_trace.log"
+_freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
+_FREEZE_DUMP_MARGIN_SEC = 15
+
+
+def _cleanupFreezeTraceIfEmpty() -> None:
+    try:
+        _freeze_trace_file.close()
+    except Exception:
+        pass
+    try:
+        if os_path.exists(_freeze_trace_path) and os_stat(_freeze_trace_path).st_size == 0:
+            os_remove(_freeze_trace_path)
+    except Exception:
+        pass
+
+
+atexit.register(_cleanupFreezeTraceIfEmpty)
 
 
 @dataclass
@@ -311,7 +344,12 @@ class _AudioDeviceSession:
                 while not audio_queue.empty():
                     audio_queue.get()
                 self._transcriber = None
-                gc.collect()
+                # 明示 gc.collect() は呼ばない: ActiveEndpointTracker が別スレッド
+                # (CoInitialize 済み apartment) で保持している comtypes の COM
+                # ポインタが、この _print_transcript スレッド (CoInitialize
+                # していない) 上で __del__ → Release() されて access violation
+                # を起こすことを crash_trace.log で 2026-08-19 に確認した。
+                # 参照が実際に不要になれば通常の GC が回収する。
 
             self._print_transcript = threadFnc(sendTranscript, end_fnc=endTranscript)
             self._print_transcript.daemon = True
@@ -746,15 +784,20 @@ class Model:
         self.logger = None
 
     def getListLanguageAndCountry(self):
+        """List every language any translation engine supports for the UI.
+
+        Deliberately NOT filtered to the currently selected engine: a user
+        should be able to pick any language up front, and if the selected
+        engine doesn't support it, the engine falls back instead (see
+        Controller.updateTranslationEngineAndEngineList()). Filtering this
+        list by engine instead forces users to switch to a
+        broadly-compatible engine first, pick the language, then switch
+        back - exactly the friction this list avoids.
+        """
         transcription_langs = list(transcription_lang.keys())
         translation_langs = []
         for tl_key in translation_lang.keys():
-            if tl_key == "CTranslate2":
-                for lang in translation_lang[tl_key][config.CTRANSLATE2_WEIGHT_TYPE]["source"]:
-                    translation_langs.append(lang)
-            else:
-                for lang in translation_lang[tl_key]["source"]:
-                    translation_langs.append(lang)
+            translation_langs.extend(self.getTranslationLanguagesForEngine(tl_key))
         translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
@@ -770,17 +813,42 @@ class Model:
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
 
+    def getTranslationLanguagesForEngine(self, engine: str) -> list[str]:
+        """Friendly language names `engine` supports as a source language."""
+        if engine == "CTranslate2":
+            languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
+        else:
+            languages = translation_lang.get(engine, {}).get("source", {})
+        return list(languages.keys())
+
+    def isLanguageSupportedByEngine(self, engine: str, language: str) -> bool:
+        return language in self.getTranslationLanguagesForEngine(engine)
+
+    def pickDefaultLanguageForEngine(self, engine: str, avoid_languages) -> dict:
+        """Pick a language `engine` supports, preferring Japanese then
+        English (the app's own defaults), and avoiding anything in
+        `avoid_languages` so the pick can't collide with another slot
+        (e.g. resetting the source language to the same value as an
+        already-fine enabled target).
+        """
+        avoid_languages = set(avoid_languages)
+        for language, country in (("Japanese", "Japan"), ("English", "United States")):
+            if language not in avoid_languages and self.isLanguageSupportedByEngine(engine, language):
+                return {"language": language, "country": country}
+        for language in self.getTranslationLanguagesForEngine(engine):
+            if language not in avoid_languages and language in transcription_lang:
+                return {"language": language, "country": next(iter(transcription_lang[language]))}
+        # Every language this engine supports is already taken by another
+        # slot - nothing to pick that wouldn't collide.
+        return None
+
     def findTranslationEngines(self, source_lang, target_lang, engines_status):
         selectable_engines = [key for key, value in engines_status.items() if value is True]
         compatible_engines = []
         for engine in list(translation_lang.keys()):
-            if engine == "CTranslate2":
-                languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
-            else:
-                languages = translation_lang.get(engine, {}).get("source", {})
+            language_list = self.getTranslationLanguagesForEngine(engine)
             source_langs = [e["language"] for e in list(source_lang.values()) if e["enable"] is True]
             target_langs = [e["language"] for e in list(target_lang.values()) if e["enable"] is True]
-            language_list = list(languages.keys())
 
             if all(e in language_list for e in source_langs) and all(e in language_list for e in target_langs):
                 if engine in selectable_engines:
@@ -847,6 +915,8 @@ class Model:
                 )
 
         # 翻訳失敗時のフェールセーフ処理
+        # translation is None: 選択言語がこのエンジンで未対応（エンジン自体の障害ではない）
+        # translation is False: エンジン側の実際の障害（レート制限・通信・認証・プロバイダエラー等）
         if isinstance(translation, str):
             success_flag = True
         else:
@@ -860,12 +930,22 @@ class Model:
                                     target_country=target_country,
                                     message=message
                             )
-                if translation is not False:
+                if isinstance(translation, str):
                     break
+                if translation is None:
+                    break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
                 sleep(0.1)
+            if isinstance(translation, str):
+                success_flag = True
+            elif translation is None:
+                # どちらのエンジンもこの言語ペアに未対応なだけ。実障害ではない。
+                success_flag = True
+                translation = message
             else:
+                # CTranslate2フォールバック自体が実際に失敗した。
+                success_flag = False
                 errorLogging()
-                translation = message  # フォールバック翻訳も失敗した場合は原文を返す
+                translation = message
         return translation, success_flag
 
     def getInputTranslate(self, message, source_language=None):
@@ -1444,10 +1524,25 @@ class Model:
         self.th_watchdog = threadFnc(self.watchdog.start)
         self.th_watchdog.daemon = True
         self.th_watchdog.start()
+        self._armFreezeDump()
 
     def feedWatchdog(self):
         self.ensure_initialized()
         self.watchdog.feed()
+        self._armFreezeDump()
+
+    def _armFreezeDump(self):
+        """次の feed が freeze 判定になるより前に、全スレッドスタックを
+        freeze_trace.log へ書き出すタイマーを (再) 武装する。呼ぶたびに
+        以前のタイマーは自動的に上書きされる (faulthandler の仕様)。
+        """
+        timeout = self.watchdog.interval + _FREEZE_DUMP_MARGIN_SEC
+        try:
+            faulthandler.dump_traceback_later(
+                timeout, repeat=False, file=_freeze_trace_file, exit=False
+            )
+        except Exception:
+            errorLogging()
 
     def setWatchdogCallback(self, callback):
         self.ensure_initialized()
@@ -1459,6 +1554,10 @@ class Model:
             self.th_watchdog.stop()
             self.th_watchdog.join()
             self.th_watchdog = None
+        try:
+            faulthandler.cancel_dump_traceback_later()
+        except Exception:
+            errorLogging()
 
     def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""

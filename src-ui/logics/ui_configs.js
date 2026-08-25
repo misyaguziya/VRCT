@@ -2,7 +2,7 @@ export const ui_configs = {
     mic_threshold_min: 0,
     mic_threshold_max: 2000,
     speaker_threshold_min: 0,
-    speaker_threshold_max: 4000,
+    speaker_threshold_max: 2000,
     // Shared overlay config (used by both small and large log)
     _overlay_log_config: {
         x_pos: { step: 0.05, min: -0.5, max: 0.5 },

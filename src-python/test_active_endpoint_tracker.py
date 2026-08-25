@@ -180,5 +180,41 @@ class TestMeterCacheManagement(unittest.TestCase):
             self.assertNotIn("id_A", tracker._meter_cache)
 
 
+class TestStopTimeout(unittest.TestCase):
+    """stop() が時間内にスレッドを止められなかった場合の可視化を検証する。
+
+    tracker が COM 呼び出しで滞留したまま join がタイムアウトすると、
+    CoUninitialize されずに COM ポインタだけが GC で破棄され得る
+    (access violation につながる経路、実機で確認済み)。完全な防止は
+    「スレッドが終わるまで待つ」以外に無いため、せめて診断できるよう
+    printLog で警告することを保証する。
+    """
+
+    def test_logs_warning_when_thread_does_not_stop_in_time(self) -> None:
+        tracker = ActiveEndpointTracker("capture")
+        stuck_thread = MagicMock()
+        stuck_thread.is_alive.return_value = True
+        tracker._thread = stuck_thread
+
+        with patch.object(ActiveEndpointTracker, "STOP_JOIN_TIMEOUT_SEC", 0.01):
+            with patch("active_endpoint_tracker.printLog") as mock_print_log:
+                tracker.stop()
+
+        stuck_thread.join.assert_called_once_with(timeout=0.01)
+        mock_print_log.assert_called_once()
+        self.assertIn("timed out", mock_print_log.call_args.args[0])
+
+    def test_no_warning_when_thread_stops_in_time(self) -> None:
+        tracker = ActiveEndpointTracker("capture")
+        finished_thread = MagicMock()
+        finished_thread.is_alive.return_value = False
+        tracker._thread = finished_thread
+
+        with patch("active_endpoint_tracker.printLog") as mock_print_log:
+            tracker.stop()
+
+        mock_print_log.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
