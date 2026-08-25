@@ -3287,7 +3287,8 @@ class Controller:
         your_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]
         for target_language in config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO].values():
             if your_language["language"] == target_language["language"] and target_language["enable"] is True:
-                engines[config.SELECTED_TAB_NO] = "CTranslate2"
+                engine = "CTranslate2"
+                engines[config.SELECTED_TAB_NO] = engine
                 config.SELECTED_TRANSLATION_ENGINES = engines
                 break
 
@@ -3298,8 +3299,7 @@ class Controller:
         # back to - reset the language itself instead, or the UI ends up
         # with a selected engine that's simultaneously shown as
         # unavailable/greyed out.
-        final_engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
-        if self.fallbackUnsupportedLanguagesForEngine(config.SELECTED_TAB_NO, final_engine):
+        if self.fallbackUnsupportedLanguagesForEngine(config.SELECTED_TAB_NO, engine):
             selectable_engines = self.getTranslationEngines()["result"]
 
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
@@ -3345,13 +3345,22 @@ class Controller:
                 your_language = your_languages[tab_no]["1"]
 
         target_changed = False
+        # Accumulate languages already spoken for as we go, so two
+        # simultaneously-unsupported enabled targets can't both get reset
+        # to the same default language.
+        taken_languages = {your_language["language"]}
         for target_language in target_languages[tab_no].values():
-            if target_language["enable"] is True and not model.isLanguageSupportedByEngine(engine, target_language["language"]):
-                default = model.pickDefaultLanguageForEngine(engine, {your_language["language"]})
-                if default is not None:
-                    target_language["language"] = default["language"]
-                    target_language["country"] = default["country"]
-                    target_changed = True
+            if target_language["enable"] is not True:
+                continue
+            if model.isLanguageSupportedByEngine(engine, target_language["language"]):
+                taken_languages.add(target_language["language"])
+                continue
+            default = model.pickDefaultLanguageForEngine(engine, taken_languages)
+            if default is not None:
+                target_language["language"] = default["language"]
+                target_language["country"] = default["country"]
+                target_changed = True
+            taken_languages.add(target_language["language"])
         if target_changed:
             config.SELECTED_TARGET_LANGUAGES = target_languages
             changed = True

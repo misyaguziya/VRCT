@@ -108,6 +108,33 @@ class TestFallbackUnsupportedLanguagesForEngine(unittest.TestCase):
         self.assertEqual(config.SELECTED_TARGET_LANGUAGES[self.TAB_NO]["2"]["language"], "Arabic")
         self.assertTrue(any(endpoint == "selected_target_languages" for _, endpoint, _ in self.calls))
 
+    def test_two_unsupported_enabled_targets_do_not_collide_on_the_same_default(self) -> None:
+        """Resetting each unsupported target independently (avoiding only
+        the source language) could pick the same default for two different
+        targets, leaving two enabled slots translating into the identical
+        language. Each slot must avoid what earlier slots in the same pass
+        already ended up with."""
+        config.SELECTED_YOUR_LANGUAGES = {
+            self.TAB_NO: {"1": {"language": "Japanese", "country": "Japan", "enable": True}},
+        }
+        config.SELECTED_TARGET_LANGUAGES = {
+            self.TAB_NO: {
+                # Neither Filipino nor Vietnamese is in DeepL_API's table.
+                "1": {"language": "Filipino", "country": "Philippines", "enable": True},
+                "2": {"language": "Vietnamese", "country": "Vietnam", "enable": True},
+                "3": {"language": "English", "country": "United States", "enable": False},
+            },
+        }
+
+        changed = self.controller.fallbackUnsupportedLanguagesForEngine(self.TAB_NO, "DeepL_API")
+
+        self.assertTrue(changed)
+        target_1 = config.SELECTED_TARGET_LANGUAGES[self.TAB_NO]["1"]["language"]
+        target_2 = config.SELECTED_TARGET_LANGUAGES[self.TAB_NO]["2"]["language"]
+        self.assertNotEqual(target_1, target_2)
+        self.assertTrue(model.isLanguageSupportedByEngine("DeepL_API", target_1))
+        self.assertTrue(model.isLanguageSupportedByEngine("DeepL_API", target_2))
+
     def test_no_change_when_languages_are_supported(self) -> None:
         config.SELECTED_YOUR_LANGUAGES = {
             self.TAB_NO: {"1": {"language": "Japanese", "country": "Japan", "enable": True}},
