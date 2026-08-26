@@ -338,21 +338,22 @@ config_page:
             aptabase_privacy_policy_label: "Aptabase Privacy Policy"
 
     updater:
-        release_channel:
-            label: "Release Channel"
-            desc: "Beta gets new features earlier but may be less stable. Switching back to Stable does not downgrade your current install by itself."
-            stable: "Stable"
-            beta: "Beta"
-        section_label_update: "Update"
-        switch_compute_device:
-            label: "Switch VRCT To CPU/GPU Version"
-        section_label_version_history: "Version History"
-        version_history:
-            label: "Version to Install"
-            desc: "Pick a past release to reinstall it (downgrade)."
+        install_panel:
+            section_label: "Choose Version and Build"
+            current_summary_label: "Current"
+            current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
+            channel_label: "Release Channel"
+            channel_stable: "Stable"
+            channel_beta: "Beta"
+            compute_mode_label: "Device"
+            compute_mode_cpu: "CPU"
+            compute_mode_gpu: "GPU (CUDA)"
+            version_label: "Version to Install"
+            version_desc: "Pick a past release to downgrade. The list is filtered by the channel you selected above."
             beta_suffix: "Beta"
-            install_button: "Install This Version"
-            is_current_version_already: "This is the version currently installed"
+            latest_suffix: "Latest"
+            install_button: "Install with This Setup"
+            reinstall_button: "Reinstall with This Setup"
 
     hotkeys:
         toggle_vrct_visibility:

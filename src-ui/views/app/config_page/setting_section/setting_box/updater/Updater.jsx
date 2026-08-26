@@ -16,141 +16,172 @@ import {
 
 import {
     RadioButtonContainer,
-    ActionButtonContainer,
     DropdownMenuContainer,
 } from "../_templates/Templates";
 
 import {
+    LabelComponent,
     SectionLabelComponent,
 } from "../_components";
 
-import { useStore_OpenedQuickSetting } from "@store";
-
-import HelpSvg from "@images/help.svg?react";
-import RefreshSvg from "@images/refresh.svg?react";
-import CheckMarkSvg from "@images/check_mark.svg?react";
-
 export const Updater = () => {
-    const { t } = useI18n();
-
     return (
         <div className={styles.container}>
-            <div>
-                <ReleaseChannelContainer />
-            </div>
-            <div>
-                <SectionLabelComponent label={t("config_page.updater.section_label_update")} />
-                <OpenSwitchComputeDeviceModalContainer />
-            </div>
-            <div>
-                <SectionLabelComponent label={t("config_page.updater.section_label_version_history")} />
-                <VersionHistoryContainer />
-            </div>
+            <InstallPanel />
         </div>
     );
 };
 
-const ReleaseChannelContainer = () => {
+const InstallPanel = () => {
     const { t } = useI18n();
     const { currentReleaseChannel, setReleaseChannel } = useUpdater();
-
-    return (
-        <RadioButtonContainer
-            label={t("config_page.updater.release_channel.label")}
-            desc={t("config_page.updater.release_channel.desc")}
-            selectFunction={setReleaseChannel}
-            name="release_channel"
-            options={[
-                { id: "stable", label: t("config_page.updater.release_channel.stable") },
-                { id: "beta", label: t("config_page.updater.release_channel.beta") },
-            ]}
-            checked_variable={currentReleaseChannel}
-        />
-    );
-};
-
-const OpenSwitchComputeDeviceModalContainer = () => {
-    const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-    const onClickFunction = () => {
-        updateOpenedQuickSetting("update_software");
-    };
-
-    return (
-        <ActionButtonContainer
-            label={t("config_page.updater.switch_compute_device.label")}
-            IconComponent={HelpSvg}
-            onclickFunction={onClickFunction}
-        />
-    );
-};
-
-const VersionHistoryContainer = () => {
-    const { t } = useI18n();
     const { currentAvailableReleases, getAvailableReleases } = useAvailableReleases();
     const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
     const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
     const { currentComputeMode } = useComputeMode();
     const { currentSoftwareVersion } = useSoftwareVersion();
-    const [selected_version, setSelectedVersion] = useState("");
+
+    const [pending_channel, setPendingChannel] = useState(null);
+    const [pending_compute_mode, setPendingComputeMode] = useState(null);
+    const [pending_version, setPendingVersion] = useState("");
 
     useEffect(() => {
         getAvailableReleases();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const list_for_ui = useMemo(() => {
-        const result = {};
-        currentAvailableReleases.data.forEach((release) => {
-            const suffix = release.is_prerelease ? ` (${t("config_page.updater.version_history.beta_suffix")})` : "";
-            result[release.version] = `${release.version}${suffix}`;
-        });
-        return result;
-    }, [currentAvailableReleases.data, t]);
+    useEffect(() => {
+        if (pending_channel !== null) return;
+        if (!currentReleaseChannel.data) return;
+        setPendingChannel(currentReleaseChannel.data);
+    }, [currentReleaseChannel.data, pending_channel]);
 
     useEffect(() => {
-        if (selected_version || currentAvailableReleases.data.length === 0) return;
-        setSelectedVersion(currentAvailableReleases.data[0].version);
-    }, [currentAvailableReleases.data, selected_version]);
+        if (pending_compute_mode !== null) return;
+        if (!currentComputeMode.data) return;
+        setPendingComputeMode(currentComputeMode.data);
+    }, [currentComputeMode.data, pending_compute_mode]);
 
-    const selectFunction = (selected_data) => {
-        setSelectedVersion(selected_data.selected_id);
-    };
+    const effective_channel = pending_channel ?? currentReleaseChannel.data ?? "stable";
+    const effective_compute_mode = pending_compute_mode ?? currentComputeMode.data ?? "cpu";
+
+    const filtered_releases = useMemo(() => {
+        const list = currentAvailableReleases.data;
+        if (effective_channel === "beta") return list;
+        return list.filter((release) => !release.is_prerelease);
+    }, [currentAvailableReleases.data, effective_channel]);
+
+    const list_for_ui = useMemo(() => {
+        const result = {};
+        filtered_releases.forEach((release, index) => {
+            const parts = [release.version];
+            if (release.is_prerelease) {
+                parts.push(`(${t("config_page.updater.install_panel.beta_suffix")})`);
+            }
+            if (index === 0) {
+                parts.push(`- ${t("config_page.updater.install_panel.latest_suffix")}`);
+            }
+            result[release.version] = parts.join(" ");
+        });
+        return result;
+    }, [filtered_releases, t]);
+
+    useEffect(() => {
+        const first = filtered_releases[0];
+        if (!first) return;
+        const exists_in_filtered = filtered_releases.some((release) => release.version === pending_version);
+        if (exists_in_filtered) return;
+        setPendingVersion(first.version);
+    }, [filtered_releases, pending_version]);
+
+    const channel_options = [
+        { id: "stable", label: t("config_page.updater.install_panel.channel_stable") },
+        { id: "beta", label: t("config_page.updater.install_panel.channel_beta") },
+    ];
+
+    const compute_mode_options = [
+        { id: "cpu", label: t("config_page.updater.install_panel.compute_mode_cpu") },
+        { id: "gpu", label: t("config_page.updater.install_panel.compute_mode_gpu") },
+    ];
+
+    const channel_variable = { state: currentReleaseChannel.state, data: effective_channel };
+    const compute_mode_variable = { state: "ok", data: effective_compute_mode };
+
+    const selected_release = filtered_releases.find((release) => release.version === pending_version);
+
+    const is_same_as_current =
+        selected_release &&
+        selected_release.version === currentSoftwareVersion.data &&
+        effective_compute_mode === currentComputeMode.data;
+
+    const is_ready_to_install = Boolean(selected_release) && filtered_releases.length > 0;
 
     const onClickInstall = () => {
-        if (!selected_version) return;
+        if (!is_ready_to_install) return;
+        if (pending_channel && pending_channel !== currentReleaseChannel.data) {
+            setReleaseChannel(pending_channel);
+        }
         updateIsSoftwareUpdating(true);
-        if (currentComputeMode.data === "cpu") {
-            updateSoftware(selected_version);
+        if (effective_compute_mode === "cpu") {
+            updateSoftware(selected_release.version);
         } else {
-            updateSoftware_CUDA(selected_version);
+            updateSoftware_CUDA(selected_release.version);
         }
     };
 
-    const is_current_version_selected = selected_version && selected_version === currentSoftwareVersion.data;
+    const current_summary_value = t("config_page.updater.install_panel.current_summary_value", {
+        version: currentSoftwareVersion.data,
+        compute_mode:
+            currentComputeMode.data === "cpu"
+                ? t("config_page.updater.install_panel.compute_mode_cpu")
+                : t("config_page.updater.install_panel.compute_mode_gpu"),
+        channel:
+            currentReleaseChannel.data === "beta"
+                ? t("config_page.updater.install_panel.channel_beta")
+                : t("config_page.updater.install_panel.channel_stable"),
+    });
 
     return (
-        <>
+        <div className={styles.panel}>
+            <SectionLabelComponent label={t("config_page.updater.install_panel.section_label")} />
+            <LabelComponent
+                label={t("config_page.updater.install_panel.current_summary_label")}
+                desc={current_summary_value}
+            />
+            <RadioButtonContainer
+                label={t("config_page.updater.install_panel.channel_label")}
+                selectFunction={setPendingChannel}
+                name="updater_channel"
+                options={channel_options}
+                checked_variable={channel_variable}
+            />
+            <RadioButtonContainer
+                label={t("config_page.updater.install_panel.compute_mode_label")}
+                selectFunction={setPendingComputeMode}
+                name="updater_compute_mode"
+                options={compute_mode_options}
+                checked_variable={compute_mode_variable}
+            />
             <DropdownMenuContainer
-                dropdown_id="available_release_version"
-                label={t("config_page.updater.version_history.label")}
-                desc={t("config_page.updater.version_history.desc")}
-                selected_id={selected_version}
+                dropdown_id="updater_version"
+                label={t("config_page.updater.install_panel.version_label")}
+                desc={t("config_page.updater.install_panel.version_desc")}
+                selected_id={pending_version}
                 list={list_for_ui}
-                selectFunction={selectFunction}
+                selectFunction={(data) => setPendingVersion(data.selected_id)}
                 state={currentAvailableReleases.state}
             />
-            <ActionButtonContainer
-                label={
-                    is_current_version_selected
-                        ? t("config_page.updater.version_history.is_current_version_already")
-                        : t("config_page.updater.version_history.install_button")
-                }
-                IconComponent={RefreshSvg}
-                ClickedIconComponent={CheckMarkSvg}
-                clicked_duration={1000}
-                onclickFunction={onClickInstall}
-            />
-        </>
+            <div className={styles.install_button_wrapper}>
+                <button
+                    className={styles.install_button}
+                    onClick={onClickInstall}
+                    disabled={!is_ready_to_install}
+                >
+                    {is_same_as_current
+                        ? t("config_page.updater.install_panel.reinstall_button")
+                        : t("config_page.updater.install_panel.install_button")}
+                </button>
+            </div>
+        </div>
     );
 };

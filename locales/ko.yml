@@ -332,21 +332,22 @@ config_page:
             aptabase_privacy_policy_label:
 
     updater:
-        release_channel:
-            label:
-            desc:
-            stable:
-            beta:
-        section_label_update:
-        switch_compute_device:
-            label: "VRCT CPU/GPU 버전 전환"
-        section_label_version_history: "버전 기록"
-        version_history:
-            label: "설치할 버전"
-            desc:
+        install_panel:
+            section_label:
+            current_summary_label:
+            current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
+            channel_label:
+            channel_stable:
+            channel_beta:
+            compute_mode_label:
+            compute_mode_cpu: "CPU"
+            compute_mode_gpu: "GPU (CUDA)"
+            version_label: "설치할 버전"
+            version_desc:
             beta_suffix: "베타"
-            install_button: "이 버전 설치"
-            is_current_version_already:
+            latest_suffix:
+            install_button:
+            reinstall_button:
 
     hotkeys:
         toggle_vrct_visibility:

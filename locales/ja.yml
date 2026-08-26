@@ -338,21 +338,22 @@ config_page:
             aptabase_privacy_policy_label: "Aptabase プライバシーポリシー"
 
     updater:
-        release_channel:
-            label: "リリースチャンネル"
-            desc: "β版は新機能をいち早く試せますが、安定性が低い場合があります。安定版に戻しても、現在インストール済みのバージョンが自動でダウングレードされるわけではありません。"
-            stable: "安定版"
-            beta: "β版"
-        section_label_update: "アップデート"
-        switch_compute_device:
-            label: "VRCT CPU/GPUバージョンの切り替え"
-        section_label_version_history: "バージョン履歴"
-        version_history:
-            label: "インストールするバージョン"
-            desc: "過去のバージョンを選んでインストールし直せます（ダウングレード可能）。"
+        install_panel:
+            section_label: "バージョン・構成の選択"
+            current_summary_label: "現在の状態"
+            current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
+            channel_label: "リリースチャンネル"
+            channel_stable: "安定版"
+            channel_beta: "β版"
+            compute_mode_label: "デバイス構成"
+            compute_mode_cpu: "CPU版"
+            compute_mode_gpu: "GPU版 (CUDA)"
+            version_label: "インストールするバージョン"
+            version_desc: "過去のバージョンを選ぶとダウングレードできます。リストは選択中のチャンネルで絞り込まれます。"
             beta_suffix: "β版"
-            install_button: "このバージョンをインストール"
-            is_current_version_already: "現在インストール済みのバージョンです"
+            latest_suffix: "最新"
+            install_button: "この設定でインストール"
+            reinstall_button: "この設定で再インストール"
 
     hotkeys:
         toggle_vrct_visibility:
