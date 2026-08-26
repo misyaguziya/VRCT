@@ -344,6 +344,7 @@ config_page:
             compute_mode_gpu: "GPU (CUDA)"
             version_label: "설치할 버전"
             version_desc:
+            no_versions_available:
             beta_suffix: "베타"
             latest_suffix:
             install_button:

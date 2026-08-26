@@ -344,6 +344,7 @@ config_page:
             compute_mode_gpu: "GPU (CUDA)"
             version_label: "要安装的版本"
             version_desc:
+            no_versions_available:
             beta_suffix: "测试版"
             latest_suffix:
             install_button:

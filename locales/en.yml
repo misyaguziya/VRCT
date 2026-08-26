@@ -350,6 +350,7 @@ config_page:
             compute_mode_gpu: "GPU (CUDA)"
             version_label: "Version to Install"
             version_desc: "Pick a past release to downgrade. The list is filtered by the channel you selected above."
+            no_versions_available: "No releases are available on the selected channel yet."
             beta_suffix: "Beta"
             latest_suffix: "Latest"
             install_button: "Install with This Setup"

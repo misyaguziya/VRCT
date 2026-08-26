@@ -67,7 +67,9 @@ const InstallPanel = () => {
 
     const filtered_releases = useMemo(() => {
         const list = currentAvailableReleases.data;
-        if (effective_channel === "beta") return list;
+        if (effective_channel === "beta") {
+            return list.filter((release) => release.is_prerelease);
+        }
         return list.filter((release) => !release.is_prerelease);
     }, [currentAvailableReleases.data, effective_channel]);
 
@@ -87,11 +89,13 @@ const InstallPanel = () => {
     }, [filtered_releases, t]);
 
     useEffect(() => {
-        const first = filtered_releases[0];
-        if (!first) return;
+        if (filtered_releases.length === 0) {
+            if (pending_version !== "") setPendingVersion("");
+            return;
+        }
         const exists_in_filtered = filtered_releases.some((release) => release.version === pending_version);
         if (exists_in_filtered) return;
-        setPendingVersion(first.version);
+        setPendingVersion(filtered_releases[0].version);
     }, [filtered_releases, pending_version]);
 
     const channel_options = [
@@ -165,7 +169,11 @@ const InstallPanel = () => {
             <DropdownMenuContainer
                 dropdown_id="updater_version"
                 label={t("config_page.updater.install_panel.version_label")}
-                desc={t("config_page.updater.install_panel.version_desc")}
+                desc={
+                    filtered_releases.length === 0 && currentAvailableReleases.state === "ok"
+                        ? t("config_page.updater.install_panel.no_versions_available")
+                        : t("config_page.updater.install_panel.version_desc")
+                }
                 selected_id={pending_version}
                 list={list_for_ui}
                 selectFunction={(data) => setPendingVersion(data.selected_id)}

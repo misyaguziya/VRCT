@@ -350,6 +350,7 @@ config_page:
             compute_mode_gpu: "GPU版 (CUDA)"
             version_label: "インストールするバージョン"
             version_desc: "過去のバージョンを選ぶとダウングレードできます。リストは選択中のチャンネルで絞り込まれます。"
+            no_versions_available: "選択中のチャンネルには利用可能なバージョンがありません。"
             beta_suffix: "β版"
             latest_suffix: "最新"
             install_button: "この設定でインストール"
