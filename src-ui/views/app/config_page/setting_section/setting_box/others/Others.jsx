@@ -13,7 +13,6 @@ import {
 import {
     CheckboxContainer,
     MessageFormatContainer,
-    RadioButtonContainer,
 } from "../_templates/Templates";
 
 import {
@@ -56,10 +55,6 @@ export const Others = () => {
             </div>
             <div>
                 <TelemetryContainer />
-            </div>
-            <div>
-                <SectionLabelComponent label={t("config_page.others.section_label_updates")} />
-                <ReleaseChannelContainer />
             </div>
         </div>
     );
@@ -251,25 +246,6 @@ const ConvertMessageToHiraganaContainer = () => {
             desc={desc}
             variable={currentConvertMessageToHiragana}
             toggleFunction={toggleConvertMessageToHiragana}
-        />
-    );
-};
-
-const ReleaseChannelContainer = () => {
-    const { t } = useI18n();
-    const { currentReleaseChannel, setReleaseChannel } = useOthers();
-
-    return (
-        <RadioButtonContainer
-            label={t("config_page.others.release_channel.label")}
-            desc={t("config_page.others.release_channel.desc")}
-            selectFunction={setReleaseChannel}
-            name="release_channel"
-            options={[
-                { id: "stable", label: t("config_page.others.release_channel.stable") },
-                { id: "beta", label: t("config_page.others.release_channel.beta") },
-            ]}
-            checked_variable={currentReleaseChannel}
         />
     );
 };

@@ -102,6 +102,7 @@ config_page:
         hotkeys: "단축키"
         plugins: "플러그인"
         advanced_settings: "고급 설정"
+        updater: "업데이트"
 
     device:
         check_volume: "음량 확인"
@@ -329,12 +330,23 @@ config_page:
             label:
             desc:
             aptabase_privacy_policy_label:
-        section_label_updates:
+
+    updater:
         release_channel:
             label:
             desc:
             stable:
             beta:
+        section_label_update:
+        switch_compute_device:
+            label: "VRCT CPU/GPU 버전 전환"
+        section_label_version_history: "버전 기록"
+        version_history:
+            label: "설치할 버전"
+            desc:
+            beta_suffix: "베타"
+            install_button: "이 버전 설치"
+            is_current_version_already:
 
     hotkeys:
         toggle_vrct_visibility:
@@ -365,8 +377,6 @@ config_page:
             label: "OSC 포트"
         open_config_filepath:
             label: "설정 파일 열기"
-        switch_compute_device:
-            label: "VRCT CPU/GPU 버전 전환"
         enable_websocket:
             label: "WebSocket 서버 활성화"
             locked_by_obs_browser_source: "OBS 브라우저 소스를 비활성화한 뒤 변경하세요"

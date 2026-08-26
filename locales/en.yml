@@ -102,6 +102,7 @@ config_page:
         hotkeys: "Hotkeys"
         plugins: "Plugins"
         advanced_settings: "Advanced"
+        updater: "Updater"
 
     device:
         check_volume: "Check Volume"
@@ -335,12 +336,23 @@ config_page:
             label: "Support Our Development"
             desc: "Sends usage data so our developers can grin and say 'Thanks for using it!' while improving the app.\n* No personal info or conversation content is ever sent."
             aptabase_privacy_policy_label: "Aptabase Privacy Policy"
-        section_label_updates: "Updates"
+
+    updater:
         release_channel:
             label: "Release Channel"
             desc: "Beta gets new features earlier but may be less stable. Switching back to Stable does not downgrade your current install by itself."
             stable: "Stable"
             beta: "Beta"
+        section_label_update: "Update"
+        switch_compute_device:
+            label: "Switch VRCT To CPU/GPU Version"
+        section_label_version_history: "Version History"
+        version_history:
+            label: "Version to Install"
+            desc: "Pick a past release to reinstall it (downgrade)."
+            beta_suffix: "Beta"
+            install_button: "Install This Version"
+            is_current_version_already: "This is the version currently installed"
 
     hotkeys:
         toggle_vrct_visibility:
@@ -371,8 +383,6 @@ config_page:
             label: "OSC Port"
         open_config_filepath:
             label: "Open Config File"
-        switch_compute_device:
-            label: "Switch VRCT To CPU/GPU Version"
         enable_websocket:
             label: "Enable WebSocket Server"
             locked_by_obs_browser_source: "Disable OBS Browser Source to change this"

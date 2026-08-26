@@ -102,6 +102,7 @@ config_page:
         hotkeys: "快捷鍵"
         plugins: "外掛程式"
         advanced_settings: "進階設定"
+        updater: "更新"
 
     device:
         check_volume: "音量檢查"
@@ -329,12 +330,23 @@ config_page:
             label:
             desc:
             aptabase_privacy_policy_label:
-        section_label_updates:
+
+    updater:
         release_channel:
             label:
             desc:
             stable:
             beta:
+        section_label_update:
+        switch_compute_device:
+            label: "切換 VRCT CPU/GPU 版本"
+        section_label_version_history: "版本歷史"
+        version_history:
+            label: "要安裝的版本"
+            desc:
+            beta_suffix: "測試版"
+            install_button: "安裝此版本"
+            is_current_version_already:
 
     hotkeys:
         toggle_vrct_visibility:
@@ -365,8 +377,6 @@ config_page:
             label: "OSC 端口"
         open_config_filepath:
             label: "打開設定文件"
-        switch_compute_device:
-            label: "切換 VRCT CPU/GPU 版本"
         enable_websocket:
             label: "啟用 WebSocket 伺服器"
             locked_by_obs_browser_source: "請先停用 OBS 瀏覽器來源再變更此項"

@@ -755,7 +755,7 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "telemetry",
     },
     {
-        Category: "Others",
+        Category: "Updater",
         Base_Name: "ReleaseChannel",
         default_value: "stable",
         ui_template_id: "select",

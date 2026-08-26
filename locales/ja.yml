@@ -102,6 +102,7 @@ config_page:
         hotkeys: "ホットキー"
         plugins: "プラグイン"
         advanced_settings: "高度な設定"
+        updater: "アップデート"
 
     device:
         check_volume: "音量チェック"
@@ -335,12 +336,23 @@ config_page:
             label: "製品の改善に協力する"
             desc: "開発者が「みんな使ってくれてるんだな～」ってにやにやしながら機能改善するための使用状況データを送信します。\n※会話内容など個人情報は一切送信しません。"
             aptabase_privacy_policy_label: "Aptabase プライバシーポリシー"
-        section_label_updates: "アップデート"
+
+    updater:
         release_channel:
             label: "リリースチャンネル"
             desc: "β版は新機能をいち早く試せますが、安定性が低い場合があります。安定版に戻しても、現在インストール済みのバージョンが自動でダウングレードされるわけではありません。"
             stable: "安定版"
             beta: "β版"
+        section_label_update: "アップデート"
+        switch_compute_device:
+            label: "VRCT CPU/GPUバージョンの切り替え"
+        section_label_version_history: "バージョン履歴"
+        version_history:
+            label: "インストールするバージョン"
+            desc: "過去のバージョンを選んでインストールし直せます（ダウングレード可能）。"
+            beta_suffix: "β版"
+            install_button: "このバージョンをインストール"
+            is_current_version_already: "現在インストール済みのバージョンです"
 
     hotkeys:
         toggle_vrct_visibility:
@@ -371,8 +383,6 @@ config_page:
             label: "OSC Port"
         open_config_filepath:
             label: "設定ファイルを開く"
-        switch_compute_device:
-            label: "VRCT CPU/GPUバージョンの切り替え"
         enable_websocket:
             label: "WebSocketサーバーを有効にする"
             locked_by_obs_browser_source: "OBSブラウザソースを無効にしてから変更してください"
