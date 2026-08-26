@@ -150,23 +150,49 @@ Function PageChooseLanguage
     ${NSD_CB_AddString} $DropListLanguages "한국어"
     ${NSD_CB_AddString} $DropListLanguages "繁體中文"
     ${NSD_CB_AddString} $DropListLanguages "简体中文"
-    ${NSD_CB_SelectString} $DropListLanguages "English"
-    StrCpy $SelectedLangage "en"
+
+    ; Preselect based on /UILANG= (passed from the app when launched from
+    ; within VRCT). Falls back to English on first-time installs.
+    ${If} $UILang == "ja"
+        ${NSD_CB_SelectString} $DropListLanguages "日本語"
+        StrCpy $SelectedLangage "ja"
+    ${ElseIf} $UILang == "ko"
+        ${NSD_CB_SelectString} $DropListLanguages "한국어"
+        StrCpy $SelectedLangage "ko"
+    ${ElseIf} $UILang == "zh-Hant"
+        ${NSD_CB_SelectString} $DropListLanguages "繁體中文"
+        StrCpy $SelectedLangage "zh-Hant"
+    ${ElseIf} $UILang == "zh-Hans"
+        ${NSD_CB_SelectString} $DropListLanguages "简体中文"
+        StrCpy $SelectedLangage "zh-Hans"
+    ${Else}
+        ${NSD_CB_SelectString} $DropListLanguages "English"
+        StrCpy $SelectedLangage "en"
+    ${EndIf}
     nsDialogs::Show
 FunctionEnd
 
 Function PageLeaveChooseLanguage
+    ; When the user picks a language here, apply it to the rest of the
+    ; installer chrome too (Back/Next/Cancel etc.) by switching $LANGUAGE.
+    ; Pages already rendered before this one stay in their prior language;
+    ; subsequent MUI pages pick up the new $LANGUAGE at render time.
     ${NSD_GetText} $DropListLanguages $0
     ${If} "English" == $0
         StrCpy $SelectedLangage "en"
+        StrCpy $LANGUAGE ${LANG_ENGLISH}
     ${ElseIf} "日本語" == $0
         StrCpy $SelectedLangage "ja"
+        StrCpy $LANGUAGE ${LANG_JAPANESE}
     ${ElseIf} "한국어" == $0
         StrCpy $SelectedLangage "ko"
+        StrCpy $LANGUAGE ${LANG_KOREAN}
     ${ElseIf} "繁體中文" == $0
         StrCpy $SelectedLangage "zh-Hant"
+        StrCpy $LANGUAGE ${LANG_TRADCHINESE}
     ${ElseIf} "简体中文" == $0
         StrCpy $SelectedLangage "zh-Hans"
+        StrCpy $LANGUAGE ${LANG_SIMPCHINESE}
     ${EndIf}
 FunctionEnd
 
@@ -466,6 +492,7 @@ FunctionEnd
 
 Var PassiveMode
 Var TargetVersion
+Var UILang
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode
   IfErrors +2 0
@@ -484,6 +511,25 @@ Function .onInit
   ${GetOptions} $CMDLINE "/VERSION=" $0
   IfErrors +2 0
     StrCpy $TargetVersion $0
+
+  ; Preselect the UI language when launched from within the app (e.g.
+  ; "/UILANG=ja" from the in-app updater). Both the installer chrome
+  ; (via MUI_LANGDLL_REGISTRY_VALUENAME) and the initial value of the
+  ; custom PageChooseLanguage default to it. The page is still shown so
+  ; the user can change their mind before installing.
+  ${GetOptions} $CMDLINE "/UILANG=" $UILang
+  ClearErrors
+  ${If} $UILang == "en"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1033"
+  ${ElseIf} $UILang == "ja"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1041"
+  ${ElseIf} $UILang == "ko"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1042"
+  ${ElseIf} $UILang == "zh-Hant"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1028"
+  ${ElseIf} $UILang == "zh-Hans"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "2052"
+  ${EndIf}
 
   !if "${DISPLAYLANGUAGESELECTOR}" == "true"
     !insertmacro MUI_LANGDLL_DISPLAY

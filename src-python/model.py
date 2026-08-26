@@ -1197,8 +1197,10 @@ class Model:
         if Model._downloadSetup() is False:
             return
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
-        # target_version when the user picked a specific release to install
-        args = ["VRCT_setup.exe", "/EDITION=cpu"]
+        # target_version when the user picked a specific release to install;
+        # carry over the current UI language so the installer chrome and the
+        # custom "UI Language" page start on the user's chosen language.
+        args = ["VRCT_setup.exe", "/EDITION=cpu", f"/UILANG={config.UI_LANGUAGE}"]
         if target_version:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)
@@ -1211,8 +1213,10 @@ class Model:
         if Model._downloadSetup() is False:
             return
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
-        # target_version when the user picked a specific release to install
-        args = ["VRCT_setup.exe", "/EDITION=gpu"]
+        # target_version when the user picked a specific release to install;
+        # carry over the current UI language so the installer chrome and the
+        # custom "UI Language" page start on the user's chosen language.
+        args = ["VRCT_setup.exe", "/EDITION=gpu", f"/UILANG={config.UI_LANGUAGE}"]
         if target_version:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)
