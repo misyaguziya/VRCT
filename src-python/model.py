@@ -775,15 +775,20 @@ class Model:
         self.logger = None
 
     def getListLanguageAndCountry(self):
+        """List every language any translation engine supports for the UI.
+
+        Deliberately NOT filtered to the currently selected engine: a user
+        should be able to pick any language up front, and if the selected
+        engine doesn't support it, the engine falls back instead (see
+        Controller.updateTranslationEngineAndEngineList()). Filtering this
+        list by engine instead forces users to switch to a
+        broadly-compatible engine first, pick the language, then switch
+        back - exactly the friction this list avoids.
+        """
         transcription_langs = list(transcription_lang.keys())
         translation_langs = []
         for tl_key in translation_lang.keys():
-            if tl_key == "CTranslate2":
-                for lang in translation_lang[tl_key][config.CTRANSLATE2_WEIGHT_TYPE]["source"]:
-                    translation_langs.append(lang)
-            else:
-                for lang in translation_lang[tl_key]["source"]:
-                    translation_langs.append(lang)
+            translation_langs.extend(self.getTranslationLanguagesForEngine(tl_key))
         translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
@@ -799,17 +804,42 @@ class Model:
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
 
+    def getTranslationLanguagesForEngine(self, engine: str) -> list[str]:
+        """Friendly language names `engine` supports as a source language."""
+        if engine == "CTranslate2":
+            languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
+        else:
+            languages = translation_lang.get(engine, {}).get("source", {})
+        return list(languages.keys())
+
+    def isLanguageSupportedByEngine(self, engine: str, language: str) -> bool:
+        return language in self.getTranslationLanguagesForEngine(engine)
+
+    def pickDefaultLanguageForEngine(self, engine: str, avoid_languages) -> dict:
+        """Pick a language `engine` supports, preferring Japanese then
+        English (the app's own defaults), and avoiding anything in
+        `avoid_languages` so the pick can't collide with another slot
+        (e.g. resetting the source language to the same value as an
+        already-fine enabled target).
+        """
+        avoid_languages = set(avoid_languages)
+        for language, country in (("Japanese", "Japan"), ("English", "United States")):
+            if language not in avoid_languages and self.isLanguageSupportedByEngine(engine, language):
+                return {"language": language, "country": country}
+        for language in self.getTranslationLanguagesForEngine(engine):
+            if language not in avoid_languages and language in transcription_lang:
+                return {"language": language, "country": next(iter(transcription_lang[language]))}
+        # Every language this engine supports is already taken by another
+        # slot - nothing to pick that wouldn't collide.
+        return None
+
     def findTranslationEngines(self, source_lang, target_lang, engines_status):
         selectable_engines = [key for key, value in engines_status.items() if value is True]
         compatible_engines = []
         for engine in list(translation_lang.keys()):
-            if engine == "CTranslate2":
-                languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
-            else:
-                languages = translation_lang.get(engine, {}).get("source", {})
+            language_list = self.getTranslationLanguagesForEngine(engine)
             source_langs = [e["language"] for e in list(source_lang.values()) if e["enable"] is True]
             target_langs = [e["language"] for e in list(target_lang.values()) if e["enable"] is True]
-            language_list = list(languages.keys())
 
             if all(e in language_list for e in source_langs) and all(e in language_list for e in target_langs):
                 if engine in selectable_engines:
@@ -876,6 +906,8 @@ class Model:
                 )
 
         # 翻訳失敗時のフェールセーフ処理
+        # translation is None: 選択言語がこのエンジンで未対応（エンジン自体の障害ではない）
+        # translation is False: エンジン側の実際の障害（レート制限・通信・認証・プロバイダエラー等）
         if isinstance(translation, str):
             success_flag = True
         else:
@@ -889,12 +921,22 @@ class Model:
                                     target_country=target_country,
                                     message=message
                             )
-                if translation is not False:
+                if isinstance(translation, str):
                     break
+                if translation is None:
+                    break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
                 sleep(0.1)
+            if isinstance(translation, str):
+                success_flag = True
+            elif translation is None:
+                # どちらのエンジンもこの言語ペアに未対応なだけ。実障害ではない。
+                success_flag = True
+                translation = message
             else:
+                # CTranslate2フォールバック自体が実際に失敗した。
+                success_flag = False
                 errorLogging()
-                translation = message  # フォールバック翻訳も失敗した場合は原文を返す
+                translation = message
         return translation, success_flag
 
     def getInputTranslate(self, message, source_language=None):
