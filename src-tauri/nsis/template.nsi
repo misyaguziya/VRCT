@@ -234,6 +234,59 @@ Function PageLeaveChooseEdition
     ${EndIf}
 FunctionEnd
 
+; 4-3. Choose release channel + optional specific version page
+Var RadioChannelStable
+Var RadioChannelBeta
+Var DialogChooseChannel
+Var TextTargetVersion
+Page custom PageChooseChannel PageLeaveChooseChannel
+Function PageChooseChannel
+    !insertmacro MUI_HEADER_TEXT "Initial Settings" "Choose the release channel and, optionally, pin a specific version (can be changed later)."
+    nsDialogs::Create 1018
+    Pop $DialogChooseChannel
+
+    ${If} $DialogChooseChannel == error
+        Abort
+    ${EndIf}
+
+    ${NSD_CreateRadioButton} 0 0u 100% 12u "Stable"
+    Pop $RadioChannelStable
+    ${NSD_CreateRadioButton} 0 20u 100% 12u "Beta (early access, may be less stable)"
+    Pop $RadioChannelBeta
+
+    ${If} $SelectedChannel == "beta"
+        SendMessage $RadioChannelBeta ${BM_SETCHECK} ${BST_CHECKED} 0
+    ${Else}
+        SendMessage $RadioChannelStable ${BM_SETCHECK} ${BST_CHECKED} 0
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 44u 100% 12u "Specific version (optional, e.g. 3.5.0 or 3.5.1-beta.2):"
+    ${NSD_CreateText} 0 58u 100% 12u "$TargetVersion"
+    Pop $TextTargetVersion
+
+    ${NSD_CreateLabel} 0 74u 100% 20u "Leave blank to install the latest release of the selected channel."
+
+    nsDialogs::Show
+FunctionEnd
+
+Function PageLeaveChooseChannel
+    ${NSD_GetState} $RadioChannelBeta $0
+    ${If} $0 == ${BST_CHECKED}
+        StrCpy $SelectedChannel "beta"
+    ${Else}
+        StrCpy $SelectedChannel "stable"
+    ${EndIf}
+
+    ${NSD_GetText} $TextTargetVersion $TargetVersion
+    ; Tolerate a user-typed "v3.5.0"; the rest of the installer always
+    ; expects the bare version number and prepends "v" itself.
+    StrCpy $0 $TargetVersion 1
+    ${If} $0 == "v"
+    ${OrIf} $0 == "V"
+        StrCpy $TargetVersion $TargetVersion "" 1
+    ${EndIf}
+FunctionEnd
+
 !insertmacro MUI_PAGE_COMPONENTS
 
 ; 4-4. Custom page to ask user if he wants to reinstall/uninstall
@@ -493,6 +546,7 @@ FunctionEnd
 Var PassiveMode
 Var TargetVersion
 Var UILang
+Var SelectedChannel
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode
   IfErrors +2 0
@@ -511,6 +565,27 @@ Function .onInit
   ${GetOptions} $CMDLINE "/VERSION=" $0
   IfErrors +2 0
     StrCpy $TargetVersion $0
+
+  ; Default the release channel page to whatever channel this very
+  ; installer was itself built/published for (a setup.exe downloaded from
+  ; the beta GitHub release has "-beta"/"-rc" baked into ${VERSION}), so a
+  ; standalone run without any flags still lands on a sensible default.
+  ${StrLoc} $0 "${VERSION}" "-beta" ">"
+  ${If} $0 == ""
+    ${StrLoc} $0 "${VERSION}" "-rc" ">"
+  ${EndIf}
+  ${If} $0 == ""
+    StrCpy $SelectedChannel "stable"
+  ${Else}
+    StrCpy $SelectedChannel "beta"
+  ${EndIf}
+
+  ; Launched from within the app (e.g. the user is on the beta channel and
+  ; clicks "reinstall"/"switch edition"): use VRCT's current channel setting
+  ; instead of the baked-in default above.
+  ${GetOptions} $CMDLINE "/CHANNEL=" $0
+  IfErrors +2 0
+    StrCpy $SelectedChannel $0
 
   ; Preselect the UI language when launched from within the app (e.g.
   ; "/UILANG=ja" from the in-app updater). Both the installer chrome
@@ -713,26 +788,34 @@ Section Install
   ${EndIf}
 
   ; Pin to a specific released version's HF tag (e.g. "/VERSION=3.4.2" -> tag
-  ; "v3.4.2") when requested for rollback; otherwise fetch the latest from main.
+  ; "v3.4.2", or typed into the release-channel page) when requested for
+  ; rollback; otherwise fetch the latest from the selected channel's "main".
   ${If} $TargetVersion != ""
     StrCpy $release_revision "v$TargetVersion"
     StrCpy $effective_version $TargetVersion
-  ${Else}
-    StrCpy $release_revision "main"
-    StrCpy $effective_version "${VERSION}"
-  ${EndIf}
 
-  ; Beta versions (e.g. "3.5.0-beta.1") are published to a separate HF repo,
-  ; not the production one -- route both the default fetch and any /VERSION=
-  ; rollback target there based on the version string itself.
-  ${StrLoc} $beta_marker_pos $effective_version "-beta" ">"
-  ${If} $beta_marker_pos == ""
-    ${StrLoc} $beta_marker_pos $effective_version "-rc" ">"
-  ${EndIf}
-  ${If} $beta_marker_pos == ""
-    StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+    ; Beta versions (e.g. "3.5.0-beta.1") are published to a separate HF repo,
+    ; not the production one -- an explicit pinned version routes by its own
+    ; string, regardless of which channel radio button is selected, since a
+    ; given tag only ever exists in one of the two repos.
+    ${StrLoc} $beta_marker_pos $effective_version "-beta" ">"
+    ${If} $beta_marker_pos == ""
+      ${StrLoc} $beta_marker_pos $effective_version "-rc" ">"
+    ${EndIf}
+    ${If} $beta_marker_pos == ""
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+    ${Else}
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+    ${EndIf}
   ${Else}
-    StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+    ; No specific version pinned -- fetch the latest from whichever channel
+    ; the user picked on the release-channel page.
+    StrCpy $release_revision "main"
+    ${If} $SelectedChannel == "beta"
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+    ${Else}
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+    ${EndIf}
   ${EndIf}
 
   StrCpy $cmder_dl "https://huggingface.co/$release_repo/resolve/$release_revision/$file_name"
