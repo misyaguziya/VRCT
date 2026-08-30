@@ -1199,8 +1199,10 @@ class Model:
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
         # target_version when the user picked a specific release to install;
         # carry over the current UI language so the installer chrome and the
-        # custom "UI Language" page start on the user's chosen language.
-        args = ["VRCT_setup.exe", "/EDITION=cpu", f"/UILANG={config.UI_LANGUAGE}"]
+        # custom "UI Language" page start on the user's chosen language;
+        # carry over the current release channel so the installer's channel
+        # page defaults to what the user already has selected in VRCT.
+        args = ["VRCT_setup.exe", "/EDITION=cpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
         if target_version:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)
@@ -1215,8 +1217,10 @@ class Model:
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
         # target_version when the user picked a specific release to install;
         # carry over the current UI language so the installer chrome and the
-        # custom "UI Language" page start on the user's chosen language.
-        args = ["VRCT_setup.exe", "/EDITION=gpu", f"/UILANG={config.UI_LANGUAGE}"]
+        # custom "UI Language" page start on the user's chosen language;
+        # carry over the current release channel so the installer's channel
+        # page defaults to what the user already has selected in VRCT.
+        args = ["VRCT_setup.exe", "/EDITION=gpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
         if target_version:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)
