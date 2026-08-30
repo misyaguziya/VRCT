@@ -487,7 +487,7 @@ git push origin v3.5.0-beta.1
 |---|---|---|
 | GitHub Release | `prerelease: false` | `prerelease: true` |
 | Hugging Face公開先 | `ms-software/VRCT` | `ms-software/VRCT-beta` |
-| インストーラー(setup.exe)の既定ダウンロード元 | `ms-software/VRCT` | `ms-software/VRCT-beta`(インストーラー内の「Release Channel」ページで選択、既定はビルド元のチャンネル) |
+| インストーラー(setup.exe)の既定ダウンロード元 | `ms-software/VRCT` | `ms-software/VRCT-beta`(バージョン文字列の `-beta`/`-rc` から自動判定、または `/CHANNEL=` 指定) |
 
 > **事前準備**: β用のHugging Faceリポジトリ `ms-software/VRCT-beta` は
 > CIでは自動作成されないため、初回は手動で作成しておく必要があります。
@@ -498,14 +498,12 @@ GitHub Releasesで配布されるsetup.exeは、実行時にHugging Faceから�
 ダウンロードするダウンローダー形式です。そのため、通常はGitHub Releasesの
 古いバージョンのsetup.exeを取得しても、その時点の最新版がインストールされてしまいます。
 
-setup.exeを実行すると、CPU/GPU選択ページに続けて「Release Channel」ページが
-表示され、GUI上で以下を選べます(setup.exe自体はどのバージョン・チャンネルの
-ものでも構いません):
-- Stable / Beta のどちらのチャンネルから最新版を取得するか
-- 特定バージョンへのピン留め(空欄なら選択したチャンネルの最新版)
-
-コマンドラインから同じことをしたい場合は `/CHANNEL=` と `/VERSION=` 引数を
-付けてください(GUIの各ページはそれでも表示され、その場で変更できます):
+チャンネル・バージョンの指定はGUI画面ではなく `/CHANNEL=` `/VERSION=` の
+CLI引数でのみ行えます(setup.exe自体はどのバージョン・チャンネルのものでも
+構いません)。setup.exeを単体でダブルクリックした場合はこれらの引数が付かない
+ため、CPU/GPU選択のみでビルド元チャンネルの最新版がインストールされます
+(GUI上に選択肢を増やさないための意図的な設計です)。VRCT本体のUpdaterタブ
+からの更新はこれらの引数を自動的に付与して起動します。
 
 ```bash
 VRCT_setup.exe /CHANNEL=beta
@@ -515,9 +513,10 @@ VRCT_setup.exe /VERSION=3.4.2
 `/VERSION=` を指定した場合は、そのバージョン文字列に `-beta` または `-rc` が
 含まれるかどうかで自動的にダウンロード元リポジトリ(`ms-software/VRCT` /
 `ms-software/VRCT-beta`)を判定します(`/CHANNEL=` の指定より優先されます)。
-`/VERSION=` を指定しない場合は `/CHANNEL=`(またはGUIで選んだチャンネル)の
-最新版をダウンロードします。指定したバージョンがHugging Face上に存在しない
-場合はダウンロードに失敗し、インストールが中断されます。
+`/VERSION=` を指定しない場合は `/CHANNEL=`(省略時はこのsetup.exe自身が
+ビルドされたチャンネル)の最新版をダウンロードします。指定したバージョンが
+Hugging Face上に存在しない場合はダウンロードに失敗し、インストールが
+中断されます。
 
 ### リリースパッケージの内容
 
