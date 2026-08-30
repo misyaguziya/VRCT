@@ -638,6 +638,18 @@ Section Install
   !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
+
+  ; Free-space budget (MiB) per edition. The compressed archive is written to
+  ; %TEMP%, the extracted tree to $INSTDIR, and both exist at once during
+  ; extraction, so a same-drive install needs DOWNLOAD + EXTRACT together.
+  ; Measured 2026-08: VRCT.zip ~485MB / ~1.5GB unpacked; VRCT_cuda.zip
+  ; ~3461MB / ~5757MB unpacked. Values below add headroom -- re-measure and
+  ; bump them when the packages grow.
+  !define REQ_DOWNLOAD_MB_CPU 1024
+  !define REQ_EXTRACT_MB_CPU 3072
+  !define REQ_DOWNLOAD_MB_GPU 4096
+  !define REQ_EXTRACT_MB_GPU 7168
+
   Var /GLOBAL i
   Var /GLOBAL cmder_dl
   Var /GLOBAL cmder_version
@@ -647,25 +659,86 @@ Section Install
   Var /GLOBAL dl_tick
   Var /GLOBAL dl_percent
   Var /GLOBAL dl_xfersize
+  Var /GLOBAL req_dl_mb
+  Var /GLOBAL req_extract_mb
   ${If} $SelectedEdition == "gpu"
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
+    StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_GPU}
+    StrCpy $req_extract_mb ${REQ_EXTRACT_MB_GPU}
   ${Else}
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
+    StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_CPU}
+    StrCpy $req_extract_mb ${REQ_EXTRACT_MB_CPU}
+  ${EndIf}
+
+  ; --- Pre-flight: refuse to start if either target volume is too small ---
+  ; $TEMP holds the download, $INSTDIR holds the extracted app. When they are
+  ; on the same volume the archive and the extracted tree must fit together.
+  ; DriveSpace returns "" on failure -> treat as "unknown" and don't block.
+  ${GetRoot} "$TEMP" $R0
+  ${GetRoot} "$INSTDIR" $R1
+  ${DriveSpace} "$R0\" "/D=F /S=M" $R2
+  ${DriveSpace} "$R1\" "/D=F /S=M" $R3
+  ${IfThen} $R2 == "" ${|} StrCpy $R2 -1 ${|}
+  ${IfThen} $R3 == "" ${|} StrCpy $R3 -1 ${|}
+
+  ${If} $R0 == $R1
+    IntOp $R4 $req_dl_mb + $req_extract_mb
+    ${If} $R2 >= 0
+    ${AndIf} $R2 < $R4
+      DetailPrint "Aborted: need $R4 MB free on $R0, only $R2 MB available"
+      MessageBox MB_OK|MB_ICONSTOP "Not enough free disk space on drive $R0 to install the $SelectedEdition version.$\r$\n$\r$\nRequired: about $R4 MB$\r$\nAvailable: $R2 MB$\r$\n$\r$\nFree up space (or pick an install folder on another drive) and run the installer again." /SD IDOK
+      Abort
+    ${EndIf}
+  ${Else}
+    ${If} $R2 >= 0
+    ${AndIf} $R2 < $req_dl_mb
+      DetailPrint "Aborted: need $req_dl_mb MB free on TEMP drive $R0, only $R2 MB available"
+      MessageBox MB_OK|MB_ICONSTOP "Not enough free space on the temporary-files drive $R0 to download the $SelectedEdition package.$\r$\n$\r$\nRequired: about $req_dl_mb MB$\r$\nAvailable: $R2 MB$\r$\n$\r$\nFree up space on $R0 and run the installer again." /SD IDOK
+      Abort
+    ${EndIf}
+    ${If} $R3 >= 0
+    ${AndIf} $R3 < $req_extract_mb
+      DetailPrint "Aborted: need $req_extract_mb MB free on install drive $R1, only $R3 MB available"
+      MessageBox MB_OK|MB_ICONSTOP "Not enough free space on the install drive $R1 for the $SelectedEdition version.$\r$\n$\r$\nRequired: about $req_extract_mb MB$\r$\nAvailable: $R3 MB$\r$\n$\r$\nFree up space (or choose another drive) and run the installer again." /SD IDOK
+      Abort
+    ${EndIf}
   ${EndIf}
 
   StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
   DetailPrint "Got URL : $cmder_dl"
 
-  ; NScurl (libcurl-based) replaces inetc::get, which is limited to files under
-  ; 2GB -- the GPU package is ~3.5GB. /BACKGROUND queues the transfer and
-  ; returns immediately so this loop can poll and print real progress
-  ; (percent + MB via NScurl::query) instead of blocking silently for
-  ; several minutes; /RESUME lets a retry continue from where it left off
-  ; rather than restart the whole transfer.
-  DetailPrint "Downloading $file_name..."
-  Delete "$TEMP\$file_name"
+  ; The archive is unpacked with Windows' bundled bsdtar (see below). Bail out
+  ; early with a clear message if it is missing rather than downloading GBs
+  ; first only to fail at the end. This installer is 32-bit, so $SYSDIR is
+  ; WOW64-redirected to SysWOW64 (no tar.exe there) -- disable redirection so
+  ; the check and the later call both reach the real System32.
+  ${DisableX64FSRedirection}
+  ${If} ${FileExists} "$SYSDIR\tar.exe"
+    StrCpy $R0 "ok"
+  ${Else}
+    StrCpy $R0 "missing"
+  ${EndIf}
+  ${EnableX64FSRedirection}
+  ${If} $R0 == "missing"
+    DetailPrint "Cannot continue: tar.exe is missing from System32 (requires Windows 10 1803 or later)"
+    MessageBox MB_OK|MB_ICONSTOP "This installer needs the tar tool built into Windows 10 version 1803 (April 2018) and later.$\r$\n$\r$\nPlease update Windows, then run the installer again." /SD IDOK
+    Abort
+  ${EndIf}
+
+  ; Download + extract is retried as a single unit. NScurl (libcurl-based)
+  ; replaces inetc::get, which is limited to files under 2GB -- the GPU package
+  ; is ~3.5GB. /BACKGROUND queues the transfer so this loop can poll and print
+  ; real progress (percent + MB via NScurl::query). The HuggingFace CDN is
+  ; flaky for multi-GB transfers (observed: a "completed" download truncated
+  ; mid-file), and that only surfaces when the unpack fails. So on ANY failure
+  ; (download error or an unpack that yields no ${MAINBINARYNAME}.exe) we
+  ; delete the archive and pull a completely fresh copy rather than resuming a
+  ; possibly-poisoned one.
   StrCpy $dl_retries 0
-  download_retry:
+  install_attempt:
+    Delete "$TEMP\$file_name"
+    DetailPrint "Downloading $file_name..."
     NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
     Pop $dl_transfer_id
 
@@ -687,37 +760,51 @@ Section Install
         Goto download_wait
       ${EndIf}
 
-    ; The transfer is queued/complete as soon as NScurl::http returns a transfer
-    ; ID, so NScurl::wait here only blocks for the (already-elapsed) tail end;
-    ; it pushes nothing to the stack -- the actual result is read via @ERROR@.
+    ; NScurl::wait only blocks for the (already-elapsed) tail end; it pushes
+    ; nothing to the stack -- the actual result is read via @ERROR@.
     NScurl::wait /ID $dl_transfer_id /END
     NScurl::query /ID $dl_transfer_id "@ERROR@"
     Pop $0
     ${If} $0 != "OK"
-      IntOp $dl_retries $dl_retries + 1
-      ${If} $dl_retries < 3
-        DetailPrint "Download interrupted ($0), retrying ($dl_retries/3)..."
-        Goto download_retry
-      ${Else}
-        DetailPrint "Download Failed ($0)"
-        Abort
-      ${EndIf}
+      DetailPrint "Download failed ($0)"
+      Goto attempt_failed
     ${EndIf}
 
-  dlok:
-  DetailPrint "Extracting $file_name ..."
-  nsisunz::UnzipToStack "$TEMP\$file_name" $INSTDIR
+    DetailPrint "Extracting $file_name ..."
+    ; NSIS unzip plugins (nsisunz, and Nsis7z regardless of its embedded 7-Zip
+    ; version) use 32-bit file I/O in their glue code and silently fail on
+    ; multi-GB archives -- that is what broke the GPU install. Shell out to
+    ; Windows' bundled bsdtar instead: a real 64-bit process that reads Zip64
+    ; and returns a usable exit code. Verified on VRCT_cuda.zip (Zip64, 4985
+    ; entries, ~5.8GB unpacked).
+    SetOutPath $INSTDIR
+    ${DisableX64FSRedirection}
+    nsExec::ExecToLog '"$SYSDIR\tar.exe" -xf "$TEMP\$file_name" -C "$INSTDIR"'
+    Pop $0
+    ${EnableX64FSRedirection}
+    ${If} $0 == 0
+    ${AndIf} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+      Goto install_ready
+    ${EndIf}
+    DetailPrint "Unpack failed (tar exit $0; $INSTDIR\${MAINBINARYNAME}.exe missing) -- archive likely corrupt"
 
-  ; nsisunz's return value isn't checked here (its stack protocol for
-  ; UnzipToStack isn't reliably documented and this call is shared with the
-  ; CPU install path, which has worked untouched), so instead verify directly
-  ; that the extraction actually produced the app rather than trusting a
-  ; silent success -- otherwise a corrupt/incomplete zip results in an
-  ; installer that reports success with an empty install directory.
-  ${IfNot} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
-    DetailPrint "Extraction failed: $INSTDIR\${MAINBINARYNAME}.exe not found after extracting $file_name"
+  attempt_failed:
+    IntOp $dl_retries $dl_retries + 1
+    ${If} $dl_retries < 3
+      DetailPrint "Retrying download + unpack ($dl_retries/3)..."
+      Goto install_attempt
+    ${EndIf}
+    ; Keep the last (bad) archive instead of deleting it, so the failure can
+    ; be diagnosed from %TEMP%.
+    Delete "$TEMP\$file_name.bad"
+    Rename "$TEMP\$file_name" "$TEMP\$file_name.bad"
+    DetailPrint "Giving up after 3 attempts; kept archive at $TEMP\$file_name.bad"
+    MessageBox MB_OK|MB_ICONSTOP "Could not download and unpack $file_name after 3 attempts.$\r$\n$\r$\nYour connection may be unstable or the disk may be full. The last download was kept for troubleshooting at:$\r$\n$TEMP\$file_name.bad$\r$\n$\r$\nPlease try again later." /SD IDOK
     Abort
-  ${EndIf}
+
+  install_ready:
+  ; The archive is no longer needed once it is unpacked; reclaim the space.
+  Delete "$TEMP\$file_name"
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
