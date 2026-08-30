@@ -234,58 +234,12 @@ Function PageLeaveChooseEdition
     ${EndIf}
 FunctionEnd
 
-; 4-3. Choose release channel + optional specific version page
-Var RadioChannelStable
-Var RadioChannelBeta
-Var DialogChooseChannel
-Var TextTargetVersion
-Page custom PageChooseChannel PageLeaveChooseChannel
-Function PageChooseChannel
-    !insertmacro MUI_HEADER_TEXT "Initial Settings" "Choose the release channel and, optionally, pin a specific version (can be changed later)."
-    nsDialogs::Create 1018
-    Pop $DialogChooseChannel
-
-    ${If} $DialogChooseChannel == error
-        Abort
-    ${EndIf}
-
-    ${NSD_CreateRadioButton} 0 0u 100% 12u "Stable"
-    Pop $RadioChannelStable
-    ${NSD_CreateRadioButton} 0 20u 100% 12u "Beta (early access, may be less stable)"
-    Pop $RadioChannelBeta
-
-    ${If} $SelectedChannel == "beta"
-        SendMessage $RadioChannelBeta ${BM_SETCHECK} ${BST_CHECKED} 0
-    ${Else}
-        SendMessage $RadioChannelStable ${BM_SETCHECK} ${BST_CHECKED} 0
-    ${EndIf}
-
-    ${NSD_CreateLabel} 0 44u 100% 12u "Specific version (optional, e.g. 3.5.0 or 3.5.1-beta.2):"
-    ${NSD_CreateText} 0 58u 100% 12u "$TargetVersion"
-    Pop $TextTargetVersion
-
-    ${NSD_CreateLabel} 0 74u 100% 20u "Leave blank to install the latest release of the selected channel."
-
-    nsDialogs::Show
-FunctionEnd
-
-Function PageLeaveChooseChannel
-    ${NSD_GetState} $RadioChannelBeta $0
-    ${If} $0 == ${BST_CHECKED}
-        StrCpy $SelectedChannel "beta"
-    ${Else}
-        StrCpy $SelectedChannel "stable"
-    ${EndIf}
-
-    ${NSD_GetText} $TextTargetVersion $TargetVersion
-    ; Tolerate a user-typed "v3.5.0"; the rest of the installer always
-    ; expects the bare version number and prepends "v" itself.
-    StrCpy $0 $TargetVersion 1
-    ${If} $0 == "v"
-    ${OrIf} $0 == "V"
-        StrCpy $TargetVersion $TargetVersion "" 1
-    ${EndIf}
-FunctionEnd
+; Release channel (stable/beta) and specific-version pinning are controlled
+; only via the /CHANNEL= and /VERSION= CLI flags (set by VRCT's own Updater
+; tab -- see .onInit below and Section Install). Deliberately no GUI page
+; for these: a user who double-clicks setup.exe standalone just gets the
+; latest release of the channel this installer itself was published for,
+; with no extra decisions to make.
 
 !insertmacro MUI_PAGE_COMPONENTS
 
