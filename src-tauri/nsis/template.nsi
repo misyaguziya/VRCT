@@ -638,6 +638,18 @@ Section Install
   !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
+
+  ; Free-space budget (MiB) per edition. The compressed archive is written to
+  ; %TEMP%, the extracted tree to $INSTDIR, and both exist at once during
+  ; extraction, so a same-drive install needs DOWNLOAD + EXTRACT together.
+  ; Measured 2026-08: VRCT.zip ~485MB / ~1.5GB unpacked; VRCT_cuda.zip
+  ; ~3461MB / ~5757MB unpacked. Values below add headroom -- re-measure and
+  ; bump them when the packages grow.
+  !define REQ_DOWNLOAD_MB_CPU 1024
+  !define REQ_EXTRACT_MB_CPU 3072
+  !define REQ_DOWNLOAD_MB_GPU 4096
+  !define REQ_EXTRACT_MB_GPU 7168
+
   Var /GLOBAL i
   Var /GLOBAL cmder_dl
   Var /GLOBAL cmder_version
@@ -647,77 +659,308 @@ Section Install
   Var /GLOBAL dl_tick
   Var /GLOBAL dl_percent
   Var /GLOBAL dl_xfersize
+  Var /GLOBAL req_dl_mb
+  Var /GLOBAL req_extract_mb
+  Var /GLOBAL dl_total
+  Var /GLOBAL dl_parallel
+  Var /GLOBAL dl_id0
+  Var /GLOBAL dl_id1
+  Var /GLOBAL dl_id2
+  Var /GLOBAL dl_id3
   ${If} $SelectedEdition == "gpu"
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
+    StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_GPU}
+    StrCpy $req_extract_mb ${REQ_EXTRACT_MB_GPU}
   ${Else}
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
+    StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_CPU}
+    StrCpy $req_extract_mb ${REQ_EXTRACT_MB_CPU}
+  ${EndIf}
+
+  ; --- Pre-flight: refuse to start if either target volume is too small ---
+  ; $TEMP holds the download, $INSTDIR holds the extracted app. When they are
+  ; on the same volume the archive and the extracted tree must fit together.
+  ; DriveSpace returns "" on failure -> treat as "unknown" and don't block.
+  ${GetRoot} "$TEMP" $R0
+  ${GetRoot} "$INSTDIR" $R1
+  ${DriveSpace} "$R0\" "/D=F /S=M" $R2
+  ${DriveSpace} "$R1\" "/D=F /S=M" $R3
+  ${IfThen} $R2 == "" ${|} StrCpy $R2 -1 ${|}
+  ${IfThen} $R3 == "" ${|} StrCpy $R3 -1 ${|}
+
+  ${If} $R0 == $R1
+    IntOp $R4 $req_dl_mb + $req_extract_mb
+    ${If} $R2 >= 0
+    ${AndIf} $R2 < $R4
+      DetailPrint "Aborted: need $R4 MB free on $R0, only $R2 MB available"
+      MessageBox MB_OK|MB_ICONSTOP "Not enough free disk space on drive $R0 to install the $SelectedEdition version.$\r$\n$\r$\nRequired: about $R4 MB$\r$\nAvailable: $R2 MB$\r$\n$\r$\nFree up space (or pick an install folder on another drive) and run the installer again." /SD IDOK
+      Abort
+    ${EndIf}
+  ${Else}
+    ${If} $R2 >= 0
+    ${AndIf} $R2 < $req_dl_mb
+      DetailPrint "Aborted: need $req_dl_mb MB free on TEMP drive $R0, only $R2 MB available"
+      MessageBox MB_OK|MB_ICONSTOP "Not enough free space on the temporary-files drive $R0 to download the $SelectedEdition package.$\r$\n$\r$\nRequired: about $req_dl_mb MB$\r$\nAvailable: $R2 MB$\r$\n$\r$\nFree up space on $R0 and run the installer again." /SD IDOK
+      Abort
+    ${EndIf}
+    ${If} $R3 >= 0
+    ${AndIf} $R3 < $req_extract_mb
+      DetailPrint "Aborted: need $req_extract_mb MB free on install drive $R1, only $R3 MB available"
+      MessageBox MB_OK|MB_ICONSTOP "Not enough free space on the install drive $R1 for the $SelectedEdition version.$\r$\n$\r$\nRequired: about $req_extract_mb MB$\r$\nAvailable: $R3 MB$\r$\n$\r$\nFree up space (or choose another drive) and run the installer again." /SD IDOK
+      Abort
+    ${EndIf}
   ${EndIf}
 
   StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
   DetailPrint "Got URL : $cmder_dl"
 
-  ; NScurl (libcurl-based) replaces inetc::get, which is limited to files under
-  ; 2GB -- the GPU package is ~3.5GB. /BACKGROUND queues the transfer and
-  ; returns immediately so this loop can poll and print real progress
-  ; (percent + MB via NScurl::query) instead of blocking silently for
-  ; several minutes; /RESUME lets a retry continue from where it left off
-  ; rather than restart the whole transfer.
-  DetailPrint "Downloading $file_name..."
-  Delete "$TEMP\$file_name"
-  StrCpy $dl_retries 0
-  download_retry:
-    NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
-    Pop $dl_transfer_id
-
-    StrCpy $dl_tick 0
-    download_wait:
-      Sleep 1000
-      NScurl::query /ID $dl_transfer_id "@STATUS@"
-      Pop $0
-      ${If} $0 != "Complete"
-        IntOp $dl_tick $dl_tick + 1
-        ${If} $dl_tick >= 5
-          StrCpy $dl_tick 0
-          NScurl::query /ID $dl_transfer_id "@PERCENT@"
-          Pop $dl_percent
-          NScurl::query /ID $dl_transfer_id "@XFERSIZE@"
-          Pop $dl_xfersize
-          DetailPrint "Downloading $file_name... $dl_xfersize ($dl_percent%)"
-        ${EndIf}
-        Goto download_wait
-      ${EndIf}
-
-    ; The transfer is queued/complete as soon as NScurl::http returns a transfer
-    ; ID, so NScurl::wait here only blocks for the (already-elapsed) tail end;
-    ; it pushes nothing to the stack -- the actual result is read via @ERROR@.
-    NScurl::wait /ID $dl_transfer_id /END
-    NScurl::query /ID $dl_transfer_id "@ERROR@"
-    Pop $0
-    ${If} $0 != "OK"
-      IntOp $dl_retries $dl_retries + 1
-      ${If} $dl_retries < 3
-        DetailPrint "Download interrupted ($0), retrying ($dl_retries/3)..."
-        Goto download_retry
-      ${Else}
-        DetailPrint "Download Failed ($0)"
-        Abort
-      ${EndIf}
-    ${EndIf}
-
-  dlok:
-  DetailPrint "Extracting $file_name ..."
-  nsisunz::UnzipToStack "$TEMP\$file_name" $INSTDIR
-
-  ; nsisunz's return value isn't checked here (its stack protocol for
-  ; UnzipToStack isn't reliably documented and this call is shared with the
-  ; CPU install path, which has worked untouched), so instead verify directly
-  ; that the extraction actually produced the app rather than trusting a
-  ; silent success -- otherwise a corrupt/incomplete zip results in an
-  ; installer that reports success with an empty install directory.
-  ${IfNot} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
-    DetailPrint "Extraction failed: $INSTDIR\${MAINBINARYNAME}.exe not found after extracting $file_name"
+  ; The archive is unpacked with Windows' bundled bsdtar (see below). Bail out
+  ; early with a clear message if it is missing rather than downloading GBs
+  ; first only to fail at the end. This installer is 32-bit, so $SYSDIR is
+  ; WOW64-redirected to SysWOW64 (no tar.exe there) -- disable redirection so
+  ; the check and the later call both reach the real System32.
+  ${DisableX64FSRedirection}
+  ${If} ${FileExists} "$SYSDIR\tar.exe"
+    StrCpy $R0 "ok"
+  ${Else}
+    StrCpy $R0 "missing"
+  ${EndIf}
+  ${EnableX64FSRedirection}
+  ${If} $R0 == "missing"
+    DetailPrint "Cannot continue: tar.exe is missing from System32 (requires Windows 10 1803 or later)"
+    MessageBox MB_OK|MB_ICONSTOP "This installer needs the tar tool built into Windows 10 version 1803 (April 2018) and later.$\r$\n$\r$\nPlease update Windows, then run the installer again." /SD IDOK
     Abort
   ${EndIf}
+
+  ; Probe the total size so the download can be split into byte ranges.
+  ; $SYSDIR\curl.exe shares tar.exe's Windows baseline (checked above); if the
+  ; probe fails, $dl_total stays "0" and a single stream is used instead.
+  StrCpy $dl_total "0"
+  ${DisableX64FSRedirection}
+  nsExec::ExecToStack '"$SYSDIR\curl.exe" -sIL --fail --retry 2 -o NUL -w "%header{content-length}" "$cmder_dl"'
+  Pop $0
+  Pop $1
+  ${EnableX64FSRedirection}
+  ${If} $0 == 0
+    System::Int64Op $1 + 0        ; keep leading digits, drop any trailing CR/LF
+    Pop $dl_total
+  ${EndIf}
+
+  ; Use the parallel path only when the size is known AND the download volume
+  ; can clearly hold the parts + the reassembled archive + the extracted tree
+  ; at once (2x archive during "copy /b" + the unpacked size + margin). On a
+  ; tighter disk, or if any parallel part fails at runtime, we fall back to a
+  ; single stream (1x archive) which the pre-flight check above already sized.
+  StrCpy $dl_parallel "0"
+  ${If} $dl_total != "0"
+    ${GetRoot} "$TEMP" $R0
+    ${DriveSpace} "$R0\" "/D=F /S=M" $R1
+    System::Int64Op $dl_total / 524288      ; = 2 * archive size in MiB
+    Pop $R2
+    IntOp $R2 $R2 + $req_extract_mb
+    IntOp $R2 $R2 + 1024                    ; margin
+    ${If} $R1 != ""
+    ${AndIf} $R1 > $R2
+      StrCpy $dl_parallel "1"
+    ${EndIf}
+  ${EndIf}
+
+  ; Download + extract is retried as a single unit: a transfer the downloader
+  ; reports as OK can still be truncated (the HuggingFace CDN does this on
+  ; multi-GB files), which only surfaces when the unpack fails. So on ANY
+  ; failure (download error, or an unpack that yields no ${MAINBINARYNAME}.exe)
+  ; we wipe the archive and pull a completely fresh copy.
+  StrCpy $dl_retries 0
+  install_attempt:
+    Delete "$TEMP\$file_name"
+    Delete "$TEMP\$file_name.p0"
+    Delete "$TEMP\$file_name.p1"
+    Delete "$TEMP\$file_name.p2"
+    Delete "$TEMP\$file_name.p3"
+
+    ${If} $dl_parallel != "1"
+      ; -------- Single connection (size unknown, tight disk, or retry) --------
+      DetailPrint "Downloading $file_name..."
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
+      Pop $dl_transfer_id
+      StrCpy $dl_tick 0
+      download_wait:
+        Sleep 1000
+        NScurl::query /ID $dl_transfer_id "@STATUS@"
+        Pop $0
+        ${If} $0 != "Complete"
+          IntOp $dl_tick $dl_tick + 1
+          ${If} $dl_tick >= 5
+            StrCpy $dl_tick 0
+            NScurl::query /ID $dl_transfer_id "@PERCENT@"
+            Pop $dl_percent
+            NScurl::query /ID $dl_transfer_id "@XFERSIZE@"
+            Pop $dl_xfersize
+            DetailPrint "Downloading $file_name... $dl_xfersize ($dl_percent%)"
+          ${EndIf}
+          Goto download_wait
+        ${EndIf}
+      NScurl::wait /ID $dl_transfer_id /END
+      NScurl::query /ID $dl_transfer_id "@ERROR@"
+      Pop $0
+      ${If} $0 != "OK"
+        DetailPrint "Download failed ($0)"
+        Goto attempt_failed
+      ${EndIf}
+    ${Else}
+      ; -------- 4 byte ranges pulled concurrently, then reassembled --------
+      ; $R0 = chunk, $R2 = 2*chunk (part2 start), $R3 = 3*chunk (part3 start),
+      ; $R1 = scratch (range end), $R4 = watchdog tick. The last range is
+      ; open-ended so it always covers the remainder.
+      DetailPrint "Downloading $file_name (4 parallel connections)..."
+      System::Int64Op $dl_total / 4
+      Pop $R0
+      System::Int64Op $R0 - 1
+      Pop $R1
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p0" /HEADER "Range: bytes=0-$R1" /INSIST /BACKGROUND /END
+      Pop $dl_id0
+      System::Int64Op $R0 * 2
+      Pop $R2
+      System::Int64Op $R2 - 1
+      Pop $R1
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p1" /HEADER "Range: bytes=$R0-$R1" /INSIST /BACKGROUND /END
+      Pop $dl_id1
+      System::Int64Op $R0 * 3
+      Pop $R3
+      System::Int64Op $R3 - 1
+      Pop $R1
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p2" /HEADER "Range: bytes=$R2-$R1" /INSIST /BACKGROUND /END
+      Pop $dl_id2
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p3" /HEADER "Range: bytes=$R3-" /INSIST /BACKGROUND /END
+      Pop $dl_id3
+
+      StrCpy $dl_tick 0
+      StrCpy $R4 0
+      par_wait:
+        Sleep 1000
+        IntOp $R4 $R4 + 1
+        NScurl::query /ID $dl_id0 "@STATUS@"
+        Pop $1
+        NScurl::query /ID $dl_id1 "@STATUS@"
+        Pop $2
+        NScurl::query /ID $dl_id2 "@STATUS@"
+        Pop $3
+        NScurl::query /ID $dl_id3 "@STATUS@"
+        Pop $4
+        ${If} $1 == "Aborted"
+        ${OrIf} $2 == "Aborted"
+        ${OrIf} $3 == "Aborted"
+        ${OrIf} $4 == "Aborted"
+          DetailPrint "A download connection was aborted"
+          Goto par_failed
+        ${EndIf}
+        ${If} $R4 > 3600
+          DetailPrint "Download timed out"
+          Goto par_failed
+        ${EndIf}
+        IntOp $dl_tick $dl_tick + 1
+        ${If} $dl_tick >= 3
+          StrCpy $dl_tick 0
+          NScurl::query /ID $dl_id0 "@XFERSIZE_B@"
+          Pop $5
+          NScurl::query /ID $dl_id1 "@XFERSIZE_B@"
+          Pop $6
+          System::Int64Op $5 + $6
+          Pop $5
+          NScurl::query /ID $dl_id2 "@XFERSIZE_B@"
+          Pop $6
+          System::Int64Op $5 + $6
+          Pop $5
+          NScurl::query /ID $dl_id3 "@XFERSIZE_B@"
+          Pop $6
+          System::Int64Op $5 + $6
+          Pop $5
+          System::Int64Op $5 / 1048576
+          Pop $7
+          System::Int64Op $5 * 100
+          Pop $8
+          System::Int64Op $8 / $dl_total
+          Pop $8
+          System::Int64Op $dl_total / 1048576
+          Pop $9
+          DetailPrint "Downloading $file_name... $7 / $9 MB ($8%)"
+        ${EndIf}
+        StrCmp "$1$2$3$4" "CompleteCompleteCompleteComplete" par_done 0
+        Goto par_wait
+      par_done:
+      NScurl::query /ID $dl_id0 "@ERROR@"
+      Pop $1
+      NScurl::query /ID $dl_id1 "@ERROR@"
+      Pop $2
+      NScurl::query /ID $dl_id2 "@ERROR@"
+      Pop $3
+      NScurl::query /ID $dl_id3 "@ERROR@"
+      Pop $4
+      ${If} $1 != "OK"
+      ${OrIf} $2 != "OK"
+      ${OrIf} $3 != "OK"
+      ${OrIf} $4 != "OK"
+        DetailPrint "Parallel download failed ($1 / $2 / $3 / $4)"
+        Goto par_failed
+      ${EndIf}
+      DetailPrint "Combining parts..."
+      nsExec::ExecToLog 'cmd /c copy /b "$TEMP\$file_name.p0"+"$TEMP\$file_name.p1"+"$TEMP\$file_name.p2"+"$TEMP\$file_name.p3" "$TEMP\$file_name"'
+      Pop $0
+      ${If} $0 != 0
+        DetailPrint "Could not combine downloaded parts (exit $0)"
+        Goto par_failed
+      ${EndIf}
+      Delete "$TEMP\$file_name.p0"
+      Delete "$TEMP\$file_name.p1"
+      Delete "$TEMP\$file_name.p2"
+      Delete "$TEMP\$file_name.p3"
+      Goto par_ok
+    par_failed:
+      ; A parallel part failed (often disk-write pressure from 4 concurrent
+      ; writers). Drop to a single connection for the remaining attempts.
+      DetailPrint "Retrying with a single connection..."
+      StrCpy $dl_parallel "0"
+      Goto attempt_failed
+    par_ok:
+    ${EndIf}
+
+    DetailPrint "Extracting $file_name ..."
+    ; NSIS unzip plugins (nsisunz, and Nsis7z regardless of its embedded 7-Zip
+    ; version) use 32-bit file I/O in their glue code and silently fail on
+    ; multi-GB archives -- that is what broke the GPU install. Shell out to
+    ; Windows' bundled bsdtar instead: a real 64-bit process that reads Zip64
+    ; and returns a usable exit code. Verified on VRCT_cuda.zip (Zip64, 4985
+    ; entries, ~5.8GB unpacked). -v prints each file as it is written so the
+    ; details view scrolls during extraction instead of sitting on
+    ; "Extracting ..." until done.
+    SetOutPath $INSTDIR
+    ${DisableX64FSRedirection}
+    nsExec::ExecToLog '"$SYSDIR\tar.exe" -xvf "$TEMP\$file_name" -C "$INSTDIR"'
+    Pop $0
+    ${EnableX64FSRedirection}
+    ${If} $0 == 0
+    ${AndIf} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+      Goto install_ready
+    ${EndIf}
+    DetailPrint "Unpack failed (tar exit $0; $INSTDIR\${MAINBINARYNAME}.exe missing) -- archive likely corrupt"
+
+  attempt_failed:
+    IntOp $dl_retries $dl_retries + 1
+    ${If} $dl_retries < 3
+      DetailPrint "Retrying download + unpack ($dl_retries/3)..."
+      Goto install_attempt
+    ${EndIf}
+    ; Keep the last (bad) archive instead of deleting it, so the failure can
+    ; be diagnosed from %TEMP%.
+    Delete "$TEMP\$file_name.bad"
+    Rename "$TEMP\$file_name" "$TEMP\$file_name.bad"
+    DetailPrint "Giving up after 3 attempts; kept archive at $TEMP\$file_name.bad"
+    MessageBox MB_OK|MB_ICONSTOP "Could not download and unpack $file_name after 3 attempts.$\r$\n$\r$\nYour connection may be unstable or the disk may be full. The last download was kept for troubleshooting at:$\r$\n$TEMP\$file_name.bad$\r$\n$\r$\nPlease try again later." /SD IDOK
+    Abort
+
+  install_ready:
+  ; The archive is no longer needed once it is unpacked; reclaim the space.
+  Delete "$TEMP\$file_name"
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
