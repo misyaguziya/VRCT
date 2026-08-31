@@ -639,13 +639,6 @@ Section Install
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
 
-  ; Optional multi-threaded unpacker. bsdtar (used below) is single-threaded;
-  ; if 7za.exe is placed in src-tauri/nsis/tools/ it is used instead with
-  ; -mmt so the archive's entries are decompressed across CPU cores. The File
-  ; is /nonfatal, so the build still works without it and the installer just
-  ; falls back to tar.exe at runtime.
-  !define SEVENZIP_SRC "..\..\..\..\nsis\tools\7za.exe"
-
   ; Free-space budget (MiB) per edition. The compressed archive is written to
   ; %TEMP%, the extracted tree to $INSTDIR, and both exist at once during
   ; extraction, so a same-drive install needs DOWNLOAD + EXTRACT together.
@@ -738,10 +731,6 @@ Section Install
     MessageBox MB_OK|MB_ICONSTOP "This installer needs the tar tool built into Windows 10 version 1803 (April 2018) and later.$\r$\n$\r$\nPlease update Windows, then run the installer again." /SD IDOK
     Abort
   ${EndIf}
-
-  ; Stage the optional multi-threaded unpacker. /nonfatal: absent -> build
-  ; warning only, and the runtime FileExists check picks tar.exe instead.
-  File /nonfatal "/oname=$PLUGINSDIR\7za.exe" "${SEVENZIP_SRC}"
 
   ; Probe the total size so the download can be split into byte ranges.
   ; $SYSDIR\curl.exe shares tar.exe's Windows baseline (checked above); if the
@@ -938,32 +927,22 @@ Section Install
     DetailPrint "Extracting $file_name ..."
     ; NSIS unzip plugins (nsisunz, and Nsis7z regardless of its embedded 7-Zip
     ; version) use 32-bit file I/O in their glue code and silently fail on
-    ; multi-GB archives -- that is what broke the GPU install. Shell out to a
-    ; real 64-bit process instead: 7za.exe (multi-threaded) when bundled,
-    ; otherwise Windows' bundled bsdtar. Both read Zip64 and return a usable
-    ; exit code. Verified on VRCT_cuda.zip (Zip64, 4985 entries, ~5.8GB).
+    ; multi-GB archives -- that is what broke the GPU install. Shell out to
+    ; Windows' bundled bsdtar instead: a real 64-bit process that reads Zip64
+    ; and returns a usable exit code. Verified on VRCT_cuda.zip (Zip64, 4985
+    ; entries, ~5.8GB unpacked). -v prints each file as it is written so the
+    ; details view scrolls during extraction instead of sitting on
+    ; "Extracting ..." until done.
     SetOutPath $INSTDIR
-    ${If} ${FileExists} "$PLUGINSDIR\7za.exe"
-      ; -bsp1 streams a running percentage, -bb1 lists each entry, so the
-      ; details view shows live progress just like the download does.
-      nsExec::ExecToLog '"$PLUGINSDIR\7za.exe" x "$TEMP\$file_name" -o"$INSTDIR" -mmt -aoa -y -bsp1 -bb1'
-      Pop $0
-      ${If} $0 == 1        ; 7-Zip exit 1 = non-fatal warnings, not a failure
-        StrCpy $0 0
-      ${EndIf}
-    ${Else}
-      ; -v prints each file as it is written -- the details view then scrolls
-      ; during extraction instead of sitting on "Extracting ..." until done.
-      ${DisableX64FSRedirection}
-      nsExec::ExecToLog '"$SYSDIR\tar.exe" -xvf "$TEMP\$file_name" -C "$INSTDIR"'
-      Pop $0
-      ${EnableX64FSRedirection}
-    ${EndIf}
+    ${DisableX64FSRedirection}
+    nsExec::ExecToLog '"$SYSDIR\tar.exe" -xvf "$TEMP\$file_name" -C "$INSTDIR"'
+    Pop $0
+    ${EnableX64FSRedirection}
     ${If} $0 == 0
     ${AndIf} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
       Goto install_ready
     ${EndIf}
-    DetailPrint "Unpack failed (exit $0; $INSTDIR\${MAINBINARYNAME}.exe missing) -- archive likely corrupt"
+    DetailPrint "Unpack failed (tar exit $0; $INSTDIR\${MAINBINARYNAME}.exe missing) -- archive likely corrupt"
 
   attempt_failed:
     IntOp $dl_retries $dl_retries + 1
