@@ -944,14 +944,18 @@ Section Install
     ; exit code. Verified on VRCT_cuda.zip (Zip64, 4985 entries, ~5.8GB).
     SetOutPath $INSTDIR
     ${If} ${FileExists} "$PLUGINSDIR\7za.exe"
-      nsExec::ExecToLog '"$PLUGINSDIR\7za.exe" x "$TEMP\$file_name" -o"$INSTDIR" -mmt -aoa -y -bso0 -bsp0 -bb0'
+      ; -bsp1 streams a running percentage, -bb1 lists each entry, so the
+      ; details view shows live progress just like the download does.
+      nsExec::ExecToLog '"$PLUGINSDIR\7za.exe" x "$TEMP\$file_name" -o"$INSTDIR" -mmt -aoa -y -bsp1 -bb1'
       Pop $0
       ${If} $0 == 1        ; 7-Zip exit 1 = non-fatal warnings, not a failure
         StrCpy $0 0
       ${EndIf}
     ${Else}
+      ; -v prints each file as it is written -- the details view then scrolls
+      ; during extraction instead of sitting on "Extracting ..." until done.
       ${DisableX64FSRedirection}
-      nsExec::ExecToLog '"$SYSDIR\tar.exe" -xf "$TEMP\$file_name" -C "$INSTDIR"'
+      nsExec::ExecToLog '"$SYSDIR\tar.exe" -xvf "$TEMP\$file_name" -C "$INSTDIR"'
       Pop $0
       ${EnableX64FSRedirection}
     ${EndIf}
