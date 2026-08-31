@@ -639,15 +639,6 @@ Section Install
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
 
-  ; Optional download accelerator. NScurl (below) downloads over a single
-  ; connection, which the HuggingFace CDN throttles hard (~3MB/s from Asia) --
-  ; the GPU package then takes ~15-20 min. If aria2c.exe is placed in
-  ; src-tauri/nsis/tools/ it is used instead: 8 parallel range connections
-  ; (measured ~3-4x faster) with a live percent / speed / ETA readout. The
-  ; File below is /nonfatal, so the build still works when the binary is
-  ; absent; the installer then just falls back to NScurl at runtime.
-  !define ARIA2C_SRC "..\..\..\..\nsis\tools\aria2c.exe"
-
   ; Free-space budget (MiB) per edition. The compressed archive is written to
   ; %TEMP%, the extracted tree to $INSTDIR, and both exist at once during
   ; extraction, so a same-drive install needs DOWNLOAD + EXTRACT together.
@@ -670,6 +661,12 @@ Section Install
   Var /GLOBAL dl_xfersize
   Var /GLOBAL req_dl_mb
   Var /GLOBAL req_extract_mb
+  Var /GLOBAL dl_total
+  Var /GLOBAL dl_parallel
+  Var /GLOBAL dl_id0
+  Var /GLOBAL dl_id1
+  Var /GLOBAL dl_id2
+  Var /GLOBAL dl_id3
   ${If} $SelectedEdition == "gpu"
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
     StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_GPU}
@@ -735,10 +732,38 @@ Section Install
     Abort
   ${EndIf}
 
-  ; Stage the optional accelerator into $PLUGINSDIR. /nonfatal: when
-  ; aria2c.exe is not in the repo this is just a build warning, and the
-  ; runtime FileExists check below then picks the NScurl path.
-  File /nonfatal "/oname=$PLUGINSDIR\aria2c.exe" "${ARIA2C_SRC}"
+  ; Probe the total size so the download can be split into byte ranges.
+  ; $SYSDIR\curl.exe shares tar.exe's Windows baseline (checked above); if the
+  ; probe fails, $dl_total stays "0" and a single stream is used instead.
+  StrCpy $dl_total "0"
+  ${DisableX64FSRedirection}
+  nsExec::ExecToStack '"$SYSDIR\curl.exe" -sIL --fail --retry 2 -o NUL -w "%header{content-length}" "$cmder_dl"'
+  Pop $0
+  Pop $1
+  ${EnableX64FSRedirection}
+  ${If} $0 == 0
+    System::Int64Op $1 + 0        ; keep leading digits, drop any trailing CR/LF
+    Pop $dl_total
+  ${EndIf}
+
+  ; Use the parallel path only when the size is known AND the download volume
+  ; can clearly hold the parts + the reassembled archive + the extracted tree
+  ; at once (2x archive during "copy /b" + the unpacked size + margin). On a
+  ; tighter disk, or if any parallel part fails at runtime, we fall back to a
+  ; single stream (1x archive) which the pre-flight check above already sized.
+  StrCpy $dl_parallel "0"
+  ${If} $dl_total != "0"
+    ${GetRoot} "$TEMP" $R0
+    ${DriveSpace} "$R0\" "/D=F /S=M" $R1
+    System::Int64Op $dl_total / 524288      ; = 2 * archive size in MiB
+    Pop $R2
+    IntOp $R2 $R2 + $req_extract_mb
+    IntOp $R2 $R2 + 1024                    ; margin
+    ${If} $R1 != ""
+    ${AndIf} $R1 > $R2
+      StrCpy $dl_parallel "1"
+    ${EndIf}
+  ${EndIf}
 
   ; Download + extract is retried as a single unit: a transfer the downloader
   ; reports as OK can still be truncated (the HuggingFace CDN does this on
@@ -748,56 +773,157 @@ Section Install
   StrCpy $dl_retries 0
   install_attempt:
     Delete "$TEMP\$file_name"
-    Delete "$TEMP\$file_name.aria2"
+    Delete "$TEMP\$file_name.p0"
+    Delete "$TEMP\$file_name.p1"
+    Delete "$TEMP\$file_name.p2"
+    Delete "$TEMP\$file_name.p3"
 
-    ${If} ${FileExists} "$PLUGINSDIR\aria2c.exe"
-      ; --- Fast path: aria2c, 8 parallel connections, live %/speed/ETA ---
-      DetailPrint "Downloading $file_name (parallel)..."
-      nsExec::ExecToLog '"$PLUGINSDIR\aria2c.exe" --dir="$TEMP" --out="$file_name" --continue=true --max-connection-per-server=8 --split=8 --min-split-size=8M --max-tries=3 --retry-wait=3 --connect-timeout=30 --timeout=60 --file-allocation=none --allow-overwrite=true --auto-file-renaming=false --check-certificate=true --console-log-level=warn --summary-interval=2 --show-console-readout=true --download-result=hide "$cmder_dl"'
-      Pop $0
-      ${If} $0 == 0
-        Goto dl_ok
-      ${EndIf}
-      DetailPrint "aria2c failed (exit $0); falling back to single-stream download"
-      Delete "$TEMP\$file_name"
-      Delete "$TEMP\$file_name.aria2"
-    ${EndIf}
-
-    ; --- Fallback: NScurl single connection. /BACKGROUND lets this loop poll
-    ;     and print progress; /INSIST keeps retrying through brief drops.
-    DetailPrint "Downloading $file_name..."
-    NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
-    Pop $dl_transfer_id
-
-    StrCpy $dl_tick 0
-    download_wait:
-      Sleep 1000
-      NScurl::query /ID $dl_transfer_id "@STATUS@"
-      Pop $0
-      ${If} $0 != "Complete"
-        IntOp $dl_tick $dl_tick + 1
-        ${If} $dl_tick >= 5
-          StrCpy $dl_tick 0
-          NScurl::query /ID $dl_transfer_id "@PERCENT@"
-          Pop $dl_percent
-          NScurl::query /ID $dl_transfer_id "@XFERSIZE@"
-          Pop $dl_xfersize
-          DetailPrint "Downloading $file_name... $dl_xfersize ($dl_percent%)"
+    ${If} $dl_parallel != "1"
+      ; -------- Single connection (size unknown, tight disk, or retry) --------
+      DetailPrint "Downloading $file_name..."
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
+      Pop $dl_transfer_id
+      StrCpy $dl_tick 0
+      download_wait:
+        Sleep 1000
+        NScurl::query /ID $dl_transfer_id "@STATUS@"
+        Pop $0
+        ${If} $0 != "Complete"
+          IntOp $dl_tick $dl_tick + 1
+          ${If} $dl_tick >= 5
+            StrCpy $dl_tick 0
+            NScurl::query /ID $dl_transfer_id "@PERCENT@"
+            Pop $dl_percent
+            NScurl::query /ID $dl_transfer_id "@XFERSIZE@"
+            Pop $dl_xfersize
+            DetailPrint "Downloading $file_name... $dl_xfersize ($dl_percent%)"
+          ${EndIf}
+          Goto download_wait
         ${EndIf}
-        Goto download_wait
+      NScurl::wait /ID $dl_transfer_id /END
+      NScurl::query /ID $dl_transfer_id "@ERROR@"
+      Pop $0
+      ${If} $0 != "OK"
+        DetailPrint "Download failed ($0)"
+        Goto attempt_failed
       ${EndIf}
+    ${Else}
+      ; -------- 4 byte ranges pulled concurrently, then reassembled --------
+      ; $R0 = chunk, $R2 = 2*chunk (part2 start), $R3 = 3*chunk (part3 start),
+      ; $R1 = scratch (range end), $R4 = watchdog tick. The last range is
+      ; open-ended so it always covers the remainder.
+      DetailPrint "Downloading $file_name (4 parallel connections)..."
+      System::Int64Op $dl_total / 4
+      Pop $R0
+      System::Int64Op $R0 - 1
+      Pop $R1
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p0" /HEADER "Range: bytes=0-$R1" /INSIST /BACKGROUND /END
+      Pop $dl_id0
+      System::Int64Op $R0 * 2
+      Pop $R2
+      System::Int64Op $R2 - 1
+      Pop $R1
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p1" /HEADER "Range: bytes=$R0-$R1" /INSIST /BACKGROUND /END
+      Pop $dl_id1
+      System::Int64Op $R0 * 3
+      Pop $R3
+      System::Int64Op $R3 - 1
+      Pop $R1
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p2" /HEADER "Range: bytes=$R2-$R1" /INSIST /BACKGROUND /END
+      Pop $dl_id2
+      NScurl::http GET "$cmder_dl" "$TEMP\$file_name.p3" /HEADER "Range: bytes=$R3-" /INSIST /BACKGROUND /END
+      Pop $dl_id3
 
-    ; NScurl::wait only blocks for the (already-elapsed) tail end; it pushes
-    ; nothing to the stack -- the actual result is read via @ERROR@.
-    NScurl::wait /ID $dl_transfer_id /END
-    NScurl::query /ID $dl_transfer_id "@ERROR@"
-    Pop $0
-    ${If} $0 != "OK"
-      DetailPrint "Download failed ($0)"
+      StrCpy $dl_tick 0
+      StrCpy $R4 0
+      par_wait:
+        Sleep 1000
+        IntOp $R4 $R4 + 1
+        NScurl::query /ID $dl_id0 "@STATUS@"
+        Pop $1
+        NScurl::query /ID $dl_id1 "@STATUS@"
+        Pop $2
+        NScurl::query /ID $dl_id2 "@STATUS@"
+        Pop $3
+        NScurl::query /ID $dl_id3 "@STATUS@"
+        Pop $4
+        ${If} $1 == "Aborted"
+        ${OrIf} $2 == "Aborted"
+        ${OrIf} $3 == "Aborted"
+        ${OrIf} $4 == "Aborted"
+          DetailPrint "A download connection was aborted"
+          Goto par_failed
+        ${EndIf}
+        ${If} $R4 > 3600
+          DetailPrint "Download timed out"
+          Goto par_failed
+        ${EndIf}
+        IntOp $dl_tick $dl_tick + 1
+        ${If} $dl_tick >= 3
+          StrCpy $dl_tick 0
+          NScurl::query /ID $dl_id0 "@XFERSIZE_B@"
+          Pop $5
+          NScurl::query /ID $dl_id1 "@XFERSIZE_B@"
+          Pop $6
+          System::Int64Op $5 + $6
+          Pop $5
+          NScurl::query /ID $dl_id2 "@XFERSIZE_B@"
+          Pop $6
+          System::Int64Op $5 + $6
+          Pop $5
+          NScurl::query /ID $dl_id3 "@XFERSIZE_B@"
+          Pop $6
+          System::Int64Op $5 + $6
+          Pop $5
+          System::Int64Op $5 / 1048576
+          Pop $7
+          System::Int64Op $5 * 100
+          Pop $8
+          System::Int64Op $8 / $dl_total
+          Pop $8
+          System::Int64Op $dl_total / 1048576
+          Pop $9
+          DetailPrint "Downloading $file_name... $7 / $9 MB ($8%)"
+        ${EndIf}
+        StrCmp "$1$2$3$4" "CompleteCompleteCompleteComplete" par_done 0
+        Goto par_wait
+      par_done:
+      NScurl::query /ID $dl_id0 "@ERROR@"
+      Pop $1
+      NScurl::query /ID $dl_id1 "@ERROR@"
+      Pop $2
+      NScurl::query /ID $dl_id2 "@ERROR@"
+      Pop $3
+      NScurl::query /ID $dl_id3 "@ERROR@"
+      Pop $4
+      ${If} $1 != "OK"
+      ${OrIf} $2 != "OK"
+      ${OrIf} $3 != "OK"
+      ${OrIf} $4 != "OK"
+        DetailPrint "Parallel download failed ($1 / $2 / $3 / $4)"
+        Goto par_failed
+      ${EndIf}
+      DetailPrint "Combining parts..."
+      nsExec::ExecToLog 'cmd /c copy /b "$TEMP\$file_name.p0"+"$TEMP\$file_name.p1"+"$TEMP\$file_name.p2"+"$TEMP\$file_name.p3" "$TEMP\$file_name"'
+      Pop $0
+      ${If} $0 != 0
+        DetailPrint "Could not combine downloaded parts (exit $0)"
+        Goto par_failed
+      ${EndIf}
+      Delete "$TEMP\$file_name.p0"
+      Delete "$TEMP\$file_name.p1"
+      Delete "$TEMP\$file_name.p2"
+      Delete "$TEMP\$file_name.p3"
+      Goto par_ok
+    par_failed:
+      ; A parallel part failed (often disk-write pressure from 4 concurrent
+      ; writers). Drop to a single connection for the remaining attempts.
+      DetailPrint "Retrying with a single connection..."
+      StrCpy $dl_parallel "0"
       Goto attempt_failed
+    par_ok:
     ${EndIf}
 
-  dl_ok:
     DetailPrint "Extracting $file_name ..."
     ; NSIS unzip plugins (nsisunz, and Nsis7z regardless of its embedded 7-Zip
     ; version) use 32-bit file I/O in their glue code and silently fail on
@@ -833,7 +959,6 @@ Section Install
   install_ready:
   ; The archive is no longer needed once it is unpacked; reclaim the space.
   Delete "$TEMP\$file_name"
-  Delete "$TEMP\$file_name.aria2"
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
