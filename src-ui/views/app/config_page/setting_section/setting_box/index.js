@@ -4,7 +4,6 @@ export { Translation } from "./translation/Translation";
 export { Transcription } from "./transcription/Transcription";
 export { Others, VrcMicMuteSyncContainer } from "./others/Others";
 export { AdvancedSettings } from "./advanced_settings/AdvancedSettings";
-export { Updater } from "./updater/Updater";
 export { Vr } from "./vr/Vr";
 export { Hotkeys } from "./hotkeys/Hotkeys";
 export { Plugins } from "./plugins/Plugins";
