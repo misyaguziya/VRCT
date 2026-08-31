@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import yaml
@@ -5,7 +6,10 @@ import yaml
 from models.translation.translation_utils import ctranslate2_weights
 
 
-LANGUAGES_YAML_PATH = "models/translation/translation_settings/languages/languages.yml"
+LANGUAGES_YAML_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "models", "translation", "translation_settings", "languages", "languages.yml",
+)
 
 
 class TestCTranslate2WeightDefinitions(unittest.TestCase):
