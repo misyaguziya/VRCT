@@ -5,6 +5,7 @@ import { useI18n } from "@useI18n";
 import {
     useStore_SelectedConfigTabId,
     useStore_IsBreakPoint,
+    useStore_OpenedQuickSetting,
 } from "@store";
 
 import MicSvg from "@images/mic.svg?react";
@@ -85,8 +86,17 @@ const TabIcon = ({ tab_id, className }) => {
 const Tab = (props) => {
     const { t } = useI18n();
     const { updateSelectedConfigTabId, currentSelectedConfigTabId } = useStore_SelectedConfigTabId();
+    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
 
     const onclickFunction = () => {
+        // The Updater tab is a shortcut into the update modal — it does not
+        // navigate to a settings page, so clicking it opens the modal instead
+        // of switching tabs. Kept in the sidebar so users still have an
+        // obvious entry point when no update-available banner is showing.
+        if (props.tab_id === "updater") {
+            updateOpenedQuickSetting("update_software");
+            return;
+        }
         updateSelectedConfigTabId(props.tab_id);
     };
 
