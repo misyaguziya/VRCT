@@ -639,6 +639,15 @@ Section Install
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
 
+  ; Optional download accelerator. NScurl (below) downloads over a single
+  ; connection, which the HuggingFace CDN throttles hard (~3MB/s from Asia) --
+  ; the GPU package then takes ~15-20 min. If aria2c.exe is placed in
+  ; src-tauri/nsis/tools/ it is used instead: 8 parallel range connections
+  ; (measured ~3-4x faster) with a live percent / speed / ETA readout. The
+  ; File below is /nonfatal, so the build still works when the binary is
+  ; absent; the installer then just falls back to NScurl at runtime.
+  !define ARIA2C_SRC "..\..\..\..\nsis\tools\aria2c.exe"
+
   ; Free-space budget (MiB) per edition. The compressed archive is written to
   ; %TEMP%, the extracted tree to $INSTDIR, and both exist at once during
   ; extraction, so a same-drive install needs DOWNLOAD + EXTRACT together.
@@ -726,18 +735,36 @@ Section Install
     Abort
   ${EndIf}
 
-  ; Download + extract is retried as a single unit. NScurl (libcurl-based)
-  ; replaces inetc::get, which is limited to files under 2GB -- the GPU package
-  ; is ~3.5GB. /BACKGROUND queues the transfer so this loop can poll and print
-  ; real progress (percent + MB via NScurl::query). The HuggingFace CDN is
-  ; flaky for multi-GB transfers (observed: a "completed" download truncated
-  ; mid-file), and that only surfaces when the unpack fails. So on ANY failure
-  ; (download error or an unpack that yields no ${MAINBINARYNAME}.exe) we
-  ; delete the archive and pull a completely fresh copy rather than resuming a
-  ; possibly-poisoned one.
+  ; Stage the optional accelerator into $PLUGINSDIR. /nonfatal: when
+  ; aria2c.exe is not in the repo this is just a build warning, and the
+  ; runtime FileExists check below then picks the NScurl path.
+  File /nonfatal "/oname=$PLUGINSDIR\aria2c.exe" "${ARIA2C_SRC}"
+
+  ; Download + extract is retried as a single unit: a transfer the downloader
+  ; reports as OK can still be truncated (the HuggingFace CDN does this on
+  ; multi-GB files), which only surfaces when the unpack fails. So on ANY
+  ; failure (download error, or an unpack that yields no ${MAINBINARYNAME}.exe)
+  ; we wipe the archive and pull a completely fresh copy.
   StrCpy $dl_retries 0
   install_attempt:
     Delete "$TEMP\$file_name"
+    Delete "$TEMP\$file_name.aria2"
+
+    ${If} ${FileExists} "$PLUGINSDIR\aria2c.exe"
+      ; --- Fast path: aria2c, 8 parallel connections, live %/speed/ETA ---
+      DetailPrint "Downloading $file_name (parallel)..."
+      nsExec::ExecToLog '"$PLUGINSDIR\aria2c.exe" --dir="$TEMP" --out="$file_name" --continue=true --max-connection-per-server=8 --split=8 --min-split-size=8M --max-tries=3 --retry-wait=3 --connect-timeout=30 --timeout=60 --file-allocation=none --allow-overwrite=true --auto-file-renaming=false --check-certificate=true --console-log-level=warn --summary-interval=2 --show-console-readout=true --download-result=hide "$cmder_dl"'
+      Pop $0
+      ${If} $0 == 0
+        Goto dl_ok
+      ${EndIf}
+      DetailPrint "aria2c failed (exit $0); falling back to single-stream download"
+      Delete "$TEMP\$file_name"
+      Delete "$TEMP\$file_name.aria2"
+    ${EndIf}
+
+    ; --- Fallback: NScurl single connection. /BACKGROUND lets this loop poll
+    ;     and print progress; /INSIST keeps retrying through brief drops.
     DetailPrint "Downloading $file_name..."
     NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
     Pop $dl_transfer_id
@@ -770,6 +797,7 @@ Section Install
       Goto attempt_failed
     ${EndIf}
 
+  dl_ok:
     DetailPrint "Extracting $file_name ..."
     ; NSIS unzip plugins (nsisunz, and Nsis7z regardless of its embedded 7-Zip
     ; version) use 32-bit file I/O in their glue code and silently fail on
@@ -805,6 +833,7 @@ Section Install
   install_ready:
   ; The archive is no longer needed once it is unpacked; reclaim the space.
   Delete "$TEMP\$file_name"
+  Delete "$TEMP\$file_name.aria2"
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
