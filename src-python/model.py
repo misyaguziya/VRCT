@@ -18,6 +18,7 @@ from threading import Thread
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
+from dataclasses import dataclass
 
 from flashtext import KeywordProcessor
 
@@ -74,6 +75,14 @@ def _cleanupFreezeTraceIfEmpty() -> None:
 
 
 atexit.register(_cleanupFreezeTraceIfEmpty)
+
+
+@dataclass
+class ReleaseInfo:
+    tag: str
+    version: str
+    is_prerelease: bool
+    published_at: str
 
 
 class _DiscardQueue(Queue):
@@ -1082,14 +1091,40 @@ class Model:
         return self.osc_handler.getIsOscQueryEnabled()
 
     @staticmethod
+    def _isVersionSupported(version_str: str) -> bool:
+        # VRCT 3.4.2 fails to start (fixed in 3.4.3); keep it out of both the
+        # update-check comparison and the version picker.
+        try:
+            return parse(version_str) >= parse(config.MIN_SUPPORTED_VERSION)
+        except Exception:
+            return False
+
+    @staticmethod
+    def _fetchGithubReleases() -> list:
+        # All releases (including prereleases), newest first, drafts excluded.
+        response = requests_get(config.GITHUB_RELEASES_LIST_URL)
+        response.raise_for_status()
+        releases = response.json()
+        if not isinstance(releases, list):
+            return []
+        return [r for r in releases if isinstance(r, dict) and not r.get("draft", False)]
+
+    @staticmethod
     def checkSoftwareUpdated():
         # check update
         update_flag = False
         version = ""
         try:
-            response = requests_get(config.GITHUB_URL)
-            json_data = response.json()
-            version = json_data.get("name", None)
+            if config.SELECTED_RELEASE_CHANNEL == "beta":
+                candidates = [
+                    r["name"] for r in Model._fetchGithubReleases()
+                    if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                ]
+                version = candidates[0] if candidates else None
+            else:
+                response = requests_get(config.GITHUB_URL)
+                json_data = response.json()
+                version = json_data.get("name", None)
             if isinstance(version, str):
                 new_version = parse(version)
                 current_version = parse(config.VERSION)
@@ -1101,6 +1136,29 @@ class Model:
             "is_update_available": update_flag,
             "new_version": version,
         }
+
+    @staticmethod
+    def listAvailableReleases() -> list:
+        # Version picker data source: all supported (>= MIN_SUPPORTED_VERSION)
+        # releases across both channels, newest first.
+        result = []
+        try:
+            for r in Model._fetchGithubReleases():
+                version = r.get("name")
+                tag = r.get("tag_name")
+                if not isinstance(version, str) or not isinstance(tag, str):
+                    continue
+                if not Model._isVersionSupported(version):
+                    continue
+                result.append(ReleaseInfo(
+                    tag=tag,
+                    version=version,
+                    is_prerelease=bool(r.get("prerelease", False)),
+                    published_at=str(r.get("published_at", "")),
+                ))
+        except Exception:
+            errorLogging()
+        return result
 
     @staticmethod
     def _downloadSetup() -> bool:
@@ -1133,19 +1191,39 @@ class Model:
         return False
 
     @staticmethod
-    def updateSoftware():
+    def updateSoftware(target_version: Optional[str] = None):
+        if target_version is not None and not Model._isVersionSupported(target_version):
+            return
         if Model._downloadSetup() is False:
             return
-        # run the NSIS setup wizard, preselecting the CPU edition
-        Popen(["VRCT_setup.exe", "/EDITION=cpu"], cwd=config.PATH_LOCAL)
+        # run the NSIS setup wizard, preselecting the CPU edition; pin to
+        # target_version when the user picked a specific release to install;
+        # carry over the current UI language so the installer chrome and the
+        # custom "UI Language" page start on the user's chosen language;
+        # carry over the current release channel so the installer's channel
+        # page defaults to what the user already has selected in VRCT.
+        args = ["VRCT_setup.exe", "/EDITION=cpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
+        if target_version:
+            args.append(f"/VERSION={target_version}")
+        Popen(args, cwd=config.PATH_LOCAL)
         Model._quitApp()
 
     @staticmethod
-    def updateCudaSoftware():
+    def updateCudaSoftware(target_version: Optional[str] = None):
+        if target_version is not None and not Model._isVersionSupported(target_version):
+            return
         if Model._downloadSetup() is False:
             return
-        # run the NSIS setup wizard, preselecting the GPU edition
-        Popen(["VRCT_setup.exe", "/EDITION=gpu"], cwd=config.PATH_LOCAL)
+        # run the NSIS setup wizard, preselecting the GPU edition; pin to
+        # target_version when the user picked a specific release to install;
+        # carry over the current UI language so the installer chrome and the
+        # custom "UI Language" page start on the user's chosen language;
+        # carry over the current release channel so the installer's channel
+        # page defaults to what the user already has selected in VRCT.
+        args = ["VRCT_setup.exe", "/EDITION=gpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
+        if target_version:
+            args.append(f"/VERSION={target_version}")
+        Popen(args, cwd=config.PATH_LOCAL)
         Model._quitApp()
 
     @staticmethod

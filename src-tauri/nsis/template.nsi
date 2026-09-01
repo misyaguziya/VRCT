@@ -150,23 +150,49 @@ Function PageChooseLanguage
     ${NSD_CB_AddString} $DropListLanguages "한국어"
     ${NSD_CB_AddString} $DropListLanguages "繁體中文"
     ${NSD_CB_AddString} $DropListLanguages "简体中文"
-    ${NSD_CB_SelectString} $DropListLanguages "English"
-    StrCpy $SelectedLangage "en"
+
+    ; Preselect based on /UILANG= (passed from the app when launched from
+    ; within VRCT). Falls back to English on first-time installs.
+    ${If} $UILang == "ja"
+        ${NSD_CB_SelectString} $DropListLanguages "日本語"
+        StrCpy $SelectedLangage "ja"
+    ${ElseIf} $UILang == "ko"
+        ${NSD_CB_SelectString} $DropListLanguages "한국어"
+        StrCpy $SelectedLangage "ko"
+    ${ElseIf} $UILang == "zh-Hant"
+        ${NSD_CB_SelectString} $DropListLanguages "繁體中文"
+        StrCpy $SelectedLangage "zh-Hant"
+    ${ElseIf} $UILang == "zh-Hans"
+        ${NSD_CB_SelectString} $DropListLanguages "简体中文"
+        StrCpy $SelectedLangage "zh-Hans"
+    ${Else}
+        ${NSD_CB_SelectString} $DropListLanguages "English"
+        StrCpy $SelectedLangage "en"
+    ${EndIf}
     nsDialogs::Show
 FunctionEnd
 
 Function PageLeaveChooseLanguage
+    ; When the user picks a language here, apply it to the rest of the
+    ; installer chrome too (Back/Next/Cancel etc.) by switching $LANGUAGE.
+    ; Pages already rendered before this one stay in their prior language;
+    ; subsequent MUI pages pick up the new $LANGUAGE at render time.
     ${NSD_GetText} $DropListLanguages $0
     ${If} "English" == $0
         StrCpy $SelectedLangage "en"
+        StrCpy $LANGUAGE ${LANG_ENGLISH}
     ${ElseIf} "日本語" == $0
         StrCpy $SelectedLangage "ja"
+        StrCpy $LANGUAGE ${LANG_JAPANESE}
     ${ElseIf} "한국어" == $0
         StrCpy $SelectedLangage "ko"
+        StrCpy $LANGUAGE ${LANG_KOREAN}
     ${ElseIf} "繁體中文" == $0
         StrCpy $SelectedLangage "zh-Hant"
+        StrCpy $LANGUAGE ${LANG_TRADCHINESE}
     ${ElseIf} "简体中文" == $0
         StrCpy $SelectedLangage "zh-Hans"
+        StrCpy $LANGUAGE ${LANG_SIMPCHINESE}
     ${EndIf}
 FunctionEnd
 
@@ -207,6 +233,13 @@ Function PageLeaveChooseEdition
         StrCpy $SelectedEdition "cpu"
     ${EndIf}
 FunctionEnd
+
+; Release channel (stable/beta) and specific-version pinning are controlled
+; only via the /CHANNEL= and /VERSION= CLI flags (set by VRCT's own Updater
+; tab -- see .onInit below and Section Install). Deliberately no GUI page
+; for these: a user who double-clicks setup.exe standalone just gets the
+; latest release of the channel this installer itself was published for,
+; with no extra decisions to make.
 
 !insertmacro MUI_PAGE_COMPONENTS
 
@@ -465,6 +498,9 @@ FunctionEnd
 !macroend
 
 Var PassiveMode
+Var TargetVersion
+Var UILang
+Var SelectedChannel
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode
   IfErrors +2 0
@@ -476,6 +512,53 @@ Function .onInit
   ${GetOptions} $CMDLINE "/EDITION=" $0
   IfErrors +2 0
     StrCpy $SelectedEdition $0
+
+  ; Pin the downloaded app package to a specific released version instead of
+  ; always fetching the latest from the HF "main" revision (e.g.
+  ; "/VERSION=3.4.2" for rollback). Falls back to latest when omitted.
+  ${GetOptions} $CMDLINE "/VERSION=" $0
+  IfErrors +2 0
+    StrCpy $TargetVersion $0
+
+  ; Default the release channel page to whatever channel this very
+  ; installer was itself built/published for (a setup.exe downloaded from
+  ; the beta GitHub release has "-beta"/"-rc" baked into ${VERSION}), so a
+  ; standalone run without any flags still lands on a sensible default.
+  ${StrLoc} $0 "${VERSION}" "-beta" ">"
+  ${If} $0 == ""
+    ${StrLoc} $0 "${VERSION}" "-rc" ">"
+  ${EndIf}
+  ${If} $0 == ""
+    StrCpy $SelectedChannel "stable"
+  ${Else}
+    StrCpy $SelectedChannel "beta"
+  ${EndIf}
+
+  ; Launched from within the app (e.g. the user is on the beta channel and
+  ; clicks "reinstall"/"switch edition"): use VRCT's current channel setting
+  ; instead of the baked-in default above.
+  ${GetOptions} $CMDLINE "/CHANNEL=" $0
+  IfErrors +2 0
+    StrCpy $SelectedChannel $0
+
+  ; Preselect the UI language when launched from within the app (e.g.
+  ; "/UILANG=ja" from the in-app updater). Both the installer chrome
+  ; (via MUI_LANGDLL_REGISTRY_VALUENAME) and the initial value of the
+  ; custom PageChooseLanguage default to it. The page is still shown so
+  ; the user can change their mind before installing.
+  ${GetOptions} $CMDLINE "/UILANG=" $UILang
+  ClearErrors
+  ${If} $UILang == "en"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1033"
+  ${ElseIf} $UILang == "ja"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1041"
+  ${ElseIf} $UILang == "ko"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1042"
+  ${ElseIf} $UILang == "zh-Hant"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1028"
+  ${ElseIf} $UILang == "zh-Hans"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "2052"
+  ${EndIf}
 
   !if "${DISPLAYLANGUAGESELECTOR}" == "true"
     !insertmacro MUI_LANGDLL_DISPLAY
@@ -635,7 +718,8 @@ Section Install
 
   !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
   ; 指定のURLからファイルをダウンロード
-  !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
+  !define SOFTWARE_RELEASE_REPO "ms-software/VRCT"
+  !define SOFTWARE_RELEASE_REPO_BETA "ms-software/VRCT-beta"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
 
@@ -659,6 +743,10 @@ Section Install
   Var /GLOBAL dl_tick
   Var /GLOBAL dl_percent
   Var /GLOBAL dl_xfersize
+  Var /GLOBAL release_revision
+  Var /GLOBAL release_repo
+  Var /GLOBAL effective_version
+  Var /GLOBAL beta_marker_pos
   Var /GLOBAL req_dl_mb
   Var /GLOBAL req_extract_mb
   Var /GLOBAL dl_total
@@ -711,7 +799,38 @@ Section Install
     ${EndIf}
   ${EndIf}
 
-  StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
+  ; Pin to a specific released version's HF tag (e.g. "/VERSION=3.4.2" -> tag
+  ; "v3.4.2", or typed into the release-channel page) when requested for
+  ; rollback; otherwise fetch the latest from the selected channel's "main".
+  ${If} $TargetVersion != ""
+    StrCpy $release_revision "v$TargetVersion"
+    StrCpy $effective_version $TargetVersion
+
+    ; Beta versions (e.g. "3.5.0-beta.1") are published to a separate HF repo,
+    ; not the production one -- an explicit pinned version routes by its own
+    ; string, regardless of which channel radio button is selected, since a
+    ; given tag only ever exists in one of the two repos.
+    ${StrLoc} $beta_marker_pos $effective_version "-beta" ">"
+    ${If} $beta_marker_pos == ""
+      ${StrLoc} $beta_marker_pos $effective_version "-rc" ">"
+    ${EndIf}
+    ${If} $beta_marker_pos == ""
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+    ${Else}
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+    ${EndIf}
+  ${Else}
+    ; No specific version pinned -- fetch the latest from whichever channel
+    ; the user picked on the release-channel page.
+    StrCpy $release_revision "main"
+    ${If} $SelectedChannel == "beta"
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+    ${Else}
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+    ${EndIf}
+  ${EndIf}
+
+  StrCpy $cmder_dl "https://huggingface.co/$release_repo/resolve/$release_revision/$file_name"
   DetailPrint "Got URL : $cmder_dl"
 
   ; The archive is unpacked with Windows' bundled bsdtar (see below). Bail out

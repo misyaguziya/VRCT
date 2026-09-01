@@ -754,6 +754,14 @@ export const SETTINGS_ARRAY = [
         logics_template_id: "toggle_enable_disable",
         base_endpoint_name: "telemetry",
     },
+    {
+        Category: "Updater",
+        Base_Name: "ReleaseChannel",
+        default_value: "stable",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "release_channel",
+    },
 
     // AdvancedSettings
     {

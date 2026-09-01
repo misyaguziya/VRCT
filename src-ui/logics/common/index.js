@@ -1,4 +1,5 @@
 export { useSoftwareVersion } from "./useSoftwareVersion";
+export { useAvailableReleases } from "./useAvailableReleases";
 export { useComputeMode } from "./useComputeMode";
 export { useInitProgress } from "./useInitProgress";
 export { useIsBackendReady } from "./useIsBackendReady";

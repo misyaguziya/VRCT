@@ -15,6 +15,76 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Get version from tag
+        id: get_version
+        shell: pwsh
+        run: |
+          $TAG_WITH_V = $env:GITHUB_REF -replace "^refs/tags/", ""
+          $VERSION_NUM = $TAG_WITH_V -replace "^v", ""
+          echo "VERSION=$VERSION_NUM" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Determine release channel
+        id: channel
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_name }}" -match "-(beta|rc)") {
+            echo "is_beta=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            echo "hf_repo=ms-software/VRCT-beta" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          } else {
+            echo "is_beta=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            echo "hf_repo=ms-software/VRCT" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
+
+      - name: Verify version numbers match the tag
+        shell: pwsh
+        run: |
+          $expected = $env:VERSION
+          $failed = $false
+
+          $pkgVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($pkgVersion -ne $expected) {
+            Write-Host "::error::package.json version ($pkgVersion) does not match tag version ($expected)"
+            $failed = $true
+          }
+
+          $tauriVersion = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          if ($tauriVersion -ne $expected) {
+            Write-Host "::error::src-tauri/tauri.conf.json version ($tauriVersion) does not match tag version ($expected)"
+            $failed = $true
+          }
+
+          $configContent = Get-Content src-python/config.py -Raw
+          if ($configContent -notmatch 'self\._VERSION\s*=\s*"([^"]+)"') {
+            Write-Host "::error::could not find self._VERSION in src-python/config.py"
+            $failed = $true
+          } elseif ($Matches[1] -ne $expected) {
+            Write-Host "::error::src-python/config.py VERSION ($($Matches[1])) does not match tag version ($expected)"
+            $failed = $true
+          }
+
+          if ($failed) {
+            Write-Host "::error::Version mismatch detected. Bump every version field to $expected before tagging."
+            exit 1
+          }
+
+      - name: Verify build channel matches the tag
+        shell: pwsh
+        run: |
+          $isBeta = "${{ steps.channel.outputs.is_beta }}" -eq "true"
+          $expectedChannel = if ($isBeta) { "beta" } else { "stable" }
+
+          $content = Get-Content src-python/build_channel.py -Raw
+          if ($content -notmatch 'BUILD_CHANNEL\s*=\s*"([^"]+)"') {
+            Write-Host "::error::could not find BUILD_CHANNEL in src-python/build_channel.py"
+            exit 1
+          }
+          $actualChannel = $Matches[1]
+
+          if ($actualChannel -ne $expectedChannel) {
+            Write-Host "::error::BUILD_CHANNEL is '$actualChannel' but tag '${{ github.ref_name }}' implies '$expectedChannel'. Fix src-python/build_channel.py before tagging."
+            exit 1
+          }
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -44,14 +114,6 @@ jobs:
       - name: Build and package
         run: npm run release-all
 
-      - name: Get version from tag
-        id: get_version
-        shell: pwsh
-        run: |
-          $TAG_WITH_V = $env:GITHUB_REF -replace "^refs/tags/", ""
-          $VERSION_NUM = $TAG_WITH_V -replace "^v", ""
-          echo "VERSION=$VERSION_NUM" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
       - name: Upload to Hugging Face Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -65,9 +127,9 @@ jobs:
           Copy-Item -Path ./VRCT_cuda.zip -Destination "$UPLOAD_DIR/VRCT_cuda.zip"
           Copy-Item -Path "./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe" -Destination "$UPLOAD_DIR/VRCT_setup.exe"
 
-          hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ms-software/VRCT $UPLOAD_DIR
+          hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ${{ steps.channel.outputs.hf_repo }} $UPLOAD_DIR
 
-          hf repo tag create ms-software/VRCT ${{ github.ref_name }} --repo-type model --message "Release ${{ github.ref_name }}"
+          hf repo tag create ${{ steps.channel.outputs.hf_repo }} ${{ github.ref_name }} --repo-type model --message "Release ${{ github.ref_name }}"
 
           Remove-Item -Recurse -Force $UPLOAD_DIR
 
@@ -80,7 +142,7 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ env.VERSION }}
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.channel.outputs.is_beta }}
 
       - name: Upload Release Asset (NSIS Installer)
         uses: actions/upload-release-asset@v1

@@ -57,7 +57,14 @@
             "nsis": {
                 "template": "nsis/template.nsi",
                 "installMode": "currentUser",
-                "displayLanguageSelector": true
+                "displayLanguageSelector": true,
+                "languages": [
+                    "English",
+                    "Japanese",
+                    "Korean",
+                    "TradChinese",
+                    "SimpChinese"
+                ]
             }
         }
     }
