@@ -59,3 +59,4 @@ CLAUDE.md
 .claude/
 docs/adr/
 src-python/docs/ref/
+src-python/telemetry_state.json
