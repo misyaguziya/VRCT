@@ -2,6 +2,7 @@ import atexit
 import copy
 import asyncio
 import faulthandler
+import hashlib
 import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
@@ -1242,8 +1243,73 @@ class Model:
             errorLogging()
         return result
 
+    # setup.exe と一緒に CI が公開する SHA-256 サイドカーアセットのファイル名
+    # サフィックス。release.yml 側で <installer名>.sha256 という名前で
+    # 追加アップロードしている前提。
+    _SHA256_ASSET_SUFFIX = ".sha256"
+
     @staticmethod
-    def _downloadSetup() -> bool:
+    def _resolveReleaseForVersion(target_version: Optional[str] = None) -> Optional[dict]:
+        # target_version (完全なバージョン文字列) に対応する GitHub Release
+        # オブジェクト (assets を含む) を返す。target_version が None の
+        # 場合は checkSoftwareUpdated() と同じロジックで、現在の
+        # SELECTED_RELEASE_CHANNEL における最新版の Release を返す。
+        # 見つからない/取得失敗の場合は None。
+        try:
+            if target_version is not None:
+                for r in Model._fetchGithubReleases():
+                    if r.get("name") == target_version:
+                        return r
+                return None
+            if config.SELECTED_RELEASE_CHANNEL == "beta":
+                candidates = [
+                    r for r in Model._fetchGithubReleases()
+                    if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                ]
+                return candidates[0] if candidates else None
+            response = requests_get(config.GITHUB_URL, timeout=_HTTP_TIMEOUT)
+            response.raise_for_status()
+            data = response.json()
+            return data if isinstance(data, dict) else None
+        except Exception:
+            errorLogging()
+            return None
+
+    @staticmethod
+    def _fetchExpectedSha256(release: Optional[dict]) -> Optional[str]:
+        # release の assets から "<setup.exe名>.sha256" というサイドカー
+        # アセットを探し、中身 (16進ダイジェスト文字列) を取得して返す。
+        # release.yml が SHA-256 を公開するようになる前の古いリリースには
+        # このアセットが存在しないため、その場合は None を返す。呼び出し側
+        # はこれを「検証不能」として扱い、サイズチェックのみへフォール
+        # バックする (古いバージョンの再インストール/ダウングレードが
+        # 完全にできなくなるのを避けるため)。
+        if not isinstance(release, dict):
+            return None
+        assets = release.get("assets")
+        if not isinstance(assets, list):
+            return None
+        for asset in assets:
+            if not isinstance(asset, dict):
+                continue
+            name = asset.get("name")
+            if not isinstance(name, str) or not name.endswith(Model._SHA256_ASSET_SUFFIX):
+                continue
+            url = asset.get("browser_download_url")
+            if not isinstance(url, str):
+                continue
+            try:
+                res = requests_get(url, timeout=_HTTP_TIMEOUT)
+                res.raise_for_status()
+                digest = res.text.strip().split()[0].lower()
+                if len(digest) == 64 and all(c in "0123456789abcdef" for c in digest):
+                    return digest
+            except Exception:
+                errorLogging()
+        return None
+
+    @staticmethod
+    def _downloadSetup(expected_sha256: Optional[str] = None) -> bool:
         # try to download at most 5 times
         program_name = "VRCT_setup.exe"
         current_directory = config.PATH_LOCAL
@@ -1256,12 +1322,31 @@ class Model:
                 res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
                 downloaded_size = 0
+                hasher = hashlib.sha256()
                 with open(dest_path, 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
+                        hasher.update(chunk)
                         downloaded_size += len(chunk)
                 if downloaded_size < min_valid_size:
                     raise ValueError(f"Downloaded setup file is too small ({downloaded_size} bytes); likely not a valid installer")
+                if expected_sha256 is not None:
+                    actual_sha256 = hasher.hexdigest()
+                    if actual_sha256 != expected_sha256:
+                        # ハッシュ不一致は改ざん/破損の疑いであり、通信起因
+                        # の一時的な失敗とは性質が異なる (同じレスポンスを
+                        # 再試行しても無意味、あるいは攻撃者に汚染された
+                        # 配信元を再度信頼することになりかねない) ため、
+                        # リトライループには乗せず即座に失敗として扱う。
+                        printLog(
+                            "Setup file SHA-256 mismatch: expected "
+                            f"{expected_sha256}, got {actual_sha256}. Aborting update."
+                        )
+                        try:
+                            os_remove(dest_path)
+                        except Exception:
+                            errorLogging()
+                        return False
                 return True
             except Exception:
                 errorLogging()
@@ -1276,7 +1361,14 @@ class Model:
     def updateSoftware(target_version: Optional[str] = None):
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
-        if Model._downloadSetup() is False:
+        release = Model._resolveReleaseForVersion(target_version)
+        expected_sha256 = Model._fetchExpectedSha256(release)
+        if expected_sha256 is None:
+            printLog(
+                "Setup file SHA-256 could not be verified (no .sha256 asset found for "
+                f"{target_version or 'the latest release'}); falling back to size-only validation"
+            )
+        if Model._downloadSetup(expected_sha256) is False:
             return
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1294,7 +1386,14 @@ class Model:
     def updateCudaSoftware(target_version: Optional[str] = None):
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
-        if Model._downloadSetup() is False:
+        release = Model._resolveReleaseForVersion(target_version)
+        expected_sha256 = Model._fetchExpectedSha256(release)
+        if expected_sha256 is None:
+            printLog(
+                "Setup file SHA-256 could not be verified (no .sha256 asset found for "
+                f"{target_version or 'the latest release'}); falling back to size-only validation"
+            )
+        if Model._downloadSetup(expected_sha256) is False:
             return
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
         # target_version when the user picked a specific release to install;
