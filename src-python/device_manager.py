@@ -81,6 +81,12 @@ class Client(MMNotificationClient):
 class DeviceManager:
     _instance = None
 
+    # monitoring() が通知待ちに使う最長タイムアウト。COM が万一通知を
+    # 落とした場合の保険、および COM 未登録時 (非 Windows / 登録失敗) の
+    # ポーリング間隔として機能する。テストで小さい値に差し替えられるよう
+    # クラス定数にしている。
+    _MONITOR_WAIT_TIMEOUT_SEC: float = 2.0
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DeviceManager, cls).__new__(cls)
@@ -158,6 +164,17 @@ class DeviceManager:
         # ここでダミーを 1 個用意しておく。
         self._notify_event: Event = Event()
         self.th_monitoring: Optional[Thread] = None
+
+        # setMicAutoActive/setSpeakerAutoActive/monitoring スレッドと
+        # tracker の起動・停止を直列化するロック。pyaudio_op_lock とは別物
+        # (WASAPI/PortAudio 操作用) で、こちらは「フラグの読み書き」と
+        # 「monitoring スレッド・tracker の起動/停止判断」を保護する。
+        # このロックを保持したまま pyaudio_op_lock を新規に取得すること
+        # はない (tracker.stop()/monitoring スレッドの join は、それらが
+        # 内部で pyaudio_op_lock を保持中でも待つだけで、こちら側から
+        # 追加で pyaudio_op_lock を取りに行かないため、両ロック間に
+        # 循環待ちは生じない)。
+        self._lifecycle_lock: Lock = Lock()
 
         # Auto Select 状態を mic/speaker で独立管理する。
         # 監視スレッド自体は 1 本 (update() が両方のリストを一括で refresh する
@@ -335,48 +352,62 @@ class DeviceManager:
         (b) 変化しないケースでは 20s 待ち続けてもリソース浪費なだけ、
         (c) その間 stop_event を見ないので OFF 応答が遅くなる、という
         3 点の理由で削除した。update() 一発と noticeUpdate で必要十分。
+
+        COM 登録について: 以前はこのループの反復ごと (=通知を受けるたび) に
+        CoInitialize → RegisterEndpointNotificationCallback →
+        UnregisterEndpointNotificationCallback → CoUninitialize を
+        繰り返していた。IMMNotificationClient は元々「スレッド生存中は
+        登録しっぱなしにし、変更があれば COM 側が勝手にコールバックを
+        呼んでくる」設計 (fire-and-forget) で使うのが Microsoft の想定する
+        使い方であり、同じファイル内の ActiveEndpointTracker._run() も
+        その作法 (CoInitialize/CoUninitialize をスレッド開始・終了時に
+        1 回ずつ) に従っている。ここも合わせ、COM 登録・CoInitialize は
+        スレッド開始時に 1 回だけ行い、スレッド終了時に 1 回だけ後始末する。
         """
+        com_initialized = False
+        com_registered = False
+        cb = None
+        enumerator = None
+        if comtypes is not None and AudioUtilities is not None:
+            try:
+                comtypes.CoInitialize()
+                com_initialized = True
+                cb = Client(self._notify_event)
+                enumerator = AudioUtilities.GetDeviceEnumerator()
+                enumerator.RegisterEndpointNotificationCallback(cb)
+                com_registered = True
+            except Exception:
+                # COM 監視の初期化に失敗したらポーリング fallback に落ちる。
+                errorLogging()
+                if com_initialized and not com_registered:
+                    try:
+                        comtypes.CoUninitialize()
+                    except Exception:
+                        pass
+                    com_initialized = False
+
         try:
             while not self._stop_event.is_set():
                 try:
                     self._notify_event.clear()
-
-                    # COM が使える環境では endpoint 通知で wait、そうでなければ
-                    # 一定周期のポーリングで代替する。stop_event を wait 相手に
-                    # 混ぜているのは、COM が反応しなくても stop で即抜けるため。
-                    if comtypes is not None and AudioUtilities is not None:
-                        try:
-                            comtypes.CoInitialize()
-                            cb = Client(self._notify_event)
-                            enumerator = AudioUtilities.GetDeviceEnumerator()
-                            enumerator.RegisterEndpointNotificationCallback(cb)
-                            # 通知 or stop のいずれかで即抜ける。最長 2s の
-                            # タイムアウトは COM が万一通知を落とした場合の保険。
-                            while not self._notify_event.wait(timeout=2.0):
-                                if self._stop_event.is_set():
-                                    break
-                            try:
-                                enumerator.UnregisterEndpointNotificationCallback(cb)
-                            except Exception:
-                                # best-effort unregister
-                                pass
-                            comtypes.CoUninitialize()
-                        except Exception:
-                            # COM 監視が失敗したらポーリング fallback に落ちる
-                            errorLogging()
-                            self._stop_event.wait(timeout=2.0)
-                    else:
-                        # 非 Windows fallback: 単純ポーリング
-                        self._stop_event.wait(timeout=2.0)
-
+                    # 通知 or stop のいずれかで即抜ける。COM 登録済みなら
+                    # 通知は Client の on_* コールバックが直接 set する。
+                    # 最長 2s のタイムアウトは COM が万一通知を落とした場合の
+                    # 保険 (com_registered が False の場合はこれ自体が
+                    # ポーリング間隔として機能する)。
+                    notified = self._notify_event.wait(timeout=self._MONITOR_WAIT_TIMEOUT_SEC)
                     if self._stop_event.is_set():
                         break
+                    if not notified and com_registered:
+                        # COM 登録済みなのに単なるタイムアウト (通知は来て
+                        # いない) → 何もせず次の wait に戻る。
+                        continue
 
-                    # 通知を受けた直後のデバイス一覧再構築フェーズ。
-                    # Before/After callback は Auto がアクティブな側のみ発火。
-                    # 相手側の Auto は無効な状態でも、update() は両方の
-                    # デバイスリストを refresh する (副作用の少ない読み取り
-                    # なので always-run)。
+                    # 通知を受けた直後 (または COM 未登録時の定期ポーリング)
+                    # のデバイス一覧再構築フェーズ。Before/After callback は
+                    # Auto がアクティブな側のみ発火。相手側の Auto は無効な
+                    # 状態でも、update() は両方のデバイスリストを refresh
+                    # する (副作用の少ない読み取りなので always-run)。
                     if self._mic_auto_active:
                         self.runProcessBeforeUpdateMicDevices()
                     if self._speaker_auto_active:
@@ -394,8 +425,26 @@ class DeviceManager:
                     self._stop_event.wait(timeout=0.5)
         except Exception:
             errorLogging()
+        finally:
+            if com_registered:
+                try:
+                    enumerator.UnregisterEndpointNotificationCallback(cb)
+                except Exception:
+                    # best-effort unregister
+                    pass
+            if com_initialized:
+                try:
+                    comtypes.CoUninitialize()
+                except Exception:
+                    pass
 
     def startMonitoring(self):
+        """公開 API。単体で呼ばれても安全なよう _lifecycle_lock を取る。"""
+        with self._lifecycle_lock:
+            self._startMonitoringLocked()
+
+    def _startMonitoringLocked(self) -> None:
+        """_lifecycle_lock を既に保持している前提の内部実装。"""
         # 既に稼働中なら何もしない (冪等)
         if not self._stop_event.is_set() and self.th_monitoring is not None and self.th_monitoring.is_alive():
             return
@@ -404,7 +453,9 @@ class DeviceManager:
         # 状態だけ clear する。以前は毎回 Event() で作り直していたが、
         # startMonitoring と stopMonitoring が並行実行された場合に
         # stopMonitoring が古い Event を set し、新しく起動したスレッドは
-        # 新 Event を wait したまま起きられない、という race が発生していた。
+        # 新 Event を wait したまま起きられない、という race が発生していた
+        # (_lifecycle_lock 導入後もこのイベント自体の再生成をしない設計は
+        # そのまま維持する)。
         self._notify_event.clear()
         self.th_monitoring = Thread(target=self.monitoring, daemon=True)
         self.th_monitoring.start()
@@ -415,25 +466,36 @@ class DeviceManager:
         監視スレッドの起動/停止判断はここで完結させ、controller 側が
         相手側 (speaker) の状態を見て判断する必要を無くす。同時に、
         アクティブエンドポイント追跡 tracker の起動/停止も切り替える。
+
+        _lifecycle_lock で flag 更新〜tracker 起動/停止〜monitoring 起動/停止
+        判断までを 1 つの原子操作にする。setMicAutoActive/setSpeakerAutoActive
+        は別々のエンドポイント (mainloop のロック) から並行に呼ばれ得るため、
+        ここでロックしないと (a) 両方が同時に monitoring スレッドを起動して
+        2 本走る、(b) 片方が active フラグを書く前にもう片方が
+        「両方 inactive」と誤判定して monitoring を止める、といった競合が
+        起きる。
         """
-        self._mic_auto_active = active
-        if active:
-            self._startMicEndpointTracker()
-        else:
-            self._stopMicEndpointTracker()
-        self._syncMonitoringLifecycle()
+        with self._lifecycle_lock:
+            self._mic_auto_active = active
+            if active:
+                self._startMicEndpointTrackerLocked()
+            else:
+                self._stopMicEndpointTrackerLocked()
+            self._syncMonitoringLifecycleLocked()
 
     def setSpeakerAutoActive(self, active: bool) -> None:
         """Auto Speaker Select の有効/無効を DeviceManager 側で受け取る。
         詳細は setMicAutoActive のコメント参照。"""
-        self._speaker_auto_active = active
-        if active:
-            self._startSpeakerEndpointTracker()
-        else:
-            self._stopSpeakerEndpointTracker()
-        self._syncMonitoringLifecycle()
+        with self._lifecycle_lock:
+            self._speaker_auto_active = active
+            if active:
+                self._startSpeakerEndpointTrackerLocked()
+            else:
+                self._stopSpeakerEndpointTrackerLocked()
+            self._syncMonitoringLifecycleLocked()
 
-    def _startMicEndpointTracker(self) -> None:
+    def _startMicEndpointTrackerLocked(self) -> None:
+        """_lifecycle_lock を既に保持している前提の内部実装。"""
         if self._mic_endpoint_tracker is not None:
             return
         # pyaudio_op_lock を渡して、tracker の COM 呼び出しと Recorder の
@@ -443,13 +505,15 @@ class DeviceManager:
         tracker.start()
         self._mic_endpoint_tracker = tracker
 
-    def _stopMicEndpointTracker(self) -> None:
+    def _stopMicEndpointTrackerLocked(self) -> None:
+        """_lifecycle_lock を既に保持している前提の内部実装。"""
         tracker = self._mic_endpoint_tracker
         self._mic_endpoint_tracker = None
         if tracker is not None:
             tracker.stop()
 
-    def _startSpeakerEndpointTracker(self) -> None:
+    def _startSpeakerEndpointTrackerLocked(self) -> None:
+        """_lifecycle_lock を既に保持している前提の内部実装。"""
         if self._speaker_endpoint_tracker is not None:
             return
         tracker = ActiveEndpointTracker("render", com_lock=pyaudio_op_lock)
@@ -457,7 +521,8 @@ class DeviceManager:
         tracker.start()
         self._speaker_endpoint_tracker = tracker
 
-    def _stopSpeakerEndpointTracker(self) -> None:
+    def _stopSpeakerEndpointTrackerLocked(self) -> None:
+        """_lifecycle_lock を既に保持している前提の内部実装。"""
         tracker = self._speaker_endpoint_tracker
         self._speaker_endpoint_tracker = None
         if tracker is not None:
@@ -621,20 +686,27 @@ class DeviceManager:
                 return d["name"]
         return None
 
-    def _syncMonitoringLifecycle(self) -> None:
+    def _syncMonitoringLifecycleLocked(self) -> None:
         """mic/speaker の active フラグに応じて monitoring スレッドを起動/停止。
 
         少なくとも 1 サイドが active なら起動、両方 inactive なら停止。
         個々の設定変更 (setMicAutoActive/setSpeakerAutoActive) の後に呼ぶ。
+        _lifecycle_lock を既に保持している前提の内部実装。
         """
         any_active = self._mic_auto_active or self._speaker_auto_active
         if any_active:
-            self.startMonitoring()
+            self._startMonitoringLocked()
         else:
-            self.stopMonitoring()
+            self._stopMonitoringLocked()
 
     def stopMonitoring(self):
+        """公開 API。単体で呼ばれても安全なよう _lifecycle_lock を取る。"""
+        with self._lifecycle_lock:
+            self._stopMonitoringLocked()
+
+    def _stopMonitoringLocked(self) -> None:
         """非ブロッキング stop。event を set して短時間だけ join を試みる。
+        _lifecycle_lock を既に保持している前提の内部実装。
 
         以前は join(timeout=5) だったが、内部ループが flag を最大 20s 見て
         いなかったため endpoint 呼び出しが 5s 丸ごとブロックされていた。

@@ -152,7 +152,7 @@ class TestShutdownStopsAutoSelectTrackers(unittest.TestCase):
         self.assertIn(("setMicAutoActive", False), calls)
         self.assertIn(("setSpeakerAutoActive", False), calls)
         # tracker を明示停止してから stopMonitoring() を呼ぶこと
-        # (逆順だと _syncMonitoringLifecycle が「もう片方はまだ active」と
+        # (逆順だと _syncMonitoringLifecycleLocked が「もう片方はまだ active」と
         # 見て監視スレッドを再起動してしまう、詳細は shutdown() のコメント参照)。
         self.assertLess(calls.index(("setMicAutoActive", False)), calls.index(("stopMonitoring",)))
         self.assertLess(calls.index(("setSpeakerAutoActive", False)), calls.index(("stopMonitoring",)))

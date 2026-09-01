@@ -147,7 +147,7 @@ class Controller:
         # まま COM ポインタが破棄されて access violation
         # (Exception ignored in: _compointer_base.__del__) を起こす経路が
         # 残る。stopMonitoring() より前に呼ぶ: 後で呼ぶと
-        # _syncMonitoringLifecycle() が「もう片方はまだ active」と見て
+        # _syncMonitoringLifecycleLocked() が「もう片方はまだ active」と見て
         # 監視スレッドを再起動してしまう。
         try:
             device_manager.setMicAutoActive(False)
