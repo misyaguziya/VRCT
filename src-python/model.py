@@ -271,7 +271,14 @@ class _AudioDeviceSession:
 
         same_features = new_features == self.features
         same_device = self._device_key(resolved_device) == self._device_key(self._active_device)
-        already_running = (not new_features) or (self._recorder is not None)
+        # `_recorder is not None` だけでは、_start() が Recorder を生成した
+        # 直後 (listener 起動前) に例外で失敗したケースを "起動済み" と誤認
+        # してしまう (P0-2)。_start() は失敗時に必ず _recorder を None へ
+        # 巻き戻すので通常はこの2つの判定は同じ結果になるが、"listener が
+        # 実際に走っているか" という本来知りたい条件をそのまま書いておく。
+        already_running = (not new_features) or (
+            self._recorder is not None and self._recorder.stop is not None
+        )
         if same_features and same_device and already_running:
             return
 
@@ -281,14 +288,14 @@ class _AudioDeviceSession:
             self._start(device=resolved_device)
 
     def pause(self) -> None:
-        if self._recorder is not None:
+        if self._recorder is not None and callable(self._recorder.pause):
             self._recorder.pause()
 
     def resume(self) -> None:
         if isinstance(self._audio_queue, Queue):
             while not self._audio_queue.empty():
                 self._audio_queue.get()
-        if self._recorder is not None:
+        if self._recorder is not None and callable(self._recorder.resume):
             self._recorder.resume()
 
     @property
@@ -314,12 +321,33 @@ class _AudioDeviceSession:
         # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
         self._active_device = device
 
-        self._recorder = self._create_recorder(device)
+        try:
+            self._recorder = self._create_recorder(device)
 
-        audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
-        energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
-        self._audio_queue = audio_queue
-        self._recorder.recordIntoQueue(audio_queue, energy_queue)
+            audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
+            energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
+            self._audio_queue = audio_queue
+            self._recorder.recordIntoQueue(audio_queue, energy_queue)
+        except Exception:
+            # デバイスが処理中に切断される (実機で OSError: device gone を
+            # 確認済み) 等で Recorder の生成/listener 起動が途中失敗すると、
+            # 以前は self._recorder が非 None のまま残り、reconfigure() の
+            # already_running 判定が「起動済み」と誤認してしまっていた
+            # (P0-2)。ユーザーが文字起こしを OFF→ON しても永久に復帰しない
+            # 原因だったため、自分が触った内部状態を全て「何も起動していない」
+            # 状態へ巻き戻してから再送出する。
+            #
+            # features も合わせてリセットする: reconfigure() は _start() を
+            # 呼ぶ前に self.features = new_features を代入済みだが、実際には
+            # 何も起動できていないため、ここでリセットしないと
+            # self._mic_session.features 等を直接参照する呼び出し元
+            # (例: startMicTranscript) が「起動できた」と誤認しうる。
+            self._recorder = None
+            self._transcriber = None
+            self._audio_queue = None
+            self._active_device = None
+            self.features = set()
+            raise
 
         if "transcript" in self.features:
             self._transcriber = self._create_transcriber()
@@ -381,8 +409,14 @@ class _AudioDeviceSession:
             self._energy_progressbar.join()
             self._energy_progressbar = None
         if self._recorder is not None:
-            self._recorder.resume()
-            self._recorder.stop()
+            # _start() のロールバックにより通常はここに来ないはずだが、
+            # 万一 recordIntoQueue() が listener 起動前に失敗した Recorder
+            # (resume/stop がまだ None のまま) が渡ってきても TypeError で
+            # _stop() 自体を失敗させないよう callable() で防御する。
+            if callable(self._recorder.resume):
+                self._recorder.resume()
+            if callable(self._recorder.stop):
+                self._recorder.stop()
             self._recorder = None
         self._transcriber = None
         self._audio_queue = None
