@@ -624,8 +624,11 @@ class Config:
             os_replace(tmp_path, self.PATH_CONFIG)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
-        self._config_data[key] = value
-
+        # 実際に永続化される値は saveConfigToFile() が毎回
+        # json_serializable_vars から丸ごと再構成するため、ここで
+        # self._config_data を直接書き換えても次の保存で必ず上書き
+        # される (以前あった self._config_data[key] = value は
+        # 何も読まれない dead code だったため削除)。
         with self._file_lock:
             if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
                 self._timer.cancel()
