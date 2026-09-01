@@ -417,6 +417,8 @@ config_page:
             label: "WebSocket 主機"
         websocket_port:
             label: "WebSocket 連接埠"
+        websocket_url:
+            label: "WebSocket URL（點擊複製）"
         obs_browser_source:
             section_label: "OBS 瀏覽器來源"
         enable_obs_browser_source:
