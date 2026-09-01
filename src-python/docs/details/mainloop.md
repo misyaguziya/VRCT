@@ -155,7 +155,7 @@ receiver() -> None
 - パースエラーの適切な処理
 
 ```python
-handleRequest(endpoint: str, data: Any = None) -> tuple
+_call_handler(endpoint: str, data: Any = None) -> tuple
 ```
 
 - エンドポイント処理の実行
@@ -215,11 +215,11 @@ main_instance.controller.init()
 
 ```python
 # エンドポイントの直接呼び出し
-result, status = main_instance.handleRequest("/get/data/version", None)
+result, status = main_instance._call_handler("/get/data/version", None)
 print(f"バージョン: {result}")
 
 # 翻訳機能の有効化
-result, status = main_instance.handleRequest("/set/enable/translation", None)
+result, status = main_instance._call_handler("/set/enable/translation", None)
 ```
 
 ### 標準入力からの処理

@@ -585,30 +585,6 @@ class Main:
         th_receiver.start()
         self._threads.append(th_receiver)
 
-    def handleRequest(self, endpoint: str, data: Any = None) -> tuple:
-        result = None  # デフォルト値を設定
-        status = 500   # デフォルト値を設定
-
-        handler = self.mapping.get(endpoint)
-        if handler is None:
-            response = "Invalid endpoint"
-            status = 404
-        elif handler["status"] is False:
-            response = "Locked endpoint"
-            status = 423
-        else:
-            try:
-                response = handler["variable"](data)
-                status = response.get("status")
-                result = response.get("result")
-                time.sleep(0.2)  # 処理の安定化のために少し待機
-            except Exception:
-                errorLogging()
-                result = "Internal error"
-                status = 500
-
-        return result, status
-
     def _call_handler(self, endpoint: str, data: Any = None) -> tuple:
         result = None
         status = 500
