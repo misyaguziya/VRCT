@@ -63,6 +63,7 @@ main_page:
     updating: "Now updating..."
 
 update_modal:
+    # Legacy keys (still used by other surfaces)
     cpu_desc: "Use CPU only as the compute device."
     cuda_desc: "Selectable between CPU and NVIDIA GPUs as compute devices."
     cuda_compare_cpu_desc: "GPUs offer faster processing than CPUs."
@@ -71,6 +72,38 @@ update_modal:
     download_latest_and_restart: "The latest version will be downloaded,\nand the app will automatically restart."
     is_latest_version_already: "Already using the latest version"
     is_current_compute_device: "The version currently in use"
+    # New UpdateModal (unified with the former Updater tab)
+    title: "Update"
+    hero_update_available: "UPDATE AVAILABLE"
+    hero_up_to_date: "LATEST"
+    hero_up_to_date_desc: "You are on the latest version — no update needed."
+    hero_custom_pending: "REVIEW YOUR CHANGES"
+    current_prefix: "Current: "
+    channel_stable: "Stable"
+    channel_beta: "Beta"
+    compute_mode_cpu: "CPU"
+    compute_mode_gpu: "GPU (CUDA)"
+    beta_suffix: "Beta"
+    latest_suffix: "Latest"
+    install_latest_button: "Install Now"
+    install_button: "Install with These Choices"
+    close_button: "Close"
+    section_pick_variant: "Pick a different version or build"
+    refresh_button: "Refresh"
+    refresh_button_title: "Fetch the latest release list"
+    channel_label: "Release channel"
+    channel_desc: "Beta gives you early access but may be less stable."
+    compute_mode_label: "Device build"
+    compute_mode_desc: "GPU (CUDA) runs faster on NVIDIA GPUs but adds ~5 GB to the download."
+    version_label: "Version to install"
+    version_desc: "Pick from releases published on the selected channel."
+    no_versions_available: "No releases are available on the selected channel yet."
+    change_col_current: "Current"
+    change_col_after: "After install"
+    warn_downgrade: "This is a downgrade from {{from}} to {{to}}. Config file compatibility is not guaranteed."
+    warn_gpu_extra_size: "The GPU build requires roughly 5 GB of additional download."
+    warn_switch_to_beta: "You are switching to the Beta channel. Future update notifications will follow Beta releases."
+    warn_switch_to_stable: "You are switching to the Stable channel. Future update notifications will follow Stable releases."
 
 config_page:
     common:
@@ -102,6 +135,7 @@ config_page:
         hotkeys: "Hotkeys"
         plugins: "Plugins"
         advanced_settings: "Advanced"
+        updater: "Updater"
 
     device:
         check_volume: "Check Volume"
@@ -336,6 +370,25 @@ config_page:
             desc: "Sends usage data so our developers can grin and say 'Thanks for using it!' while improving the app.\n* No personal info or conversation content is ever sent."
             aptabase_privacy_policy_label: "Aptabase Privacy Policy"
 
+    updater:
+        install_panel:
+            section_label: "Choose Version and Build"
+            current_summary_label: "Current"
+            current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
+            channel_label: "Release Channel"
+            channel_stable: "Stable"
+            channel_beta: "Beta"
+            compute_mode_label: "Device"
+            compute_mode_cpu: "CPU"
+            compute_mode_gpu: "GPU (CUDA)"
+            version_label: "Version to Install"
+            version_desc: "Pick a past release to downgrade. The list is filtered by the channel you selected above."
+            no_versions_available: "No releases are available on the selected channel yet."
+            beta_suffix: "Beta"
+            latest_suffix: "Latest"
+            install_button: "Install with This Setup"
+            reinstall_button: "Reinstall with This Setup"
+
     hotkeys:
         toggle_vrct_visibility:
             label: "Toggle VRCT visibility"
@@ -365,8 +418,6 @@ config_page:
             label: "OSC Port"
         open_config_filepath:
             label: "Open Config File"
-        switch_compute_device:
-            label: "Switch VRCT To CPU/GPU Version"
         enable_websocket:
             label: "Enable WebSocket Server"
             locked_by_obs_browser_source: "Disable OBS Browser Source to change this"

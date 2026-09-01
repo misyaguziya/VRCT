@@ -63,6 +63,7 @@ main_page:
     updating: "アップデート中..."
 
 update_modal:
+    # 旧キー(他画面から引き続き参照)
     cpu_desc: "処理デバイスとしてCPUのみを使用"
     cuda_desc: "処理デバイスとしてCPUとNVIDIA製のGPUを選択可能"
     cuda_compare_cpu_desc: "GPU選択時、CPUと比べて処理が高速"
@@ -71,6 +72,38 @@ update_modal:
     download_latest_and_restart: "最新版がダウンロードされ、\nアプリは自動的に再起動します。"
     is_latest_version_already: "すでに最新版を使用中"
     is_current_compute_device: "現在使用中のバージョン"
+    # 新UpdateModal (旧Updaterタブと統合)
+    title: "アップデート"
+    hero_update_available: "アップデートあり"
+    hero_up_to_date: "最新版"
+    hero_up_to_date_desc: "最新版を使用中です。アップデートの必要はありません。"
+    hero_custom_pending: "この設定でインストール"
+    current_prefix: "現在: "
+    channel_stable: "安定版"
+    channel_beta: "β版"
+    compute_mode_cpu: "CPU版"
+    compute_mode_gpu: "GPU版 (CUDA)"
+    beta_suffix: "β版"
+    latest_suffix: "最新"
+    install_latest_button: "今すぐ更新"
+    install_button: "この設定で更新"
+    close_button: "閉じる"
+    section_pick_variant: "別のバージョン・構成を選ぶ"
+    refresh_button: "再取得"
+    refresh_button_title: "最新の一覧を取得"
+    channel_label: "リリースチャンネル"
+    channel_desc: "β版は新機能を先取りできますが、動作が不安定な場合があります。"
+    compute_mode_label: "デバイス構成"
+    compute_mode_desc: "GPU版はNVIDIA GPUで高速に動作しますが、約 5GB 大きくなります。"
+    version_label: "インストールするバージョン"
+    version_desc: "選択したチャンネルで公開されているリリースから選べます。"
+    no_versions_available: "選択中のチャンネルには利用可能なバージョンがありません。"
+    change_col_current: "現在"
+    change_col_after: "インストール後"
+    warn_downgrade: "{{from}} から {{to}} へのダウングレードになります。設定ファイルの互換性は保証されません。"
+    warn_gpu_extra_size: "GPU版は約 5GB の追加ダウンロードが必要です。"
+    warn_switch_to_beta: "β版チャンネルに切り替わります。次回以降のアップデート通知もβ版が対象になります。"
+    warn_switch_to_stable: "安定版チャンネルに切り替わります。次回以降のアップデート通知も安定版が対象になります。"
 
 config_page:
     common:
@@ -102,6 +135,7 @@ config_page:
         hotkeys: "ホットキー"
         plugins: "プラグイン"
         advanced_settings: "高度な設定"
+        updater: "アップデート"
 
     device:
         check_volume: "音量チェック"
@@ -336,6 +370,25 @@ config_page:
             desc: "開発者が「みんな使ってくれてるんだな～」ってにやにやしながら機能改善するための使用状況データを送信します。\n※会話内容など個人情報は一切送信しません。"
             aptabase_privacy_policy_label: "Aptabase プライバシーポリシー"
 
+    updater:
+        install_panel:
+            section_label: "バージョン・構成の選択"
+            current_summary_label: "現在の状態"
+            current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
+            channel_label: "リリースチャンネル"
+            channel_stable: "安定版"
+            channel_beta: "β版"
+            compute_mode_label: "デバイス構成"
+            compute_mode_cpu: "CPU版"
+            compute_mode_gpu: "GPU版 (CUDA)"
+            version_label: "インストールするバージョン"
+            version_desc: "過去のバージョンを選ぶとダウングレードできます。リストは選択中のチャンネルで絞り込まれます。"
+            no_versions_available: "選択中のチャンネルには利用可能なバージョンがありません。"
+            beta_suffix: "β版"
+            latest_suffix: "最新"
+            install_button: "この設定でインストール"
+            reinstall_button: "この設定で再インストール"
+
     hotkeys:
         toggle_vrct_visibility:
             label: "VRCTの最小化/アクティブ化の切り替え"
@@ -365,8 +418,6 @@ config_page:
             label: "OSC Port"
         open_config_filepath:
             label: "設定ファイルを開く"
-        switch_compute_device:
-            label: "VRCT CPU/GPUバージョンの切り替え"
         enable_websocket:
             label: "WebSocketサーバーを有効にする"
             locked_by_obs_browser_source: "OBSブラウザソースを無効にしてから変更してください"
