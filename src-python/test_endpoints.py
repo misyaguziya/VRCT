@@ -1,11 +1,14 @@
-# 初期化のため、config.jsonの削除
 import os
 import time
 import random
-if os.path.exists("config.json"):
-    os.remove("config.json")
 
-from mainloop import main_instance
+# config.json の削除と mainloop (実バックエンド一式) の import は、
+# このファイルが `python test_endpoints.py` として直接実行された時
+# (__main__ ブロック) にのみ行う。"test_" プレフィックスのため pytest
+# に (test_*.py の命名規則により、実際のテストスイートでは無いにも
+# 関わらず) import されうるが、ここに無条件で置くと単に import
+# されただけでカレントディレクトリの実 config.json が削除され、かつ
+# 重い実アプリ初期化が走ってしまう。
 
 class Color:
 	BLACK          = '\033[30m'#(文字)黒
@@ -847,6 +850,13 @@ class TestMainloop():
 
 if __name__ == "__main__":
     import traceback
+
+    # 初期化のため、config.jsonの削除 (実行時のみ; import 時には行わない)
+    if os.path.exists("config.json"):
+        os.remove("config.json")
+
+    from mainloop import main_instance
+
     try:
         test = TestMainloop()
         # test.test_endpoints_on_off_all()
