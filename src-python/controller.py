@@ -1854,7 +1854,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
 
     def setDeeplAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set DeepL Auth Key", data)
+        printLog("Set DeepL Auth Key")
         translator_name = "DeepL_API"
         try:
             data = str(data)
@@ -1899,7 +1899,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["Plamo_API"]}
 
     def setPlamoAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Plamo Auth Key", data)
+        printLog("Set Plamo Auth Key")
         translator_name = "Plamo_API"
         try:
             data = str(data)
@@ -1986,7 +1986,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["Gemini_API"]}
 
     def setGeminiAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Gemini Auth Key", data)
+        printLog("Set Gemini Auth Key")
         translator_name = "Gemini_API"
         try:
             data = str(data)
@@ -2074,7 +2074,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["OpenAI_API"]}
 
     def setOpenAIAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Auth Key", data)
+        printLog("Set OpenAI Auth Key")
         translator_name = "OpenAI_API"
         try:
             data = str(data)
@@ -2162,7 +2162,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["Groq_API"]}
 
     def setGroqAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Groq Auth Key", data)
+        printLog("Set Groq Auth Key")
         translator_name = "Groq_API"
         try:
             data = str(data)
@@ -2250,7 +2250,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["OpenRouter_API"]}
 
     def setOpenRouterAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenRouter Auth Key", data)
+        printLog("Set OpenRouter Auth Key")
         translator_name = "OpenRouter_API"
         try:
             data = str(data)
@@ -2469,7 +2469,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["OpenAI_Compatible"]}
 
     def setOpenAICompatibleAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Compatible Auth Key", data)
+        printLog("Set OpenAI Compatible Auth Key")
         translator_name = "OpenAI_Compatible"
         try:
             data = str(data).strip()
