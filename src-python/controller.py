@@ -3911,6 +3911,29 @@ class Controller:
             ctranslate2_available = future_ctranslate2.result()
             whisper_available = future_whisper.result()
 
+        # 初回ダウンロード後もまだロードできない重みがある場合、ユーザーに
+        # 「AIモデル未検出。VRCTを再起動してください」通知を出して手動再起動を
+        # 促す前に、アプリ自身が最大1回だけ同期的に再ダウンロードを試みる。
+        # (list_repo_files の一時失敗などで初回ダウンロードスレッドが丸ごと
+        #  取りこぼしたケースを吸収する)
+        if connected_network is True and (not ctranslate2_available or not whisper_available):
+            if not ctranslate2_available:
+                printLog("CTranslate2 weight unavailable after first download; retrying once")
+                self.downloadCtranslate2Weight(config.CTRANSLATE2_WEIGHT_TYPE, False)
+            if not whisper_available:
+                printLog("Whisper weight unavailable after first download; retrying once")
+                self.downloadWhisperWeight(config.WHISPER_WEIGHT_TYPE, False)
+
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                future_ctranslate2 = executor.submit(
+                    lambda: ctranslate2_available or model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is True
+                )
+                future_whisper = executor.submit(
+                    lambda: whisper_available or model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is True
+                )
+                ctranslate2_available = future_ctranslate2.result()
+                whisper_available = future_whisper.result()
+
         # インスタンス変数にキャッシュ（後続の処理で再利用）
         self._ctranslate2_available_cache = ctranslate2_available
         self._whisper_available_cache = whisper_available
