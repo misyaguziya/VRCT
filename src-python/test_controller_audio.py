@@ -123,6 +123,11 @@ class TestShutdownStopsAutoSelectTrackers(unittest.TestCase):
 
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
+        # shutdown() は mic/speaker_lifecycle_lock を取得してから
+        # 停止関数を呼ぶ (ロードマップ項目 5)。__init__ をバイパスしている
+        # ためここで明示的にシードする。
+        self.controller.mic_lifecycle_lock = Lock()
+        self.controller.speaker_lifecycle_lock = Lock()
 
     @patch("controller.model.telemetryShutdown", return_value=None)
     @patch("controller.config.saveConfigToFile", return_value=None)

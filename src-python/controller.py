@@ -24,6 +24,12 @@ _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 _DOWNLOAD_PROGRESS_MIN_DELTA = 0.01
 _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
 
+# shutdown() が mic/speaker_lifecycle_lock を待つ上限。model.py の
+# TRANSCRIPT_STOP_JOIN_TIMEOUT (15s) + PyAudio open の _MIC_OPEN_TIMEOUT_SEC
+# (8s) など、ロック保持中に自然完了しうる最長の単発処理より余裕を持たせつつ、
+# 万一ロックが本当に返ってこない場合でも終了処理自体を無期限に止めない。
+_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC = 20.0
+
 
 def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
     """DownloadCTranslate2 / DownloadWhisper の progressBar 用スロットル。
@@ -89,7 +95,30 @@ class Controller:
 
     def setRun(self, run:Callable[[int, str, Any], None]) -> None:
         self.run = run
-    
+
+    def _stopLockedForShutdown(self, lock: Lock, stop_fn: Callable[[], None], label: str) -> None:
+        """shutdown() 専用: lock を取得してから stop_fn() を呼ぶ。
+
+        通常経路 (stopTranscriptionSendMessage 等) と同じロックを使うが、
+        shutdown() は他の全ての mic/speaker_lifecycle_lock 保持経路
+        (start/stop 系, AudioLifecycleWorker 経由のデバイス切替等) と
+        直列化されないまま model.* を直接叩いていたため、_stop() と
+        _start() が同一 Session に対して並行実行され得た。取得を
+        acquire(timeout=...) にしているのは、終了処理自体がロック待ちで
+        無期限にハングしないようにするため (ロックが返らない場合は
+        ログを残してこの停止だけスキップし、後続の停止処理は続行する)。
+        """
+        acquired = lock.acquire(timeout=_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC)
+        if not acquired:
+            printLog(f"shutdown: {label} のロック取得が {_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC}s でタイムアウトしたため、この停止処理をスキップします")
+            return
+        try:
+            stop_fn()
+        except Exception:
+            errorLogging()
+        finally:
+            lock.release()
+
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
 
@@ -124,22 +153,17 @@ class Controller:
             device_manager.stopMonitoring()
         except Exception:
             errorLogging()
-        try:
-            model.stopMicTranscript()
-        except Exception:
-            errorLogging()
-        try:
-            model.stopSpeakerTranscript()
-        except Exception:
-            errorLogging()
-        try:
-            model.stopCheckMicEnergy()
-        except Exception:
-            errorLogging()
-        try:
-            model.stopCheckSpeakerEnergy()
-        except Exception:
-            errorLogging()
+        # 以下の4つは他の全ての start/stop 系 (mic/speaker_lifecycle_lock を
+        # 保持する) と直列化する必要がある。ロック未取得のまま model.* を
+        # 直接叩くと、AudioLifecycleWorker がまだ実行中の
+        # restartAccessMicDevices 等と _stop()/_start() が並行実行され、
+        # 片方が代入した新しい Recorder をもう片方が知らずに破棄する形で
+        # listener スレッドと PyAudio ストリームが宙に浮いたままプロセスが
+        # 終了しうる。
+        self._stopLockedForShutdown(self.mic_lifecycle_lock, model.stopMicTranscript, "mic transcript")
+        self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopSpeakerTranscript, "speaker transcript")
+        self._stopLockedForShutdown(self.mic_lifecycle_lock, model.stopCheckMicEnergy, "mic energy")
+        self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopCheckSpeakerEnergy, "speaker energy")
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a
