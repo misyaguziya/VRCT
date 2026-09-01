@@ -331,12 +331,36 @@ SENSITIVE_ENDPOINT_MARKERS = ("auth_key", "api_key", "password", "token", "secre
 def _isSensitiveEndpoint(endpoint: Any) -> bool:
     if not isinstance(endpoint, str):
         return False
-    lowered = endpoint.lower()
+    # ラベル文字列 ("Set OpenRouter Auth Key") とエンドポイント文字列
+    # ("/set/data/openrouter_auth_key") の両方で "auth_key" 等のマーカーに
+    # ヒットするよう、空白をアンダースコアに正規化してから判定する。
+    lowered = endpoint.lower().replace(" ", "_")
     return any(marker in lowered for marker in SENSITIVE_ENDPOINT_MARKERS)
 
 
 def _maskSensitiveValue(value: Any) -> Any:
     return "***MASKED***" if value not in (None, "") else value
+
+
+def _maskSensitiveData(data: Any) -> Any:
+    """Recursively mask values under dict keys that look like secrets.
+
+    Used for aggregate payloads (e.g. the /run/initialization_complete
+    response, which bundles every /get/data/* result including the
+    *_auth_key entries into a single dict) where the top-level endpoint
+    name itself isn't "sensitive" but individual keys inside the payload
+    are. Each dict key is checked with the same normalization as
+    _isSensitiveEndpoint, so both endpoint-style keys
+    ("/get/data/openrouter_auth_key") and log-label keys are caught.
+    """
+    if isinstance(data, dict):
+        return {
+            key: (_maskSensitiveValue(value) if _isSensitiveEndpoint(str(key)) else _maskSensitiveData(value))
+            for key, value in data.items()
+        }
+    if isinstance(data, list):
+        return [_maskSensitiveData(item) for item in data]
+    return data
 
 
 def printLog(log: str, data: Any = None) -> None:
@@ -370,10 +394,15 @@ def printResponse(status: int, endpoint: str, result: Any = None) -> None:
         "result": result,
     }
 
+    # エンドポイント自体が機微な場合 (/get/data/openrouter_auth_key 等) は
+    # result 全体を、そうでない場合 (/run/initialization_complete のような
+    # 集約レスポンス) は result 内部を再帰的に走査してマスクする。
+    # エンドポイント名だけを見る判定は集約レスポンスに対して機能しないため。
     if _isSensitiveEndpoint(endpoint):
-        logged_response = {**response, "result": _maskSensitiveValue(result)}
+        logged_result = _maskSensitiveValue(result)
     else:
-        logged_response = response
+        logged_result = _maskSensitiveData(result)
+    logged_response = {**response, "result": logged_result}
     process_logger.info(logged_response)  # Log the (possibly masked) response, never the raw secret
 
     try:
