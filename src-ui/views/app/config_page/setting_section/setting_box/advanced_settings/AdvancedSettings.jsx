@@ -109,6 +109,7 @@ const WebsocketContainer = () => {
             <EnableWebsocketContainer />
             <WebsocketHostContainer />
             <WebsocketPortContainer />
+            <WebsocketUrlContainer />
         </div>
     );
 };
@@ -182,6 +183,32 @@ const WebsocketPortContainer = () => {
     );
 };
 
+
+const WebsocketUrlContainer = () => {
+    const { t } = useI18n();
+    const { currentWebsocketHost, currentWebsocketPort, currentWebsocketAuthToken } = useAdvancedSettings();
+
+    const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
+    const token = currentWebsocketAuthToken.data;
+    const url = token
+        ? `ws://${host}:${currentWebsocketPort.data}/?token=${encodeURIComponent(token)}`
+        : `ws://${host}:${currentWebsocketPort.data}`;
+
+    const copyUrlToClipboard = async () => {
+        await navigator.clipboard.writeText(url);
+    };
+
+    return (
+        <ActionButtonContainer
+            label={t("config_page.advanced_settings.websocket_url.label")}
+            desc={url}
+            IconComponent={CopySvg}
+            ClickedIconComponent={CheckMarkSvg}
+            clicked_duration={1000}
+            onclickFunction={copyUrlToClipboard}
+        />
+    );
+};
 
 const ObsBrowserSourceContainer = () => {
     const { t } = useI18n();

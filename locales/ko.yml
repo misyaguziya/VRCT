@@ -417,6 +417,8 @@ config_page:
             label: "WebSocket 호스트"
         websocket_port:
             label: "WebSocket 포트"
+        websocket_url:
+            label: "WebSocket URL(클릭하여 복사)"
         obs_browser_source:
             section_label: "OBS 브라우저 소스"
         enable_obs_browser_source:

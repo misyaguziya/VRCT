@@ -9,7 +9,7 @@ import time
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isAvailableWebSocketServer
+from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
@@ -3526,7 +3526,12 @@ class Controller:
 
     @staticmethod
     def setWebSocketHost(data, *args, **kwargs) -> dict:
-        if isValidIpAddress(data) is False:
+        # 0.0.0.0/:: (ワイルドカードアドレス) は「マシンが持つ全インター
+        # フェースで listen する」ことを意味し、WebSocket サーバーは
+        # 認証 (token) を導入済みとはいえ、同一 LAN 上の第三者からの
+        # 到達性まで許してしまう。特定の LAN IP を明示的に選ぶのとは
+        # リスクの性質が異なるため、他の IP 検証と分けて拒否する。
+        if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
             response = VRCTError.create_error_response(
                 ErrorCode.VALIDATION_INVALID_IP,
                 data=config.WEBSOCKET_HOST
@@ -3589,6 +3594,18 @@ class Controller:
                     data=config.WEBSOCKET_PORT
                 )
         return response
+
+    @staticmethod
+    def getWebSocketAuthToken(*args, **kwargs) -> dict:
+        """WebSocket サーバーへの接続に必要なトークンを返す。
+
+        OBS Browser Source はサーバー側が生成するページに自動で埋め込むため
+        これを直接使う必要はないが、VRCT-TTS のように接続 URL をユーザーが
+        手動入力する外部連携ツール向けに、UI 側で
+        `ws://{host}:{port}/?token={token}` をコピーできるようにするために
+        公開する。
+        """
+        return {"status":200, "result":config.WEBSOCKET_AUTH_TOKEN}
 
     @staticmethod
     def getWebSocketServer(*args, **kwargs) -> dict:

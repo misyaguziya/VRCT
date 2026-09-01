@@ -456,6 +456,7 @@ mapping = {
     "/set/data/websocket_host": {"status": True, "variable":controller.setWebSocketHost},
     "/get/data/websocket_port": {"status": True, "variable":controller.getWebSocketPort},
     "/set/data/websocket_port": {"status": True, "variable":controller.setWebSocketPort},
+    "/get/data/websocket_auth_token": {"status": True, "variable":controller.getWebSocketAuthToken},
     "/get/data/websocket_server": {"status": True, "variable":controller.getWebSocketServer},
     "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
     "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},

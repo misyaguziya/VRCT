@@ -173,6 +173,22 @@ def isValidIpAddress(ip_address: str) -> bool:
     except ValueError:
         return False
 
+def isWildcardBindAddress(ip_address: str) -> bool:
+    """Return True if `ip_address` is the IPv4/IPv6 "unspecified" address
+    (0.0.0.0 / ::), which means "listen on every interface".
+
+    Used to reject binding the local WebSocket server to a wildcard
+    address: unlike a specific LAN IP (which at least requires the same
+    network segment), 0.0.0.0/:: exposes the unauthenticated-by-default
+    transcript stream to literally any interface the machine has,
+    including ones the user may not realize are reachable (VPN, hotspot,
+    etc.).
+    """
+    try:
+        return ipaddress.ip_address(ip_address).is_unspecified
+    except ValueError:
+        return False
+
 def getComputeDeviceList() -> List[Dict[str, Any]]:
     """Return a list of available compute devices and supported compute types.
 

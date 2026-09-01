@@ -1668,6 +1668,7 @@ class Model:
                 self.websocket_server = WebSocketServer(
                     host=host,
                     port=port,
+                    token=config.WEBSOCKET_AUTH_TOKEN,
                 )
                 self.websocket_server.set_message_handler(self.message_handler)
                 self.websocket_server.start()
@@ -1738,7 +1739,7 @@ class Model:
         self.stopObsBrowserSourceServer()
 
         try:
-            self.obs_browser_source_server = ObsBrowserSourceServer(host=host, port=port)
+            self.obs_browser_source_server = ObsBrowserSourceServer(host=host, port=port, ws_token=config.WEBSOCKET_AUTH_TOKEN)
             self.obs_browser_source_server.start()
         except Exception:
             errorLogging()
