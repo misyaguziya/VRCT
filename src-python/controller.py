@@ -74,6 +74,14 @@ class Controller:
         except Exception:
             # In test or headless environments initialization may fail; log and continue.
             errorLogging()
+        try:
+            # OSC ミュート同期 (Model.changeHandlerMute, 任意の OSC 受信
+            # スレッドで走る) が pause()/resume() を mic_lifecycle_lock 配下
+            # で実行できるよう、ロック付きラッパーを Model 側のコールバック
+            # スロットへ登録する。
+            model.setMicMuteStatusChangeCallback(self._changeMicTranscriptStatusLocked)
+        except Exception:
+            errorLogging()
 
     def _is_overlay_available(self) -> bool:
         """Safe check whether overlay is present and initialized.
@@ -1445,6 +1453,17 @@ class Controller:
         # いないため、ここで明示的にロックを取る。
         with self.mic_lifecycle_lock:
             model.reconfigureMicDevice()
+
+    def _changeMicTranscriptStatusLocked(self) -> None:
+        # OSC ミュート同期 (Model.changeHandlerMute) からのみ呼ばれる
+        # (model.setMicMuteStatusChangeCallback 経由で __init__ が登録)。
+        # 任意の OSC 受信スレッドで走るため、他の mic_lifecycle_lock
+        # 保持経路 (start/stop 系, Auto Select のデバイス切替) と
+        # 直列化されていなかった (壊れた Recorder への pause()/resume()
+        # で TypeError になったり、resume() が新しい _audio_queue を drain
+        # して録音済み音声を取りこぼす原因になっていた)。
+        with self.mic_lifecycle_lock:
+            model.changeMicTranscriptStatus()
 
     @staticmethod
     def getMicThreshold(*args, **kwargs) -> dict:

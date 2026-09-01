@@ -588,6 +588,14 @@ class Model:
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_mute_status = None
+        # OSC ミュート同期 (changeHandlerMute) が実行する pause()/resume() を
+        # Controller.mic_lifecycle_lock 配下で行うためのフック。
+        # Controller.__init__ が setMicMuteStatusChangeCallback() で
+        # 自身のロック付きラッパーを登録する。Model は Controller を知らない
+        # ままこの間接呼び出しだけを持つ (transcript_fnc/energy_fnc と同じ
+        # コールバック注入パターン)。未登録時は changeMicTranscriptStatus() を
+        # 直接使うフォールバックとする。
+        self.mic_mute_status_change_callback: Optional[Callable[[], None]] = None
         self.transliterator = None
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
@@ -1099,16 +1107,44 @@ class Model:
         self.ensure_initialized()
         self.mic_mute_status = self.osc_handler.getOSCParameterMuteSelf()
 
+    def setMicMuteStatusChangeCallback(self, fn: Optional[Callable[[], None]]) -> None:
+        """OSC ミュート同期が pause()/resume() を実行する際に呼ぶ関数を登録する。
+
+        Controller.__init__ が自身の mic_lifecycle_lock を取得する
+        ラッパー (_changeMicTranscriptStatusLocked) を登録することで、
+        OSC 受信スレッド発の pause()/resume() を他の全ての start/stop 系
+        (mainloop ワーカーが直接呼ぶ startTranscriptionSendMessage 等も含む)
+        と完全に排他制御する。未登録なら changeMicTranscriptStatus() を直接
+        使う (Controller を経由しないテスト等でも壊れないようにするため)。
+        """
+        self.mic_mute_status_change_callback = fn
+
     def startReceiveOSC(self):
         self.ensure_initialized()
         def changeHandlerMute(address, osc_arguments):
+            # ThreadingOSCUDPServer は受信メッセージごとに新しいスレッドを
+            # 起こすため、ここはロックを一切持たない任意のスレッドで走る。
+            # changeMicTranscriptStatus() を直接ここで呼ぶと、Auto Mic
+            # Select のデバイス切替や mainloop ワーカーが直接呼ぶ
+            # start/stop 系 (_stop()/_start() を実行中) と
+            # _mic_session.pause()/resume() が無ロックで交錯し得る
+            # (ミュート連打中にデバイスが切り替わると壊れた Recorder に
+            # 触れる)。audio_lifecycle_worker.enqueue() で Auto Select の
+            # 他のデバイス操作と同じ FIFO キューに直列化しつつ、実行される
+            # 関数自体は mic_mute_status_change_callback (= Controller の
+            # mic_lifecycle_lock 付きラッパー) にすることで、ロックを直接
+            # 取得する経路とも完全に排他制御する。
             if config.VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mic_mute_status is False:
                     self.mic_mute_status = osc_arguments
-                    self.changeMicTranscriptStatus()
+                    self.audio_lifecycle_worker.enqueue(
+                        self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                    )
                 elif osc_arguments is False and self.mic_mute_status is True:
                     self.mic_mute_status = osc_arguments
-                    self.changeMicTranscriptStatus()
+                    self.audio_lifecycle_worker.enqueue(
+                        self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                    )
 
         dict_filter_and_target = {
             self.osc_handler.osc_parameter_muteself: changeHandlerMute,
