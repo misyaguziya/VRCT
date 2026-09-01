@@ -323,7 +323,19 @@ class ValidatedProperty:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return getattr(instance, self.private_name)
+        stored = getattr(instance, self.private_name)
+        # Return a deep copy for mutable types, mirroring ManagedProperty.__get__.
+        # Returning the raw reference let external code mutate config's internal
+        # state directly via the common `d = config.X; d[k] = v; config.X = d`
+        # idiom, before the setter (and its validator) ever ran. That silently
+        # defeated validators whose "fall back to the previous value on an
+        # invalid entry" logic reads `inst.X` as the "old" value: by the time
+        # __set__ ran, `inst.X` and the incoming `value` were already the same
+        # (already-mutated) object, so the fallback returned the new invalid
+        # value instead of the real previous one.
+        if isinstance(stored, (dict, list)):
+            return copy.deepcopy(stored)
+        return stored
 
     def __set__(self, instance, value):
         try:
@@ -332,6 +344,11 @@ class ValidatedProperty:
             return
         if normalized is None:
             return
+        # Deep copy mutable types before storing, mirroring ManagedProperty.__set__,
+        # so a caller that keeps a reference to the object it passed in (or that a
+        # validator returned verbatim) can't mutate config's internal state later.
+        if isinstance(normalized, (dict, list)):
+            normalized = copy.deepcopy(normalized)
         setattr(instance, self.private_name, normalized)
         try:
             if self.serialize:

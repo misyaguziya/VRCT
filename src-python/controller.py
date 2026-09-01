@@ -3155,7 +3155,13 @@ class Controller:
     def changeToCTranslate2Process(self) -> None:
         selected_engines = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[selected_engines] = False
-        config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
+        # SELECTED_TRANSLATION_ENGINES は ValidatedProperty (生参照を返さない) なので
+        # read → 変更 → 再代入する必要がある。以前は config.X[...] = ... の直接代入で
+        # バリデータを一切通さずに内部状態を書き換えていた (P0-3 の生参照バグに依存していた
+        # 唯一の呼び出し箇所)。
+        engines = config.SELECTED_TRANSLATION_ENGINES
+        engines[config.SELECTED_TAB_NO] = "CTranslate2"
+        config.SELECTED_TRANSLATION_ENGINES = engines
         selectable_engines = self.getTranslationEngines()["result"]
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
