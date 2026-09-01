@@ -3894,6 +3894,17 @@ class Controller:
         removeLog()
         printLog("Start Initialization")
 
+        # watchdog を初期化処理の先頭で起動する。以前は init() の最終行に
+        # あったため、モデル重みのダウンロードや外部 API 呼び出しが
+        # (バグ等で) 無期限にハングした場合、watchdog 自体がまだ起動して
+        # おらず自動復旧が一切効かなかった。フロントエンドは Python
+        # プロセスを spawn した直後から 20s 間隔で /run/feed_watchdog を
+        # 送り続けており (StartPythonController.jsx)、このエンドポイントは
+        # 初期化中でも処理可能 (mainloop.py の "status": True) なため、
+        # init() をメインスレッドで実行している間も 3 本のハンドラワーカー
+        # がフィードを処理できる。よってここで起動しても安全。
+        self.startWatchdog()
+
         # Network check
         connected_network = isConnectedNetwork()
         if connected_network is True:
@@ -3932,12 +3943,39 @@ class Controller:
                 th_download_whisper.daemon = True
                 th_download_whisper.start()
 
+            # join() にタイムアウトを設ける: downloadCTranslate2Weight/
+            # downloadWhisperWeight は HTTP タイムアウト+リトライ (最大 3 回
+            # × 最大 70s + バックオフ) を持つため 1 ファイルあたりの worst
+            # case は数分程度で収まるが、重みセットが複数ファイルにまたがる
+            # ため、理論上の合計 worst case はさらに長くなりうる。無制限
+            # join だと万一そのバジェットを超えて本当にハングした場合に
+            # init() (ひいてはアプリの起動) が無期限に固まる。ここでの
+            # タイムアウトは「異常系での最終防波堤」として十分長く
+            # (30 分) 取り、正常系の低速回線でのリトライを誤って
+            # 中断しないようにする。タイムアウトした場合はダウンロード
+            # スレッド (daemon) をバックグラウンドで走らせたまま
+            # 初期化を先へ進める。
+            _WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC = 1800
             if isinstance(th_download_ctranslate2, Thread):
-                th_download_ctranslate2.join()
+                th_download_ctranslate2.join(timeout=_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC)
+                if th_download_ctranslate2.is_alive():
+                    printLog(
+                        f"CTranslate2 weight download did not finish within "
+                        f"{_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC}s; continuing "
+                        "initialization without waiting further (download "
+                        "continues in the background)"
+                    )
                 # ダウンロードを行った場合は結果が変わるため再検証が必要
                 ctranslate2_pre_available = None
             if isinstance(th_download_whisper, Thread):
-                th_download_whisper.join()
+                th_download_whisper.join(timeout=_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC)
+                if th_download_whisper.is_alive():
+                    printLog(
+                        f"Whisper weight download did not finish within "
+                        f"{_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC}s; continuing "
+                        "initialization without waiting further (download "
+                        "continues in the background)"
+                    )
                 whisper_pre_available = None
 
         # Check and disable/enable AI models (parallel)
@@ -4336,4 +4374,3 @@ class Controller:
         self.updateConfigSettings()
 
         printLog("End Initialization")
-        self.startWatchdog()

@@ -45,6 +45,15 @@ from utils import errorLogging, setupLogger, printLog
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 
+# GitHub API 呼び出し / setup.exe ダウンロードの (connect, read) タイムアウト。
+# 無指定だと「接続はするが応答しない」相手に requests が無期限にブロック
+# しうる。checkSoftwareUpdated()/listAvailableReleases() は
+# Controller.init() から呼ばれるため、これが起きると初期化そのものが
+# 固まる。translation_utils.py/transcription_whisper.py の
+# _DOWNLOAD_TIMEOUT と同じ値を使う (大きめの read 側はモデル重みと同様、
+# setup.exe のダウンロードにも余裕を持たせるため)。
+_HTTP_TIMEOUT = (10, 60)
+
 # フリーズ調査用の恒久計装。mainloop.py の faulthandler.enable() は
 # ネイティブフォルト (access violation 等) 発生時にしか全スレッドの
 # コールスタックを記録しない。今回問題になっている「クラッシュではなく
@@ -1172,7 +1181,10 @@ class Model:
     @staticmethod
     def _fetchGithubReleases() -> list:
         # All releases (including prereleases), newest first, drafts excluded.
-        response = requests_get(config.GITHUB_RELEASES_LIST_URL)
+        # timeout 無しだと GitHub 側が「接続はするが応答しない」状態になった
+        # 場合に無期限にブロックし、これを呼ぶ checkSoftwareUpdated() は
+        # Controller.init() から呼ばれるため、初期化そのものが固まる。
+        response = requests_get(config.GITHUB_RELEASES_LIST_URL, timeout=_HTTP_TIMEOUT)
         response.raise_for_status()
         releases = response.json()
         if not isinstance(releases, list):
@@ -1192,7 +1204,7 @@ class Model:
                 ]
                 version = candidates[0] if candidates else None
             else:
-                response = requests_get(config.GITHUB_URL)
+                response = requests_get(config.GITHUB_URL, timeout=_HTTP_TIMEOUT)
                 json_data = response.json()
                 version = json_data.get("name", None)
             if isinstance(version, str):
@@ -1241,7 +1253,7 @@ class Model:
         min_valid_size = 1024 * 1024
         for _ in range(5):
             try:
-                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True)
+                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
                 downloaded_size = 0
                 with open(dest_path, 'wb') as file:
