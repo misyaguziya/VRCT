@@ -57,6 +57,10 @@ class ErrorCode(str, Enum):
     TRANSCRIPTION_VRAM_SPEAKER = "TRANSCRIPTION_VRAM_SPEAKER"
     TRANSCRIPTION_SEND_DISABLED_VRAM = "TRANSCRIPTION_SEND_DISABLED_VRAM"
     TRANSCRIPTION_RECEIVE_DISABLED_VRAM = "TRANSCRIPTION_RECEIVE_DISABLED_VRAM"
+    TRANSCRIPTION_API_AUTH_FAILED = "TRANSCRIPTION_API_AUTH_FAILED"
+    TRANSCRIPTION_API_RATE_LIMITED = "TRANSCRIPTION_API_RATE_LIMITED"
+    TRANSCRIPTION_API_TIMEOUT = "TRANSCRIPTION_API_TIMEOUT"
+    TRANSCRIPTION_API_SERVER_ERROR = "TRANSCRIPTION_API_SERVER_ERROR"
     
     # ============================================================================
     # ウェイトダウンロード関連エラー (WEIGHT_*)
@@ -108,7 +112,12 @@ class ErrorCode(str, Enum):
     MODEL_OPENROUTER_INVALID = "MODEL_OPENROUTER_INVALID"
     MODEL_LMSTUDIO_INVALID = "MODEL_LMSTUDIO_INVALID"
     MODEL_OLLAMA_INVALID = "MODEL_OLLAMA_INVALID"
-    
+    # Groq/OpenAI/カスタムサーバーの文字起こしモデルは全て
+    # OpenAICompatibleTranscriptionProvider の1実装を共有するため、翻訳側の
+    # ようにエンジンごとのコードを分けず1つにまとめる (エラーコード追加は
+    # 最低限にする方針のため)。
+    MODEL_TRANSCRIPTION_INVALID = "MODEL_TRANSCRIPTION_INVALID"
+
     # ============================================================================
     # 接続エラー (CONNECTION_*)
     # ============================================================================
@@ -116,7 +125,8 @@ class ErrorCode(str, Enum):
     CONNECTION_OLLAMA_FAILED = "CONNECTION_OLLAMA_FAILED"
     CONNECTION_LMSTUDIO_URL_INVALID = "CONNECTION_LMSTUDIO_URL_INVALID"
     CONNECTION_OPENAI_COMPATIBLE_URL_INVALID = "CONNECTION_OPENAI_COMPATIBLE_URL_INVALID"
-    
+    CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID = "CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID"
+
     # ============================================================================
     # WebSocketエラー (WEBSOCKET_*)
     # ============================================================================
@@ -247,7 +257,31 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "critical",
         "user_action_required": True,
     },
-    
+    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API rejected the configured API key",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.TRANSCRIPTION_API_RATE_LIMITED: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API rate limit exceeded",
+        "severity": "warning",
+        "user_action_required": False,
+    },
+    ErrorCode.TRANSCRIPTION_API_TIMEOUT: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API request timed out",
+        "severity": "warning",
+        "user_action_required": False,
+    },
+    ErrorCode.TRANSCRIPTION_API_SERVER_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API returned a server error",
+        "severity": "warning",
+        "user_action_required": False,
+    },
+
     # ウェイトダウンロードエラー
     ErrorCode.WEIGHT_CTRANSLATE2_DOWNLOAD: {
         "category": ErrorCategory.WEIGHT,
@@ -465,7 +499,13 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "warning",
         "user_action_required": True,
     },
-    
+    ErrorCode.MODEL_TRANSCRIPTION_INVALID: {
+        "category": ErrorCategory.MODEL,
+        "message": "Transcription API model is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # 接続エラー
     ErrorCode.CONNECTION_LMSTUDIO_FAILED: {
         "category": ErrorCategory.CONNECTION,
@@ -491,7 +531,13 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "warning",
         "user_action_required": True,
     },
-    
+    ErrorCode.CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID: {
+        "category": ErrorCategory.CONNECTION,
+        "message": "Custom transcription server URL is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # WebSocketエラー
     ErrorCode.WEBSOCKET_HOST_INVALID: {
         "category": ErrorCategory.WEBSOCKET,

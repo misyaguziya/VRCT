@@ -11,6 +11,7 @@ from config import config
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
+from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -1160,6 +1161,331 @@ class Controller:
     def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
         config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
+
+    # ------------------------------------------------------------------
+    # Transcription API engines (Groq Whisper / OpenAI Whisper / カスタムサーバー)
+    #
+    # 翻訳側のエンジンと違い、文字起こし側にはエンジンごとの永続クライアント
+    # オブジェクトが存在しない (AudioTranscriber がセッション開始のたびに
+    # config の現在値からプロバイダを都度組み立てる設計のため、
+    # model.updateTranslatorXClient() に相当する呼び出しは不要)。
+    # モデル選択の検証も、翻訳側のようにクライアントへ問い合わせる
+    # model.setTranslatorXModel(...) 相当は行わず、
+    # SELECTABLE_*_MODEL_LIST に含まれているかどうかだけで判定する。
+    # ------------------------------------------------------------------
+    @staticmethod
+    def getGroqWhisperAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["Groq_Whisper"]}
+
+    def setGroqWhisperAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Groq Whisper Auth Key")
+        engine = "Groq_Whisper"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationTranscriptionApiKey(api_key=data, base_url=config.GROQ_WHISPER_BASE_URL)
+                if result is True:
+                    model_list = model.getTranscriptionApiModelList(
+                        api_key=data, base_url=config.GROQ_WHISPER_BASE_URL, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                    )
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = model_list
+                        self.run(200, self.run_mapping["selectable_groq_whisper_model_list"], config.SELECTABLE_GROQ_WHISPER_MODEL_LIST)
+                        if config.SELECTED_GROQ_WHISPER_MODEL not in config.SELECTABLE_GROQ_WHISPER_MODEL_LIST:
+                            config.SELECTED_GROQ_WHISPER_MODEL = config.SELECTABLE_GROQ_WHISPER_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_groq_whisper_model"], config.SELECTED_GROQ_WHISPER_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delGroqWhisperAuthKey()
+        return response
+
+    def delGroqWhisperAuthKey(self, *args, **kwargs) -> dict:
+        engine = "Groq_Whisper"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
+        config.SELECTED_GROQ_WHISPER_MODEL = None
+        self.run(200, self.run_mapping["selectable_groq_whisper_model_list"], config.SELECTABLE_GROQ_WHISPER_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_groq_whisper_model"], config.SELECTED_GROQ_WHISPER_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+    def getGroqWhisperModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_GROQ_WHISPER_MODEL_LIST}
+
+    @staticmethod
+    def getGroqWhisperModel(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_GROQ_WHISPER_MODEL}
+
+    @staticmethod
+    def setGroqWhisperModel(data, *args, **kwargs) -> dict:
+        printLog("Set Groq Whisper Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_GROQ_WHISPER_MODEL_LIST:
+            config.SELECTED_GROQ_WHISPER_MODEL = data
+            return {"status":200, "result":config.SELECTED_GROQ_WHISPER_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_GROQ_WHISPER_MODEL
+        )
+
+    @staticmethod
+    def getOpenAIWhisperAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["OpenAI_Whisper"]}
+
+    def setOpenAIWhisperAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Whisper Auth Key")
+        engine = "OpenAI_Whisper"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationTranscriptionApiKey(api_key=data, base_url=config.OPENAI_WHISPER_BASE_URL)
+                if result is True:
+                    model_list = model.getTranscriptionApiModelList(
+                        api_key=data, base_url=config.OPENAI_WHISPER_BASE_URL, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                    )
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = model_list
+                        self.run(200, self.run_mapping["selectable_openai_whisper_model_list"], config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
+                        if config.SELECTED_OPENAI_WHISPER_MODEL not in config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST:
+                            config.SELECTED_OPENAI_WHISPER_MODEL = config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_openai_whisper_model"], config.SELECTED_OPENAI_WHISPER_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delOpenAIWhisperAuthKey()
+        return response
+
+    def delOpenAIWhisperAuthKey(self, *args, **kwargs) -> dict:
+        engine = "OpenAI_Whisper"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
+        config.SELECTED_OPENAI_WHISPER_MODEL = None
+        self.run(200, self.run_mapping["selectable_openai_whisper_model_list"], config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_openai_whisper_model"], config.SELECTED_OPENAI_WHISPER_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+    def getOpenAIWhisperModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST}
+
+    @staticmethod
+    def getOpenAIWhisperModel(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_OPENAI_WHISPER_MODEL}
+
+    @staticmethod
+    def setOpenAIWhisperModel(data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Whisper Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST:
+            config.SELECTED_OPENAI_WHISPER_MODEL = data
+            return {"status":200, "result":config.SELECTED_OPENAI_WHISPER_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_OPENAI_WHISPER_MODEL
+        )
+
+    @staticmethod
+    def getCustomWhisperAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["Custom_Whisper"]}
+
+    def setCustomWhisperAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Custom Whisper Auth Key")
+        engine = "Custom_Whisper"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationTranscriptionApiKey(api_key=data, base_url=config.TRANSCRIPTION_CUSTOM_URL)
+                if result is True:
+                    # カスタムサーバーはどんなモデル名を使っているか分からないため絞り込まない
+                    model_list = model.getTranscriptionApiModelList(api_key=data, base_url=config.TRANSCRIPTION_CUSTOM_URL)
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
+                        self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                        if config.SELECTED_CUSTOM_WHISPER_MODEL not in config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST:
+                            config.SELECTED_CUSTOM_WHISPER_MODEL = config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delCustomWhisperAuthKey()
+        return response
+
+    def delCustomWhisperAuthKey(self, *args, **kwargs) -> dict:
+        engine = "Custom_Whisper"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+        config.SELECTED_CUSTOM_WHISPER_MODEL = None
+        self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+    @staticmethod
+    def getCustomWhisperURL(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_CUSTOM_URL}
+
+    def setCustomWhisperURL(self, data, *args, **kwargs) -> dict:
+        """URL 変更時は「認証成功後に URL を確定」する順序を守る
+        (翻訳側の OpenAI互換エンジンの setOpenAICompatibleURL と同じ)。
+
+        Auth Key が未設定の場合は URL だけ保存して終わる (次回 Auth Key 入力時に検証される)。
+        """
+        printLog("Set Custom Whisper URL", data)
+        engine = "Custom_Whisper"
+        try:
+            data = str(data).strip()
+            auth_key = config.TRANSCRIPTION_AUTH_KEYS[engine]
+
+            if not auth_key:
+                config.TRANSCRIPTION_CUSTOM_URL = data
+                return {"status":200, "result":config.TRANSCRIPTION_CUSTOM_URL}
+
+            result = model.authenticationTranscriptionApiKey(api_key=auth_key, base_url=data)
+            if result is True:
+                model_list = model.getTranscriptionApiModelList(api_key=auth_key, base_url=data)
+                if len(model_list) == 0:
+                    config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+                    config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+                    config.SELECTED_CUSTOM_WHISPER_MODEL = None
+                    self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                    self.updateTranscriptionEngine()
+                    response = VRCTError.create_error_response(
+                        ErrorCode.CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID,
+                        data=config.TRANSCRIPTION_CUSTOM_URL
+                    )
+                else:
+                    config.TRANSCRIPTION_CUSTOM_URL = data
+                    config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                    config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
+                    self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                    if config.SELECTED_CUSTOM_WHISPER_MODEL not in config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST:
+                        config.SELECTED_CUSTOM_WHISPER_MODEL = config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST[0]
+                    self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                    self.updateTranscriptionEngine()
+                    response = {"status":200, "result":config.TRANSCRIPTION_CUSTOM_URL}
+            else:
+                config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+                config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+                config.SELECTED_CUSTOM_WHISPER_MODEL = None
+                self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                self.updateTranscriptionEngine()
+                response = VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID,
+                    data=config.TRANSCRIPTION_CUSTOM_URL
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.TRANSCRIPTION_CUSTOM_URL
+            )
+        return response
+
+    def getCustomWhisperModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST}
+
+    @staticmethod
+    def getCustomWhisperModel(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_CUSTOM_WHISPER_MODEL}
+
+    @staticmethod
+    def setCustomWhisperModel(data, *args, **kwargs) -> dict:
+        printLog("Set Custom Whisper Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST:
+            config.SELECTED_CUSTOM_WHISPER_MODEL = data
+            return {"status":200, "result":config.SELECTED_CUSTOM_WHISPER_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_CUSTOM_WHISPER_MODEL
+        )
 
     @staticmethod
     def getSelectableReleaseChannels(*args, **kwargs) -> dict:
@@ -3469,6 +3795,14 @@ class Controller:
                     config.SELECTED_TRANSCRIPTION_ENGINE = alternate if alternate in selected_engines else None
                 else:
                     config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+        elif current_engine in TRANSCRIPTION_API_ENGINES:
+            # Groq/OpenAI/カスタムサーバーはキー無効化等で使えなくなった
+            # 場合のみ、ローカル Whisper (オフラインで最も安定) へ
+            # フォールバックする。まだ有効なら維持する (この elif が無いと
+            # 下の else に落ちて、新エンジンを選択した直後にここが呼ばれる
+            # たびに意図せず Whisper へ巻き戻ってしまう)。
+            if current_engine not in selected_engines:
+                config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
         else:
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
 
@@ -4247,16 +4581,130 @@ class Controller:
         printLog("Translation Engine Status Init completed")
 
         # Init Transcription Engine Status
-        for engine in config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
-            match engine:
-                case "Whisper":
-                    # キャッシュされた結果を使用（重複チェックを回避）
-                    config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = self._whisper_available_cache
-                case _:
-                    if connected_network is True:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
-                    else:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        printLog("Init Transcription Engine Status")
+
+        def check_transcription_engine(engine: str) -> tuple:
+            """文字起こしエンジンのステータスをチェック（並列実行用）。
+
+            Groq/OpenAI/カスタムサーバーは翻訳側の OpenAI互換エンジンと同じ
+            「認証キーでモデル一覧が取得できるか」で可用性を判定する。
+            実際に文字起こしを1回試すより軽量で、起動時の検証に向く。
+            """
+            status = False
+            auth_key_invalid = False
+            model_list = None
+            selected_model = None
+
+            try:
+                match engine:
+                    case "Whisper":
+                        # キャッシュされた結果を使用（重複チェックを回避）
+                        status = self._whisper_available_cache
+                    case "Groq_Whisper":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        if not api_key:
+                            status = False
+                        else:
+                            base_url = config.GROQ_WHISPER_BASE_URL
+                            if model.authenticationTranscriptionApiKey(api_key=api_key, base_url=base_url) is True:
+                                model_list = model.getTranscriptionApiModelList(
+                                    api_key=api_key, base_url=base_url, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                                )
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_GROQ_WHISPER_MODEL if config.SELECTED_GROQ_WHISPER_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
+                    case "OpenAI_Whisper":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        if not api_key:
+                            status = False
+                        else:
+                            base_url = config.OPENAI_WHISPER_BASE_URL
+                            if model.authenticationTranscriptionApiKey(api_key=api_key, base_url=base_url) is True:
+                                model_list = model.getTranscriptionApiModelList(
+                                    api_key=api_key, base_url=base_url, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                                )
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_OPENAI_WHISPER_MODEL if config.SELECTED_OPENAI_WHISPER_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
+                    case "Custom_Whisper":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        base_url = config.TRANSCRIPTION_CUSTOM_URL
+                        if not api_key or not base_url:
+                            status = False
+                        else:
+                            if model.authenticationTranscriptionApiKey(api_key=api_key, base_url=base_url) is True:
+                                # カスタムサーバーはどんなモデル名を使っているか分からないため絞り込まない
+                                model_list = model.getTranscriptionApiModelList(api_key=api_key, base_url=base_url)
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_CUSTOM_WHISPER_MODEL if config.SELECTED_CUSTOM_WHISPER_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
+                    case _:
+                        # Google 等、ネットワーク接続のみが条件のエンジン
+                        status = connected_network is True
+            except Exception as e:
+                printLog(f"Error checking transcription engine {engine}: {str(e)}")
+                errorLogging()
+                status = False
+
+            return engine, status, auth_key_invalid, model_list, selected_model
+
+        transcription_engine_results = {}
+        transcription_engines_to_check = list(config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST)
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            future_to_transcription_engine = {
+                executor.submit(check_transcription_engine, engine): engine
+                for engine in transcription_engines_to_check
+            }
+            for future in as_completed(future_to_transcription_engine):
+                engine, status, auth_key_invalid, model_list, selected_model = future.result()
+                transcription_engine_results[engine] = (status, auth_key_invalid, model_list, selected_model)
+
+        for engine in transcription_engines_to_check:
+            if engine not in transcription_engine_results:
+                continue
+
+            status, auth_key_invalid, model_list, selected_model = transcription_engine_results[engine]
+
+            config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = status
+
+            if auth_key_invalid:
+                auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                auth_keys[engine] = None
+                config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                printLog(f"{engine} transcription auth key is invalid")
+            elif status:
+                printLog(f"{engine} transcription engine is valid/available")
+
+            if engine == "Groq_Whisper" and not status:
+                config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
+                config.SELECTED_GROQ_WHISPER_MODEL = None
+            if engine == "OpenAI_Whisper" and not status:
+                config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
+                config.SELECTED_OPENAI_WHISPER_MODEL = None
+            if engine == "Custom_Whisper" and not status:
+                config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+                config.SELECTED_CUSTOM_WHISPER_MODEL = None
+
+            if model_list is not None and status:
+                match engine:
+                    case "Groq_Whisper":
+                        config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = model_list
+                        config.SELECTED_GROQ_WHISPER_MODEL = selected_model
+                    case "OpenAI_Whisper":
+                        config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = model_list
+                        config.SELECTED_OPENAI_WHISPER_MODEL = selected_model
+                    case "Custom_Whisper":
+                        config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
+                        config.SELECTED_CUSTOM_WHISPER_MODEL = selected_model
+
+        printLog("Transcription Engine Status Init completed")
         self.initializationProgress(2)
 
         # Set Translation Engine
