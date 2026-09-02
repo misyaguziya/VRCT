@@ -148,6 +148,32 @@ class ManagedDict(dict):
         self._save()
         return result
 
+    # dict のプレーンな `for k in d`/`len(d)`/`d == {...}`/`repr(d)` は
+    # dict の C レベル内部ストレージを直接見るため、上のメソッド群と違い
+    # `_get_internal()` を経由しない。プロパティを直接 (`config.X = {...}`)
+    # 一括再代入した後、既にキャッシュ済みの wrapper がこの一括再代入前の
+    # 内容のまま「見た目だけ」古くなる (実際の値は正しく保存されている)
+    # のを防ぐため、ここも明示的に委譲する。
+    def __iter__(self):
+        return iter(self._get_internal())
+
+    def __len__(self):
+        return len(self._get_internal())
+
+    def __eq__(self, other):
+        return self._get_internal() == other
+
+    def __ne__(self, other):
+        return self._get_internal() != other
+
+    def __repr__(self):
+        return repr(self._get_internal())
+
+    def __str__(self):
+        return str(self._get_internal())
+
+    __hash__ = None
+
 
 class ManagedList(list):
     """List wrapper that saves changes back to config."""
@@ -209,6 +235,24 @@ class ManagedList(list):
     def insert(self, index, value):
         super().insert(index, value)
         self._save()
+
+    # `list == [...]`/`repr(list)`/`str(list)` は list の C レベル内部
+    # ストレージを直接見るため (__iter__/__len__/__getitem__ とは違い)
+    # `_get_internal()` を経由しない。ManagedDict.__eq__ 等と同じ理由で
+    # 明示的に委譲する。
+    def __eq__(self, other):
+        return self._get_internal() == other
+
+    def __ne__(self, other):
+        return self._get_internal() != other
+
+    def __repr__(self):
+        return repr(self._get_internal())
+
+    def __str__(self):
+        return str(self._get_internal())
+
+    __hash__ = None
 
     def remove(self, value):
         super().remove(value)
@@ -300,6 +344,24 @@ class ManagedProperty:
             value = copy.deepcopy(value)
 
         setattr(instance, self.private_name, value)
+
+        # mutable_tracking の場合、既にキャッシュ済みの ManagedDict/ManagedList
+        # wrapper があれば、その「自分自身の (list/dict 基底クラスの) 内部
+        # ストレージ」は今回の一括再代入で更新されないまま残ってしまう。
+        # __getitem__ 等 (_get_internal() 経由) は生き残った wrapper でも
+        # 正しく新しい値を返すが、その後 wrapper 経由で1件でも変更
+        # (`config.X[key] = value` 等) が起きると、wrapper._save() が
+        # 「wrapper 自身の (古い) 基底ストレージ」を internal storage へ
+        # 書き戻してしまい、今回の一括再代入の内容を丸ごと消してしまう
+        # (単なる表示上の古さではなく実データの巻き戻り)。
+        # 古い wrapper を破棄し、次回アクセス時に今回の新しい値から
+        # 作り直させることでこれを防ぐ。
+        if self.mutable_tracking:
+            try:
+                delattr(instance, self.wrapper_cache_name)
+            except AttributeError:
+                pass
+
         # Persist change
         try:
             if self.serialize:
@@ -586,6 +648,12 @@ class Config:
     _HF_REPO_STABLE = "ms-software/VRCT"
     _HF_REPO_BETA = "ms-software/VRCT-beta"
 
+    # Groq/OpenAI 公式の音声書き起こしAPIのエンドポイントは固定 (ユーザー
+    # 編集不可)。カスタムサーバーのみ TRANSCRIPTION_CUSTOM_URL で
+    # ユーザーが指定する (issue #100 のローカル/LANサーバー向け)。
+    GROQ_WHISPER_BASE_URL = "https://api.groq.com/openai/v1"
+    OPENAI_WHISPER_BASE_URL = "https://api.openai.com/v1"
+
     @property
     def SETUP_DOWNLOAD_URL(self) -> str:
         repo = self._HF_REPO_BETA if self.SELECTED_RELEASE_CHANNEL == "beta" else self._HF_REPO_STABLE
@@ -690,6 +758,9 @@ class Config:
     SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_GROQ_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENAI_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
 
     # --- Save Json Data (ManagedProperty-based) ---
     # More simple boolean flags replaced with ManagedProperty
@@ -748,6 +819,20 @@ class Config:
     )
     LMSTUDIO_URL = ManagedProperty('LMSTUDIO_URL', type_=str)
     OPENAI_COMPATIBLE_URL = ManagedProperty('OPENAI_COMPATIBLE_URL', type_=str)
+
+    # --- 文字起こし用 API キー・URL (翻訳用の AUTH_KEYS/OPENAI_COMPATIBLE_URL とは
+    # 意図的に別管理にしている。レート制限/クォータの共有を避け、翻訳と
+    # 文字起こしで別々のキー・エンドポイントを使いたいケースに対応するため。
+    TRANSCRIPTION_AUTH_KEYS = ValidatedProperty('TRANSCRIPTION_AUTH_KEYS',
+        validator=lambda val, inst: (
+            {
+                k: (val[k] if (k in val and isinstance(val[k], (str, type(None)))) else inst.TRANSCRIPTION_AUTH_KEYS.get(k))
+                for k in inst.TRANSCRIPTION_AUTH_KEYS.keys()
+            }
+            if isinstance(val, dict) else None
+        )
+    )
+    TRANSCRIPTION_CUSTOM_URL = ManagedProperty('TRANSCRIPTION_CUSTOM_URL', type_=str)
 
     # --- Transcription settings ---
     SELECTED_TRANSCRIPTION_COMPUTE_TYPE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_TYPE', _selected_transcription_compute_type_validator)
@@ -824,6 +909,9 @@ class Config:
     SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
     SELECTED_OPENAI_COMPATIBLE_MODEL = ManagedProperty('SELECTED_OPENAI_COMPATIBLE_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'))
     SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
+    SELECTED_GROQ_WHISPER_MODEL = ManagedProperty('SELECTED_GROQ_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_WHISPER_MODEL_LIST'))
+    SELECTED_OPENAI_WHISPER_MODEL = ManagedProperty('SELECTED_OPENAI_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_WHISPER_MODEL_LIST'))
+    SELECTED_CUSTOM_WHISPER_MODEL = ManagedProperty('SELECTED_CUSTOM_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'))
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
@@ -913,6 +1001,9 @@ class Config:
         self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
         self._SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
         self._SELECTABLE_OLLAMA_MODEL_LIST = []
+        self._SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
 
         # Save Json Data
         ## Main Window
@@ -1021,6 +1112,12 @@ class Config:
             "Groq_API": None,
             "OpenRouter_API": None,
         }
+        self._TRANSCRIPTION_AUTH_KEYS = {
+            "Groq_Whisper": None,
+            "OpenAI_Whisper": None,
+            "Custom_Whisper": None,
+        }
+        self._TRANSCRIPTION_CUSTOM_URL = ""
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
@@ -1035,6 +1132,9 @@ class Config:
         self._OPENAI_COMPATIBLE_URL = "https://api.openai.com/v1"
         self._SELECTED_OPENAI_COMPATIBLE_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
+        self._SELECTED_GROQ_WHISPER_MODEL = None
+        self._SELECTED_OPENAI_WHISPER_MODEL = None
+        self._SELECTED_CUSTOM_WHISPER_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
@@ -1181,6 +1281,9 @@ class Config:
             ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
             ('SELECTED_OPENAI_COMPATIBLE_MODEL', 'SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'),
             ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
+            ('SELECTED_GROQ_WHISPER_MODEL', 'SELECTABLE_GROQ_WHISPER_MODEL_LIST'),
+            ('SELECTED_OPENAI_WHISPER_MODEL', 'SELECTABLE_OPENAI_WHISPER_MODEL_LIST'),
+            ('SELECTED_CUSTOM_WHISPER_MODEL', 'SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'),
         ]
         for sel_attr, list_attr in pairs:
             try:

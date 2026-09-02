@@ -34,6 +34,7 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer, backwardCompatibleRenameWeightsDir
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
+from models.transcription.transcription_openai_compatible import checkTranscriptionApiKey, getAvailableTranscriptionModels
 from models.transliteration.transliteration_transliterator import Transliterator
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
@@ -245,6 +246,34 @@ class _AudioDeviceSession:
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
         raise NotImplementedError
+
+    @staticmethod
+    def _resolve_api_transcription_kwargs() -> dict:
+        """Groq/OpenAI/カスタムサーバー選択時のみ、対応する認証キー/URL/
+        モデルを config から解決して `AudioTranscriber` へ渡す kwargs を
+        作る。Google/ローカル Whisper 選択時は空の dict を返す (それらの
+        引数は `AudioTranscriber` 側で None がデフォルトのため無視される)。
+        """
+        engine = config.SELECTED_TRANSCRIPTION_ENGINE
+        if engine == "Groq_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Groq_Whisper"),
+                "base_url": config.GROQ_WHISPER_BASE_URL,
+                "api_model": config.SELECTED_GROQ_WHISPER_MODEL,
+            }
+        if engine == "OpenAI_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("OpenAI_Whisper"),
+                "base_url": config.OPENAI_WHISPER_BASE_URL,
+                "api_model": config.SELECTED_OPENAI_WHISPER_MODEL,
+            }
+        if engine == "Custom_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Custom_Whisper"),
+                "base_url": config.TRANSCRIPTION_CUSTOM_URL,
+                "api_model": config.SELECTED_CUSTOM_WHISPER_MODEL,
+            }
+        return {}
 
     # --- 公開 API ---------------------------------------------------------
 
@@ -476,6 +505,7 @@ class MicSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            **self._resolve_api_transcription_kwargs(),
         )
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
@@ -533,6 +563,7 @@ class SpeakerSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            **self._resolve_api_transcription_kwargs(),
         )
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
@@ -669,6 +700,12 @@ class Model:
 
     def downloadWhisperModelWeight(self, weight_type, callback=None, end_callback=None):
         return downloadWhisperWeight(config.PATH_LOCAL, weight_type, callback, end_callback)
+
+    def authenticationTranscriptionApiKey(self, api_key: str, base_url: str) -> bool:
+        return checkTranscriptionApiKey(api_key, base_url)
+
+    def getTranscriptionApiModelList(self, api_key: str, base_url: str, keyword_filter: Optional[list[str]] = None) -> list[str]:
+        return getAvailableTranscriptionModels(api_key, base_url, keyword_filter=keyword_filter)
 
     def resetKeywordProcessor(self):
         self.ensure_initialized()
