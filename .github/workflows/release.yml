@@ -114,6 +114,16 @@ jobs:
       - name: Build and package
         run: npm run release-all
 
+      - name: Compute SHA-256 of the installer
+        id: sha256
+        shell: pwsh
+        run: |
+          $exePath = "./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe"
+          $shaPath = "./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe.sha256"
+          $hash = (Get-FileHash -Path $exePath -Algorithm SHA256).Hash.ToLower()
+          Set-Content -Path $shaPath -Value $hash -NoNewline -Encoding ascii
+          echo "sha_path=$shaPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - name: Upload to Hugging Face Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -153,3 +163,13 @@ jobs:
           asset_path: ./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe
           asset_name: VRCT_${{ env.VERSION }}_x64-setup.exe
           asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset (SHA-256 checksum)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.sha256.outputs.sha_path }}
+          asset_name: VRCT_${{ env.VERSION }}_x64-setup.exe.sha256
+          asset_content_type: text/plain

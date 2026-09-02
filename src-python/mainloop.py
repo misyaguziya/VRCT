@@ -456,6 +456,7 @@ mapping = {
     "/set/data/websocket_host": {"status": True, "variable":controller.setWebSocketHost},
     "/get/data/websocket_port": {"status": True, "variable":controller.getWebSocketPort},
     "/set/data/websocket_port": {"status": True, "variable":controller.setWebSocketPort},
+    "/get/data/websocket_auth_token": {"status": True, "variable":controller.getWebSocketAuthToken},
     "/get/data/websocket_server": {"status": True, "variable":controller.getWebSocketServer},
     "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
     "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
@@ -509,9 +510,21 @@ controller.setInitMapping(init_mapping)
 
 DEFAULT_WORKER_COUNT = 3  # 必要なら増やす
 
+# キュー要素は (endpoint, data, attempt) の 3-tuple。attempt は
+# 「同一ロックが処理中」「エンドポイントが初期化未完了 (423)」で再キューされた
+# 回数。無制限に再キューし続けると、応答を一切返さないまま
+# ワーカーを 1 本ずつ専有し、ワーカーが limited (DEFAULT_WORKER_COUNT 本)
+# なので詰まった要求が積み重なると他の全リクエストが処理できなくなる
+# (特に初期化ハングと重なると恒久的な無応答になる)。上限に達したら
+# 423 を応答として返し、再キューを打ち切る。
+_LOCK_BUSY_RETRY_INTERVAL_SEC = 0.05
+_LOCK_BUSY_MAX_RETRIES = 400  # 0.05s × 400 ≈ 20s (同一ロックの処理完了を待つ上限)
+_ENDPOINT_LOCKED_RETRY_INTERVAL_SEC = 0.1
+_ENDPOINT_LOCKED_MAX_RETRIES = 300  # 0.1s × 300 ≈ 30s (初期化完了を待つ上限)
+
 class Main:
     def __init__(self, controller_instance: Controller, mapping_data: dict, worker_count: int = DEFAULT_WORKER_COUNT) -> None:
-        self.queue: Queue[Tuple[str, Any]] = Queue()
+        self.queue: "Queue[Tuple[str, Any, int]]" = Queue()
         self._stop_event: Event = Event()
         self.controller = controller_instance
         self.mapping = mapping_data
@@ -559,7 +572,7 @@ class Main:
                     data = received_data.get("data")
                     data = encodeBase64(data) if data is not None else None
                     printLog(endpoint, {"receive_data": data})
-                    self.queue.put((endpoint, data))
+                    self.queue.put((endpoint, data, 0))
             except json.JSONDecodeError:
                 # malformed input; log and continue
                 errorLogging()
@@ -571,30 +584,6 @@ class Main:
         th_receiver.daemon = True
         th_receiver.start()
         self._threads.append(th_receiver)
-
-    def handleRequest(self, endpoint: str, data: Any = None) -> tuple:
-        result = None  # デフォルト値を設定
-        status = 500   # デフォルト値を設定
-
-        handler = self.mapping.get(endpoint)
-        if handler is None:
-            response = "Invalid endpoint"
-            status = 404
-        elif handler["status"] is False:
-            response = "Locked endpoint"
-            status = 423
-        else:
-            try:
-                response = handler["variable"](data)
-                status = response.get("status")
-                result = response.get("result")
-                time.sleep(0.2)  # 処理の安定化のために少し待機
-            except Exception:
-                errorLogging()
-                result = "Internal error"
-                status = 500
-
-        return result, status
 
     def _call_handler(self, endpoint: str, data: Any = None) -> tuple:
         result = None
@@ -621,7 +610,7 @@ class Main:
     def handler(self) -> None:
         while not self._stop_event.is_set():
             try:
-                endpoint, data = self.queue.get(timeout=0.5)
+                endpoint, data, attempt = self.queue.get(timeout=0.5)
             except Empty:
                 continue
 
@@ -632,9 +621,20 @@ class Main:
             if lock is not None:
                 acquired = lock.acquire(blocking=False)
                 if not acquired:
-                    # 同一機能で既に処理中 -> 少し待って再キュー
-                    time.sleep(0.05)
-                    self.queue.put((endpoint, data))
+                    # 同一機能で既に処理中 -> 少し待って再キュー。
+                    # 上限に達したら「本当にロック解放を待つべきか」を
+                    # 諦め、423 を応答して打ち切る (無応答のままワーカーを
+                    # 専有し続けるのを防ぐ)。
+                    if attempt >= _LOCK_BUSY_MAX_RETRIES:
+                        printLog(
+                            f"{endpoint}: lock busy retry limit "
+                            f"({_LOCK_BUSY_MAX_RETRIES}) exceeded; responding 423"
+                        )
+                        printLog(endpoint, {"status": 423, "send_data": "Locked endpoint (busy)"})
+                        printResponse(423, endpoint, "Locked endpoint (busy)")
+                        continue
+                    time.sleep(_LOCK_BUSY_RETRY_INTERVAL_SEC)
+                    self.queue.put((endpoint, data, attempt + 1))
                     continue
                 try:
                     result, status = self._call_handler(endpoint, data)
@@ -644,8 +644,19 @@ class Main:
                 result, status = self._call_handler(endpoint, data)
 
             if status == 423:
-                time.sleep(0.1)
-                self.queue.put((endpoint, data))
+                # エンドポイントがまだ初期化未完了でロックされている。上限まで
+                # 待っても解除されなければ、無応答のまま再キューし続けず
+                # 423 を応答して呼び出し元に判断を委ねる。
+                if attempt >= _ENDPOINT_LOCKED_MAX_RETRIES:
+                    printLog(
+                        f"{endpoint}: endpoint-locked retry limit "
+                        f"({_ENDPOINT_LOCKED_MAX_RETRIES}) exceeded; responding 423"
+                    )
+                    printLog(endpoint, {"status": status, "send_data": result})
+                    printResponse(status, endpoint, result)
+                    continue
+                time.sleep(_ENDPOINT_LOCKED_RETRY_INTERVAL_SEC)
+                self.queue.put((endpoint, data, attempt + 1))
             else:
                 printLog(endpoint, {"status": status, "send_data": result})
                 printResponse(status, endpoint, result)

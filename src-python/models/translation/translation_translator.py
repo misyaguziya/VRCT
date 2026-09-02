@@ -25,6 +25,7 @@ except Exception:
     ENABLE_TRANSLATORS = False
 
 import warnings
+from threading import RLock
 from typing import Any, Optional, Tuple
 
 warnings.filterwarnings("ignore")
@@ -121,6 +122,18 @@ class Translator:
         self.ctranslate2_tokenizer: Any = None
         self.is_loaded_ctranslate2_model: bool = False
         self.is_changed_translator_parameters: bool = False
+        # ctranslate2_translator/ctranslate2_tokenizer は mic/speaker の
+        # _print_transcript スレッドと mainloop ワーカー (チャット送信) から
+        # 同時に触られる共有状態。tokenizer.src_lang への代入は tokenizer
+        # インスタンス自体の状態を書き換えるため、無ロックだと mic/speaker
+        # 間で src_lang が競合して意図しない言語で encode/decode されたり
+        # (クラッシュせず気付きにくい翻訳品質の劣化)、changeCTranslate2Model()
+        # によるモデル差し替え中の破棄途中オブジェクトに translate_batch が
+        # 入りうる。CTranslate2 の Translator 自体はスレッドセーフだが、
+        # これは tokenizer の保護にはならない。RLock なのは、将来
+        # 呼び出し元が既にロックを保持した状態で再入する可能性に備えるため
+        # (現状のコードパスでは再入は起きない)。
+        self._ctranslate2_lock: RLock = RLock()
 
     def authenticationDeepLAuthKey(self, auth_key: str) -> bool:
         """Authenticate DeepL API with the provided key.
@@ -431,29 +444,30 @@ class Translator:
         if ctranslate2 is None or transformers is None:
             return
 
-        self.is_loaded_ctranslate2_model = False
-        directory_name = ctranslate2_weights[model_type]["directory_name"]
-        tokenizer = ctranslate2_weights[model_type]["tokenizer"]
-        weight_path = os_path.join(path, "weights", "ctranslate2", directory_name)
-        tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
+        with self._ctranslate2_lock:
+            self.is_loaded_ctranslate2_model = False
+            directory_name = ctranslate2_weights[model_type]["directory_name"]
+            tokenizer = ctranslate2_weights[model_type]["tokenizer"]
+            weight_path = os_path.join(path, "weights", "ctranslate2", directory_name)
+            tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
 
-        if compute_type == "auto":
-            compute_type = getBestComputeType(device, device_index)
-        self.ctranslate2_translator = ctranslate2.Translator(
-            weight_path,
-            device=device,
-            device_index=device_index,
-            compute_type=compute_type,
-            inter_threads=1,
-            intra_threads=4,
-        )
-        try:
-            self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
-        except Exception:
-            errorLogging()
-            tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
-            self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
-        self.is_loaded_ctranslate2_model = True
+            if compute_type == "auto":
+                compute_type = getBestComputeType(device, device_index)
+            self.ctranslate2_translator = ctranslate2.Translator(
+                weight_path,
+                device=device,
+                device_index=device_index,
+                compute_type=compute_type,
+                inter_threads=1,
+                intra_threads=4,
+            )
+            try:
+                self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+            except Exception:
+                errorLogging()
+                tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
+                self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+            self.is_loaded_ctranslate2_model = True
 
     def isLoadedCTranslate2Model(self) -> bool:
         return self.is_loaded_ctranslate2_model
@@ -470,22 +484,23 @@ class Translator:
         Returns a string on success or False on failure (keeps legacy behavior).
         """
         result: Any = False
-        if self.is_loaded_ctranslate2_model is True:
-            try:
-                self.ctranslate2_tokenizer.src_lang = source_language
-                source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
-                match weight_type:
-                    case "m2m100_418M-ct2-int8" | "m2m100_1.2B-ct2-int8":
-                        target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
-                    case "nllb-200-distilled-600M-ct2-int8" | "nllb-200-distilled-1.3B-ct2-int8" | "nllb-200-3.3B-ct2-int8":
-                        target_prefix = [target_language]
-                    case _:
-                        return False
-                results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
-                target = results[0].hypotheses[0][1:]
-                result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
-            except Exception:
-                errorLogging()
+        with self._ctranslate2_lock:
+            if self.is_loaded_ctranslate2_model is True:
+                try:
+                    self.ctranslate2_tokenizer.src_lang = source_language
+                    source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
+                    match weight_type:
+                        case "m2m100_418M-ct2-int8" | "m2m100_1.2B-ct2-int8":
+                            target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+                        case "nllb-200-distilled-600M-ct2-int8" | "nllb-200-distilled-1.3B-ct2-int8" | "nllb-200-3.3B-ct2-int8":
+                            target_prefix = [target_language]
+                        case _:
+                            return False
+                    results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
+                    target = results[0].hypotheses[0][1:]
+                    result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
+                except Exception:
+                    errorLogging()
         return result
 
     @staticmethod

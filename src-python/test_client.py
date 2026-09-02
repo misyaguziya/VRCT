@@ -16,8 +16,11 @@ import time
 import threading
 from typing import Optional, Dict, Any
 
-if os.path.exists("config.json"):
-    os.remove("config.json")
+# config.json の削除は __main__ 実行時 (main() の先頭) にのみ行う。
+# このファイルは "test_" プレフィックスのため pytest に (test_*.py の
+# 命名規則により、実際のテストスイートでは無いにも関わらず) import
+# されうる。ここに無条件で置くと、単に import されただけでカレント
+# ディレクトリの実 config.json が削除されてしまう。
 
 class Color:
     GREEN = '\033[32m'
@@ -923,6 +926,10 @@ def run_interactive_mode(client: TestClient):
 
 def main():
     """メイン処理"""
+    # 初期化のため、config.jsonの削除 (実行時のみ; import 時には行わない)
+    if os.path.exists("config.json"):
+        os.remove("config.json")
+
     print(f"{Color.BOLD}{'='*60}{Color.RESET}")
     print(f"{Color.BOLD}  VRCT Backend Test Client{Color.RESET}")
     print(f"{Color.BOLD}{'='*60}{Color.RESET}\n")

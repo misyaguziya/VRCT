@@ -12,7 +12,6 @@ class TestMicTranslationEngineLimitContract(unittest.TestCase):
         self.controller = Controller.__new__(Controller)
         self.controller.run_mapping = {"error_translation_engine": "error_translation_engine"}
         self.controller.changeToCTranslate2Process = lambda: None
-        self.controller._pending_partial_transcripts = {}
         self.calls = []
         self.controller.run = lambda status, endpoint, result: self.calls.append((status, endpoint, result))
 
@@ -49,7 +48,6 @@ class TestRecognitionErrorVisibility(unittest.TestCase):
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
         self.controller.run_mapping = {"transcription_recognition_error": "transcription_recognition_error"}
-        self.controller._pending_partial_transcripts = {}
         self.calls = []
         self.controller.run = lambda status, endpoint, result: self.calls.append((status, endpoint, result))
 
@@ -123,6 +121,11 @@ class TestShutdownStopsAutoSelectTrackers(unittest.TestCase):
 
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
+        # shutdown() は mic/speaker_lifecycle_lock を取得してから
+        # 停止関数を呼ぶ (ロードマップ項目 5)。__init__ をバイパスしている
+        # ためここで明示的にシードする。
+        self.controller.mic_lifecycle_lock = Lock()
+        self.controller.speaker_lifecycle_lock = Lock()
 
     @patch("controller.model.telemetryShutdown", return_value=None)
     @patch("controller.config.saveConfigToFile", return_value=None)
@@ -147,7 +150,7 @@ class TestShutdownStopsAutoSelectTrackers(unittest.TestCase):
         self.assertIn(("setMicAutoActive", False), calls)
         self.assertIn(("setSpeakerAutoActive", False), calls)
         # tracker を明示停止してから stopMonitoring() を呼ぶこと
-        # (逆順だと _syncMonitoringLifecycle が「もう片方はまだ active」と
+        # (逆順だと _syncMonitoringLifecycleLocked が「もう片方はまだ active」と
         # 見て監視スレッドを再起動してしまう、詳細は shutdown() のコメント参照)。
         self.assertLess(calls.index(("setMicAutoActive", False)), calls.index(("stopMonitoring",)))
         self.assertLess(calls.index(("setSpeakerAutoActive", False)), calls.index(("stopMonitoring",)))

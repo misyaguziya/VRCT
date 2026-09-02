@@ -9,7 +9,7 @@ import time
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isAvailableWebSocketServer
+from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
@@ -23,6 +23,12 @@ _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 # MIN_INTERVAL_SEC 以上経過した場合のみ forward する (0% / 100% は必ず送る)。
 _DOWNLOAD_PROGRESS_MIN_DELTA = 0.01
 _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
+
+# shutdown() が mic/speaker_lifecycle_lock を待つ上限。model.py の
+# TRANSCRIPT_STOP_JOIN_TIMEOUT (15s) + PyAudio open の _MIC_OPEN_TIMEOUT_SEC
+# (8s) など、ロック保持中に自然完了しうる最長の単発処理より余裕を持たせつつ、
+# 万一ロックが本当に返ってこない場合でも終了処理自体を無期限に止めない。
+_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC = 20.0
 
 
 def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
@@ -68,6 +74,14 @@ class Controller:
         except Exception:
             # In test or headless environments initialization may fail; log and continue.
             errorLogging()
+        try:
+            # OSC ミュート同期 (Model.changeHandlerMute, 任意の OSC 受信
+            # スレッドで走る) が pause()/resume() を mic_lifecycle_lock 配下
+            # で実行できるよう、ロック付きラッパーを Model 側のコールバック
+            # スロットへ登録する。
+            model.setMicMuteStatusChangeCallback(self._changeMicTranscriptStatusLocked)
+        except Exception:
+            errorLogging()
 
     def _is_overlay_available(self) -> bool:
         """Safe check whether overlay is present and initialized.
@@ -89,7 +103,30 @@ class Controller:
 
     def setRun(self, run:Callable[[int, str, Any], None]) -> None:
         self.run = run
-    
+
+    def _stopLockedForShutdown(self, lock: Lock, stop_fn: Callable[[], None], label: str) -> None:
+        """shutdown() 専用: lock を取得してから stop_fn() を呼ぶ。
+
+        通常経路 (stopTranscriptionSendMessage 等) と同じロックを使うが、
+        shutdown() は他の全ての mic/speaker_lifecycle_lock 保持経路
+        (start/stop 系, AudioLifecycleWorker 経由のデバイス切替等) と
+        直列化されないまま model.* を直接叩いていたため、_stop() と
+        _start() が同一 Session に対して並行実行され得た。取得を
+        acquire(timeout=...) にしているのは、終了処理自体がロック待ちで
+        無期限にハングしないようにするため (ロックが返らない場合は
+        ログを残してこの停止だけスキップし、後続の停止処理は続行する)。
+        """
+        acquired = lock.acquire(timeout=_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC)
+        if not acquired:
+            printLog(f"shutdown: {label} のロック取得が {_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC}s でタイムアウトしたため、この停止処理をスキップします")
+            return
+        try:
+            stop_fn()
+        except Exception:
+            errorLogging()
+        finally:
+            lock.release()
+
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
 
@@ -110,7 +147,7 @@ class Controller:
         # まま COM ポインタが破棄されて access violation
         # (Exception ignored in: _compointer_base.__del__) を起こす経路が
         # 残る。stopMonitoring() より前に呼ぶ: 後で呼ぶと
-        # _syncMonitoringLifecycle() が「もう片方はまだ active」と見て
+        # _syncMonitoringLifecycleLocked() が「もう片方はまだ active」と見て
         # 監視スレッドを再起動してしまう。
         try:
             device_manager.setMicAutoActive(False)
@@ -124,22 +161,17 @@ class Controller:
             device_manager.stopMonitoring()
         except Exception:
             errorLogging()
-        try:
-            model.stopMicTranscript()
-        except Exception:
-            errorLogging()
-        try:
-            model.stopSpeakerTranscript()
-        except Exception:
-            errorLogging()
-        try:
-            model.stopCheckMicEnergy()
-        except Exception:
-            errorLogging()
-        try:
-            model.stopCheckSpeakerEnergy()
-        except Exception:
-            errorLogging()
+        # 以下の4つは他の全ての start/stop 系 (mic/speaker_lifecycle_lock を
+        # 保持する) と直列化する必要がある。ロック未取得のまま model.* を
+        # 直接叩くと、AudioLifecycleWorker がまだ実行中の
+        # restartAccessMicDevices 等と _stop()/_start() が並行実行され、
+        # 片方が代入した新しい Recorder をもう片方が知らずに破棄する形で
+        # listener スレッドと PyAudio ストリームが宙に浮いたままプロセスが
+        # 終了しうる。
+        self._stopLockedForShutdown(self.mic_lifecycle_lock, model.stopMicTranscript, "mic transcript")
+        self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopSpeakerTranscript, "speaker transcript")
+        self._stopLockedForShutdown(self.mic_lifecycle_lock, model.stopCheckMicEnergy, "mic energy")
+        self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopCheckSpeakerEnergy, "speaker energy")
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a
@@ -1422,6 +1454,17 @@ class Controller:
         with self.mic_lifecycle_lock:
             model.reconfigureMicDevice()
 
+    def _changeMicTranscriptStatusLocked(self) -> None:
+        # OSC ミュート同期 (Model.changeHandlerMute) からのみ呼ばれる
+        # (model.setMicMuteStatusChangeCallback 経由で __init__ が登録)。
+        # 任意の OSC 受信スレッドで走るため、他の mic_lifecycle_lock
+        # 保持経路 (start/stop 系, Auto Select のデバイス切替) と
+        # 直列化されていなかった (壊れた Recorder への pause()/resume()
+        # で TypeError になったり、resume() が新しい _audio_queue を drain
+        # して録音済み音声を取りこぼす原因になっていた)。
+        with self.mic_lifecycle_lock:
+            model.changeMicTranscriptStatus()
+
     @staticmethod
     def getMicThreshold(*args, **kwargs) -> dict:
         return {"status":200, "result":config.MIC_THRESHOLD}
@@ -1854,7 +1897,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
 
     def setDeeplAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set DeepL Auth Key", data)
+        printLog("Set DeepL Auth Key")
         translator_name = "DeepL_API"
         try:
             data = str(data)
@@ -1899,7 +1942,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["Plamo_API"]}
 
     def setPlamoAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Plamo Auth Key", data)
+        printLog("Set Plamo Auth Key")
         translator_name = "Plamo_API"
         try:
             data = str(data)
@@ -1986,7 +2029,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["Gemini_API"]}
 
     def setGeminiAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Gemini Auth Key", data)
+        printLog("Set Gemini Auth Key")
         translator_name = "Gemini_API"
         try:
             data = str(data)
@@ -2074,7 +2117,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["OpenAI_API"]}
 
     def setOpenAIAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Auth Key", data)
+        printLog("Set OpenAI Auth Key")
         translator_name = "OpenAI_API"
         try:
             data = str(data)
@@ -2162,7 +2205,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["Groq_API"]}
 
     def setGroqAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Groq Auth Key", data)
+        printLog("Set Groq Auth Key")
         translator_name = "Groq_API"
         try:
             data = str(data)
@@ -2250,7 +2293,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["OpenRouter_API"]}
 
     def setOpenRouterAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenRouter Auth Key", data)
+        printLog("Set OpenRouter Auth Key")
         translator_name = "OpenRouter_API"
         try:
             data = str(data)
@@ -2469,7 +2512,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["OpenAI_Compatible"]}
 
     def setOpenAICompatibleAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Compatible Auth Key", data)
+        printLog("Set OpenAI Compatible Auth Key")
         translator_name = "OpenAI_Compatible"
         try:
             data = str(data).strip()
@@ -3155,7 +3198,13 @@ class Controller:
     def changeToCTranslate2Process(self) -> None:
         selected_engines = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[selected_engines] = False
-        config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
+        # SELECTED_TRANSLATION_ENGINES は ValidatedProperty (生参照を返さない) なので
+        # read → 変更 → 再代入する必要がある。以前は config.X[...] = ... の直接代入で
+        # バリデータを一切通さずに内部状態を書き換えていた (P0-3 の生参照バグに依存していた
+        # 唯一の呼び出し箇所)。
+        engines = config.SELECTED_TRANSLATION_ENGINES
+        engines[config.SELECTED_TAB_NO] = "CTranslate2"
+        config.SELECTED_TRANSLATION_ENGINES = engines
         selectable_engines = self.getTranslationEngines()["result"]
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
@@ -3477,7 +3526,12 @@ class Controller:
 
     @staticmethod
     def setWebSocketHost(data, *args, **kwargs) -> dict:
-        if isValidIpAddress(data) is False:
+        # 0.0.0.0/:: (ワイルドカードアドレス) は「マシンが持つ全インター
+        # フェースで listen する」ことを意味し、WebSocket サーバーは
+        # 認証 (token) を導入済みとはいえ、同一 LAN 上の第三者からの
+        # 到達性まで許してしまう。特定の LAN IP を明示的に選ぶのとは
+        # リスクの性質が異なるため、他の IP 検証と分けて拒否する。
+        if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
             response = VRCTError.create_error_response(
                 ErrorCode.VALIDATION_INVALID_IP,
                 data=config.WEBSOCKET_HOST
@@ -3540,6 +3594,18 @@ class Controller:
                     data=config.WEBSOCKET_PORT
                 )
         return response
+
+    @staticmethod
+    def getWebSocketAuthToken(*args, **kwargs) -> dict:
+        """WebSocket サーバーへの接続に必要なトークンを返す。
+
+        OBS Browser Source はサーバー側が生成するページに自動で埋め込むため
+        これを直接使う必要はないが、VRCT-TTS のように接続 URL をユーザーが
+        手動入力する外部連携ツール向けに、UI 側で
+        `ws://{host}:{port}/?token={token}` をコピーできるようにするために
+        公開する。
+        """
+        return {"status":200, "result":config.WEBSOCKET_AUTH_TOKEN}
 
     @staticmethod
     def getWebSocketServer(*args, **kwargs) -> dict:
@@ -3845,6 +3911,17 @@ class Controller:
         removeLog()
         printLog("Start Initialization")
 
+        # watchdog を初期化処理の先頭で起動する。以前は init() の最終行に
+        # あったため、モデル重みのダウンロードや外部 API 呼び出しが
+        # (バグ等で) 無期限にハングした場合、watchdog 自体がまだ起動して
+        # おらず自動復旧が一切効かなかった。フロントエンドは Python
+        # プロセスを spawn した直後から 20s 間隔で /run/feed_watchdog を
+        # 送り続けており (StartPythonController.jsx)、このエンドポイントは
+        # 初期化中でも処理可能 (mainloop.py の "status": True) なため、
+        # init() をメインスレッドで実行している間も 3 本のハンドラワーカー
+        # がフィードを処理できる。よってここで起動しても安全。
+        self.startWatchdog()
+
         # Network check
         connected_network = isConnectedNetwork()
         if connected_network is True:
@@ -3883,12 +3960,39 @@ class Controller:
                 th_download_whisper.daemon = True
                 th_download_whisper.start()
 
+            # join() にタイムアウトを設ける: downloadCTranslate2Weight/
+            # downloadWhisperWeight は HTTP タイムアウト+リトライ (最大 3 回
+            # × 最大 70s + バックオフ) を持つため 1 ファイルあたりの worst
+            # case は数分程度で収まるが、重みセットが複数ファイルにまたがる
+            # ため、理論上の合計 worst case はさらに長くなりうる。無制限
+            # join だと万一そのバジェットを超えて本当にハングした場合に
+            # init() (ひいてはアプリの起動) が無期限に固まる。ここでの
+            # タイムアウトは「異常系での最終防波堤」として十分長く
+            # (30 分) 取り、正常系の低速回線でのリトライを誤って
+            # 中断しないようにする。タイムアウトした場合はダウンロード
+            # スレッド (daemon) をバックグラウンドで走らせたまま
+            # 初期化を先へ進める。
+            _WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC = 1800
             if isinstance(th_download_ctranslate2, Thread):
-                th_download_ctranslate2.join()
+                th_download_ctranslate2.join(timeout=_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC)
+                if th_download_ctranslate2.is_alive():
+                    printLog(
+                        f"CTranslate2 weight download did not finish within "
+                        f"{_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC}s; continuing "
+                        "initialization without waiting further (download "
+                        "continues in the background)"
+                    )
                 # ダウンロードを行った場合は結果が変わるため再検証が必要
                 ctranslate2_pre_available = None
             if isinstance(th_download_whisper, Thread):
-                th_download_whisper.join()
+                th_download_whisper.join(timeout=_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC)
+                if th_download_whisper.is_alive():
+                    printLog(
+                        f"Whisper weight download did not finish within "
+                        f"{_WEIGHT_DOWNLOAD_JOIN_TIMEOUT_SEC}s; continuing "
+                        "initialization without waiting further (download "
+                        "continues in the background)"
+                    )
                 whisper_pre_available = None
 
         # Check and disable/enable AI models (parallel)
@@ -4287,4 +4391,3 @@ class Controller:
         self.updateConfigSettings()
 
         printLog("End Initialization")
-        self.startWatchdog()

@@ -7,6 +7,11 @@ from psutil import process_iter
 import openvr
 
 try:
+    from models import openvr_session
+except ImportError:
+    import openvr_session
+
+try:
     from utils import printLog
 except ImportError:
     def printLog(data, *args, **kwargs):
@@ -43,6 +48,7 @@ if sys.platform == 'win32':
     import ctypes
     import ctypes.wintypes as wintypes
     user32 = ctypes.WinDLL('user32', use_last_error=True)
+    kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
 
     def find_windows_by_title_substring(substring: str):
         HWND = wintypes.HWND
@@ -88,10 +94,31 @@ if sys.platform == 'win32':
 
     def focus_window(hwnd) -> bool:
         try:
-            # Restore and set foreground
             SW_RESTORE = 9
             user32.ShowWindow(hwnd, SW_RESTORE)
-            res = user32.SetForegroundWindow(hwnd)
+
+            # Windows のフォーカス奪取防止機構により、直前までフォア
+            # グラウンドでなかった別プロセス (VRCT) からの素の
+            # SetForegroundWindow はしばしば OS に無視され、タスクバーの
+            # 点滅だけで終わる。AttachThreadInput で自スレッドの入力状態を
+            # 現在のフォアグラウンドウィンドウのスレッドに一時的に結び付ける
+            # と、両者が「入力状態を共有するスレッド」とみなされ、この
+            # 制限を正規の方法で回避できる (よく知られた Win32 の作法)。
+            current_thread_id = kernel32.GetCurrentThreadId()
+            fore_hwnd = user32.GetForegroundWindow()
+            fore_thread_id = user32.GetWindowThreadProcessId(fore_hwnd, None) if fore_hwnd else 0
+
+            attached = False
+            if fore_thread_id and fore_thread_id != current_thread_id:
+                attached = bool(user32.AttachThreadInput(current_thread_id, fore_thread_id, True))
+
+            try:
+                user32.BringWindowToTop(hwnd)
+                res = user32.SetForegroundWindow(hwnd)
+            finally:
+                if attached:
+                    user32.AttachThreadInput(current_thread_id, fore_thread_id, False)
+
             return bool(res)
         except Exception:
             return False
@@ -185,9 +212,24 @@ class Clipboard:
         printLog("Clipboard: VR monitor thread ended.")
 
     def _setup_vr_app_name(self):
-        """Setup VR application name from OpenVR."""
+        """Setup VR application name from OpenVR.
+
+        Goes through the shared, reference-counted openvr_session instead
+        of calling openvr.init()/openvr.shutdown() directly: Overlay uses
+        the same OpenVR session, and openvr.shutdown() tears down the
+        whole process's VR connection, not just this caller's. Releasing
+        in a finally block avoids leaking a reference (which would keep
+        the shared session permanently "held" and stop shutdown() from
+        ever running) if anything below the acquire fails.
+        """
         try:
-            openvr.init(openvr.VRApplication_Background)
+            openvr_session.acquire(openvr.VRApplication_Background)
+        except Exception as e:
+            printLog(f"Clipboard: Error setting up VR app name: {e}")
+            self.app_name = None
+            return
+
+        try:
             apps = openvr.VRApplications()
 
             app_count = apps.getApplicationCount()
@@ -206,19 +248,26 @@ class Clipboard:
                 if key.startswith("steam.app"):
                     self.app_name = name
                     break
-            openvr.shutdown()
         except Exception as e:
             printLog(f"Clipboard: Error setting up VR app name: {e}")
             self.app_name = None
+        finally:
+            openvr_session.release()
 
     def copy_and_paste(self, message: str, window_name: str|None = None, countdown: int = 0) -> bool:
         window_name = window_name if window_name is not None else self.app_name
 
-        # If window_name is provided, attempt to focus it (Windows only).
-        # If window_name is None, skip focusing and paste into the currently focused window.
+        # If window_name is available, attempt to focus it (Windows only).
+        # Focusing another process's window is an OS-level privilege VRCT
+        # is not always granted (see focus_window()); when it fails we
+        # still want the text on the clipboard for a manual paste, so
+        # copying below is unconditional -- only the automatic paste
+        # (which requires the right window to actually be focused, or it
+        # would type into whatever else happens to have focus) is gated
+        # on focus having actually succeeded.
+        focused = False
         if window_name is not None and sys.platform == 'win32':
             printLog(f"paste: attempting to focus window matching '{window_name}'")
-            focused = False
 
             # try title substring match first
             wins = find_windows_by_title_substring(window_name)
@@ -238,22 +287,21 @@ class Clipboard:
                         break
 
             if not focused:
-                printLog(f"copy_and_paste: no window found matching '{window_name}'")
-                return False
+                printLog(f"copy_and_paste: could not focus a window matching '{window_name}'; copying only")
+            else:
+                # small delay to allow focus to settle
+                time.sleep(0.2)
 
-            # small delay to allow focus to settle
-            time.sleep(0.2)
-
-            # copy
-            copied = copy_to_clipboard(message)
-            if not copied:
-                printLog("copy_and_paste: failed to copy to clipboard")
-                return False
-            # paste
-            pasted = paste_via_pyautogui(countdown)
-            return bool(pasted)
-        else:
+        copied = copy_to_clipboard(message)
+        if not copied:
+            printLog("copy_and_paste: failed to copy to clipboard")
             return False
+
+        if not focused:
+            return False
+
+        pasted = paste_via_pyautogui(countdown)
+        return bool(pasted)
 
 if __name__ == '__main__':
     clipboard = Clipboard()

@@ -2,6 +2,7 @@ import atexit
 import copy
 import asyncio
 import faulthandler
+import hashlib
 import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
@@ -44,6 +45,15 @@ from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
+
+# GitHub API 呼び出し / setup.exe ダウンロードの (connect, read) タイムアウト。
+# 無指定だと「接続はするが応答しない」相手に requests が無期限にブロック
+# しうる。checkSoftwareUpdated()/listAvailableReleases() は
+# Controller.init() から呼ばれるため、これが起きると初期化そのものが
+# 固まる。translation_utils.py/transcription_whisper.py の
+# _DOWNLOAD_TIMEOUT と同じ値を使う (大きめの read 側はモデル重みと同様、
+# setup.exe のダウンロードにも余裕を持たせるため)。
+_HTTP_TIMEOUT = (10, 60)
 
 # フリーズ調査用の恒久計装。mainloop.py の faulthandler.enable() は
 # ネイティブフォルト (access violation 等) 発生時にしか全スレッドの
@@ -271,7 +281,14 @@ class _AudioDeviceSession:
 
         same_features = new_features == self.features
         same_device = self._device_key(resolved_device) == self._device_key(self._active_device)
-        already_running = (not new_features) or (self._recorder is not None)
+        # `_recorder is not None` だけでは、_start() が Recorder を生成した
+        # 直後 (listener 起動前) に例外で失敗したケースを "起動済み" と誤認
+        # してしまう (P0-2)。_start() は失敗時に必ず _recorder を None へ
+        # 巻き戻すので通常はこの2つの判定は同じ結果になるが、"listener が
+        # 実際に走っているか" という本来知りたい条件をそのまま書いておく。
+        already_running = (not new_features) or (
+            self._recorder is not None and self._recorder.stop is not None
+        )
         if same_features and same_device and already_running:
             return
 
@@ -281,14 +298,14 @@ class _AudioDeviceSession:
             self._start(device=resolved_device)
 
     def pause(self) -> None:
-        if self._recorder is not None:
+        if self._recorder is not None and callable(self._recorder.pause):
             self._recorder.pause()
 
     def resume(self) -> None:
         if isinstance(self._audio_queue, Queue):
             while not self._audio_queue.empty():
                 self._audio_queue.get()
-        if self._recorder is not None:
+        if self._recorder is not None and callable(self._recorder.resume):
             self._recorder.resume()
 
     @property
@@ -314,12 +331,33 @@ class _AudioDeviceSession:
         # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
         self._active_device = device
 
-        self._recorder = self._create_recorder(device)
+        try:
+            self._recorder = self._create_recorder(device)
 
-        audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
-        energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
-        self._audio_queue = audio_queue
-        self._recorder.recordIntoQueue(audio_queue, energy_queue)
+            audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
+            energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
+            self._audio_queue = audio_queue
+            self._recorder.recordIntoQueue(audio_queue, energy_queue)
+        except Exception:
+            # デバイスが処理中に切断される (実機で OSError: device gone を
+            # 確認済み) 等で Recorder の生成/listener 起動が途中失敗すると、
+            # 以前は self._recorder が非 None のまま残り、reconfigure() の
+            # already_running 判定が「起動済み」と誤認してしまっていた
+            # (P0-2)。ユーザーが文字起こしを OFF→ON しても永久に復帰しない
+            # 原因だったため、自分が触った内部状態を全て「何も起動していない」
+            # 状態へ巻き戻してから再送出する。
+            #
+            # features も合わせてリセットする: reconfigure() は _start() を
+            # 呼ぶ前に self.features = new_features を代入済みだが、実際には
+            # 何も起動できていないため、ここでリセットしないと
+            # self._mic_session.features 等を直接参照する呼び出し元
+            # (例: startMicTranscript) が「起動できた」と誤認しうる。
+            self._recorder = None
+            self._transcriber = None
+            self._audio_queue = None
+            self._active_device = None
+            self.features = set()
+            raise
 
         if "transcript" in self.features:
             self._transcriber = self._create_transcriber()
@@ -381,8 +419,14 @@ class _AudioDeviceSession:
             self._energy_progressbar.join()
             self._energy_progressbar = None
         if self._recorder is not None:
-            self._recorder.resume()
-            self._recorder.stop()
+            # _start() のロールバックにより通常はここに来ないはずだが、
+            # 万一 recordIntoQueue() が listener 起動前に失敗した Recorder
+            # (resume/stop がまだ None のまま) が渡ってきても TypeError で
+            # _stop() 自体を失敗させないよう callable() で防御する。
+            if callable(self._recorder.resume):
+                self._recorder.resume()
+            if callable(self._recorder.stop):
+                self._recorder.stop()
             self._recorder = None
         self._transcriber = None
         self._audio_queue = None
@@ -554,6 +598,14 @@ class Model:
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_mute_status = None
+        # OSC ミュート同期 (changeHandlerMute) が実行する pause()/resume() を
+        # Controller.mic_lifecycle_lock 配下で行うためのフック。
+        # Controller.__init__ が setMicMuteStatusChangeCallback() で
+        # 自身のロック付きラッパーを登録する。Model は Controller を知らない
+        # ままこの間接呼び出しだけを持つ (transcript_fnc/energy_fnc と同じ
+        # コールバック注入パターン)。未登録時は changeMicTranscriptStatus() を
+        # 直接使うフォールバックとする。
+        self.mic_mute_status_change_callback: Optional[Callable[[], None]] = None
         self.transliterator = None
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
@@ -1065,16 +1117,44 @@ class Model:
         self.ensure_initialized()
         self.mic_mute_status = self.osc_handler.getOSCParameterMuteSelf()
 
+    def setMicMuteStatusChangeCallback(self, fn: Optional[Callable[[], None]]) -> None:
+        """OSC ミュート同期が pause()/resume() を実行する際に呼ぶ関数を登録する。
+
+        Controller.__init__ が自身の mic_lifecycle_lock を取得する
+        ラッパー (_changeMicTranscriptStatusLocked) を登録することで、
+        OSC 受信スレッド発の pause()/resume() を他の全ての start/stop 系
+        (mainloop ワーカーが直接呼ぶ startTranscriptionSendMessage 等も含む)
+        と完全に排他制御する。未登録なら changeMicTranscriptStatus() を直接
+        使う (Controller を経由しないテスト等でも壊れないようにするため)。
+        """
+        self.mic_mute_status_change_callback = fn
+
     def startReceiveOSC(self):
         self.ensure_initialized()
         def changeHandlerMute(address, osc_arguments):
+            # ThreadingOSCUDPServer は受信メッセージごとに新しいスレッドを
+            # 起こすため、ここはロックを一切持たない任意のスレッドで走る。
+            # changeMicTranscriptStatus() を直接ここで呼ぶと、Auto Mic
+            # Select のデバイス切替や mainloop ワーカーが直接呼ぶ
+            # start/stop 系 (_stop()/_start() を実行中) と
+            # _mic_session.pause()/resume() が無ロックで交錯し得る
+            # (ミュート連打中にデバイスが切り替わると壊れた Recorder に
+            # 触れる)。audio_lifecycle_worker.enqueue() で Auto Select の
+            # 他のデバイス操作と同じ FIFO キューに直列化しつつ、実行される
+            # 関数自体は mic_mute_status_change_callback (= Controller の
+            # mic_lifecycle_lock 付きラッパー) にすることで、ロックを直接
+            # 取得する経路とも完全に排他制御する。
             if config.VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mic_mute_status is False:
                     self.mic_mute_status = osc_arguments
-                    self.changeMicTranscriptStatus()
+                    self.audio_lifecycle_worker.enqueue(
+                        self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                    )
                 elif osc_arguments is False and self.mic_mute_status is True:
                     self.mic_mute_status = osc_arguments
-                    self.changeMicTranscriptStatus()
+                    self.audio_lifecycle_worker.enqueue(
+                        self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                    )
 
         dict_filter_and_target = {
             self.osc_handler.osc_parameter_muteself: changeHandlerMute,
@@ -1102,7 +1182,10 @@ class Model:
     @staticmethod
     def _fetchGithubReleases() -> list:
         # All releases (including prereleases), newest first, drafts excluded.
-        response = requests_get(config.GITHUB_RELEASES_LIST_URL)
+        # timeout 無しだと GitHub 側が「接続はするが応答しない」状態になった
+        # 場合に無期限にブロックし、これを呼ぶ checkSoftwareUpdated() は
+        # Controller.init() から呼ばれるため、初期化そのものが固まる。
+        response = requests_get(config.GITHUB_RELEASES_LIST_URL, timeout=_HTTP_TIMEOUT)
         response.raise_for_status()
         releases = response.json()
         if not isinstance(releases, list):
@@ -1122,7 +1205,7 @@ class Model:
                 ]
                 version = candidates[0] if candidates else None
             else:
-                response = requests_get(config.GITHUB_URL)
+                response = requests_get(config.GITHUB_URL, timeout=_HTTP_TIMEOUT)
                 json_data = response.json()
                 version = json_data.get("name", None)
             if isinstance(version, str):
@@ -1160,8 +1243,73 @@ class Model:
             errorLogging()
         return result
 
+    # setup.exe と一緒に CI が公開する SHA-256 サイドカーアセットのファイル名
+    # サフィックス。release.yml 側で <installer名>.sha256 という名前で
+    # 追加アップロードしている前提。
+    _SHA256_ASSET_SUFFIX = ".sha256"
+
     @staticmethod
-    def _downloadSetup() -> bool:
+    def _resolveReleaseForVersion(target_version: Optional[str] = None) -> Optional[dict]:
+        # target_version (完全なバージョン文字列) に対応する GitHub Release
+        # オブジェクト (assets を含む) を返す。target_version が None の
+        # 場合は checkSoftwareUpdated() と同じロジックで、現在の
+        # SELECTED_RELEASE_CHANNEL における最新版の Release を返す。
+        # 見つからない/取得失敗の場合は None。
+        try:
+            if target_version is not None:
+                for r in Model._fetchGithubReleases():
+                    if r.get("name") == target_version:
+                        return r
+                return None
+            if config.SELECTED_RELEASE_CHANNEL == "beta":
+                candidates = [
+                    r for r in Model._fetchGithubReleases()
+                    if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                ]
+                return candidates[0] if candidates else None
+            response = requests_get(config.GITHUB_URL, timeout=_HTTP_TIMEOUT)
+            response.raise_for_status()
+            data = response.json()
+            return data if isinstance(data, dict) else None
+        except Exception:
+            errorLogging()
+            return None
+
+    @staticmethod
+    def _fetchExpectedSha256(release: Optional[dict]) -> Optional[str]:
+        # release の assets から "<setup.exe名>.sha256" というサイドカー
+        # アセットを探し、中身 (16進ダイジェスト文字列) を取得して返す。
+        # release.yml が SHA-256 を公開するようになる前の古いリリースには
+        # このアセットが存在しないため、その場合は None を返す。呼び出し側
+        # はこれを「検証不能」として扱い、サイズチェックのみへフォール
+        # バックする (古いバージョンの再インストール/ダウングレードが
+        # 完全にできなくなるのを避けるため)。
+        if not isinstance(release, dict):
+            return None
+        assets = release.get("assets")
+        if not isinstance(assets, list):
+            return None
+        for asset in assets:
+            if not isinstance(asset, dict):
+                continue
+            name = asset.get("name")
+            if not isinstance(name, str) or not name.endswith(Model._SHA256_ASSET_SUFFIX):
+                continue
+            url = asset.get("browser_download_url")
+            if not isinstance(url, str):
+                continue
+            try:
+                res = requests_get(url, timeout=_HTTP_TIMEOUT)
+                res.raise_for_status()
+                digest = res.text.strip().split()[0].lower()
+                if len(digest) == 64 and all(c in "0123456789abcdef" for c in digest):
+                    return digest
+            except Exception:
+                errorLogging()
+        return None
+
+    @staticmethod
+    def _downloadSetup(expected_sha256: Optional[str] = None) -> bool:
         # try to download at most 5 times
         program_name = "VRCT_setup.exe"
         current_directory = config.PATH_LOCAL
@@ -1171,15 +1319,34 @@ class Model:
         min_valid_size = 1024 * 1024
         for _ in range(5):
             try:
-                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True)
+                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
                 downloaded_size = 0
+                hasher = hashlib.sha256()
                 with open(dest_path, 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
+                        hasher.update(chunk)
                         downloaded_size += len(chunk)
                 if downloaded_size < min_valid_size:
                     raise ValueError(f"Downloaded setup file is too small ({downloaded_size} bytes); likely not a valid installer")
+                if expected_sha256 is not None:
+                    actual_sha256 = hasher.hexdigest()
+                    if actual_sha256 != expected_sha256:
+                        # ハッシュ不一致は改ざん/破損の疑いであり、通信起因
+                        # の一時的な失敗とは性質が異なる (同じレスポンスを
+                        # 再試行しても無意味、あるいは攻撃者に汚染された
+                        # 配信元を再度信頼することになりかねない) ため、
+                        # リトライループには乗せず即座に失敗として扱う。
+                        printLog(
+                            "Setup file SHA-256 mismatch: expected "
+                            f"{expected_sha256}, got {actual_sha256}. Aborting update."
+                        )
+                        try:
+                            os_remove(dest_path)
+                        except Exception:
+                            errorLogging()
+                        return False
                 return True
             except Exception:
                 errorLogging()
@@ -1194,7 +1361,14 @@ class Model:
     def updateSoftware(target_version: Optional[str] = None):
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
-        if Model._downloadSetup() is False:
+        release = Model._resolveReleaseForVersion(target_version)
+        expected_sha256 = Model._fetchExpectedSha256(release)
+        if expected_sha256 is None:
+            printLog(
+                "Setup file SHA-256 could not be verified (no .sha256 asset found for "
+                f"{target_version or 'the latest release'}); falling back to size-only validation"
+            )
+        if Model._downloadSetup(expected_sha256) is False:
             return
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1212,7 +1386,14 @@ class Model:
     def updateCudaSoftware(target_version: Optional[str] = None):
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
-        if Model._downloadSetup() is False:
+        release = Model._resolveReleaseForVersion(target_version)
+        expected_sha256 = Model._fetchExpectedSha256(release)
+        if expected_sha256 is None:
+            printLog(
+                "Setup file SHA-256 could not be verified (no .sha256 asset found for "
+                f"{target_version or 'the latest release'}); falling back to size-only validation"
+            )
+        if Model._downloadSetup(expected_sha256) is False:
             return
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1586,6 +1767,7 @@ class Model:
                 self.websocket_server = WebSocketServer(
                     host=host,
                     port=port,
+                    token=config.WEBSOCKET_AUTH_TOKEN,
                 )
                 self.websocket_server.set_message_handler(self.message_handler)
                 self.websocket_server.start()
@@ -1656,7 +1838,7 @@ class Model:
         self.stopObsBrowserSourceServer()
 
         try:
-            self.obs_browser_source_server = ObsBrowserSourceServer(host=host, port=port)
+            self.obs_browser_source_server = ObsBrowserSourceServer(host=host, port=port, ws_token=config.WEBSOCKET_AUTH_TOKEN)
             self.obs_browser_source_server.start()
         except Exception:
             errorLogging()
