@@ -3,10 +3,13 @@ import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef, useEffect } from "react";
 import DeleteSvg from "@images/cancel.svg?react";
 import clsx from "clsx";
+import { useI18n } from "@useI18n";
 
 export const HotkeysEntry = (props) => {
+    const { t } = useI18n();
     const [isAcceptingInput, setIsAcceptingInput] = useState(false);
     const [displayValue, setDisplayValue] = useState("");
+    const committedDisplayValueRef = useRef("");
     const lastKeyRef = useRef(null);
     const isModifierOnlyRef = useRef(false);
     const entryRef = useRef(null);
@@ -14,9 +17,12 @@ export const HotkeysEntry = (props) => {
     const keysRef = useRef([]);
 
     useEffect(() => {
-        const init_display_value = props.value[props.hotkey_id] ? props.value[props.hotkey_id].join(" + ") : "";
-        setDisplayValue(init_display_value);
-    }, []);
+        const hotkey = props.value[props.hotkey_id];
+        const display_value = hotkey ? hotkey.join(" + ") : "";
+        committedDisplayValueRef.current = display_value;
+        if (!isAcceptingInput) setDisplayValue(display_value);
+    }, [props.value, props.hotkey_id, isAcceptingInput]);
+
 
     const updateHotkeys = (keys) => {
         entryRef.current.blur();
@@ -90,6 +96,12 @@ export const HotkeysEntry = (props) => {
     const handleBlur = () => {
         setIsAcceptingInput(false);
         pressedKeys.current.clear();
+        if (!displayValue) setDisplayValue(committedDisplayValueRef.current);
+    };
+
+    const handleFocus = () => {
+        setIsAcceptingInput(true);
+        setDisplayValue("");
     };
 
     const handleDelete = () => {
@@ -103,10 +115,11 @@ export const HotkeysEntry = (props) => {
             {is_pending && <span className={styles.loader}></span>}
             <_Entry
                 ref={entryRef}
-                onFocus={() => setIsAcceptingInput(true)}
+                onFocus={handleFocus}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 onKeyUp={handleKeyUp}
+                placeholder={isAcceptingInput ? t("config_page.hotkeys.input_placeholder") : ""}
                 ui_variable={displayValue}
                 width="20rem"
                 is_activated={isAcceptingInput}

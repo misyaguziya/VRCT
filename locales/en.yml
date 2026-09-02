@@ -390,6 +390,7 @@ config_page:
             reinstall_button: "Reinstall with This Setup"
 
     hotkeys:
+        input_placeholder: "Press a key combination"
         toggle_vrct_visibility:
             label: "Toggle VRCT visibility"
         toggle_translation:

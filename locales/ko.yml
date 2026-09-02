@@ -382,6 +382,7 @@ config_page:
             reinstall_button:
 
     hotkeys:
+        input_placeholder: "키 조합을 입력하세요"
         toggle_vrct_visibility:
             label: "VRCT 최소화/활성화 전환"
         toggle_translation:
