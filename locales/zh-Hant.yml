@@ -382,6 +382,7 @@ config_page:
             reinstall_button:
 
     hotkeys:
+        input_placeholder: "請輸入按鍵組合"
         toggle_vrct_visibility:
             label: "切換 VRCT 最小化/啟動"
         toggle_translation:

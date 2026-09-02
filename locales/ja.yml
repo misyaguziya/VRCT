@@ -390,6 +390,7 @@ config_page:
             reinstall_button: "この設定で再インストール"
 
     hotkeys:
+        input_placeholder: "キーの組み合わせを入力"
         toggle_vrct_visibility:
             label: "VRCTの最小化/アクティブ化の切り替え"
         toggle_translation:
