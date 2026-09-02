@@ -1,11 +1,14 @@
-# 初期化のため、config.jsonの削除
 import os
 import time
 import random
-if os.path.exists("config.json"):
-    os.remove("config.json")
 
-from mainloop import main_instance
+# config.json の削除と mainloop (実バックエンド一式) の import は、
+# このファイルが `python test_endpoints.py` として直接実行された時
+# (__main__ ブロック) にのみ行う。"test_" プレフィックスのため pytest
+# に (test_*.py の命名規則により、実際のテストスイートでは無いにも
+# 関わらず) import されうるが、ここに無条件で置くと単に import
+# されただけでカレントディレクトリの実 config.json が削除され、かつ
+# 重い実アプリ初期化が走ってしまう。
 
 class Color:
 	BLACK          = '\033[30m'#(文字)黒
@@ -51,9 +54,9 @@ class TestMainloop():
         self.config_dict = {}
         for endpoint in self.main.mapping.keys():
             if endpoint.startswith("/get/data/"):
-                self.config_dict[endpoint.split("/")[-1]], _ = self.main.handleRequest(endpoint, None)
+                self.config_dict[endpoint.split("/")[-1]], _ = self.main._call_handler(endpoint, None)
             elif endpoint.startswith("/set/disable/"):
-                self.config_dict[endpoint.split("/")[-1]], _ = self.main.handleRequest(endpoint, None)
+                self.config_dict[endpoint.split("/")[-1]], _ = self.main._call_handler(endpoint, None)
         print(self.config_dict, flush=True)
 
         self.validity_endpoints = []
@@ -105,7 +108,7 @@ class TestMainloop():
                 case _:
                     pass
 
-            result, status = self.main.handleRequest(endpoint, None)
+            result, status = self.main._call_handler(endpoint, None)
             if status in expected_status:
                 if status == 200:
                     self.config_dict[endpoint.split("/")[-1]] = result
@@ -115,7 +118,7 @@ class TestMainloop():
                 print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 print(f"Current config_dict: {self.config_dict}")
         elif endpoint.startswith("/set/disable/"):
-            result, status = self.main.handleRequest(endpoint, None)
+            result, status = self.main._call_handler(endpoint, None)
             if status in expected_status:
                 if status == 200:
                     self.config_dict[endpoint.split("/")[-1]] = result
@@ -145,7 +148,7 @@ class TestMainloop():
         # 最後にすべてOFFにして終了
         for endpoint in self.validity_endpoints:
             if endpoint.startswith("/set/disable/"):
-                result, status = self.main.handleRequest(endpoint, None)
+                result, status = self.main._call_handler(endpoint, None)
                 time.sleep(0.2)
         print("----ON/OFFでのランダムアクセスのテスト終了----")
 
@@ -170,7 +173,7 @@ class TestMainloop():
         # 最後にすべてOFFにして終了
         for endpoint in self.validity_endpoints:
             if endpoint.startswith("/set/disable/"):
-                result, status = self.main.handleRequest(endpoint, None)
+                result, status = self.main._call_handler(endpoint, None)
         print("----ON/OFF連続テスト終了----")
 
     def test_set_data_endpoints_single(self, endpoint):
@@ -181,20 +184,20 @@ class TestMainloop():
                 data = random.choice(["1", "2", "3"])
             case "/set/data/selected_translation_engines":
                 print("Fetching endpoint data for translation_engines...")
-                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/selectable_translation_engines", None)
+                self.config_dict["translation_engines"], _ = self.main._call_handler("/get/data/selectable_translation_engines", None)
                 translation_engines = self.config_dict.get("translation_engines", None)
                 data = {}
                 for i in ["1", "2", "3"]:
                     data[i] = random.choice(translation_engines)
             case "/set/data/selected_your_languages":
-                self.config_dict["selectable_language_list"], _ = self.main.handleRequest("/get/data/selectable_language_list", None)
+                self.config_dict["selectable_language_list"], _ = self.main._call_handler("/get/data/selectable_language_list", None)
                 selectable_language_list = self.config_dict.get("selectable_language_list", None)
                 data = {}
                 for i in ["1", "2", "3"]:
                     data[i] = {}
                     data[i]["1"] = random.choice(selectable_language_list) | {"enable": True}
             case "/set/data/selected_target_languages":
-                self.config_dict["selectable_language_list"], _ = self.main.handleRequest("/get/data/selectable_language_list", None)
+                self.config_dict["selectable_language_list"], _ = self.main._call_handler("/get/data/selectable_language_list", None)
                 selectable_language_list = self.config_dict.get("selectable_language_list", None)
                 data = {}
                 for i in ["1", "2", "3"]:
@@ -202,7 +205,7 @@ class TestMainloop():
                     for j in ["1", "2", "3"]:
                         data[i][j] = random.choice(selectable_language_list) | {"enable": random.choice([True, False])}
             case "/set/data/selected_transcription_engine":
-                self.config_dict["transcription_engines"], _ = self.main.handleRequest("/get/data/selectable_transcription_engines", None)
+                self.config_dict["transcription_engines"], _ = self.main._call_handler("/get/data/selectable_transcription_engines", None)
                 transcription_engines = self.config_dict.get("transcription_engines", None)
                 data = random.choice(transcription_engines)
             case "/set/data/transparency":
@@ -227,42 +230,42 @@ class TestMainloop():
                     "height": random.randint(600, 1080)
                 }
             case "/set/data/selected_translation_compute_device":
-                self.config_dict["translation_compute_device_list"], _ = self.main.handleRequest("/get/data/selectable_translation_compute_device_list", None)
+                self.config_dict["translation_compute_device_list"], _ = self.main._call_handler("/get/data/selectable_translation_compute_device_list", None)
                 translation_compute_device_list = self.config_dict.get("translation_compute_device_list", None)
                 data = random.choice(translation_compute_device_list)
             case "/set/data/selected_transcription_compute_device":
-                self.config_dict["transcription_compute_device_list"], _ = self.main.handleRequest("/get/data/selectable_transcription_compute_device_list", None)
+                self.config_dict["transcription_compute_device_list"], _ = self.main._call_handler("/get/data/selectable_transcription_compute_device_list", None)
                 transcription_compute_device_list = self.config_dict.get("transcription_compute_device_list", None)
                 data = random.choice(transcription_compute_device_list)
             case "/set/data/selected_ctranslate2_weight_type":
-                self.config_dict["selectable_ctranslate2_weight_type_dict"], _ = self.main.handleRequest("/get/data/selectable_ctranslate2_weight_type_dict", None)
+                self.config_dict["selectable_ctranslate2_weight_type_dict"], _ = self.main._call_handler("/get/data/selectable_ctranslate2_weight_type_dict", None)
                 selectable_ctranslate2_weight_type_dict = self.config_dict.get("selectable_ctranslate2_weight_type_dict", None)
                 data = random.choice(list(selectable_ctranslate2_weight_type_dict.keys()))
             # LLM / API Clients
             case "/set/data/selected_plamo_model":
                 # 事前にモデルリストを取得
-                self.config_dict["plamo_model_list"], _ = self.main.handleRequest("/get/data/selectable_plamo_model_list", None)
+                self.config_dict["plamo_model_list"], _ = self.main._call_handler("/get/data/selectable_plamo_model_list", None)
                 model_list = self.config_dict.get("plamo_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/plamo_auth_key":
                 data = "PLAMO_DUMMY_KEY"  # 成功か失敗かは内部判定に依存
                 expected_status = [200, 400]
             case "/set/data/selected_gemini_model":
-                self.config_dict["gemini_model_list"], _ = self.main.handleRequest("/get/data/selectable_gemini_model_list", None)
+                self.config_dict["gemini_model_list"], _ = self.main._call_handler("/get/data/selectable_gemini_model_list", None)
                 model_list = self.config_dict.get("gemini_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/gemini_auth_key":
                 data = "GEMINI_DUMMY_KEY"
                 expected_status = [200, 400]
             case "/set/data/selected_openai_model":
-                self.config_dict["openai_model_list"], _ = self.main.handleRequest("/get/data/selectable_openai_model_list", None)
+                self.config_dict["openai_model_list"], _ = self.main._call_handler("/get/data/selectable_openai_model_list", None)
                 model_list = self.config_dict.get("openai_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/openai_auth_key":
                 data = "OPENAI_DUMMY_KEY"
                 expected_status = [200, 400]
             case "/set/data/selected_lmstudio_model":
-                self.config_dict["lmstudio_model_list"], _ = self.main.handleRequest("/get/data/selectable_lmstudio_model_list", None)
+                self.config_dict["lmstudio_model_list"], _ = self.main._call_handler("/get/data/selectable_lmstudio_model_list", None)
                 model_list = self.config_dict.get("lmstudio_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/lmstudio_url":
@@ -284,11 +287,11 @@ class TestMainloop():
                 ])
                 expected_status = [200, 400]
             case "/set/data/selected_openai_compatible_model":
-                self.config_dict["openai_compatible_model_list"], _ = self.main.handleRequest("/get/data/selectable_openai_compatible_model_list", None)
+                self.config_dict["openai_compatible_model_list"], _ = self.main._call_handler("/get/data/selectable_openai_compatible_model_list", None)
                 model_list = self.config_dict.get("openai_compatible_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/selected_ollama_model":
-                self.config_dict["ollama_model_list"], _ = self.main.handleRequest("/get/data/selectable_ollama_model_list", None)
+                self.config_dict["ollama_model_list"], _ = self.main._call_handler("/get/data/selectable_ollama_model_list", None)
                 model_list = self.config_dict.get("ollama_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/deepl_auth_key":
@@ -304,11 +307,11 @@ class TestMainloop():
                 data = "OPENAI_DUMMY_KEY"
                 expected_status = [200, 400]
             case "/set/data/selected_mic_host":
-                self.config_dict["selectable_mic_host_list"], _ = self.main.handleRequest("/get/data/selectable_mic_host_list", None)
+                self.config_dict["selectable_mic_host_list"], _ = self.main._call_handler("/get/data/selectable_mic_host_list", None)
                 mic_host_list = self.config_dict.get("selectable_mic_host_list", None)
                 data = random.choice(mic_host_list)
             case "/set/data/selected_mic_device":
-                self.config_dict["selectable_mic_device_list"], _ = self.main.handleRequest("/get/data/selectable_mic_device_list", None)
+                self.config_dict["selectable_mic_device_list"], _ = self.main._call_handler("/get/data/selectable_mic_device_list", None)
                 mic_device_list = self.config_dict.get("selectable_mic_device_list", None)
                 data = random.choice(mic_device_list)
             case "/set/data/mic_threshold":
@@ -319,7 +322,7 @@ class TestMainloop():
                     expected_status = [400]
             case "/set/data/mic_record_timeout":
                 data = random.randint(-1, 10)
-                self.config_dict["mic_phrase_timeout"], _ = self.main.handleRequest("/get/data/mic_phrase_timeout", None)
+                self.config_dict["mic_phrase_timeout"], _ = self.main._call_handler("/get/data/mic_phrase_timeout", None)
                 mic_phrase_timeout = self.config_dict.get("mic_phrase_timeout", None)
                 if 0 <= data <= mic_phrase_timeout:
                     pass
@@ -327,7 +330,7 @@ class TestMainloop():
                     expected_status = [400]
             case "/set/data/mic_phrase_timeout":
                 data = random.randint(-1, 10)
-                self.config_dict["mic_record_timeout"], _ = self.main.handleRequest("/get/data/mic_record_timeout", None)
+                self.config_dict["mic_record_timeout"], _ = self.main._call_handler("/get/data/mic_record_timeout", None)
                 mic_record_timeout = self.config_dict.get("mic_record_timeout", None)
                 if mic_record_timeout <= data:
                     pass
@@ -362,7 +365,7 @@ class TestMainloop():
                     ]
                 )
             case "/set/data/selected_speaker_device":
-                self.config_dict["selectable_speaker_device_list"], _ = self.main.handleRequest("/get/data/selectable_speaker_device_list", None)
+                self.config_dict["selectable_speaker_device_list"], _ = self.main._call_handler("/get/data/selectable_speaker_device_list", None)
                 speaker_device_list = self.config_dict.get("selectable_speaker_device_list", None)
                 data = random.choice(speaker_device_list)
             case "/set/data/speaker_threshold":
@@ -373,7 +376,7 @@ class TestMainloop():
                     expected_status = [400]
             case "/set/data/speaker_record_timeout":
                 data = random.randint(-1, 10)
-                self.config_dict["speaker_phrase_timeout"], _ = self.main.handleRequest("/get/data/speaker_phrase_timeout", None)
+                self.config_dict["speaker_phrase_timeout"], _ = self.main._call_handler("/get/data/speaker_phrase_timeout", None)
                 speaker_phrase_timeout = self.config_dict.get("speaker_phrase_timeout", None)
                 if 0 <= data <= speaker_phrase_timeout:
                     pass
@@ -381,7 +384,7 @@ class TestMainloop():
                     expected_status = [400]
             case "/set/data/speaker_phrase_timeout":
                 data = random.randint(-1, 10)
-                self.config_dict["speaker_record_timeout"], _ = self.main.handleRequest("/get/data/speaker_record_timeout", None)
+                self.config_dict["speaker_record_timeout"], _ = self.main._call_handler("/get/data/speaker_record_timeout", None)
                 speaker_record_timeout = self.config_dict.get("speaker_record_timeout", None)
                 if speaker_record_timeout <= data:
                     pass
@@ -398,7 +401,7 @@ class TestMainloop():
             case "/set/data/speaker_no_speech_prob":
                 data = random.uniform(0, 1)
             case "/set/data/selected_whisper_weight_type":
-                self.config_dict["selectable_whisper_weight_type_dict"], _ = self.main.handleRequest("/get/data/selectable_whisper_weight_type_dict", None)
+                self.config_dict["selectable_whisper_weight_type_dict"], _ = self.main._call_handler("/get/data/selectable_whisper_weight_type_dict", None)
                 selectable_whisper_weight_type_dict = self.config_dict.get("selectable_whisper_weight_type_dict", None)
                 data = random.choice([key for key, value in selectable_whisper_weight_type_dict.items() if value is True])
             case "/set/data/overlay_small_log_settings":
@@ -430,11 +433,11 @@ class TestMainloop():
                     "tracker": random.choice(["HMD", "LeftHand", "RightHand"]),
                 }
             case "/set/data/send_message_format_parts":
-                self.config_dict["send_message_format_parts"], _ = self.main.handleRequest("/get/data/send_message_format_parts", None)
+                self.config_dict["send_message_format_parts"], _ = self.main._call_handler("/get/data/send_message_format_parts", None)
                 send_message_format_parts = self.config_dict.get("send_message_format_parts", None)
                 data = send_message_format_parts
             case "/set/data/received_message_format_parts":
-                self.config_dict["received_message_format_parts"], _ = self.main.handleRequest("/get/data/received_message_format_parts", None)
+                self.config_dict["received_message_format_parts"], _ = self.main._call_handler("/get/data/received_message_format_parts", None)
                 received_message_format_parts = self.config_dict.get("received_message_format_parts", None)
                 data = received_message_format_parts
             case "/set/data/websocket_host":
@@ -483,7 +486,7 @@ class TestMainloop():
 
         if data is not None:
             print(f"data: {data}", end=" ", flush=True)
-            result, status = self.main.handleRequest(endpoint, data)
+            result, status = self.main._call_handler(endpoint, data)
             if status in expected_status:
                 if status == 200:
                     self.config_dict[endpoint.split("/")[-1]] = result
@@ -596,7 +599,7 @@ class TestMainloop():
             self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
             return False
 
-        result, status = self.main.handleRequest(endpoint, data)
+        result, status = self.main._call_handler(endpoint, data)
         if status in expected_status:
             print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
             success = True
@@ -649,7 +652,7 @@ class TestMainloop():
         # 最後にすべてOFFにして終了
         for endpoint in self.validity_endpoints:
             if endpoint.startswith("/set/disable/"):
-                _, _ = self.main.handleRequest(endpoint, None)
+                _, _ = self.main._call_handler(endpoint, None)
         print("----すべてのエンドポイントのランダムアクセスのテスト終了----")
 
     def test_endpoints_specific_random(self):
@@ -705,7 +708,7 @@ class TestMainloop():
         # 最後にすべてOFFにして終了
         for endpoint in self.validity_endpoints:
             if endpoint.startswith("/set/disable/"):
-                _, _ = self.main.handleRequest(endpoint, None)
+                _, _ = self.main._call_handler(endpoint, None)
         print("----特定のエンドポイントのランダムアクセスのテスト終了----")
 
     def test_delete_data_endpoints_single(self, endpoint):
@@ -724,7 +727,7 @@ class TestMainloop():
             self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
             return False
 
-        result, status = self.main.handleRequest(endpoint, data)
+        result, status = self.main._call_handler(endpoint, data)
         if status in expected_status:
             print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
             success = True
@@ -749,15 +752,15 @@ class TestMainloop():
         """
         # エンドポイント
         endpoint = "/run/send_message_box"
-        result, status = self.main.handleRequest(endpoint, text)
+        result, status = self.main._call_handler(endpoint, text)
         return result, status
 
     def test_translate_all_language_pairs(self):
         results = {}
         # 翻訳機能を有効にする
-        self.main.handleRequest("/set/enable/translation", None)
+        self.main._call_handler("/set/enable/translation", None)
         # 対応する言語コードのリストを取得
-        self.config_dict["selectable_language_list"], _ = self.main.handleRequest("/get/data/selectable_language_list", None)
+        self.config_dict["selectable_language_list"], _ = self.main._call_handler("/get/data/selectable_language_list", None)
         selectable_language_list = self.config_dict.get("selectable_language_list", None)
         # すべての言語ペアで翻訳をテスト
         for source_lang in selectable_language_list:
@@ -768,7 +771,7 @@ class TestMainloop():
                 for i in ["1", "2", "3"]:
                     data[i] = {}
                     data[i]["1"] = source_lang | {"enable": True}
-                self.main.handleRequest("/set/data/selected_your_languages", data)
+                self.main._call_handler("/set/data/selected_your_languages", data)
                 data = {}
                 for i in ["1", "2", "3"]:
                     data[i] = {}
@@ -777,17 +780,17 @@ class TestMainloop():
                             data[i][j] = target_lang | {"enable": True}
                         else:
                             data[i][j] = target_lang | {"enable": False}
-                self.main.handleRequest("/set/data/selected_target_languages", data)
+                self.main._call_handler("/set/data/selected_target_languages", data)
 
                 # 翻訳エンジンを設定する（例: "CTranslate2"）
-                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/selectable_translation_engines", None)
+                self.config_dict["translation_engines"], _ = self.main._call_handler("/get/data/selectable_translation_engines", None)
                 translation_engines = self.config_dict.get("translation_engines", None)
                 for engine in translation_engines:
                     results[source_lang["language"]][target_lang["language"]][engine] = None
                     data = {}
                     for i in ["1", "2", "3"]:
                         data[i] = engine
-                    self.main.handleRequest("/set/data/selected_translation_engines", data)
+                    self.main._call_handler("/set/data/selected_translation_engines", data)
 
                     # テスト翻訳を実行
                     print(f"Translating from {source_lang} to {target_lang} using {engine}")
@@ -799,7 +802,7 @@ class TestMainloop():
                         print(f"-> {Color.RED}[ERROR]{Color.RESET} Translation from {source_lang} to {target_lang} failed with status {status}")
                         results[source_lang["language"]][target_lang["language"]][engine] = False
         # 翻訳機能を無効にする
-        self.main.handleRequest("/set/disable/translation", None)
+        self.main._call_handler("/set/disable/translation", None)
         print("----すべての言語ペアでの翻訳テスト終了----")
         import json
         with open("translation_test_results.json", "w", encoding="utf-8") as f:
@@ -847,6 +850,13 @@ class TestMainloop():
 
 if __name__ == "__main__":
     import traceback
+
+    # 初期化のため、config.jsonの削除 (実行時のみ; import 時には行わない)
+    if os.path.exists("config.json"):
+        os.remove("config.json")
+
+    from mainloop import main_instance
+
     try:
         test = TestMainloop()
         # test.test_endpoints_on_off_all()

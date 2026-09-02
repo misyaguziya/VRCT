@@ -9,6 +9,10 @@ import openvr
 import numpy as np
 from PIL import Image
 try:
+    from models import openvr_session
+except ImportError:
+    import openvr_session
+try:
     from utils import errorLogging
 except ImportError:
     def errorLogging():
@@ -103,7 +107,11 @@ class Overlay:
 
     def init(self) -> None:
         try:
-            self.system = openvr.init(openvr.VRApplication_Background)
+            # Go through the shared, reference-counted OpenVR session
+            # instead of calling openvr.init() directly: Clipboard uses
+            # the same session, and openvr.shutdown() tears down the
+            # whole process's VR connection, not just this caller's.
+            self.system = openvr_session.acquire(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
             self.handle = {}
@@ -292,7 +300,10 @@ class Overlay:
                         self.overlay.destroyOverlay(self.handle[size])
                 self.overlay = None
             if isinstance(self.system, openvr.IVRSystem):
-                openvr.shutdown()
+                # Only releases our reference; the real openvr.shutdown()
+                # only runs once every other holder (e.g. Clipboard) has
+                # released theirs too.
+                openvr_session.release()
                 self.system = None
             self.initialized = False
 

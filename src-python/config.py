@@ -3,6 +3,7 @@ import copy
 from os import path as os_path, makedirs as os_makedirs, replace as os_replace, fsync as os_fsync, remove as os_remove
 from json import load as json_load
 from json import dump as json_dump
+from secrets import token_urlsafe as secrets_token_urlsafe
 import threading
 from typing import Optional, Dict, Any
 
@@ -35,7 +36,7 @@ try:
 except Exception:  # pragma: no cover - optional runtime
     whisper_models = {}  # type: ignore
 
-from utils import errorLogging, validateDictStructure, getComputeDeviceList
+from utils import errorLogging, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
 
 # NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
 # 対応する migration ヘルパは ADR-0004 でストリーミング/VAD 独自実装を撤退した際に
@@ -323,7 +324,19 @@ class ValidatedProperty:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return getattr(instance, self.private_name)
+        stored = getattr(instance, self.private_name)
+        # Return a deep copy for mutable types, mirroring ManagedProperty.__get__.
+        # Returning the raw reference let external code mutate config's internal
+        # state directly via the common `d = config.X; d[k] = v; config.X = d`
+        # idiom, before the setter (and its validator) ever ran. That silently
+        # defeated validators whose "fall back to the previous value on an
+        # invalid entry" logic reads `inst.X` as the "old" value: by the time
+        # __set__ ran, `inst.X` and the incoming `value` were already the same
+        # (already-mutated) object, so the fallback returned the new invalid
+        # value instead of the real previous one.
+        if isinstance(stored, (dict, list)):
+            return copy.deepcopy(stored)
+        return stored
 
     def __set__(self, instance, value):
         try:
@@ -332,6 +345,11 @@ class ValidatedProperty:
             return
         if normalized is None:
             return
+        # Deep copy mutable types before storing, mirroring ManagedProperty.__set__,
+        # so a caller that keeps a reference to the object it passed in (or that a
+        # validator returned verbatim) can't mutate config's internal state later.
+        if isinstance(normalized, (dict, list)):
+            normalized = copy.deepcopy(normalized)
         setattr(instance, self.private_name, normalized)
         try:
             if self.serialize:
@@ -606,8 +624,11 @@ class Config:
             os_replace(tmp_path, self.PATH_CONFIG)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
-        self._config_data[key] = value
-
+        # 実際に永続化される値は saveConfigToFile() が毎回
+        # json_serializable_vars から丸ごと再構成するため、ここで
+        # self._config_data を直接書き換えても次の保存で必ず上書き
+        # される (以前あった self._config_data[key] = value は
+        # 何も読まれない dead code だったため削除)。
         with self._file_lock:
             if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
                 self._timer.cancel()
@@ -753,8 +774,26 @@ class Config:
     LOGGER_FEATURE = ManagedProperty('LOGGER_FEATURE', type_=bool)
     VRC_MIC_MUTE_SYNC = ManagedProperty('VRC_MIC_MUTE_SYNC', type_=bool)
     NOTIFICATION_VRC_SFX = ManagedProperty('NOTIFICATION_VRC_SFX', type_=bool)
-    WEBSOCKET_HOST = ManagedProperty('WEBSOCKET_HOST', type_=str)
+    # 0.0.0.0/:: (ワイルドカードアドレス) を拒否する。setWebSocketHost() の
+    # 入力検証だけでは、config.json に (過去バージョンや手動編集で)
+    # 0.0.0.0 が既に保存されているケースを防げない。load_config() の
+    # setattr() はディスクリプタ経由なのでこの allowed もそこで効き、
+    # 起動時に無認証の WebSocket サーバーを全インターフェースへ
+    # bind してしまう経路を塞ぐ。
+    WEBSOCKET_HOST = ManagedProperty(
+        'WEBSOCKET_HOST', type_=str,
+        allowed=lambda v, inst: isValidIpAddress(v) and not isWildcardBindAddress(v),
+    )
     WEBSOCKET_PORT = ManagedProperty('WEBSOCKET_PORT', type_=int)
+    # WebSocket サーバーへの接続トークン。127.0.0.1 バインドや Origin
+    # ヘッダーだけでは「同じ PC 上で開いた任意の Web ページの JS が直接
+    # ws://127.0.0.1:PORT に接続してマイク/スピーカーの文字起こしを
+    # 盗聴する」ことを防げない (WebSocket は同一オリジンポリシーの対象外)
+    # ため、これを知らないクライアントを拒否する唯一の実効的な防御として
+    # 使う。初回起動時に 1 回だけ生成し、以降は config.json に永続化する
+    # (プロセス起動ごとに変えると、OBS Browser Source や外部連携ツール
+    # (例: VRCT-TTS) が再起動のたびに接続できなくなってしまうため)。
+    WEBSOCKET_AUTH_TOKEN = ManagedProperty('WEBSOCKET_AUTH_TOKEN', type_=str)
 
     # --- OBS Browser Source (overlay for OBS) ---
     OBS_BROWSER_SOURCE = ManagedProperty('OBS_BROWSER_SOURCE', type_=bool)
@@ -1064,6 +1103,11 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
+        # 初回起動時のみここでランダム生成される。config.json に既に
+        # WEBSOCKET_AUTH_TOKEN が保存されていれば、この直後の
+        # load_config() の setattr() でその値に上書きされる (=以降は
+        # 再起動しても同じトークンが使われる)。
+        self._WEBSOCKET_AUTH_TOKEN = secrets_token_urlsafe(32)
         self._OBS_BROWSER_SOURCE = False
         self._OBS_BROWSER_SOURCE_PORT = 2232
         self._OBS_BROWSER_SOURCE_MAX_MESSAGES = 14

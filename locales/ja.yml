@@ -425,6 +425,8 @@ config_page:
             label: "WebSocket Host"
         websocket_port:
             label: "WebSocket Port"
+        websocket_url:
+            label: "WebSocket URL（クリックでコピー）"
         obs_browser_source:
             section_label: "OBS ブラウザソース"
         enable_obs_browser_source:
