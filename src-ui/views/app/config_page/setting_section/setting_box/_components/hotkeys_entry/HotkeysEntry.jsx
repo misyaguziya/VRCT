@@ -103,7 +103,6 @@ export const HotkeysEntry = (props) => {
             {is_pending && <span className={styles.loader}></span>}
             <_Entry
                 ref={entryRef}
-                type="text"
                 onFocus={() => setIsAcceptingInput(true)}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
