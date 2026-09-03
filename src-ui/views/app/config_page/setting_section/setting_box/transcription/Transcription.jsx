@@ -197,12 +197,18 @@ const SpeakerMaxWords_Box = () => {
 
 const TranscriptionEngine_Container = () => {
     const { t } = useI18n();
+    const { currentSelectedTranscriptionEngine } = useTranscription();
+
     return (
         <div>
             <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
             <TranscriptionEngine_Box />
-            <WhisperWeightType_Box />
-            <TranscriptionComputeDevice_Box />
+            {currentSelectedTranscriptionEngine.data === "Whisper" && (
+                <>
+                    <WhisperWeightType_Box />
+                    <TranscriptionComputeDevice_Box />
+                </>
+            )}
         </div>
     );
 };
@@ -256,7 +262,7 @@ const WhisperWeightType_Box = () => {
                 label={t("config_page.transcription.whisper_weight_type.label")}
                 desc={t(
                     "config_page.transcription.whisper_weight_type.desc",
-                    {translator: t("main_page.translator")}
+                    { translator: t("main_page.translator") }
                 )}
                 name="whisper_weight_type"
                 options={whisper_weight_types}
