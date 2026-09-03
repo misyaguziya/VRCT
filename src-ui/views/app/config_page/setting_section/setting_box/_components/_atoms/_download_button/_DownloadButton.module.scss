@@ -3,7 +3,7 @@
 .download_container {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     width: 8rem;
     min-width: 8rem;
     flex-shrink: 0;
@@ -15,6 +15,10 @@
     padding: 0.8rem;
     flex-shrink: 0;
     border-radius: 0.2rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     &:hover {
         background-color: var(--dark_750_color);
     }
@@ -24,11 +28,30 @@
 }
 .download_button_label {
     font-size: 1.2rem;
+    white-space: nowrap;
+}
+
+.progress_wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
 }
 
 .progress_label {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-size: 1rem;
+    line-height: 1;
+    text-align: center;
+    user-select: none;
+    pointer-events: none;
+    white-space: nowrap;
 }
 
 .update_button {
@@ -37,6 +60,10 @@
     padding: 0.8rem;
     flex-shrink: 0;
     border-radius: 0.2rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     &:hover {
         background-color: var(--primary_450_color);
     }
