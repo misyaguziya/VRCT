@@ -1366,13 +1366,10 @@ class Controller:
         device_manager.setCallbackProcessAfterUpdateMicDevices(
             lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessMicDevices)
         )
-        # ActiveEndpointTracker が「実使用中エンドポイント」の切替を検知
-        # したときは、Session の Recorder を新デバイスに 1 発で差し替える。
-        # tracker スレッドをブロックしないよう worker 経由 + reconfigureMicDevice
-        # (Session の device 差分検知でリソース節約)。
-        device_manager.setCallbackEndpointReconfiguredMic(
-            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureMicDeviceLocked)
-        )
+        # マイクの Auto Select は OS 既定デバイス追従のみ。speaker と違い
+        # ActiveEndpointTracker (peak 追従) は使わないため、endpoint 切替
+        # 起点の Recorder 差し替え callback は登録しない
+        # (device_manager.setMicAutoActive の docstring 参照)。
         device_manager.forceUpdateAndSetMicDevices()
         # monitoring スレッドの起動判断は DeviceManager 側に集約
         # (speaker 側の状態を controller で気にする必要はもう無い)
@@ -1390,7 +1387,6 @@ class Controller:
             device_manager.clearCallbackProcessBeforeUpdateMicDevices()
             device_manager.clearCallbackDefaultMicDevice()
             device_manager.clearCallbackProcessAfterUpdateMicDevices()
-            device_manager.clearCallbackEndpointReconfiguredMic()
             # monitoring の停止判断は DeviceManager 側に委譲。
             # speaker 側が active なら monitoring は継続、両方 inactive で
             # 初めて thread が停止する。以前ここで AUTO_SPEAKER_SELECT を
@@ -1444,13 +1440,6 @@ class Controller:
         # 1 呼び出しで済み、config 上のデバイスと現在開いているデバイスが
         # 同じなら no-op になる。
         # config は呼び出し元 (setSelectedMicHost/Device) が既に書き換え済み。
-        with self.mic_lifecycle_lock:
-            model.reconfigureMicDevice()
-
-    def _reconfigureMicDeviceLocked(self) -> None:
-        # ActiveEndpointTracker からの通知 (setCallbackEndpointReconfiguredMic)
-        # は他の mic_lifecycle_lock 保持経路 (start/stop 系) と直列化されて
-        # いないため、ここで明示的にロックを取る。
         with self.mic_lifecycle_lock:
             model.reconfigureMicDevice()
 
@@ -1668,7 +1657,10 @@ class Controller:
             model.reconfigureSpeakerDevice()
 
     def _reconfigureSpeakerDeviceLocked(self) -> None:
-        # 詳細は _reconfigureMicDeviceLocked のコメント参照。
+        # ActiveEndpointTracker (render) からの通知
+        # (setCallbackEndpointReconfiguredSpeaker) は他の speaker_lifecycle_lock
+        # 保持経路 (start/stop 系) と直列化されていないため、ここで明示的に
+        # ロックを取る。
         with self.speaker_lifecycle_lock:
             model.reconfigureSpeakerDevice()
 
