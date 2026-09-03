@@ -1,10 +1,13 @@
-"""`TRANSLATION_PROVIDER_REGISTRY` (フェーズ3・項目17 の設計段階) の自己整合性テスト。
+"""`TRANSLATION_PROVIDER_REGISTRY`/`CONNECTION_PROVIDER_REGISTRY`
+(フェーズ3・項目17) の自己整合性テスト。
 
-このレジストリはまだ controller.py / model.py / translation_translator.py の
-どこからも参照されていない (設計のみ、挙動変化なし)。ここでは登録内容が
-実際の config 属性・mainloop ルーティング・クライアントクラスの形状と
-食い違っていないことだけを検証する — 将来レジストリにエンジンを足す際、
-タイプミスをここで検出できるようにするための安全網。
+ここでは登録内容が実際の config 属性・mainloop ルーティング・クライアント
+クラスの形状と食い違っていないことだけを検証する — 将来レジストリに
+エンジンを足す際、タイプミスをここで検出できるようにするための安全網。
+controller.py 側の実際の分岐挙動 (認証成功/失敗・接続成功/失敗) は
+test_controller_translation_gemini_endpoint.py /
+test_controller_translation_registry_endpoints.py /
+test_controller_translation_connection_endpoints.py で検証している。
 """
 
 import unittest
@@ -13,6 +16,7 @@ import mainloop
 from config import config
 from errors import ErrorCode
 from models.translation.translation_providers import (
+    CONNECTION_PROVIDER_REGISTRY,
     REQUIRED_CLIENT_METHODS,
     TRANSLATION_PROVIDER_REGISTRY,
 )
@@ -90,6 +94,38 @@ class TestAuthValidatePredicates(unittest.TestCase):
         spec = TRANSLATION_PROVIDER_REGISTRY["OpenRouter_API"]
         self.assertFalse(spec.auth_validate("a" * 19))
         self.assertTrue(spec.auth_validate("a" * 20))
+
+
+class TestConnectionRegistryMatchesConfigAndMainloop(unittest.TestCase):
+    """`CONNECTION_PROVIDER_REGISTRY` (LMStudio/Ollama、疎通確認型) 版。"""
+
+    def test_every_selectable_model_list_attr_exists_on_config(self) -> None:
+        for engine_key, spec in CONNECTION_PROVIDER_REGISTRY.items():
+            with self.subTest(engine=engine_key):
+                self.assertTrue(hasattr(config, spec.selectable_model_list_attr))
+
+    def test_every_selected_model_attr_exists_on_config(self) -> None:
+        for engine_key, spec in CONNECTION_PROVIDER_REGISTRY.items():
+            with self.subTest(engine=engine_key):
+                self.assertTrue(hasattr(config, spec.selected_model_attr))
+
+    def test_every_run_mapping_key_is_registered_in_mainloop(self) -> None:
+        for engine_key, spec in CONNECTION_PROVIDER_REGISTRY.items():
+            with self.subTest(engine=engine_key):
+                self.assertIn(spec.run_mapping_selectable_key, mainloop.run_mapping)
+                self.assertIn(spec.run_mapping_selected_key, mainloop.run_mapping)
+
+    def test_every_error_code_field_is_an_error_code(self) -> None:
+        for engine_key, spec in CONNECTION_PROVIDER_REGISTRY.items():
+            with self.subTest(engine=engine_key):
+                self.assertIsInstance(spec.error_connection_failed, ErrorCode)
+                self.assertIsInstance(spec.error_model_invalid, ErrorCode)
+
+    def test_engine_keys_do_not_overlap_with_auth_key_registry(self) -> None:
+        # 同じ engine_key が両方のレジストリに存在すると
+        # Controller._resolveEngineSpec の解決が曖昧になる。
+        overlap = set(CONNECTION_PROVIDER_REGISTRY) & set(TRANSLATION_PROVIDER_REGISTRY)
+        self.assertEqual(overlap, set())
 
 
 if __name__ == "__main__":
