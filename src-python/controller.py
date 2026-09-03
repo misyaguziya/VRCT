@@ -1158,9 +1158,10 @@ class Controller:
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
     def setSelectedTranscriptionEngine(self, data, *args, **kwargs) -> dict:
-        config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
-        self.fallbackUnsupportedLanguagesForTranscriptionEngine(config.SELECTED_TRANSCRIPTION_ENGINE)
-        self.run(200, self.run_mapping["selectable_language_list"], model.getListLanguageAndCountry())
+        # setSelectedTranslationEngines() -> updateTranslationEngineAndEngineList()
+        # と同じパターン: 希望値をまず渡し、可用性チェック・言語フォールバック・
+        # 言語リストのpushは updateTranscriptionEngine() 側に集約する。
+        self.updateTranscriptionEngine(requested_engine=str(data))
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
     def fallbackUnsupportedLanguagesForTranscriptionEngine(self, engine: str) -> bool:
@@ -1609,12 +1610,6 @@ class Controller:
 
     def getDeepgramModelList(self, *args, **kwargs) -> dict:
         return {"status":200, "result": config.SELECTABLE_DEEPGRAM_MODEL_LIST}
-
-    def getDeepgramModelLanguages(self, *args, **kwargs) -> dict:
-        """モデル名 -> 対応言語コード一覧。UI側が選択中/選択候補のモデルの
-        対応言語を利用者に示すためのメタデータ (文字起こし処理自体は
-        DeepgramProvider が常に自動検出するため参照しない)。"""
-        return {"status":200, "result": dict(config.DEEPGRAM_MODEL_LANGUAGES)}
 
     @staticmethod
     def getDeepgramModel(*args, **kwargs) -> dict:
@@ -3930,7 +3925,28 @@ class Controller:
                 continue
             config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] = model.checkTranscriptionWhisperModelWeight(weight_type)
 
-    def updateTranscriptionEngine(self):
+    def updateTranscriptionEngine(self, requested_engine: Optional[str] = None) -> None:
+        """SELECTED_TRANSCRIPTION_ENGINE を検証・更新する。
+
+        `requested_engine` を渡すと、まずそれを希望値として設定してから
+        検証する (setSelectedTranscriptionEngine からの明示的な変更用。
+        setSelectedTranslationEngines() -> updateTranslationEngineAndEngineList()
+        と同じパターン)。渡さなければ現在の値をそのまま検証する
+        (キー無効化等による自動フォールバック用。controller.init() や
+        setGroqWhisperAuthKey/delDeepgramAuthKey 等、多数の呼び出し元から
+        使われる)。
+
+        エンジンが実際に変化した場合、文字起こしエンジンごとに対応言語が
+        異なりうるため (Deepgram等)、選択中の言語をフォールバックさせ、
+        更新後の言語一覧を毎回 selectable_language_list でUIへpushする。
+        呼び出し元ごとに重複させず、「エンジンが変わる場所」であるここ
+        一箇所に集約することで、どの経路でエンジンが変わっても確実に
+        UIの言語リストが追従するようにする。
+        """
+        previous_engine = config.SELECTED_TRANSCRIPTION_ENGINE
+        if requested_engine is not None:
+            config.SELECTED_TRANSCRIPTION_ENGINE = requested_engine
+
         weight_type = config.WHISPER_WEIGHT_TYPE
         weight_type_dict = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
         weight_available = bool(weight_type_dict.get(weight_type))
@@ -3955,6 +3971,10 @@ class Controller:
                 config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
         else:
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+
+        if config.SELECTED_TRANSCRIPTION_ENGINE != previous_engine:
+            self.fallbackUnsupportedLanguagesForTranscriptionEngine(config.SELECTED_TRANSCRIPTION_ENGINE)
+            self.run(200, self.run_mapping["selectable_language_list"], model.getListLanguageAndCountry())
 
     def startCheckMicEnergy(self) -> None:
         with self.mic_lifecycle_lock:

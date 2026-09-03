@@ -166,8 +166,14 @@ class TestSetSelectedTranscriptionEnginePushesLanguageListAndFallback(unittest.T
         self._original_target_languages = config.SELECTED_TARGET_LANGUAGES
         self._original_deepgram_model = config._SELECTED_DEEPGRAM_MODEL
         self._original_deepgram_languages = dict(config._DEEPGRAM_MODEL_LANGUAGES)
+        self._original_status = dict(config._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS)
         config._SELECTED_DEEPGRAM_MODEL = "nova-3"
         config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
+        # updateTranscriptionEngine() が可用性チェックで巻き戻さないよう、
+        # Whisper/Deepgram の両方を利用可能扱いにしておく。
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = {
+            "Google": True, "Whisper": True, "Deepgram": True,
+        }
 
     def tearDown(self) -> None:
         config._SELECTED_TRANSCRIPTION_ENGINE = self._original_engine
@@ -175,6 +181,7 @@ class TestSetSelectedTranscriptionEnginePushesLanguageListAndFallback(unittest.T
         config.SELECTED_TARGET_LANGUAGES = self._original_target_languages
         config._SELECTED_DEEPGRAM_MODEL = self._original_deepgram_model
         config.DEEPGRAM_MODEL_LANGUAGES = self._original_deepgram_languages
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = self._original_status
 
     def test_switching_to_deepgram_pushes_language_list_and_resets_language(self) -> None:
         config.SELECTED_YOUR_LANGUAGES = {
@@ -193,6 +200,10 @@ class TestSetSelectedTranscriptionEnginePushesLanguageListAndFallback(unittest.T
         self.assertIn("selected_your_languages", pushed_endpoints)
 
     def test_switching_to_whisper_does_not_touch_languages(self) -> None:
+        # 実際にエンジンが変化するケースを試すため、起点を明示的に
+        # "Whisper" 以外にしておく (でないと変化なし=pushされずテストの
+        # 意図が成立しない)。
+        config._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         config.SELECTED_YOUR_LANGUAGES = {
             "1": {"1": {"language": "Korean", "country": "South Korea", "enable": True}},
         }

@@ -291,13 +291,5 @@ class DeepgramAuthKeyEndpointTests(_ConfigSnapshotMixin, unittest.TestCase):
 
         self.assertEqual(response["status"], 400)
 
-    def test_get_model_languages_reflects_current_config(self) -> None:
-        config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
-
-        response = self.controller.getDeepgramModelLanguages()
-
-        self.assertEqual(response["status"], 200)
-        self.assertEqual(response["result"], {"nova-3": ["en", "ja"]})
-
 if __name__ == "__main__":
     unittest.main()
