@@ -1,7 +1,9 @@
 import styles from "./RadioButton.module.scss";
 import clsx from "clsx";
+import { useI18n } from "@useI18n";
 
 export const RadioButton = (props) => {
+    const { t } = useI18n();
     const containerClass = clsx(styles.container, {
         [styles.column]: props.column === true,
     });
@@ -32,6 +34,14 @@ export const RadioButton = (props) => {
                                 disabled={option.disabled === true || props.checked_variable.state === "pending"}
                             />
                             <p className={styles.radio_button_label}>{option.label}</p>
+                            {option.is_default && (
+                                <span className={styles.default_badge}>
+                                    {t("common.default_label")}
+                                </span>
+                            )}
+                            {option.capacity && (
+                                <span className={styles.capacity_label}>{option.capacity}</span>
+                            )}
                         </label>
                         {props.ChildComponent && <props.ChildComponent option={option} {...props} />}
                     </div>

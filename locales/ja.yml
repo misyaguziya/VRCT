@@ -5,6 +5,7 @@
 
 common:
     go_back_button_label: "戻る"
+    default_label: "デフォルト"
 
 common_error:
     no_device_mic: "マイクデバイスが検出されませんでした。"
@@ -279,8 +280,6 @@ config_page:
         whisper_weight_type:
             label: "Whisperモデルのタイプ"
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
-            model_template: "{{model_name}} モデル （{{capacity}}）"
-            recommended_model_template: "{{model_name}} モデル （{{capacity}}） [推奨]"
         transcription_compute_device:
             label: "AI音声認識で使用する処理デバイス"
 

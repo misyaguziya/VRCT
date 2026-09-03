@@ -96,14 +96,14 @@ export const translator_status = [
 export const ctranslate2_weight_type_status = [
     { id: "m2m100_418M-ct2-int8", capacity: "418MB"},
     { id: "m2m100_1.2B-ct2-int8", capacity: "1.2GB"},
-    { id: "nllb-200-distilled-600M-ct2-int8", capacity: "600MB"},
+    { id: "nllb-200-distilled-600M-ct2-int8", capacity: "600MB", is_default: true},
     { id: "nllb-200-distilled-1.3B-ct2-int8", capacity: "1.3GB"},
     { id: "nllb-200-3.3B-ct2-int8", capacity: "3.3GB"},
-].map(item => ({ ...item, is_downloaded: false, progress: null }));
+].map(item => ({ is_default: false, ...item, is_downloaded: false, progress: null }));
 
 export const whisper_weight_type_status = [
     { id: "tiny", capacity: "74.5MB"},
-    { id: "base", capacity: "141MB"},
+    { id: "base", capacity: "141MB", is_default: true},
     { id: "small", capacity: "463MB"},
     { id: "medium", capacity: "1.42GB"},
     { id: "large-v1", capacity: "2.87GB"},
@@ -111,7 +111,7 @@ export const whisper_weight_type_status = [
     { id: "large-v3", capacity: "2.87GB"},
     { id: "large-v3-turbo-int8", capacity: "794MB"},
     { id: "large-v3-turbo", capacity: "1.58GB"},
-].map(item => ({ ...item, is_downloaded: false, progress: null }));
+].map(item => ({ is_default: false, ...item, is_downloaded: false, progress: null }));
 
 
 export const deepl_auth_key_url = "https://www.deepl.com/ja/your-account/keys";

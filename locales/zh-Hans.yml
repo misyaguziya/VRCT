@@ -5,6 +5,7 @@
 
 common:
     go_back_button_label: "返回"
+    default_label: "默认"
 
 common_error:
     no_device_mic: "未检测到麦克风设备。"
@@ -271,8 +272,6 @@ config_page:
         whisper_weight_type:
             label: "Whisper 模型类型"
             desc: "容量越大的模型精度越高，但会占用更多 CPU/GPU 资源。\n※特别是比 medium 更大的模型，根据 CPU/GPU 性能可能难以使用。"
-            model_template: "{{model_name}} 模型 ({{capacity}})"
-            recommended_model_template: "{{model_name}} 模型 ({{capacity}}) (推荐)"
         transcription_compute_device:
             label: "AI 语音识别使用的处理设备"
 

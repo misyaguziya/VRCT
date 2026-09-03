@@ -3,9 +3,9 @@
 .download_container {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 8rem;
+    justify-content: flex-end;
+    width: 8rem;
+    min-width: 8rem;
     flex-shrink: 0;
 }
 
