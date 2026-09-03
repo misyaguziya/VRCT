@@ -12,7 +12,6 @@ from models.transcription.transcription_deepgram import (
     checkDeepgramApiKey,
     getAvailableDeepgramModels,
     getAvailableDeepgramModelsDetailed,
-    getDeepgramSupportedLanguages,
     isLanguageSupportedByDeepgramModel,
 )
 
@@ -164,34 +163,6 @@ class TestIsLanguageSupportedByDeepgramModel(unittest.TestCase):
 
     def test_unknown_language_country_pair_returns_false(self) -> None:
         self.assertFalse(isLanguageSupportedByDeepgramModel("Klingon", "Qo'noS", ["en"]))
-
-
-class TestGetDeepgramSupportedLanguages(unittest.TestCase):
-    def test_returns_per_country_support_for_every_language(self) -> None:
-        result = getDeepgramSupportedLanguages(["en", "ja"])
-
-        self.assertEqual(result["Japanese"], {"Japan": True})
-        self.assertEqual(result["Korean"], {"South Korea": False})
-        self.assertTrue(result["English"]["United States"])
-        self.assertTrue(result["English"]["United Kingdom"])
-
-    def test_multi_marker_supports_every_entry(self) -> None:
-        result = getDeepgramSupportedLanguages(["multi"])
-
-        self.assertTrue(all(
-            supported
-            for countries in result.values()
-            for supported in countries.values()
-        ))
-
-    def test_empty_model_languages_supports_nothing(self) -> None:
-        result = getDeepgramSupportedLanguages([])
-
-        self.assertFalse(any(
-            supported
-            for countries in result.values()
-            for supported in countries.values()
-        ))
 
 
 if __name__ == "__main__":

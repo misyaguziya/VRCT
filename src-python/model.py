@@ -39,7 +39,6 @@ from models.transcription.transcription_deepgram import (
     checkDeepgramApiKey,
     getAvailableDeepgramModels,
     getAvailableDeepgramModelsDetailed,
-    getDeepgramSupportedLanguages,
     isLanguageSupportedByDeepgramModel,
 )
 from models.transliteration.transliteration_transliterator import Transliterator
@@ -731,11 +730,6 @@ class Model:
         """モデル名と対応言語コード一覧つきで返す (UI向けメタデータ)。"""
         return getAvailableDeepgramModelsDetailed(api_key)
 
-    def getDeepgramSupportedLanguages(self, model_languages: list) -> dict:
-        """VRCT の Language/Country ごとに、指定モデルが対応しているかを
-        動的に判定した結果を返す (UI向けメタデータ)。"""
-        return getDeepgramSupportedLanguages(model_languages)
-
     def resetKeywordProcessor(self):
         self.ensure_initialized()
         del self.keyword_processor
@@ -952,7 +946,7 @@ class Model:
         transcription_lang の全エントリを網羅しているため常に True
         (Groq/OpenAI/カスタムサーバーはローカルWhisperと同じ言語コードを
         使うため)。Deepgram だけは選択中のモデルが実際に申告する対応言語
-        一覧と動的に突き合わせる (getDeepgramSupportedLanguages 参照)。
+        一覧と動的に突き合わせる (isLanguageSupportedByDeepgramModel 参照)。
         """
         if language not in transcription_lang or country not in transcription_lang[language]:
             return False

@@ -110,18 +110,3 @@ def isLanguageSupportedByDeepgramModel(language: str, country: str, model_langua
     base_code = _base_language_code(whisper_code)
     model_base_codes = {_base_language_code(code) for code in model_languages if code}
     return "multi" in model_base_codes or base_code in model_base_codes
-
-
-def getDeepgramSupportedLanguages(model_languages: list) -> dict:
-    """`transcription_lang` の全 (Language, Country) について、指定モデルが
-    対応しているかどうかを動的に判定した結果を返す。
-
-    返り値の例: {"Japanese": {"Japan": True}, "English": {"United States": True, ...}, ...}
-    """
-    result: dict = {}
-    for language, countries in transcription_lang.items():
-        result[language] = {
-            country: isLanguageSupportedByDeepgramModel(language, country, model_languages)
-            for country in countries
-        }
-    return result

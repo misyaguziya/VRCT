@@ -1617,20 +1617,6 @@ class Controller:
         return {"status":200, "result": dict(config.DEEPGRAM_MODEL_LANGUAGES)}
 
     @staticmethod
-    def getDeepgramSupportedLanguages(data=None, *args, **kwargs) -> dict:
-        """指定したDeepgramモデル (`data`、省略時は現在選択中のモデル) が、
-        VRCT の Language/Country ごとに対応しているかを動的に判定して
-        返す (transcription_languages.py のような静的な対応表を手作業で
-        保守する代わりに、Deepgram自身が申告する対応言語一覧
-        (`DEEPGRAM_MODEL_LANGUAGES`、`/v1/models` から都度取得) を突き合わせる)。
-
-        返り値の例: {"Japanese": {"Japan": True}, "Korean": {"South Korea": False}, ...}
-        """
-        model_name = str(data).strip() if data else (config.SELECTED_DEEPGRAM_MODEL or "")
-        model_languages = config.DEEPGRAM_MODEL_LANGUAGES.get(model_name, [])
-        return {"status":200, "result": model.getDeepgramSupportedLanguages(model_languages)}
-
-    @staticmethod
     def getDeepgramModel(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_DEEPGRAM_MODEL}
 
