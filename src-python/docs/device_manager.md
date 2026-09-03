@@ -975,30 +975,34 @@ def applyAutoMicSelect(self) -> None:
 
 ---
 
-## ActiveEndpointTracker による「音声検出ベース」の自動切替（既知の制限）
+## ActiveEndpointTracker による「音声検出ベース」の自動切替（スピーカーのみ）
 
 上記のシーケンスは「OS の既定デバイスが変わったとき」に追従する経路。
 これとは別に `active_endpoint_tracker.ActiveEndpointTracker` が
-`_startMicEndpointTracker`/`_startSpeakerEndpointTracker`
-(`setMicAutoActive`/`setSpeakerAutoActive` が呼ばれたときに起動) を通じて、
-「今実際に音が出ている/拾われているエンドポイント」を pycaw の
+`_startSpeakerEndpointTracker` (`setSpeakerAutoActive(True)` で起動) を通じて、
+「今実際に音が出ているエンドポイント」を pycaw の
 `IAudioMeterInformation.GetPeakValue` のポーリングで追跡し、OS既定と無関係に
 Recorder を切り替える経路も存在する（詳細は `active_endpoint_tracker.py`
-冒頭のdocstring参照）。
+冒頭のdocstring参照）。**この経路は render (スピーカー) 側専用。**
 
-**既知の制限 (2026-08-15 実機調査で確定):**
+**マイク側で peak 追従を行わない理由 (2026-08-15 実機調査 + 2026-09-03 不具合報告):**
 `GetPeakValue` は capture (マイク) エンドポイントに限り、そのデバイスを
 能動的に使っているクライアントが他に存在しないと常に 0 を返す。VRCT は
 選択中のマイク 1 台しか開かないため、非選択の候補マイクは基本的に誰にも
-掴まれておらず、ActiveEndpointTracker による「音声検出での自動切替」は
-実運用ではほぼ発火しない（他アプリが該当マイクを掴んでいる場合のみ機能する）。
+掴まれておらず「音声検出での自動切替」はまず発火しない。逆に VB-Audio
+Virtual Cable のような「常時他アプリの音が流れている」仮想 capture だけが
+ピークを持つため、Auto Mic Select を ON にした瞬間 OS 既定デバイス
+(例: MME / QUAD-CAPTURE) を無視して仮想ケーブルへ張り替わり、
+「Windows 規定とずれる / UI が一瞬既定を表示してすぐ戻る」不具合になっていた。
+このため `setMicAutoActive` はマイク側 tracker を一切起動せず、
+**マイクの Auto Select は本セクション冒頭の OS 既定デバイス追従のみ**とする。
 render (スピーカー) 側はこの制限を受けないため（他アプリが出力していれば
-非選択デバイスでもピークが取れる）、Auto Speaker Select は正常に機能する。
+非選択デバイスでもピークが取れる）、Auto Speaker Select は peak 追従込みで
+正常に機能する。
 
-OS既定デバイス追従（本セクション冒頭のシーケンス）は mic/speaker とも
-影響を受けず、通常通り動作する。対応するにはマイク候補を能動的に短時間
-open してサンプリングする設計変更が必要だが、ユーザー確認の結果、現時点
-では対応不要と判断し据え置いている。
+マイクでも「実際に音を拾っているデバイス」を追いたい場合は、候補マイクを
+能動的に短時間 open してサンプリングする設計変更が必要だが、ユーザー確認の
+結果、現時点では対応不要と判断し据え置いている。
 
 ---
 

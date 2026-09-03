@@ -1541,11 +1541,11 @@ class Model:
         config (SELECTED_MIC_HOST/DEVICE) から解決する。Session 内部で
         差分検知するため、同一デバイスなら no-op になる。
 
-        Auto 追跡中は device_manager 側の ActiveEndpointTracker が 250ms
-        周期で COM ポーリングしており、Recorder の open/close と並行実行
-        されると WASAPI がデッドロックする (実測確認済み)。reconfigure の
-        前後で tracker を pause/resume することで並行アクセスを排除する。
-        Auto OFF 時は tracker が存在しないので pause/resume は no-op。
+        マイク側は ActiveEndpointTracker (peak 追従) を使わないため
+        (device_manager.setMicAutoActive の docstring 参照)、
+        pauseMicEndpointTracker/resumeMicEndpointTracker は現状常に no-op。
+        speaker 側との対称性のため呼び出しは残す (将来マイク peak 追従を
+        復活させた場合の COM デッドロック回避策として機能する)。
         """
         self.ensure_initialized()
         device_manager.pauseMicEndpointTracker()
@@ -1555,8 +1555,15 @@ class Model:
             device_manager.resumeMicEndpointTracker()
 
     def reconfigureSpeakerDevice(self, device: Optional[dict] = None) -> None:
-        """稼働中の Speaker Session を新デバイスに差し替える。詳細は
-        reconfigureMicDevice のドキュメント参照。"""
+        """稼働中の Speaker Session を新デバイスに差し替える。
+        features / device 解決 / 差分検知の扱いは reconfigureMicDevice と同じ。
+
+        Auto Speaker 追跡中は device_manager 側の ActiveEndpointTracker が
+        250ms 周期で COM ポーリングしており、Recorder の open/close と並行
+        実行されると WASAPI がデッドロックする (実測確認済み)。reconfigure の
+        前後で tracker を pause/resume することで並行アクセスを排除する。
+        Auto OFF 時は tracker が存在しないので pause/resume は no-op。
+        """
         self.ensure_initialized()
         device_manager.pauseSpeakerEndpointTracker()
         try:
