@@ -9,8 +9,8 @@
     False のまま monitoring スレッドが 2 本立ち上がりうる。
   - 誤停止: mic 側が _mic_auto_active = True を書く前に speaker 側が
     「両方 inactive」と誤判定して stopMonitoring() してしまいうる。
-  - tracker (_startMicEndpointTracker 等) も同じ check-then-act で
-    二重起動しうる。
+  - tracker (_startSpeakerEndpointTracker 等) も同じ check-then-act で
+    二重起動しうる (マイク側は peak 追従 tracker を起動しないため対象外)。
 
   修正: _lifecycle_lock を導入し、フラグ更新〜tracker 起動/停止〜
   monitoring 起動/停止判断までを 1 つの原子操作にした。
@@ -153,25 +153,41 @@ class LifecycleLockAutoSelectRaceTests(unittest.TestCase):
             f"monitoring スレッドが {len(created_threads)} 本作られた (二重起動)",
         )
 
-    def test_concurrent_enable_starts_mic_tracker_exactly_once(self) -> None:
-        barrier = threading.Barrier(2, timeout=5)
-
-        def enable_mic_a():
-            barrier.wait()
+    def test_enabling_mic_auto_starts_no_endpoint_tracker(self) -> None:
+        # マイクの Auto Select は OS 既定デバイス追従のみ。speaker と違い
+        # ActiveEndpointTracker (peak 追従) は起動しない
+        # (device_manager.setMicAutoActive の docstring 参照)。
+        with patch.object(device_manager_module.DeviceManager, "monitoring", lambda self: None):
             self.dm.setMicAutoActive(True)
 
-        def enable_mic_b():
-            barrier.wait()
-            self.dm.setMicAutoActive(True)
+        self.assertEqual(
+            [t for t in _BlockingTracker.instances if t.flow == "capture"],
+            [],
+            "マイク Auto Select で capture 側 ActiveEndpointTracker が起動した",
+        )
+        self.assertIsNone(self.dm._mic_endpoint_tracker)
+        self.assertTrue(self.dm._mic_auto_active)
 
-        threads = [threading.Thread(target=enable_mic_a), threading.Thread(target=enable_mic_b)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join(timeout=5)
+    def test_concurrent_enable_starts_speaker_tracker_exactly_once(self) -> None:
+        with patch.object(device_manager_module.DeviceManager, "monitoring", lambda self: None):
+            barrier = threading.Barrier(2, timeout=5)
+
+            def enable_speaker_a():
+                barrier.wait()
+                self.dm.setSpeakerAutoActive(True)
+
+            def enable_speaker_b():
+                barrier.wait()
+                self.dm.setSpeakerAutoActive(True)
+
+            threads = [threading.Thread(target=enable_speaker_a), threading.Thread(target=enable_speaker_b)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join(timeout=5)
 
         started = [t for t in _BlockingTracker.instances if t.started]
-        self.assertEqual(len(started), 1, f"mic tracker が {len(started)} 個起動している (二重起動)")
+        self.assertEqual(len(started), 1, f"speaker tracker が {len(started)} 個起動している (二重起動)")
 
     def test_disable_one_side_while_other_stays_active_does_not_stop_monitoring(self) -> None:
         with patch.object(device_manager_module.DeviceManager, "monitoring", lambda self: None):
