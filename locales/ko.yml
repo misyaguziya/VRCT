@@ -5,6 +5,7 @@
 
 common:
     go_back_button_label: "돌아가기"
+    default_label: "기본값"
 
 common_error:
     no_device_mic: "마이크 디바이스를 찾지 못했습니다."
@@ -271,8 +272,6 @@ config_page:
         whisper_weight_type:
             label: "Whisper 모델 타입"
             desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. * 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
-            model_template: "{{model_name}} 모델 ({{capacity}})"
-            recommended_model_template: "{{model_name}} 모델 ({{capacity}}) (권장)"
         transcription_compute_device:
             label:
 

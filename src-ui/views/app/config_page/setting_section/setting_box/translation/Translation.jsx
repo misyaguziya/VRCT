@@ -88,7 +88,7 @@ const CTranslate2WeightType_Box = () => {
     const c_translate2_weight_types_object = currentCTranslate2WeightTypeStatus.data.map(item => {
         return {
             ...item,
-            label: `${item.id} (${item.capacity})`,
+            label: item.id,
         };
     });
 

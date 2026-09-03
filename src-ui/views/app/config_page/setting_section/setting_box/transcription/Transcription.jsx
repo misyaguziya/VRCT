@@ -252,7 +252,7 @@ const WhisperWeightType_Box = () => {
     const whisper_weight_types = currentWhisperWeightTypeStatus.data.map(item => {
         return {
             ...item,
-            label: `${item.id} (${item.capacity})`,
+            label: item.id,
         };
     });
 

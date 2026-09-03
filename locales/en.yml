@@ -5,6 +5,7 @@
 
 common:
     go_back_button_label: "Go Back"
+    default_label: "Default"
 
 common_error:
     no_device_mic: "No mic device detected."
@@ -279,8 +280,6 @@ config_page:
         whisper_weight_type:
             label: "Whisper Model"
             desc: "Larger models have higher accuracy, but they also consume more CPU or GPU resources.\nEspecially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU."
-            model_template: "{{model_name}} model ({{capacity}})"
-            recommended_model_template: "{{model_name}} model ({{capacity}}) (Recommended)"
         transcription_compute_device:
             label: "Processing Device Used For AI transcription"
 
