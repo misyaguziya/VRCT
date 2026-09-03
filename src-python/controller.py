@@ -48,11 +48,35 @@ _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC = 20.0
 # で毎回引き直すことで、モジュールロード時に実体の bound method を
 # キャッシュしてしまい patch が効かなくなる事故を避ける。
 _ENGINE_MODEL_BINDINGS = {
+    "Plamo_API": {
+        "authenticate": "authenticationTranslatorPlamoAuthKey",
+        "get_model_list": "getTranslatorPlamoModelList",
+        "set_model": "setTranslatorPlamoModel",
+        "update_client": "updateTranslatorPlamoClient",
+    },
     "Gemini_API": {
         "authenticate": "authenticationTranslatorGeminiAuthKey",
         "get_model_list": "getTranslatorGeminiModelList",
         "set_model": "setTranslatorGeminiModel",
         "update_client": "updateTranslatorGeminiClient",
+    },
+    "OpenAI_API": {
+        "authenticate": "authenticationTranslatorOpenAIAuthKey",
+        "get_model_list": "getTranslatorOpenAIModelList",
+        "set_model": "setTranslatorOpenAIModel",
+        "update_client": "updateTranslatorOpenAIClient",
+    },
+    "Groq_API": {
+        "authenticate": "authenticationTranslatorGroqAuthKey",
+        "get_model_list": "getTranslatorGroqModelList",
+        "set_model": "setTranslatorGroqModel",
+        "update_client": "updateTranslatorGroqClient",
+    },
+    "OpenRouter_API": {
+        "authenticate": "authenticationTranslatorOpenRouterAuthKey",
+        "get_model_list": "getTranslatorOpenRouterModelList",
+        "set_model": "setTranslatorOpenRouterModel",
+        "update_client": "updateTranslatorOpenRouterClient",
     },
 }
 
@@ -2536,91 +2560,22 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
     def getPlamoAuthKey(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["Plamo_API"]}
+        return self._getTranslationEngineAuthKey("Plamo_API")
 
     def setPlamoAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Plamo Auth Key")
-        translator_name = "Plamo_API"
-        try:
-            data = str(data)
-            if len(data) >= 72:
-                result = model.authenticationTranslatorPlamoAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_PLAMO_MODEL_LIST = model.getTranslatorPlamoModelList()
-                    self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
-                    if config.SELECTED_PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
-                        config.SELECTED_PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
-                    model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
-                    self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
-                    model.updateTranslatorPlamoClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_PLAMO_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_PLAMO_LENGTH,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delPlamoAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("Plamo_API", data)
 
     def delPlamoAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "Plamo_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_PLAMO_MODEL_LIST = []
-        config.SELECTED_PLAMO_MODEL = None
-        self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("Plamo_API")
 
     def getPlamoModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_PLAMO_MODEL_LIST}
+        return self._getTranslationEngineModelList("Plamo_API")
 
     def getPlamoModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_PLAMO_MODEL}
+        return self._getTranslationEngineModel("Plamo_API")
 
     def setPlamoModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Plamo Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorPlamoModel(model=data)
-            if result is True:
-                config.SELECTED_PLAMO_MODEL = data
-                model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
-                model.updateTranslatorPlamoClient()
-                response = {"status":200, "result":config.SELECTED_PLAMO_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_PLAMO_INVALID,
-                    data=config.SELECTED_PLAMO_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_PLAMO_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Plamo_API", data)
 
     def getGeminiAuthKey(self, *args, **kwargs) -> dict:
         return self._getTranslationEngineAuthKey("Gemini_API")
@@ -2640,269 +2595,59 @@ class Controller:
     def setGeminiModel(self, data, *args, **kwargs) -> dict:
         return self._setTranslationEngineModel("Gemini_API", data)
 
-    @staticmethod
-    def getOpenAIAuthKey(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["OpenAI_API"]}
+    def getOpenAIAuthKey(self, *args, **kwargs) -> dict:
+        return self._getTranslationEngineAuthKey("OpenAI_API")
 
     def setOpenAIAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Auth Key")
-        translator_name = "OpenAI_API"
-        try:
-            data = str(data)
-            if data.startswith("sk-") and len(data) >= 164:
-                result = model.authenticationTranslatorOpenAIAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
-                    self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
-                    if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
-                        config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                    model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
-                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
-                    model.updateTranslatorOpenAIClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_OPENAI_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_OPENAI_INVALID,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delOpenAIAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("OpenAI_API", data)
 
     def delOpenAIAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "OpenAI_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_OPENAI_MODEL_LIST = []
-        config.SELECTED_OPENAI_MODEL = None
-        self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("OpenAI_API")
 
     def getOpenAIModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_OPENAI_MODEL_LIST}
+        return self._getTranslationEngineModelList("OpenAI_API")
 
     def getOpenAIModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OPENAI_MODEL}
+        return self._getTranslationEngineModel("OpenAI_API")
 
     def setOpenAIModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorOpenAIModel(model=data)
-            if result is True:
-                config.SELECTED_OPENAI_MODEL = data
-                model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
-                model.updateTranslatorOpenAIClient()
-                response = {"status":200, "result":config.SELECTED_OPENAI_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_OPENAI_INVALID,
-                    data=config.SELECTED_OPENAI_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_OPENAI_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("OpenAI_API", data)
 
-    @staticmethod
-    def getGroqAuthKey(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["Groq_API"]}
+    def getGroqAuthKey(self, *args, **kwargs) -> dict:
+        return self._getTranslationEngineAuthKey("Groq_API")
 
     def setGroqAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Groq Auth Key")
-        translator_name = "Groq_API"
-        try:
-            data = str(data)
-            if data.startswith("gsk") and len(data) >= 40:
-                result = model.authenticationTranslatorGroqAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_GROQ_MODEL_LIST = model.getTranslatorGroqModelList()
-                    self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
-                    if config.SELECTED_GROQ_MODEL not in config.SELECTABLE_GROQ_MODEL_LIST:
-                        config.SELECTED_GROQ_MODEL = config.SELECTABLE_GROQ_MODEL_LIST[0]
-                    model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
-                    self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
-                    model.updateTranslatorGroqClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_GROQ_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_GROQ_INVALID,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delGroqAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("Groq_API", data)
 
     def delGroqAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "Groq_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_GROQ_MODEL_LIST = []
-        config.SELECTED_GROQ_MODEL = None
-        self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("Groq_API")
 
     def getGroqModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_GROQ_MODEL_LIST}
+        return self._getTranslationEngineModelList("Groq_API")
 
     def getGroqModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_GROQ_MODEL}
+        return self._getTranslationEngineModel("Groq_API")
 
     def setGroqModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Groq Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorGroqModel(model=data)
-            if result is True:
-                config.SELECTED_GROQ_MODEL = data
-                model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
-                model.updateTranslatorGroqClient()
-                response = {"status":200, "result":config.SELECTED_GROQ_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_GROQ_INVALID,
-                    data=config.SELECTED_GROQ_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_GROQ_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Groq_API", data)
 
-    @staticmethod
-    def getOpenRouterAuthKey(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["OpenRouter_API"]}
+    def getOpenRouterAuthKey(self, *args, **kwargs) -> dict:
+        return self._getTranslationEngineAuthKey("OpenRouter_API")
 
     def setOpenRouterAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenRouter Auth Key")
-        translator_name = "OpenRouter_API"
-        try:
-            data = str(data)
-            if len(data) >= 20:  # OpenRouter API key basic validation
-                result = model.authenticationTranslatorOpenRouterAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_OPENROUTER_MODEL_LIST = model.getTranslatorOpenRouterModelList()
-                    self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
-                    if config.SELECTED_OPENROUTER_MODEL not in config.SELECTABLE_OPENROUTER_MODEL_LIST:
-                        config.SELECTED_OPENROUTER_MODEL = config.SELECTABLE_OPENROUTER_MODEL_LIST[0]
-                    model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
-                    self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
-                    model.updateTranslatorOpenRouterClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_OPENROUTER_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_OPENROUTER_INVALID,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delOpenRouterAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("OpenRouter_API", data)
 
     def delOpenRouterAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "OpenRouter_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_OPENROUTER_MODEL_LIST = []
-        config.SELECTED_OPENROUTER_MODEL = None
-        self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("OpenRouter_API")
 
     def getOpenRouterModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_OPENROUTER_MODEL_LIST}
+        return self._getTranslationEngineModelList("OpenRouter_API")
 
     def getOpenRouterModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
+        return self._getTranslationEngineModel("OpenRouter_API")
 
     def setOpenRouterModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenRouter Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorOpenRouterModel(model=data)
-            if result is True:
-                config.SELECTED_OPENROUTER_MODEL = data
-                model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
-                model.updateTranslatorOpenRouterClient()
-                response = {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_OPENROUTER_INVALID,
-                    data=config.SELECTED_OPENROUTER_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_OPENROUTER_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("OpenRouter_API", data)
 
     def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         return {"status":200, "result":model.getTranslatorLMStudioConnected()}
