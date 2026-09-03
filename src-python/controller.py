@@ -2735,10 +2735,6 @@ class Controller:
     def checkTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         return self._checkTranslationEngineConnection("LMStudio", connect_kwargs={"base_url": config.LMSTUDIO_URL})
 
-    def getConnectedLMStudio(self, *args, **kwargs) -> dict:
-        is_connected = model.getTranslatorLMStudioConnected()
-        return {"status":200, "result": is_connected}
-
     def getTranslatorLMStudioURL(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.LMSTUDIO_URL}
 
@@ -2787,15 +2783,12 @@ class Controller:
             )
         return response
 
-    def getTranslatorLStudioModelList(self, *args, **kwargs) -> dict:
-        # NOTE: "LStudio" は既存の mainloop.py ルーティングに合わせた
-        # 元からのタイポ (本来は "LMStudio")。挙動に影響しないため
-        # 今回のリファクタでは温存する。
-        # また、認証キー型5エンジンの getXModelList と異なり、ここは
-        # config のキャッシュ値ではなく model 経由でクライアントに
-        # 都度問い合わせる (ローカルサーバーでモデルが動的に増減しうる
-        # LMStudio/Ollama 固有の設計) ため、_getTranslationEngineModelList
-        # には委譲せず既存の実装のまま残す。
+    def getTranslatorLMStudioModelList(self, *args, **kwargs) -> dict:
+        # 認証キー型5エンジンの getXModelList と異なり、ここは config の
+        # キャッシュ値ではなく model 経由でクライアントに都度問い合わせる
+        # (ローカルサーバーでモデルが動的に増減しうる LMStudio/Ollama 固有の
+        # 設計) ため、_getTranslationEngineModelList には委譲せず既存の実装の
+        # まま残す。
         model_list = model.getTranslatorLMStudioModelList()
         return {"status":200, "result": model_list}
 
