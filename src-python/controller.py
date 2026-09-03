@@ -12,7 +12,7 @@ from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
-from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY
+from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -77,6 +77,21 @@ _ENGINE_MODEL_BINDINGS = {
         "get_model_list": "getTranslatorOpenRouterModelList",
         "set_model": "setTranslatorOpenRouterModel",
         "update_client": "updateTranslatorOpenRouterClient",
+    },
+    # CONNECTION_PROVIDER_REGISTRY (疎通確認型) 用。"authenticate" は
+    # 「接続を確認する」呼び出しに読み替える (LMStudioはbase_url必須、
+    # Ollamaは引数なし — 呼び出し時の connect_kwargs で吸収する)。
+    "LMStudio": {
+        "authenticate": "authenticationTranslatorLMStudio",
+        "get_model_list": "getTranslatorLMStudioModelList",
+        "set_model": "setTranslatorLMStudioModel",
+        "update_client": "updateTranslatorLMStudioClient",
+    },
+    "Ollama": {
+        "authenticate": "authenticationTranslatorOllama",
+        "get_model_list": "getTranslatorOllamaModelList",
+        "set_model": "setTranslatorOllamaModel",
+        "update_client": "updateTranslatorOllamaClient",
     },
 }
 
@@ -2412,12 +2427,23 @@ class Controller:
             config.NOTIFICATION_VRC_SFX = False
         return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
-    # --- フェーズ3項目17: TRANSLATION_PROVIDER_REGISTRY 登録エンジン向け
-    # 共通CRUD実装。「認証キー + モデル一覧」型のエンジン (現時点では
-    # Gemini_API のみ、段階移行中) は、この6メソッドと
-    # _ENGINE_MODEL_BINDINGS への4行の追加だけで対応できる。
-    # エンジン固有の get/set/delXAuthKey・getXModelList・get/setXModel は
-    # 全てこれらへの1行委譲になる (詳細は translation_providers.py 参照)。
+    # --- フェーズ3項目17: 翻訳エンジンレジストリ (TRANSLATION_PROVIDER_REGISTRY
+    # =認証キー型、CONNECTION_PROVIDER_REGISTRY=疎通確認型) 向け共通CRUD実装。
+    # エンジン固有の get/set/delXAuthKey・getXModelList・get/setXModel・
+    # checkXConnection は全てこれらへの1行委譲になる
+    # (詳細は translation_providers.py 参照)。
+
+    def _resolveEngineSpec(self, engine_key: str):
+        """`engine_key` がどちらのレジストリに属していても対応するスペックを返す。
+
+        `_getTranslationEngineModelList` 等モデル管理系の3メソッドは
+        `selectable_model_list_attr`/`selected_model_attr`/`error_model_invalid`
+        という共通フィールド名だけを使うため、どちらのレジストリのスペックでも
+        区別せず動く。
+        """
+        if engine_key in TRANSLATION_PROVIDER_REGISTRY:
+            return TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        return CONNECTION_PROVIDER_REGISTRY[engine_key]
 
     def _getTranslationEngineAuthKey(self, engine_key: str) -> dict:
         return {"status":200, "result":config.AUTH_KEYS[engine_key]}
@@ -2480,15 +2506,15 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS[engine_key]}
 
     def _getTranslationEngineModelList(self, engine_key: str) -> dict:
-        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        spec = self._resolveEngineSpec(engine_key)
         return {"status":200, "result": getattr(config, spec.selectable_model_list_attr)}
 
     def _getTranslationEngineModel(self, engine_key: str) -> dict:
-        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        spec = self._resolveEngineSpec(engine_key)
         return {"status":200, "result":getattr(config, spec.selected_model_attr)}
 
     def _setTranslationEngineModel(self, engine_key: str, data) -> dict:
-        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        spec = self._resolveEngineSpec(engine_key)
         bindings = _ENGINE_MODEL_BINDINGS[engine_key]
         display_name = engine_key[:-len("_API")] if engine_key.endswith("_API") else engine_key
         printLog(f"Set {display_name} Model", data)
@@ -2510,6 +2536,60 @@ class Controller:
             response = VRCTError.create_exception_error_response(
                 e,
                 data=getattr(config, spec.selected_model_attr)
+            )
+        return response
+
+    def _checkTranslationEngineConnection(self, engine_key: str, connect_kwargs: dict) -> dict:
+        """CONNECTION_PROVIDER_REGISTRY 登録エンジン (LMStudio/Ollama) 共通の
+        疎通確認処理。`connect_kwargs` は接続呼び出しに渡す追加引数
+        (LMStudio: `{"base_url": config.LMSTUDIO_URL}`、Ollama: `{}`)。
+
+        NOTE: 接続には成功したがモデル一覧が空だった場合、既存実装を
+        そのまま踏襲して `raise Exception(...)` で下の except に処理させている
+        (専用のエラーコードではなく GENERAL_EXCEPTION 応答になる、既存の
+        LMStudio/Ollama の挙動と同じ)。
+        """
+        spec = CONNECTION_PROVIDER_REGISTRY[engine_key]
+        bindings = _ENGINE_MODEL_BINDINGS[engine_key]
+        printLog(f"Check Translator {engine_key} Connection")
+        try:
+            result = getattr(model, bindings["authenticate"])(**connect_kwargs)
+            if result is True:
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = True
+                model_list = getattr(model, bindings["get_model_list"])()
+                setattr(config, spec.selectable_model_list_attr, model_list)
+                self.run(200, self.run_mapping[spec.run_mapping_selectable_key], model_list)
+                if len(model_list) == 0:
+                    raise Exception(f"No {engine_key} models available")
+                if getattr(config, spec.selected_model_attr) not in model_list:
+                    setattr(config, spec.selected_model_attr, model_list[0])
+                getattr(model, bindings["set_model"])(model=getattr(config, spec.selected_model_attr))
+                self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+                getattr(model, bindings["update_client"])()
+                self.updateTranslationEngineAndEngineList()
+                response = {"status":200, "result":True}
+            else:
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
+                setattr(config, spec.selectable_model_list_attr, [])
+                setattr(config, spec.selected_model_attr, None)
+                self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
+                self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+                self.updateTranslationEngineAndEngineList()
+                response = VRCTError.create_error_response(
+                    spec.error_connection_failed,
+                    data=False
+                )
+        except Exception as e:
+            errorLogging()
+            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
+            setattr(config, spec.selectable_model_list_attr, [])
+            setattr(config, spec.selected_model_attr, None)
+            self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
+            self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+            self.updateTranslationEngineAndEngineList()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=False
             )
         return response
 
@@ -2653,47 +2733,7 @@ class Controller:
         return {"status":200, "result":model.getTranslatorLMStudioConnected()}
 
     def checkTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
-        printLog("Check Translator LMStudio Connection")
-        translator_name = "LMStudio"
-        try:
-            result = model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL)
-            if result is True:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
-                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
-                if len(config.SELECTABLE_LMSTUDIO_MODEL_LIST) == 0:
-                    raise Exception("No LMStudio models available")
-                if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
-                    config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
-                model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
-                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
-                model.updateTranslatorLMStudioClient()
-                self.updateTranslationEngineAndEngineList()
-                response = {"status":200, "result":True}
-            else:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-                config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
-                config.SELECTED_LMSTUDIO_MODEL = None
-                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
-                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
-                self.updateTranslationEngineAndEngineList()
-                response = VRCTError.create_error_response(
-                    ErrorCode.CONNECTION_LMSTUDIO_FAILED,
-                    data=False
-                )
-        except Exception as e:
-            errorLogging()
-            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-            config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
-            config.SELECTED_LMSTUDIO_MODEL = None
-            self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
-            self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
-            self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=False
-            )
-        return response
+        return self._checkTranslationEngineConnection("LMStudio", connect_kwargs={"base_url": config.LMSTUDIO_URL})
 
     def getConnectedLMStudio(self, *args, **kwargs) -> dict:
         is_connected = model.getTranslatorLMStudioConnected()
@@ -2748,34 +2788,22 @@ class Controller:
         return response
 
     def getTranslatorLStudioModelList(self, *args, **kwargs) -> dict:
+        # NOTE: "LStudio" は既存の mainloop.py ルーティングに合わせた
+        # 元からのタイポ (本来は "LMStudio")。挙動に影響しないため
+        # 今回のリファクタでは温存する。
+        # また、認証キー型5エンジンの getXModelList と異なり、ここは
+        # config のキャッシュ値ではなく model 経由でクライアントに
+        # 都度問い合わせる (ローカルサーバーでモデルが動的に増減しうる
+        # LMStudio/Ollama 固有の設計) ため、_getTranslationEngineModelList
+        # には委譲せず既存の実装のまま残す。
         model_list = model.getTranslatorLMStudioModelList()
         return {"status":200, "result": model_list}
 
     def getTranslatorLMStudioModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
+        return self._getTranslationEngineModel("LMStudio")
 
     def setTranslatorLMStudioModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Translator LMStudio Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorLMStudioModel(model=data)
-            if result is True:
-                config.SELECTED_LMSTUDIO_MODEL = data
-                model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
-                model.updateTranslatorLMStudioClient()
-                response = {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_LMSTUDIO_INVALID,
-                    data=config.SELECTED_LMSTUDIO_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_LMSTUDIO_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("LMStudio", data)
 
     # ------------------------------------------------------------------
     # OpenAI-compatible endpoint (URL + Auth Key)
@@ -2953,77 +2981,17 @@ class Controller:
         return {"status":200, "result":model.getTranslatorOllamaConnected()}
 
     def checkTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
-        printLog("Check Translator Ollama Connection")
-        translator_name = "Ollama"
-        try:
-            result = model.authenticationTranslatorOllama()
-            if result is True:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                config.SELECTABLE_OLLAMA_MODEL_LIST = model.getTranslatorOllamaModelList()
-                self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
-                if len(config.SELECTABLE_OLLAMA_MODEL_LIST) == 0:
-                    raise Exception("No Ollama models available")
-                if config.SELECTED_OLLAMA_MODEL not in config.SELECTABLE_OLLAMA_MODEL_LIST:
-                    config.SELECTED_OLLAMA_MODEL = config.SELECTABLE_OLLAMA_MODEL_LIST[0]
-                model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
-                self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
-                model.updateTranslatorOllamaClient()
-                self.updateTranslationEngineAndEngineList()
-                response = {"status":200, "result":True}
-            else:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-                config.SELECTABLE_OLLAMA_MODEL_LIST = []
-                config.SELECTED_OLLAMA_MODEL = None
-                self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
-                self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
-                self.updateTranslationEngineAndEngineList()
-                response = VRCTError.create_error_response(
-                    ErrorCode.CONNECTION_OLLAMA_FAILED,
-                    data=False
-                )
-        except Exception as e:
-            errorLogging()
-            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-            config.SELECTABLE_OLLAMA_MODEL_LIST = []
-            config.SELECTED_OLLAMA_MODEL = None
-            self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
-            self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
-            self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=False
-            )
-        return response
+        return self._checkTranslationEngineConnection("Ollama", connect_kwargs={})
 
     def getTranslatorOllamaModelList(self, *args, **kwargs) -> dict:
         model_list = model.getTranslatorOllamaModelList()
         return {"status":200, "result": model_list}
 
     def getTranslatorOllamaModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
+        return self._getTranslationEngineModel("Ollama")
 
     def setTranslatorOllamaModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Translator Ollama Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorOllamaModel(model=data)
-            if result is True:
-                config.SELECTED_OLLAMA_MODEL = data
-                model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
-                model.updateTranslatorOllamaClient()
-                response = {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_OLLAMA_INVALID,
-                    data=config.SELECTED_OLLAMA_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_OLLAMA_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Ollama", data)
 
     @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
