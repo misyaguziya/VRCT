@@ -5,10 +5,6 @@ import styles from "./Topbar.module.scss";
 import { useIsOpenedConfigPage } from "@logics_common";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 
-import { TitleBox } from "./title_box/TitleBox";
-import { SectionTitleBox } from "./section_title_box/SectionTitleBox";
-import { CompactSwitchBox } from "./compact_switch_box/CompactSwitchBox";
-
 export const Topbar = () => {
     const { t } = useI18n();
     const { currentIsOpenedConfigPage, setIsOpenedConfigPage } = useIsOpenedConfigPage();
@@ -27,11 +23,6 @@ export const Topbar = () => {
                 <div className={styles.go_back_text_wrapper}>
                     <p className={styles.go_back_text}>{t("common.go_back_button_label")}</p>
                 </div>
-
-
-                {/* <TitleBox />
-                <SectionTitleBox />
-                <CompactSwitchBox /> */}
             </div>
         </div>
     );
