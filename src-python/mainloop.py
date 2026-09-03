@@ -196,7 +196,6 @@ mapping = {
     "/set/data/deepgram_auth_key": {"status": True, "variable":controller.setDeepgramAuthKey},
     "/delete/data/deepgram_auth_key": {"status": True, "variable":controller.delDeepgramAuthKey},
     "/get/data/selectable_deepgram_model_list": {"status": True, "variable":controller.getDeepgramModelList},
-    "/get/data/deepgram_model_languages": {"status": True, "variable":controller.getDeepgramModelLanguages},
     "/get/data/selected_deepgram_model": {"status": True, "variable":controller.getDeepgramModel},
     "/set/data/selected_deepgram_model": {"status": True, "variable":controller.setDeepgramModel},
 
