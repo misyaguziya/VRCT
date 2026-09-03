@@ -20,6 +20,7 @@ import math
 from typing import List, Optional, Protocol, Tuple
 
 import numpy as np
+import requests
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -247,3 +248,91 @@ class OpenAICompatibleTranscriptionProvider:
             and detected_language == transcription_lang[language][country][self.engine_name]
         )
         return text, confidence, is_definitive
+
+
+_DEEPGRAM_LISTEN_URL = "https://api.deepgram.com/v1/listen"
+
+
+def _map_deepgram_status(status_code: int) -> ErrorCode:
+    if status_code in (401, 403):
+        return ErrorCode.TRANSCRIPTION_API_AUTH_FAILED
+    if status_code == 429:
+        return ErrorCode.TRANSCRIPTION_API_RATE_LIMITED
+    return ErrorCode.TRANSCRIPTION_API_SERVER_ERROR
+
+
+class DeepgramProvider:
+    """Deepgram の録音済み(バッチ) REST API (`/v1/listen`) 向けプロバイダ。
+
+    OpenAI互換ではないため `openai` パッケージは使わず、既存依存の
+    `requests` で直接叩く。
+
+    言語コードについて: Deepgram の対応言語・コード体系はモデルごとに
+    差異があり、ローカル/OpenAI互換系 (`transcription_lang[...]["Whisper"]`)
+    の値をそのまま流用すると誤ったコードを送ってしまう恐れがある。
+    正確な対応表を今の時点で用意するのはリスクが高いため、v1では常に
+    `detect_language=true` (自動検出) を使い、`language`/`country` 引数は
+    使用しない。これにより「1回のAPI呼び出しで済む」利点もある
+    (Deepgram自身が1呼び出しで多言語を判定できるため、Whisper系のように
+    候補言語ごとに複数回呼ぶ必要が無い)。そのため `is_definitive` は常に
+    True を返し、呼び出し元のループを1回で打ち切らせる。
+
+    信頼度についても、avg_logprob/no_speech_prob に相当するセグメント
+    単位の指標をDeepgramは返さないため、トップレベルの `confidence`
+    (0〜1) をそのまま使う (セグメント単位のフィルタリングは行わない)。
+    """
+
+    def __init__(self, api_key: str, model: str) -> None:
+        self.api_key = api_key
+        self.model = model
+
+    def transcribe(
+        self,
+        audio_data: AudioData,
+        language: str,
+        country: str,
+        *,
+        avg_logprob: float,
+        no_speech_prob: float,
+        no_repeat_ngram_size: int,
+        force_language: bool,
+    ) -> Tuple[str, float, bool]:
+        wav_bytes = audio_data.get_wav_data(convert_rate=16000, convert_width=2)
+
+        try:
+            response = requests.post(
+                _DEEPGRAM_LISTEN_URL,
+                headers={
+                    "Authorization": f"Token {self.api_key}",
+                    "Content-Type": "audio/wav",
+                },
+                params={"model": self.model, "detect_language": "true"},
+                data=wav_bytes,
+                timeout=_HTTP_TIMEOUT,
+            )
+        except requests.exceptions.Timeout as exc:
+            errorLogging()
+            raise TranscriptionApiError(ErrorCode.TRANSCRIPTION_API_TIMEOUT) from exc
+        except requests.exceptions.RequestException as exc:
+            errorLogging()
+            raise TranscriptionApiError(ErrorCode.TRANSCRIPTION_API_SERVER_ERROR) from exc
+
+        if response.status_code != 200:
+            errorLogging()
+            raise TranscriptionApiError(_map_deepgram_status(response.status_code))
+
+        payload = response.json()
+        try:
+            channel = payload["results"]["channels"][0]
+            alternative = channel["alternatives"][0]
+        except (KeyError, IndexError):
+            return "", 0.0, False
+
+        text = alternative.get("transcript", "") or ""
+        if not text:
+            return "", 0.0, False
+
+        confidence = float(alternative.get("confidence", 0.0) or 0.0)
+        # 常に detect_language=true で呼ぶため、この1回の結果が最終結果。
+        # 呼び出し元 (transcribeAudioQueue) には他の候補言語を試させない。
+        return text, confidence, True

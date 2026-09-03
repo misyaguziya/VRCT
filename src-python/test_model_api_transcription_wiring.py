@@ -22,14 +22,17 @@ class TestResolveApiTranscriptionKwargs(unittest.TestCase):
         self._original_groq_model = config._SELECTED_GROQ_WHISPER_MODEL
         self._original_openai_model = config._SELECTED_OPENAI_WHISPER_MODEL
         self._original_custom_model = config._SELECTED_CUSTOM_WHISPER_MODEL
+        self._original_deepgram_model = config._SELECTED_DEEPGRAM_MODEL
         # allowed= バリデータは SELECTABLE_*_MODEL_LIST に無い値を弾くため、
         # private 属性へ直接書き込んでバリデーションを迂回する。
         self._original_groq_list = list(config._SELECTABLE_GROQ_WHISPER_MODEL_LIST)
         self._original_openai_list = list(config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
         self._original_custom_list = list(config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+        self._original_deepgram_list = list(config._SELECTABLE_DEEPGRAM_MODEL_LIST)
         config._SELECTABLE_GROQ_WHISPER_MODEL_LIST = ["whisper-large-v3"]
         config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = ["whisper-1"]
         config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = ["whisper"]
+        config._SELECTABLE_DEEPGRAM_MODEL_LIST = ["nova-3"]
 
     def tearDown(self) -> None:
         config._SELECTED_TRANSCRIPTION_ENGINE = self._original_engine
@@ -38,9 +41,11 @@ class TestResolveApiTranscriptionKwargs(unittest.TestCase):
         config._SELECTED_GROQ_WHISPER_MODEL = self._original_groq_model
         config._SELECTED_OPENAI_WHISPER_MODEL = self._original_openai_model
         config._SELECTED_CUSTOM_WHISPER_MODEL = self._original_custom_model
+        config._SELECTED_DEEPGRAM_MODEL = self._original_deepgram_model
         config._SELECTABLE_GROQ_WHISPER_MODEL_LIST = self._original_groq_list
         config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = self._original_openai_list
         config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = self._original_custom_list
+        config._SELECTABLE_DEEPGRAM_MODEL_LIST = self._original_deepgram_list
 
     def test_google_returns_empty_kwargs(self) -> None:
         config._SELECTED_TRANSCRIPTION_ENGINE = "Google"
@@ -101,6 +106,15 @@ class TestResolveApiTranscriptionKwargs(unittest.TestCase):
             },
         )
 
+    def test_deepgram_resolves_key_and_model_without_base_url(self) -> None:
+        config._SELECTED_TRANSCRIPTION_ENGINE = "Deepgram"
+        config.TRANSCRIPTION_AUTH_KEYS = {"Deepgram": "dg-test"}
+        config._SELECTED_DEEPGRAM_MODEL = "nova-3"
+
+        result = MicSession._resolve_api_transcription_kwargs()
+
+        self.assertEqual(result, {"api_key": "dg-test", "api_model": "nova-3"})
+
 
 class TestCreateTranscriberPassesApiKwargsThrough(unittest.TestCase):
     """`_create_transcriber()` が `_resolve_api_transcription_kwargs()` の
@@ -146,6 +160,36 @@ class TestCreateTranscriberPassesApiKwargsThrough(unittest.TestCase):
         self.assertEqual(kwargs["api_key"], "sk-groq")
         self.assertEqual(kwargs["base_url"], config.GROQ_WHISPER_BASE_URL)
         self.assertEqual(kwargs["api_model"], "whisper-large-v3")
+
+
+class TestCreateTranscriberPassesDeepgramKwargsThrough(unittest.TestCase):
+    def setUp(self) -> None:
+        self._original_engine = config._SELECTED_TRANSCRIPTION_ENGINE
+        self._original_auth_keys = dict(config._TRANSCRIPTION_AUTH_KEYS)
+        self._original_deepgram_model = config._SELECTED_DEEPGRAM_MODEL
+        self._original_deepgram_list = list(config._SELECTABLE_DEEPGRAM_MODEL_LIST)
+        config._SELECTABLE_DEEPGRAM_MODEL_LIST = ["nova-3"]
+        config._SELECTED_TRANSCRIPTION_ENGINE = "Deepgram"
+        config.TRANSCRIPTION_AUTH_KEYS = {"Deepgram": "dg-test"}
+        config._SELECTED_DEEPGRAM_MODEL = "nova-3"
+
+    def tearDown(self) -> None:
+        config._SELECTED_TRANSCRIPTION_ENGINE = self._original_engine
+        config._TRANSCRIPTION_AUTH_KEYS = self._original_auth_keys
+        config._SELECTED_DEEPGRAM_MODEL = self._original_deepgram_model
+        config._SELECTABLE_DEEPGRAM_MODEL_LIST = self._original_deepgram_list
+
+    @patch("model.AudioTranscriber")
+    def test_mic_session_passes_api_kwargs_without_base_url(self, transcriber_cls) -> None:
+        session = MicSession()
+        session._recorder = SimpleNamespace(SAMPLE_RATE=16000, SAMPLE_WIDTH=2, channels=1)
+
+        session._create_transcriber()
+
+        _, kwargs = transcriber_cls.call_args
+        self.assertEqual(kwargs["api_key"], "dg-test")
+        self.assertEqual(kwargs["api_model"], "nova-3")
+        self.assertNotIn("base_url", kwargs)
 
 
 if __name__ == "__main__":

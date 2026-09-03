@@ -13,6 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import httpx
+import requests
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -24,6 +25,7 @@ from speech_recognition import UnknownValueError
 
 from errors import ErrorCode
 from models.transcription.transcription_providers import (
+    DeepgramProvider,
     GoogleProvider,
     LocalWhisperProvider,
     OpenAICompatibleTranscriptionProvider,
@@ -307,6 +309,173 @@ class TestOpenAICompatibleTranscriptionProvider(unittest.TestCase):
         )
 
         with patch("models.transcription.transcription_providers.errorLogging"):
+            with self.assertRaises(TranscriptionApiError) as ctx:
+                provider.transcribe(
+                    self._make_audio_data(), "English", "United States",
+                    avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+                )
+        self.assertEqual(ctx.exception.error_code, ErrorCode.TRANSCRIPTION_API_SERVER_ERROR)
+
+
+def _make_deepgram_response(status_code=200, payload=None):
+    response = MagicMock()
+    response.status_code = status_code
+    response.json.return_value = payload or {}
+    return response
+
+
+class TestDeepgramProvider(unittest.TestCase):
+    def _make_audio_data(self) -> MagicMock:
+        audio_data = MagicMock()
+        audio_data.get_wav_data.return_value = b"RIFF....WAVEfmt "
+        return audio_data
+
+    def test_calls_rest_api_with_key_model_and_wav_body(self) -> None:
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+        response = _make_deepgram_response(200, {
+            "results": {"channels": [{"alternatives": [{"transcript": "hello", "confidence": 0.95}]}]},
+        })
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests:
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            text, confidence, is_definitive = provider.transcribe(
+                self._make_audio_data(), "English", "United States",
+                avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+            )
+
+        self.assertEqual(text, "hello")
+        self.assertEqual(confidence, 0.95)
+        self.assertTrue(is_definitive)
+
+        _, kwargs = mock_requests.post.call_args
+        self.assertEqual(kwargs["headers"]["Authorization"], "Token dg-test")
+        self.assertEqual(kwargs["headers"]["Content-Type"], "audio/wav")
+        self.assertEqual(kwargs["params"]["model"], "nova-2")
+        self.assertEqual(kwargs["params"]["detect_language"], "true")
+        self.assertEqual(kwargs["data"], b"RIFF....WAVEfmt ")
+        # language/country は使わず常に自動検出する (v1の設計)
+        self.assertNotIn("language", kwargs["params"])
+
+    def test_always_reports_definitive_even_with_multiple_candidates(self) -> None:
+        # detect_language=true で1回の呼び出しで済むため、force_language=False
+        # (複数候補言語) でも is_definitive=True を返し、呼び出し元に
+        # 他候補を試させない。
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+        response = _make_deepgram_response(200, {
+            "results": {"channels": [{"alternatives": [{"transcript": "hello", "confidence": 0.5}]}]},
+        })
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests:
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            _, _, is_definitive = provider.transcribe(
+                self._make_audio_data(), "Japanese", "Japan",
+                avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=False,
+            )
+
+        self.assertTrue(is_definitive)
+
+    def test_empty_transcript_returns_empty_result(self) -> None:
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+        response = _make_deepgram_response(200, {
+            "results": {"channels": [{"alternatives": [{"transcript": "", "confidence": 0.0}]}]},
+        })
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests:
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            text, confidence, is_definitive = provider.transcribe(
+                self._make_audio_data(), "English", "United States",
+                avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+            )
+
+        self.assertEqual(text, "")
+        self.assertEqual(confidence, 0.0)
+        self.assertFalse(is_definitive)
+
+    def test_malformed_response_shape_returns_empty_result(self) -> None:
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+        response = _make_deepgram_response(200, {"results": {"channels": []}})
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests:
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            text, confidence, is_definitive = provider.transcribe(
+                self._make_audio_data(), "English", "United States",
+                avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+            )
+
+        self.assertEqual(text, "")
+        self.assertEqual(confidence, 0.0)
+        self.assertFalse(is_definitive)
+
+    def test_401_maps_to_auth_failed(self) -> None:
+        provider = DeepgramProvider(api_key="dg-bad", model="nova-2")
+        response = _make_deepgram_response(401, {"err_msg": "invalid key"})
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests, \
+             patch("models.transcription.transcription_providers.errorLogging"):
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            with self.assertRaises(TranscriptionApiError) as ctx:
+                provider.transcribe(
+                    self._make_audio_data(), "English", "United States",
+                    avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+                )
+        self.assertEqual(ctx.exception.error_code, ErrorCode.TRANSCRIPTION_API_AUTH_FAILED)
+
+    def test_429_maps_to_rate_limited(self) -> None:
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+        response = _make_deepgram_response(429, {"err_msg": "too many requests"})
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests, \
+             patch("models.transcription.transcription_providers.errorLogging"):
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            with self.assertRaises(TranscriptionApiError) as ctx:
+                provider.transcribe(
+                    self._make_audio_data(), "English", "United States",
+                    avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+                )
+        self.assertEqual(ctx.exception.error_code, ErrorCode.TRANSCRIPTION_API_RATE_LIMITED)
+
+    def test_500_maps_to_server_error(self) -> None:
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+        response = _make_deepgram_response(500, {"err_msg": "internal error"})
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests, \
+             patch("models.transcription.transcription_providers.errorLogging"):
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            with self.assertRaises(TranscriptionApiError) as ctx:
+                provider.transcribe(
+                    self._make_audio_data(), "English", "United States",
+                    avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+                )
+        self.assertEqual(ctx.exception.error_code, ErrorCode.TRANSCRIPTION_API_SERVER_ERROR)
+
+    def test_timeout_maps_to_timeout_code(self) -> None:
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests, \
+             patch("models.transcription.transcription_providers.errorLogging"):
+            mock_requests.exceptions = requests.exceptions
+            mock_requests.post.side_effect = requests.exceptions.Timeout("timed out")
+            with self.assertRaises(TranscriptionApiError) as ctx:
+                provider.transcribe(
+                    self._make_audio_data(), "English", "United States",
+                    avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+                )
+        self.assertEqual(ctx.exception.error_code, ErrorCode.TRANSCRIPTION_API_TIMEOUT)
+
+    def test_connection_error_maps_to_server_error(self) -> None:
+        provider = DeepgramProvider(api_key="dg-test", model="nova-2")
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests, \
+             patch("models.transcription.transcription_providers.errorLogging"):
+            mock_requests.exceptions = requests.exceptions
+            mock_requests.post.side_effect = requests.exceptions.ConnectionError("connection failed")
             with self.assertRaises(TranscriptionApiError) as ctx:
                 provider.transcribe(
                     self._make_audio_data(), "English", "United States",

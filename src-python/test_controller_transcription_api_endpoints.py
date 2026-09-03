@@ -20,6 +20,8 @@ _RUN_MAPPING = {
     "selected_openai_whisper_model": "/run/selected_openai_whisper_model",
     "selectable_custom_whisper_model_list": "/run/selectable_custom_whisper_model_list",
     "selected_custom_whisper_model": "/run/selected_custom_whisper_model",
+    "selectable_deepgram_model_list": "/run/selectable_deepgram_model_list",
+    "selected_deepgram_model": "/run/selected_deepgram_model",
 }
 
 
@@ -38,9 +40,11 @@ class _ConfigSnapshotMixin:
         self._orig_groq_list = list(config._SELECTABLE_GROQ_WHISPER_MODEL_LIST)
         self._orig_openai_list = list(config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
         self._orig_custom_list = list(config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+        self._orig_deepgram_list = list(config._SELECTABLE_DEEPGRAM_MODEL_LIST)
         self._orig_groq_model = config._SELECTED_GROQ_WHISPER_MODEL
         self._orig_openai_model = config._SELECTED_OPENAI_WHISPER_MODEL
         self._orig_custom_model = config._SELECTED_CUSTOM_WHISPER_MODEL
+        self._orig_deepgram_model = config._SELECTED_DEEPGRAM_MODEL
 
     def _restore_config(self) -> None:
         config.TRANSCRIPTION_AUTH_KEYS = self._orig_auth_keys
@@ -49,11 +53,13 @@ class _ConfigSnapshotMixin:
         config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = self._orig_groq_list
         config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = self._orig_openai_list
         config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = self._orig_custom_list
+        config.SELECTABLE_DEEPGRAM_MODEL_LIST = self._orig_deepgram_list
         # allowed=_allowed_in_populated(...) を持つため SELECTABLE_*_LIST の
         # 復元より後に private 属性へ直接書き戻す。
         config._SELECTED_GROQ_WHISPER_MODEL = self._orig_groq_model
         config._SELECTED_OPENAI_WHISPER_MODEL = self._orig_openai_model
         config._SELECTED_CUSTOM_WHISPER_MODEL = self._orig_custom_model
+        config._SELECTED_DEEPGRAM_MODEL = self._orig_deepgram_model
 
 
 class GroqWhisperAuthKeyEndpointTests(_ConfigSnapshotMixin, unittest.TestCase):
@@ -197,6 +203,128 @@ class CustomWhisperURLEndpointTests(_ConfigSnapshotMixin, unittest.TestCase):
         self.assertEqual(config.TRANSCRIPTION_CUSTOM_URL, "http://localhost:8000/v1")
         self.assertFalse(config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS["Custom_Whisper"])
         self.assertEqual(config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST, [])
+
+
+class DeepgramAuthKeyEndpointTests(_ConfigSnapshotMixin, unittest.TestCase):
+    """Deepgramは他3エンジンと違いURLを持たず、認証も `api_key` のみを
+    取る (`model.authenticationDeepgramApiKey`/`getDeepgramModelListDetailed`)。
+    また対応言語 (`DEEPGRAM_MODEL_LANGUAGES`) もモデル一覧と同時に反映する。"""
+
+    def setUp(self) -> None:
+        self._snapshot_config()
+        self._orig_languages = dict(config._DEEPGRAM_MODEL_LANGUAGES)
+        self.controller = Controller.__new__(Controller)
+        self.controller.run_mapping = _RUN_MAPPING
+        self.controller.run = lambda *a, **k: None
+        self.controller.updateTranscriptionEngine = lambda: None
+
+    def tearDown(self) -> None:
+        self._restore_config()
+        config.DEEPGRAM_MODEL_LANGUAGES = self._orig_languages
+
+    @patch("controller.model")
+    def test_set_auth_key_success_populates_model_list_and_status(self, mock_model) -> None:
+        mock_model.authenticationDeepgramApiKey.return_value = True
+        mock_model.getDeepgramModelListDetailed.return_value = [
+            {"name": "nova-2", "languages": ["en"]},
+            {"name": "nova-3", "languages": ["en", "ja"]},
+        ]
+
+        response = self.controller.setDeepgramAuthKey("dg-test")
+
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(config.TRANSCRIPTION_AUTH_KEYS["Deepgram"], "dg-test")
+        self.assertTrue(config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS["Deepgram"])
+        self.assertEqual(config.SELECTABLE_DEEPGRAM_MODEL_LIST, ["nova-2", "nova-3"])
+        self.assertEqual(config.SELECTED_DEEPGRAM_MODEL, "nova-2")
+        self.assertEqual(
+            dict(config.DEEPGRAM_MODEL_LANGUAGES),
+            {"nova-2": ["en"], "nova-3": ["en", "ja"]},
+        )
+        mock_model.authenticationDeepgramApiKey.assert_called_once_with(api_key="dg-test")
+
+    @patch("controller.model")
+    def test_set_auth_key_empty_is_rejected_without_calling_model(self, mock_model) -> None:
+        response = self.controller.setDeepgramAuthKey("   ")
+
+        self.assertEqual(response["status"], 400)
+        mock_model.authenticationDeepgramApiKey.assert_not_called()
+
+    @patch("controller.model")
+    def test_set_auth_key_failure_clears_state(self, mock_model) -> None:
+        mock_model.authenticationDeepgramApiKey.return_value = False
+
+        response = self.controller.setDeepgramAuthKey("dg-bad")
+
+        self.assertEqual(response["status"], 400)
+        self.assertIsNone(config.TRANSCRIPTION_AUTH_KEYS["Deepgram"])
+        self.assertFalse(config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS["Deepgram"])
+        self.assertEqual(config.SELECTABLE_DEEPGRAM_MODEL_LIST, [])
+
+    @patch("controller.model")
+    def test_del_auth_key_clears_everything(self, mock_model) -> None:
+        mock_model.authenticationDeepgramApiKey.return_value = True
+        mock_model.getDeepgramModelListDetailed.return_value = [{"name": "nova-3", "languages": ["en"]}]
+        self.controller.setDeepgramAuthKey("dg-test")
+
+        response = self.controller.delDeepgramAuthKey()
+
+        self.assertEqual(response["status"], 200)
+        self.assertIsNone(config.TRANSCRIPTION_AUTH_KEYS["Deepgram"])
+        self.assertFalse(config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS["Deepgram"])
+        self.assertEqual(config.SELECTABLE_DEEPGRAM_MODEL_LIST, [])
+        self.assertEqual(dict(config.DEEPGRAM_MODEL_LANGUAGES), {})
+        self.assertIsNone(config.SELECTED_DEEPGRAM_MODEL)
+
+    def test_set_model_accepts_a_listed_model(self) -> None:
+        config.SELECTABLE_DEEPGRAM_MODEL_LIST = ["nova-2", "nova-3"]
+
+        response = self.controller.setDeepgramModel("nova-3")
+
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(config.SELECTED_DEEPGRAM_MODEL, "nova-3")
+
+    def test_set_model_rejects_an_unlisted_model(self) -> None:
+        config.SELECTABLE_DEEPGRAM_MODEL_LIST = ["nova-2"]
+
+        response = self.controller.setDeepgramModel("not-a-real-model")
+
+        self.assertEqual(response["status"], 400)
+
+    def test_get_model_languages_reflects_current_config(self) -> None:
+        config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
+
+        response = self.controller.getDeepgramModelLanguages()
+
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(response["result"], {"nova-3": ["en", "ja"]})
+
+    def test_get_supported_languages_for_a_named_model(self) -> None:
+        config.DEEPGRAM_MODEL_LANGUAGES = {
+            "nova-3": ["en", "ja"],
+            "nova-2": ["en"],
+        }
+
+        response = self.controller.getDeepgramSupportedLanguages("nova-3")
+
+        self.assertEqual(response["status"], 200)
+        self.assertEqual(response["result"]["Japanese"], {"Japan": True})
+        self.assertEqual(response["result"]["Korean"], {"South Korea": False})
+
+    def test_get_supported_languages_defaults_to_currently_selected_model(self) -> None:
+        config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
+        config._SELECTED_DEEPGRAM_MODEL = "nova-3"
+
+        response = self.controller.getDeepgramSupportedLanguages()
+
+        self.assertEqual(response["result"]["Japanese"], {"Japan": True})
+
+    def test_get_supported_languages_for_unknown_model_supports_nothing(self) -> None:
+        config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
+
+        response = self.controller.getDeepgramSupportedLanguages("not-a-real-model")
+
+        self.assertEqual(response["result"]["Japanese"], {"Japan": False})
 
 
 if __name__ == "__main__":

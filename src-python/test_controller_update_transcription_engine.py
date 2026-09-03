@@ -61,6 +61,28 @@ class UpdateTranscriptionEngineApiEnginesTests(unittest.TestCase):
 
         self.assertEqual(config.SELECTED_TRANSCRIPTION_ENGINE, "Whisper")
 
+    def test_keeps_deepgram_selected_while_still_available(self) -> None:
+        config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {}
+        config._SELECTED_TRANSCRIPTION_ENGINE = "Deepgram"
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = {
+            "Google": True, "Whisper": False, "Deepgram": True,
+        }
+
+        self.controller.updateTranscriptionEngine()
+
+        self.assertEqual(config.SELECTED_TRANSCRIPTION_ENGINE, "Deepgram")
+
+    def test_falls_back_to_whisper_when_deepgram_becomes_unavailable(self) -> None:
+        config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {}
+        config._SELECTED_TRANSCRIPTION_ENGINE = "Deepgram"
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = {
+            "Google": True, "Whisper": False, "Deepgram": False,
+        }
+
+        self.controller.updateTranscriptionEngine()
+
+        self.assertEqual(config.SELECTED_TRANSCRIPTION_ENGINE, "Whisper")
+
 
 if __name__ == "__main__":
     unittest.main()

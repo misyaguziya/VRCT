@@ -25,9 +25,15 @@ from .transcription_providers import (
     GoogleProvider,
     LocalWhisperProvider,
     OpenAICompatibleTranscriptionProvider,
+    DeepgramProvider,
     TranscriptionApiError,
 )
 from .transcription_openai_compatible import TRANSCRIPTION_API_ENGINES as _API_TRANSCRIPTION_ENGINES
+
+# OpenAI互換系 (base_url/model差し替え) に加えて、独自プロトコルの
+# Deepgramも「APIキー/モデルを持つクラウドエンジン」として同列に扱う箇所
+# (last_recognition_errorのリセット対象等) で使う。
+_CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
 
 from pydub import AudioSegment
 from errors import ErrorCode
@@ -106,6 +112,13 @@ class AudioTranscriber:
             except Exception:
                 errorLogging()
                 self._api_provider = None
+        elif transcription_engine == "Deepgram":
+            self.transcription_engine = transcription_engine
+            try:
+                self._api_provider = DeepgramProvider(api_key=api_key or "", model=api_model or "")
+            except Exception:
+                errorLogging()
+                self._api_provider = None
 
     def _resolve_provider(self):
         """`self.transcription_engine`/`self.whisper_model` の"現在の"値を見て
@@ -118,7 +131,7 @@ class AudioTranscriber:
             if self.whisper_model is None:
                 return None
             return LocalWhisperProvider(self.whisper_model)
-        if self.transcription_engine in _API_TRANSCRIPTION_ENGINES:
+        if self.transcription_engine in _CLOUD_TRANSCRIPTION_ENGINES:
             return self._api_provider
         return GoogleProvider(self.audio_recognizer)
 
@@ -149,7 +162,7 @@ class AudioTranscriber:
         # 呼び出しの都度エラー状態をクリアして UI に古いエラーを残さない。
         # ローカル Whisper は従来からこのリセットを行っておらず、その挙動は
         # 変更しない (エラーが決定的である= リトライしても意味が薄いため)。
-        if self.transcription_engine == "Google" or self.transcription_engine in _API_TRANSCRIPTION_ENGINES:
+        if self.transcription_engine == "Google" or self.transcription_engine in _CLOUD_TRANSCRIPTION_ENGINES:
             self.last_recognition_error = False
             self.last_api_error_code = None
 
