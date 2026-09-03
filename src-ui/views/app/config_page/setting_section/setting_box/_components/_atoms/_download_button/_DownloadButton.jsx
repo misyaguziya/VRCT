@@ -11,7 +11,7 @@ export const _DownloadButton = ({option, ...props}) => {
         switch (true) {
             case option.progress !== null:
                 return (
-                    <>
+                    <div className={styles.progress_wrapper}>
                         <CircularProgress
                             variant={(option.progress === 100) ? "indeterminate" : "determinate"}
                             value={circular_progress}
@@ -19,10 +19,14 @@ export const _DownloadButton = ({option, ...props}) => {
                             sx={{ color: "var(--primary_300_color)" }}
                         />
                         <p className={styles.progress_label}>{`${Math.round(option.progress)}%`}</p>
-                    </>
+                    </div>
                 );
             case option.is_pending:
-                return <CircularProgress size="3rem" sx={{ color: "var(--dark_600_color)" }}/>;
+                return (
+                    <div className={styles.progress_wrapper}>
+                        <CircularProgress size="3rem" sx={{ color: "var(--dark_600_color)" }}/>
+                    </div>
+                );
             case !option.is_downloaded:
                 return (
                     <button
