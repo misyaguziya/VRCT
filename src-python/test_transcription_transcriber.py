@@ -272,7 +272,17 @@ class TestDeepgramTranscriptionEngine(unittest.TestCase):
             api_key="dg-test", api_model="nova-3",
         )
 
-        provider_cls.assert_called_once_with(api_key="dg-test", model="nova-3")
+        provider_cls.assert_called_once_with(api_key="dg-test", model="nova-3", model_languages=None)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_passes_model_languages_through_to_provider(self, provider_cls, _) -> None:
+        AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3", api_model_languages=["en", "ja"],
+        )
+
+        provider_cls.assert_called_once_with(api_key="dg-test", model="nova-3", model_languages=["en", "ja"])
 
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
     @patch("models.transcription.transcription_transcriber.DeepgramProvider")

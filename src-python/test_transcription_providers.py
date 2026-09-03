@@ -354,7 +354,8 @@ class TestDeepgramProvider(unittest.TestCase):
         self.assertEqual(kwargs["params"]["model"], "nova-2")
         self.assertEqual(kwargs["params"]["detect_language"], "true")
         self.assertEqual(kwargs["data"], b"RIFF....WAVEfmt ")
-        # language/country は使わず常に自動検出する (v1の設計)
+        # model_languages を渡していない (コンストラクタのデフォルト) ため、
+        # 具体的なコードを解決できず自動検出にフォールバックする。
         self.assertNotIn("language", kwargs["params"])
 
     def test_always_reports_definitive_even_with_multiple_candidates(self) -> None:
@@ -375,6 +376,74 @@ class TestDeepgramProvider(unittest.TestCase):
             )
 
         self.assertTrue(is_definitive)
+
+    def test_passes_resolved_language_code_when_force_language_and_model_matches(self) -> None:
+        # 候補言語が1つに確定していて (force_language=True)、モデルが
+        # 対応言語として "en-AU" を申告している場合、detect_language では
+        # なく具体的なコードを渡す。
+        provider = DeepgramProvider(
+            api_key="dg-test", model="nova-2",
+            model_languages=["en", "en-AU", "en-GB", "en-US"],
+        )
+        response = _make_deepgram_response(200, {
+            "results": {"channels": [{"alternatives": [{"transcript": "hello", "confidence": 0.95}]}]},
+        })
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests:
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            provider.transcribe(
+                self._make_audio_data(), "English", "Australia",
+                avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+            )
+
+        _, kwargs = mock_requests.post.call_args
+        self.assertEqual(kwargs["params"]["language"], "en-AU")
+        self.assertNotIn("detect_language", kwargs["params"])
+
+    def test_falls_back_to_detect_language_when_model_has_no_matching_code(self) -> None:
+        provider = DeepgramProvider(
+            api_key="dg-test", model="nova-2",
+            model_languages=["ja", "ko"],
+        )
+        response = _make_deepgram_response(200, {
+            "results": {"channels": [{"alternatives": [{"transcript": "hello", "confidence": 0.95}]}]},
+        })
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests:
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            provider.transcribe(
+                self._make_audio_data(), "English", "United States",
+                avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+            )
+
+        _, kwargs = mock_requests.post.call_args
+        self.assertEqual(kwargs["params"]["detect_language"], "true")
+        self.assertNotIn("language", kwargs["params"])
+
+    def test_uses_detect_language_when_multiple_candidates_even_if_model_matches(self) -> None:
+        # force_language=False (複数候補言語) の場合、1つの言語に絞れない
+        # ため、モデルが対応していても明示コードは渡さず自動検出に任せる。
+        provider = DeepgramProvider(
+            api_key="dg-test", model="nova-2",
+            model_languages=["en", "ja"],
+        )
+        response = _make_deepgram_response(200, {
+            "results": {"channels": [{"alternatives": [{"transcript": "hello", "confidence": 0.95}]}]},
+        })
+
+        with patch("models.transcription.transcription_providers.requests") as mock_requests:
+            mock_requests.post.return_value = response
+            mock_requests.exceptions = requests.exceptions
+            provider.transcribe(
+                self._make_audio_data(), "Japanese", "Japan",
+                avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=False,
+            )
+
+        _, kwargs = mock_requests.post.call_args
+        self.assertEqual(kwargs["params"]["detect_language"], "true")
+        self.assertNotIn("language", kwargs["params"])
 
     def test_empty_transcript_returns_empty_result(self) -> None:
         provider = DeepgramProvider(api_key="dg-test", model="nova-2")

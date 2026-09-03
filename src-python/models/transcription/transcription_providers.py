@@ -32,6 +32,7 @@ from openai import (
 from speech_recognition import AudioData, Recognizer, UnknownValueError
 
 from errors import ErrorCode
+from models.transcription.transcription_deepgram import resolveDeepgramLanguageCode
 from models.transcription.transcription_languages import transcription_lang
 from utils import errorLogging
 
@@ -267,24 +268,27 @@ class DeepgramProvider:
     OpenAI互換ではないため `openai` パッケージは使わず、既存依存の
     `requests` で直接叩く。
 
-    言語コードについて: Deepgram の対応言語・コード体系はモデルごとに
-    差異があり、ローカル/OpenAI互換系 (`transcription_lang[...]["Whisper"]`)
-    の値をそのまま流用すると誤ったコードを送ってしまう恐れがある。
-    正確な対応表を今の時点で用意するのはリスクが高いため、v1では常に
-    `detect_language=true` (自動検出) を使い、`language`/`country` 引数は
-    使用しない。これにより「1回のAPI呼び出しで済む」利点もある
-    (Deepgram自身が1呼び出しで多言語を判定できるため、Whisper系のように
-    候補言語ごとに複数回呼ぶ必要が無い)。そのため `is_definitive` は常に
-    True を返し、呼び出し元のループを1回で打ち切らせる。
+    言語コードについて: 候補言語が1つに確定している場合
+    (`force_language=True`)、`resolveDeepgramLanguageCode()` で
+    このモデルが実際に対応言語として申告しているコード (Google列との
+    完全一致、または Whisper列のベースコード一致) を解決できれば、
+    それを `language=` として明示的に渡す。解決できない場合
+    (対応コードが不明、または候補言語が複数で1つに絞れない場合) は
+    `detect_language=true` (自動検出) にフォールバックする。
+    いずれの経路でも1回のAPI呼び出しで完結するため
+    (Deepgram自身が1呼び出しで多言語を判定できる、Whisper系のように
+    候補言語ごとに複数回呼ぶ必要が無い)、`is_definitive` は常に True を
+    返し、呼び出し元のループを1回で打ち切らせる。
 
     信頼度についても、avg_logprob/no_speech_prob に相当するセグメント
     単位の指標をDeepgramは返さないため、トップレベルの `confidence`
     (0〜1) をそのまま使う (セグメント単位のフィルタリングは行わない)。
     """
 
-    def __init__(self, api_key: str, model: str) -> None:
+    def __init__(self, api_key: str, model: str, model_languages: Optional[List[str]] = None) -> None:
         self.api_key = api_key
         self.model = model
+        self.model_languages = model_languages or []
 
     def transcribe(
         self,
@@ -299,6 +303,13 @@ class DeepgramProvider:
     ) -> Tuple[str, float, bool]:
         wav_bytes = audio_data.get_wav_data(convert_rate=16000, convert_width=2)
 
+        params = {"model": self.model}
+        resolved_code = resolveDeepgramLanguageCode(language, country, self.model_languages) if force_language else None
+        if resolved_code:
+            params["language"] = resolved_code
+        else:
+            params["detect_language"] = "true"
+
         try:
             response = requests.post(
                 _DEEPGRAM_LISTEN_URL,
@@ -306,7 +317,7 @@ class DeepgramProvider:
                     "Authorization": f"Token {self.api_key}",
                     "Content-Type": "audio/wav",
                 },
-                params={"model": self.model, "detect_language": "true"},
+                params=params,
                 data=wav_bytes,
                 timeout=_HTTP_TIMEOUT,
             )
@@ -333,6 +344,7 @@ class DeepgramProvider:
             return "", 0.0, False
 
         confidence = float(alternative.get("confidence", 0.0) or 0.0)
-        # 常に detect_language=true で呼ぶため、この1回の結果が最終結果。
-        # 呼び出し元 (transcribeAudioQueue) には他の候補言語を試させない。
+        # 明示コード・自動検出のいずれでも1回の呼び出しで完結するため、
+        # この1回の結果が最終結果。呼び出し元 (transcribeAudioQueue) には
+        # 他の候補言語を試させない。
         return text, confidence, True

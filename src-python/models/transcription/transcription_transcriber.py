@@ -71,6 +71,7 @@ class AudioTranscriber:
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         api_model: Optional[str] = None,
+        api_model_languages: Optional[List[str]] = None,
     ) -> None:
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
@@ -115,7 +116,11 @@ class AudioTranscriber:
         elif transcription_engine == "Deepgram":
             self.transcription_engine = transcription_engine
             try:
-                self._api_provider = DeepgramProvider(api_key=api_key or "", model=api_model or "")
+                self._api_provider = DeepgramProvider(
+                    api_key=api_key or "",
+                    model=api_model or "",
+                    model_languages=api_model_languages,
+                )
             except Exception:
                 errorLogging()
                 self._api_provider = None

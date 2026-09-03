@@ -29,6 +29,7 @@ class TestResolveApiTranscriptionKwargs(unittest.TestCase):
         self._original_openai_list = list(config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
         self._original_custom_list = list(config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
         self._original_deepgram_list = list(config._SELECTABLE_DEEPGRAM_MODEL_LIST)
+        self._original_deepgram_languages = dict(config._DEEPGRAM_MODEL_LANGUAGES)
         config._SELECTABLE_GROQ_WHISPER_MODEL_LIST = ["whisper-large-v3"]
         config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = ["whisper-1"]
         config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = ["whisper"]
@@ -46,6 +47,7 @@ class TestResolveApiTranscriptionKwargs(unittest.TestCase):
         config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = self._original_openai_list
         config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = self._original_custom_list
         config._SELECTABLE_DEEPGRAM_MODEL_LIST = self._original_deepgram_list
+        config.DEEPGRAM_MODEL_LANGUAGES = self._original_deepgram_languages
 
     def test_google_returns_empty_kwargs(self) -> None:
         config._SELECTED_TRANSCRIPTION_ENGINE = "Google"
@@ -110,10 +112,14 @@ class TestResolveApiTranscriptionKwargs(unittest.TestCase):
         config._SELECTED_TRANSCRIPTION_ENGINE = "Deepgram"
         config.TRANSCRIPTION_AUTH_KEYS = {"Deepgram": "dg-test"}
         config._SELECTED_DEEPGRAM_MODEL = "nova-3"
+        config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
 
         result = MicSession._resolve_api_transcription_kwargs()
 
-        self.assertEqual(result, {"api_key": "dg-test", "api_model": "nova-3"})
+        self.assertEqual(
+            result,
+            {"api_key": "dg-test", "api_model": "nova-3", "api_model_languages": ["en", "ja"]},
+        )
 
 
 class TestCreateTranscriberPassesApiKwargsThrough(unittest.TestCase):
