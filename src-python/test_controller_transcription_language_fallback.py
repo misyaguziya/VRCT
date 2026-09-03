@@ -235,8 +235,15 @@ class TestSetDeepgramModelPushesLanguageListOnlyWhenActiveEngine(unittest.TestCa
         self._original_deepgram_list = list(config._SELECTABLE_DEEPGRAM_MODEL_LIST)
         self._original_deepgram_languages = dict(config._DEEPGRAM_MODEL_LANGUAGES)
         self._original_your_languages = config.SELECTED_YOUR_LANGUAGES
+        self._original_target_languages = config.SELECTED_TARGET_LANGUAGES
         config.SELECTABLE_DEEPGRAM_MODEL_LIST = ["nova-2", "nova-3"]
         config.DEEPGRAM_MODEL_LANGUAGES = {"nova-2": ["en"], "nova-3": ["en", "ja"]}
+        # ターゲット言語を明示的に無効化しておく (実際の現在値を使うと、
+        # 既定で有効な "English" ターゲットとの衝突回避により
+        # nova-2 (英語のみ対応) へのフォールバック先候補が無くなってしまう)。
+        config.SELECTED_TARGET_LANGUAGES = {
+            "1": {"1": {"language": "English", "country": "United States", "enable": False}},
+        }
 
     def tearDown(self) -> None:
         config._SELECTED_TRANSCRIPTION_ENGINE = self._original_engine
@@ -244,6 +251,7 @@ class TestSetDeepgramModelPushesLanguageListOnlyWhenActiveEngine(unittest.TestCa
         config.SELECTABLE_DEEPGRAM_MODEL_LIST = self._original_deepgram_list
         config.DEEPGRAM_MODEL_LANGUAGES = self._original_deepgram_languages
         config.SELECTED_YOUR_LANGUAGES = self._original_your_languages
+        config.SELECTED_TARGET_LANGUAGES = self._original_target_languages
 
     def test_pushes_language_list_when_deepgram_is_the_active_engine(self) -> None:
         config._SELECTED_TRANSCRIPTION_ENGINE = "Deepgram"

@@ -13,6 +13,7 @@ from models.transcription.transcription_deepgram import (
     getAvailableDeepgramModels,
     getAvailableDeepgramModelsDetailed,
     isLanguageSupportedByDeepgramModel,
+    resolveDeepgramLanguageCode,
 )
 
 
@@ -163,6 +164,53 @@ class TestIsLanguageSupportedByDeepgramModel(unittest.TestCase):
 
     def test_unknown_language_country_pair_returns_false(self) -> None:
         self.assertFalse(isLanguageSupportedByDeepgramModel("Klingon", "Qo'noS", ["en"]))
+
+
+class TestResolveDeepgramLanguageCode(unittest.TestCase):
+    def test_exact_regional_match_is_preferred(self) -> None:
+        # モデルが地域ごとに対応言語を区別している場合 (実際のDeepgram
+        # モデルの多くがこの形): VRCTのGoogleコード ("en-AU") が完全一致
+        # するので、それをそのまま返す。
+        result = resolveDeepgramLanguageCode(
+            "English", "Australia", ["en", "en-AU", "en-GB", "en-IN", "en-NZ", "en-US"]
+        )
+        self.assertEqual(result, "en-AU")
+
+    def test_falls_back_to_base_code_when_region_not_listed(self) -> None:
+        # モデルが "en-US" しか申告していない場合でも、ベースコード "en"
+        # が一致するので、モデルが実際に使っている表記 ("en-US") を返す
+        # (完全一致ではないが、自動検出よりは有用なヒント)。
+        result = resolveDeepgramLanguageCode("English", "Australia", ["en-US"])
+        self.assertEqual(result, "en-US")
+
+    def test_handles_google_code_divergence_from_deepgram_via_whisper_fallback(self) -> None:
+        # ヘブライ語: Googleのコードは古い表記 "iw-IL" でDeepgramの "he" と
+        # 一致しないため、Whisper列のベースコード "he" 経由でフォールバック
+        # する。
+        result = resolveDeepgramLanguageCode("Hebrew", "Israel", ["en", "he", "ja"])
+        self.assertEqual(result, "he")
+
+    def test_returns_none_for_multi_marker(self) -> None:
+        # "multi" は「特定の言語コードを渡す意味が無い」ケースなので
+        # 自動検出 (detect_language=true) に任せる。
+        result = resolveDeepgramLanguageCode("Japanese", "Japan", ["multi"])
+        self.assertIsNone(result)
+
+    def test_returns_none_when_unsupported(self) -> None:
+        result = resolveDeepgramLanguageCode("Korean", "South Korea", ["en", "ja"])
+        self.assertIsNone(result)
+
+    def test_returns_none_for_unknown_language_country_pair(self) -> None:
+        result = resolveDeepgramLanguageCode("Klingon", "Qo'noS", ["en"])
+        self.assertIsNone(result)
+
+    def test_returns_none_when_model_languages_is_empty(self) -> None:
+        result = resolveDeepgramLanguageCode("Japanese", "Japan", [])
+        self.assertIsNone(result)
+
+    def test_match_is_case_insensitive(self) -> None:
+        result = resolveDeepgramLanguageCode("English", "Australia", ["EN-AU"])
+        self.assertEqual(result, "EN-AU")
 
 
 if __name__ == "__main__":

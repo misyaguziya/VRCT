@@ -281,10 +281,14 @@ class _AudioDeviceSession:
             }
         if engine == "Deepgram":
             # Deepgram はエンドポイントが固定 (base_url入力欄が無い) ため
-            # api_key/api_modelのみ渡す。
+            # base_urlは渡さない。api_model_languagesは、選択中モデルが
+            # 実際に対応していると申告している言語コード一覧
+            # (DeepgramProvider が候補言語1つに確定している場合に、
+            # 自動検出の代わりに明示的な language= を解決するために使う)。
             return {
                 "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Deepgram"),
                 "api_model": config.SELECTED_DEEPGRAM_MODEL,
+                "api_model_languages": config.DEEPGRAM_MODEL_LANGUAGES.get(config.SELECTED_DEEPGRAM_MODEL, []),
             }
         return {}
 
