@@ -5,10 +5,13 @@ import {
 } from "../../_templates/Templates";
 
 // Compute device helpers
-const transformDeviceArray = (devices) => {
+const transformDeviceArray = (devices = {}) => {
+    if (!devices) return {};
     const name_counts = Object.values(devices).reduce((counts, device) => {
-        const name = device.device_name;
-        counts[name] = (counts[name] || 0) + 1;
+        const name = device?.device_name;
+        if (name) {
+            counts[name] = (counts[name] || 0) + 1;
+        }
         return counts;
     }, {});
 
@@ -16,7 +19,8 @@ const transformDeviceArray = (devices) => {
     const result = {};
 
     Object.entries(devices).forEach(([key, device]) => {
-        const name = device.device_name;
+        const name = device?.device_name;
+        if (!name) return;
 
         if (name_counts[name] > 1) {
             name_indices[name] = (name_indices[name] || 0);
@@ -32,8 +36,10 @@ const transformDeviceArray = (devices) => {
 };
 
 const findKeyByDeviceValue = (devices, target_value) => {
+    if (!devices || !target_value) return null;
     for (const [key, value] of Object.entries(devices)) {
         if (
+            value &&
             value.device === target_value.device &&
             value.device_index === target_value.device_index &&
             value.device_name === target_value.device_name
@@ -57,11 +63,11 @@ const DEFAULT_ORDER = [
 ];
 
 const sortComputeTypesArray = (compute_types_array = [], order) => {
-    const src_set = new Set(compute_types_array);
+    const src_set = new Set(compute_types_array || []);
 
     const from_order = order.filter((id) => src_set.has(id));
 
-    const invalid_ids = compute_types_array.filter((id) => !order.includes(id));
+    const invalid_ids = (compute_types_array || []).filter((id) => !order.includes(id));
     if (invalid_ids.length > 0) {
         console.error("[sortComputeTypesArray] Unsupported compute types ignored:", invalid_ids);
     }
@@ -118,15 +124,19 @@ export const ComputeDevice = ({
 
     const target_index = findKeyByDeviceValue(currentDeviceList.data, currentSelectedDevice.data);
 
-    const computeTypesArray = currentDeviceList.data[target_index].compute_types;
+    const computeTypesArray = (currentDeviceList.data && target_index !== null)
+        ? currentDeviceList.data[target_index]?.compute_types || []
+        : [];
 
     const ordered_array = sortComputeTypesArray(computeTypesArray, DEFAULT_ORDER);
 
     const new_compute_types_labels = buildSimpleLabels(ordered_array, t);
 
     const selectFunction_ComputeDevice = (selected_data) => {
-        const target_obj = currentDeviceList.data[selected_data.selected_id];
-        setSelectedDevice(target_obj);
+        const target_obj = currentDeviceList.data?.[selected_data.selected_id];
+        if (target_obj) {
+            setSelectedDevice(target_obj);
+        }
     };
 
     const selectFunction_ComputeType = (selected_data) => {
