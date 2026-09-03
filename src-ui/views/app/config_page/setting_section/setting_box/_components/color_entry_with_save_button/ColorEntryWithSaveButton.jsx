@@ -119,11 +119,18 @@ export const ColorEntryWithSaveButton = (props) => {
         [styles.align_start]: !placement.align_end,
     });
 
+    const handleEnterPressed = (e) => {
+        if (is_disabled) return;
+        saveFunction();
+        e.target.blur();
+    };
+
     return (
         <div className={styles.container}>
             <_Entry
                 width={props.width}
                 onChange={onChangeFunction}
+                onEnterPressed={handleEnterPressed}
                 ui_variable={props.variable}
                 is_disabled={is_disabled}
             />

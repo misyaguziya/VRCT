@@ -16,6 +16,11 @@ export const WordFilter = () => {
         setInputValue(e.target.value);
     };
 
+    const handleEnterPressed = () => {
+        if (!input_value || !input_value.trim()) return;
+        addWords();
+    };
+
     const addWords = () => {
         if (input_value === undefined) return;
         updateMicWordFilterList((prev_list) => {
@@ -60,7 +65,7 @@ export const WordFilter = () => {
                 </div>
             }
             <div className={styles.entry_section_wrapper}>
-                <_Entry width="30rem" onChange={onChangeEntry} ui_variable={input_value}/>
+                <_Entry width="30rem" onChange={onChangeEntry} onEnterPressed={handleEnterPressed} ui_variable={input_value}/>
                 <button className={styles.add_button} onClick={addWords}>{t("config_page.transcription.mic_word_filter.add_button_label")}</button>
             </div>
         </div>

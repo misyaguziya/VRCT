@@ -20,6 +20,17 @@ const _Entry = forwardRef((props, ref) => {
         [styles.is_activated]: props.is_activated,
     });
 
+    const handleKeyDown = (e) => {
+        props.onKeyDown?.(e);
+        if (
+            e.key === "Enter" &&
+            !e.nativeEvent.isComposing &&
+            e.keyCode !== 229
+        ) {
+            props.onEnterPressed?.(e);
+        }
+    };
+
     return (
         <div
             className={styles.entry_container}
@@ -35,7 +46,7 @@ const _Entry = forwardRef((props, ref) => {
                     onChange={(e) => props.onChange?.(e)}
                     onFocus={(e) => props.onFocus?.(e)}
                     onBlur={(e) => props.onBlur?.(e)}
-                    onKeyDown={(e) => props.onKeyDown?.(e)}
+                    onKeyDown={handleKeyDown}
                     onKeyUp={(e) => props.onKeyUp?.(e)}
                     readOnly={props.readOnly === true ? true : false}
                 />

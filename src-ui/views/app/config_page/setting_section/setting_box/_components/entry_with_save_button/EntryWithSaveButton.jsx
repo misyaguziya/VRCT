@@ -14,13 +14,19 @@ export const EntryWithSaveButton = (props) => {
     };
     const is_disabled = props.state === "pending";
 
+    const handleEnterPressed = (e) => {
+        if (is_disabled) return;
+        saveFunction();
+        e.target.blur();
+    };
+
     const save_button_class_names = clsx(styles.save_button, {
         [styles.is_disabled]: is_disabled
     });
 
     return (
         <div className={styles.container}>
-            <_Entry width={props.width} onChange={onChangeFunction} ui_variable={props.variable} is_disabled={is_disabled}/>
+            <_Entry width={props.width} onChange={onChangeFunction} onEnterPressed={handleEnterPressed} ui_variable={props.variable} is_disabled={is_disabled}/>
             <button className={save_button_class_names} onClick={saveFunction}>
                 {is_disabled
                 ? <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }}/>
