@@ -761,6 +761,12 @@ class Config:
     SELECTABLE_GROQ_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENAI_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_DEEPGRAM_MODEL_LIST = ManagedProperty('SELECTABLE_DEEPGRAM_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    # モデル名 -> 対応言語コード一覧 ({"nova-3": ["en", "ja", ...], ...})。
+    # DeepgramProvider は常に detect_language=true で呼ぶため文字起こし
+    # 処理自体はこの値を参照しないが、UI側で「選択したモデルがどの言語に
+    # 対応しているか」を表示できるようにするためのメタデータ。
+    DEEPGRAM_MODEL_LANGUAGES = ManagedProperty('DEEPGRAM_MODEL_LANGUAGES', type_=dict, serialize=False, mutable_tracking=True)
 
     # --- Save Json Data (ManagedProperty-based) ---
     # More simple boolean flags replaced with ManagedProperty
@@ -912,6 +918,7 @@ class Config:
     SELECTED_GROQ_WHISPER_MODEL = ManagedProperty('SELECTED_GROQ_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_WHISPER_MODEL_LIST'))
     SELECTED_OPENAI_WHISPER_MODEL = ManagedProperty('SELECTED_OPENAI_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_WHISPER_MODEL_LIST'))
     SELECTED_CUSTOM_WHISPER_MODEL = ManagedProperty('SELECTED_CUSTOM_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'))
+    SELECTED_DEEPGRAM_MODEL = ManagedProperty('SELECTED_DEEPGRAM_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_DEEPGRAM_MODEL_LIST'))
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
@@ -1004,6 +1011,8 @@ class Config:
         self._SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
         self._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
         self._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_DEEPGRAM_MODEL_LIST = []
+        self._DEEPGRAM_MODEL_LANGUAGES = {}
 
         # Save Json Data
         ## Main Window
@@ -1116,6 +1125,7 @@ class Config:
             "Groq_Whisper": None,
             "OpenAI_Whisper": None,
             "Custom_Whisper": None,
+            "Deepgram": None,
         }
         self._TRANSCRIPTION_CUSTOM_URL = ""
         self._USE_EXCLUDE_WORDS = True
@@ -1135,6 +1145,7 @@ class Config:
         self._SELECTED_GROQ_WHISPER_MODEL = None
         self._SELECTED_OPENAI_WHISPER_MODEL = None
         self._SELECTED_CUSTOM_WHISPER_MODEL = None
+        self._SELECTED_DEEPGRAM_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
@@ -1284,6 +1295,7 @@ class Config:
             ('SELECTED_GROQ_WHISPER_MODEL', 'SELECTABLE_GROQ_WHISPER_MODEL_LIST'),
             ('SELECTED_OPENAI_WHISPER_MODEL', 'SELECTABLE_OPENAI_WHISPER_MODEL_LIST'),
             ('SELECTED_CUSTOM_WHISPER_MODEL', 'SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'),
+            ('SELECTED_DEEPGRAM_MODEL', 'SELECTABLE_DEEPGRAM_MODEL_LIST'),
         ]
         for sel_attr, list_attr in pairs:
             try:

@@ -40,6 +40,9 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
         self._original_groq_list = list(config._SELECTABLE_GROQ_WHISPER_MODEL_LIST)
         self._original_openai_list = list(config._SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
         self._original_custom_list = list(config._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+        self._original_deepgram_list = list(config._SELECTABLE_DEEPGRAM_MODEL_LIST)
+        self._original_deepgram_model = config._SELECTED_DEEPGRAM_MODEL
+        self._original_deepgram_languages = dict(config._DEEPGRAM_MODEL_LANGUAGES)
         self._original_status = dict(config._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS)
         # controller.init() は途中の "Init Translation Engine Status" も
         # 素通りするため、こちらも副作用で書き換わる。他テストに影響しない
@@ -50,6 +53,7 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
             "Groq_Whisper": "sk-groq",
             "OpenAI_Whisper": None,
             "Custom_Whisper": "bad-key",
+            "Deepgram": "dg-test",
         }
         config._TRANSCRIPTION_CUSTOM_URL = "http://localhost:8000/v1"
 
@@ -64,6 +68,8 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
         config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = self._original_groq_list
         config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = self._original_openai_list
         config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = self._original_custom_list
+        config.SELECTABLE_DEEPGRAM_MODEL_LIST = self._original_deepgram_list
+        config.DEEPGRAM_MODEL_LANGUAGES = self._original_deepgram_languages
         config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = self._original_status
         config.SELECTABLE_TRANSLATION_ENGINE_STATUS = self._original_translation_status
         # allowed=_allowed_in_populated(...) を持つため、上の SELECTABLE_*_LIST
@@ -72,6 +78,7 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
         config._SELECTED_GROQ_WHISPER_MODEL = self._original_groq_model
         config._SELECTED_OPENAI_WHISPER_MODEL = self._original_openai_model
         config._SELECTED_CUSTOM_WHISPER_MODEL = self._original_custom_model
+        config._SELECTED_DEEPGRAM_MODEL = self._original_deepgram_model
 
     def _run_init(self, mock_model) -> None:
         mock_model.checkTranslatorCTranslate2ModelWeight.return_value = True
@@ -87,6 +94,11 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
 
         mock_model.authenticationTranscriptionApiKey.side_effect = fake_auth
         mock_model.getTranscriptionApiModelList.side_effect = fake_model_list
+        mock_model.authenticationDeepgramApiKey.return_value = True
+        mock_model.getDeepgramModelListDetailed.return_value = [
+            {"name": "nova-2", "languages": ["en"]},
+            {"name": "nova-3", "languages": ["en", "ja"]},
+        ]
 
         with self.assertRaises(_Sentinel):
             self.controller.init()
@@ -126,6 +138,20 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
         self.assertIsNone(config.SELECTED_CUSTOM_WHISPER_MODEL)
         # 無効なキーは起動時検証でクリアされる (翻訳エンジンの既存挙動と同じ)
         self.assertIsNone(config.TRANSCRIPTION_AUTH_KEYS["Custom_Whisper"])
+
+    @patch("controller.isConnectedNetwork", return_value=True)
+    @patch("controller.model")
+    def test_deepgram_with_valid_key_becomes_available_with_models(self, mock_model, _) -> None:
+        self._run_init(mock_model)
+
+        self.assertTrue(config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS["Deepgram"])
+        self.assertEqual(config.SELECTABLE_DEEPGRAM_MODEL_LIST, ["nova-2", "nova-3"])
+        self.assertEqual(config.SELECTED_DEEPGRAM_MODEL, "nova-2")
+        self.assertEqual(
+            dict(config.DEEPGRAM_MODEL_LANGUAGES),
+            {"nova-2": ["en"], "nova-3": ["en", "ja"]},
+        )
+        mock_model.authenticationDeepgramApiKey.assert_called_once_with(api_key="dg-test")
 
 
 if __name__ == "__main__":

@@ -49,6 +49,7 @@ dist-ssr
 /build
 error.txt
 config.json
+config.json.tmp
 
 
 # Personal Claude Code settings (not shared with the team)

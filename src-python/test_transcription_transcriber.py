@@ -260,6 +260,72 @@ class TestApiTranscriptionEngines(unittest.TestCase):
         self.assertEqual(transcriber.getTranscript()["text"], "high")
 
 
+class TestDeepgramTranscriptionEngine(unittest.TestCase):
+    """Deepgram (DeepgramProvider) 経由のディスパッチ。base_url を持たない
+    点が Groq/OpenAI/カスタムサーバーと異なる。"""
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_constructs_provider_with_api_key_and_model_only(self, provider_cls, _) -> None:
+        AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3",
+        )
+
+        provider_cls.assert_called_once_with(api_key="dg-test", model="nova-3")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_transcribes_via_provider_and_updates_transcript(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.return_value = ("hello", 0.9, True)
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.getTranscript()["text"], "hello")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_api_error_sets_recognition_error_and_error_code(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.side_effect = TranscriptionApiError(
+            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED
+        )
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-bad", api_model="nova-3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertTrue(transcriber.last_recognition_error)
+        self.assertEqual(transcriber.last_api_error_code, ErrorCode.TRANSCRIPTION_API_AUTH_FAILED)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_single_call_regardless_of_candidate_language_count(self, provider_cls, _) -> None:
+        # DeepgramProvider は常に is_definitive=True を返す (1回の呼び出しで
+        # 自動言語検出が完結するため)。複数候補言語を渡しても1回しか
+        # 呼ばれないことを確認する。
+        provider_cls.return_value.transcribe.return_value = ("hello", 0.9, True)
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese", "English"], ["Japan", "United States"])
+
+        self.assertEqual(provider_cls.return_value.transcribe.call_count, 1)
+
+
 class TestWhisperResilienceAcrossCandidates(unittest.TestCase):
     """ローカル Whisper は1候補目で例外が出ても2候補目を試す
     (エラーハンドリングを Google/API系と共通化した副次効果)。

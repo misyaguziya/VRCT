@@ -35,6 +35,13 @@ from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer, backwardCompatibleRenameWeightsDir
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
 from models.transcription.transcription_openai_compatible import checkTranscriptionApiKey, getAvailableTranscriptionModels
+from models.transcription.transcription_deepgram import (
+    checkDeepgramApiKey,
+    getAvailableDeepgramModels,
+    getAvailableDeepgramModelsDetailed,
+    getDeepgramSupportedLanguages,
+    isLanguageSupportedByDeepgramModel,
+)
 from models.transliteration.transliteration_transliterator import Transliterator
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
@@ -272,6 +279,13 @@ class _AudioDeviceSession:
                 "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Custom_Whisper"),
                 "base_url": config.TRANSCRIPTION_CUSTOM_URL,
                 "api_model": config.SELECTED_CUSTOM_WHISPER_MODEL,
+            }
+        if engine == "Deepgram":
+            # Deepgram はエンドポイントが固定 (base_url入力欄が無い) ため
+            # api_key/api_modelのみ渡す。
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Deepgram"),
+                "api_model": config.SELECTED_DEEPGRAM_MODEL,
             }
         return {}
 
@@ -707,6 +721,21 @@ class Model:
     def getTranscriptionApiModelList(self, api_key: str, base_url: str, keyword_filter: Optional[list[str]] = None) -> list[str]:
         return getAvailableTranscriptionModels(api_key, base_url, keyword_filter=keyword_filter)
 
+    def authenticationDeepgramApiKey(self, api_key: str) -> bool:
+        return checkDeepgramApiKey(api_key)
+
+    def getDeepgramModelList(self, api_key: str) -> list[str]:
+        return getAvailableDeepgramModels(api_key)
+
+    def getDeepgramModelListDetailed(self, api_key: str) -> list[dict]:
+        """モデル名と対応言語コード一覧つきで返す (UI向けメタデータ)。"""
+        return getAvailableDeepgramModelsDetailed(api_key)
+
+    def getDeepgramSupportedLanguages(self, model_languages: list) -> dict:
+        """VRCT の Language/Country ごとに、指定モデルが対応しているかを
+        動的に判定した結果を返す (UI向けメタデータ)。"""
+        return getDeepgramSupportedLanguages(model_languages)
+
     def resetKeywordProcessor(self):
         self.ensure_initialized()
         del self.keyword_processor
@@ -875,14 +904,25 @@ class Model:
     def getListLanguageAndCountry(self):
         """List every language any translation engine supports for the UI.
 
-        Deliberately NOT filtered to the currently selected engine: a user
-        should be able to pick any language up front, and if the selected
+        Deliberately NOT filtered by translation engine: a user should be
+        able to pick any language up front, and if the selected translation
         engine doesn't support it, the engine falls back instead (see
         Controller.updateTranslationEngineAndEngineList()). Filtering this
-        list by engine instead forces users to switch to a
+        list by translation engine instead forces users to switch to a
         broadly-compatible engine first, pick the language, then switch
         back - exactly the friction this list avoids.
+
+        This list IS filtered by the current TRANSCRIPTION engine, though
+        (see isLanguageSupportedByTranscriptionEngine()): transcription runs
+        before translation in the pipeline, so a language the transcription
+        engine can't recognize at all is useless to offer regardless of
+        translation engine support. Historically every entry in
+        transcription_lang was supported by both local engines (Google/
+        Whisper), so this filter was a no-op; Deepgram's language coverage
+        genuinely varies by model, so it's the first engine where this
+        matters.
         """
+        engine = config.SELECTED_TRANSCRIPTION_ENGINE
         transcription_langs = list(transcription_lang.keys())
         translation_langs = []
         for tl_key in translation_lang.keys():
@@ -893,6 +933,8 @@ class Model:
         languages = []
         for language in supported_langs:
             for country in transcription_lang[language]:
+                if not self.isLanguageSupportedByTranscriptionEngine(engine, language, country):
+                    continue
                 languages.append(
                     {
                         "language" : language,
@@ -901,6 +943,47 @@ class Model:
                 )
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
+
+    def isLanguageSupportedByTranscriptionEngine(self, engine: str, language: str, country: str) -> bool:
+        """VRCT の (Language, Country) を、指定した文字起こしエンジンが
+        対応しているかどうかを返す。
+
+        Google/Whisper/Groq_Whisper/OpenAI_Whisper/Custom_Whisper は
+        transcription_lang の全エントリを網羅しているため常に True
+        (Groq/OpenAI/カスタムサーバーはローカルWhisperと同じ言語コードを
+        使うため)。Deepgram だけは選択中のモデルが実際に申告する対応言語
+        一覧と動的に突き合わせる (getDeepgramSupportedLanguages 参照)。
+        """
+        if language not in transcription_lang or country not in transcription_lang[language]:
+            return False
+        if engine == "Deepgram":
+            model_languages = config.DEEPGRAM_MODEL_LANGUAGES.get(config.SELECTED_DEEPGRAM_MODEL, [])
+            return isLanguageSupportedByDeepgramModel(language, country, model_languages)
+        return True
+
+    def getTranscriptionLanguagesForEngine(self, engine: str) -> list:
+        """指定した文字起こしエンジンが対応する (Language, Country) の一覧。"""
+        return [
+            {"language": language, "country": country}
+            for language, countries in transcription_lang.items()
+            for country in countries
+            if self.isLanguageSupportedByTranscriptionEngine(engine, language, country)
+        ]
+
+    def pickDefaultLanguageAndCountryForTranscriptionEngine(self, engine: str, avoid_languages) -> Optional[dict]:
+        """文字起こしエンジンが対応する言語を、日本語→英語の優先順で選ぶ
+        (翻訳側の pickDefaultLanguageForEngine と同じ考え方)。`avoid_languages`
+        に含まれる言語は避け、他のスロットとの衝突を防ぐ。
+        """
+        avoid_languages = set(avoid_languages)
+        for language, country in (("Japanese", "Japan"), ("English", "United States")):
+            if language not in avoid_languages and self.isLanguageSupportedByTranscriptionEngine(engine, language, country):
+                return {"language": language, "country": country}
+        for entry in self.getTranscriptionLanguagesForEngine(engine):
+            if entry["language"] not in avoid_languages:
+                return entry
+        # このエンジンが対応する言語が既に他スロットで使われている
+        return None
 
     def getTranslationLanguagesForEngine(self, engine: str) -> list[str]:
         """Friendly language names `engine` supports as a source language."""

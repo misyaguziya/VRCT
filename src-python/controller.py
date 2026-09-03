@@ -1157,10 +1157,64 @@ class Controller:
     def getSelectedTranscriptionEngine(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
-    @staticmethod
-    def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
+    def setSelectedTranscriptionEngine(self, data, *args, **kwargs) -> dict:
         config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
+        self.fallbackUnsupportedLanguagesForTranscriptionEngine(config.SELECTED_TRANSCRIPTION_ENGINE)
+        self.run(200, self.run_mapping["selectable_language_list"], model.getListLanguageAndCountry())
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
+
+    def fallbackUnsupportedLanguagesForTranscriptionEngine(self, engine: str) -> bool:
+        """文字起こしエンジンが切り替わった際、既に選択されている言語が
+        新しいエンジンで対応していなければデフォルト言語 (日本語/英語) へ
+        リセットする (翻訳側の fallbackUnsupportedLanguagesForEngine の
+        文字起こしエンジン版)。
+
+        SELECTED_TRANSCRIPTION_ENGINE はタブ横断のグローバル設定
+        (SELECTED_TRANSLATION_ENGINES と違いタブごとではない) なので、
+        全タブについて確認する。
+
+        Returns True if any language was reset.
+        """
+        changed = False
+
+        your_languages = copy.deepcopy(config.SELECTED_YOUR_LANGUAGES)
+        target_languages = copy.deepcopy(config.SELECTED_TARGET_LANGUAGES)
+
+        for tab_no in your_languages.keys():
+            your_language = your_languages[tab_no]["1"]
+            enabled_target_languages = {
+                target_language["language"]
+                for target_language in target_languages.get(tab_no, {}).values()
+                if target_language["enable"] is True
+            }
+            if not model.isLanguageSupportedByTranscriptionEngine(engine, your_language["language"], your_language["country"]):
+                default = model.pickDefaultLanguageAndCountryForTranscriptionEngine(engine, enabled_target_languages)
+                if default is not None:
+                    your_languages[tab_no]["1"] = {**default, "enable": True}
+                    changed = True
+                    your_language = your_languages[tab_no]["1"]
+
+            taken_languages = {your_language["language"]}
+            for target_language in target_languages.get(tab_no, {}).values():
+                if target_language["enable"] is not True:
+                    continue
+                if model.isLanguageSupportedByTranscriptionEngine(engine, target_language["language"], target_language["country"]):
+                    taken_languages.add(target_language["language"])
+                    continue
+                default = model.pickDefaultLanguageAndCountryForTranscriptionEngine(engine, taken_languages)
+                if default is not None:
+                    target_language["language"] = default["language"]
+                    target_language["country"] = default["country"]
+                    changed = True
+                taken_languages.add(target_language["language"])
+
+        if changed:
+            config.SELECTED_YOUR_LANGUAGES = your_languages
+            config.SELECTED_TARGET_LANGUAGES = target_languages
+            self.run(200, self.run_mapping["selected_your_languages"], config.SELECTED_YOUR_LANGUAGES)
+            self.run(200, self.run_mapping["selected_target_languages"], config.SELECTED_TARGET_LANGUAGES)
+
+        return changed
 
     # ------------------------------------------------------------------
     # Transcription API engines (Groq Whisper / OpenAI Whisper / カスタムサーバー)
@@ -1485,6 +1539,116 @@ class Controller:
         return VRCTError.create_error_response(
             ErrorCode.MODEL_TRANSCRIPTION_INVALID,
             data=config.SELECTED_CUSTOM_WHISPER_MODEL
+        )
+
+    @staticmethod
+    def getDeepgramAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["Deepgram"]}
+
+    def setDeepgramAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Deepgram Auth Key")
+        engine = "Deepgram"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationDeepgramApiKey(api_key=data)
+                if result is True:
+                    models_detailed = model.getDeepgramModelListDetailed(api_key=data)
+                    model_list = [m["name"] for m in models_detailed]
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_DEEPGRAM_MODEL_LIST = model_list
+                        config.DEEPGRAM_MODEL_LANGUAGES = {m["name"]: m["languages"] for m in models_detailed}
+                        self.run(200, self.run_mapping["selectable_deepgram_model_list"], config.SELECTABLE_DEEPGRAM_MODEL_LIST)
+                        if config.SELECTED_DEEPGRAM_MODEL not in config.SELECTABLE_DEEPGRAM_MODEL_LIST:
+                            config.SELECTED_DEEPGRAM_MODEL = config.SELECTABLE_DEEPGRAM_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_deepgram_model"], config.SELECTED_DEEPGRAM_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delDeepgramAuthKey()
+        return response
+
+    def delDeepgramAuthKey(self, *args, **kwargs) -> dict:
+        engine = "Deepgram"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_DEEPGRAM_MODEL_LIST = []
+        config.DEEPGRAM_MODEL_LANGUAGES = {}
+        config.SELECTED_DEEPGRAM_MODEL = None
+        self.run(200, self.run_mapping["selectable_deepgram_model_list"], config.SELECTABLE_DEEPGRAM_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_deepgram_model"], config.SELECTED_DEEPGRAM_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+    def getDeepgramModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_DEEPGRAM_MODEL_LIST}
+
+    def getDeepgramModelLanguages(self, *args, **kwargs) -> dict:
+        """モデル名 -> 対応言語コード一覧。UI側が選択中/選択候補のモデルの
+        対応言語を利用者に示すためのメタデータ (文字起こし処理自体は
+        DeepgramProvider が常に自動検出するため参照しない)。"""
+        return {"status":200, "result": dict(config.DEEPGRAM_MODEL_LANGUAGES)}
+
+    @staticmethod
+    def getDeepgramSupportedLanguages(data=None, *args, **kwargs) -> dict:
+        """指定したDeepgramモデル (`data`、省略時は現在選択中のモデル) が、
+        VRCT の Language/Country ごとに対応しているかを動的に判定して
+        返す (transcription_languages.py のような静的な対応表を手作業で
+        保守する代わりに、Deepgram自身が申告する対応言語一覧
+        (`DEEPGRAM_MODEL_LANGUAGES`、`/v1/models` から都度取得) を突き合わせる)。
+
+        返り値の例: {"Japanese": {"Japan": True}, "Korean": {"South Korea": False}, ...}
+        """
+        model_name = str(data).strip() if data else (config.SELECTED_DEEPGRAM_MODEL or "")
+        model_languages = config.DEEPGRAM_MODEL_LANGUAGES.get(model_name, [])
+        return {"status":200, "result": model.getDeepgramSupportedLanguages(model_languages)}
+
+    @staticmethod
+    def getDeepgramModel(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_DEEPGRAM_MODEL}
+
+    def setDeepgramModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Deepgram Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_DEEPGRAM_MODEL_LIST:
+            config.SELECTED_DEEPGRAM_MODEL = data
+            # 対応言語はモデルごとに異なるため、Deepgramが現在選択中の
+            # 文字起こしエンジンである場合のみ、表示中の言語リストと
+            # 既存の言語選択への影響を反映する。
+            if config.SELECTED_TRANSCRIPTION_ENGINE == "Deepgram":
+                self.fallbackUnsupportedLanguagesForTranscriptionEngine("Deepgram")
+                self.run(200, self.run_mapping["selectable_language_list"], model.getListLanguageAndCountry())
+            return {"status":200, "result":config.SELECTED_DEEPGRAM_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_DEEPGRAM_MODEL
         )
 
     @staticmethod
@@ -3795,9 +3959,9 @@ class Controller:
                     config.SELECTED_TRANSCRIPTION_ENGINE = alternate if alternate in selected_engines else None
                 else:
                     config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
-        elif current_engine in TRANSCRIPTION_API_ENGINES:
-            # Groq/OpenAI/カスタムサーバーはキー無効化等で使えなくなった
-            # 場合のみ、ローカル Whisper (オフラインで最も安定) へ
+        elif current_engine in TRANSCRIPTION_API_ENGINES or current_engine == "Deepgram":
+            # Groq/OpenAI/カスタムサーバー/Deepgramはキー無効化等で使えなく
+            # なった場合のみ、ローカル Whisper (オフラインで最も安定) へ
             # フォールバックする。まだ有効なら維持する (この elif が無いと
             # 下の else に落ちて、新エンジンを選択した直後にここが呼ばれる
             # たびに意図せず Whisper へ巻き戻ってしまう)。
@@ -4583,6 +4747,13 @@ class Controller:
         # Init Transcription Engine Status
         printLog("Init Transcription Engine Status")
 
+        # Deepgram のモデル名 -> 対応言語一覧。check_transcription_engine() は
+        # 全エンジン共通の戻り値シェイプ (model_list は list[str]) を持つため、
+        # Deepgram だけが持つ追加メタデータ (言語一覧) はここに直接書き込む
+        # (Deepgram のケースはスレッドプール中で高々1回しか実行されないため
+        # 競合の心配はない)。
+        deepgram_model_languages: dict = {}
+
         def check_transcription_engine(engine: str) -> tuple:
             """文字起こしエンジンのステータスをチェック（並列実行用）。
 
@@ -4644,6 +4815,20 @@ class Controller:
                                     status = True
                             else:
                                 auth_key_invalid = True
+                    case "Deepgram":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        if not api_key:
+                            status = False
+                        else:
+                            if model.authenticationDeepgramApiKey(api_key=api_key) is True:
+                                models_detailed = model.getDeepgramModelListDetailed(api_key=api_key)
+                                model_list = [m["name"] for m in models_detailed]
+                                deepgram_model_languages.update({m["name"]: m["languages"] for m in models_detailed})
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_DEEPGRAM_MODEL if config.SELECTED_DEEPGRAM_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
                     case _:
                         # Google 等、ネットワーク接続のみが条件のエンジン
                         status = connected_network is True
@@ -4691,6 +4876,10 @@ class Controller:
             if engine == "Custom_Whisper" and not status:
                 config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
                 config.SELECTED_CUSTOM_WHISPER_MODEL = None
+            if engine == "Deepgram" and not status:
+                config.SELECTABLE_DEEPGRAM_MODEL_LIST = []
+                config.DEEPGRAM_MODEL_LANGUAGES = {}
+                config.SELECTED_DEEPGRAM_MODEL = None
 
             if model_list is not None and status:
                 match engine:
@@ -4700,6 +4889,10 @@ class Controller:
                     case "OpenAI_Whisper":
                         config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = model_list
                         config.SELECTED_OPENAI_WHISPER_MODEL = selected_model
+                    case "Deepgram":
+                        config.SELECTABLE_DEEPGRAM_MODEL_LIST = model_list
+                        config.DEEPGRAM_MODEL_LANGUAGES = deepgram_model_languages
+                        config.SELECTED_DEEPGRAM_MODEL = selected_model
                     case "Custom_Whisper":
                         config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
                         config.SELECTED_CUSTOM_WHISPER_MODEL = selected_model

@@ -83,6 +83,7 @@ run_mapping = {
     "translation_engines":"/run/translation_engines",
     "selected_your_languages":"/run/selected_your_languages",
     "selected_target_languages":"/run/selected_target_languages",
+    "selectable_language_list":"/run/selectable_language_list",
 
     "selected_translation_compute_type":"/run/selected_translation_compute_type",
     "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
@@ -109,6 +110,8 @@ run_mapping = {
     "selected_openai_whisper_model":"/run/selected_openai_whisper_model",
     "selectable_custom_whisper_model_list":"/run/selectable_custom_whisper_model_list",
     "selected_custom_whisper_model":"/run/selected_custom_whisper_model",
+    "selectable_deepgram_model_list":"/run/selectable_deepgram_model_list",
+    "selected_deepgram_model":"/run/selected_deepgram_model",
 
     "selectable_mic_host_list":"/run/selectable_mic_host_list",
     "selectable_mic_device_list":"/run/selectable_mic_device_list",
@@ -188,6 +191,15 @@ mapping = {
     "/get/data/selectable_custom_whisper_model_list": {"status": True, "variable":controller.getCustomWhisperModelList},
     "/get/data/selected_custom_whisper_model": {"status": True, "variable":controller.getCustomWhisperModel},
     "/set/data/selected_custom_whisper_model": {"status": True, "variable":controller.setCustomWhisperModel},
+
+    "/get/data/deepgram_auth_key": {"status": True, "variable":controller.getDeepgramAuthKey},
+    "/set/data/deepgram_auth_key": {"status": True, "variable":controller.setDeepgramAuthKey},
+    "/delete/data/deepgram_auth_key": {"status": True, "variable":controller.delDeepgramAuthKey},
+    "/get/data/selectable_deepgram_model_list": {"status": True, "variable":controller.getDeepgramModelList},
+    "/get/data/deepgram_model_languages": {"status": True, "variable":controller.getDeepgramModelLanguages},
+    "/get/data/deepgram_supported_languages": {"status": True, "variable":controller.getDeepgramSupportedLanguages},
+    "/get/data/selected_deepgram_model": {"status": True, "variable":controller.getDeepgramModel},
+    "/set/data/selected_deepgram_model": {"status": True, "variable":controller.setDeepgramModel},
 
     "/get/data/selectable_release_channels": {"status": True, "variable":controller.getSelectableReleaseChannels},
     "/get/data/release_channel": {"status": True, "variable":controller.getSelectedReleaseChannel},
