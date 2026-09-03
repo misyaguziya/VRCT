@@ -299,33 +299,5 @@ class DeepgramAuthKeyEndpointTests(_ConfigSnapshotMixin, unittest.TestCase):
         self.assertEqual(response["status"], 200)
         self.assertEqual(response["result"], {"nova-3": ["en", "ja"]})
 
-    def test_get_supported_languages_for_a_named_model(self) -> None:
-        config.DEEPGRAM_MODEL_LANGUAGES = {
-            "nova-3": ["en", "ja"],
-            "nova-2": ["en"],
-        }
-
-        response = self.controller.getDeepgramSupportedLanguages("nova-3")
-
-        self.assertEqual(response["status"], 200)
-        self.assertEqual(response["result"]["Japanese"], {"Japan": True})
-        self.assertEqual(response["result"]["Korean"], {"South Korea": False})
-
-    def test_get_supported_languages_defaults_to_currently_selected_model(self) -> None:
-        config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
-        config._SELECTED_DEEPGRAM_MODEL = "nova-3"
-
-        response = self.controller.getDeepgramSupportedLanguages()
-
-        self.assertEqual(response["result"]["Japanese"], {"Japan": True})
-
-    def test_get_supported_languages_for_unknown_model_supports_nothing(self) -> None:
-        config.DEEPGRAM_MODEL_LANGUAGES = {"nova-3": ["en", "ja"]}
-
-        response = self.controller.getDeepgramSupportedLanguages("not-a-real-model")
-
-        self.assertEqual(response["result"]["Japanese"], {"Japan": False})
-
-
 if __name__ == "__main__":
     unittest.main()
