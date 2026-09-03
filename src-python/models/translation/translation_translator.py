@@ -5,12 +5,14 @@ try:
     from .translation_languages import translation_lang
     from .translation_utils import ctranslate2_weights
     from .translation_bing import parse_bing_credentials
+    from .translation_providers import TRANSLATION_PROVIDER_REGISTRY
 except Exception:
     import sys
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang
     from translation_utils import ctranslate2_weights
     from translation_bing import parse_bing_credentials
+    from translation_providers import TRANSLATION_PROVIDER_REGISTRY
 
 from utils import errorLogging, getBestComputeType
 
@@ -26,7 +28,7 @@ except Exception:
 
 import warnings
 from threading import RLock
-from typing import Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 warnings.filterwarnings("ignore")
 
@@ -109,7 +111,14 @@ class Translator:
         self.is_enable_translators = ENABLE_TRANSLATORS
         self.deepl_client: Optional[DeepLClient] = None
         self.plamo_client: Optional[Any] = None
-        self.gemini_client: Optional[Any] = None
+        # TRANSLATION_PROVIDER_REGISTRY に登録されたエンジン (現時点では
+        # Gemini_API のみ、フェーズ3項目17で段階移行中) のクライアントは
+        # ここに一元管理する。エンジンごとの専用フィールド
+        # (self.gemini_client 等) の代わりに、レジストリの engine_key を
+        # キーとした辞書で持つことで、認証/モデル一覧取得/モデル変更/
+        # クライアント更新の4メソッドをエンジンの数だけ書かずに済む
+        # (authenticationRegistryAuthKey 等、下記参照)。
+        self._provider_clients: Dict[str, Any] = {}
         self.openai_client: Optional[Any] = None
         self.openai_compatible_client: Optional[Any] = None
         self.groq_client: Optional[Any] = None
@@ -185,39 +194,69 @@ class Translator:
         """Update the Plamo client (fetch available models)."""
         self.plamo_client.updateClient()
 
+    def authenticationRegistryAuthKey(self, engine_key: str, auth_key: str, root_path: str = None) -> bool:
+        """`TRANSLATION_PROVIDER_REGISTRY` 登録エンジン共通の認証処理。
+
+        Returns True on success, False on failure.
+        """
+        client = TRANSLATION_PROVIDER_REGISTRY[engine_key].client_class(root_path=root_path)
+        if client.setAuthKey(auth_key):
+            self._provider_clients[engine_key] = client
+            return True
+        else:
+            self._provider_clients.pop(engine_key, None)
+            return False
+
+    def getRegistryModelList(self, engine_key: str) -> list[str]:
+        """`TRANSLATION_PROVIDER_REGISTRY` 登録エンジン共通のモデル一覧取得。
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        client = self._provider_clients.get(engine_key)
+        if client is None:
+            return []
+        return client.getModelList()
+
+    def setRegistryModel(self, engine_key: str, model: str) -> bool:
+        """`TRANSLATION_PROVIDER_REGISTRY` 登録エンジン共通のモデル変更。
+
+        Returns True on success, False on failure.
+        """
+        client = self._provider_clients.get(engine_key)
+        if client is None:
+            return False
+        return client.setModel(model)
+
+    def updateRegistryClient(self, engine_key: str) -> None:
+        """`TRANSLATION_PROVIDER_REGISTRY` 登録エンジン共通のクライアント更新。"""
+        client = self._provider_clients.get(engine_key)
+        if client is not None:
+            client.updateClient()
+
     def authenticationGeminiAuthKey(self, auth_key: str, root_path: str = None) -> bool:
         """Authenticate Gemini API with the provided key.
 
         Returns True on success, False on failure.
         """
-        self.gemini_client = GeminiClient(root_path=root_path)
-        if self.gemini_client.setAuthKey(auth_key):
-            return True
-        else:
-            self.gemini_client = None
-            return False
+        return self.authenticationRegistryAuthKey("Gemini_API", auth_key, root_path=root_path)
 
     def getGeminiModelList(self) -> list[str]:
         """Get available Gemini models.
 
         Returns a list of model names, or an empty list on failure.
         """
-        if self.gemini_client is None:
-            return []
-        return self.gemini_client.getModelList()
+        return self.getRegistryModelList("Gemini_API")
 
     def setGeminiModel(self, model: str) -> bool:
         """Change the Gemini model used for translation.
 
         Returns True on success, False on failure.
         """
-        if self.gemini_client is None:
-            return False
-        return self.gemini_client.setModel(model)
+        return self.setRegistryModel("Gemini_API", model)
 
     def updateGeminiClient(self) -> None:
         """Update the Gemini client (fetch available models)."""
-        self.gemini_client.updateClient()
+        self.updateRegistryClient("Gemini_API")
 
     def authenticationOpenAIAuthKey(self, auth_key: str, base_url: str | None = None, root_path: str = None) -> bool:
         """Authenticate OpenAI (Chat Completions) API with the provided key.
@@ -587,12 +626,13 @@ class Translator:
                             output_lang=target_language,
                             )
                 case "Gemini_API":
-                    if self.gemini_client is None:
+                    gemini_client = self._provider_clients.get("Gemini_API")
+                    if gemini_client is None:
                         result = False
                     else:
                         if context_history:
-                            self.gemini_client.setContextHistory(context_history)
-                        result = self.gemini_client.translate(
+                            gemini_client.setContextHistory(context_history)
+                        result = gemini_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,

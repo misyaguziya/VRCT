@@ -12,6 +12,7 @@ from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
+from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -30,6 +31,30 @@ _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
 # (8s) など、ロック保持中に自然完了しうる最長の単発処理より余裕を持たせつつ、
 # 万一ロックが本当に返ってこない場合でも終了処理自体を無期限に止めない。
 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC = 20.0
+
+# TRANSLATION_PROVIDER_REGISTRY (フェーズ3項目17) 登録エンジンの
+# 「認証/モデル一覧取得/モデル変更/クライアント更新」を model.py の
+# どのメソッド"名"に委譲するかの対応表。エンジンを1つレジストリに追加する際、
+# ここに4行足すだけで Controller._setTranslationEngineAuthKey 等の
+# 共通実装から使えるようになる (model.py 自体の各メソッドはこれまで通り
+# 個別に存在する — Translator ファサード層 (layer 1) は
+# authenticationRegistryAuthKey 等で既にレジストリ駆動になっているが、
+# model.py (layer 2) は薄い1行委譲のみで書き換える理由に乏しいため、
+# この対応表で拾う形にした)。
+#
+# 値をメソッド"名" (str) にしているのは、既存テストが
+# `@patch("controller.model")` で model シングルトンを丸ごとモックに
+# 差し替える方式に依存しているため。呼び出し時に `getattr(model, name)`
+# で毎回引き直すことで、モジュールロード時に実体の bound method を
+# キャッシュしてしまい patch が効かなくなる事故を避ける。
+_ENGINE_MODEL_BINDINGS = {
+    "Gemini_API": {
+        "authenticate": "authenticationTranslatorGeminiAuthKey",
+        "get_model_list": "getTranslatorGeminiModelList",
+        "set_model": "setTranslatorGeminiModel",
+        "update_client": "updateTranslatorGeminiClient",
+    },
+}
 
 
 def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
@@ -2363,6 +2388,107 @@ class Controller:
             config.NOTIFICATION_VRC_SFX = False
         return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
+    # --- フェーズ3項目17: TRANSLATION_PROVIDER_REGISTRY 登録エンジン向け
+    # 共通CRUD実装。「認証キー + モデル一覧」型のエンジン (現時点では
+    # Gemini_API のみ、段階移行中) は、この6メソッドと
+    # _ENGINE_MODEL_BINDINGS への4行の追加だけで対応できる。
+    # エンジン固有の get/set/delXAuthKey・getXModelList・get/setXModel は
+    # 全てこれらへの1行委譲になる (詳細は translation_providers.py 参照)。
+
+    def _getTranslationEngineAuthKey(self, engine_key: str) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS[engine_key]}
+
+    def _setTranslationEngineAuthKey(self, engine_key: str, data) -> dict:
+        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        bindings = _ENGINE_MODEL_BINDINGS[engine_key]
+        display_name = engine_key[:-len("_API")] if engine_key.endswith("_API") else engine_key
+        printLog(f"Set {display_name} Auth Key")
+        try:
+            data = str(data)
+            if spec.auth_validate(data):
+                result = getattr(model, bindings["authenticate"])(auth_key=data)
+                if result is True:
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[engine_key] = data
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = True
+                    model_list = getattr(model, bindings["get_model_list"])()
+                    setattr(config, spec.selectable_model_list_attr, model_list)
+                    self.run(200, self.run_mapping[spec.run_mapping_selectable_key], model_list)
+                    if getattr(config, spec.selected_model_attr) not in model_list:
+                        setattr(config, spec.selected_model_attr, model_list[0])
+                    getattr(model, bindings["set_model"])(model=getattr(config, spec.selected_model_attr))
+                    self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+                    getattr(model, bindings["update_client"])()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[engine_key]}
+                else:
+                    response = VRCTError.create_error_response(
+                        spec.error_auth_failed,
+                        data=None
+                    )
+            else:
+                response = VRCTError.create_error_response(
+                    spec.error_auth_invalid,
+                    data=None
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self._delTranslationEngineAuthKey(engine_key)
+        return response
+
+    def _delTranslationEngineAuthKey(self, engine_key: str) -> dict:
+        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        auth_keys = config.AUTH_KEYS
+        auth_keys[engine_key] = None
+        config.AUTH_KEYS = auth_keys
+        setattr(config, spec.selectable_model_list_attr, [])
+        setattr(config, spec.selected_model_attr, None)
+        self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
+        self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[engine_key]}
+
+    def _getTranslationEngineModelList(self, engine_key: str) -> dict:
+        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        return {"status":200, "result": getattr(config, spec.selectable_model_list_attr)}
+
+    def _getTranslationEngineModel(self, engine_key: str) -> dict:
+        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        return {"status":200, "result":getattr(config, spec.selected_model_attr)}
+
+    def _setTranslationEngineModel(self, engine_key: str, data) -> dict:
+        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        bindings = _ENGINE_MODEL_BINDINGS[engine_key]
+        display_name = engine_key[:-len("_API")] if engine_key.endswith("_API") else engine_key
+        printLog(f"Set {display_name} Model", data)
+        try:
+            data = str(data)
+            result = getattr(model, bindings["set_model"])(model=data)
+            if result is True:
+                setattr(config, spec.selected_model_attr, data)
+                getattr(model, bindings["set_model"])(model=getattr(config, spec.selected_model_attr))
+                getattr(model, bindings["update_client"])()
+                response = {"status":200, "result":getattr(config, spec.selected_model_attr)}
+            else:
+                response = VRCTError.create_error_response(
+                    spec.error_model_invalid,
+                    data=getattr(config, spec.selected_model_attr)
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=getattr(config, spec.selected_model_attr)
+            )
+        return response
+
     @staticmethod
     def getDeepLAuthKey(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
@@ -2497,91 +2623,22 @@ class Controller:
         return response
 
     def getGeminiAuthKey(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["Gemini_API"]}
+        return self._getTranslationEngineAuthKey("Gemini_API")
 
     def setGeminiAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Gemini Auth Key")
-        translator_name = "Gemini_API"
-        try:
-            data = str(data)
-            if len(data) >= 39:
-                result = model.authenticationTranslatorGeminiAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_GEMINI_MODEL_LIST = model.getTranslatorGeminiModelList()
-                    self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
-                    if config.SELECTED_GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
-                        config.SELECTED_GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
-                    model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
-                    self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
-                    model.updateTranslatorGeminiClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_GEMINI_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_GEMINI_LENGTH,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delGeminiAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("Gemini_API", data)
 
     def delGeminiAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "Gemini_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_GEMINI_MODEL_LIST = []
-        config.SELECTED_GEMINI_MODEL = None
-        self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("Gemini_API")
 
     def getGeminiModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_GEMINI_MODEL_LIST}
+        return self._getTranslationEngineModelList("Gemini_API")
 
     def getGeminiModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_GEMINI_MODEL}
+        return self._getTranslationEngineModel("Gemini_API")
 
     def setGeminiModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Gemini Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorGeminiModel(model=data)
-            if result is True:
-                config.SELECTED_GEMINI_MODEL = data
-                model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
-                model.updateTranslatorGeminiClient()
-                response = {"status":200, "result":config.SELECTED_GEMINI_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_GEMINI_INVALID,
-                    data=config.SELECTED_GEMINI_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_GEMINI_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Gemini_API", data)
 
     @staticmethod
     def getOpenAIAuthKey(*args, **kwargs) -> dict:
