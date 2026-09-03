@@ -13,8 +13,8 @@ common_error:
     failed_download_weight_ctranslate2: "CTranslate2 模型下载失败。"
     failed_download_weight_whisper: "Whisper 模型下载失败。"
     translation_limit: "已达到翻译引擎使用限制或临时受到使用限制。"
-    deepl_auth_key_invalid_length: "授权密钥字符数错误。"
-    deepl_auth_key_failed_authentication: "授权密钥错误或已达API使用上限。"
+    deepl_auth_key_invalid_length: "API 密钥字符数错误。"
+    deepl_auth_key_failed_authentication: "API 密钥错误或已达 API 使用上限。"
 
     invalid_value_mic_record_timeout: "数值应为 0 至 「{{mic_phrase_timeout_label}}」"
     invalid_value_mic_phrase_timeout: "转录间隔时间大于0秒且不能小于「{{mic_record_timeout_label}}」"
@@ -187,12 +187,12 @@ config_page:
             label: "AI 翻译的处理设备"
 
         deepl_auth_key:
-            label: "DeepL 授权密匙"
+            label: "DeepL API 密钥"
             desc: "在使用的时候,使用时请在主屏幕上通过 DeepL_API 选择 {{translator}}\n※某些语言可能不支持"
             open_auth_key_webpage: "打开DeepL账号页面"
             save: "保存"
             edit: "编辑"
-            auth_key_success: "授权密匙认证完成。"
+            auth_key_success: "API 密钥更新完成。"
 
         plamo_auth_key:
             label:

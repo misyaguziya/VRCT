@@ -13,8 +13,8 @@ common_error:
     failed_download_weight_ctranslate2: "CTranslate2 モデルのダウンロードに失敗しました。"
     failed_download_weight_whisper: "Whisper モデルのダウンロードに失敗しました。"
     translation_limit: "翻訳エンジンの使用制限に達したか、一時的に利用制限がかけられています。"
-    deepl_auth_key_invalid_length: "認証キーの文字数が間違っています。"
-    deepl_auth_key_failed_authentication: "認証キーが間違っているか、API使用制限が上限に達しています。"
+    deepl_auth_key_invalid_length: "APIキーの文字数が間違っています。"
+    deepl_auth_key_failed_authentication: "APIキーが間違っているか、API使用制限が上限に達しています。"
 
     invalid_value_mic_record_timeout: "0 以上で 「{{mic_phrase_timeout_label}}」 より大きくすることはできません。"
     invalid_value_mic_phrase_timeout: "0 以上で 「{{mic_record_timeout_label}}」 より小さくすることはできません。"
@@ -109,8 +109,8 @@ config_page:
     common:
         version: "バージョン {{version}}"
         model_download_button_label: "ダウンロード"
-        correct_auth_key_required: "正しい認証キーが必要"
-        open_auth_key_webpage: "認証キー管理ページを開く"
+        correct_auth_key_required: "正しいAPIキーが必要"
+        open_auth_key_webpage: "APIキー管理ページを開く"
         connection_check:
             button_label: "接続確認"
             checking: "確認中..."
@@ -194,30 +194,30 @@ config_page:
             open_auth_key_webpage: "DeepLアカウントページを開く"
             save: "保存"
             edit: "編集"
-            auth_key_success: "認証キーの更新が完了しました。"
+            auth_key_success: "APIキーの更新が完了しました。"
 
         plamo_auth_key:
-            label: "Plamo 認証キー"
+            label: "Plamo APIキー"
         select_plamo_model:
             label: "Plamo モデルを選択"
 
         gemini_auth_key:
-            label: "Gemini 認証キー"
+            label: "Gemini APIキー"
         select_gemini_model:
             label: "Gemini モデルを選択"
 
         openai_auth_key:
-            label: "OpenAI 認証キー"
+            label: "OpenAI APIキー"
         select_openai_model:
             label: "OpenAI モデルを選択"
 
         groq_auth_key:
-            label: "Groq 認証キー"
+            label: "Groq APIキー"
         select_groq_model:
             label: "Groq モデルを選択"
 
         openrouter_auth_key:
-            label: "OpenRouter 認証キー"
+            label: "OpenRouter APIキー"
         select_openrouter_model:
             label: "OpenRouter モデルを選択"
 
@@ -231,7 +231,7 @@ config_page:
             label: "OpenAI 互換エンドポイント URL"
             desc: "公式 OpenAI 以外を指定した場合は、料金・セキュリティ・モデル互換性を自己責任で確認してください。"
         openai_compatible_auth_key:
-            label: "OpenAI 互換 認証キー"
+            label: "OpenAI 互換 APIキー"
         select_openai_compatible_model:
             label: "OpenAI 互換モデルを選択"
 

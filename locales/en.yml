@@ -13,8 +13,8 @@ common_error:
     failed_download_weight_ctranslate2: "CTranslate2 weight download error."
     failed_download_weight_whisper: "Whisper weight download error."
     translation_limit: "Translation engine limit reached or temporarily restricted."
-    deepl_auth_key_invalid_length: "DeepL auth key length is not correct."
-    deepl_auth_key_failed_authentication: "Auth key is incorrect or API usage limit reached."
+    deepl_auth_key_invalid_length: "DeepL API key length is not correct."
+    deepl_auth_key_failed_authentication: "API key is incorrect or API usage limit reached."
 
     invalid_value_mic_record_timeout: "It cannot be greater than '{{mic_phrase_timeout_label}}' with a value of 0 or more."
     invalid_value_mic_phrase_timeout: "It cannot be set lower than '{{mic_record_timeout_label}}' with a value of 0 or more."
@@ -109,8 +109,8 @@ config_page:
     common:
         version: "Version {{version}}"
         model_download_button_label: "Download"
-        correct_auth_key_required: "Correct Auth Key Required"
-        open_auth_key_webpage: "Open Auth Key Management Webpage"
+        correct_auth_key_required: "Correct API Key Required"
+        open_auth_key_webpage: "Open API Key Management Webpage"
         connection_check:
             button_label: "Connection Check"
             checking: "Checking..."
@@ -189,35 +189,35 @@ config_page:
             label: "Processing device for AI translation"
 
         deepl_auth_key:
-            label: "DeepL Auth Key"
+            label: "DeepL API Key"
             desc: "When using it, please change {{translator}} on the main screen to DeepL_API. ※Some languages may not be supported."
             open_auth_key_webpage: "Open DeepL Account Webpage"
             save: "Save"
             edit: "Edit"
-            auth_key_success: "Auth key update completed."
+            auth_key_success: "API key update completed."
 
         plamo_auth_key:
-            label: "Plamo Auth Key"
+            label: "Plamo API Key"
         select_plamo_model:
             label: "Select Plamo Model"
 
         gemini_auth_key:
-            label: "Gemini Auth Key"
+            label: "Gemini API Key"
         select_gemini_model:
             label: "Select Gemini Model"
 
         openai_auth_key:
-            label: "OpenAI Auth Key"
+            label: "OpenAI API Key"
         select_openai_model:
             label: "Select OpenAI Model"
 
         groq_auth_key:
-            label: "Groq Auth Key"
+            label: "Groq API Key"
         select_groq_model:
             label: "Select Groq Model"
 
         openrouter_auth_key:
-            label: "OpenRouter Auth Key"
+            label: "OpenRouter API Key"
         select_openrouter_model:
             label: "Select OpenRouter Model"
 
@@ -231,7 +231,7 @@ config_page:
             label: "OpenAI-Compatible Endpoint URL"
             desc: "When pointing at a non-official endpoint, verify pricing, security and model compatibility at your own risk."
         openai_compatible_auth_key:
-            label: "OpenAI-Compatible Auth Key"
+            label: "OpenAI-Compatible API Key"
         select_openai_compatible_model:
             label: "Select OpenAI-Compatible Model"
 
