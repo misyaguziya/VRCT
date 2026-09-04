@@ -1,7 +1,8 @@
 import base64
-from typing import Any, List, Dict, Optional
+from typing import Any, Callable, List, Dict, Optional
 import json
 import os
+import queue
 import sys
 import traceback
 import logging
@@ -38,17 +39,153 @@ _WEIGHT_VERIFIED_MARKER_NAME = ".weight_verified.json"
 _stdout_write_lock = threading.Lock()
 
 
-def _writeStdoutLine(line: str) -> None:
-    """flush 付きで 1 行 stdout に書き込む。スレッド間で直列化し、
-    書き込み自体が失敗しても (パイプ切断等) 呼び出し元には伝播させず、
-    ログにだけ記録する。
+def _writeStdoutLine(line: str) -> bool:
+    """flush 付きで 1 行 stdout に書き込む。呼び出し元 (専用の書き込み
+    スレッド、下記参照) には例外を伝播させず、ログにだけ記録する。
+
+    戻り値は成功したかどうか (フェーズ3項目18: 呼び出し元が連続失敗を
+    数えてフロントエンド消失を検知するために使う)。
     """
     try:
         with _stdout_write_lock:
             sys.stdout.write(line + "\n")
             sys.stdout.flush()
+        return True
     except Exception:
         errorLogging()
+        return False
+
+
+# --- stdout 専用書き込みスレッド (フェーズ3項目18) ---
+#
+# 以前は printLog/printResponse を呼んだスレッドが直接 _writeStdoutLine()
+# を (ロック付きで) 実行していた。Tauri 側のパイプが壊れると
+# sys.stdout.write() が OSError (Errno 22) を送出し (error.log に実例あり、
+# 2026-08-27)、パイプが「読まれずに埋まる」場合はブロックする。
+# いずれの場合も _stdout_write_lock を握ったまま止まるため、
+# printLog/printResponse/run() を呼ぶ全スレッド (energy メーターは
+# 毎秒15回程度 run() を叩く) が芋づる式に停止していた
+# (freeze_trace.log 2026-08-27、35秒フリーズで実際に確認済み)。
+#
+# 書き込み自体を専用スレッド1本に閉じ込め、呼び出し元は「キューに積む」
+# だけにすることでこの連鎖を断つ。printResponse (実際のエンドポイント
+# 応答) は無制限キューに積み絶対に取りこぼさない。printLog (診断ログ)
+# は有界キューにし、あふれたら古いものから捨てる (診断用途なので
+# 欠落しても機能に影響しない)。
+#
+# NOTE: 「例外を出さずに書き込みが永久にブロックし続ける」ケース
+# (パイプが読まれずに埋まる場合) はこの実装では検知できない
+# (連続失敗カウンタは書き込みが実際に失敗して初めて進む)。実際に
+# freeze_trace.log で観測された障害は全スレッドのロック待ち連鎖であり、
+# それはこの分離だけで解消する。無応答のままブロックし続けるケースへの
+# 対応は、書き込みスレッドの進捗を外部から監視する別の仕組みが必要な
+# ため、別項目として切り出す方針とした。
+_STDOUT_LOG_QUEUE_MAXSIZE = 200
+_MAX_CONSECUTIVE_STDOUT_FAILURES = 50
+# ログが無い間、応答キューと停止フラグを再確認する間隔。
+# queue.Queue.get(timeout=...) は条件変数によるブロッキング待ちであり
+# ビジーループではないため、短くしてもCPU負荷はほぼ増えない。短いほど
+# 「ログだけが流れていて応答が来ていない」状況での応答の検知遅延と、
+# stopStdoutWriter() の反映遅延の両方が縮む。
+_LOG_QUEUE_POLL_TIMEOUT_SECONDS = 0.02
+
+_stdout_response_queue: "queue.Queue" = queue.Queue()
+_stdout_log_queue: "queue.Queue" = queue.Queue(maxsize=_STDOUT_LOG_QUEUE_MAXSIZE)
+_stdout_writer_thread: Optional[threading.Thread] = None
+_stdout_writer_start_lock = threading.Lock()
+_stdout_writer_stop_event = threading.Event()
+_on_frontend_lost: Optional[Callable[[], None]] = None
+
+
+def setFrontendLostCallback(callback: Optional[Callable[[], None]]) -> None:
+    """stdoutへの書き込みが連続して失敗した際に呼ぶコールバックを登録する。
+
+    未登録 (None、既定) の場合は os._exit(1) で自己終了する。テストが
+    実プロセスを終了させずに検知だけを確認できるようにするための差し替え口。
+    """
+    global _on_frontend_lost
+    _on_frontend_lost = callback
+
+
+def _stdoutWriterLoop() -> None:
+    consecutive_failures = 0
+    while not _stdout_writer_stop_event.is_set():
+        # 応答キューを先に (ブロックせず) 確認し、優先して処理する。
+        # 無ければログキューを短いタイムアウト付きで待つ。もし逆に
+        # 応答キューを毎回 get(timeout=...) で待ってしまうと、ログだけが
+        # 溜まっている状況でも1件処理するごとにこのタイムアウト分の
+        # 遅延が入り、ログのスループットが不必要に制限されてしまう
+        # (energy メーターだけで秒15回程度 printLog が呼ばれるため、
+        # 実際にテストでタイムアウトとして検出された)。
+        try:
+            line = _stdout_response_queue.get_nowait()
+        except queue.Empty:
+            try:
+                line = _stdout_log_queue.get(timeout=_LOG_QUEUE_POLL_TIMEOUT_SECONDS)
+            except queue.Empty:
+                continue
+
+        if _writeStdoutLine(line):
+            consecutive_failures = 0
+            continue
+
+        consecutive_failures += 1
+        if consecutive_failures >= _MAX_CONSECUTIVE_STDOUT_FAILURES:
+            callback = _on_frontend_lost
+            if callback is not None:
+                try:
+                    callback()
+                except Exception:
+                    errorLogging()
+            else:
+                os._exit(1)
+            return  # コールバック指定時は書き込みスレッドを終了する
+
+
+def _ensureStdoutWriterStarted() -> None:
+    # 2つのスレッドがほぼ同時に初回の printLog/printResponse を呼ぶと、
+    # 素朴な "None なら作る" チェックだけでは両方が「まだ無い」と判定し
+    # 書き込みスレッドが2本立ち上がりうる (直そうとしている「複数スレッドが
+    # 同時に stdout へ書き込む」問題の再発になる)。起動処理自体をロックで
+    # 直列化する。
+    global _stdout_writer_thread
+    with _stdout_writer_start_lock:
+        if _stdout_writer_thread is not None and _stdout_writer_thread.is_alive():
+            return
+        _stdout_writer_stop_event.clear()
+        _stdout_writer_thread = threading.Thread(
+            target=_stdoutWriterLoop, name="StdoutWriter", daemon=True
+        )
+        _stdout_writer_thread.start()
+
+
+def stopStdoutWriter() -> None:
+    """通常のシャットダウン時に書き込みスレッドを止める。デーモンスレッド
+    なのでプロセス終了自体はこれを呼ばなくてもブロックしないが、
+    行儀よく止めておく。"""
+    _stdout_writer_stop_event.set()
+
+
+def _enqueueResponseLine(line: str) -> None:
+    _ensureStdoutWriterStarted()
+    _stdout_response_queue.put(line)
+
+
+def _enqueueLogLine(line: str) -> None:
+    _ensureStdoutWriterStarted()
+    try:
+        _stdout_log_queue.put_nowait(line)
+    except queue.Full:
+        # 診断用ログなので、あふれたら一番古いものを1つ捨てて新しいものを
+        # 積む (直近の状態のほうが有用なため)。
+        try:
+            _stdout_log_queue.get_nowait()
+        except queue.Empty:
+            pass
+        try:
+            _stdout_log_queue.put_nowait(line)
+        except queue.Full:
+            pass
 
 
 def _collectWeightFileStats(root: str) -> Dict[str, Dict[str, float]]:
@@ -393,7 +530,7 @@ def printLog(log: str, data: Any = None) -> None:
     }
     process_logger.info(response)
     serialized = json.dumps(response)
-    _writeStdoutLine(serialized)
+    _enqueueLogLine(serialized)
 
 def printResponse(status: int, endpoint: str, result: Any = None) -> None:
     """Log and print a structured response object.
@@ -436,9 +573,9 @@ def printResponse(status: int, endpoint: str, result: Any = None) -> None:
             "endpoint": endpoint,
             "result": {"error": "Failed to serialize response", "details": str(e)},
         })
-        _writeStdoutLine(error_json)
+        _enqueueResponseLine(error_json)
     else:
-        _writeStdoutLine(serialized_response)
+        _enqueueResponseLine(serialized_response)
 
 error_logger: Optional[logging.Logger] = None
 
