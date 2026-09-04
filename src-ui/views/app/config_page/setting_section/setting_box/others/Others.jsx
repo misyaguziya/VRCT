@@ -101,6 +101,7 @@ const AutoExportMessageLogsContainer = () => {
                     onclickFunction={openFolder_MessageLogs}
                 />
                 <Checkbox
+                    label={t("config_page.others.auto_export_message_logs.label")}
                     variable={currentEnableAutoExportMessageLogs}
                     toggleFunction={toggleEnableAutoExportMessageLogs}
                 />
