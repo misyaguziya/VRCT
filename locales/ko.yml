@@ -108,8 +108,11 @@ config_page:
     common:
         version: "버전 {{version}}"
         model_download_button_label: "다운로드"
-        correct_auth_key_required:
-        open_auth_key_webpage:
+        save_button_label: "저장"
+        edit_button_label: "편집"
+        correct_auth_key_required: "올바른 API 키 필요"
+        open_auth_key_webpage: "API 키 관리 페이지 열기"
+        auth_key_success: "API 키 갱신이 완료되었습니다."
         connection_check:
             button_label:
             checking:
@@ -190,10 +193,6 @@ config_page:
         deepl_auth_key:
             label: "DeepL API 키"
             desc: "사용시 메인화면에 있는 {{translator}}를 DeepL_API로 변경해 주세요.\n지원하지 않는 언어도 있습니다."
-            open_auth_key_webpage: "DeepL 계정 페이지 열기"
-            save: "저장"
-            edit: "편집"
-            auth_key_success: "API 키 갱신이 완료되었습니다."
 
         plamo_auth_key:
             label:

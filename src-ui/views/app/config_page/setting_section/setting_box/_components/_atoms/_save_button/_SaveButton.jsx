@@ -10,7 +10,7 @@ export const _SaveButton = ({
     className,
 }) => {
     const { t } = useI18n();
-    const button_label = label ?? t("config_page.translation.deepl_auth_key.save");
+    const button_label = label ?? t("config_page.common.save_button_label");
 
     const button_class_names = clsx(
         styles.save_button,

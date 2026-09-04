@@ -22,6 +22,7 @@ import {
     ConnectionCheckButton,
 } from "../_components";
 import { Checkbox } from "@common_components";
+import { useI18n } from "@useI18n";
 
 export const useOnMouseLeaveDropdownMenu = () => {
     const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
@@ -149,12 +150,15 @@ export const RadioButtonContainer = (props) => (
 );
 
 export const AuthKeyContainer = (props) => {
-    const webpage_settings = {
-        webpage_url: props.webpage_url,
-        open_webpage_label: props.open_webpage_label,
-    };
+    const { t } = useI18n();
+
     return (
-        <CommonContainer Component={AuthKey} {...props} {...webpage_settings} />
+        <CommonContainer
+            Component={AuthKey}
+            webpage_url={props.webpage_url}
+            open_webpage_label={t("config_page.common.open_auth_key_webpage")}
+            {...props}
+        />
     );
 };
 

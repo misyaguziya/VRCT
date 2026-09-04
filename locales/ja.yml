@@ -110,8 +110,11 @@ config_page:
     common:
         version: "バージョン {{version}}"
         model_download_button_label: "ダウンロード"
+        save_button_label: "保存"
+        edit_button_label: "編集"
         correct_auth_key_required: "正しいAPIキーが必要"
         open_auth_key_webpage: "APIキー管理ページを開く"
+        auth_key_success: "APIキーの更新が完了しました。"
         connection_check:
             button_label: "接続確認"
             checking: "確認中..."
@@ -192,10 +195,6 @@ config_page:
         deepl_auth_key:
             label: "DeepL APIキーの登録"
             desc: "使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
-            open_auth_key_webpage: "DeepLアカウントページを開く"
-            save: "保存"
-            edit: "編集"
-            auth_key_success: "APIキーの更新が完了しました。"
 
         plamo_auth_key:
             label: "Plamo APIキー"
