@@ -134,12 +134,12 @@ export const generateLocalizedDocumentUrl = (lang_code = "en") => {
         lang_code = "en";
     }
 
-    const lang_path = (lang_code === "en") ? "" : `/${lang_code}`;
+    const lang_path = (lang_code === "en") ? "" : `${lang_code}`;
 
     return {
-        vrct_document_home_url: `${vrct_document_home_url}`,
-        vrct_document_faq_url: `${vrct_document_home_url}${lang_path}/${vrct_document_url_chunk_faq}`,
-        vrct_document_ui_guide_url: `${vrct_document_home_url}${lang_path}/${vrct_document_url_chunk_ui_guide}`,
+        vrct_document_home_url: `${vrct_document_home_url}/${lang_path}`,
+        vrct_document_faq_url: `${vrct_document_home_url}/${lang_path}/${vrct_document_url_chunk_faq}`,
+        vrct_document_ui_guide_url: `${vrct_document_home_url}/${lang_path}/${vrct_document_url_chunk_ui_guide}`,
     };
 };
 
