@@ -139,6 +139,7 @@ const ThresholdEntryInput = (props) => {
             onFocus={onFocusFunction}
             onBlur={onBlurFunction}
             onKeyDown={onKeyDownFunction}
+            onWheel={(e) => e.currentTarget.blur()}
             disabled={props.is_disable}
         />
     );
