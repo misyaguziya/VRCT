@@ -10,7 +10,7 @@ deepl == 1.22.0
 flashtext ==2.7
 pyinstaller==6.10.0
 numpy==1.26.4
-sentencepiece==0.2.0
+sentencepiece==0.2.1  # PYSEC-2026-1909 fixed in 0.2.1
 openvr==1.26.701
 pydub==0.25.1
 psutil==5.9.8
@@ -18,6 +18,12 @@ pycaw==20240210
 websockets==15.0.1
 huggingface_hub==0.32.2
 hf-xet==1.1.2
+# NOTE: PYSEC-2026-3447 is fixed in setuptools 83.0.0, but setuptools removed
+# the pkg_resources module entirely in 82.0.0, and both openvr and
+# ctranslate2 still `import pkg_resources` at import time - bumping past
+# 81.x breaks the app outright (verified: 32 test files fail to even collect).
+# Stays pinned below the vulnerable-but-still-supported line until openvr/
+# ctranslate2 drop their pkg_resources dependency upstream.
 setuptools==80.8.0
 langchain-openai==0.3.32
 langchain-google-genai==2.1.10
@@ -31,8 +37,23 @@ niquests==3.21.0
 exejs==1.0.1
 cloudscraper==1.2.71
 aiohttp==3.14.3
-translators @ git+https://github.com/misyaguziya/translators@6.0.4.2.5
-SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4.3
-tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3
+# requests is imported directly; urllib3/certifi are its transitive deps that
+# are also used at runtime. pyperclip is imported directly too. None of these
+# were declared here before (backend review 2026-08-27, phase 3 item 28) -
+# pinned to the versions already verified working, so pip-audit can check them.
+# NOTE: keep comments in this file ASCII-only - pip-audit's requirements
+# parser decodes the file using the OS locale codepage rather than UTF-8, and
+# non-ASCII text can make parsing fail depending on the machine's locale.
+requests==2.34.2
+urllib3==2.7.0  # PYSEC-2026-141/1994/1996/1998 fixed by 2.6.0-2.7.0
+certifi==2025.8.3
+pyperclip==1.11.0
+# Git dependencies are pinned to a commit SHA instead of a tag (tags are
+# mutable, backend review 2026-08-27 phase 3 item 28). Each SHA is the commit
+# the corresponding tag pointed to as of 2026-09-04 (verified via
+# `git ls-remote --tags`).
+translators @ git+https://github.com/misyaguziya/translators@1cb4f3b0dda82a84622878622ec22ee89ea11d72  # tag: 6.0.4.2.5
+SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@50a30bf13dc511915241d8ffa9647ed8b47d5cee  # tag: 3.10.4.3
+tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@5765a85b0d83da41b8266f75dfd3c99f0dec4411  # tag: 0.1.3
 aptabase==0.1.0
 PyAutoGUI==0.9.54
