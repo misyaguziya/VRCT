@@ -5,7 +5,7 @@ import json
 import time
 import faulthandler
 from typing import Any, Tuple
-from threading import Thread, Event, Lock
+from threading import Thread, Event, Lock, Timer
 from queue import Queue, Empty
 import logging
 from controller import Controller  # noqa: E402
@@ -561,6 +561,14 @@ _LOCK_BUSY_MAX_RETRIES = 400  # 0.05s × 400 ≈ 20s (同一ロックの処理�
 _ENDPOINT_LOCKED_RETRY_INTERVAL_SEC = 0.1
 _ENDPOINT_LOCKED_MAX_RETRIES = 300  # 0.1s × 300 ≈ 30s (初期化完了を待つ上限)
 
+# watchdog タイムアウト (フロントエンドからの feed 途絶) 検知後、
+# グレースフルな Main.stop() が完了しなくても確実にプロセスを終了させる
+# までの猶予秒数 (フェーズ3項目19)。Main.stop() 自体は理論上
+# 最大60秒近くかかりうる (mic/speaker 停止×2 + energy 停止×2 が
+# それぞれ最大15秒の join タイムアウトを持つため) が、フリーズ検知後は
+# グレースフルさより「必ず終わる」ことを優先する。
+_WATCHDOG_GRACE_PERIOD_SEC = 30
+
 class Main:
     def __init__(self, controller_instance: Controller, mapping_data: dict, worker_count: int = DEFAULT_WORKER_COUNT) -> None:
         self.queue: "Queue[Tuple[str, Any, int]]" = Queue()
@@ -569,6 +577,10 @@ class Main:
         self.mapping = mapping_data
         self._threads: list[Thread] = []
         self._worker_count = worker_count
+
+        # watchdog エスカレーション (項目19) の二重発火防止用。
+        self._watchdog_escalation_lock: Lock = Lock()
+        self._watchdog_escalation_started: bool = False
 
         # エンドポイントごとの排他制御用 Lock を作成
         # enable/disable ペアは同じロックキーに正規化する
@@ -734,6 +746,40 @@ class Main:
             remaining = max(0.0, wait - (time.time() - start))
             th.join(timeout=remaining)
 
+    def escalateShutdown(self) -> None:
+        """watchdog タイムアウト (フロントエンドからの feed 途絶) 用の
+        コールバック (フェーズ3項目19)。
+
+        `stop()`(→ `controller.shutdown()`)がロック等で永久にブロック
+        し続けても、`_WATCHDOG_GRACE_PERIOD_SEC` 秒後には必ずプロセスを
+        終了させる。ハードデッドライン用の `Timer` は他のロックに一切
+        触れないため、グレースフルな停止処理が何に詰まっていても影響
+        されず、確実に発火する。
+
+        watchdog のバックグラウンドスレッドは feed が来ない限りこの
+        コールバックを interval (既定20秒) ごとに呼び続けるため、
+        二重に停止処理・タイマーを積み上げないよう一度だけ実行する。
+        """
+        with self._watchdog_escalation_lock:
+            if self._watchdog_escalation_started:
+                return
+            self._watchdog_escalation_started = True
+
+        hard_deadline = Timer(_WATCHDOG_GRACE_PERIOD_SEC, os._exit, args=(1,))
+        hard_deadline.daemon = True
+        hard_deadline.start()
+
+        def _gracefulShutdownThenExit() -> None:
+            try:
+                self.stop()
+            except Exception:
+                errorLogging()
+            finally:
+                hard_deadline.cancel()
+                os._exit(0)
+
+        Thread(target=_gracefulShutdownThenExit, name="WatchdogEscalatedShutdown", daemon=True).start()
+
 # 外部から参照可能なインスタンスを提供
 main_instance = Main(controller_instance=controller, mapping_data=mapping)
 
@@ -741,7 +787,7 @@ if __name__ == "__main__":
     main_instance.startReceiver()
     main_instance.startHandler()
 
-    main_instance.controller.setWatchdogCallback(main_instance.stop)
+    main_instance.controller.setWatchdogCallback(main_instance.escalateShutdown)
     main_instance.controller.init()
 
     # mappingのすべてのstatusをTrueにする
