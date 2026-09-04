@@ -38,8 +38,8 @@ const _Entry = forwardRef((props, ref) => {
         >
             <div className={input_wrapper_class_names}>
                 <input
+                    type={props.type || "text"}
                     ref={inputRef}
-                    type="text"
                     placeholder={props.placeholder ? props.placeholder : ""}
                     className={input_class_names}
                     value={props.ui_variable === null ? "" : props.ui_variable}

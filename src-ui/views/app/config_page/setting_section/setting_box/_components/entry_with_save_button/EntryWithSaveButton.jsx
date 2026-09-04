@@ -26,7 +26,7 @@ export const EntryWithSaveButton = (props) => {
 
     return (
         <div className={styles.container}>
-            <_Entry width={props.width} onChange={onChangeFunction} onEnterPressed={handleEnterPressed} ui_variable={props.variable} is_disabled={is_disabled}/>
+            <_Entry width={props.width} type={props.type} onChange={onChangeFunction} onEnterPressed={handleEnterPressed} ui_variable={props.variable} is_disabled={is_disabled}/>
             <button className={save_button_class_names} onClick={saveFunction}>
                 {is_disabled
                 ? <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }}/>
