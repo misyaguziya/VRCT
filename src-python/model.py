@@ -1235,6 +1235,18 @@ class Model:
         self.ensure_initialized()
         self.mic_mute_status = self.osc_handler.getOSCParameterMuteSelf()
 
+    def watchForVrchatOscQueryConnection(self, on_found: Callable[[], None]) -> None:
+        """VRCTがVRChatより先に起動した場合でも、VRChatのOSCQueryサービスが
+        後から現れた瞬間に `on_found` を呼べるようにする (mDNSのイベント通知)。
+
+        `setMuteSelfStatus()` はその場限りの一発勝負のクエリなので、
+        VRChat未起動時に呼んでも `mic_mute_status` は `None` のままになる。
+        Controller.init() 側は、この監視を使って「見つかったら
+        setMuteSelfStatus() を再試行する」コールバックを登録する。
+        """
+        self.ensure_initialized()
+        self.osc_handler.waitForVrchatOscQueryConnectionAsync(on_found)
+
     def setMicMuteStatusChangeCallback(self, fn: Optional[Callable[[], None]]) -> None:
         """OSC ミュート同期が pause()/resume() を実行する際に呼ぶ関数を登録する。
 
