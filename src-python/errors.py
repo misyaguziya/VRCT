@@ -82,7 +82,12 @@ class ErrorCode(str, Enum):
     VALIDATION_INVALID_IP = "VALIDATION_INVALID_IP"
     VALIDATION_CANNOT_SET_IP = "VALIDATION_CANNOT_SET_IP"
     VALIDATION_OSC_PORT_INVALID = "VALIDATION_OSC_PORT_INVALID"
-    
+    # config.py のディスクリプタ (ManagedProperty/ValidatedProperty) が
+    # ConfigValidationError を送出した際の汎用コード (フェーズ3項目24)。
+    # どのフィールドが失敗したかはリクエスト先のエンドポイント自体で
+    # 自明なため、フィールドごとに専用コードを増やさずこれ1つで共有する。
+    VALIDATION_CONFIG_VALUE_INVALID = "VALIDATION_CONFIG_VALUE_INVALID"
+
     # ============================================================================
     # 認証エラー (AUTH_*)
     # ============================================================================
@@ -360,6 +365,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
     ErrorCode.VALIDATION_OSC_PORT_INVALID: {
         "category": ErrorCategory.VALIDATION,
         "message": "OSC port must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.VALIDATION_CONFIG_VALUE_INVALID: {
+        "category": ErrorCategory.VALIDATION,
+        "message": "The provided value was rejected",
         "severity": "warning",
         "user_action_required": True,
     },

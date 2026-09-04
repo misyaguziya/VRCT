@@ -276,6 +276,30 @@ class ManagedList(list):
         self._save()
 
 
+class ConfigValidationError(Exception):
+    """`ManagedProperty`/`ValidatedProperty` が値を拒否した際に送出する
+    (フェーズ3項目24)。
+
+    以前はディスクリプタが不正な値をサイレントに無視していたため、
+    `/set/data/*` エンドポイントは「値が拒否されても200で成功を返す」
+    という誤った契約になっていた。呼び出し元 (主に controller.py の
+    `_configValidationErrorResponse` デコレータ) がこれを捕まえて
+    `VRCTError` の適切なエラーレスポンスへ変換する。
+
+    `ValidatedProperty` はバリデータが**全体を**拒否した場合 (`None` を
+    返した場合) のみ送出する。多くのバリデータ (`HOTKEYS` や
+    `SELECTED_TRANSLATION_ENGINES` 等) は「キー単位で不正な項目だけ
+    旧値にフォールバックする」設計を意図的に持っており
+    (`test_config_validated_property.py` で検証済み)、その場合は
+    `None` を返さず正常終了するため、この例外は送出されない
+    (=部分的なフォールバックは今まで通り黙って起こる、これは仕様)。
+    """
+    def __init__(self, attr_name: str, value):
+        self.attr_name = attr_name
+        self.value = value
+        super().__init__(f"Invalid value for {attr_name}: {value!r}")
+
+
 # Descriptor for simple managed config properties to reduce repetitive getters/setters.
 # It performs optional type validation, optional allowed-values check, and calls
 # instance.saveConfig(...) on successful set.
@@ -324,7 +348,7 @@ class ManagedProperty:
 
         # Type check if requested（Noneは常に許可）
         if self.type_ is not None and value is not None and not isinstance(value, self.type_):
-            return
+            raise ConfigValidationError(self.name, value)
 
         # Allowed-values check: can be an iterable or a callable
         if self.allowed is not None:
@@ -334,10 +358,10 @@ class ManagedProperty:
                 except Exception:
                     ok = False
                 if not ok:
-                    return
+                    raise ConfigValidationError(self.name, value)
             else:
                 if value not in self.allowed:
-                    return
+                    raise ConfigValidationError(self.name, value)
 
         # Deep copy mutable types to prevent external reference issues
         if isinstance(value, (dict, list)):
@@ -374,7 +398,8 @@ class ValidatedProperty:
     """Descriptor for complex validated properties.
 
     validator(value, instance) -> normalized_value | None
-    If returns None (or raises), value is ignored.
+    If it returns None (or raises), `ConfigValidationError` is raised and the
+    value is not stored (フェーズ3項目24; 以前はサイレントに無視していた)。
     """
     def __init__(self, name: str, validator, immediate_save: bool = False, serialize: bool = True):
         self.name = name
@@ -401,12 +426,18 @@ class ValidatedProperty:
         return stored
 
     def __set__(self, instance, value):
+        # NOTE(フェーズ3項目24): 送出するのはバリデータが値を「全体として」
+        # 拒否した場合 (None を返した/例外を送出した場合) のみ。多くの
+        # バリデータは「キー単位で不正な項目だけ旧値にフォールバックする」
+        # 設計を意図的に持っており (test_config_validated_property.py
+        # 参照)、その場合は non-None を返して正常終了するため送出されない
+        # (=部分的なフォールバックはこれまで通り黙って起こる、仕様通り)。
         try:
             normalized = self.validator(value, instance)
-        except Exception:
-            return
+        except Exception as e:
+            raise ConfigValidationError(self.name, value) from e
         if normalized is None:
-            return
+            raise ConfigValidationError(self.name, value)
         # Deep copy mutable types before storing, mirroring ManagedProperty.__set__,
         # so a caller that keeps a reference to the object it passed in (or that a
         # validator returned verbatim) can't mutate config's internal state later.

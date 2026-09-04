@@ -112,8 +112,17 @@ class ConfigDescriptorRejectsWildcardTests(unittest.TestCase):
         self.config.WEBSOCKET_HOST = self._original_host
 
     def test_direct_assignment_of_wildcard_is_ignored(self) -> None:
+        # フェーズ3項目24により、ディスクリプタは拒否時にサイレントreturnせず
+        # ConfigValidationError を送出するようになった。load_config() 自身は
+        # 1キーごとに try/except で包んであるため (config.py:1276-1290)、
+        # 起動時に config.json へ 0.0.0.0 が書かれていても実際の挙動は
+        # 変わらない (この例外がその場で捕まり、該当キーだけスキップされる)。
+        # ここでは「例外を送出する」+「値は書き変わらない」の両方を検証する。
+        import config as config_module
+
         self.config.WEBSOCKET_HOST = "127.0.0.1"
-        self.config.WEBSOCKET_HOST = "0.0.0.0"  # load_config() の setattr() 相当
+        with self.assertRaises(config_module.ConfigValidationError):
+            self.config.WEBSOCKET_HOST = "0.0.0.0"  # load_config() の setattr() 相当
         self.assertEqual(self.config.WEBSOCKET_HOST, "127.0.0.1", "0.0.0.0 が素通りしている")
 
     def test_direct_assignment_of_valid_host_is_accepted(self) -> None:
