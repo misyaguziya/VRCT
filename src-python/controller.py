@@ -114,7 +114,33 @@ def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
     return False
 
 class Controller:
-    def __init__(self) -> None:
+    def __init__(self, config_override=None, model_override=None) -> None:
+        """
+        `config_override`/`model_override` はデフォルト引数注入
+        (フェーズ3項目22)。既定 (未指定) では、このモジュールが `from
+        config import config` / `from model import model` した
+        シングルトンをその場で (呼び出し時に) 参照するため、既存の全呼び出し
+        (`Controller()`) は無変更で動き、`@patch("controller.model")` の
+        ようなモジュール属性差し替えにも追従する。
+
+        NOTE: `def __init__(self, config=config, model=model)` のように
+        引数名をモジュールレベル名と揃えて既定値にする書き方は避けた —
+        デフォルト値は関数定義時 (＝モジュール import 時) に1回だけ評価
+        されるため、後から `@patch("controller.model")` で
+        `controller.model` を差し替えても、既に固定された既定値には反映
+        されない (実際にこれで既存テストを壊しかけた)。`config`/`model` を
+        関数本体側で毎回参照する今の形なら、呼び出し時点の最新の値を拾える。
+
+        テストや将来の DI 移行 (項目23) のために差し替えられるよう
+        `self._config`/`self._model` として保持するが、これはコンストラクタ
+        自体の足場に留まる: このクラスの残り数千行は引き続き裸のモジュール
+        レベル `config`/`model` を直接参照しており、今回それらを
+        `self._config`/`self._model` 経由に書き換えることはしていない
+        (影響範囲が大きすぎるため項目23の対象)。現時点で `self._model` を
+        実際に使っているのは `_bootstrapModel()` (下記) のみ。
+        """
+        self._config = config_override if config_override is not None else config
+        self._model = model_override if model_override is not None else model
         # typed attributes to satisfy static type checkers
         self.init_mapping: dict = {}
         self.run_mapping: dict = {}
@@ -132,21 +158,17 @@ class Controller:
         # 取るため、start*Message の中から呼ぶとデッドロックする)。
         self.mic_lifecycle_lock: Lock = Lock()
         self.speaker_lifecycle_lock: Lock = Lock()
-        # Ensure model is initialized at controller startup so existing
-        # attribute-based checks (e.g. model.overlay.initialized) continue to work.
-        try:
-            model.init()
-        except Exception:
-            # In test or headless environments initialization may fail; log and continue.
-            errorLogging()
-        try:
-            # OSC ミュート同期 (Model.changeHandlerMute, 任意の OSC 受信
-            # スレッドで走る) が pause()/resume() を mic_lifecycle_lock 配下
-            # で実行できるよう、ロック付きラッパーを Model 側のコールバック
-            # スロットへ登録する。
-            model.setMicMuteStatusChangeCallback(self._changeMicTranscriptStatusLocked)
-        except Exception:
-            errorLogging()
+        # NOTE(フェーズ3項目22、実機検証後に取り消し): 当初 model.init() を
+        # ここから Controller.init() へ移動する変更を試みた。model.init()
+        # 自身のdocstringが「import時に呼ばない、ensure_initialized() で
+        # 遅延初期化する設計」を明記しているため、理屈の上では安全なはずだった。
+        # しかし実機検証で、VRCTをVRChatより先に起動した場合にOSCQueryが
+        # 接続されずミュート同期が壊れる回帰が判明した (VRChatが先に起動
+        # 済みなら問題は再現しない)。根本原因を確信を持って特定できていない
+        # ため、タイミングを変えるこの部分だけを元に戻す
+        # (self._bootstrapModel() をここで呼ぶ = 従来通り Controller() 構築時
+        # に即時実行)。DI引数自体はタイミングに影響しないため維持する。
+        self._bootstrapModel()
 
     def _is_overlay_available(self) -> bool:
         """Safe check whether overlay is present and initialized.
@@ -4174,6 +4196,71 @@ class Controller:
             "disabled_functions": disabled_functions
         })
 
+    def _initVrcMicMuteSync(self) -> None:
+        """VRC_MIC_MUTE_SYNC が有効な場合の、起動時のミュート状態初期同期。
+
+        `model.setMuteSelfStatus()` はVRChatのOSCQueryサービスへの
+        その場限りの一発勝負の問い合わせ。VRCTがVRChatより先に起動していると
+        これは失敗し (`model.mic_mute_status` が `None` のまま)、
+        `changeHandlerMute` (model.py) 側のガード条件が `None` からは
+        絶対に遷移できない構造になっているため、二度とミュート同期が
+        機能しなくなる不具合があった (VRChatを先に起動していれば問題は
+        起きない、という起動順序依存のバグとして実機で確認済み)。
+
+        ここで諦めず、VRChatのOSCQueryサービスがmDNSで後から現れた瞬間に
+        `_retryMuteSelfStatusOnceVrchatFound()` を呼ぶよう監視を仕込むことで、
+        起動順序に関わらずミュート同期を確立できるようにする。
+        """
+        model.setMuteSelfStatus()
+        if model.mic_mute_status is not None:
+            model.changeMicTranscriptStatus()
+        else:
+            model.watchForVrchatOscQueryConnection(self._retryMuteSelfStatusOnceVrchatFound)
+
+    def _retryMuteSelfStatusOnceVrchatFound(self) -> None:
+        """VRChatのOSCQueryサービスが後から見つかった際のコールバック
+        (`_initVrcMicMuteSync()` 参照)。zeroconf自身のバックグラウンド
+        スレッドから呼ばれる。
+        """
+        try:
+            model.setMuteSelfStatus()
+            model.changeMicTranscriptStatus()
+        except Exception:
+            errorLogging()
+
+    def _bootstrapModel(self) -> None:
+        """`model.init()` + ミュート同期コールバック登録。
+
+        `Controller.__init__` (`Controller()` 構築時、本番では mainloop.py
+        のモジュールimport時) から呼ばれる。`init()` 側への移動を試みたが
+        (フェーズ3項目22)、実機検証で「VRCTをVRChatより先に起動すると
+        OSCQueryが接続されずミュート同期が壊れる」回帰が判明したため、
+        タイミングを従来通り (Controller() 構築時に即時実行) へ戻した。
+        根本原因は未特定 (`model.init()` 自体はimport時に呼ばない設計の
+        はずだが、実際には他の何かがこの前倒しタイミングに依存している)。
+        `__init__` 本体から切り出したのは、この2行だけを単体テストで
+        検証できるようにするため (`test_controller_di_constructor.py` /
+        `test_model_osc_mute_sync.py` 参照)。
+
+        順序が重要: `model.init()` は
+        `model.mic_mute_status_change_callback` を `None` にリセットする
+        ため、先に `model.init()` を終わらせてからコールバックを登録しないと
+        登録した値が消えてしまう。
+        """
+        try:
+            self._model.init()
+        except Exception:
+            # In test or headless environments initialization may fail; log and continue.
+            errorLogging()
+        try:
+            # OSC ミュート同期 (Model.changeHandlerMute, 任意の OSC 受信
+            # スレッドで走る) が pause()/resume() を mic_lifecycle_lock 配下
+            # で実行できるよう、ロック付きラッパーを Model 側のコールバック
+            # スロットへ登録する。
+            self._model.setMicMuteStatusChangeCallback(self._changeMicTranscriptStatusLocked)
+        except Exception:
+            errorLogging()
+
     def init(self, *args, **kwargs) -> None:
         removeLog()
         printLog("Start Initialization")
@@ -4724,8 +4811,7 @@ class Controller:
                 if osc_query_enabled is True:
                     self.enableOscQuery()
                     if config.VRC_MIC_MUTE_SYNC is True:
-                        model.setMuteSelfStatus()
-                        model.changeMicTranscriptStatus()
+                        self._initVrcMicMuteSync()
                 else:
                     # OSC Query is disabled, so disable VRC some features
                     mute_sync_info_flag = False
