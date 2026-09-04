@@ -4,10 +4,11 @@ from threading import Thread, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 import copy
+import functools
 import re
 import time
 from device_manager import device_manager
-from config import config
+from config import config, ConfigValidationError
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
@@ -94,6 +95,33 @@ _ENGINE_MODEL_BINDINGS = {
         "update_client": "updateTranslatorOllamaClient",
     },
 }
+
+
+def _configValidationErrorResponse(error_code: ErrorCode):
+    """設定値のディスクリプタ (config.py の ManagedProperty/ValidatedProperty)
+    が拒否した場合に `ConfigValidationError` を捕まえ、`VRCTError` の
+    エラーレスポンスへ変換するデコレータ (フェーズ3項目24)。
+
+    対象は「`config.X = data` して結果を返すだけ」の単純なエンドポイント
+    (例: `setUiLanguage`) — これまでは不正な値を渡されても、ディスクリプタが
+    サイレントに値を無視し、変化していない旧値を 200 (成功) で返していた
+    (`setUiLanguage(bad_value)` が「成功したが何も変わっていない」レスポンスに
+    なる、という誤った契約)。デコレータを付けるだけで、関数本体は一切
+    書き換えずに正しいエラー契約に直せる。
+
+    副作用を伴う (例: `self.run(...)` で他のpushを行う) エンドポイントには
+    使わないこと — 拒否時、副作用がどこまで実行された状態で例外に
+    なったかをこのデコレータは関知しない。
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except ConfigValidationError as e:
+                return VRCTError.create_error_response(error_code, data=e.value)
+        return wrapper
+    return decorator
 
 
 def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
@@ -1716,6 +1744,7 @@ class Controller:
         return {"status":200, "result":config.SELECTED_RELEASE_CHANNEL}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSelectedReleaseChannel(data, *args, **kwargs) -> dict:
         config.SELECTED_RELEASE_CHANNEL = str(data)
         return {"status":200, "result":config.SELECTED_RELEASE_CHANNEL}
@@ -1837,6 +1866,7 @@ class Controller:
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setMessageBoxRatio(data, *args, **kwargs) -> dict:
         config.MESSAGE_BOX_RATIO = data
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
@@ -1846,6 +1876,7 @@ class Controller:
         return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSendMessageButtonType(data, *args, **kwargs) -> dict:
         config.SEND_MESSAGE_BUTTON_TYPE = data
         return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
@@ -1871,6 +1902,7 @@ class Controller:
         return {"status":200, "result":config.FONT_FAMILY}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setFontFamily(data, *args, **kwargs) -> dict:
         config.FONT_FAMILY = data
         return {"status":200, "result":config.FONT_FAMILY}
@@ -1880,6 +1912,7 @@ class Controller:
         return {"status":200, "result":config.UI_LANGUAGE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setUiLanguage(data, *args, **kwargs) -> dict:
         config.UI_LANGUAGE = data
         return {"status":200, "result":config.UI_LANGUAGE}
@@ -1889,6 +1922,7 @@ class Controller:
         return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setMainWindowGeometry(data, *args, **kwargs) -> dict:
         config.MAIN_WINDOW_GEOMETRY = data
         return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
@@ -2325,6 +2359,7 @@ class Controller:
         return {"status":200, "result":config.HOTKEYS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setHotkeys(data, *args, **kwargs) -> dict:
         config.HOTKEYS = data
         return {"status":200, "result":config.HOTKEYS}
@@ -2334,6 +2369,7 @@ class Controller:
         return {"status":200, "result":config.PLUGINS_STATUS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setPluginsStatus(data, *args, **kwargs) -> dict:
         config.PLUGINS_STATUS = data
         return {"status":200, "result":config.PLUGINS_STATUS}
@@ -3022,6 +3058,7 @@ class Controller:
         return {"status":200, "result":config.WHISPER_WEIGHT_TYPE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setWhisperWeightType(data, *args, **kwargs) -> dict:
         config.WHISPER_WEIGHT_TYPE = str(data)
         return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
@@ -3031,6 +3068,7 @@ class Controller:
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSelectedTranscriptionComputeType(data, *args, **kwargs) -> dict:
         config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE = str(data)
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
@@ -3040,6 +3078,7 @@ class Controller:
         return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSendMessageFormatParts(data, *args, **kwargs) -> dict:
         config.SEND_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
@@ -3049,6 +3088,7 @@ class Controller:
         return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setReceivedMessageFormatParts(data, *args, **kwargs) -> dict:
         config.RECEIVED_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
