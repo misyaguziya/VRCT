@@ -48,6 +48,10 @@ const _Entry = forwardRef((props, ref) => {
                     onBlur={(e) => props.onBlur?.(e)}
                     onKeyDown={handleKeyDown}
                     onKeyUp={(e) => props.onKeyUp?.(e)}
+                    onWheel={(e) => {
+                        props.onWheel?.(e);
+                        e.currentTarget.blur();
+                    }}
                     readOnly={props.readOnly === true ? true : false}
                 />
             </div>
