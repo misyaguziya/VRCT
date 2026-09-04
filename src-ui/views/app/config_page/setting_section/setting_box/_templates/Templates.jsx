@@ -25,20 +25,14 @@ import { Checkbox } from "@common_components";
 import { useI18n } from "@useI18n";
 
 export const useOnMouseLeaveDropdownMenu = () => {
-    const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
-
-    const onMouseLeaveFunction = () => {
-        updateIsOpenedDropdownMenu("");
-    };
-
+    // Deprecated: Dropdown menu closing is now handled via outside click and Escape key in _DropdownMenu
+    const onMouseLeaveFunction = () => {};
     return { onMouseLeaveFunction };
 };
 
 export const DropdownMenuContainer = (props) => {
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
     return (
-        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
+        <TemplatesContainerWrapper {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
             <DropdownMenu {...props} />
         </TemplatesContainerWrapper>
@@ -46,12 +40,10 @@ export const DropdownMenuContainer = (props) => {
 };
 
 export const MultiDropdownMenuContainer = (props) => {
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
     return (
-        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
+        <TemplatesContainerWrapper {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
             <MultiDropdownMenu dropdown_settings={props.dropdown_settings} is_break_point={currentIsBreakPoint.data} />
         </TemplatesContainerWrapper>
