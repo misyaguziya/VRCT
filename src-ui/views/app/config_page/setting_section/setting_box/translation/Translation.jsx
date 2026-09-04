@@ -157,7 +157,6 @@ const DeepLAuthKey_Box = () => {
                     {translator: t("main_page.translator")}
                 )}
                 webpage_url={deepl_auth_key_url}
-                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentDeepLAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -184,7 +183,6 @@ const PlamoAuthKey_Box = () => {
                 label={t("config_page.translation.plamo_auth_key.label")}
                 // desc="Plamo Auth Desc"
                 webpage_url={plamo_auth_key_url}
-                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentPlamoAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -246,7 +244,6 @@ const GeminiAuthKey_Box = () => {
                 label={t("config_page.translation.gemini_auth_key.label")}
                 // desc="Gemini Auth Desc"
                 webpage_url={gemini_auth_key_url}
-                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentGeminiAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -307,7 +304,6 @@ const OpenAIAuthKey_Box = () => {
                 label={t("config_page.translation.openai_auth_key.label")}
                 // desc="OpenAI Auth Desc"
                 webpage_url={openai_auth_key_url}
-                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentOpenAIAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -368,7 +364,6 @@ const GroqAuthKey_Box = () => {
                 label={t("config_page.translation.groq_auth_key.label")}
                 // desc="Groq Auth Desc"
                 webpage_url={groq_auth_key_url}
-                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentGroqAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -429,7 +424,6 @@ const OpenRouterAuthKey_Box = () => {
                 label={t("config_page.translation.openrouter_auth_key.label")}
                 // desc="OpenRouter Auth Desc"
                 webpage_url={openrouter_auth_key_url}
-                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentOpenRouterAuthKey.state}
                 onChangeFunction={onChangeFunction}

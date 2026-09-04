@@ -110,8 +110,11 @@ config_page:
     common:
         version: "Version {{version}}"
         model_download_button_label: "Download"
+        save_button_label: "Save"
+        edit_button_label: "Edit"
         correct_auth_key_required: "Correct API Key Required"
         open_auth_key_webpage: "Open API Key Management Webpage"
+        auth_key_success: "API key update completed."
         connection_check:
             button_label: "Connection Check"
             checking: "Checking..."
@@ -192,10 +195,6 @@ config_page:
         deepl_auth_key:
             label: "DeepL API Key"
             desc: "When using it, please change {{translator}} on the main screen to DeepL_API. ※Some languages may not be supported."
-            open_auth_key_webpage: "Open DeepL Account Webpage"
-            save: "Save"
-            edit: "Edit"
-            auth_key_success: "API key update completed."
 
         plamo_auth_key:
             label: "Plamo API Key"

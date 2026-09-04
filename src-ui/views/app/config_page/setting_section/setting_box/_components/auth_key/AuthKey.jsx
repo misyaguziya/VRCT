@@ -44,7 +44,7 @@ export const AuthKey = (props) => {
                 ? null
                 :
                     <div className={styles.entry_edit_cover} onClick={revealEditAuthKey}>
-                        <button className={styles.edit_button}>{t("config_page.translation.deepl_auth_key.edit")}</button>
+                        <button className={styles.edit_button}>{t("config_page.common.edit_button_label")}</button>
                     </div>
                 }
             </div>

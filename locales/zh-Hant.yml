@@ -108,8 +108,11 @@ config_page:
     common:
         version: "版本 {{version}}"
         model_download_button_label: "下載"
-        correct_auth_key_required:
-        open_auth_key_webpage:
+        save_button_label: "儲存"
+        edit_button_label: "編輯"
+        correct_auth_key_required: "需要正確的 API 金鑰"
+        open_auth_key_webpage: "打開 API 金鑰管理頁面"
+        auth_key_success: "API 金鑰更新完成。"
         connection_check:
             button_label:
             checking:
@@ -190,10 +193,6 @@ config_page:
         deepl_auth_key:
             label: "DeepL API 金鑰"
             desc: "使用 DeepL API 時請在主螢幕選擇 {{translator}}。※可能不支援某些語言。"
-            open_auth_key_webpage: "打開 DeepL 帳號頁面"
-            save: "儲存"
-            edit: "編輯"
-            auth_key_success: "API 金鑰更新完成。"
 
         plamo_auth_key:
             label:
