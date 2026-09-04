@@ -664,7 +664,7 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 | 25 | `MessagePipeline` への 3 メソッド統合（過程で mic/speaker の非対称を仕様として決着） | A |
 | 26 | API キーの DPAPI 暗号化保存 ⬜ 見送り（詳細は下記補足） | C |
 | 27 | Tauri CSP の明示的ポリシー設定 ⬜ 見送り（詳細は下記補足） | C |
-| 28 | 依存関係の更新（Pillow / transformers）、直接 import の宣言、git 依存の SHA 固定、`pip-audit` の CI 組み込み | C |
+| 28 | 依存関係の更新（Pillow / transformers）、直接 import の宣言、git 依存の SHA 固定、`pip-audit` の CI 組み込み 🟡 `fbc8b09b`（一部完了、詳細は下記補足） | C |
 
 > **項目22の補足**: `Controller.__init__(self, config_override=None, model_override=None)` を追加し、既存の全呼び出し・`@patch("controller.model")` ベースのテストとの互換性を保ったままDIの足場を用意した(`self._config`/`self._model` として保持、現時点で実際に使っているのは `_bootstrapModel()` のみ — このクラスの残り数千行はまだ裸のモジュールレベル `config`/`model` を直接参照しており、項目23の対象)。
 >
@@ -675,6 +675,8 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 > **項目26は見送りと結論(2026-09-04)**: 調査の結果、レビューが懸念する脅威(同一ユーザーで動く別プロセスがAPIキーを読める)への対処は、原理的にOS提供の秘匿ストレージ機構(Windows DPAPI等)に頼るしかないと判明した — ファイルACL制限は「別ユーザー」は防げても「同一ユーザーの別プロセス」は防げず、自前の対称鍵暗号も鍵自体を同じファイルシステム上に置く以上、同一ユーザーの別プロセスから見れば鍵も読めてしまい実質的な防御にならない。DPAPI実装(ctypes直呼び、pywin32は不使用の方針)を提案したが、VRCTがWindows専用でありプラットフォーム分岐コードを持ち込む価値への疑問、および最終的に「暗号化自体が不要」「ACL制限による軽量な代替案も不要、config.jsonの保護はユーザー側の責任とする」という判断に至った。将来再検討する場合は、この経緯(特に「同一ユーザー別プロセス」という脅威モデルに対する暗号理論上の制約)を踏まえること。
 >
 > **項目27は見送りと結論(2026-09-04)**: 調査の結果、VRCTのプラグイン機構(GitHubリリースからZIPを取得→JSXをBabelでその場でトランスパイル→`Blob`+動的`import()`で実行、`usePlugins.js`)が「外部から取得したコードを実行する」ことを意図的な仕様として持っており、単純な`default-src 'self'`では機能ごと壊れることが判明した。Tauri v2は自アプリのバンドル済みスクリプトには自動でnonce/hashを付与するが、動的JSロード(まさにこのプラグイン機構)はその自動化の対象外で、`script-src`に`blob:`を明示的に許可する設計が必要。GitHub等へのHTTP通信は`@tauri-apps/plugin-http`経由(Rust側処理)のためCSPの`connect-src`には影響されない一方、`shell:allow-stdin-write`自体はCSPでは制限できない(CSPはページ読み込み内容の制御であり、Tauri API呼び出し可否とは別レイヤー)。プラグイン機構を壊さない`script-src`設計+実機ビルドでの動作確認が必要な、見た目より手間のかかるタスクと判明し、見送りとした。
+>
+> **項目28は一部完了(2026-09-04, `fbc8b09b`)**: `requests`(直接import)/`urllib3`・`certifi`(requestsの推移的依存)/`pyperclip`(直接import)をrequirements.txtに明記。git依存3件(translators/custom_speech_recognition/tinyoscquery)をタグからコミットSHA固定に変更。`urllib3`(→2.7.0)・`sentencepiece`(→0.2.1)を実際のCVE修正版に更新し、テスト465件で動作確認済み。一方、`setuptools`の更新(PYSEC-2026-3447修正版83.0.0)は**対応不可能と判明**: setuptoolsは82.0.0で`pkg_resources`モジュールを完全に削除しており、`openvr`/`ctranslate2`が起動時に`import pkg_resources`しているため、更新するとテスト32ファイルが収集不能になることを実際に検証して確認した。`openvr`/`ctranslate2`が上流でこの依存をやめない限り対応不可能。pip-auditのCI組み込み・Pillow/transformersの更新は、上記setuptoolsに加えPillow(既知のCVE多数)・langchain-openai/langchain-core(推移的依存、メジャーバージョン跳躍)・zeroconf(推移的依存)が現状でも脆弱性ありと判定され、導入した瞬間にCIが赤くなる状態だったため、対応方針を決めずに見送った。またrequirements.txtのコメントは意図的にASCII文字のみにしている(pip-auditのrequirements parserがOSロケールのコードページでファイルをデコードするため、日本語コメントがあると環境依存でパースに失敗することを実際に確認した)。
 
 > **項目17の補足**: 当初想定した「翻訳エンジンを1つの型に統一」ではなく、実装を精査した結果、実際に構造が一致するエンジン群ごとに2つのレジストリへ分けた。
 > - `TRANSLATION_PROVIDER_REGISTRY`（認証キー + モデル一覧型）: Plamo/Gemini/OpenAI/Groq/OpenRouter の5エンジン。Gemini 1エンジンをパイロットとして通した後、残り4エンジンへ一括展開。
