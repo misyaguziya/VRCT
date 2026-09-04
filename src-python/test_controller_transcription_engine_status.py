@@ -81,6 +81,11 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
         config._SELECTED_DEEPGRAM_MODEL = self._original_deepgram_model
 
     def _run_init(self, mock_model) -> None:
+        # Controller.__init__ をバイパスしているため、init() 冒頭の
+        # _bootstrapModel() (フェーズ3項目22) が使う self._model を手動で
+        # 用意する (patch("controller.model") はモジュール属性を差し替える
+        # だけで、既に __new__ 済みのインスタンス属性までは遡らない)。
+        self.controller._model = mock_model
         mock_model.checkTranslatorCTranslate2ModelWeight.return_value = True
         mock_model.checkTranscriptionWhisperModelWeight.return_value = True
 

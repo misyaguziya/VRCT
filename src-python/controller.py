@@ -158,17 +158,6 @@ class Controller:
         # 取るため、start*Message の中から呼ぶとデッドロックする)。
         self.mic_lifecycle_lock: Lock = Lock()
         self.speaker_lifecycle_lock: Lock = Lock()
-        # NOTE(フェーズ3項目22、実機検証後に取り消し): 当初 model.init() を
-        # ここから Controller.init() へ移動する変更を試みた。model.init()
-        # 自身のdocstringが「import時に呼ばない、ensure_initialized() で
-        # 遅延初期化する設計」を明記しているため、理屈の上では安全なはずだった。
-        # しかし実機検証で、VRCTをVRChatより先に起動した場合にOSCQueryが
-        # 接続されずミュート同期が壊れる回帰が判明した (VRChatが先に起動
-        # 済みなら問題は再現しない)。根本原因を確信を持って特定できていない
-        # ため、タイミングを変えるこの部分だけを元に戻す
-        # (self._bootstrapModel() をここで呼ぶ = 従来通り Controller() 構築時
-        # に即時実行)。DI引数自体はタイミングに影響しないため維持する。
-        self._bootstrapModel()
 
     def _is_overlay_available(self) -> bool:
         """Safe check whether overlay is present and initialized.
@@ -4229,18 +4218,26 @@ class Controller:
             errorLogging()
 
     def _bootstrapModel(self) -> None:
-        """`model.init()` + ミュート同期コールバック登録。
+        """`model.init()` + ミュート同期コールバック登録 (フェーズ3項目22)。
 
-        `Controller.__init__` (`Controller()` 構築時、本番では mainloop.py
-        のモジュールimport時) から呼ばれる。`init()` 側への移動を試みたが
-        (フェーズ3項目22)、実機検証で「VRCTをVRChatより先に起動すると
-        OSCQueryが接続されずミュート同期が壊れる」回帰が判明したため、
-        タイミングを従来通り (Controller() 構築時に即時実行) へ戻した。
-        根本原因は未特定 (`model.init()` 自体はimport時に呼ばない設計の
-        はずだが、実際には他の何かがこの前倒しタイミングに依存している)。
-        `__init__` 本体から切り出したのは、この2行だけを単体テストで
-        検証できるようにするため (`test_controller_di_constructor.py` /
-        `test_model_osc_mute_sync.py` 参照)。
+        以前は `Controller.__init__` (`Controller()` 構築時、本番では
+        mainloop.py のモジュールimport時) に前倒しで実行していたが、
+        `model.init()` 自身が「import時には呼ばない、ensure_initialized()
+        で遅延初期化する」設計であることに合わせて `init()` 側に移動した。
+
+        経緯: 一度この移動を実装した際、実機検証で「VRCTをVRChatより先に
+        起動するとOSCQueryが接続されずミュート同期が壊れる」回帰が見つかり
+        タイミングを一旦元に戻した。その後の調査で、この回帰は今回の
+        タイミング変更とは無関係の既存バグ (起動時1回きりの
+        `model.setMuteSelfStatus()` がVRChat未起動時に失敗すると
+        `model.mic_mute_status` が `None` のまま二度と回復しない構造的な
+        問題) と判明し、`_VrchatOscQueryFoundListener`
+        (`models/osc/osc.py`) による別修正で解決済み。タイミング変更自体は
+        無罪と確認できたため、改めてここに移動した。
+
+        `init()` 本体から切り出したのは、この2行だけを (残り400行超の
+        ネットワーク確認・重みダウンロード等を実行せずに) 単体テストで
+        検証できるようにするため。
 
         順序が重要: `model.init()` は
         `model.mic_mute_status_change_callback` を `None` にリセットする
@@ -4264,6 +4261,8 @@ class Controller:
     def init(self, *args, **kwargs) -> None:
         removeLog()
         printLog("Start Initialization")
+
+        self._bootstrapModel()
 
         # watchdog を初期化処理の先頭で起動する。以前は init() の最終行に
         # あったため、モデル重みのダウンロードや外部 API 呼び出しが

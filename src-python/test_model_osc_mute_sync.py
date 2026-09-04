@@ -16,7 +16,7 @@
      呼ぶのではなく、Auto Select の他のデバイス操作と同じ
      audio_lifecycle_worker の FIFO キューに投げて直列実行させる。
   2. 実行される関数自体を mic_mute_status_change_callback
-     (= Controller.__init__ (_bootstrapModel()) が登録する
+     (= Controller.init() (_bootstrapModel()) が登録する
      mic_lifecycle_lock 付きラッパー _changeMicTranscriptStatusLocked)
      にすることで、ロックを直接
      取得する経路 (mainloop ワーカーが直接呼ぶ startTranscriptionSendMessage
@@ -154,22 +154,20 @@ class ControllerRegistersLockedMuteCallbackTests(unittest.TestCase):
     """Controller が起動時に mic_lifecycle_lock 付きラッパーを Model へ
     登録し、そのラッパー自体が実際にロックを取得することを確認する。
 
-    登録は Controller.__init__ が呼ぶ _bootstrapModel() で行われる
+    フェーズ3項目22により、この登録は Controller.__init__ ではなく
+    Controller.init() (実際には _bootstrapModel()) で行われる
     (model.init() がコールバックスロットを None にリセットするため、
     先に model.init() を終わらせてから登録する順序になっている)。
-
-    NOTE: フェーズ3項目22でこの登録を Controller.init() 側へ移動する
-    変更を一度試みたが、実機検証で「VRCTをVRChatより先に起動すると
-    OSCQueryが接続されない」回帰が判明したため、タイミングを
-    Controller() 構築時の即時実行に戻した (根本原因は未特定)。
     """
 
     @patch("controller.model")
-    def test_init_registers_the_locked_wrapper_with_model(self, mock_model) -> None:
+    def test_bootstrap_registers_the_locked_wrapper_with_model(self, mock_model) -> None:
         # controller.model をまるごとモックしているため、model.init() を
-        # 含む __init__ (_bootstrapModel() 経由) 全体を実行しても
-        # 実デバイス/実ネットワークには一切触れない。
+        # 含む _bootstrapModel() 全体を実行しても実デバイス/実ネットワークには
+        # 一切触れない。
         controller = Controller()
+
+        controller._bootstrapModel()
 
         mock_model.setMicMuteStatusChangeCallback.assert_called_once_with(
             controller._changeMicTranscriptStatusLocked
