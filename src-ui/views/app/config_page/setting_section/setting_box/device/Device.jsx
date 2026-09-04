@@ -8,7 +8,6 @@ import {
 } from "@logics_configs";
 
 import {
-    useOnMouseLeaveDropdownMenu,
     MultiDropdownMenuContainer,
 } from "../_templates/Templates";
 
@@ -44,12 +43,6 @@ const MicContainer = () => {
         currentEnableAutomaticMicThreshold,
         toggleEnableAutomaticMicThreshold,
     } = useDevice();
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
-    const _toggleEnableAutoMicSelect = () => {
-        toggleEnableAutoMicSelect();
-        onMouseLeaveFunction();
-    };
 
     const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
@@ -86,7 +79,7 @@ const MicContainer = () => {
                         insert_component_props: {
                             secondary_label: t("config_page.device.label_auto_select"),
                             variable: currentEnableAutoMicSelect,
-                            toggleFunction: _toggleEnableAutoMicSelect,
+                            toggleFunction: toggleEnableAutoMicSelect,
                         },
                         insert_to: "before",
                     },
@@ -141,12 +134,6 @@ const SpeakerContainer = () => {
         currentEnableAutomaticSpeakerThreshold,
         toggleEnableAutomaticSpeakerThreshold,
     } = useDevice();
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
-    const _toggleEnableAutoSpeakerSelect = () => {
-        toggleEnableAutoSpeakerSelect();
-        onMouseLeaveFunction();
-    };
 
     const selectFunction = (selected_data) => {
         setSelectedSpeakerDevice(selected_data.selected_id);
@@ -176,13 +163,13 @@ const SpeakerContainer = () => {
 
     return (
         <div className={styles.speaker_container}>
-            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
+            <div className={device_container_class}>
                 <LabelComponent label={t("config_page.device.speaker_device.label")} />
                 <div className={styles.device_contents}>
                     <SwitchBox
                         secondary_label={t("config_page.device.label_auto_select")}
                         variable={currentEnableAutoSpeakerSelect}
-                        toggleFunction={_toggleEnableAutoSpeakerSelect}
+                        toggleFunction={toggleEnableAutoSpeakerSelect}
                     />
                     <DropdownMenu
                         dropdown_id="speaker_device"
