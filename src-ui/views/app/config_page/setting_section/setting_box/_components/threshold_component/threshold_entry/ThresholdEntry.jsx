@@ -132,6 +132,7 @@ const ThresholdEntryInput = (props) => {
 
     return (
         <input
+            type="number"
             className={class_names}
             value={inputValue}
             onChange={onChangeFunction}

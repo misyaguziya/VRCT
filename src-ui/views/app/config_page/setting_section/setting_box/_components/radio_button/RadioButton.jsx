@@ -25,8 +25,8 @@ export const RadioButton = (props) => {
                     <div key={option.id} className={radioWrapperClass}>
                         <label className={labelClass}>
                             <input
-                                className={styles.radio_button_input}
                                 type="radio"
+                                className={styles.radio_button_input}
                                 name={props.name}
                                 value={option.id}
                                 onChange={() => props.selectFunction(option.id)}
