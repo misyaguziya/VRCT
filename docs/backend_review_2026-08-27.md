@@ -660,7 +660,7 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 | 21 | `AudioLifecycleWorker` の mic/speaker 分割・重複除去・停止 API | B |
 | 22 | `Controller.__init__` への DI 導入 + `model.init()` を `Controller.init()` へ移動 🟢 `c2b61fa5`（詳細は下記補足） | A |
 | 23 | `Controller` のドメイン分割（17 完了後、単純 get/set のテーブル駆動化を先に） | A |
-| 24 | エラー契約の統一（ディスクリプタから例外 → 共通デコレータで `VRCTError` 化） | A |
+| 24 | エラー契約の統一（ディスクリプタから例外 → 共通デコレータで `VRCTError` 化） 🟢 `4ab9b521`（詳細は下記補足） | A |
 | 25 | `MessagePipeline` への 3 メソッド統合（過程で mic/speaker の非対称を仕様として決着） | A |
 | 26 | API キーの DPAPI 暗号化保存 | C |
 | 27 | Tauri CSP の明示的ポリシー設定 | C |
@@ -669,6 +669,8 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 > **項目22の補足**: `Controller.__init__(self, config_override=None, model_override=None)` を追加し、既存の全呼び出し・`@patch("controller.model")` ベースのテストとの互換性を保ったままDIの足場を用意した(`self._config`/`self._model` として保持、現時点で実際に使っているのは `_bootstrapModel()` のみ — このクラスの残り数千行はまだ裸のモジュールレベル `config`/`model` を直接参照しており、項目23の対象)。
 >
 > `model.init()` を `Controller.init()` 側へ移動する変更は、一度実機検証で「VRCTをVRChatより先に起動するとOSCQueryが繋がらずミュート同期が壊れる」回帰が見つかり保守的に撤回したが、調査の結果この回帰は今回の変更と無関係な既存バグ(起動時1回きりの `setMuteSelfStatus()` がVRChat未起動時に失敗すると `mic_mute_status` が `None` のまま二度と回復しない構造的な問題)と判明し、`_VrchatOscQueryFoundListener`(zeroconfのイベント駆動監視、`models/osc/osc.py`)を追加して別途修正・実機検証済み。無関係と確認できたため改めて `model.init()` の移動を実装し、実機検証(通常起動・ミュート同期とも正常動作)を経て完了。
+>
+> **項目24の補足**: 当初は「controller.py側だけで代入前後の値を比較する」という、config.py自体には触れない縮小版アプローチを検討したが、ユーザーから「今後の設定追加のしやすさ」まで含めて見直すよう指示があり、レビュー本来の提案(ディスクリプタ自体が拒否時に例外を送出する)を採用する方向に再設計した。決め手は2点: (1) `mainloop.py`の`_call_handler`が既に全ハンドラ呼び出しを`try/except Exception`で包んでおり、例外を送出してもアプリがクラッシュしないことを確認できた、(2) `HOTKEYS`等の「キー単位で不正な項目だけ旧値にフォールバックする」設計は意図的な仕様(`test_config_validated_property.py`で検証済み)であり、`ValidatedProperty`がバリデータ**全体の**拒否(`None`返却)時のみ例外を送出するようにすれば、この仕様を一切壊さずに済むと判明した。`ConfigValidationError`(config.py)+`_configValidationErrorResponse`デコレータ(controller.py)を追加し、対象12エンドポイントはデコレータ1行を足すだけで直った(本体は無変更)。今後新しい単純な設定セッターを追加する際も、同じデコレータを1行付けるだけで正しいエラー契約に乗せられる。
 
 > **項目17の補足**: 当初想定した「翻訳エンジンを1つの型に統一」ではなく、実装を精査した結果、実際に構造が一致するエンジン群ごとに2つのレジストリへ分けた。
 > - `TRANSLATION_PROVIDER_REGISTRY`（認証キー + モデル一覧型）: Plamo/Gemini/OpenAI/Groq/OpenRouter の5エンジン。Gemini 1エンジンをパイロットとして通した後、残り4エンジンへ一括展開。
