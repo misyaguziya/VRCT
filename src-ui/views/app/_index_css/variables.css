@@ -69,7 +69,7 @@
     --title_bar_height: 2rem;
     --main_page_topbar_height: 4.8rem;
     --config_page_sidebar_width: 16.8rem;
-    --config_page_topbar_height: 8rem;
+    --config_page_content_padding_top: 8rem;
 
     --font_family: "Yu Gothic UI";
 }
