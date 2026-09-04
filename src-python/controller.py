@@ -141,6 +141,108 @@ def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
         return True
     return False
 
+
+# config.py の値をそのまま返すだけの単純なgetterエンドポイント
+# (フェーズ3項目23)。エンドポイントメソッド名 -> config属性名の対応表。
+# 実際のメソッド生成・Controllerクラスへの登録は
+# _registerSimpleConfigGetters() 参照 (ファイル末尾)。
+_SIMPLE_CONFIG_GETTERS = {
+    "getVersion": "VERSION",
+    "getComputeMode": "COMPUTE_MODE",
+    "getComputeDeviceList": "SELECTABLE_COMPUTE_DEVICE_LIST",
+    "getSelectedTranslationComputeDevice": "SELECTED_TRANSLATION_COMPUTE_DEVICE",
+    "getSelectableCtranslate2WeightTypeDict": "SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT",
+    "getSelectedTranscriptionComputeDevice": "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE",
+    "getSelectedTabNo": "SELECTED_TAB_NO",
+    "getSelectedTranslationEngines": "SELECTED_TRANSLATION_ENGINES",
+    "getSelectedYourLanguages": "SELECTED_YOUR_LANGUAGES",
+    "getSelectedTargetLanguages": "SELECTED_TARGET_LANGUAGES",
+    "getSelectedTranscriptionEngine": "SELECTED_TRANSCRIPTION_ENGINE",
+    "getGroqWhisperModelList": "SELECTABLE_GROQ_WHISPER_MODEL_LIST",
+    "getGroqWhisperModel": "SELECTED_GROQ_WHISPER_MODEL",
+    "getOpenAIWhisperModelList": "SELECTABLE_OPENAI_WHISPER_MODEL_LIST",
+    "getOpenAIWhisperModel": "SELECTED_OPENAI_WHISPER_MODEL",
+    "getCustomWhisperURL": "TRANSCRIPTION_CUSTOM_URL",
+    "getCustomWhisperModelList": "SELECTABLE_CUSTOM_WHISPER_MODEL_LIST",
+    "getCustomWhisperModel": "SELECTED_CUSTOM_WHISPER_MODEL",
+    "getDeepgramModelList": "SELECTABLE_DEEPGRAM_MODEL_LIST",
+    "getDeepgramModel": "SELECTED_DEEPGRAM_MODEL",
+    "getSelectableReleaseChannels": "SELECTABLE_RELEASE_CHANNEL_LIST",
+    "getSelectedReleaseChannel": "SELECTED_RELEASE_CHANNEL",
+    "getConvertMessageToRomaji": "CONVERT_MESSAGE_TO_ROMAJI",
+    "getConvertMessageToHiragana": "CONVERT_MESSAGE_TO_HIRAGANA",
+    "getMainWindowSidebarCompactMode": "MAIN_WINDOW_SIDEBAR_COMPACT_MODE",
+    "getTransparency": "TRANSPARENCY",
+    "getUiScaling": "UI_SCALING",
+    "getTextboxUiScaling": "TEXTBOX_UI_SCALING",
+    "getMessageBoxRatio": "MESSAGE_BOX_RATIO",
+    "getSendMessageButtonType": "SEND_MESSAGE_BUTTON_TYPE",
+    "getShowResendButton": "SHOW_RESEND_BUTTON",
+    "getFontFamily": "FONT_FAMILY",
+    "getUiLanguage": "UI_LANGUAGE",
+    "getMainWindowGeometry": "MAIN_WINDOW_GEOMETRY",
+    "getAutoMicSelect": "AUTO_MIC_SELECT",
+    "getSelectedMicHost": "SELECTED_MIC_HOST",
+    "getSelectedMicDevice": "SELECTED_MIC_DEVICE",
+    "getMicThreshold": "MIC_THRESHOLD",
+    "getMicAutomaticThreshold": "MIC_AUTOMATIC_THRESHOLD",
+    "getMicRecordTimeout": "MIC_RECORD_TIMEOUT",
+    "getMicPhraseTimeout": "MIC_PHRASE_TIMEOUT",
+    "getMicMaxPhrases": "MIC_MAX_PHRASES",
+    "getMicWordFilter": "MIC_WORD_FILTER",
+    "getMicAvgLogprob": "MIC_AVG_LOGPROB",
+    "getMicNoSpeechProb": "MIC_NO_SPEECH_PROB",
+    "getAutoSpeakerSelect": "AUTO_SPEAKER_SELECT",
+    "getSelectedSpeakerDevice": "SELECTED_SPEAKER_DEVICE",
+    "getSpeakerThreshold": "SPEAKER_THRESHOLD",
+    "getSpeakerAutomaticThreshold": "SPEAKER_AUTOMATIC_THRESHOLD",
+    "getSpeakerRecordTimeout": "SPEAKER_RECORD_TIMEOUT",
+    "getSpeakerPhraseTimeout": "SPEAKER_PHRASE_TIMEOUT",
+    "getSpeakerMaxPhrases": "SPEAKER_MAX_PHRASES",
+    "getHotkeys": "HOTKEYS",
+    "getPluginsStatus": "PLUGINS_STATUS",
+    "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
+    "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
+    "getOscIpAddress": "OSC_IP_ADDRESS",
+    "getOscPort": "OSC_PORT",
+    "getNotificationVrcSfx": "NOTIFICATION_VRC_SFX",
+    "getTranslatorLMStudioURL": "LMSTUDIO_URL",
+    "getOpenAICompatibleURL": "OPENAI_COMPATIBLE_URL",
+    "getOpenAICompatibleModelList": "SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST",
+    "getOpenAICompatibleModel": "SELECTED_OPENAI_COMPATIBLE_MODEL",
+    "getCtranslate2WeightType": "CTRANSLATE2_WEIGHT_TYPE",
+    "getSelectedTranslationComputeType": "SELECTED_TRANSLATION_COMPUTE_TYPE",
+    "getWhisperWeightType": "WHISPER_WEIGHT_TYPE",
+    "getSelectedTranscriptionComputeType": "SELECTED_TRANSCRIPTION_COMPUTE_TYPE",
+    "getSendMessageFormatParts": "SEND_MESSAGE_FORMAT_PARTS",
+    "getReceivedMessageFormatParts": "RECEIVED_MESSAGE_FORMAT_PARTS",
+    "getAutoClearMessageBox": "AUTO_CLEAR_MESSAGE_BOX",
+    "getSendOnlyTranslatedMessages": "SEND_ONLY_TRANSLATED_MESSAGES",
+    "getOverlaySmallLog": "OVERLAY_SMALL_LOG",
+    "getOverlaySmallLogSettings": "OVERLAY_SMALL_LOG_SETTINGS",
+    "getOverlayLargeLog": "OVERLAY_LARGE_LOG",
+    "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
+    "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
+    "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
+    "getSendReceivedMessageToVrc": "SEND_RECEIVED_MESSAGE_TO_VRC",
+    "getLoggerFeature": "LOGGER_FEATURE",
+    "getVrcMicMuteSync": "VRC_MIC_MUTE_SYNC",
+    "getTelemetry": "ENABLE_TELEMETRY",
+    "getWebSocketHost": "WEBSOCKET_HOST",
+    "getWebSocketPort": "WEBSOCKET_PORT",
+    "getWebSocketServer": "WEBSOCKET_SERVER",
+    "getObsBrowserSource": "OBS_BROWSER_SOURCE",
+    "getObsBrowserSourcePort": "OBS_BROWSER_SOURCE_PORT",
+    "getObsBrowserSourceMaxMessages": "OBS_BROWSER_SOURCE_MAX_MESSAGES",
+    "getObsBrowserSourceDisplayDuration": "OBS_BROWSER_SOURCE_DISPLAY_DURATION",
+    "getObsBrowserSourceFadeoutDuration": "OBS_BROWSER_SOURCE_FADEOUT_DURATION",
+    "getObsBrowserSourceFontSize": "OBS_BROWSER_SOURCE_FONT_SIZE",
+    "getObsBrowserSourceFontColor": "OBS_BROWSER_SOURCE_FONT_COLOR",
+    "getObsBrowserSourceFontOutlineThickness": "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS",
+    "getObsBrowserSourceFontOutlineColor": "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR",
+    "getClipboard": "ENABLE_CLIPBOARD",
+}
+
 class Controller:
     def __init__(self, config_override=None, model_override=None) -> None:
         """
@@ -1058,9 +1160,6 @@ class Controller:
                     ]
                 }}
 
-    @staticmethod
-    def getVersion(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.VERSION}
 
     def checkSoftwareUpdated(self) -> dict:
         software_update_info = model.checkSoftwareUpdated()
@@ -1071,17 +1170,8 @@ class Controller:
         )
         return {"status":200, "result": software_update_info}
 
-    @staticmethod
-    def getComputeMode(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.COMPUTE_MODE}
 
-    @staticmethod
-    def getComputeDeviceList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_COMPUTE_DEVICE_LIST}
 
-    @staticmethod
-    def getSelectedTranslationComputeDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     def setSelectedTranslationComputeDevice(self, device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranslationComputeDevice", device)
@@ -1091,13 +1181,7 @@ class Controller:
         model.setChangedTranslatorParameters(True)
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
-    @staticmethod
-    def getSelectableCtranslate2WeightTypeDict(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT}
 
-    @staticmethod
-    def getSelectedTranscriptionComputeDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
 
     def setSelectedTranscriptionComputeDevice(self, device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranscriptionComputeDevice", device)
@@ -1177,9 +1261,6 @@ class Controller:
             config.ENABLE_FOREGROUND = False
         return {"status":200, "result":config.ENABLE_FOREGROUND}
 
-    @staticmethod
-    def getSelectedTabNo(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TAB_NO}
 
     def setSelectedTabNo(self, selected_tab_no:str, *args, **kwargs) -> dict:
         printLog("setSelectedTabNo", selected_tab_no)
@@ -1221,9 +1302,6 @@ class Controller:
     def getSpeakerDeviceList(*args, **kwargs) -> dict:
         return {"status":200, "result": model.getListSpeakerDevice()}
 
-    @staticmethod
-    def getSelectedTranslationEngines(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
 
     def setSelectedTranslationEngines(self, data:dict, *args, **kwargs) -> dict:
         config.SELECTED_TRANSLATION_ENGINES = data
@@ -1233,18 +1311,12 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
-    @staticmethod
-    def getSelectedYourLanguages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_YOUR_LANGUAGES}
 
     def setSelectedYourLanguages(self, select:dict, *args, **kwargs) -> dict:
         config.SELECTED_YOUR_LANGUAGES = select
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.SELECTED_YOUR_LANGUAGES}
 
-    @staticmethod
-    def getSelectedTargetLanguages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TARGET_LANGUAGES}
 
     def setSelectedTargetLanguages(self, select:dict, *args, **kwargs) -> dict:
         config.SELECTED_TARGET_LANGUAGES = select
@@ -1256,9 +1328,6 @@ class Controller:
         engines = [key for key, value in config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS.items() if value is True]
         return {"status":200, "result":engines}
 
-    @staticmethod
-    def getSelectedTranscriptionEngine(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
     def setSelectedTranscriptionEngine(self, data, *args, **kwargs) -> dict:
         # setSelectedTranslationEngines() -> updateTranslationEngineAndEngineList()
@@ -1396,12 +1465,7 @@ class Controller:
         self.updateTranscriptionEngine()
         return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
 
-    def getGroqWhisperModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_GROQ_WHISPER_MODEL_LIST}
 
-    @staticmethod
-    def getGroqWhisperModel(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_GROQ_WHISPER_MODEL}
 
     @staticmethod
     def setGroqWhisperModel(data, *args, **kwargs) -> dict:
@@ -1480,12 +1544,7 @@ class Controller:
         self.updateTranscriptionEngine()
         return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
 
-    def getOpenAIWhisperModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST}
 
-    @staticmethod
-    def getOpenAIWhisperModel(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OPENAI_WHISPER_MODEL}
 
     @staticmethod
     def setOpenAIWhisperModel(data, *args, **kwargs) -> dict:
@@ -1563,9 +1622,6 @@ class Controller:
         self.updateTranscriptionEngine()
         return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
 
-    @staticmethod
-    def getCustomWhisperURL(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.TRANSCRIPTION_CUSTOM_URL}
 
     def setCustomWhisperURL(self, data, *args, **kwargs) -> dict:
         """URL 変更時は「認証成功後に URL を確定」する順序を守る
@@ -1626,12 +1682,7 @@ class Controller:
             )
         return response
 
-    def getCustomWhisperModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST}
 
-    @staticmethod
-    def getCustomWhisperModel(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_CUSTOM_WHISPER_MODEL}
 
     @staticmethod
     def setCustomWhisperModel(data, *args, **kwargs) -> dict:
@@ -1711,12 +1762,7 @@ class Controller:
         self.updateTranscriptionEngine()
         return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
 
-    def getDeepgramModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_DEEPGRAM_MODEL_LIST}
 
-    @staticmethod
-    def getDeepgramModel(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_DEEPGRAM_MODEL}
 
     def setDeepgramModel(self, data, *args, **kwargs) -> dict:
         printLog("Set Deepgram Model", data)
@@ -1735,13 +1781,7 @@ class Controller:
             data=config.SELECTED_DEEPGRAM_MODEL
         )
 
-    @staticmethod
-    def getSelectableReleaseChannels(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_RELEASE_CHANNEL_LIST}
 
-    @staticmethod
-    def getSelectedReleaseChannel(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_RELEASE_CHANNEL}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -1754,9 +1794,6 @@ class Controller:
         releases = model.listAvailableReleases()
         return {"status":200, "result":[asdict(r) for r in releases]}
 
-    @staticmethod
-    def getConvertMessageToRomaji(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
     @staticmethod
     def setEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
@@ -1774,9 +1811,6 @@ class Controller:
             config.CONVERT_MESSAGE_TO_ROMAJI = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
-    @staticmethod
-    def getConvertMessageToHiragana(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
     @staticmethod
     def setEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
@@ -1794,9 +1828,6 @@ class Controller:
             config.CONVERT_MESSAGE_TO_HIRAGANA = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
-    @staticmethod
-    def getMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
     @staticmethod
     def setEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
@@ -1810,9 +1841,6 @@ class Controller:
             config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
         return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
-    @staticmethod
-    def getTransparency(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.TRANSPARENCY}
 
     @staticmethod
     def setTransparency(data, *args, **kwargs) -> dict:
@@ -1827,9 +1855,6 @@ class Controller:
         config.TRANSPARENCY = value
         return {"status":200, "result":config.TRANSPARENCY}
 
-    @staticmethod
-    def getUiScaling(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.UI_SCALING}
 
     @staticmethod
     def setUiScaling(data, *args, **kwargs) -> dict:
@@ -1844,9 +1869,6 @@ class Controller:
         config.UI_SCALING = value
         return {"status":200, "result":config.UI_SCALING}
 
-    @staticmethod
-    def getTextboxUiScaling(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.TEXTBOX_UI_SCALING}
 
     @staticmethod
     def setTextboxUiScaling(data, *args, **kwargs) -> dict:
@@ -1861,9 +1883,6 @@ class Controller:
         config.TEXTBOX_UI_SCALING = value
         return {"status":200, "result":config.TEXTBOX_UI_SCALING}
 
-    @staticmethod
-    def getMessageBoxRatio(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -1871,9 +1890,6 @@ class Controller:
         config.MESSAGE_BOX_RATIO = data
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
-    @staticmethod
-    def getSendMessageButtonType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -1881,9 +1897,6 @@ class Controller:
         config.SEND_MESSAGE_BUTTON_TYPE = data
         return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
-    @staticmethod
-    def getShowResendButton(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
     @staticmethod
     def setEnableShowResendButton(*args, **kwargs) -> dict:
@@ -1897,9 +1910,6 @@ class Controller:
             config.SHOW_RESEND_BUTTON = False
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
-    @staticmethod
-    def getFontFamily(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.FONT_FAMILY}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -1907,9 +1917,6 @@ class Controller:
         config.FONT_FAMILY = data
         return {"status":200, "result":config.FONT_FAMILY}
 
-    @staticmethod
-    def getUiLanguage(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.UI_LANGUAGE}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -1917,9 +1924,6 @@ class Controller:
         config.UI_LANGUAGE = data
         return {"status":200, "result":config.UI_LANGUAGE}
 
-    @staticmethod
-    def getMainWindowGeometry(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -1927,9 +1931,6 @@ class Controller:
         config.MAIN_WINDOW_GEOMETRY = data
         return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
 
-    @staticmethod
-    def getAutoMicSelect(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     def applyAutoMicSelect(self) -> None:
         # stopAccessMicDevices/restartAccessMicDevices は mic_lifecycle_lock
@@ -1979,9 +1980,6 @@ class Controller:
             config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
-    @staticmethod
-    def getSelectedMicHost(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_MIC_HOST}
 
     def setSelectedMicHost(self, data, *args, **kwargs) -> dict:
         previously_selected_device = config.SELECTED_MIC_DEVICE
@@ -2007,9 +2005,6 @@ class Controller:
         self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
-    @staticmethod
-    def getSelectedMicDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_MIC_DEVICE}
 
     def setSelectedMicDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_DEVICE = data
@@ -2045,9 +2040,6 @@ class Controller:
         with self.mic_lifecycle_lock:
             model.changeMicTranscriptStatus()
 
-    @staticmethod
-    def getMicThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_THRESHOLD}
 
     @staticmethod
     def setMicThreshold(data, *args, **kwargs) -> dict:
@@ -2067,9 +2059,6 @@ class Controller:
             response = {"status":status, "result":config.MIC_THRESHOLD}
         return response
 
-    @staticmethod
-    def getMicAutomaticThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setEnableMicAutomaticThreshold(*args, **kwargs) -> dict:
@@ -2083,9 +2072,6 @@ class Controller:
             config.MIC_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
-    @staticmethod
-    def getMicRecordTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_RECORD_TIMEOUT}
 
     @staticmethod
     def setMicRecordTimeout(data, *args, **kwargs) -> dict:
@@ -2105,9 +2091,6 @@ class Controller:
             response = {"status":200, "result":config.MIC_RECORD_TIMEOUT}
         return response
 
-    @staticmethod
-    def getMicPhraseTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
 
     @staticmethod
     def setMicPhraseTimeout(data, *args, **kwargs) -> dict:
@@ -2126,9 +2109,6 @@ class Controller:
             response = {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
         return response
 
-    @staticmethod
-    def getMicMaxPhrases(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_MAX_PHRASES}
 
     @staticmethod
     def setMicMaxPhrases(data, *args, **kwargs) -> dict:
@@ -2147,9 +2127,6 @@ class Controller:
             response = {"status":200, "result":config.MIC_MAX_PHRASES}
         return response
 
-    @staticmethod
-    def getMicWordFilter(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_WORD_FILTER}
 
     @staticmethod
     def setMicWordFilter(data, *args, **kwargs) -> dict:
@@ -2158,9 +2135,6 @@ class Controller:
         model.addKeywords()
         return {"status":200, "result":config.MIC_WORD_FILTER}
 
-    @staticmethod
-    def getMicAvgLogprob(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
     @staticmethod
     def setMicAvgLogprob(data, *args, **kwargs) -> dict:
@@ -2175,9 +2149,6 @@ class Controller:
         config.MIC_AVG_LOGPROB = value
         return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
-    @staticmethod
-    def getMicNoSpeechProb(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
     @staticmethod
     def setMicNoSpeechProb(data, *args, **kwargs) -> dict:
@@ -2192,9 +2163,6 @@ class Controller:
         config.MIC_NO_SPEECH_PROB = value
         return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
-    @staticmethod
-    def getAutoSpeakerSelect(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     def applyAutoSpeakerSelect(self) -> None:
         # 詳細は applyAutoMicSelect のコメント参照:
@@ -2232,9 +2200,6 @@ class Controller:
             config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
-    @staticmethod
-    def getSelectedSpeakerDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
     def setSelectedSpeakerDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_SPEAKER_DEVICE = data
@@ -2252,9 +2217,6 @@ class Controller:
         with self.speaker_lifecycle_lock:
             model.reconfigureSpeakerDevice()
 
-    @staticmethod
-    def getSpeakerThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_THRESHOLD}
 
     @staticmethod
     def setSpeakerThreshold(data, *args, **kwargs) -> dict:
@@ -2274,9 +2236,6 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_THRESHOLD}
         return response
 
-    @staticmethod
-    def getSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setEnableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
@@ -2290,9 +2249,6 @@ class Controller:
             config.SPEAKER_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
-    @staticmethod
-    def getSpeakerRecordTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
 
     @staticmethod
     def setSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
@@ -2311,9 +2267,6 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
         return response
 
-    @staticmethod
-    def getSpeakerPhraseTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
 
     @staticmethod
     def setSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
@@ -2332,9 +2285,6 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
         return response
 
-    @staticmethod
-    def getSpeakerMaxPhrases(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_MAX_PHRASES}
 
     @staticmethod
     def setSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
@@ -2354,9 +2304,6 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_MAX_PHRASES}
         return response
 
-    @staticmethod
-    def getHotkeys(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.HOTKEYS}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -2364,9 +2311,6 @@ class Controller:
         config.HOTKEYS = data
         return {"status":200, "result":config.HOTKEYS}
 
-    @staticmethod
-    def getPluginsStatus(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.PLUGINS_STATUS}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -2374,9 +2318,6 @@ class Controller:
         config.PLUGINS_STATUS = data
         return {"status":200, "result":config.PLUGINS_STATUS}
 
-    @staticmethod
-    def getSpeakerAvgLogprob(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
     @staticmethod
     def setSpeakerAvgLogprob(data, *args, **kwargs) -> dict:
@@ -2391,9 +2332,6 @@ class Controller:
         config.SPEAKER_AVG_LOGPROB = value
         return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
-    @staticmethod
-    def getSpeakerNoSpeechProb(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
     @staticmethod
     def setSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
@@ -2408,9 +2346,6 @@ class Controller:
         config.SPEAKER_NO_SPEECH_PROB = value
         return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
-    @staticmethod
-    def getOscIpAddress(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OSC_IP_ADDRESS}
 
     def setOscIpAddress(self, data, *args, **kwargs) -> dict:
         if isValidIpAddress(data) is False:
@@ -2440,9 +2375,6 @@ class Controller:
                 )
         return response
 
-    @staticmethod
-    def getOscPort(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OSC_PORT}
 
     @staticmethod
     def setOscPort(data, *args, **kwargs) -> dict:
@@ -2458,9 +2390,6 @@ class Controller:
         model.setOscPort(config.OSC_PORT)
         return {"status":200, "result":config.OSC_PORT}
 
-    @staticmethod
-    def getNotificationVrcSfx(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
     @staticmethod
     def setEnableNotificationVrcSfx(*args, **kwargs) -> dict:
@@ -2782,8 +2711,6 @@ class Controller:
     def checkTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         return self._checkTranslationEngineConnection("LMStudio", connect_kwargs={"base_url": config.LMSTUDIO_URL})
 
-    def getTranslatorLMStudioURL(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.LMSTUDIO_URL}
 
     def setTranslatorLMStudioURL(self, data, *args, **kwargs) -> dict:
         printLog("Set Translator LMStudio URL", data)
@@ -2916,9 +2843,6 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
-    @staticmethod
-    def getOpenAICompatibleURL(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OPENAI_COMPATIBLE_URL}
 
     def setOpenAICompatibleURL(self, data, *args, **kwargs) -> dict:
         """URL 変更時は「認証成功後に URL を確定」する順序を守る。
@@ -2988,11 +2912,7 @@ class Controller:
             )
         return response
 
-    def getOpenAICompatibleModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST}
 
-    def getOpenAICompatibleModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OPENAI_COMPATIBLE_MODEL}
 
     def setOpenAICompatibleModel(self, data, *args, **kwargs) -> dict:
         printLog("Set OpenAI Compatible Model", data)
@@ -3033,9 +2953,6 @@ class Controller:
     def setTranslatorOllamaModel(self, data, *args, **kwargs) -> dict:
         return self._setTranslationEngineModel("Ollama", data)
 
-    @staticmethod
-    def getCtranslate2WeightType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
     def setCtranslate2WeightType(data, *args, **kwargs) -> dict:
@@ -3043,9 +2960,6 @@ class Controller:
         model.setChangedTranslatorParameters(True)
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
-    @staticmethod
-    def getSelectedTranslationComputeType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_TYPE}
 
     @staticmethod
     def setSelectedTranslationComputeType(data, *args, **kwargs) -> dict:
@@ -3053,9 +2967,6 @@ class Controller:
         model.setChangedTranslatorParameters(True)
         return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_TYPE}
 
-    @staticmethod
-    def getWhisperWeightType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WHISPER_WEIGHT_TYPE}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -3063,9 +2974,6 @@ class Controller:
         config.WHISPER_WEIGHT_TYPE = str(data)
         return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
 
-    @staticmethod
-    def getSelectedTranscriptionComputeType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -3073,9 +2981,6 @@ class Controller:
         config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE = str(data)
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
 
-    @staticmethod
-    def getSendMessageFormatParts(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -3083,9 +2988,6 @@ class Controller:
         config.SEND_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
 
-    @staticmethod
-    def getReceivedMessageFormatParts(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
     @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
@@ -3093,9 +2995,6 @@ class Controller:
         config.RECEIVED_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
 
-    @staticmethod
-    def getAutoClearMessageBox(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
     @staticmethod
     def setEnableAutoClearMessageBox(*args, **kwargs) -> dict:
@@ -3109,9 +3008,6 @@ class Controller:
             config.AUTO_CLEAR_MESSAGE_BOX = False
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
-    @staticmethod
-    def getSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
@@ -3125,9 +3021,6 @@ class Controller:
             config.SEND_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
-    @staticmethod
-    def getOverlaySmallLog(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
@@ -3146,9 +3039,6 @@ class Controller:
             config.OVERLAY_SMALL_LOG = False
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
-    @staticmethod
-    def getOverlaySmallLogSettings(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS}
 
     @staticmethod
     def setOverlaySmallLogSettings(data, *args, **kwargs) -> dict:
@@ -3156,9 +3046,6 @@ class Controller:
         model.updateOverlaySmallLogSettings()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS}
 
-    @staticmethod
-    def getOverlayLargeLog(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
@@ -3177,9 +3064,6 @@ class Controller:
             config.OVERLAY_LARGE_LOG = False
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
-    @staticmethod
-    def getOverlayLargeLogSettings(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_LARGE_LOG_SETTINGS}
 
     @staticmethod
     def setOverlayLargeLogSettings(data, *args, **kwargs) -> dict:
@@ -3187,9 +3071,6 @@ class Controller:
         model.updateOverlayLargeLogSettings()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG_SETTINGS}
 
-    @staticmethod
-    def getOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setEnableOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
@@ -3203,9 +3084,6 @@ class Controller:
             config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
-    @staticmethod
-    def getSendMessageToVrc(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
     @staticmethod
     def setEnableSendMessageToVrc(*args, **kwargs) -> dict:
@@ -3219,9 +3097,6 @@ class Controller:
             config.SEND_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
-    @staticmethod
-    def getSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
     @staticmethod
     def setEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
@@ -3235,9 +3110,6 @@ class Controller:
             config.SEND_RECEIVED_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
-    @staticmethod
-    def getLoggerFeature(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.LOGGER_FEATURE}
 
     @staticmethod
     def setEnableLoggerFeature(*args, **kwargs) -> dict:
@@ -3253,9 +3125,6 @@ class Controller:
             config.LOGGER_FEATURE = False
         return {"status":200, "result":config.LOGGER_FEATURE}
 
-    @staticmethod
-    def getVrcMicMuteSync(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
@@ -3368,9 +3237,6 @@ class Controller:
                 model.updateOverlayLargeLog(overlay_image)
         return {"status":200, "result":data}
 
-    @staticmethod
-    def getTelemetry(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.ENABLE_TELEMETRY}
 
     @staticmethod
     def setEnableTelemetry(*args, **kwargs) -> dict:
@@ -3838,9 +3704,6 @@ class Controller:
         model.stopWatchdog()
         return {"status":200, "result":True}
 
-    @staticmethod
-    def getWebSocketHost(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WEBSOCKET_HOST}
 
     @staticmethod
     def setWebSocketHost(data, *args, **kwargs) -> dict:
@@ -3880,9 +3743,6 @@ class Controller:
 
         return response
 
-    @staticmethod
-    def getWebSocketPort(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WEBSOCKET_PORT}
 
     @staticmethod
     def setWebSocketPort(data, *args, **kwargs) -> dict:
@@ -3925,9 +3785,6 @@ class Controller:
         """
         return {"status":200, "result":config.WEBSOCKET_AUTH_TOKEN}
 
-    @staticmethod
-    def getWebSocketServer(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WEBSOCKET_SERVER}
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
@@ -3960,9 +3817,6 @@ class Controller:
         return {"status":200, "result":config.WEBSOCKET_SERVER}
 
     # OBS Browser Source (local overlay for OBS)
-    @staticmethod
-    def getObsBrowserSource(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE}
 
     @staticmethod
     def setEnableObsBrowserSource(*args, **kwargs) -> dict:
@@ -4008,9 +3862,6 @@ class Controller:
             model.stopObsBrowserSourceServer()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE}
 
-    @staticmethod
-    def getObsBrowserSourcePort(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_PORT}
 
     @staticmethod
     def setObsBrowserSourcePort(data, *args, **kwargs) -> dict:
@@ -4071,9 +3922,6 @@ class Controller:
             },
         })
 
-    @staticmethod
-    def getObsBrowserSourceMaxMessages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
     def setObsBrowserSourceMaxMessages(self, data, *args, **kwargs) -> dict:
         try:
@@ -4088,9 +3936,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
-    @staticmethod
-    def getObsBrowserSourceDisplayDuration(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
     def setObsBrowserSourceDisplayDuration(self, data, *args, **kwargs) -> dict:
         try:
@@ -4105,9 +3950,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
-    @staticmethod
-    def getObsBrowserSourceFadeoutDuration(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
     def setObsBrowserSourceFadeoutDuration(self, data, *args, **kwargs) -> dict:
         try:
@@ -4122,9 +3964,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
-    @staticmethod
-    def getObsBrowserSourceFontSize(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
     def setObsBrowserSourceFontSize(self, data, *args, **kwargs) -> dict:
         try:
@@ -4139,9 +3978,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
-    @staticmethod
-    def getObsBrowserSourceFontColor(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
 
     def setObsBrowserSourceFontColor(self, data, *args, **kwargs) -> dict:
         color = str(data).strip()
@@ -4154,9 +3990,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
 
-    @staticmethod
-    def getObsBrowserSourceFontOutlineThickness(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
     def setObsBrowserSourceFontOutlineThickness(self, data, *args, **kwargs) -> dict:
         try:
@@ -4171,9 +4004,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
-    @staticmethod
-    def getObsBrowserSourceFontOutlineColor(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
 
     def setObsBrowserSourceFontOutlineColor(self, data, *args, **kwargs) -> dict:
         color = str(data).strip()
@@ -4187,9 +4017,6 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
 
     # Clipboard control
-    @staticmethod
-    def getClipboard(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.ENABLE_CLIPBOARD}
 
     @staticmethod
     def setEnableClipboard(*args, **kwargs) -> dict:
@@ -4926,3 +4753,34 @@ class Controller:
         self.updateConfigSettings()
 
         printLog("End Initialization")
+
+
+def _makeSimpleConfigGetter(attr_name: str):
+    """`_SIMPLE_CONFIG_GETTERS` の1エントリから、単純なgetterを生成する
+    (フェーズ3項目23)。以前はこの形の94個のメソッドが`controller.py`に
+    個別の`def`として並んでいた:
+
+        @staticmethod
+        def getUiLanguage(*args, **kwargs) -> dict:
+            return {"status":200, "result":config.UI_LANGUAGE}
+
+    ロジックが完全に同一な94個の関数定義を、1個のジェネレータ+
+    テーブルへ集約する。生成したメソッドは通常の`def`と同じ名前で
+    `Controller`クラスへ登録するため (`_registerSimpleConfigGetters()`
+    参照)、`mainloop.py`のルーティング (`controller.getUiLanguage`) や
+    既存テストからの直接呼び出しは一切変更不要。
+    """
+    def getter(*args, **kwargs) -> dict:
+        return {"status": 200, "result": getattr(config, attr_name)}
+    return getter
+
+
+def _registerSimpleConfigGetters() -> None:
+    for method_name, attr_name in _SIMPLE_CONFIG_GETTERS.items():
+        getter = _makeSimpleConfigGetter(attr_name)
+        getter.__name__ = method_name
+        getter.__qualname__ = f"Controller.{method_name}"
+        setattr(Controller, method_name, staticmethod(getter))
+
+
+_registerSimpleConfigGetters()
