@@ -658,13 +658,17 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 | 19 | watchdog のエスカレーション（グレースフル → タイムアウト後 `os._exit`）と one-shot 化 | B（18 と組み合わせて初めて「フリーズしたら確実に落ちる」が成立） |
 | 20 | `audio_queue` の有界化と `last_sample` 長の上限 | B（バックプレッシャの明示） |
 | 21 | `AudioLifecycleWorker` の mic/speaker 分割・重複除去・停止 API | B |
-| 22 | `Controller.__init__` への DI 導入 + `model.init()` を `Controller.init()` へ移動 | A |
+| 22 | `Controller.__init__` への DI 導入 + `model.init()` を `Controller.init()` へ移動 🟡 `c4793172`（DI引数のみ完了、詳細は下記補足） | A |
 | 23 | `Controller` のドメイン分割（17 完了後、単純 get/set のテーブル駆動化を先に） | A |
 | 24 | エラー契約の統一（ディスクリプタから例外 → 共通デコレータで `VRCTError` 化） | A |
 | 25 | `MessagePipeline` への 3 メソッド統合（過程で mic/speaker の非対称を仕様として決着） | A |
 | 26 | API キーの DPAPI 暗号化保存 | C |
 | 27 | Tauri CSP の明示的ポリシー設定 | C |
 | 28 | 依存関係の更新（Pillow / transformers）、直接 import の宣言、git 依存の SHA 固定、`pip-audit` の CI 組み込み | C |
+
+> **項目22の補足(部分完了)**: `Controller.__init__(self, config_override=None, model_override=None)` を追加し、既存の全呼び出し・`@patch("controller.model")` ベースのテストとの互換性を保ったままDIの足場を用意した(`self._config`/`self._model` として保持、現時点で実際に使っているのは `_bootstrapModel()` のみ)。
+>
+> `model.init()` を `Controller.init()` 側へ移動する変更も一度実装したが、実機検証で「VRCTをVRChatより先に起動するとOSCQueryが繋がらずミュート同期が壊れる」回帰を確認したため撤回した。後の調査で、この回帰自体は今回の変更と無関係な既存バグ(起動時1回きりの `setMuteSelfStatus()` がVRChat未起動時に失敗すると `mic_mute_status` が `None` のまま二度と回復しない構造的な問題)と判明し、`_VrchatOscQueryFoundListener`(zeroconfのイベント駆動監視)を追加して別途修正・実機検証済み(コミット同上)。ただし `model.init()` のタイミング変更自体を安全だと確証できていないため、保守的に元のタイミング(`Controller.__init__` から即時実行)のまま維持している。**残作業**: `model.init()` の `Controller.init()` への移動そのものは未完了。
 
 > **項目17の補足**: 当初想定した「翻訳エンジンを1つの型に統一」ではなく、実装を精査した結果、実際に構造が一致するエンジン群ごとに2つのレジストリへ分けた。
 > - `TRANSLATION_PROVIDER_REGISTRY`（認証キー + モデル一覧型）: Plamo/Gemini/OpenAI/Groq/OpenRouter の5エンジン。Gemini 1エンジンをパイロットとして通した後、残り4エンジンへ一括展開。
