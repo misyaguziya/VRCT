@@ -13,8 +13,9 @@ const _Entry = forwardRef((props, ref) => {
             inputRef.current.blur();
         }
     }));
+    const is_disabled = props.is_disabled || false;
     const input_class_names = clsx(styles.entry_input_area, {
-        [styles.is_disabled]: props.is_disabled,
+        [styles.is_disabled]: is_disabled,
     });
     const input_wrapper_class_names = clsx(styles.entry_wrapper, {
         [styles.is_activated]: props.is_activated,
@@ -42,7 +43,7 @@ const _Entry = forwardRef((props, ref) => {
                     ref={inputRef}
                     placeholder={props.placeholder ? props.placeholder : ""}
                     className={input_class_names}
-                    value={props.ui_variable === null ? "" : props.ui_variable}
+                    value={props.ui_variable ?? ""}
                     onChange={(e) => props.onChange?.(e)}
                     onFocus={(e) => props.onFocus?.(e)}
                     onBlur={(e) => props.onBlur?.(e)}
@@ -53,6 +54,7 @@ const _Entry = forwardRef((props, ref) => {
                         e.currentTarget.blur();
                     }}
                     readOnly={props.readOnly === true ? true : false}
+                    disabled={is_disabled}
                 />
             </div>
         </div>
