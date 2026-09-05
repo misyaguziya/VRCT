@@ -40,6 +40,10 @@ $default_loader_line_width: 0.2rem !default;
 }
 
 
+// Animation & Transition
+$progress_ease: cubic-bezier(0, 1, 0.75, 1);
+
+
 
 $toggle_background_color_on: var(--primary_400_color);
 $toggle_background_color_off: var(--dark_775_color);
