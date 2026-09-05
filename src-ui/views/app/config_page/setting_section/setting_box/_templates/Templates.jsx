@@ -24,12 +24,6 @@ import {
 import { Checkbox } from "@common_components";
 import { useI18n } from "@useI18n";
 
-export const useOnMouseLeaveDropdownMenu = () => {
-    // Deprecated: Dropdown menu closing is now handled via outside click and Escape key in _DropdownMenu
-    const onMouseLeaveFunction = () => {};
-    return { onMouseLeaveFunction };
-};
-
 export const DropdownMenuContainer = (props) => {
     return (
         <TemplatesContainerWrapper {...props}>
@@ -55,7 +49,6 @@ const TemplatesContainerWrapper = ({
     add_break_point = true,
     flex_column = false,
     remove_border_bottom = false,
-    onMouseLeaveFunction = null,
 }) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
@@ -66,7 +59,7 @@ const TemplatesContainerWrapper = ({
     });
 
     return (
-        <div className={container_class} onMouseLeave={onMouseLeaveFunction}>
+        <div className={container_class}>
             {children}
         </div>
     );
