@@ -42,7 +42,7 @@ export const Checkbox = ({
                 )}
                 <span className={styles.cbx}>
                     <svg viewBox="0 0 12 12">
-                        <polyline points="1 6.29411765 4.5 10 11 1"></polyline>
+                        <polyline points="1.2 6.79411765 4.6 10.5 11.1 1.5" pathLength="1"></polyline>
                     </svg>
                 </span>
             </label>
