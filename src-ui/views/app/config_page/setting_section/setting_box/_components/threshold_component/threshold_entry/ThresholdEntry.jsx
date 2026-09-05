@@ -1,17 +1,10 @@
-import clsx from "clsx";
 import { useEffect, useRef, useState } from "react";
-import styles from "./ThresholdEntry.module.scss";
+import { _Entry } from "../../_atoms/_entry/_Entry";
 
 const INPUT_DEBOUNCE_DELAY = 1000; // ms
 
 export const ThresholdEntry = (props) => {
-    return (
-        <div className={styles.container}>
-            <div className={styles.entry_wrapper}>
-                <ThresholdEntryInput {...props} />
-            </div>
-        </div>
-    );
+    return <ThresholdEntryInput {...props} />;
 };
 
 const ThresholdEntryInput = (props) => {
@@ -118,29 +111,21 @@ const ThresholdEntryInput = (props) => {
         commitValue(inputValue);
     };
 
-    const onKeyDownFunction = (e) => {
-        if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
-            e.preventDefault();
-            commitValue(inputValue);
-            e.currentTarget.blur();
-        }
+    const handleEnterPressed = (e) => {
+        commitValue(inputValue);
+        e.target.blur();
     };
 
-    const class_names = clsx(styles.entry_input_area, {
-        [styles.is_disable]: props.is_disable,
-    });
-
     return (
-        <input
+        <_Entry
+            width="6rem"
             type="number"
-            className={class_names}
-            value={inputValue}
+            ui_variable={inputValue}
             onChange={onChangeFunction}
             onFocus={onFocusFunction}
             onBlur={onBlurFunction}
-            onKeyDown={onKeyDownFunction}
-            onWheel={(e) => e.currentTarget.blur()}
-            disabled={props.is_disable}
+            onEnterPressed={handleEnterPressed}
+            is_disabled={props.is_disable || props.is_disabled}
         />
     );
 };
