@@ -444,6 +444,7 @@ config_page:
 
     notifications:
         save_success: "設定已儲存。"
+        opened_folder: "已開啟檔案夾。"
 
 plugin_notifications:
     downloading: "正在下載外掛程式。"

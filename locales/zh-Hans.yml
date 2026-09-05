@@ -444,6 +444,7 @@ config_page:
 
     notifications:
         save_success: "设置已保存。"
+        opened_folder: "已打开文件夹。"
 
 plugin_notifications:
     downloading: "正在下载插件。"
