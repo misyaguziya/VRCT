@@ -23,6 +23,7 @@ import {
 import { Checkbox } from "@common_components";
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
+import CheckMarkSvg from "@images/check_mark.svg?react";
 
 export const Others = () => {
     const { t } = useI18n();
@@ -98,6 +99,8 @@ const AutoExportMessageLogsContainer = () => {
             <div className={styles.auto_export_message_logs_switch_section_container}>
                 <ActionButton
                     IconComponent={OpenFolderSvg}
+                    ClickedIconComponent={CheckMarkSvg}
+                    clicked_duration={1000}
                     onclickFunction={openFolder_MessageLogs}
                 />
                 <Checkbox

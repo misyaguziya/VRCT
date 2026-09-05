@@ -444,6 +444,7 @@ config_page:
 
     notifications:
         save_success: "설정을 저장했습니다."
+        opened_folder: "폴더를 열었습니다."
 
 plugin_notifications:
     downloading: "플러그인을 다운로드 중입니다."
