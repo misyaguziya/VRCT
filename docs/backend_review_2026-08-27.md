@@ -657,7 +657,7 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 | 18 | stdout 出力を専用スレッド + 有界キューに移行、フロントエンド消失時の自己終了 🟢 `c9ff7bd4`（詳細は下記補足） | B（35 秒フリーズ + `Errno 22` の根本対策） |
 | 19 | watchdog のエスカレーション（グレースフル → タイムアウト後 `os._exit`）と one-shot 化 🟢 `853bc8ca`（詳細は下記補足） | B（18 と組み合わせて初めて「フリーズしたら確実に落ちる」が成立） |
 | 20 | `audio_queue` の有界化と `last_sample` 長の上限 🟢 `88b1c1d2`（詳細は下記補足） | B（バックプレッシャの明示） |
-| 21 | `AudioLifecycleWorker` の mic/speaker 分割・重複除去・停止 API | B |
+| 21 | `AudioLifecycleWorker` の mic/speaker 分割・重複除去・停止 API 🟢 `3b77d16c`（詳細は下記補足） | B |
 | 22 | `Controller.__init__` への DI 導入 + `model.init()` を `Controller.init()` へ移動 🟢 `c2b61fa5`（詳細は下記補足） | A |
 | 23 | `Controller` のドメイン分割（17 完了後、単純 get/set のテーブル駆動化を先に） 🟡 `d6c67fae`（テーブル駆動化のみ完了、ドメイン分割は見送り、詳細は下記補足） | A |
 | 24 | エラー契約の統一（ディスクリプタから例外 → 共通デコレータで `VRCTError` 化） 🟢 `4ab9b521`（詳細は下記補足） | A |
@@ -694,6 +694,14 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 > 一方、`_AUDIO_QUEUE_MAXSIZE`(20チャンク、理論上最悪600秒分バッファしうる = last_sample側の60秒上限よりかなり大きい)はレビューで指摘されたが、到達には単発のWhisper推論呼び出しが10分近く返らない必要があり非現実的と判断しそのまま維持(コメントのみ実態を正直に修正)。内側の`except Full: pass`(現状の単一プロデューサ設計では到達不能)も、`utils.py`の既存パターンと完全に一致しており逸脱ではないため変更不要と判断。
 >
 > 新規/更新テスト13件を追加。全体500件を3回連続実行して安定を確認済み。
+>
+> **項目21の補足(2026-09-06, `3b77d16c`)**: mic/speakerが同一の`AudioLifecycleWorker`(単一スレッド・単一キュー)を共有しており、片方の重い処理(最大`TRANSCRIPT_STOP_JOIN_TIMEOUT`+`_MIC_OPEN_TIMEOUT_SEC`秒)の間、無関係なもう片方の操作まで無駄に足止めされていた(mic/speaker_lifecycle_lockを分けた意味が薄れる)。ただし調査の結果、これは「衝突」の問題ではなく「レスポンス性」の問題と判明: mic/speakerは別デバイスで衝突リスクは無く、実際のPortAudio呼び出し自体は`pyaudio_op_lock`で元々プロセス全体で直列化されている。ワーカー分離自体はドライバ競合対策ではなく、待つ必要のない処理を無駄に待たせないための変更、という位置づけで実施した。
+>
+> mic用・speaker用でインスタンスを分離し、`enqueue()`に`coalesce_key`を追加(ActiveEndpointTrackerの250ms周期からの冪等なreconfigure要求が積み上がるのを防ぐ)、`stop()`を追加して`Controller.shutdown()`から呼ぶようにした。
+>
+> 実装後に`/code-review`(xhigh)を実行し7件の指摘のうち6件を修正: (1) `enqueue()`の`_stopped`チェックと`queue.put()`が非アトミックで、`stop()`と競合するとコールバックが誰にも処理されないまま永久に消えるバグ→同じロックで保護し`enqueue()`はTrue/Falseを返すよう変更、200回競合させる回帰テストを追加。(2) `shutdown()`がworkerを止めることを検証するテストが無かった→追加。(3) 新設した2つの`stop()`呼び出しが直列で最大40秒追加していた→`ThreadPoolExecutor`で並行実行に変更(20秒に削減)。(4) watchdogの猶予秒数コメントが古いまま→更新。(5) 既存の`test_controller_audio.py`のシャットダウンテストが実際の共有singletonの workerを止めてしまい後続テストを汚染しうる→他の属性と同様にpatchして修正。(6) `coalesce_key`の「冪等な関数のみ渡してよい」という前提が`enqueue()`自体に書かれていない→docstring追加。1件(`model.stopReceiveOSC()`が誰からも呼ばれていない既存バグ)は、呼ぶと`serve_forever(10)`起因で最大10秒シャットダウンが伸びるトレードオフがあり見送ったが、その後のユーザーとの対話で「IP/ポート変更時にOSC機能の再起動が正しく行われるか」という懸念が挙がり調査した結果、`OSCHandler.setOscIpAddress`/`setOscPort`が独自に`oscServerStop()`+`receiveOscParameters()`を呼んで正しく再起動していることを確認(この関数とは無関係に動作)。`stopReceiveOSC()`自体は完全に未使用と判明したため削除した。
+>
+> 新規/更新テスト13件を追加。全体513件を3回連続実行して安定を確認済み。
 >
 > **項目22の補足**: `Controller.__init__(self, config_override=None, model_override=None)` を追加し、既存の全呼び出し・`@patch("controller.model")` ベースのテストとの互換性を保ったままDIの足場を用意した(`self._config`/`self._model` として保持、現時点で実際に使っているのは `_bootstrapModel()` のみ — このクラスの残り数千行はまだ裸のモジュールレベル `config`/`model` を直接参照しており、項目23の対象)。
 >
