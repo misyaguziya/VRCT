@@ -132,6 +132,22 @@ class ShutdownUsesLockedStopHelpersTests(unittest.TestCase):
         )
         self.assertEqual(result, {"status": 200, "result": True})
 
+    @patch("controller.device_manager")
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_shutdown_stops_both_lifecycle_workers(
+        self, mock_config, mock_model, mock_device_manager
+    ) -> None:
+        """コードレビュー指摘: 以前はこれを検証するテストが無く、
+        mic/speaker_lifecycle_worker.stop() の呼び出しが将来の変更で
+        消えても(項目21が直そうとした「shutdown()がworkerを一切止め
+        ない」バグの再発)、他のテストは何も気づけない状態だった。"""
+        mock_model.telemetryShutdown.return_value = None
+        self.controller.shutdown()
+
+        mock_model.mic_lifecycle_worker.stop.assert_called_once()
+        mock_model.speaker_lifecycle_worker.stop.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

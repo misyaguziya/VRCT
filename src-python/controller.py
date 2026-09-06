@@ -333,6 +333,20 @@ class Controller:
         finally:
             lock.release()
 
+    @staticmethod
+    def _stopWorkerForShutdown(worker) -> None:
+        """shutdown() 専用: AudioLifecycleWorker.stop() の例外を握りつぶす。
+
+        mic/speaker で独立したワーカーなので、shutdown() 側では
+        ThreadPoolExecutor で並行に stop() することで、直列に呼んだ場合の
+        最大2倍の待ち時間 (各最大 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC 秒)
+        を避ける (コードレビュー指摘)。
+        """
+        try:
+            worker.stop(timeout=_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC)
+        except Exception:
+            errorLogging()
+
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
 
@@ -367,6 +381,21 @@ class Controller:
             device_manager.stopMonitoring()
         except Exception:
             errorLogging()
+        # mic/speaker_lifecycle_worker を止め、以後の enqueue を無視する。
+        # ここで止めておかないと、シャットダウン中に届いた古いデバイス
+        # 通知やミュート同期の再送が、直後の _stopLockedForShutdown による
+        # リソース解放と競合しうる (フェーズ3項目21)。mic/speakerは互いに
+        # 無関係なので、直列ではなく並行に stop() する (コードレビュー指摘:
+        # 直列だと最大 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC 秒の2倍を
+        # 待ちうる。ここは watchdog の強制終了デッドライン
+        # [mainloop._WATCHDOG_GRACE_PERIOD_SEC] と競争している区間)。
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(self._stopWorkerForShutdown, model.mic_lifecycle_worker),
+                executor.submit(self._stopWorkerForShutdown, model.speaker_lifecycle_worker),
+            ]
+            for future in futures:
+                future.result()
         # 以下の4つは他の全ての start/stop 系 (mic/speaker_lifecycle_lock を
         # 保持する) と直列化する必要がある。ロック未取得のまま model.* を
         # 直接叩くと、AudioLifecycleWorker がまだ実行中の
@@ -1937,22 +1966,29 @@ class Controller:
         # を取得しつつ recorder の stop や PyAudio open を行う重い処理。
         # device_manager.monitoring() 自身のスレッドで直接実行すると、その間
         # monitoring が次の COM デバイス通知を取りこぼす。
-        # model.audio_lifecycle_worker 経由で専用スレッドに投げることで
+        # model.mic_lifecycle_worker 経由で専用スレッドに投げることで
         # monitoring は即座に呼び出しから戻れる。Before/After は同じ worker の
-        # FIFO キューで順序が保たれる。
+        # FIFO キューで順序が保たれる。speaker 側とはワーカーを分けており
+        # (フェーズ3項目21)、mic の重い処理が無関係な speaker 側の操作を
+        # 足止めしない。
         device_manager.setCallbackProcessBeforeUpdateMicDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessMicDevices)
+            lambda: model.mic_lifecycle_worker.enqueue(self.stopAccessMicDevices)
         )
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.setCallbackProcessAfterUpdateMicDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessMicDevices)
+            lambda: model.mic_lifecycle_worker.enqueue(self.restartAccessMicDevices)
         )
         # ActiveEndpointTracker が「実使用中エンドポイント」の切替を検知
         # したときは、Session の Recorder を新デバイスに 1 発で差し替える。
         # tracker スレッドをブロックしないよう worker 経由 + reconfigureMicDevice
-        # (Session の device 差分検知でリソース節約)。
+        # (Session の device 差分検知でリソース節約)。250ms周期で追いつけない
+        # ほど連続発火しても、常に「現在の状態」を読むだけの冪等な処理なので
+        # coalesce_key で重複投入をまとめ、無駄な実行 (1回最大20秒超) の
+        # 積み上がりを防ぐ (フェーズ3項目21)。
         device_manager.setCallbackEndpointReconfiguredMic(
-            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureMicDeviceLocked)
+            lambda: model.mic_lifecycle_worker.enqueue(
+                self._reconfigureMicDeviceLocked, coalesce_key="mic_reconfigure"
+            )
         )
         device_manager.forceUpdateAndSetMicDevices()
         # monitoring スレッドの起動判断は DeviceManager 側に集約
@@ -2167,16 +2203,19 @@ class Controller:
     def applyAutoSpeakerSelect(self) -> None:
         # 詳細は applyAutoMicSelect のコメント参照:
         # monitoring スレッドをブロックしないよう worker 経由で実行する。
+        # mic とはワーカーを分けている (フェーズ3項目21)。
         device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessSpeakerDevices)
+            lambda: model.speaker_lifecycle_worker.enqueue(self.stopAccessSpeakerDevices)
         )
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.setCallbackProcessAfterUpdateSpeakerDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessSpeakerDevices)
+            lambda: model.speaker_lifecycle_worker.enqueue(self.restartAccessSpeakerDevices)
         )
-        # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携)
+        # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携・coalesce_key)
         device_manager.setCallbackEndpointReconfiguredSpeaker(
-            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureSpeakerDeviceLocked)
+            lambda: model.speaker_lifecycle_worker.enqueue(
+                self._reconfigureSpeakerDeviceLocked, coalesce_key="speaker_reconfigure"
+            )
         )
         device_manager.forceUpdateAndSetSpeakerDevices()
         device_manager.setSpeakerAutoActive(True)

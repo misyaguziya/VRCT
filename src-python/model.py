@@ -15,7 +15,7 @@ from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
 from queue import Queue, Empty
-from threading import Thread
+from threading import Thread, Lock
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -187,19 +187,95 @@ class AudioLifecycleWorker:
     ここに enqueue することで monitoring スレッドは即座に呼び出しから
     戻れる。関数は FIFO で 1 つずつ実行されるため、
     Before → (デバイス列挙) → After の順序自体は保たれる。
+
+    フェーズ3項目21: 以前は mic/speaker が同じ1インスタンスを共有して
+    おり、片方の重い処理 (最大 TRANSCRIPT_STOP_JOIN_TIMEOUT +
+    _MIC_OPEN_TIMEOUT_SEC 秒) の間、無関係なもう片方の操作まで
+    無駄に足止めされていた (mic/speaker_lifecycle_lock を分けた意味が
+    薄れる)。呼び出し側 (model.py) で mic 用・speaker 用にそれぞれ
+    別インスタンスを持つことでこれを解消する。なお実際の PortAudio
+    呼び出し自体は pyaudio_op_lock で元々プロセス全体で直列化されて
+    いるため、この分離はドライバ競合対策ではなく、待つ必要のない
+    処理を無駄に待たせないための変更。
+
+    coalesce_key を指定すると、同じ key でまだ実行開始していない項目が
+    既にキューにある間は新規投入をスキップする。ActiveEndpointTracker
+    (250ms周期) からの reconfigure 要求のように、常に「現在の状態」を
+    読むだけの冪等な処理が実行速度を上回るペースで積み上がり、既に
+    古くなった内容を何度も無駄に実行し続ける (1回あたり最大20秒超)
+    のを防ぐ。実行が始まった項目の key は直ちにキューから外すため、
+    実行中に新しい要求が来れば改めて1件だけキューされる。
+    coalesce_key に渡す関数は、この「まだ実行開始していない重複は
+    捨てられる」性質上、引数を持たず常にその時点の「現在の状態」を
+    読むだけの冪等な処理である必要がある (呼び出し時点の特定の値を
+    クロージャで捕まえた関数を渡すと、後続の重複投入で握り潰される
+    可能性がある)。
+
+    enqueue()/stop() は同じロックで保護しており、「stop() 済みなのに
+    enqueue() がキューに積んでしまい、専用スレッドは既に終了していて
+    誰も処理しない」という取りこぼしが起きないようにしている
+    (コードレビュー指摘)。
     """
 
+    _STOP_SENTINEL = object()
+
     def __init__(self) -> None:
-        self._queue: "Queue[Callable[[], None]]" = Queue()
+        self._queue: "Queue[tuple]" = Queue()
+        self._pending_keys: set = set()
+        self._lock = Lock()
+        self._stopped = False
         self._thread = Thread(target=self._run, daemon=True)
         self._thread.start()
 
-    def enqueue(self, fn: Callable[[], None]) -> None:
-        self._queue.put(fn)
+    def enqueue(self, fn: Callable[[], None], coalesce_key: Optional[str] = None) -> bool:
+        """fn を専用スレッドで実行するようキューに積む。
+
+        coalesce_key を指定した場合、まだ実行開始していない同じ key の
+        項目が既にキューにあれば新規投入をスキップする (クラスの
+        docstring 参照。fn は引数を持たず常に現在の状態を読む冪等な
+        処理であること)。
+
+        Returns:
+            実際にキューへ積んだ場合は True。stop() 済み、または
+            coalesce_key が示す重複が既に保留中でスキップした場合は
+            False。
+        """
+        with self._lock:
+            if self._stopped:
+                return False
+            if coalesce_key is not None:
+                if coalesce_key in self._pending_keys:
+                    return False
+                self._pending_keys.add(coalesce_key)
+            self._queue.put((coalesce_key, fn))
+            return True
+
+    def stop(self, timeout: Optional[float] = None) -> None:
+        """新規 enqueue を以後無視し、専用スレッドを止める。
+
+        シャットダウン中に古いデバイス通知やミュート同期の再送が届いて
+        リソース解放と競合するのを防ぐために呼ぶ。enqueue() と同じ
+        ロックの下でフラグを立てて sentinel を積むため、「enqueue() が
+        stop() 済みでないことを確認した直後に stop() が完了してしまい、
+        その後に積んだ項目を誰も処理しない」という競合が起きない
+        (どちらか一方が先にロックを取り、その時点の状態で結果が
+        確定する)。
+        """
+        with self._lock:
+            if self._stopped:
+                return
+            self._stopped = True
+            self._queue.put((None, self._STOP_SENTINEL))
+        self._thread.join(timeout=timeout)
 
     def _run(self) -> None:
         while True:
-            fn = self._queue.get()
+            coalesce_key, fn = self._queue.get()
+            if fn is self._STOP_SENTINEL:
+                return
+            if coalesce_key is not None:
+                with self._lock:
+                    self._pending_keys.discard(coalesce_key)
             try:
                 fn()
             except Exception:
@@ -658,7 +734,10 @@ class Model:
         # session が管理する。
         self._mic_session = MicSession()
         self._speaker_session = SpeakerSession()
-        self.audio_lifecycle_worker = AudioLifecycleWorker()
+        # mic/speaker で別インスタンスにする理由は AudioLifecycleWorker の
+        # docstring 参照 (フェーズ3項目21)。
+        self.mic_lifecycle_worker = AudioLifecycleWorker()
+        self.speaker_lifecycle_worker = AudioLifecycleWorker()
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
@@ -1299,7 +1378,7 @@ class Model:
             # start/stop 系 (_stop()/_start() を実行中) と
             # _mic_session.pause()/resume() が無ロックで交錯し得る
             # (ミュート連打中にデバイスが切り替わると壊れた Recorder に
-            # 触れる)。audio_lifecycle_worker.enqueue() で Auto Select の
+            # 触れる)。mic_lifecycle_worker.enqueue() で Auto Select の
             # 他のデバイス操作と同じ FIFO キューに直列化しつつ、実行される
             # 関数自体は mic_mute_status_change_callback (= Controller の
             # mic_lifecycle_lock 付きラッパー) にすることで、ロックを直接
@@ -1307,12 +1386,12 @@ class Model:
             if config.VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mic_mute_status is False:
                     self.mic_mute_status = osc_arguments
-                    self.audio_lifecycle_worker.enqueue(
+                    self.mic_lifecycle_worker.enqueue(
                         self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
                     )
                 elif osc_arguments is False and self.mic_mute_status is True:
                     self.mic_mute_status = osc_arguments
-                    self.audio_lifecycle_worker.enqueue(
+                    self.mic_lifecycle_worker.enqueue(
                         self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
                     )
 
@@ -1321,10 +1400,6 @@ class Model:
         }
         self.osc_handler.setDictFilterAndTarget(dict_filter_and_target)
         self.osc_handler.receiveOscParameters()
-
-    def stopReceiveOSC(self):
-        self.ensure_initialized()
-        self.osc_handler.oscServerStop()
 
     def getIsOscQueryEnabled(self):
         self.ensure_initialized()

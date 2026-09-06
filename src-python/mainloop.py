@@ -564,9 +564,12 @@ _ENDPOINT_LOCKED_MAX_RETRIES = 300  # 0.1s × 300 ≈ 30s (初期化完了を待
 # watchdog タイムアウト (フロントエンドからの feed 途絶) 検知後、
 # グレースフルな Main.stop() が完了しなくても確実にプロセスを終了させる
 # までの猶予秒数 (フェーズ3項目19)。Main.stop() 自体は理論上
-# 最大60秒近くかかりうる (mic/speaker 停止×2 + energy 停止×2 が
+# 最大80秒近くかかりうる (mic/speaker_lifecycle_worker の並行stop()が
+# 最大20秒 [フェーズ3項目21] + mic/speaker 停止×2 + energy 停止×2 が
 # それぞれ最大15秒の join タイムアウトを持つため) が、フリーズ検知後は
-# グレースフルさより「必ず終わる」ことを優先する。
+# グレースフルさより「必ず終わる」ことを優先する。この見積もりを超える
+# 場合でもプロセスは30秒で確実に終了するが、config保存やtelemetry送信
+# が間に合わない可能性がある。
 _WATCHDOG_GRACE_PERIOD_SEC = 30
 
 class Main:
