@@ -37,7 +37,7 @@ _CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
 
 from pydub import AudioSegment
 from errors import ErrorCode
-from utils import errorLogging
+from utils import errorLogging, printLog
 
 import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
@@ -45,6 +45,18 @@ warnings.simplefilter('ignore', RuntimeWarning)
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 GOOGLE_RECOGNIZE_TIMEOUT_SECONDS = 10
+
+# last_sample の長さ上限の下限値 (フェーズ3項目20)。last_sample は無音
+# ギャップが phrase_timeout 秒を超えるまでリセットされないため、発話・
+# 環境音が途切れないまま続くと無制限に伸び続け、推論がさらに遅くなって
+# もっと溜まる、という正のフィードバックループになりうる (audio_queue
+# 側の有界化 [model.py の _AUDIO_QUEUE_MAXSIZE] とあわせて対応)。
+# 実際に使う実効上限は _effectiveMaxLastSampleSeconds() が
+# self.phrase_timeout から動的に算出する (この定数はその下限)。
+# 固定値だけに頼ると、UI側の phrase_timeout/record_timeout の設定可能
+# 上限が将来変わった場合に追従できず、正常な長いフレーズを誤って
+# 切り詰めかねないため (レビュー指摘)。
+MAX_LAST_SAMPLE_SECONDS = 60
 
 
 class AudioTranscriber:
@@ -162,6 +174,12 @@ class AudioTranscriber:
             except Empty:
                 break
             self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+        # drainしたチャンク全件を反映した後に1回だけ上限を適用する。
+        # チャンク単位で毎回切り詰めても最終結果は同じだが (末尾切り出しは
+        # 冪等)、backlogが溜まっている時ほど無駄な大きいバイト列コピーが
+        # 繰り返されてしまうため、ここでまとめて行う (レビュー指摘、
+        # フェーズ3項目20)。
+        self._capLastSampleLength(self.audio_sources)
 
         # Google/API系はネットワーク経由のためエラーが一時的なことが多く、
         # 呼び出しの都度エラー状態をクリアして UI に古いエラーを残さない。
@@ -223,6 +241,35 @@ class AudioTranscriber:
 
         source_info["last_sample"] += data
         source_info["last_spoken"] = time_spoken
+
+    def _effectiveMaxLastSampleSeconds(self) -> int:
+        """last_sample の実効上限秒数。
+
+        MAX_LAST_SAMPLE_SECONDS を下限としつつ、self.phrase_timeout の
+        倍を下回らないようにする。以前は固定60秒だったが、UI側の
+        phrase_timeout/record_timeout の設定可能上限 (Transcription.jsx)
+        にコメントで依存するだけで、Python側には何の強制力も無かった
+        (レビュー指摘)。ユーザーが実際に設定した phrase_timeout から
+        動的に算出することで、UI側の上限が将来変わっても追従する。
+        """
+        return max(MAX_LAST_SAMPLE_SECONDS, self.phrase_timeout * 2)
+
+    def _capLastSampleLength(self, source_info: Dict[str, Any]) -> None:
+        """last_sample が実効上限を超えていたら、古い方 (先頭) から
+        切り捨てる (フェーズ3項目20)。sample_rate/sample_width/channels/
+        phrase_timeoutは常にint (config.py・speech_recognition側で保証)
+        なので、max_bytesは常にsample_width*channelsの正確な倍数になり
+        PCMサンプル境界はずれない。
+        """
+        frame_size = source_info["sample_width"] * source_info["channels"]
+        if frame_size <= 0:
+            return
+        max_bytes = source_info["sample_rate"] * frame_size * self._effectiveMaxLastSampleSeconds()
+        last_sample = source_info["last_sample"]
+        if max_bytes > 0 and len(last_sample) > max_bytes:
+            dropped_bytes = len(last_sample) - max_bytes
+            source_info["last_sample"] = last_sample[-max_bytes:]
+            printLog(f"last_sample exceeded its cap; dropped {dropped_bytes} bytes of the oldest audio")
 
     def processMicData(self) -> AudioData:
         audio_data = AudioData(
