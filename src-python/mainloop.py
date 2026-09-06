@@ -5,7 +5,7 @@ import json
 import time
 import faulthandler
 from typing import Any, Tuple
-from threading import Thread, Event, Lock
+from threading import Thread, Event, Lock, Timer
 from queue import Queue, Empty
 import logging
 from controller import Controller  # noqa: E402
@@ -83,6 +83,7 @@ run_mapping = {
     "translation_engines":"/run/translation_engines",
     "selected_your_languages":"/run/selected_your_languages",
     "selected_target_languages":"/run/selected_target_languages",
+    "selectable_language_list":"/run/selectable_language_list",
 
     "selected_translation_compute_type":"/run/selected_translation_compute_type",
     "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
@@ -103,6 +104,14 @@ run_mapping = {
     "selected_openai_compatible_model":"/run/selected_openai_compatible_model",
     "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
     "selected_ollama_model":"/run/selected_ollama_model",
+    "selectable_groq_whisper_model_list":"/run/selectable_groq_whisper_model_list",
+    "selected_groq_whisper_model":"/run/selected_groq_whisper_model",
+    "selectable_openai_whisper_model_list":"/run/selectable_openai_whisper_model_list",
+    "selected_openai_whisper_model":"/run/selected_openai_whisper_model",
+    "selectable_custom_whisper_model_list":"/run/selectable_custom_whisper_model_list",
+    "selected_custom_whisper_model":"/run/selected_custom_whisper_model",
+    "selectable_deepgram_model_list":"/run/selectable_deepgram_model_list",
+    "selected_deepgram_model":"/run/selected_deepgram_model",
 
     "selectable_mic_host_list":"/run/selectable_mic_host_list",
     "selectable_mic_device_list":"/run/selectable_mic_device_list",
@@ -159,6 +168,36 @@ mapping = {
     "/get/data/selectable_transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
     "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
+
+    "/get/data/groq_whisper_auth_key": {"status": True, "variable":controller.getGroqWhisperAuthKey},
+    "/set/data/groq_whisper_auth_key": {"status": True, "variable":controller.setGroqWhisperAuthKey},
+    "/delete/data/groq_whisper_auth_key": {"status": True, "variable":controller.delGroqWhisperAuthKey},
+    "/get/data/selectable_groq_whisper_model_list": {"status": True, "variable":controller.getGroqWhisperModelList},
+    "/get/data/selected_groq_whisper_model": {"status": True, "variable":controller.getGroqWhisperModel},
+    "/set/data/selected_groq_whisper_model": {"status": True, "variable":controller.setGroqWhisperModel},
+
+    "/get/data/openai_whisper_auth_key": {"status": True, "variable":controller.getOpenAIWhisperAuthKey},
+    "/set/data/openai_whisper_auth_key": {"status": True, "variable":controller.setOpenAIWhisperAuthKey},
+    "/delete/data/openai_whisper_auth_key": {"status": True, "variable":controller.delOpenAIWhisperAuthKey},
+    "/get/data/selectable_openai_whisper_model_list": {"status": True, "variable":controller.getOpenAIWhisperModelList},
+    "/get/data/selected_openai_whisper_model": {"status": True, "variable":controller.getOpenAIWhisperModel},
+    "/set/data/selected_openai_whisper_model": {"status": True, "variable":controller.setOpenAIWhisperModel},
+
+    "/get/data/custom_whisper_auth_key": {"status": True, "variable":controller.getCustomWhisperAuthKey},
+    "/set/data/custom_whisper_auth_key": {"status": True, "variable":controller.setCustomWhisperAuthKey},
+    "/delete/data/custom_whisper_auth_key": {"status": True, "variable":controller.delCustomWhisperAuthKey},
+    "/get/data/custom_whisper_url": {"status": True, "variable":controller.getCustomWhisperURL},
+    "/set/data/custom_whisper_url": {"status": True, "variable":controller.setCustomWhisperURL},
+    "/get/data/selectable_custom_whisper_model_list": {"status": True, "variable":controller.getCustomWhisperModelList},
+    "/get/data/selected_custom_whisper_model": {"status": True, "variable":controller.getCustomWhisperModel},
+    "/set/data/selected_custom_whisper_model": {"status": True, "variable":controller.setCustomWhisperModel},
+
+    "/get/data/deepgram_auth_key": {"status": True, "variable":controller.getDeepgramAuthKey},
+    "/set/data/deepgram_auth_key": {"status": True, "variable":controller.setDeepgramAuthKey},
+    "/delete/data/deepgram_auth_key": {"status": True, "variable":controller.delDeepgramAuthKey},
+    "/get/data/selectable_deepgram_model_list": {"status": True, "variable":controller.getDeepgramModelList},
+    "/get/data/selected_deepgram_model": {"status": True, "variable":controller.getDeepgramModel},
+    "/set/data/selected_deepgram_model": {"status": True, "variable":controller.setDeepgramModel},
 
     "/get/data/selectable_release_channels": {"status": True, "variable":controller.getSelectableReleaseChannels},
     "/get/data/release_channel": {"status": True, "variable":controller.getSelectedReleaseChannel},
@@ -274,7 +313,7 @@ mapping = {
 
     "/get/data/connected_lmstudio": {"status": True, "variable":controller.getTranslatorLMStudioConnection},
     "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
-    "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
+    "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLMStudioModelList},
     "/get/data/selected_lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
     "/set/data/selected_lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
     "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
@@ -522,6 +561,17 @@ _LOCK_BUSY_MAX_RETRIES = 400  # 0.05s × 400 ≈ 20s (同一ロックの処理�
 _ENDPOINT_LOCKED_RETRY_INTERVAL_SEC = 0.1
 _ENDPOINT_LOCKED_MAX_RETRIES = 300  # 0.1s × 300 ≈ 30s (初期化完了を待つ上限)
 
+# watchdog タイムアウト (フロントエンドからの feed 途絶) 検知後、
+# グレースフルな Main.stop() が完了しなくても確実にプロセスを終了させる
+# までの猶予秒数 (フェーズ3項目19)。Main.stop() 自体は理論上
+# 最大80秒近くかかりうる (mic/speaker_lifecycle_worker の並行stop()が
+# 最大20秒 [フェーズ3項目21] + mic/speaker 停止×2 + energy 停止×2 が
+# それぞれ最大15秒の join タイムアウトを持つため) が、フリーズ検知後は
+# グレースフルさより「必ず終わる」ことを優先する。この見積もりを超える
+# 場合でもプロセスは30秒で確実に終了するが、config保存やtelemetry送信
+# が間に合わない可能性がある。
+_WATCHDOG_GRACE_PERIOD_SEC = 30
+
 class Main:
     def __init__(self, controller_instance: Controller, mapping_data: dict, worker_count: int = DEFAULT_WORKER_COUNT) -> None:
         self.queue: "Queue[Tuple[str, Any, int]]" = Queue()
@@ -530,6 +580,10 @@ class Main:
         self.mapping = mapping_data
         self._threads: list[Thread] = []
         self._worker_count = worker_count
+
+        # watchdog エスカレーション (項目19) の二重発火防止用。
+        self._watchdog_escalation_lock: Lock = Lock()
+        self._watchdog_escalation_started: bool = False
 
         # エンドポイントごとの排他制御用 Lock を作成
         # enable/disable ペアは同じロックキーに正規化する
@@ -695,6 +749,40 @@ class Main:
             remaining = max(0.0, wait - (time.time() - start))
             th.join(timeout=remaining)
 
+    def escalateShutdown(self) -> None:
+        """watchdog タイムアウト (フロントエンドからの feed 途絶) 用の
+        コールバック (フェーズ3項目19)。
+
+        `stop()`(→ `controller.shutdown()`)がロック等で永久にブロック
+        し続けても、`_WATCHDOG_GRACE_PERIOD_SEC` 秒後には必ずプロセスを
+        終了させる。ハードデッドライン用の `Timer` は他のロックに一切
+        触れないため、グレースフルな停止処理が何に詰まっていても影響
+        されず、確実に発火する。
+
+        watchdog のバックグラウンドスレッドは feed が来ない限りこの
+        コールバックを interval (既定20秒) ごとに呼び続けるため、
+        二重に停止処理・タイマーを積み上げないよう一度だけ実行する。
+        """
+        with self._watchdog_escalation_lock:
+            if self._watchdog_escalation_started:
+                return
+            self._watchdog_escalation_started = True
+
+        hard_deadline = Timer(_WATCHDOG_GRACE_PERIOD_SEC, os._exit, args=(1,))
+        hard_deadline.daemon = True
+        hard_deadline.start()
+
+        def _gracefulShutdownThenExit() -> None:
+            try:
+                self.stop()
+            except Exception:
+                errorLogging()
+            finally:
+                hard_deadline.cancel()
+                os._exit(0)
+
+        Thread(target=_gracefulShutdownThenExit, name="WatchdogEscalatedShutdown", daemon=True).start()
+
 # 外部から参照可能なインスタンスを提供
 main_instance = Main(controller_instance=controller, mapping_data=mapping)
 
@@ -702,7 +790,7 @@ if __name__ == "__main__":
     main_instance.startReceiver()
     main_instance.startHandler()
 
-    main_instance.controller.setWatchdogCallback(main_instance.stop)
+    main_instance.controller.setWatchdogCallback(main_instance.escalateShutdown)
     main_instance.controller.init()
 
     # mappingのすべてのstatusをTrueにする

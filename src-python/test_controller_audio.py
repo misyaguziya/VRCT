@@ -133,6 +133,12 @@ class TestShutdownStopsAutoSelectTrackers(unittest.TestCase):
     @patch("controller.model.stopCheckMicEnergy", return_value=None)
     @patch("controller.model.stopSpeakerTranscript", return_value=None)
     @patch("controller.model.stopMicTranscript", return_value=None)
+    # mic/speaker_lifecycle_worker はプロセス全体で共有される実インスタンス
+    # (Model.__init__ で1回だけ生成)。ここを個別にpatchせずに shutdown() を
+    # 呼ぶと、実物の .stop() が呼ばれて _stopped=True のまま元に戻せず、
+    # 同じプロセス内で後から走る他のテストに影響しうる (コードレビュー指摘)。
+    @patch("controller.model.speaker_lifecycle_worker")
+    @patch("controller.model.mic_lifecycle_worker")
     @patch("controller.device_manager")
     def test_stops_both_trackers_before_stopping_monitoring(self, mock_device_manager, *_mocks) -> None:
         calls = []
@@ -162,6 +168,8 @@ class TestShutdownStopsAutoSelectTrackers(unittest.TestCase):
     @patch("controller.model.stopCheckMicEnergy", return_value=None)
     @patch("controller.model.stopSpeakerTranscript", return_value=None)
     @patch("controller.model.stopMicTranscript", return_value=None)
+    @patch("controller.model.speaker_lifecycle_worker")
+    @patch("controller.model.mic_lifecycle_worker")
     @patch("controller.device_manager")
     def test_other_shutdown_steps_still_run_if_tracker_stop_raises(
         self, mock_device_manager, _mock_error_logging, *_mocks

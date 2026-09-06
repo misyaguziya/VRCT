@@ -14,8 +14,8 @@ from os import stat as os_stat
 from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
-from queue import Queue
-from threading import Thread
+from queue import Queue, Empty
+from threading import Thread, Lock
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -34,6 +34,13 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer, backwardCompatibleRenameWeightsDir
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
+from models.transcription.transcription_openai_compatible import checkTranscriptionApiKey, getAvailableTranscriptionModels
+from models.transcription.transcription_deepgram import (
+    checkDeepgramApiKey,
+    getAvailableDeepgramModels,
+    getAvailableDeepgramModelsDetailed,
+    isLanguageSupportedByDeepgramModel,
+)
 from models.transliteration.transliteration_transliterator import Transliterator
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
@@ -93,6 +100,20 @@ class ReleaseInfo:
     version: str
     is_prerelease: bool
     published_at: str
+
+
+# audio_queue の有界化 (フェーズ3項目20)。文字起こしが実時間に追いつけ
+# ない状況 (例: CPUでWhisper large-v3) で無制限に溜まると、drain時に
+# last_sample がまとめて連結されて音声が長くなり、推論がさらに遅くなって
+# もっと溜まる、という正のフィードバックループになる
+# (transcription_transcriber.py 側の last_sample 長上限とあわせて対応)。
+# 1チャンクは最大 record_timeout 秒 (UI 設定上限30秒) なので、理論上の
+# 最悪ケースでは 20 チャンク × 30秒 = 最大600秒分の生音声をキュー自体が
+# 保持しうる (last_sample 側の安全マージンより大きい)。ただしこれに
+# 到達するには単発の推論呼び出しが10分近く返らない必要があり非現実的
+# なため、値はそのまま維持する (レビューで指摘・検討済み)。20 は
+# 「文字起こしが実時間の何倍も遅れた」状態のみで発動する余裕を持たせた値。
+_AUDIO_QUEUE_MAXSIZE = 20
 
 
 class _DiscardQueue(Queue):
@@ -166,19 +187,95 @@ class AudioLifecycleWorker:
     ここに enqueue することで monitoring スレッドは即座に呼び出しから
     戻れる。関数は FIFO で 1 つずつ実行されるため、
     Before → (デバイス列挙) → After の順序自体は保たれる。
+
+    フェーズ3項目21: 以前は mic/speaker が同じ1インスタンスを共有して
+    おり、片方の重い処理 (最大 TRANSCRIPT_STOP_JOIN_TIMEOUT +
+    _MIC_OPEN_TIMEOUT_SEC 秒) の間、無関係なもう片方の操作まで
+    無駄に足止めされていた (mic/speaker_lifecycle_lock を分けた意味が
+    薄れる)。呼び出し側 (model.py) で mic 用・speaker 用にそれぞれ
+    別インスタンスを持つことでこれを解消する。なお実際の PortAudio
+    呼び出し自体は pyaudio_op_lock で元々プロセス全体で直列化されて
+    いるため、この分離はドライバ競合対策ではなく、待つ必要のない
+    処理を無駄に待たせないための変更。
+
+    coalesce_key を指定すると、同じ key でまだ実行開始していない項目が
+    既にキューにある間は新規投入をスキップする。ActiveEndpointTracker
+    (250ms周期) からの reconfigure 要求のように、常に「現在の状態」を
+    読むだけの冪等な処理が実行速度を上回るペースで積み上がり、既に
+    古くなった内容を何度も無駄に実行し続ける (1回あたり最大20秒超)
+    のを防ぐ。実行が始まった項目の key は直ちにキューから外すため、
+    実行中に新しい要求が来れば改めて1件だけキューされる。
+    coalesce_key に渡す関数は、この「まだ実行開始していない重複は
+    捨てられる」性質上、引数を持たず常にその時点の「現在の状態」を
+    読むだけの冪等な処理である必要がある (呼び出し時点の特定の値を
+    クロージャで捕まえた関数を渡すと、後続の重複投入で握り潰される
+    可能性がある)。
+
+    enqueue()/stop() は同じロックで保護しており、「stop() 済みなのに
+    enqueue() がキューに積んでしまい、専用スレッドは既に終了していて
+    誰も処理しない」という取りこぼしが起きないようにしている
+    (コードレビュー指摘)。
     """
 
+    _STOP_SENTINEL = object()
+
     def __init__(self) -> None:
-        self._queue: "Queue[Callable[[], None]]" = Queue()
+        self._queue: "Queue[tuple]" = Queue()
+        self._pending_keys: set = set()
+        self._lock = Lock()
+        self._stopped = False
         self._thread = Thread(target=self._run, daemon=True)
         self._thread.start()
 
-    def enqueue(self, fn: Callable[[], None]) -> None:
-        self._queue.put(fn)
+    def enqueue(self, fn: Callable[[], None], coalesce_key: Optional[str] = None) -> bool:
+        """fn を専用スレッドで実行するようキューに積む。
+
+        coalesce_key を指定した場合、まだ実行開始していない同じ key の
+        項目が既にキューにあれば新規投入をスキップする (クラスの
+        docstring 参照。fn は引数を持たず常に現在の状態を読む冪等な
+        処理であること)。
+
+        Returns:
+            実際にキューへ積んだ場合は True。stop() 済み、または
+            coalesce_key が示す重複が既に保留中でスキップした場合は
+            False。
+        """
+        with self._lock:
+            if self._stopped:
+                return False
+            if coalesce_key is not None:
+                if coalesce_key in self._pending_keys:
+                    return False
+                self._pending_keys.add(coalesce_key)
+            self._queue.put((coalesce_key, fn))
+            return True
+
+    def stop(self, timeout: Optional[float] = None) -> None:
+        """新規 enqueue を以後無視し、専用スレッドを止める。
+
+        シャットダウン中に古いデバイス通知やミュート同期の再送が届いて
+        リソース解放と競合するのを防ぐために呼ぶ。enqueue() と同じ
+        ロックの下でフラグを立てて sentinel を積むため、「enqueue() が
+        stop() 済みでないことを確認した直後に stop() が完了してしまい、
+        その後に積んだ項目を誰も処理しない」という競合が起きない
+        (どちらか一方が先にロックを取り、その時点の状態で結果が
+        確定する)。
+        """
+        with self._lock:
+            if self._stopped:
+                return
+            self._stopped = True
+            self._queue.put((None, self._STOP_SENTINEL))
+        self._thread.join(timeout=timeout)
 
     def _run(self) -> None:
         while True:
-            fn = self._queue.get()
+            coalesce_key, fn = self._queue.get()
+            if fn is self._STOP_SENTINEL:
+                return
+            if coalesce_key is not None:
+                with self._lock:
+                    self._pending_keys.discard(coalesce_key)
             try:
                 fn()
             except Exception:
@@ -246,6 +343,45 @@ class _AudioDeviceSession:
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
         raise NotImplementedError
 
+    @staticmethod
+    def _resolve_api_transcription_kwargs() -> dict:
+        """Groq/OpenAI/カスタムサーバー選択時のみ、対応する認証キー/URL/
+        モデルを config から解決して `AudioTranscriber` へ渡す kwargs を
+        作る。Google/ローカル Whisper 選択時は空の dict を返す (それらの
+        引数は `AudioTranscriber` 側で None がデフォルトのため無視される)。
+        """
+        engine = config.SELECTED_TRANSCRIPTION_ENGINE
+        if engine == "Groq_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Groq_Whisper"),
+                "base_url": config.GROQ_WHISPER_BASE_URL,
+                "api_model": config.SELECTED_GROQ_WHISPER_MODEL,
+            }
+        if engine == "OpenAI_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("OpenAI_Whisper"),
+                "base_url": config.OPENAI_WHISPER_BASE_URL,
+                "api_model": config.SELECTED_OPENAI_WHISPER_MODEL,
+            }
+        if engine == "Custom_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Custom_Whisper"),
+                "base_url": config.TRANSCRIPTION_CUSTOM_URL,
+                "api_model": config.SELECTED_CUSTOM_WHISPER_MODEL,
+            }
+        if engine == "Deepgram":
+            # Deepgram はエンドポイントが固定 (base_url入力欄が無い) ため
+            # base_urlは渡さない。api_model_languagesは、選択中モデルが
+            # 実際に対応していると申告している言語コード一覧
+            # (DeepgramProvider が候補言語1つに確定している場合に、
+            # 自動検出の代わりに明示的な language= を解決するために使う)。
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Deepgram"),
+                "api_model": config.SELECTED_DEEPGRAM_MODEL,
+                "api_model_languages": config.DEEPGRAM_MODEL_LANGUAGES.get(config.SELECTED_DEEPGRAM_MODEL, []),
+            }
+        return {}
+
     # --- 公開 API ---------------------------------------------------------
 
     def reconfigure(
@@ -302,9 +438,22 @@ class _AudioDeviceSession:
             self._recorder.pause()
 
     def resume(self) -> None:
+        # 以前は while not empty(): get() という non-atomic な
+        # チェック→ブロッキングgetだったため、_print_transcript
+        # スレッド (transcribeAudioQueue) が同時に同じキューを
+        # drainしていると、resume() が empty()==False を見た直後に
+        # その最後の1件を向こうに取られてしまい、後続のブロッキング
+        # get() が (もう誰も put しないため) 永久に返らずハングし、
+        # self._recorder.resume() が一生呼ばれなくなるバグがあった
+        # (レビューで指摘、実機ではVRChatの素早いミュート/アンミュート
+        # 切り替えで再現しうる)。get_nowait() のみを使えば、他スレッド
+        # と競合しても即座に Empty を返すだけでブロックし得ない。
         if isinstance(self._audio_queue, Queue):
-            while not self._audio_queue.empty():
-                self._audio_queue.get()
+            while True:
+                try:
+                    self._audio_queue.get_nowait()
+                except Empty:
+                    break
         if self._recorder is not None and callable(self._recorder.resume):
             self._recorder.resume()
 
@@ -334,8 +483,11 @@ class _AudioDeviceSession:
         try:
             self._recorder = self._create_recorder(device)
 
-            audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
-            energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
+            audio_queue = Queue(maxsize=_AUDIO_QUEUE_MAXSIZE) if "transcript" in self.features else _DiscardQueue()
+            # energy_queue はメーター表示用で直近の値のみ意味を持つため、
+            # audio_queue と同じ理由 (レビュー指摘、フェーズ3項目20) で
+            # 有界化する。maxsize=1 で「最新の未読み取り値のみ保持」にする。
+            energy_queue: Optional[Queue] = Queue(maxsize=1) if "energy" in self.features else None
             self._audio_queue = audio_queue
             self._recorder.recordIntoQueue(audio_queue, energy_queue)
         except Exception:
@@ -476,6 +628,7 @@ class MicSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            **self._resolve_api_transcription_kwargs(),
         )
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
@@ -533,6 +686,7 @@ class SpeakerSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            **self._resolve_api_transcription_kwargs(),
         )
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
@@ -580,7 +734,10 @@ class Model:
         # session が管理する。
         self._mic_session = MicSession()
         self._speaker_session = SpeakerSession()
-        self.audio_lifecycle_worker = AudioLifecycleWorker()
+        # mic/speaker で別インスタンスにする理由は AudioLifecycleWorker の
+        # docstring 参照 (フェーズ3項目21)。
+        self.mic_lifecycle_worker = AudioLifecycleWorker()
+        self.speaker_lifecycle_worker = AudioLifecycleWorker()
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
@@ -669,6 +826,22 @@ class Model:
 
     def downloadWhisperModelWeight(self, weight_type, callback=None, end_callback=None):
         return downloadWhisperWeight(config.PATH_LOCAL, weight_type, callback, end_callback)
+
+    def authenticationTranscriptionApiKey(self, api_key: str, base_url: str) -> bool:
+        return checkTranscriptionApiKey(api_key, base_url)
+
+    def getTranscriptionApiModelList(self, api_key: str, base_url: str, keyword_filter: Optional[list[str]] = None) -> list[str]:
+        return getAvailableTranscriptionModels(api_key, base_url, keyword_filter=keyword_filter)
+
+    def authenticationDeepgramApiKey(self, api_key: str) -> bool:
+        return checkDeepgramApiKey(api_key)
+
+    def getDeepgramModelList(self, api_key: str) -> list[str]:
+        return getAvailableDeepgramModels(api_key)
+
+    def getDeepgramModelListDetailed(self, api_key: str) -> list[dict]:
+        """モデル名と対応言語コード一覧つきで返す (UI向けメタデータ)。"""
+        return getAvailableDeepgramModelsDetailed(api_key)
 
     def resetKeywordProcessor(self):
         self.ensure_initialized()
@@ -838,14 +1011,25 @@ class Model:
     def getListLanguageAndCountry(self):
         """List every language any translation engine supports for the UI.
 
-        Deliberately NOT filtered to the currently selected engine: a user
-        should be able to pick any language up front, and if the selected
+        Deliberately NOT filtered by translation engine: a user should be
+        able to pick any language up front, and if the selected translation
         engine doesn't support it, the engine falls back instead (see
         Controller.updateTranslationEngineAndEngineList()). Filtering this
-        list by engine instead forces users to switch to a
+        list by translation engine instead forces users to switch to a
         broadly-compatible engine first, pick the language, then switch
         back - exactly the friction this list avoids.
+
+        This list IS filtered by the current TRANSCRIPTION engine, though
+        (see isLanguageSupportedByTranscriptionEngine()): transcription runs
+        before translation in the pipeline, so a language the transcription
+        engine can't recognize at all is useless to offer regardless of
+        translation engine support. Historically every entry in
+        transcription_lang was supported by both local engines (Google/
+        Whisper), so this filter was a no-op; Deepgram's language coverage
+        genuinely varies by model, so it's the first engine where this
+        matters.
         """
+        engine = config.SELECTED_TRANSCRIPTION_ENGINE
         transcription_langs = list(transcription_lang.keys())
         translation_langs = []
         for tl_key in translation_lang.keys():
@@ -856,6 +1040,8 @@ class Model:
         languages = []
         for language in supported_langs:
             for country in transcription_lang[language]:
+                if not self.isLanguageSupportedByTranscriptionEngine(engine, language, country):
+                    continue
                 languages.append(
                     {
                         "language" : language,
@@ -864,6 +1050,47 @@ class Model:
                 )
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
+
+    def isLanguageSupportedByTranscriptionEngine(self, engine: str, language: str, country: str) -> bool:
+        """VRCT の (Language, Country) を、指定した文字起こしエンジンが
+        対応しているかどうかを返す。
+
+        Google/Whisper/Groq_Whisper/OpenAI_Whisper/Custom_Whisper は
+        transcription_lang の全エントリを網羅しているため常に True
+        (Groq/OpenAI/カスタムサーバーはローカルWhisperと同じ言語コードを
+        使うため)。Deepgram だけは選択中のモデルが実際に申告する対応言語
+        一覧と動的に突き合わせる (isLanguageSupportedByDeepgramModel 参照)。
+        """
+        if language not in transcription_lang or country not in transcription_lang[language]:
+            return False
+        if engine == "Deepgram":
+            model_languages = config.DEEPGRAM_MODEL_LANGUAGES.get(config.SELECTED_DEEPGRAM_MODEL, [])
+            return isLanguageSupportedByDeepgramModel(language, country, model_languages)
+        return True
+
+    def getTranscriptionLanguagesForEngine(self, engine: str) -> list:
+        """指定した文字起こしエンジンが対応する (Language, Country) の一覧。"""
+        return [
+            {"language": language, "country": country}
+            for language, countries in transcription_lang.items()
+            for country in countries
+            if self.isLanguageSupportedByTranscriptionEngine(engine, language, country)
+        ]
+
+    def pickDefaultLanguageAndCountryForTranscriptionEngine(self, engine: str, avoid_languages) -> Optional[dict]:
+        """文字起こしエンジンが対応する言語を、日本語→英語の優先順で選ぶ
+        (翻訳側の pickDefaultLanguageForEngine と同じ考え方)。`avoid_languages`
+        に含まれる言語は避け、他のスロットとの衝突を防ぐ。
+        """
+        avoid_languages = set(avoid_languages)
+        for language, country in (("Japanese", "Japan"), ("English", "United States")):
+            if language not in avoid_languages and self.isLanguageSupportedByTranscriptionEngine(engine, language, country):
+                return {"language": language, "country": country}
+        for entry in self.getTranscriptionLanguagesForEngine(engine):
+            if entry["language"] not in avoid_languages:
+                return entry
+        # このエンジンが対応する言語が既に他スロットで使われている
+        return None
 
     def getTranslationLanguagesForEngine(self, engine: str) -> list[str]:
         """Friendly language names `engine` supports as a source language."""
@@ -1117,6 +1344,18 @@ class Model:
         self.ensure_initialized()
         self.mic_mute_status = self.osc_handler.getOSCParameterMuteSelf()
 
+    def watchForVrchatOscQueryConnection(self, on_found: Callable[[], None]) -> None:
+        """VRCTがVRChatより先に起動した場合でも、VRChatのOSCQueryサービスが
+        後から現れた瞬間に `on_found` を呼べるようにする (mDNSのイベント通知)。
+
+        `setMuteSelfStatus()` はその場限りの一発勝負のクエリなので、
+        VRChat未起動時に呼んでも `mic_mute_status` は `None` のままになる。
+        Controller.init() 側は、この監視を使って「見つかったら
+        setMuteSelfStatus() を再試行する」コールバックを登録する。
+        """
+        self.ensure_initialized()
+        self.osc_handler.waitForVrchatOscQueryConnectionAsync(on_found)
+
     def setMicMuteStatusChangeCallback(self, fn: Optional[Callable[[], None]]) -> None:
         """OSC ミュート同期が pause()/resume() を実行する際に呼ぶ関数を登録する。
 
@@ -1139,7 +1378,7 @@ class Model:
             # start/stop 系 (_stop()/_start() を実行中) と
             # _mic_session.pause()/resume() が無ロックで交錯し得る
             # (ミュート連打中にデバイスが切り替わると壊れた Recorder に
-            # 触れる)。audio_lifecycle_worker.enqueue() で Auto Select の
+            # 触れる)。mic_lifecycle_worker.enqueue() で Auto Select の
             # 他のデバイス操作と同じ FIFO キューに直列化しつつ、実行される
             # 関数自体は mic_mute_status_change_callback (= Controller の
             # mic_lifecycle_lock 付きラッパー) にすることで、ロックを直接
@@ -1147,12 +1386,12 @@ class Model:
             if config.VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mic_mute_status is False:
                     self.mic_mute_status = osc_arguments
-                    self.audio_lifecycle_worker.enqueue(
+                    self.mic_lifecycle_worker.enqueue(
                         self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
                     )
                 elif osc_arguments is False and self.mic_mute_status is True:
                     self.mic_mute_status = osc_arguments
-                    self.audio_lifecycle_worker.enqueue(
+                    self.mic_lifecycle_worker.enqueue(
                         self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
                     )
 
@@ -1161,10 +1400,6 @@ class Model:
         }
         self.osc_handler.setDictFilterAndTarget(dict_filter_and_target)
         self.osc_handler.receiveOscParameters()
-
-    def stopReceiveOSC(self):
-        self.ensure_initialized()
-        self.osc_handler.oscServerStop()
 
     def getIsOscQueryEnabled(self):
         self.ensure_initialized()

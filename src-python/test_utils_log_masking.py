@@ -96,7 +96,7 @@ class PrintLogMaskingTests(unittest.TestCase):
             captured.update(response)
 
         utils.process_logger.info = fake_info
-        with patch.object(utils, "_writeStdoutLine"):
+        with patch.object(utils, "_enqueueLogLine"):
             utils.printLog("Set OpenRouter Auth Key", "sk-or-REALSECRET")
         self.assertEqual(captured["data"], "***MASKED***")
 
@@ -107,7 +107,7 @@ class PrintLogMaskingTests(unittest.TestCase):
             captured.update(response)
 
         utils.process_logger.info = fake_info
-        with patch.object(utils, "_writeStdoutLine"):
+        with patch.object(utils, "_enqueueLogLine"):
             utils.printLog("Whisper file download failed, retrying (1/2)", "https://example.com/x.bin")
         self.assertEqual(captured["data"], "https://example.com/x.bin")
 
@@ -116,7 +116,7 @@ class PrintLogMaskingTests(unittest.TestCase):
         # response dict を書き出すため、マスクは stdout 側にも及ぶ必要がある。
         written = {}
         utils.process_logger.info = lambda response: None
-        with patch.object(utils, "_writeStdoutLine", lambda line: written.setdefault("line", line)):
+        with patch.object(utils, "_enqueueLogLine", lambda line: written.setdefault("line", line)):
             utils.printLog("Set OpenRouter Auth Key", "sk-or-REALSECRET")
         sent = json.loads(written["line"])
         self.assertEqual(sent["data"], "***MASKED***")
@@ -134,7 +134,7 @@ class PrintResponseMaskingTests(unittest.TestCase):
     def test_direct_sensitive_endpoint_masks_whole_result(self):
         captured = {}
         utils.process_logger.info = lambda response: captured.update(response)
-        with patch.object(utils, "_writeStdoutLine"):
+        with patch.object(utils, "_enqueueResponseLine"):
             utils.printResponse(200, "/get/data/openrouter_auth_key", "sk-or-REALSECRET")
         self.assertEqual(captured["result"], "***MASKED***")
 
@@ -148,7 +148,7 @@ class PrintResponseMaskingTests(unittest.TestCase):
             "/get/data/deepl_auth_key": None,
             "/get/data/ui_language": "en",
         }
-        with patch.object(utils, "_writeStdoutLine"):
+        with patch.object(utils, "_enqueueResponseLine"):
             utils.printResponse(200, "/run/initialization_complete", payload)
         self.assertEqual(captured["result"]["/get/data/openrouter_auth_key"], "***MASKED***")
         self.assertEqual(captured["result"]["/get/data/ui_language"], "en")
@@ -162,7 +162,7 @@ class PrintResponseMaskingTests(unittest.TestCase):
             written["line"] = line
 
         utils.process_logger.info = lambda response: None
-        with patch.object(utils, "_writeStdoutLine", fake_write):
+        with patch.object(utils, "_enqueueResponseLine", fake_write):
             utils.printResponse(200, "/get/data/openrouter_auth_key", "sk-or-REALSECRET")
         sent = json.loads(written["line"])
         self.assertEqual(sent["result"], "sk-or-REALSECRET")

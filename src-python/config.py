@@ -148,6 +148,32 @@ class ManagedDict(dict):
         self._save()
         return result
 
+    # dict のプレーンな `for k in d`/`len(d)`/`d == {...}`/`repr(d)` は
+    # dict の C レベル内部ストレージを直接見るため、上のメソッド群と違い
+    # `_get_internal()` を経由しない。プロパティを直接 (`config.X = {...}`)
+    # 一括再代入した後、既にキャッシュ済みの wrapper がこの一括再代入前の
+    # 内容のまま「見た目だけ」古くなる (実際の値は正しく保存されている)
+    # のを防ぐため、ここも明示的に委譲する。
+    def __iter__(self):
+        return iter(self._get_internal())
+
+    def __len__(self):
+        return len(self._get_internal())
+
+    def __eq__(self, other):
+        return self._get_internal() == other
+
+    def __ne__(self, other):
+        return self._get_internal() != other
+
+    def __repr__(self):
+        return repr(self._get_internal())
+
+    def __str__(self):
+        return str(self._get_internal())
+
+    __hash__ = None
+
 
 class ManagedList(list):
     """List wrapper that saves changes back to config."""
@@ -210,6 +236,24 @@ class ManagedList(list):
         super().insert(index, value)
         self._save()
 
+    # `list == [...]`/`repr(list)`/`str(list)` は list の C レベル内部
+    # ストレージを直接見るため (__iter__/__len__/__getitem__ とは違い)
+    # `_get_internal()` を経由しない。ManagedDict.__eq__ 等と同じ理由で
+    # 明示的に委譲する。
+    def __eq__(self, other):
+        return self._get_internal() == other
+
+    def __ne__(self, other):
+        return self._get_internal() != other
+
+    def __repr__(self):
+        return repr(self._get_internal())
+
+    def __str__(self):
+        return str(self._get_internal())
+
+    __hash__ = None
+
     def remove(self, value):
         super().remove(value)
         self._save()
@@ -230,6 +274,30 @@ class ManagedList(list):
     def reverse(self):
         super().reverse()
         self._save()
+
+
+class ConfigValidationError(Exception):
+    """`ManagedProperty`/`ValidatedProperty` が値を拒否した際に送出する
+    (フェーズ3項目24)。
+
+    以前はディスクリプタが不正な値をサイレントに無視していたため、
+    `/set/data/*` エンドポイントは「値が拒否されても200で成功を返す」
+    という誤った契約になっていた。呼び出し元 (主に controller.py の
+    `_configValidationErrorResponse` デコレータ) がこれを捕まえて
+    `VRCTError` の適切なエラーレスポンスへ変換する。
+
+    `ValidatedProperty` はバリデータが**全体を**拒否した場合 (`None` を
+    返した場合) のみ送出する。多くのバリデータ (`HOTKEYS` や
+    `SELECTED_TRANSLATION_ENGINES` 等) は「キー単位で不正な項目だけ
+    旧値にフォールバックする」設計を意図的に持っており
+    (`test_config_validated_property.py` で検証済み)、その場合は
+    `None` を返さず正常終了するため、この例外は送出されない
+    (=部分的なフォールバックは今まで通り黙って起こる、これは仕様)。
+    """
+    def __init__(self, attr_name: str, value):
+        self.attr_name = attr_name
+        self.value = value
+        super().__init__(f"Invalid value for {attr_name}: {value!r}")
 
 
 # Descriptor for simple managed config properties to reduce repetitive getters/setters.
@@ -280,7 +348,7 @@ class ManagedProperty:
 
         # Type check if requested（Noneは常に許可）
         if self.type_ is not None and value is not None and not isinstance(value, self.type_):
-            return
+            raise ConfigValidationError(self.name, value)
 
         # Allowed-values check: can be an iterable or a callable
         if self.allowed is not None:
@@ -290,16 +358,34 @@ class ManagedProperty:
                 except Exception:
                     ok = False
                 if not ok:
-                    return
+                    raise ConfigValidationError(self.name, value)
             else:
                 if value not in self.allowed:
-                    return
+                    raise ConfigValidationError(self.name, value)
 
         # Deep copy mutable types to prevent external reference issues
         if isinstance(value, (dict, list)):
             value = copy.deepcopy(value)
 
         setattr(instance, self.private_name, value)
+
+        # mutable_tracking の場合、既にキャッシュ済みの ManagedDict/ManagedList
+        # wrapper があれば、その「自分自身の (list/dict 基底クラスの) 内部
+        # ストレージ」は今回の一括再代入で更新されないまま残ってしまう。
+        # __getitem__ 等 (_get_internal() 経由) は生き残った wrapper でも
+        # 正しく新しい値を返すが、その後 wrapper 経由で1件でも変更
+        # (`config.X[key] = value` 等) が起きると、wrapper._save() が
+        # 「wrapper 自身の (古い) 基底ストレージ」を internal storage へ
+        # 書き戻してしまい、今回の一括再代入の内容を丸ごと消してしまう
+        # (単なる表示上の古さではなく実データの巻き戻り)。
+        # 古い wrapper を破棄し、次回アクセス時に今回の新しい値から
+        # 作り直させることでこれを防ぐ。
+        if self.mutable_tracking:
+            try:
+                delattr(instance, self.wrapper_cache_name)
+            except AttributeError:
+                pass
+
         # Persist change
         try:
             if self.serialize:
@@ -312,7 +398,8 @@ class ValidatedProperty:
     """Descriptor for complex validated properties.
 
     validator(value, instance) -> normalized_value | None
-    If returns None (or raises), value is ignored.
+    If it returns None (or raises), `ConfigValidationError` is raised and the
+    value is not stored (フェーズ3項目24; 以前はサイレントに無視していた)。
     """
     def __init__(self, name: str, validator, immediate_save: bool = False, serialize: bool = True):
         self.name = name
@@ -339,12 +426,18 @@ class ValidatedProperty:
         return stored
 
     def __set__(self, instance, value):
+        # NOTE(フェーズ3項目24): 送出するのはバリデータが値を「全体として」
+        # 拒否した場合 (None を返した/例外を送出した場合) のみ。多くの
+        # バリデータは「キー単位で不正な項目だけ旧値にフォールバックする」
+        # 設計を意図的に持っており (test_config_validated_property.py
+        # 参照)、その場合は non-None を返して正常終了するため送出されない
+        # (=部分的なフォールバックはこれまで通り黙って起こる、仕様通り)。
         try:
             normalized = self.validator(value, instance)
-        except Exception:
-            return
+        except Exception as e:
+            raise ConfigValidationError(self.name, value) from e
         if normalized is None:
-            return
+            raise ConfigValidationError(self.name, value)
         # Deep copy mutable types before storing, mirroring ManagedProperty.__set__,
         # so a caller that keeps a reference to the object it passed in (or that a
         # validator returned verbatim) can't mutate config's internal state later.
@@ -586,6 +679,12 @@ class Config:
     _HF_REPO_STABLE = "ms-software/VRCT"
     _HF_REPO_BETA = "ms-software/VRCT-beta"
 
+    # Groq/OpenAI 公式の音声書き起こしAPIのエンドポイントは固定 (ユーザー
+    # 編集不可)。カスタムサーバーのみ TRANSCRIPTION_CUSTOM_URL で
+    # ユーザーが指定する (issue #100 のローカル/LANサーバー向け)。
+    GROQ_WHISPER_BASE_URL = "https://api.groq.com/openai/v1"
+    OPENAI_WHISPER_BASE_URL = "https://api.openai.com/v1"
+
     @property
     def SETUP_DOWNLOAD_URL(self) -> str:
         repo = self._HF_REPO_BETA if self.SELECTED_RELEASE_CHANNEL == "beta" else self._HF_REPO_STABLE
@@ -690,6 +789,15 @@ class Config:
     SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_GROQ_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENAI_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_DEEPGRAM_MODEL_LIST = ManagedProperty('SELECTABLE_DEEPGRAM_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    # モデル名 -> 対応言語コード一覧 ({"nova-3": ["en", "ja", ...], ...})。
+    # DeepgramProvider は常に detect_language=true で呼ぶため文字起こし
+    # 処理自体はこの値を参照しないが、UI側で「選択したモデルがどの言語に
+    # 対応しているか」を表示できるようにするためのメタデータ。
+    DEEPGRAM_MODEL_LANGUAGES = ManagedProperty('DEEPGRAM_MODEL_LANGUAGES', type_=dict, serialize=False, mutable_tracking=True)
 
     # --- Save Json Data (ManagedProperty-based) ---
     # More simple boolean flags replaced with ManagedProperty
@@ -748,6 +856,20 @@ class Config:
     )
     LMSTUDIO_URL = ManagedProperty('LMSTUDIO_URL', type_=str)
     OPENAI_COMPATIBLE_URL = ManagedProperty('OPENAI_COMPATIBLE_URL', type_=str)
+
+    # --- 文字起こし用 API キー・URL (翻訳用の AUTH_KEYS/OPENAI_COMPATIBLE_URL とは
+    # 意図的に別管理にしている。レート制限/クォータの共有を避け、翻訳と
+    # 文字起こしで別々のキー・エンドポイントを使いたいケースに対応するため。
+    TRANSCRIPTION_AUTH_KEYS = ValidatedProperty('TRANSCRIPTION_AUTH_KEYS',
+        validator=lambda val, inst: (
+            {
+                k: (val[k] if (k in val and isinstance(val[k], (str, type(None)))) else inst.TRANSCRIPTION_AUTH_KEYS.get(k))
+                for k in inst.TRANSCRIPTION_AUTH_KEYS.keys()
+            }
+            if isinstance(val, dict) else None
+        )
+    )
+    TRANSCRIPTION_CUSTOM_URL = ManagedProperty('TRANSCRIPTION_CUSTOM_URL', type_=str)
 
     # --- Transcription settings ---
     SELECTED_TRANSCRIPTION_COMPUTE_TYPE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_TYPE', _selected_transcription_compute_type_validator)
@@ -824,6 +946,10 @@ class Config:
     SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
     SELECTED_OPENAI_COMPATIBLE_MODEL = ManagedProperty('SELECTED_OPENAI_COMPATIBLE_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'))
     SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
+    SELECTED_GROQ_WHISPER_MODEL = ManagedProperty('SELECTED_GROQ_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_WHISPER_MODEL_LIST'))
+    SELECTED_OPENAI_WHISPER_MODEL = ManagedProperty('SELECTED_OPENAI_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_WHISPER_MODEL_LIST'))
+    SELECTED_CUSTOM_WHISPER_MODEL = ManagedProperty('SELECTED_CUSTOM_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'))
+    SELECTED_DEEPGRAM_MODEL = ManagedProperty('SELECTED_DEEPGRAM_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_DEEPGRAM_MODEL_LIST'))
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
@@ -913,6 +1039,11 @@ class Config:
         self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
         self._SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
         self._SELECTABLE_OLLAMA_MODEL_LIST = []
+        self._SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_DEEPGRAM_MODEL_LIST = []
+        self._DEEPGRAM_MODEL_LANGUAGES = {}
 
         # Save Json Data
         ## Main Window
@@ -1021,6 +1152,13 @@ class Config:
             "Groq_API": None,
             "OpenRouter_API": None,
         }
+        self._TRANSCRIPTION_AUTH_KEYS = {
+            "Groq_Whisper": None,
+            "OpenAI_Whisper": None,
+            "Custom_Whisper": None,
+            "Deepgram": None,
+        }
+        self._TRANSCRIPTION_CUSTOM_URL = ""
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
@@ -1035,6 +1173,10 @@ class Config:
         self._OPENAI_COMPATIBLE_URL = "https://api.openai.com/v1"
         self._SELECTED_OPENAI_COMPATIBLE_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
+        self._SELECTED_GROQ_WHISPER_MODEL = None
+        self._SELECTED_OPENAI_WHISPER_MODEL = None
+        self._SELECTED_CUSTOM_WHISPER_MODEL = None
+        self._SELECTED_DEEPGRAM_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
@@ -1181,6 +1323,10 @@ class Config:
             ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
             ('SELECTED_OPENAI_COMPATIBLE_MODEL', 'SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'),
             ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
+            ('SELECTED_GROQ_WHISPER_MODEL', 'SELECTABLE_GROQ_WHISPER_MODEL_LIST'),
+            ('SELECTED_OPENAI_WHISPER_MODEL', 'SELECTABLE_OPENAI_WHISPER_MODEL_LIST'),
+            ('SELECTED_CUSTOM_WHISPER_MODEL', 'SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'),
+            ('SELECTED_DEEPGRAM_MODEL', 'SELECTABLE_DEEPGRAM_MODEL_LIST'),
         ]
         for sel_attr, list_attr in pairs:
             try:

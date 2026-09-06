@@ -4,13 +4,16 @@ from threading import Thread, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 import copy
+import functools
 import re
 import time
 from device_manager import device_manager
-from config import config
+from config import config, ConfigValidationError
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
+from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
+from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -30,6 +33,96 @@ _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
 # 万一ロックが本当に返ってこない場合でも終了処理自体を無期限に止めない。
 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC = 20.0
 
+# TRANSLATION_PROVIDER_REGISTRY (フェーズ3項目17) 登録エンジンの
+# 「認証/モデル一覧取得/モデル変更/クライアント更新」を model.py の
+# どのメソッド"名"に委譲するかの対応表。エンジンを1つレジストリに追加する際、
+# ここに4行足すだけで Controller._setTranslationEngineAuthKey 等の
+# 共通実装から使えるようになる (model.py 自体の各メソッドはこれまで通り
+# 個別に存在する — Translator ファサード層 (layer 1) は
+# authenticationRegistryAuthKey 等で既にレジストリ駆動になっているが、
+# model.py (layer 2) は薄い1行委譲のみで書き換える理由に乏しいため、
+# この対応表で拾う形にした)。
+#
+# 値をメソッド"名" (str) にしているのは、既存テストが
+# `@patch("controller.model")` で model シングルトンを丸ごとモックに
+# 差し替える方式に依存しているため。呼び出し時に `getattr(model, name)`
+# で毎回引き直すことで、モジュールロード時に実体の bound method を
+# キャッシュしてしまい patch が効かなくなる事故を避ける。
+_ENGINE_MODEL_BINDINGS = {
+    "Plamo_API": {
+        "authenticate": "authenticationTranslatorPlamoAuthKey",
+        "get_model_list": "getTranslatorPlamoModelList",
+        "set_model": "setTranslatorPlamoModel",
+        "update_client": "updateTranslatorPlamoClient",
+    },
+    "Gemini_API": {
+        "authenticate": "authenticationTranslatorGeminiAuthKey",
+        "get_model_list": "getTranslatorGeminiModelList",
+        "set_model": "setTranslatorGeminiModel",
+        "update_client": "updateTranslatorGeminiClient",
+    },
+    "OpenAI_API": {
+        "authenticate": "authenticationTranslatorOpenAIAuthKey",
+        "get_model_list": "getTranslatorOpenAIModelList",
+        "set_model": "setTranslatorOpenAIModel",
+        "update_client": "updateTranslatorOpenAIClient",
+    },
+    "Groq_API": {
+        "authenticate": "authenticationTranslatorGroqAuthKey",
+        "get_model_list": "getTranslatorGroqModelList",
+        "set_model": "setTranslatorGroqModel",
+        "update_client": "updateTranslatorGroqClient",
+    },
+    "OpenRouter_API": {
+        "authenticate": "authenticationTranslatorOpenRouterAuthKey",
+        "get_model_list": "getTranslatorOpenRouterModelList",
+        "set_model": "setTranslatorOpenRouterModel",
+        "update_client": "updateTranslatorOpenRouterClient",
+    },
+    # CONNECTION_PROVIDER_REGISTRY (疎通確認型) 用。"authenticate" は
+    # 「接続を確認する」呼び出しに読み替える (LMStudioはbase_url必須、
+    # Ollamaは引数なし — 呼び出し時の connect_kwargs で吸収する)。
+    "LMStudio": {
+        "authenticate": "authenticationTranslatorLMStudio",
+        "get_model_list": "getTranslatorLMStudioModelList",
+        "set_model": "setTranslatorLMStudioModel",
+        "update_client": "updateTranslatorLMStudioClient",
+    },
+    "Ollama": {
+        "authenticate": "authenticationTranslatorOllama",
+        "get_model_list": "getTranslatorOllamaModelList",
+        "set_model": "setTranslatorOllamaModel",
+        "update_client": "updateTranslatorOllamaClient",
+    },
+}
+
+
+def _configValidationErrorResponse(error_code: ErrorCode):
+    """設定値のディスクリプタ (config.py の ManagedProperty/ValidatedProperty)
+    が拒否した場合に `ConfigValidationError` を捕まえ、`VRCTError` の
+    エラーレスポンスへ変換するデコレータ (フェーズ3項目24)。
+
+    対象は「`config.X = data` して結果を返すだけ」の単純なエンドポイント
+    (例: `setUiLanguage`) — これまでは不正な値を渡されても、ディスクリプタが
+    サイレントに値を無視し、変化していない旧値を 200 (成功) で返していた
+    (`setUiLanguage(bad_value)` が「成功したが何も変わっていない」レスポンスに
+    なる、という誤った契約)。デコレータを付けるだけで、関数本体は一切
+    書き換えずに正しいエラー契約に直せる。
+
+    副作用を伴う (例: `self.run(...)` で他のpushを行う) エンドポイントには
+    使わないこと — 拒否時、副作用がどこまで実行された状態で例外に
+    なったかをこのデコレータは関知しない。
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except ConfigValidationError as e:
+                return VRCTError.create_error_response(error_code, data=e.value)
+        return wrapper
+    return decorator
+
 
 def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
     """DownloadCTranslate2 / DownloadWhisper の progressBar 用スロットル。
@@ -48,8 +141,136 @@ def _shouldEmitDownloadProgress(handler: Any, progress: float) -> bool:
         return True
     return False
 
+
+# config.py の値をそのまま返すだけの単純なgetterエンドポイント
+# (フェーズ3項目23)。エンドポイントメソッド名 -> config属性名の対応表。
+# 実際のメソッド生成・Controllerクラスへの登録は
+# _registerSimpleConfigGetters() 参照 (ファイル末尾)。
+_SIMPLE_CONFIG_GETTERS = {
+    "getVersion": "VERSION",
+    "getComputeMode": "COMPUTE_MODE",
+    "getComputeDeviceList": "SELECTABLE_COMPUTE_DEVICE_LIST",
+    "getSelectedTranslationComputeDevice": "SELECTED_TRANSLATION_COMPUTE_DEVICE",
+    "getSelectableCtranslate2WeightTypeDict": "SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT",
+    "getSelectedTranscriptionComputeDevice": "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE",
+    "getSelectedTabNo": "SELECTED_TAB_NO",
+    "getSelectedTranslationEngines": "SELECTED_TRANSLATION_ENGINES",
+    "getSelectedYourLanguages": "SELECTED_YOUR_LANGUAGES",
+    "getSelectedTargetLanguages": "SELECTED_TARGET_LANGUAGES",
+    "getSelectedTranscriptionEngine": "SELECTED_TRANSCRIPTION_ENGINE",
+    "getGroqWhisperModelList": "SELECTABLE_GROQ_WHISPER_MODEL_LIST",
+    "getGroqWhisperModel": "SELECTED_GROQ_WHISPER_MODEL",
+    "getOpenAIWhisperModelList": "SELECTABLE_OPENAI_WHISPER_MODEL_LIST",
+    "getOpenAIWhisperModel": "SELECTED_OPENAI_WHISPER_MODEL",
+    "getCustomWhisperURL": "TRANSCRIPTION_CUSTOM_URL",
+    "getCustomWhisperModelList": "SELECTABLE_CUSTOM_WHISPER_MODEL_LIST",
+    "getCustomWhisperModel": "SELECTED_CUSTOM_WHISPER_MODEL",
+    "getDeepgramModelList": "SELECTABLE_DEEPGRAM_MODEL_LIST",
+    "getDeepgramModel": "SELECTED_DEEPGRAM_MODEL",
+    "getSelectableReleaseChannels": "SELECTABLE_RELEASE_CHANNEL_LIST",
+    "getSelectedReleaseChannel": "SELECTED_RELEASE_CHANNEL",
+    "getConvertMessageToRomaji": "CONVERT_MESSAGE_TO_ROMAJI",
+    "getConvertMessageToHiragana": "CONVERT_MESSAGE_TO_HIRAGANA",
+    "getMainWindowSidebarCompactMode": "MAIN_WINDOW_SIDEBAR_COMPACT_MODE",
+    "getTransparency": "TRANSPARENCY",
+    "getUiScaling": "UI_SCALING",
+    "getTextboxUiScaling": "TEXTBOX_UI_SCALING",
+    "getMessageBoxRatio": "MESSAGE_BOX_RATIO",
+    "getSendMessageButtonType": "SEND_MESSAGE_BUTTON_TYPE",
+    "getShowResendButton": "SHOW_RESEND_BUTTON",
+    "getFontFamily": "FONT_FAMILY",
+    "getUiLanguage": "UI_LANGUAGE",
+    "getMainWindowGeometry": "MAIN_WINDOW_GEOMETRY",
+    "getAutoMicSelect": "AUTO_MIC_SELECT",
+    "getSelectedMicHost": "SELECTED_MIC_HOST",
+    "getSelectedMicDevice": "SELECTED_MIC_DEVICE",
+    "getMicThreshold": "MIC_THRESHOLD",
+    "getMicAutomaticThreshold": "MIC_AUTOMATIC_THRESHOLD",
+    "getMicRecordTimeout": "MIC_RECORD_TIMEOUT",
+    "getMicPhraseTimeout": "MIC_PHRASE_TIMEOUT",
+    "getMicMaxPhrases": "MIC_MAX_PHRASES",
+    "getMicWordFilter": "MIC_WORD_FILTER",
+    "getMicAvgLogprob": "MIC_AVG_LOGPROB",
+    "getMicNoSpeechProb": "MIC_NO_SPEECH_PROB",
+    "getAutoSpeakerSelect": "AUTO_SPEAKER_SELECT",
+    "getSelectedSpeakerDevice": "SELECTED_SPEAKER_DEVICE",
+    "getSpeakerThreshold": "SPEAKER_THRESHOLD",
+    "getSpeakerAutomaticThreshold": "SPEAKER_AUTOMATIC_THRESHOLD",
+    "getSpeakerRecordTimeout": "SPEAKER_RECORD_TIMEOUT",
+    "getSpeakerPhraseTimeout": "SPEAKER_PHRASE_TIMEOUT",
+    "getSpeakerMaxPhrases": "SPEAKER_MAX_PHRASES",
+    "getHotkeys": "HOTKEYS",
+    "getPluginsStatus": "PLUGINS_STATUS",
+    "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
+    "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
+    "getOscIpAddress": "OSC_IP_ADDRESS",
+    "getOscPort": "OSC_PORT",
+    "getNotificationVrcSfx": "NOTIFICATION_VRC_SFX",
+    "getTranslatorLMStudioURL": "LMSTUDIO_URL",
+    "getOpenAICompatibleURL": "OPENAI_COMPATIBLE_URL",
+    "getOpenAICompatibleModelList": "SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST",
+    "getOpenAICompatibleModel": "SELECTED_OPENAI_COMPATIBLE_MODEL",
+    "getCtranslate2WeightType": "CTRANSLATE2_WEIGHT_TYPE",
+    "getSelectedTranslationComputeType": "SELECTED_TRANSLATION_COMPUTE_TYPE",
+    "getWhisperWeightType": "WHISPER_WEIGHT_TYPE",
+    "getSelectedTranscriptionComputeType": "SELECTED_TRANSCRIPTION_COMPUTE_TYPE",
+    "getSendMessageFormatParts": "SEND_MESSAGE_FORMAT_PARTS",
+    "getReceivedMessageFormatParts": "RECEIVED_MESSAGE_FORMAT_PARTS",
+    "getAutoClearMessageBox": "AUTO_CLEAR_MESSAGE_BOX",
+    "getSendOnlyTranslatedMessages": "SEND_ONLY_TRANSLATED_MESSAGES",
+    "getOverlaySmallLog": "OVERLAY_SMALL_LOG",
+    "getOverlaySmallLogSettings": "OVERLAY_SMALL_LOG_SETTINGS",
+    "getOverlayLargeLog": "OVERLAY_LARGE_LOG",
+    "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
+    "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
+    "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
+    "getSendReceivedMessageToVrc": "SEND_RECEIVED_MESSAGE_TO_VRC",
+    "getLoggerFeature": "LOGGER_FEATURE",
+    "getVrcMicMuteSync": "VRC_MIC_MUTE_SYNC",
+    "getTelemetry": "ENABLE_TELEMETRY",
+    "getWebSocketHost": "WEBSOCKET_HOST",
+    "getWebSocketPort": "WEBSOCKET_PORT",
+    "getWebSocketServer": "WEBSOCKET_SERVER",
+    "getObsBrowserSource": "OBS_BROWSER_SOURCE",
+    "getObsBrowserSourcePort": "OBS_BROWSER_SOURCE_PORT",
+    "getObsBrowserSourceMaxMessages": "OBS_BROWSER_SOURCE_MAX_MESSAGES",
+    "getObsBrowserSourceDisplayDuration": "OBS_BROWSER_SOURCE_DISPLAY_DURATION",
+    "getObsBrowserSourceFadeoutDuration": "OBS_BROWSER_SOURCE_FADEOUT_DURATION",
+    "getObsBrowserSourceFontSize": "OBS_BROWSER_SOURCE_FONT_SIZE",
+    "getObsBrowserSourceFontColor": "OBS_BROWSER_SOURCE_FONT_COLOR",
+    "getObsBrowserSourceFontOutlineThickness": "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS",
+    "getObsBrowserSourceFontOutlineColor": "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR",
+    "getClipboard": "ENABLE_CLIPBOARD",
+}
+
 class Controller:
-    def __init__(self) -> None:
+    def __init__(self, config_override=None, model_override=None) -> None:
+        """
+        `config_override`/`model_override` はデフォルト引数注入
+        (フェーズ3項目22)。既定 (未指定) では、このモジュールが `from
+        config import config` / `from model import model` した
+        シングルトンをその場で (呼び出し時に) 参照するため、既存の全呼び出し
+        (`Controller()`) は無変更で動き、`@patch("controller.model")` の
+        ようなモジュール属性差し替えにも追従する。
+
+        NOTE: `def __init__(self, config=config, model=model)` のように
+        引数名をモジュールレベル名と揃えて既定値にする書き方は避けた —
+        デフォルト値は関数定義時 (＝モジュール import 時) に1回だけ評価
+        されるため、後から `@patch("controller.model")` で
+        `controller.model` を差し替えても、既に固定された既定値には反映
+        されない (実際にこれで既存テストを壊しかけた)。`config`/`model` を
+        関数本体側で毎回参照する今の形なら、呼び出し時点の最新の値を拾える。
+
+        テストや将来の DI 移行 (項目23) のために差し替えられるよう
+        `self._config`/`self._model` として保持するが、これはコンストラクタ
+        自体の足場に留まる: このクラスの残り数千行は引き続き裸のモジュール
+        レベル `config`/`model` を直接参照しており、今回それらを
+        `self._config`/`self._model` 経由に書き換えることはしていない
+        (影響範囲が大きすぎるため項目23の対象)。現時点で `self._model` を
+        実際に使っているのは `_bootstrapModel()` (下記) のみ。
+        """
+        self._config = config_override if config_override is not None else config
+        self._model = model_override if model_override is not None else model
         # typed attributes to satisfy static type checkers
         self.init_mapping: dict = {}
         self.run_mapping: dict = {}
@@ -67,21 +288,6 @@ class Controller:
         # 取るため、start*Message の中から呼ぶとデッドロックする)。
         self.mic_lifecycle_lock: Lock = Lock()
         self.speaker_lifecycle_lock: Lock = Lock()
-        # Ensure model is initialized at controller startup so existing
-        # attribute-based checks (e.g. model.overlay.initialized) continue to work.
-        try:
-            model.init()
-        except Exception:
-            # In test or headless environments initialization may fail; log and continue.
-            errorLogging()
-        try:
-            # OSC ミュート同期 (Model.changeHandlerMute, 任意の OSC 受信
-            # スレッドで走る) が pause()/resume() を mic_lifecycle_lock 配下
-            # で実行できるよう、ロック付きラッパーを Model 側のコールバック
-            # スロットへ登録する。
-            model.setMicMuteStatusChangeCallback(self._changeMicTranscriptStatusLocked)
-        except Exception:
-            errorLogging()
 
     def _is_overlay_available(self) -> bool:
         """Safe check whether overlay is present and initialized.
@@ -127,6 +333,20 @@ class Controller:
         finally:
             lock.release()
 
+    @staticmethod
+    def _stopWorkerForShutdown(worker) -> None:
+        """shutdown() 専用: AudioLifecycleWorker.stop() の例外を握りつぶす。
+
+        mic/speaker で独立したワーカーなので、shutdown() 側では
+        ThreadPoolExecutor で並行に stop() することで、直列に呼んだ場合の
+        最大2倍の待ち時間 (各最大 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC 秒)
+        を避ける (コードレビュー指摘)。
+        """
+        try:
+            worker.stop(timeout=_SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC)
+        except Exception:
+            errorLogging()
+
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
 
@@ -161,6 +381,21 @@ class Controller:
             device_manager.stopMonitoring()
         except Exception:
             errorLogging()
+        # mic/speaker_lifecycle_worker を止め、以後の enqueue を無視する。
+        # ここで止めておかないと、シャットダウン中に届いた古いデバイス
+        # 通知やミュート同期の再送が、直後の _stopLockedForShutdown による
+        # リソース解放と競合しうる (フェーズ3項目21)。mic/speakerは互いに
+        # 無関係なので、直列ではなく並行に stop() する (コードレビュー指摘:
+        # 直列だと最大 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC 秒の2倍を
+        # 待ちうる。ここは watchdog の強制終了デッドライン
+        # [mainloop._WATCHDOG_GRACE_PERIOD_SEC] と競争している区間)。
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(self._stopWorkerForShutdown, model.mic_lifecycle_worker),
+                executor.submit(self._stopWorkerForShutdown, model.speaker_lifecycle_worker),
+            ]
+            for future in futures:
+                future.result()
         # 以下の4つは他の全ての start/stop 系 (mic/speaker_lifecycle_lock を
         # 保持する) と直列化する必要がある。ロック未取得のまま model.* を
         # 直接叩くと、AudioLifecycleWorker がまだ実行中の
@@ -954,9 +1189,6 @@ class Controller:
                     ]
                 }}
 
-    @staticmethod
-    def getVersion(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.VERSION}
 
     def checkSoftwareUpdated(self) -> dict:
         software_update_info = model.checkSoftwareUpdated()
@@ -967,17 +1199,8 @@ class Controller:
         )
         return {"status":200, "result": software_update_info}
 
-    @staticmethod
-    def getComputeMode(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.COMPUTE_MODE}
 
-    @staticmethod
-    def getComputeDeviceList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_COMPUTE_DEVICE_LIST}
 
-    @staticmethod
-    def getSelectedTranslationComputeDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     def setSelectedTranslationComputeDevice(self, device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranslationComputeDevice", device)
@@ -987,13 +1210,7 @@ class Controller:
         model.setChangedTranslatorParameters(True)
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
-    @staticmethod
-    def getSelectableCtranslate2WeightTypeDict(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT}
 
-    @staticmethod
-    def getSelectedTranscriptionComputeDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
 
     def setSelectedTranscriptionComputeDevice(self, device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranscriptionComputeDevice", device)
@@ -1073,9 +1290,6 @@ class Controller:
             config.ENABLE_FOREGROUND = False
         return {"status":200, "result":config.ENABLE_FOREGROUND}
 
-    @staticmethod
-    def getSelectedTabNo(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TAB_NO}
 
     def setSelectedTabNo(self, selected_tab_no:str, *args, **kwargs) -> dict:
         printLog("setSelectedTabNo", selected_tab_no)
@@ -1117,9 +1331,6 @@ class Controller:
     def getSpeakerDeviceList(*args, **kwargs) -> dict:
         return {"status":200, "result": model.getListSpeakerDevice()}
 
-    @staticmethod
-    def getSelectedTranslationEngines(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
 
     def setSelectedTranslationEngines(self, data:dict, *args, **kwargs) -> dict:
         config.SELECTED_TRANSLATION_ENGINES = data
@@ -1129,18 +1340,12 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
-    @staticmethod
-    def getSelectedYourLanguages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_YOUR_LANGUAGES}
 
     def setSelectedYourLanguages(self, select:dict, *args, **kwargs) -> dict:
         config.SELECTED_YOUR_LANGUAGES = select
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.SELECTED_YOUR_LANGUAGES}
 
-    @staticmethod
-    def getSelectedTargetLanguages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TARGET_LANGUAGES}
 
     def setSelectedTargetLanguages(self, select:dict, *args, **kwargs) -> dict:
         config.SELECTED_TARGET_LANGUAGES = select
@@ -1152,24 +1357,463 @@ class Controller:
         engines = [key for key, value in config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS.items() if value is True]
         return {"status":200, "result":engines}
 
-    @staticmethod
-    def getSelectedTranscriptionEngine(*args, **kwargs) -> dict:
+
+    def setSelectedTranscriptionEngine(self, data, *args, **kwargs) -> dict:
+        # setSelectedTranslationEngines() -> updateTranslationEngineAndEngineList()
+        # と同じパターン: 希望値をまず渡し、可用性チェック・言語フォールバック・
+        # 言語リストのpushは updateTranscriptionEngine() 側に集約する。
+        self.updateTranscriptionEngine(requested_engine=str(data))
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
+    def fallbackUnsupportedLanguagesForTranscriptionEngine(self, engine: str) -> bool:
+        """文字起こしエンジンが切り替わった際、既に選択されている言語が
+        新しいエンジンで対応していなければデフォルト言語 (日本語/英語) へ
+        リセットする (翻訳側の fallbackUnsupportedLanguagesForEngine の
+        文字起こしエンジン版)。
+
+        SELECTED_TRANSCRIPTION_ENGINE はタブ横断のグローバル設定
+        (SELECTED_TRANSLATION_ENGINES と違いタブごとではない) なので、
+        全タブについて確認する。
+
+        Returns True if any language was reset.
+        """
+        changed = False
+
+        your_languages = copy.deepcopy(config.SELECTED_YOUR_LANGUAGES)
+        target_languages = copy.deepcopy(config.SELECTED_TARGET_LANGUAGES)
+
+        for tab_no in your_languages.keys():
+            your_language = your_languages[tab_no]["1"]
+            enabled_target_languages = {
+                target_language["language"]
+                for target_language in target_languages.get(tab_no, {}).values()
+                if target_language["enable"] is True
+            }
+            if not model.isLanguageSupportedByTranscriptionEngine(engine, your_language["language"], your_language["country"]):
+                default = model.pickDefaultLanguageAndCountryForTranscriptionEngine(engine, enabled_target_languages)
+                if default is not None:
+                    your_languages[tab_no]["1"] = {**default, "enable": True}
+                    changed = True
+                    your_language = your_languages[tab_no]["1"]
+
+            taken_languages = {your_language["language"]}
+            for target_language in target_languages.get(tab_no, {}).values():
+                if target_language["enable"] is not True:
+                    continue
+                if model.isLanguageSupportedByTranscriptionEngine(engine, target_language["language"], target_language["country"]):
+                    taken_languages.add(target_language["language"])
+                    continue
+                default = model.pickDefaultLanguageAndCountryForTranscriptionEngine(engine, taken_languages)
+                if default is not None:
+                    target_language["language"] = default["language"]
+                    target_language["country"] = default["country"]
+                    changed = True
+                taken_languages.add(target_language["language"])
+
+        if changed:
+            config.SELECTED_YOUR_LANGUAGES = your_languages
+            config.SELECTED_TARGET_LANGUAGES = target_languages
+            self.run(200, self.run_mapping["selected_your_languages"], config.SELECTED_YOUR_LANGUAGES)
+            self.run(200, self.run_mapping["selected_target_languages"], config.SELECTED_TARGET_LANGUAGES)
+
+        return changed
+
+    # ------------------------------------------------------------------
+    # Transcription API engines (Groq Whisper / OpenAI Whisper / カスタムサーバー)
+    #
+    # 翻訳側のエンジンと違い、文字起こし側にはエンジンごとの永続クライアント
+    # オブジェクトが存在しない (AudioTranscriber がセッション開始のたびに
+    # config の現在値からプロバイダを都度組み立てる設計のため、
+    # model.updateTranslatorXClient() に相当する呼び出しは不要)。
+    # モデル選択の検証も、翻訳側のようにクライアントへ問い合わせる
+    # model.setTranslatorXModel(...) 相当は行わず、
+    # SELECTABLE_*_MODEL_LIST に含まれているかどうかだけで判定する。
+    # ------------------------------------------------------------------
     @staticmethod
-    def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
-        config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
+    def getGroqWhisperAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["Groq_Whisper"]}
+
+    def setGroqWhisperAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Groq Whisper Auth Key")
+        engine = "Groq_Whisper"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationTranscriptionApiKey(api_key=data, base_url=config.GROQ_WHISPER_BASE_URL)
+                if result is True:
+                    model_list = model.getTranscriptionApiModelList(
+                        api_key=data, base_url=config.GROQ_WHISPER_BASE_URL, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                    )
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = model_list
+                        self.run(200, self.run_mapping["selectable_groq_whisper_model_list"], config.SELECTABLE_GROQ_WHISPER_MODEL_LIST)
+                        if config.SELECTED_GROQ_WHISPER_MODEL not in config.SELECTABLE_GROQ_WHISPER_MODEL_LIST:
+                            config.SELECTED_GROQ_WHISPER_MODEL = config.SELECTABLE_GROQ_WHISPER_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_groq_whisper_model"], config.SELECTED_GROQ_WHISPER_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delGroqWhisperAuthKey()
+        return response
+
+    def delGroqWhisperAuthKey(self, *args, **kwargs) -> dict:
+        engine = "Groq_Whisper"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
+        config.SELECTED_GROQ_WHISPER_MODEL = None
+        self.run(200, self.run_mapping["selectable_groq_whisper_model_list"], config.SELECTABLE_GROQ_WHISPER_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_groq_whisper_model"], config.SELECTED_GROQ_WHISPER_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+
 
     @staticmethod
-    def getSelectableReleaseChannels(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_RELEASE_CHANNEL_LIST}
+    def setGroqWhisperModel(data, *args, **kwargs) -> dict:
+        printLog("Set Groq Whisper Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_GROQ_WHISPER_MODEL_LIST:
+            config.SELECTED_GROQ_WHISPER_MODEL = data
+            return {"status":200, "result":config.SELECTED_GROQ_WHISPER_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_GROQ_WHISPER_MODEL
+        )
 
     @staticmethod
-    def getSelectedReleaseChannel(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_RELEASE_CHANNEL}
+    def getOpenAIWhisperAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["OpenAI_Whisper"]}
+
+    def setOpenAIWhisperAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Whisper Auth Key")
+        engine = "OpenAI_Whisper"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationTranscriptionApiKey(api_key=data, base_url=config.OPENAI_WHISPER_BASE_URL)
+                if result is True:
+                    model_list = model.getTranscriptionApiModelList(
+                        api_key=data, base_url=config.OPENAI_WHISPER_BASE_URL, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                    )
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = model_list
+                        self.run(200, self.run_mapping["selectable_openai_whisper_model_list"], config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
+                        if config.SELECTED_OPENAI_WHISPER_MODEL not in config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST:
+                            config.SELECTED_OPENAI_WHISPER_MODEL = config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_openai_whisper_model"], config.SELECTED_OPENAI_WHISPER_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delOpenAIWhisperAuthKey()
+        return response
+
+    def delOpenAIWhisperAuthKey(self, *args, **kwargs) -> dict:
+        engine = "OpenAI_Whisper"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
+        config.SELECTED_OPENAI_WHISPER_MODEL = None
+        self.run(200, self.run_mapping["selectable_openai_whisper_model_list"], config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_openai_whisper_model"], config.SELECTED_OPENAI_WHISPER_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+
 
     @staticmethod
+    def setOpenAIWhisperModel(data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Whisper Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST:
+            config.SELECTED_OPENAI_WHISPER_MODEL = data
+            return {"status":200, "result":config.SELECTED_OPENAI_WHISPER_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_OPENAI_WHISPER_MODEL
+        )
+
+    @staticmethod
+    def getCustomWhisperAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["Custom_Whisper"]}
+
+    def setCustomWhisperAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Custom Whisper Auth Key")
+        engine = "Custom_Whisper"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationTranscriptionApiKey(api_key=data, base_url=config.TRANSCRIPTION_CUSTOM_URL)
+                if result is True:
+                    # カスタムサーバーはどんなモデル名を使っているか分からないため絞り込まない
+                    model_list = model.getTranscriptionApiModelList(api_key=data, base_url=config.TRANSCRIPTION_CUSTOM_URL)
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
+                        self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                        if config.SELECTED_CUSTOM_WHISPER_MODEL not in config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST:
+                            config.SELECTED_CUSTOM_WHISPER_MODEL = config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delCustomWhisperAuthKey()
+        return response
+
+    def delCustomWhisperAuthKey(self, *args, **kwargs) -> dict:
+        engine = "Custom_Whisper"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+        config.SELECTED_CUSTOM_WHISPER_MODEL = None
+        self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+
+    def setCustomWhisperURL(self, data, *args, **kwargs) -> dict:
+        """URL 変更時は「認証成功後に URL を確定」する順序を守る
+        (翻訳側の OpenAI互換エンジンの setOpenAICompatibleURL と同じ)。
+
+        Auth Key が未設定の場合は URL だけ保存して終わる (次回 Auth Key 入力時に検証される)。
+        """
+        printLog("Set Custom Whisper URL", data)
+        engine = "Custom_Whisper"
+        try:
+            data = str(data).strip()
+            auth_key = config.TRANSCRIPTION_AUTH_KEYS[engine]
+
+            if not auth_key:
+                config.TRANSCRIPTION_CUSTOM_URL = data
+                return {"status":200, "result":config.TRANSCRIPTION_CUSTOM_URL}
+
+            result = model.authenticationTranscriptionApiKey(api_key=auth_key, base_url=data)
+            if result is True:
+                model_list = model.getTranscriptionApiModelList(api_key=auth_key, base_url=data)
+                if len(model_list) == 0:
+                    config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+                    config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+                    config.SELECTED_CUSTOM_WHISPER_MODEL = None
+                    self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                    self.updateTranscriptionEngine()
+                    response = VRCTError.create_error_response(
+                        ErrorCode.CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID,
+                        data=config.TRANSCRIPTION_CUSTOM_URL
+                    )
+                else:
+                    config.TRANSCRIPTION_CUSTOM_URL = data
+                    config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                    config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
+                    self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                    if config.SELECTED_CUSTOM_WHISPER_MODEL not in config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST:
+                        config.SELECTED_CUSTOM_WHISPER_MODEL = config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST[0]
+                    self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                    self.updateTranscriptionEngine()
+                    response = {"status":200, "result":config.TRANSCRIPTION_CUSTOM_URL}
+            else:
+                config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+                config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+                config.SELECTED_CUSTOM_WHISPER_MODEL = None
+                self.run(200, self.run_mapping["selectable_custom_whisper_model_list"], config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_custom_whisper_model"], config.SELECTED_CUSTOM_WHISPER_MODEL)
+                self.updateTranscriptionEngine()
+                response = VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID,
+                    data=config.TRANSCRIPTION_CUSTOM_URL
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.TRANSCRIPTION_CUSTOM_URL
+            )
+        return response
+
+
+
+    @staticmethod
+    def setCustomWhisperModel(data, *args, **kwargs) -> dict:
+        printLog("Set Custom Whisper Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST:
+            config.SELECTED_CUSTOM_WHISPER_MODEL = data
+            return {"status":200, "result":config.SELECTED_CUSTOM_WHISPER_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_CUSTOM_WHISPER_MODEL
+        )
+
+    @staticmethod
+    def getDeepgramAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS["Deepgram"]}
+
+    def setDeepgramAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Deepgram Auth Key")
+        engine = "Deepgram"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                    data=None
+                )
+            else:
+                result = model.authenticationDeepgramApiKey(api_key=data)
+                if result is True:
+                    models_detailed = model.getDeepgramModelListDetailed(api_key=data)
+                    model_list = [m["name"] for m in models_detailed]
+                    if len(model_list) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                            data=None
+                        )
+                    else:
+                        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                        auth_keys[engine] = data
+                        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                        config.SELECTABLE_DEEPGRAM_MODEL_LIST = model_list
+                        config.DEEPGRAM_MODEL_LANGUAGES = {m["name"]: m["languages"] for m in models_detailed}
+                        self.run(200, self.run_mapping["selectable_deepgram_model_list"], config.SELECTABLE_DEEPGRAM_MODEL_LIST)
+                        if config.SELECTED_DEEPGRAM_MODEL not in config.SELECTABLE_DEEPGRAM_MODEL_LIST:
+                            config.SELECTED_DEEPGRAM_MODEL = config.SELECTABLE_DEEPGRAM_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_deepgram_model"], config.SELECTED_DEEPGRAM_MODEL)
+                        self.updateTranscriptionEngine()
+                        response = {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.TRANSCRIPTION_API_AUTH_FAILED,
+                        data=None
+                    )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self.delDeepgramAuthKey()
+        return response
+
+    def delDeepgramAuthKey(self, *args, **kwargs) -> dict:
+        engine = "Deepgram"
+        auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+        auth_keys[engine] = None
+        config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+        config.SELECTABLE_DEEPGRAM_MODEL_LIST = []
+        config.DEEPGRAM_MODEL_LANGUAGES = {}
+        config.SELECTED_DEEPGRAM_MODEL = None
+        self.run(200, self.run_mapping["selectable_deepgram_model_list"], config.SELECTABLE_DEEPGRAM_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_deepgram_model"], config.SELECTED_DEEPGRAM_MODEL)
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.TRANSCRIPTION_AUTH_KEYS[engine]}
+
+
+
+    def setDeepgramModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Deepgram Model", data)
+        data = str(data)
+        if data in config.SELECTABLE_DEEPGRAM_MODEL_LIST:
+            config.SELECTED_DEEPGRAM_MODEL = data
+            # 対応言語はモデルごとに異なるため、Deepgramが現在選択中の
+            # 文字起こしエンジンである場合のみ、表示中の言語リストと
+            # 既存の言語選択への影響を反映する。
+            if config.SELECTED_TRANSCRIPTION_ENGINE == "Deepgram":
+                self.fallbackUnsupportedLanguagesForTranscriptionEngine("Deepgram")
+                self.run(200, self.run_mapping["selectable_language_list"], model.getListLanguageAndCountry())
+            return {"status":200, "result":config.SELECTED_DEEPGRAM_MODEL}
+        return VRCTError.create_error_response(
+            ErrorCode.MODEL_TRANSCRIPTION_INVALID,
+            data=config.SELECTED_DEEPGRAM_MODEL
+        )
+
+
+
+    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSelectedReleaseChannel(data, *args, **kwargs) -> dict:
         config.SELECTED_RELEASE_CHANNEL = str(data)
         return {"status":200, "result":config.SELECTED_RELEASE_CHANNEL}
@@ -1179,9 +1823,6 @@ class Controller:
         releases = model.listAvailableReleases()
         return {"status":200, "result":[asdict(r) for r in releases]}
 
-    @staticmethod
-    def getConvertMessageToRomaji(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
     @staticmethod
     def setEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
@@ -1199,9 +1840,6 @@ class Controller:
             config.CONVERT_MESSAGE_TO_ROMAJI = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
-    @staticmethod
-    def getConvertMessageToHiragana(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
     @staticmethod
     def setEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
@@ -1219,9 +1857,6 @@ class Controller:
             config.CONVERT_MESSAGE_TO_HIRAGANA = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
-    @staticmethod
-    def getMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
     @staticmethod
     def setEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
@@ -1235,9 +1870,6 @@ class Controller:
             config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
         return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
-    @staticmethod
-    def getTransparency(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.TRANSPARENCY}
 
     @staticmethod
     def setTransparency(data, *args, **kwargs) -> dict:
@@ -1252,9 +1884,6 @@ class Controller:
         config.TRANSPARENCY = value
         return {"status":200, "result":config.TRANSPARENCY}
 
-    @staticmethod
-    def getUiScaling(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.UI_SCALING}
 
     @staticmethod
     def setUiScaling(data, *args, **kwargs) -> dict:
@@ -1269,9 +1898,6 @@ class Controller:
         config.UI_SCALING = value
         return {"status":200, "result":config.UI_SCALING}
 
-    @staticmethod
-    def getTextboxUiScaling(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.TEXTBOX_UI_SCALING}
 
     @staticmethod
     def setTextboxUiScaling(data, *args, **kwargs) -> dict:
@@ -1286,27 +1912,20 @@ class Controller:
         config.TEXTBOX_UI_SCALING = value
         return {"status":200, "result":config.TEXTBOX_UI_SCALING}
 
-    @staticmethod
-    def getMessageBoxRatio(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setMessageBoxRatio(data, *args, **kwargs) -> dict:
         config.MESSAGE_BOX_RATIO = data
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
-    @staticmethod
-    def getSendMessageButtonType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSendMessageButtonType(data, *args, **kwargs) -> dict:
         config.SEND_MESSAGE_BUTTON_TYPE = data
         return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
-    @staticmethod
-    def getShowResendButton(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
     @staticmethod
     def setEnableShowResendButton(*args, **kwargs) -> dict:
@@ -1320,56 +1939,51 @@ class Controller:
             config.SHOW_RESEND_BUTTON = False
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
-    @staticmethod
-    def getFontFamily(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.FONT_FAMILY}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setFontFamily(data, *args, **kwargs) -> dict:
         config.FONT_FAMILY = data
         return {"status":200, "result":config.FONT_FAMILY}
 
-    @staticmethod
-    def getUiLanguage(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.UI_LANGUAGE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setUiLanguage(data, *args, **kwargs) -> dict:
         config.UI_LANGUAGE = data
         return {"status":200, "result":config.UI_LANGUAGE}
 
-    @staticmethod
-    def getMainWindowGeometry(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setMainWindowGeometry(data, *args, **kwargs) -> dict:
         config.MAIN_WINDOW_GEOMETRY = data
         return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
 
-    @staticmethod
-    def getAutoMicSelect(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     def applyAutoMicSelect(self) -> None:
         # stopAccessMicDevices/restartAccessMicDevices は mic_lifecycle_lock
         # を取得しつつ recorder の stop や PyAudio open を行う重い処理。
         # device_manager.monitoring() 自身のスレッドで直接実行すると、その間
         # monitoring が次の COM デバイス通知を取りこぼす。
-        # model.audio_lifecycle_worker 経由で専用スレッドに投げることで
+        # model.mic_lifecycle_worker 経由で専用スレッドに投げることで
         # monitoring は即座に呼び出しから戻れる。Before/After は同じ worker の
-        # FIFO キューで順序が保たれる。
+        # FIFO キューで順序が保たれる。speaker 側とはワーカーを分けており
+        # (フェーズ3項目21)、mic の重い処理が無関係な speaker 側の操作を
+        # 足止めしない。
         device_manager.setCallbackProcessBeforeUpdateMicDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessMicDevices)
+            lambda: model.mic_lifecycle_worker.enqueue(self.stopAccessMicDevices)
         )
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.setCallbackProcessAfterUpdateMicDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessMicDevices)
+            lambda: model.mic_lifecycle_worker.enqueue(self.restartAccessMicDevices)
         )
         # マイクの Auto Select は OS 既定デバイス追従のみ。speaker と違い
         # ActiveEndpointTracker (peak 追従) は使わないため、endpoint 切替
         # 起点の Recorder 差し替え callback は登録しない
-        # (device_manager.setMicAutoActive の docstring 参照)。
+        # (device_manager.setMicAutoActive の docstring 参照。develop側の
+        # 6596c629で撤去された経緯があり、フェーズ3項目21のcoalesce_key
+        # 拡張はspeaker側の_reconfigureSpeakerDeviceLockedにのみ適用する)。
         device_manager.forceUpdateAndSetMicDevices()
         # monitoring スレッドの起動判断は DeviceManager 側に集約
         # (speaker 側の状態を controller で気にする必要はもう無い)
@@ -1395,9 +2009,6 @@ class Controller:
             config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
-    @staticmethod
-    def getSelectedMicHost(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_MIC_HOST}
 
     def setSelectedMicHost(self, data, *args, **kwargs) -> dict:
         previously_selected_device = config.SELECTED_MIC_DEVICE
@@ -1423,9 +2034,6 @@ class Controller:
         self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
-    @staticmethod
-    def getSelectedMicDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_MIC_DEVICE}
 
     def setSelectedMicDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_DEVICE = data
@@ -1454,9 +2062,6 @@ class Controller:
         with self.mic_lifecycle_lock:
             model.changeMicTranscriptStatus()
 
-    @staticmethod
-    def getMicThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_THRESHOLD}
 
     @staticmethod
     def setMicThreshold(data, *args, **kwargs) -> dict:
@@ -1476,9 +2081,6 @@ class Controller:
             response = {"status":status, "result":config.MIC_THRESHOLD}
         return response
 
-    @staticmethod
-    def getMicAutomaticThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setEnableMicAutomaticThreshold(*args, **kwargs) -> dict:
@@ -1492,9 +2094,6 @@ class Controller:
             config.MIC_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
-    @staticmethod
-    def getMicRecordTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_RECORD_TIMEOUT}
 
     @staticmethod
     def setMicRecordTimeout(data, *args, **kwargs) -> dict:
@@ -1514,9 +2113,6 @@ class Controller:
             response = {"status":200, "result":config.MIC_RECORD_TIMEOUT}
         return response
 
-    @staticmethod
-    def getMicPhraseTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
 
     @staticmethod
     def setMicPhraseTimeout(data, *args, **kwargs) -> dict:
@@ -1535,9 +2131,6 @@ class Controller:
             response = {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
         return response
 
-    @staticmethod
-    def getMicMaxPhrases(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_MAX_PHRASES}
 
     @staticmethod
     def setMicMaxPhrases(data, *args, **kwargs) -> dict:
@@ -1556,9 +2149,6 @@ class Controller:
             response = {"status":200, "result":config.MIC_MAX_PHRASES}
         return response
 
-    @staticmethod
-    def getMicWordFilter(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_WORD_FILTER}
 
     @staticmethod
     def setMicWordFilter(data, *args, **kwargs) -> dict:
@@ -1567,9 +2157,6 @@ class Controller:
         model.addKeywords()
         return {"status":200, "result":config.MIC_WORD_FILTER}
 
-    @staticmethod
-    def getMicAvgLogprob(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
     @staticmethod
     def setMicAvgLogprob(data, *args, **kwargs) -> dict:
@@ -1584,9 +2171,6 @@ class Controller:
         config.MIC_AVG_LOGPROB = value
         return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
-    @staticmethod
-    def getMicNoSpeechProb(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
     @staticmethod
     def setMicNoSpeechProb(data, *args, **kwargs) -> dict:
@@ -1601,23 +2185,23 @@ class Controller:
         config.MIC_NO_SPEECH_PROB = value
         return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
-    @staticmethod
-    def getAutoSpeakerSelect(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     def applyAutoSpeakerSelect(self) -> None:
         # 詳細は applyAutoMicSelect のコメント参照:
         # monitoring スレッドをブロックしないよう worker 経由で実行する。
+        # mic とはワーカーを分けている (フェーズ3項目21)。
         device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.stopAccessSpeakerDevices)
+            lambda: model.speaker_lifecycle_worker.enqueue(self.stopAccessSpeakerDevices)
         )
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.setCallbackProcessAfterUpdateSpeakerDevices(
-            lambda: model.audio_lifecycle_worker.enqueue(self.restartAccessSpeakerDevices)
+            lambda: model.speaker_lifecycle_worker.enqueue(self.restartAccessSpeakerDevices)
         )
-        # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携)
+        # 詳細は applyAutoMicSelect のコメント参照 (ActiveEndpointTracker 連携・coalesce_key)
         device_manager.setCallbackEndpointReconfiguredSpeaker(
-            lambda: model.audio_lifecycle_worker.enqueue(self._reconfigureSpeakerDeviceLocked)
+            lambda: model.speaker_lifecycle_worker.enqueue(
+                self._reconfigureSpeakerDeviceLocked, coalesce_key="speaker_reconfigure"
+            )
         )
         device_manager.forceUpdateAndSetSpeakerDevices()
         device_manager.setSpeakerAutoActive(True)
@@ -1641,9 +2225,6 @@ class Controller:
             config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
-    @staticmethod
-    def getSelectedSpeakerDevice(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
     def setSelectedSpeakerDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_SPEAKER_DEVICE = data
@@ -1664,9 +2245,6 @@ class Controller:
         with self.speaker_lifecycle_lock:
             model.reconfigureSpeakerDevice()
 
-    @staticmethod
-    def getSpeakerThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_THRESHOLD}
 
     @staticmethod
     def setSpeakerThreshold(data, *args, **kwargs) -> dict:
@@ -1686,9 +2264,6 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_THRESHOLD}
         return response
 
-    @staticmethod
-    def getSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setEnableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
@@ -1702,9 +2277,6 @@ class Controller:
             config.SPEAKER_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
-    @staticmethod
-    def getSpeakerRecordTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
 
     @staticmethod
     def setSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
@@ -1723,9 +2295,6 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
         return response
 
-    @staticmethod
-    def getSpeakerPhraseTimeout(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
 
     @staticmethod
     def setSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
@@ -1744,9 +2313,6 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
         return response
 
-    @staticmethod
-    def getSpeakerMaxPhrases(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_MAX_PHRASES}
 
     @staticmethod
     def setSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
@@ -1766,27 +2332,20 @@ class Controller:
             response = {"status":200, "result":config.SPEAKER_MAX_PHRASES}
         return response
 
-    @staticmethod
-    def getHotkeys(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.HOTKEYS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setHotkeys(data, *args, **kwargs) -> dict:
         config.HOTKEYS = data
         return {"status":200, "result":config.HOTKEYS}
 
-    @staticmethod
-    def getPluginsStatus(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.PLUGINS_STATUS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setPluginsStatus(data, *args, **kwargs) -> dict:
         config.PLUGINS_STATUS = data
         return {"status":200, "result":config.PLUGINS_STATUS}
 
-    @staticmethod
-    def getSpeakerAvgLogprob(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
     @staticmethod
     def setSpeakerAvgLogprob(data, *args, **kwargs) -> dict:
@@ -1801,9 +2360,6 @@ class Controller:
         config.SPEAKER_AVG_LOGPROB = value
         return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
-    @staticmethod
-    def getSpeakerNoSpeechProb(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
     @staticmethod
     def setSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
@@ -1818,9 +2374,6 @@ class Controller:
         config.SPEAKER_NO_SPEECH_PROB = value
         return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
-    @staticmethod
-    def getOscIpAddress(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OSC_IP_ADDRESS}
 
     def setOscIpAddress(self, data, *args, **kwargs) -> dict:
         if isValidIpAddress(data) is False:
@@ -1850,9 +2403,6 @@ class Controller:
                 )
         return response
 
-    @staticmethod
-    def getOscPort(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OSC_PORT}
 
     @staticmethod
     def setOscPort(data, *args, **kwargs) -> dict:
@@ -1868,9 +2418,6 @@ class Controller:
         model.setOscPort(config.OSC_PORT)
         return {"status":200, "result":config.OSC_PORT}
 
-    @staticmethod
-    def getNotificationVrcSfx(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
     @staticmethod
     def setEnableNotificationVrcSfx(*args, **kwargs) -> dict:
@@ -1883,6 +2430,172 @@ class Controller:
         if config.NOTIFICATION_VRC_SFX is True:
             config.NOTIFICATION_VRC_SFX = False
         return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
+
+    # --- フェーズ3項目17: 翻訳エンジンレジストリ (TRANSLATION_PROVIDER_REGISTRY
+    # =認証キー型、CONNECTION_PROVIDER_REGISTRY=疎通確認型) 向け共通CRUD実装。
+    # エンジン固有の get/set/delXAuthKey・getXModelList・get/setXModel・
+    # checkXConnection は全てこれらへの1行委譲になる
+    # (詳細は translation_providers.py 参照)。
+
+    def _resolveEngineSpec(self, engine_key: str):
+        """`engine_key` がどちらのレジストリに属していても対応するスペックを返す。
+
+        `_getTranslationEngineModelList` 等モデル管理系の3メソッドは
+        `selectable_model_list_attr`/`selected_model_attr`/`error_model_invalid`
+        という共通フィールド名だけを使うため、どちらのレジストリのスペックでも
+        区別せず動く。
+        """
+        if engine_key in TRANSLATION_PROVIDER_REGISTRY:
+            return TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        return CONNECTION_PROVIDER_REGISTRY[engine_key]
+
+    def _getTranslationEngineAuthKey(self, engine_key: str) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS[engine_key]}
+
+    def _setTranslationEngineAuthKey(self, engine_key: str, data) -> dict:
+        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        bindings = _ENGINE_MODEL_BINDINGS[engine_key]
+        display_name = engine_key[:-len("_API")] if engine_key.endswith("_API") else engine_key
+        printLog(f"Set {display_name} Auth Key")
+        try:
+            data = str(data)
+            if spec.auth_validate(data):
+                result = getattr(model, bindings["authenticate"])(auth_key=data)
+                if result is True:
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[engine_key] = data
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = True
+                    model_list = getattr(model, bindings["get_model_list"])()
+                    setattr(config, spec.selectable_model_list_attr, model_list)
+                    self.run(200, self.run_mapping[spec.run_mapping_selectable_key], model_list)
+                    if getattr(config, spec.selected_model_attr) not in model_list:
+                        setattr(config, spec.selected_model_attr, model_list[0])
+                    getattr(model, bindings["set_model"])(model=getattr(config, spec.selected_model_attr))
+                    self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+                    getattr(model, bindings["update_client"])()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[engine_key]}
+                else:
+                    response = VRCTError.create_error_response(
+                        spec.error_auth_failed,
+                        data=None
+                    )
+            else:
+                response = VRCTError.create_error_response(
+                    spec.error_auth_invalid,
+                    data=None
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
+        if response["status"] == 400:
+            self._delTranslationEngineAuthKey(engine_key)
+        return response
+
+    def _delTranslationEngineAuthKey(self, engine_key: str) -> dict:
+        spec = TRANSLATION_PROVIDER_REGISTRY[engine_key]
+        auth_keys = config.AUTH_KEYS
+        auth_keys[engine_key] = None
+        config.AUTH_KEYS = auth_keys
+        setattr(config, spec.selectable_model_list_attr, [])
+        setattr(config, spec.selected_model_attr, None)
+        self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
+        self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[engine_key]}
+
+    def _getTranslationEngineModelList(self, engine_key: str) -> dict:
+        spec = self._resolveEngineSpec(engine_key)
+        return {"status":200, "result": getattr(config, spec.selectable_model_list_attr)}
+
+    def _getTranslationEngineModel(self, engine_key: str) -> dict:
+        spec = self._resolveEngineSpec(engine_key)
+        return {"status":200, "result":getattr(config, spec.selected_model_attr)}
+
+    def _setTranslationEngineModel(self, engine_key: str, data) -> dict:
+        spec = self._resolveEngineSpec(engine_key)
+        bindings = _ENGINE_MODEL_BINDINGS[engine_key]
+        display_name = engine_key[:-len("_API")] if engine_key.endswith("_API") else engine_key
+        printLog(f"Set {display_name} Model", data)
+        try:
+            data = str(data)
+            result = getattr(model, bindings["set_model"])(model=data)
+            if result is True:
+                setattr(config, spec.selected_model_attr, data)
+                getattr(model, bindings["set_model"])(model=getattr(config, spec.selected_model_attr))
+                getattr(model, bindings["update_client"])()
+                response = {"status":200, "result":getattr(config, spec.selected_model_attr)}
+            else:
+                response = VRCTError.create_error_response(
+                    spec.error_model_invalid,
+                    data=getattr(config, spec.selected_model_attr)
+                )
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=getattr(config, spec.selected_model_attr)
+            )
+        return response
+
+    def _checkTranslationEngineConnection(self, engine_key: str, connect_kwargs: dict) -> dict:
+        """CONNECTION_PROVIDER_REGISTRY 登録エンジン (LMStudio/Ollama) 共通の
+        疎通確認処理。`connect_kwargs` は接続呼び出しに渡す追加引数
+        (LMStudio: `{"base_url": config.LMSTUDIO_URL}`、Ollama: `{}`)。
+
+        NOTE: 接続には成功したがモデル一覧が空だった場合、既存実装を
+        そのまま踏襲して `raise Exception(...)` で下の except に処理させている
+        (専用のエラーコードではなく GENERAL_EXCEPTION 応答になる、既存の
+        LMStudio/Ollama の挙動と同じ)。
+        """
+        spec = CONNECTION_PROVIDER_REGISTRY[engine_key]
+        bindings = _ENGINE_MODEL_BINDINGS[engine_key]
+        printLog(f"Check Translator {engine_key} Connection")
+        try:
+            result = getattr(model, bindings["authenticate"])(**connect_kwargs)
+            if result is True:
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = True
+                model_list = getattr(model, bindings["get_model_list"])()
+                setattr(config, spec.selectable_model_list_attr, model_list)
+                self.run(200, self.run_mapping[spec.run_mapping_selectable_key], model_list)
+                if len(model_list) == 0:
+                    raise Exception(f"No {engine_key} models available")
+                if getattr(config, spec.selected_model_attr) not in model_list:
+                    setattr(config, spec.selected_model_attr, model_list[0])
+                getattr(model, bindings["set_model"])(model=getattr(config, spec.selected_model_attr))
+                self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+                getattr(model, bindings["update_client"])()
+                self.updateTranslationEngineAndEngineList()
+                response = {"status":200, "result":True}
+            else:
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
+                setattr(config, spec.selectable_model_list_attr, [])
+                setattr(config, spec.selected_model_attr, None)
+                self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
+                self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+                self.updateTranslationEngineAndEngineList()
+                response = VRCTError.create_error_response(
+                    spec.error_connection_failed,
+                    data=False
+                )
+        except Exception as e:
+            errorLogging()
+            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
+            setattr(config, spec.selectable_model_list_attr, [])
+            setattr(config, spec.selected_model_attr, None)
+            self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
+            self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
+            self.updateTranslationEngineAndEngineList()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=False
+            )
+        return response
 
     @staticmethod
     def getDeepLAuthKey(*args, **kwargs) -> dict:
@@ -1931,495 +2644,101 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
     def getPlamoAuthKey(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["Plamo_API"]}
+        return self._getTranslationEngineAuthKey("Plamo_API")
 
     def setPlamoAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Plamo Auth Key")
-        translator_name = "Plamo_API"
-        try:
-            data = str(data)
-            if len(data) >= 72:
-                result = model.authenticationTranslatorPlamoAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_PLAMO_MODEL_LIST = model.getTranslatorPlamoModelList()
-                    self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
-                    if config.SELECTED_PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
-                        config.SELECTED_PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
-                    model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
-                    self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
-                    model.updateTranslatorPlamoClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_PLAMO_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_PLAMO_LENGTH,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delPlamoAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("Plamo_API", data)
 
     def delPlamoAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "Plamo_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_PLAMO_MODEL_LIST = []
-        config.SELECTED_PLAMO_MODEL = None
-        self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("Plamo_API")
 
     def getPlamoModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_PLAMO_MODEL_LIST}
+        return self._getTranslationEngineModelList("Plamo_API")
 
     def getPlamoModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_PLAMO_MODEL}
+        return self._getTranslationEngineModel("Plamo_API")
 
     def setPlamoModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Plamo Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorPlamoModel(model=data)
-            if result is True:
-                config.SELECTED_PLAMO_MODEL = data
-                model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
-                model.updateTranslatorPlamoClient()
-                response = {"status":200, "result":config.SELECTED_PLAMO_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_PLAMO_INVALID,
-                    data=config.SELECTED_PLAMO_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_PLAMO_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Plamo_API", data)
 
     def getGeminiAuthKey(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["Gemini_API"]}
+        return self._getTranslationEngineAuthKey("Gemini_API")
 
     def setGeminiAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Gemini Auth Key")
-        translator_name = "Gemini_API"
-        try:
-            data = str(data)
-            if len(data) >= 39:
-                result = model.authenticationTranslatorGeminiAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_GEMINI_MODEL_LIST = model.getTranslatorGeminiModelList()
-                    self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
-                    if config.SELECTED_GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
-                        config.SELECTED_GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
-                    model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
-                    self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
-                    model.updateTranslatorGeminiClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_GEMINI_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_GEMINI_LENGTH,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delGeminiAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("Gemini_API", data)
 
     def delGeminiAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "Gemini_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_GEMINI_MODEL_LIST = []
-        config.SELECTED_GEMINI_MODEL = None
-        self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("Gemini_API")
 
     def getGeminiModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_GEMINI_MODEL_LIST}
+        return self._getTranslationEngineModelList("Gemini_API")
 
     def getGeminiModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_GEMINI_MODEL}
+        return self._getTranslationEngineModel("Gemini_API")
 
     def setGeminiModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Gemini Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorGeminiModel(model=data)
-            if result is True:
-                config.SELECTED_GEMINI_MODEL = data
-                model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
-                model.updateTranslatorGeminiClient()
-                response = {"status":200, "result":config.SELECTED_GEMINI_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_GEMINI_INVALID,
-                    data=config.SELECTED_GEMINI_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_GEMINI_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Gemini_API", data)
 
-    @staticmethod
-    def getOpenAIAuthKey(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["OpenAI_API"]}
+    def getOpenAIAuthKey(self, *args, **kwargs) -> dict:
+        return self._getTranslationEngineAuthKey("OpenAI_API")
 
     def setOpenAIAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Auth Key")
-        translator_name = "OpenAI_API"
-        try:
-            data = str(data)
-            if data.startswith("sk-") and len(data) >= 164:
-                result = model.authenticationTranslatorOpenAIAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
-                    self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
-                    if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
-                        config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                    model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
-                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
-                    model.updateTranslatorOpenAIClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_OPENAI_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_OPENAI_INVALID,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delOpenAIAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("OpenAI_API", data)
 
     def delOpenAIAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "OpenAI_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_OPENAI_MODEL_LIST = []
-        config.SELECTED_OPENAI_MODEL = None
-        self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("OpenAI_API")
 
     def getOpenAIModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_OPENAI_MODEL_LIST}
+        return self._getTranslationEngineModelList("OpenAI_API")
 
     def getOpenAIModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OPENAI_MODEL}
+        return self._getTranslationEngineModel("OpenAI_API")
 
     def setOpenAIModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenAI Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorOpenAIModel(model=data)
-            if result is True:
-                config.SELECTED_OPENAI_MODEL = data
-                model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
-                model.updateTranslatorOpenAIClient()
-                response = {"status":200, "result":config.SELECTED_OPENAI_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_OPENAI_INVALID,
-                    data=config.SELECTED_OPENAI_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_OPENAI_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("OpenAI_API", data)
 
-    @staticmethod
-    def getGroqAuthKey(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["Groq_API"]}
+    def getGroqAuthKey(self, *args, **kwargs) -> dict:
+        return self._getTranslationEngineAuthKey("Groq_API")
 
     def setGroqAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set Groq Auth Key")
-        translator_name = "Groq_API"
-        try:
-            data = str(data)
-            if data.startswith("gsk") and len(data) >= 40:
-                result = model.authenticationTranslatorGroqAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_GROQ_MODEL_LIST = model.getTranslatorGroqModelList()
-                    self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
-                    if config.SELECTED_GROQ_MODEL not in config.SELECTABLE_GROQ_MODEL_LIST:
-                        config.SELECTED_GROQ_MODEL = config.SELECTABLE_GROQ_MODEL_LIST[0]
-                    model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
-                    self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
-                    model.updateTranslatorGroqClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_GROQ_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_GROQ_INVALID,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delGroqAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("Groq_API", data)
 
     def delGroqAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "Groq_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_GROQ_MODEL_LIST = []
-        config.SELECTED_GROQ_MODEL = None
-        self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("Groq_API")
 
     def getGroqModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_GROQ_MODEL_LIST}
+        return self._getTranslationEngineModelList("Groq_API")
 
     def getGroqModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_GROQ_MODEL}
+        return self._getTranslationEngineModel("Groq_API")
 
     def setGroqModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Groq Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorGroqModel(model=data)
-            if result is True:
-                config.SELECTED_GROQ_MODEL = data
-                model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
-                model.updateTranslatorGroqClient()
-                response = {"status":200, "result":config.SELECTED_GROQ_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_GROQ_INVALID,
-                    data=config.SELECTED_GROQ_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_GROQ_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Groq_API", data)
 
-    @staticmethod
-    def getOpenRouterAuthKey(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTH_KEYS["OpenRouter_API"]}
+    def getOpenRouterAuthKey(self, *args, **kwargs) -> dict:
+        return self._getTranslationEngineAuthKey("OpenRouter_API")
 
     def setOpenRouterAuthKey(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenRouter Auth Key")
-        translator_name = "OpenRouter_API"
-        try:
-            data = str(data)
-            if len(data) >= 20:  # OpenRouter API key basic validation
-                result = model.authenticationTranslatorOpenRouterAuthKey(auth_key=data)
-                if result is True:
-                    key = data
-                    auth_keys = config.AUTH_KEYS
-                    auth_keys[translator_name] = key
-                    config.AUTH_KEYS = auth_keys
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                    config.SELECTABLE_OPENROUTER_MODEL_LIST = model.getTranslatorOpenRouterModelList()
-                    self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
-                    if config.SELECTED_OPENROUTER_MODEL not in config.SELECTABLE_OPENROUTER_MODEL_LIST:
-                        config.SELECTED_OPENROUTER_MODEL = config.SELECTABLE_OPENROUTER_MODEL_LIST[0]
-                    model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
-                    self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
-                    model.updateTranslatorOpenRouterClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
-                else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.AUTH_OPENROUTER_FAILED,
-                        data=None
-                    )
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.AUTH_OPENROUTER_INVALID,
-                    data=None
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
-            )
-        if response["status"] == 400:
-            self.delOpenRouterAuthKey()
-        return response
+        return self._setTranslationEngineAuthKey("OpenRouter_API", data)
 
     def delOpenRouterAuthKey(self, *args, **kwargs) -> dict:
-        translator_name = "OpenRouter_API"
-        auth_keys = config.AUTH_KEYS
-        auth_keys[translator_name] = None
-        config.AUTH_KEYS = auth_keys
-        config.SELECTABLE_OPENROUTER_MODEL_LIST = []
-        config.SELECTED_OPENROUTER_MODEL = None
-        self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
-        self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
-        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-        self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+        return self._delTranslationEngineAuthKey("OpenRouter_API")
 
     def getOpenRouterModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_OPENROUTER_MODEL_LIST}
+        return self._getTranslationEngineModelList("OpenRouter_API")
 
     def getOpenRouterModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
+        return self._getTranslationEngineModel("OpenRouter_API")
 
     def setOpenRouterModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set OpenRouter Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorOpenRouterModel(model=data)
-            if result is True:
-                config.SELECTED_OPENROUTER_MODEL = data
-                model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
-                model.updateTranslatorOpenRouterClient()
-                response = {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_OPENROUTER_INVALID,
-                    data=config.SELECTED_OPENROUTER_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_OPENROUTER_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("OpenRouter_API", data)
 
     def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         return {"status":200, "result":model.getTranslatorLMStudioConnected()}
 
     def checkTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
-        printLog("Check Translator LMStudio Connection")
-        translator_name = "LMStudio"
-        try:
-            result = model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL)
-            if result is True:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
-                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
-                if len(config.SELECTABLE_LMSTUDIO_MODEL_LIST) == 0:
-                    raise Exception("No LMStudio models available")
-                if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
-                    config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
-                model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
-                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
-                model.updateTranslatorLMStudioClient()
-                self.updateTranslationEngineAndEngineList()
-                response = {"status":200, "result":True}
-            else:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-                config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
-                config.SELECTED_LMSTUDIO_MODEL = None
-                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
-                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
-                self.updateTranslationEngineAndEngineList()
-                response = VRCTError.create_error_response(
-                    ErrorCode.CONNECTION_LMSTUDIO_FAILED,
-                    data=False
-                )
-        except Exception as e:
-            errorLogging()
-            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-            config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
-            config.SELECTED_LMSTUDIO_MODEL = None
-            self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
-            self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
-            self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=False
-            )
-        return response
+        return self._checkTranslationEngineConnection("LMStudio", connect_kwargs={"base_url": config.LMSTUDIO_URL})
 
-    def getConnectedLMStudio(self, *args, **kwargs) -> dict:
-        is_connected = model.getTranslatorLMStudioConnected()
-        return {"status":200, "result": is_connected}
-
-    def getTranslatorLMStudioURL(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.LMSTUDIO_URL}
 
     def setTranslatorLMStudioURL(self, data, *args, **kwargs) -> dict:
         printLog("Set Translator LMStudio URL", data)
@@ -2466,35 +2785,20 @@ class Controller:
             )
         return response
 
-    def getTranslatorLStudioModelList(self, *args, **kwargs) -> dict:
+    def getTranslatorLMStudioModelList(self, *args, **kwargs) -> dict:
+        # 認証キー型5エンジンの getXModelList と異なり、ここは config の
+        # キャッシュ値ではなく model 経由でクライアントに都度問い合わせる
+        # (ローカルサーバーでモデルが動的に増減しうる LMStudio/Ollama 固有の
+        # 設計) ため、_getTranslationEngineModelList には委譲せず既存の実装の
+        # まま残す。
         model_list = model.getTranslatorLMStudioModelList()
         return {"status":200, "result": model_list}
 
     def getTranslatorLMStudioModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
+        return self._getTranslationEngineModel("LMStudio")
 
     def setTranslatorLMStudioModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Translator LMStudio Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorLMStudioModel(model=data)
-            if result is True:
-                config.SELECTED_LMSTUDIO_MODEL = data
-                model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
-                model.updateTranslatorLMStudioClient()
-                response = {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_LMSTUDIO_INVALID,
-                    data=config.SELECTED_LMSTUDIO_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_LMSTUDIO_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("LMStudio", data)
 
     # ------------------------------------------------------------------
     # OpenAI-compatible endpoint (URL + Auth Key)
@@ -2567,9 +2871,6 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
-    @staticmethod
-    def getOpenAICompatibleURL(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OPENAI_COMPATIBLE_URL}
 
     def setOpenAICompatibleURL(self, data, *args, **kwargs) -> dict:
         """URL 変更時は「認証成功後に URL を確定」する順序を守る。
@@ -2639,11 +2940,7 @@ class Controller:
             )
         return response
 
-    def getOpenAICompatibleModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST}
 
-    def getOpenAICompatibleModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OPENAI_COMPATIBLE_MODEL}
 
     def setOpenAICompatibleModel(self, data, *args, **kwargs) -> dict:
         printLog("Set OpenAI Compatible Model", data)
@@ -2672,81 +2969,18 @@ class Controller:
         return {"status":200, "result":model.getTranslatorOllamaConnected()}
 
     def checkTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
-        printLog("Check Translator Ollama Connection")
-        translator_name = "Ollama"
-        try:
-            result = model.authenticationTranslatorOllama()
-            if result is True:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                config.SELECTABLE_OLLAMA_MODEL_LIST = model.getTranslatorOllamaModelList()
-                self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
-                if len(config.SELECTABLE_OLLAMA_MODEL_LIST) == 0:
-                    raise Exception("No Ollama models available")
-                if config.SELECTED_OLLAMA_MODEL not in config.SELECTABLE_OLLAMA_MODEL_LIST:
-                    config.SELECTED_OLLAMA_MODEL = config.SELECTABLE_OLLAMA_MODEL_LIST[0]
-                model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
-                self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
-                model.updateTranslatorOllamaClient()
-                self.updateTranslationEngineAndEngineList()
-                response = {"status":200, "result":True}
-            else:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-                config.SELECTABLE_OLLAMA_MODEL_LIST = []
-                config.SELECTED_OLLAMA_MODEL = None
-                self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
-                self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
-                self.updateTranslationEngineAndEngineList()
-                response = VRCTError.create_error_response(
-                    ErrorCode.CONNECTION_OLLAMA_FAILED,
-                    data=False
-                )
-        except Exception as e:
-            errorLogging()
-            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
-            config.SELECTABLE_OLLAMA_MODEL_LIST = []
-            config.SELECTED_OLLAMA_MODEL = None
-            self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
-            self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
-            self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=False
-            )
-        return response
+        return self._checkTranslationEngineConnection("Ollama", connect_kwargs={})
 
     def getTranslatorOllamaModelList(self, *args, **kwargs) -> dict:
         model_list = model.getTranslatorOllamaModelList()
         return {"status":200, "result": model_list}
 
     def getTranslatorOllamaModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
+        return self._getTranslationEngineModel("Ollama")
 
     def setTranslatorOllamaModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Translator Ollama Model", data)
-        try:
-            data = str(data)
-            result = model.setTranslatorOllamaModel(model=data)
-            if result is True:
-                config.SELECTED_OLLAMA_MODEL = data
-                model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
-                model.updateTranslatorOllamaClient()
-                response = {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
-            else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.MODEL_OLLAMA_INVALID,
-                    data=config.SELECTED_OLLAMA_MODEL
-                )
-        except Exception as e:
-            errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.SELECTED_OLLAMA_MODEL
-            )
-        return response
+        return self._setTranslationEngineModel("Ollama", data)
 
-    @staticmethod
-    def getCtranslate2WeightType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
     def setCtranslate2WeightType(data, *args, **kwargs) -> dict:
@@ -2754,9 +2988,6 @@ class Controller:
         model.setChangedTranslatorParameters(True)
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
-    @staticmethod
-    def getSelectedTranslationComputeType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_TYPE}
 
     @staticmethod
     def setSelectedTranslationComputeType(data, *args, **kwargs) -> dict:
@@ -2764,45 +2995,34 @@ class Controller:
         model.setChangedTranslatorParameters(True)
         return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_TYPE}
 
-    @staticmethod
-    def getWhisperWeightType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WHISPER_WEIGHT_TYPE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setWhisperWeightType(data, *args, **kwargs) -> dict:
         config.WHISPER_WEIGHT_TYPE = str(data)
         return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
 
-    @staticmethod
-    def getSelectedTranscriptionComputeType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSelectedTranscriptionComputeType(data, *args, **kwargs) -> dict:
         config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE = str(data)
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
 
-    @staticmethod
-    def getSendMessageFormatParts(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setSendMessageFormatParts(data, *args, **kwargs) -> dict:
         config.SEND_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
 
-    @staticmethod
-    def getReceivedMessageFormatParts(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setReceivedMessageFormatParts(data, *args, **kwargs) -> dict:
         config.RECEIVED_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
 
-    @staticmethod
-    def getAutoClearMessageBox(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
     @staticmethod
     def setEnableAutoClearMessageBox(*args, **kwargs) -> dict:
@@ -2816,9 +3036,6 @@ class Controller:
             config.AUTO_CLEAR_MESSAGE_BOX = False
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
-    @staticmethod
-    def getSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
@@ -2832,9 +3049,6 @@ class Controller:
             config.SEND_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
-    @staticmethod
-    def getOverlaySmallLog(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
@@ -2853,9 +3067,6 @@ class Controller:
             config.OVERLAY_SMALL_LOG = False
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
-    @staticmethod
-    def getOverlaySmallLogSettings(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS}
 
     @staticmethod
     def setOverlaySmallLogSettings(data, *args, **kwargs) -> dict:
@@ -2863,9 +3074,6 @@ class Controller:
         model.updateOverlaySmallLogSettings()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS}
 
-    @staticmethod
-    def getOverlayLargeLog(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
@@ -2884,9 +3092,6 @@ class Controller:
             config.OVERLAY_LARGE_LOG = False
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
-    @staticmethod
-    def getOverlayLargeLogSettings(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_LARGE_LOG_SETTINGS}
 
     @staticmethod
     def setOverlayLargeLogSettings(data, *args, **kwargs) -> dict:
@@ -2894,9 +3099,6 @@ class Controller:
         model.updateOverlayLargeLogSettings()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG_SETTINGS}
 
-    @staticmethod
-    def getOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setEnableOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
@@ -2910,9 +3112,6 @@ class Controller:
             config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
-    @staticmethod
-    def getSendMessageToVrc(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
     @staticmethod
     def setEnableSendMessageToVrc(*args, **kwargs) -> dict:
@@ -2926,9 +3125,6 @@ class Controller:
             config.SEND_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
-    @staticmethod
-    def getSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
     @staticmethod
     def setEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
@@ -2942,9 +3138,6 @@ class Controller:
             config.SEND_RECEIVED_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
-    @staticmethod
-    def getLoggerFeature(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.LOGGER_FEATURE}
 
     @staticmethod
     def setEnableLoggerFeature(*args, **kwargs) -> dict:
@@ -2960,9 +3153,6 @@ class Controller:
             config.LOGGER_FEATURE = False
         return {"status":200, "result":config.LOGGER_FEATURE}
 
-    @staticmethod
-    def getVrcMicMuteSync(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
@@ -3075,9 +3265,6 @@ class Controller:
                 model.updateOverlayLargeLog(overlay_image)
         return {"status":200, "result":data}
 
-    @staticmethod
-    def getTelemetry(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.ENABLE_TELEMETRY}
 
     @staticmethod
     def setEnableTelemetry(*args, **kwargs) -> dict:
@@ -3446,7 +3633,28 @@ class Controller:
                 continue
             config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] = model.checkTranscriptionWhisperModelWeight(weight_type)
 
-    def updateTranscriptionEngine(self):
+    def updateTranscriptionEngine(self, requested_engine: Optional[str] = None) -> None:
+        """SELECTED_TRANSCRIPTION_ENGINE を検証・更新する。
+
+        `requested_engine` を渡すと、まずそれを希望値として設定してから
+        検証する (setSelectedTranscriptionEngine からの明示的な変更用。
+        setSelectedTranslationEngines() -> updateTranslationEngineAndEngineList()
+        と同じパターン)。渡さなければ現在の値をそのまま検証する
+        (キー無効化等による自動フォールバック用。controller.init() や
+        setGroqWhisperAuthKey/delDeepgramAuthKey 等、多数の呼び出し元から
+        使われる)。
+
+        エンジンが実際に変化した場合、文字起こしエンジンごとに対応言語が
+        異なりうるため (Deepgram等)、選択中の言語をフォールバックさせ、
+        更新後の言語一覧を毎回 selectable_language_list でUIへpushする。
+        呼び出し元ごとに重複させず、「エンジンが変わる場所」であるここ
+        一箇所に集約することで、どの経路でエンジンが変わっても確実に
+        UIの言語リストが追従するようにする。
+        """
+        previous_engine = config.SELECTED_TRANSCRIPTION_ENGINE
+        if requested_engine is not None:
+            config.SELECTED_TRANSCRIPTION_ENGINE = requested_engine
+
         weight_type = config.WHISPER_WEIGHT_TYPE
         weight_type_dict = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
         weight_available = bool(weight_type_dict.get(weight_type))
@@ -3461,8 +3669,20 @@ class Controller:
                     config.SELECTED_TRANSCRIPTION_ENGINE = alternate if alternate in selected_engines else None
                 else:
                     config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+        elif current_engine in TRANSCRIPTION_API_ENGINES or current_engine == "Deepgram":
+            # Groq/OpenAI/カスタムサーバー/Deepgramはキー無効化等で使えなく
+            # なった場合のみ、ローカル Whisper (オフラインで最も安定) へ
+            # フォールバックする。まだ有効なら維持する (この elif が無いと
+            # 下の else に落ちて、新エンジンを選択した直後にここが呼ばれる
+            # たびに意図せず Whisper へ巻き戻ってしまう)。
+            if current_engine not in selected_engines:
+                config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
         else:
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+
+        if config.SELECTED_TRANSCRIPTION_ENGINE != previous_engine:
+            self.fallbackUnsupportedLanguagesForTranscriptionEngine(config.SELECTED_TRANSCRIPTION_ENGINE)
+            self.run(200, self.run_mapping["selectable_language_list"], model.getListLanguageAndCountry())
 
     def startCheckMicEnergy(self) -> None:
         with self.mic_lifecycle_lock:
@@ -3512,9 +3732,6 @@ class Controller:
         model.stopWatchdog()
         return {"status":200, "result":True}
 
-    @staticmethod
-    def getWebSocketHost(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WEBSOCKET_HOST}
 
     @staticmethod
     def setWebSocketHost(data, *args, **kwargs) -> dict:
@@ -3554,9 +3771,6 @@ class Controller:
 
         return response
 
-    @staticmethod
-    def getWebSocketPort(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WEBSOCKET_PORT}
 
     @staticmethod
     def setWebSocketPort(data, *args, **kwargs) -> dict:
@@ -3599,9 +3813,6 @@ class Controller:
         """
         return {"status":200, "result":config.WEBSOCKET_AUTH_TOKEN}
 
-    @staticmethod
-    def getWebSocketServer(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WEBSOCKET_SERVER}
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
@@ -3634,9 +3845,6 @@ class Controller:
         return {"status":200, "result":config.WEBSOCKET_SERVER}
 
     # OBS Browser Source (local overlay for OBS)
-    @staticmethod
-    def getObsBrowserSource(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE}
 
     @staticmethod
     def setEnableObsBrowserSource(*args, **kwargs) -> dict:
@@ -3682,9 +3890,6 @@ class Controller:
             model.stopObsBrowserSourceServer()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE}
 
-    @staticmethod
-    def getObsBrowserSourcePort(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_PORT}
 
     @staticmethod
     def setObsBrowserSourcePort(data, *args, **kwargs) -> dict:
@@ -3745,9 +3950,6 @@ class Controller:
             },
         })
 
-    @staticmethod
-    def getObsBrowserSourceMaxMessages(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
     def setObsBrowserSourceMaxMessages(self, data, *args, **kwargs) -> dict:
         try:
@@ -3762,9 +3964,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
 
-    @staticmethod
-    def getObsBrowserSourceDisplayDuration(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
     def setObsBrowserSourceDisplayDuration(self, data, *args, **kwargs) -> dict:
         try:
@@ -3779,9 +3978,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
 
-    @staticmethod
-    def getObsBrowserSourceFadeoutDuration(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
     def setObsBrowserSourceFadeoutDuration(self, data, *args, **kwargs) -> dict:
         try:
@@ -3796,9 +3992,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
 
-    @staticmethod
-    def getObsBrowserSourceFontSize(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
     def setObsBrowserSourceFontSize(self, data, *args, **kwargs) -> dict:
         try:
@@ -3813,9 +4006,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
 
-    @staticmethod
-    def getObsBrowserSourceFontColor(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
 
     def setObsBrowserSourceFontColor(self, data, *args, **kwargs) -> dict:
         color = str(data).strip()
@@ -3828,9 +4018,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
 
-    @staticmethod
-    def getObsBrowserSourceFontOutlineThickness(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
     def setObsBrowserSourceFontOutlineThickness(self, data, *args, **kwargs) -> dict:
         try:
@@ -3845,9 +4032,6 @@ class Controller:
         self._pushObsBrowserSourceSettings()
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
 
-    @staticmethod
-    def getObsBrowserSourceFontOutlineColor(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
 
     def setObsBrowserSourceFontOutlineColor(self, data, *args, **kwargs) -> dict:
         color = str(data).strip()
@@ -3861,9 +4045,6 @@ class Controller:
         return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
 
     # Clipboard control
-    @staticmethod
-    def getClipboard(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.ENABLE_CLIPBOARD}
 
     @staticmethod
     def setEnableClipboard(*args, **kwargs) -> dict:
@@ -3899,9 +4080,84 @@ class Controller:
             "disabled_functions": disabled_functions
         })
 
+    def _initVrcMicMuteSync(self) -> None:
+        """VRC_MIC_MUTE_SYNC が有効な場合の、起動時のミュート状態初期同期。
+
+        `model.setMuteSelfStatus()` はVRChatのOSCQueryサービスへの
+        その場限りの一発勝負の問い合わせ。VRCTがVRChatより先に起動していると
+        これは失敗し (`model.mic_mute_status` が `None` のまま)、
+        `changeHandlerMute` (model.py) 側のガード条件が `None` からは
+        絶対に遷移できない構造になっているため、二度とミュート同期が
+        機能しなくなる不具合があった (VRChatを先に起動していれば問題は
+        起きない、という起動順序依存のバグとして実機で確認済み)。
+
+        ここで諦めず、VRChatのOSCQueryサービスがmDNSで後から現れた瞬間に
+        `_retryMuteSelfStatusOnceVrchatFound()` を呼ぶよう監視を仕込むことで、
+        起動順序に関わらずミュート同期を確立できるようにする。
+        """
+        model.setMuteSelfStatus()
+        if model.mic_mute_status is not None:
+            model.changeMicTranscriptStatus()
+        else:
+            model.watchForVrchatOscQueryConnection(self._retryMuteSelfStatusOnceVrchatFound)
+
+    def _retryMuteSelfStatusOnceVrchatFound(self) -> None:
+        """VRChatのOSCQueryサービスが後から見つかった際のコールバック
+        (`_initVrcMicMuteSync()` 参照)。zeroconf自身のバックグラウンド
+        スレッドから呼ばれる。
+        """
+        try:
+            model.setMuteSelfStatus()
+            model.changeMicTranscriptStatus()
+        except Exception:
+            errorLogging()
+
+    def _bootstrapModel(self) -> None:
+        """`model.init()` + ミュート同期コールバック登録 (フェーズ3項目22)。
+
+        以前は `Controller.__init__` (`Controller()` 構築時、本番では
+        mainloop.py のモジュールimport時) に前倒しで実行していたが、
+        `model.init()` 自身が「import時には呼ばない、ensure_initialized()
+        で遅延初期化する」設計であることに合わせて `init()` 側に移動した。
+
+        経緯: 一度この移動を実装した際、実機検証で「VRCTをVRChatより先に
+        起動するとOSCQueryが接続されずミュート同期が壊れる」回帰が見つかり
+        タイミングを一旦元に戻した。その後の調査で、この回帰は今回の
+        タイミング変更とは無関係の既存バグ (起動時1回きりの
+        `model.setMuteSelfStatus()` がVRChat未起動時に失敗すると
+        `model.mic_mute_status` が `None` のまま二度と回復しない構造的な
+        問題) と判明し、`_VrchatOscQueryFoundListener`
+        (`models/osc/osc.py`) による別修正で解決済み。タイミング変更自体は
+        無罪と確認できたため、改めてここに移動した。
+
+        `init()` 本体から切り出したのは、この2行だけを (残り400行超の
+        ネットワーク確認・重みダウンロード等を実行せずに) 単体テストで
+        検証できるようにするため。
+
+        順序が重要: `model.init()` は
+        `model.mic_mute_status_change_callback` を `None` にリセットする
+        ため、先に `model.init()` を終わらせてからコールバックを登録しないと
+        登録した値が消えてしまう。
+        """
+        try:
+            self._model.init()
+        except Exception:
+            # In test or headless environments initialization may fail; log and continue.
+            errorLogging()
+        try:
+            # OSC ミュート同期 (Model.changeHandlerMute, 任意の OSC 受信
+            # スレッドで走る) が pause()/resume() を mic_lifecycle_lock 配下
+            # で実行できるよう、ロック付きラッパーを Model 側のコールバック
+            # スロットへ登録する。
+            self._model.setMicMuteStatusChangeCallback(self._changeMicTranscriptStatusLocked)
+        except Exception:
+            errorLogging()
+
     def init(self, *args, **kwargs) -> None:
         removeLog()
         printLog("Start Initialization")
+
+        self._bootstrapModel()
 
         # watchdog を初期化処理の先頭で起動する。以前は init() の最終行に
         # あったため、モデル重みのダウンロードや外部 API 呼び出しが
@@ -4239,16 +4495,159 @@ class Controller:
         printLog("Translation Engine Status Init completed")
 
         # Init Transcription Engine Status
-        for engine in config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
-            match engine:
-                case "Whisper":
-                    # キャッシュされた結果を使用（重複チェックを回避）
-                    config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = self._whisper_available_cache
-                case _:
-                    if connected_network is True:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
-                    else:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        printLog("Init Transcription Engine Status")
+
+        # Deepgram のモデル名 -> 対応言語一覧。check_transcription_engine() は
+        # 全エンジン共通の戻り値シェイプ (model_list は list[str]) を持つため、
+        # Deepgram だけが持つ追加メタデータ (言語一覧) はここに直接書き込む
+        # (Deepgram のケースはスレッドプール中で高々1回しか実行されないため
+        # 競合の心配はない)。
+        deepgram_model_languages: dict = {}
+
+        def check_transcription_engine(engine: str) -> tuple:
+            """文字起こしエンジンのステータスをチェック（並列実行用）。
+
+            Groq/OpenAI/カスタムサーバーは翻訳側の OpenAI互換エンジンと同じ
+            「認証キーでモデル一覧が取得できるか」で可用性を判定する。
+            実際に文字起こしを1回試すより軽量で、起動時の検証に向く。
+            """
+            status = False
+            auth_key_invalid = False
+            model_list = None
+            selected_model = None
+
+            try:
+                match engine:
+                    case "Whisper":
+                        # キャッシュされた結果を使用（重複チェックを回避）
+                        status = self._whisper_available_cache
+                    case "Groq_Whisper":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        if not api_key:
+                            status = False
+                        else:
+                            base_url = config.GROQ_WHISPER_BASE_URL
+                            if model.authenticationTranscriptionApiKey(api_key=api_key, base_url=base_url) is True:
+                                model_list = model.getTranscriptionApiModelList(
+                                    api_key=api_key, base_url=base_url, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                                )
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_GROQ_WHISPER_MODEL if config.SELECTED_GROQ_WHISPER_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
+                    case "OpenAI_Whisper":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        if not api_key:
+                            status = False
+                        else:
+                            base_url = config.OPENAI_WHISPER_BASE_URL
+                            if model.authenticationTranscriptionApiKey(api_key=api_key, base_url=base_url) is True:
+                                model_list = model.getTranscriptionApiModelList(
+                                    api_key=api_key, base_url=base_url, keyword_filter=TRANSCRIPTION_MODEL_KEYWORDS,
+                                )
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_OPENAI_WHISPER_MODEL if config.SELECTED_OPENAI_WHISPER_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
+                    case "Custom_Whisper":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        base_url = config.TRANSCRIPTION_CUSTOM_URL
+                        if not api_key or not base_url:
+                            status = False
+                        else:
+                            if model.authenticationTranscriptionApiKey(api_key=api_key, base_url=base_url) is True:
+                                # カスタムサーバーはどんなモデル名を使っているか分からないため絞り込まない
+                                model_list = model.getTranscriptionApiModelList(api_key=api_key, base_url=base_url)
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_CUSTOM_WHISPER_MODEL if config.SELECTED_CUSTOM_WHISPER_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
+                    case "Deepgram":
+                        api_key = config.TRANSCRIPTION_AUTH_KEYS.get(engine)
+                        if not api_key:
+                            status = False
+                        else:
+                            if model.authenticationDeepgramApiKey(api_key=api_key) is True:
+                                models_detailed = model.getDeepgramModelListDetailed(api_key=api_key)
+                                model_list = [m["name"] for m in models_detailed]
+                                deepgram_model_languages.update({m["name"]: m["languages"] for m in models_detailed})
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_DEEPGRAM_MODEL if config.SELECTED_DEEPGRAM_MODEL in model_list else model_list[0]
+                                    status = True
+                            else:
+                                auth_key_invalid = True
+                    case _:
+                        # Google 等、ネットワーク接続のみが条件のエンジン
+                        status = connected_network is True
+            except Exception as e:
+                printLog(f"Error checking transcription engine {engine}: {str(e)}")
+                errorLogging()
+                status = False
+
+            return engine, status, auth_key_invalid, model_list, selected_model
+
+        transcription_engine_results = {}
+        transcription_engines_to_check = list(config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST)
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            future_to_transcription_engine = {
+                executor.submit(check_transcription_engine, engine): engine
+                for engine in transcription_engines_to_check
+            }
+            for future in as_completed(future_to_transcription_engine):
+                engine, status, auth_key_invalid, model_list, selected_model = future.result()
+                transcription_engine_results[engine] = (status, auth_key_invalid, model_list, selected_model)
+
+        for engine in transcription_engines_to_check:
+            if engine not in transcription_engine_results:
+                continue
+
+            status, auth_key_invalid, model_list, selected_model = transcription_engine_results[engine]
+
+            config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = status
+
+            if auth_key_invalid:
+                auth_keys = config.TRANSCRIPTION_AUTH_KEYS
+                auth_keys[engine] = None
+                config.TRANSCRIPTION_AUTH_KEYS = auth_keys
+                printLog(f"{engine} transcription auth key is invalid")
+            elif status:
+                printLog(f"{engine} transcription engine is valid/available")
+
+            if engine == "Groq_Whisper" and not status:
+                config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
+                config.SELECTED_GROQ_WHISPER_MODEL = None
+            if engine == "OpenAI_Whisper" and not status:
+                config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
+                config.SELECTED_OPENAI_WHISPER_MODEL = None
+            if engine == "Custom_Whisper" and not status:
+                config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+                config.SELECTED_CUSTOM_WHISPER_MODEL = None
+            if engine == "Deepgram" and not status:
+                config.SELECTABLE_DEEPGRAM_MODEL_LIST = []
+                config.DEEPGRAM_MODEL_LANGUAGES = {}
+                config.SELECTED_DEEPGRAM_MODEL = None
+
+            if model_list is not None and status:
+                match engine:
+                    case "Groq_Whisper":
+                        config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = model_list
+                        config.SELECTED_GROQ_WHISPER_MODEL = selected_model
+                    case "OpenAI_Whisper":
+                        config.SELECTABLE_OPENAI_WHISPER_MODEL_LIST = model_list
+                        config.SELECTED_OPENAI_WHISPER_MODEL = selected_model
+                    case "Deepgram":
+                        config.SELECTABLE_DEEPGRAM_MODEL_LIST = model_list
+                        config.DEEPGRAM_MODEL_LANGUAGES = deepgram_model_languages
+                        config.SELECTED_DEEPGRAM_MODEL = selected_model
+                    case "Custom_Whisper":
+                        config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
+                        config.SELECTED_CUSTOM_WHISPER_MODEL = selected_model
+
+        printLog("Transcription Engine Status Init completed")
         self.initializationProgress(2)
 
         # Set Translation Engine
@@ -4306,8 +4705,7 @@ class Controller:
                 if osc_query_enabled is True:
                     self.enableOscQuery()
                     if config.VRC_MIC_MUTE_SYNC is True:
-                        model.setMuteSelfStatus()
-                        model.changeMicTranscriptStatus()
+                        self._initVrcMicMuteSync()
                 else:
                     # OSC Query is disabled, so disable VRC some features
                     mute_sync_info_flag = False
@@ -4383,3 +4781,34 @@ class Controller:
         self.updateConfigSettings()
 
         printLog("End Initialization")
+
+
+def _makeSimpleConfigGetter(attr_name: str):
+    """`_SIMPLE_CONFIG_GETTERS` の1エントリから、単純なgetterを生成する
+    (フェーズ3項目23)。以前はこの形の94個のメソッドが`controller.py`に
+    個別の`def`として並んでいた:
+
+        @staticmethod
+        def getUiLanguage(*args, **kwargs) -> dict:
+            return {"status":200, "result":config.UI_LANGUAGE}
+
+    ロジックが完全に同一な94個の関数定義を、1個のジェネレータ+
+    テーブルへ集約する。生成したメソッドは通常の`def`と同じ名前で
+    `Controller`クラスへ登録するため (`_registerSimpleConfigGetters()`
+    参照)、`mainloop.py`のルーティング (`controller.getUiLanguage`) や
+    既存テストからの直接呼び出しは一切変更不要。
+    """
+    def getter(*args, **kwargs) -> dict:
+        return {"status": 200, "result": getattr(config, attr_name)}
+    return getter
+
+
+def _registerSimpleConfigGetters() -> None:
+    for method_name, attr_name in _SIMPLE_CONFIG_GETTERS.items():
+        getter = _makeSimpleConfigGetter(attr_name)
+        getter.__name__ = method_name
+        getter.__qualname__ = f"Controller.{method_name}"
+        setattr(Controller, method_name, staticmethod(getter))
+
+
+_registerSimpleConfigGetters()

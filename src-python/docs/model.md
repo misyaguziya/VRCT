@@ -716,9 +716,6 @@ self.osc_handler.receiveOscParameters()
 **監視パラメータ:**
 - `/avatar/parameters/MuteSelf`: マイクミュート状態
 
-##### `stopReceiveOSC() -> None`
-OSC 受信を停止。
-
 ##### `getIsOscQueryEnabled() -> bool`
 OSC Query 機能が有効かチェック。
 

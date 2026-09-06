@@ -32,6 +32,12 @@ class _Sentinel(Exception):
 class StartWatchdogRunsFirstTests(unittest.TestCase):
     def test_start_watchdog_runs_before_the_network_check(self) -> None:
         controller = Controller.__new__(Controller)
+        # Controller.__init__ をバイパスしているため、init() 冒頭の
+        # _bootstrapModel() (フェーズ3項目22) が使う self._model を手動で
+        # 用意する。無いと AttributeError が (_bootstrapModel 内の
+        # try/except で) 黙って握り潰されるだけでこのテスト自体は壊れないが、
+        # 実際に model.init() が呼ばれたことにして意図を明示する。
+        controller._model = MagicMock()
         calls = []
         controller.startWatchdog = lambda *a, **k: calls.append("startWatchdog")
 
@@ -95,6 +101,12 @@ class WeightDownloadJoinTimeoutTests(unittest.TestCase):
              patch("controller.removeLog"), \
              patch("controller.Thread", _TrackingThread), \
              patch("controller.model") as mock_model:
+            # Controller.__init__ をバイパスしているため、init() 冒頭の
+            # _bootstrapModel() (フェーズ3項目22) が使う self._model を
+            # 手動で用意する (patch("controller.model") はモジュール属性を
+            # 差し替えるだけで、既に __new__ 済みのインスタンス属性までは
+            # 遡って設定してくれない)。
+            self.controller._model = mock_model
             mock_model.backwardCompatibleTranslatorCTranslate2ModelRenameWeightsDir = lambda: None
             mock_model.checkTranslatorCTranslate2ModelWeight.side_effect = fake_check_ctranslate2
             mock_model.checkTranscriptionWhisperModelWeight.side_effect = fake_check_whisper
