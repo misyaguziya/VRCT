@@ -31,7 +31,7 @@
     justify-content: space-between;
     overflow-y: auto;
     flex: 1;
-    padding-top: var(--config_page_topbar_height); // Ensure alignment with content area
+    padding-top: var(--config_page_content_padding_top);
     max-height: 60rem;
 }
 

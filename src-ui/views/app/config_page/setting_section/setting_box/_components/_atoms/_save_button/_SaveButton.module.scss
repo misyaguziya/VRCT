@@ -1,0 +1,25 @@
+.save_button {
+    padding: 0.8rem 1.2rem;
+    background-color: var(--primary_600_color);
+    border-radius: 0.4rem;
+    text-align: center;
+    flex-shrink: 0;
+    min-width: 5.4rem;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    &:hover {
+        background-color: var(--primary_500_color);
+    }
+    &:active {
+        background-color: var(--primary_700_color);
+    }
+    &.is_disabled {
+        pointer-events: none;
+        background-color: var(--primary_800_color);
+    }
+}
+
+.save_button_label {
+    font-size: 1.4rem;
+}
