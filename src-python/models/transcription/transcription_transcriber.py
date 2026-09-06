@@ -20,17 +20,24 @@ from speech_recognition import Recognizer, AudioData, AudioFile
 from speech_recognition.exceptions import UnknownValueError
 from datetime import timedelta
 from pyaudiowpatch import get_sample_size, paInt16
-from .transcription_languages import transcription_lang
 from .transcription_whisper import getWhisperModel, checkWhisperWeight
+from .transcription_providers import (
+    GoogleProvider,
+    LocalWhisperProvider,
+    OpenAICompatibleTranscriptionProvider,
+    DeepgramProvider,
+    TranscriptionApiError,
+)
+from .transcription_openai_compatible import TRANSCRIPTION_API_ENGINES as _API_TRANSCRIPTION_ENGINES
 
-import numpy as np
+# OpenAI互換系 (base_url/model差し替え) に加えて、独自プロトコルの
+# Deepgramも「APIキー/モデルを持つクラウドエンジン」として同列に扱う箇所
+# (last_recognition_errorのリセット対象等) で使う。
+_CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
+
 from pydub import AudioSegment
-from utils import errorLogging
-
-try:
-    import torch  # noqa: F401
-except Exception:
-    torch = None  # type: ignore
+from errors import ErrorCode
+from utils import errorLogging, printLog
 
 import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
@@ -38,6 +45,18 @@ warnings.simplefilter('ignore', RuntimeWarning)
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 GOOGLE_RECOGNIZE_TIMEOUT_SECONDS = 10
+
+# last_sample の長さ上限の下限値 (フェーズ3項目20)。last_sample は無音
+# ギャップが phrase_timeout 秒を超えるまでリセットされないため、発話・
+# 環境音が途切れないまま続くと無制限に伸び続け、推論がさらに遅くなって
+# もっと溜まる、という正のフィードバックループになりうる (audio_queue
+# 側の有界化 [model.py の _AUDIO_QUEUE_MAXSIZE] とあわせて対応)。
+# 実際に使う実効上限は _effectiveMaxLastSampleSeconds() が
+# self.phrase_timeout から動的に算出する (この定数はその下限)。
+# 固定値だけに頼ると、UI側の phrase_timeout/record_timeout の設定可能
+# 上限が将来変わった場合に追従できず、正常な長いフレーズを誤って
+# 切り詰めかねないため (レビュー指摘)。
+MAX_LAST_SAMPLE_SECONDS = 60
 
 
 class AudioTranscriber:
@@ -61,6 +80,10 @@ class AudioTranscriber:
         device: str = "cpu",
         device_index: int = 0,
         compute_type: str = "auto",
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_model: Optional[str] = None,
+        api_model_languages: Optional[List[str]] = None,
     ) -> None:
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
@@ -68,11 +91,13 @@ class AudioTranscriber:
         self.transcript_data: List[Dict[str, Any]] = []
         self.transcript_changed_event = Event()
         self.last_recognition_error = False
+        self.last_api_error_code: Optional[ErrorCode] = None
         self.audio_recognizer = Recognizer()
         self.audio_recognizer.operation_timeout = GOOGLE_RECOGNIZE_TIMEOUT_SECONDS
         self.transcription_engine = "Google"
         self.whisper_model = None
         self.whisper_weight_type = whisper_weight_type
+        self._api_provider: Optional[OpenAICompatibleTranscriptionProvider] = None
         self.audio_sources: Dict[str, Any] = {
             "sample_rate": source.SAMPLE_RATE,
             "sample_width": source.SAMPLE_WIDTH,
@@ -88,6 +113,44 @@ class AudioTranscriber:
                 root, whisper_weight_type, device=device, device_index=device_index, compute_type=compute_type
             )
             self.transcription_engine = "Whisper"
+        elif transcription_engine in _API_TRANSCRIPTION_ENGINES:
+            self.transcription_engine = transcription_engine
+            try:
+                self._api_provider = OpenAICompatibleTranscriptionProvider(
+                    api_key=api_key or "",
+                    base_url=base_url or "",
+                    model=api_model or "",
+                    engine_name=transcription_engine,
+                )
+            except Exception:
+                errorLogging()
+                self._api_provider = None
+        elif transcription_engine == "Deepgram":
+            self.transcription_engine = transcription_engine
+            try:
+                self._api_provider = DeepgramProvider(
+                    api_key=api_key or "",
+                    model=api_model or "",
+                    model_languages=api_model_languages,
+                )
+            except Exception:
+                errorLogging()
+                self._api_provider = None
+
+    def _resolve_provider(self):
+        """`self.transcription_engine`/`self.whisper_model` の"現在の"値を見て
+        対応するプロバイダを返す。既存テストが構築後に直接
+        `transcriber.transcription_engine`/`transcriber.whisper_model` を
+        書き換える運用になっているため、`__init__` 時点で1回だけ決め打つ
+        のではなく、呼び出しの都度その場で解決する。
+        """
+        if self.transcription_engine == "Whisper":
+            if self.whisper_model is None:
+                return None
+            return LocalWhisperProvider(self.whisper_model)
+        if self.transcription_engine in _CLOUD_TRANSCRIPTION_ENGINES:
+            return self._api_provider
+        return GoogleProvider(self.audio_recognizer)
 
     def transcribeAudioQueue(
         self,
@@ -111,70 +174,61 @@ class AudioTranscriber:
             except Empty:
                 break
             self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+        # drainしたチャンク全件を反映した後に1回だけ上限を適用する。
+        # チャンク単位で毎回切り詰めても最終結果は同じだが (末尾切り出しは
+        # 冪等)、backlogが溜まっている時ほど無駄な大きいバイト列コピーが
+        # 繰り返されてしまうため、ここでまとめて行う (レビュー指摘、
+        # フェーズ3項目20)。
+        self._capLastSampleLength(self.audio_sources)
 
-        confidences: List[Dict[str, Any]] = [{"confidence": 0, "text": "", "language": None}]
+        # Google/API系はネットワーク経由のためエラーが一時的なことが多く、
+        # 呼び出しの都度エラー状態をクリアして UI に古いエラーを残さない。
+        # ローカル Whisper は従来からこのリセットを行っておらず、その挙動は
+        # 変更しない (エラーが決定的である= リトライしても意味が薄いため)。
+        if self.transcription_engine == "Google" or self.transcription_engine in _CLOUD_TRANSCRIPTION_ENGINES:
+            self.last_recognition_error = False
+            self.last_api_error_code = None
+
+        best: Dict[str, Any] = {"confidence": 0, "text": "", "language": None}
         try:
             audio_data = self.audio_sources["process_data_func"]()
-            match self.transcription_engine:
-                case "Google":
-                    self.last_recognition_error = False
-                    for language, country in zip(languages, countries):
-                        try:
-                            text, confidence = self.audio_recognizer.recognize_google(
-                                audio_data,
-                                language=transcription_lang[language][country][self.transcription_engine],
-                                with_confidence=True
-                            )
-                            confidences.append({"confidence": confidence, "text": text, "language": language})
-                        except UnknownValueError:
-                            pass
-                        except Exception:
-                            self.last_recognition_error = True
-                            errorLogging()
-                case "Whisper":
-                    audio_data = np.frombuffer(
-                        audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16
-                    ).flatten().astype(np.float32) / 32768.0
-                    if torch is not None and isinstance(audio_data, torch.Tensor):
-                        audio_data = audio_data.detach().numpy()
-
-                    for language, country in zip(languages, countries):
-                        text = ""
-                        source_language = (
-                            transcription_lang[language][country][self.transcription_engine]
-                            if len(languages) == 1
-                            else None
-                        )
-                        segments, info = self.whisper_model.transcribe(
+            provider = self._resolve_provider()
+            if provider is not None:
+                force_language = len(languages) == 1
+                for language, country in zip(languages, countries):
+                    try:
+                        text, confidence, is_definitive = provider.transcribe(
                             audio_data,
-                            beam_size=5,
-                            temperature=0.0,
-                            log_prob_threshold=avg_logprob,
-                            no_speech_threshold=no_speech_prob,
-                            language=source_language,
-                            word_timestamps=False,
-                            without_timestamps=True,
-                            task="transcribe",
+                            language,
+                            country,
+                            avg_logprob=avg_logprob,
+                            no_speech_prob=no_speech_prob,
                             no_repeat_ngram_size=no_repeat_ngram_size,
+                            force_language=force_language,
                         )
-                        for s in segments:
-                            if s.avg_logprob < avg_logprob or s.no_speech_prob > no_speech_prob:
-                                continue
-                            text += s.text
-                        confidences.append({"confidence": info.language_probability, "text": text, "language": language})
-                        if (len(languages) == 1) or (
-                            transcription_lang[language][country][self.transcription_engine] == info.language
-                        ):
-                            break
+                    except UnknownValueError:
+                        continue
+                    except TranscriptionApiError as exc:
+                        self.last_recognition_error = True
+                        self.last_api_error_code = exc.error_code
+                        continue
+                    except Exception:
+                        self.last_recognition_error = True
+                        errorLogging()
+                        continue
+
+                    if confidence > best["confidence"]:
+                        best = {"confidence": confidence, "text": text, "language": language}
+                    if is_definitive:
+                        break
 
         except UnknownValueError:
             pass
         except Exception:
             errorLogging()
 
-        result = max(confidences, key=lambda x: x["confidence"])
-        if result["text"] != "":
-            self.updateTranscript(result)
+        if best["text"] != "":
+            self.updateTranscript(best)
         return True
 
     def updateLastSampleAndPhraseStatus(self, data: bytes, time_spoken) -> None:
@@ -187,6 +241,35 @@ class AudioTranscriber:
 
         source_info["last_sample"] += data
         source_info["last_spoken"] = time_spoken
+
+    def _effectiveMaxLastSampleSeconds(self) -> int:
+        """last_sample の実効上限秒数。
+
+        MAX_LAST_SAMPLE_SECONDS を下限としつつ、self.phrase_timeout の
+        倍を下回らないようにする。以前は固定60秒だったが、UI側の
+        phrase_timeout/record_timeout の設定可能上限 (Transcription.jsx)
+        にコメントで依存するだけで、Python側には何の強制力も無かった
+        (レビュー指摘)。ユーザーが実際に設定した phrase_timeout から
+        動的に算出することで、UI側の上限が将来変わっても追従する。
+        """
+        return max(MAX_LAST_SAMPLE_SECONDS, self.phrase_timeout * 2)
+
+    def _capLastSampleLength(self, source_info: Dict[str, Any]) -> None:
+        """last_sample が実効上限を超えていたら、古い方 (先頭) から
+        切り捨てる (フェーズ3項目20)。sample_rate/sample_width/channels/
+        phrase_timeoutは常にint (config.py・speech_recognition側で保証)
+        なので、max_bytesは常にsample_width*channelsの正確な倍数になり
+        PCMサンプル境界はずれない。
+        """
+        frame_size = source_info["sample_width"] * source_info["channels"]
+        if frame_size <= 0:
+            return
+        max_bytes = source_info["sample_rate"] * frame_size * self._effectiveMaxLastSampleSeconds()
+        last_sample = source_info["last_sample"]
+        if max_bytes > 0 and len(last_sample) > max_bytes:
+            dropped_bytes = len(last_sample) - max_bytes
+            source_info["last_sample"] = last_sample[-max_bytes:]
+            printLog(f"last_sample exceeded its cap; dropped {dropped_bytes} bytes of the oldest audio")
 
     def processMicData(self) -> AudioData:
         audio_data = AudioData(

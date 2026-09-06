@@ -5,11 +5,14 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from speech_recognition.exceptions import RequestError
+from speech_recognition.exceptions import RequestError, UnknownValueError
 
+from errors import ErrorCode
+from models.transcription.transcription_providers import TranscriptionApiError
 from models.transcription.transcription_transcriber import (
     AudioTranscriber,
     GOOGLE_RECOGNIZE_TIMEOUT_SECONDS,
+    MAX_LAST_SAMPLE_SECONDS,
 )
 
 
@@ -148,6 +151,338 @@ class TestQueueProcessing(unittest.TestCase):
         kwargs = transcriber.whisper_model.transcribe.call_args.kwargs
         self.assertEqual(kwargs["log_prob_threshold"], -0.55)
         self.assertEqual(kwargs["no_speech_threshold"], 0.42)
+
+
+class TestLastSampleLengthCap(unittest.TestCase):
+    """last_sample は無音ギャップが phrase_timeout 秒を超えるまでリセット
+    されないため、発話・環境音が途切れないまま続くと無制限に伸び続け、
+    推論がさらに遅くなってもっと溜まる正のフィードバックループになりうる
+    (フェーズ3項目20)。FakeAudioSource は 16000Hz/16bit/mono = 32000
+    bytes/秒なので、_effectiveMaxLastSampleSeconds() を1秒に固定して
+    検証する (実効上限は self.phrase_timeout にも依存するため、
+    MAX_LAST_SAMPLE_SECONDS を直接パッチすると phrase_timeout*2 の方が
+    優先されてしまい意図した秒数にならない)。"""
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_last_sample_is_capped_and_keeps_the_most_recent_bytes(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
+
+        with patch.object(transcriber, "_effectiveMaxLastSampleSeconds", return_value=1):
+            old_chunk = b"\x01\x00" * 20000  # 40000 bytes (1秒上限を超える古い分、切り捨てられるはず)
+            new_chunk = b"\x02\x00" * 16000  # 32000 bytes = ちょうど1秒分、残るはず
+            audio_queue = Queue()
+            now = datetime.now()
+            audio_queue.put((old_chunk, now))
+            audio_queue.put((new_chunk, now + timedelta(milliseconds=10)))
+
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        last_sample = transcriber.audio_sources["last_sample"]
+        self.assertEqual(len(last_sample), 32000)
+        self.assertEqual(last_sample, new_chunk)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_last_sample_under_the_cap_is_left_untouched(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
+
+        with patch.object(transcriber, "_effectiveMaxLastSampleSeconds", return_value=1):
+            audio_queue = Queue()
+            now = datetime.now()
+            audio_queue.put((b"\x01\x00", now))
+            audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100)))
+
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00\x02\x00")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_truncation_is_logged_instead_of_silent(self, _) -> None:
+        """レビュー指摘: 以前は last_sample の切り詰めが完全にサイレント
+        だった。printLog に残すこと。"""
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
+
+        with patch.object(transcriber, "_effectiveMaxLastSampleSeconds", return_value=1), \
+             patch("models.transcription.transcription_transcriber.printLog") as mock_print_log:
+            audio_queue = Queue()
+            now = datetime.now()
+            audio_queue.put((b"\x01\x00" * 20000, now))  # 上限(32000 bytes)超え
+
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        mock_print_log.assert_called_once()
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_cap_is_applied_once_per_drain_not_per_chunk(self, _) -> None:
+        """効率化: drainした全チャンクに1回ずつではなく、drainループ全体の
+        後に1回だけ切り詰めが行われること (最終結果は同じだが、backlogが
+        大きいときの無駄なコピーを避けるため)。"""
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
+
+        call_count = 0
+        original = transcriber._capLastSampleLength
+
+        def counting_cap(source_info):
+            nonlocal call_count
+            call_count += 1
+            original(source_info)
+
+        transcriber._capLastSampleLength = counting_cap
+        audio_queue = Queue()
+        now = datetime.now()
+        for i in range(5):
+            audio_queue.put((b"\x01\x00", now + timedelta(milliseconds=i)))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(call_count, 1, "5チャンクdrainしても切り詰めは1回だけのはず")
+
+    def test_effective_cap_never_falls_below_the_module_floor(self) -> None:
+        with patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False):
+            transcriber = AudioTranscriber(False, FakeAudioSource(), 1, 10, "Whisper")
+        # phrase_timeout=1 -> 1*2=2 は MAX_LAST_SAMPLE_SECONDS (60) を
+        # 下回るため、下限の60が使われるはず。
+        self.assertEqual(transcriber._effectiveMaxLastSampleSeconds(), MAX_LAST_SAMPLE_SECONDS)
+
+    def test_effective_cap_scales_up_with_a_long_phrase_timeout(self) -> None:
+        with patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False):
+            transcriber = AudioTranscriber(False, FakeAudioSource(), 100, 10, "Whisper")
+        # phrase_timeout=100 -> 100*2=200 は下限の60を上回るため、
+        # 200が使われるはず (UIの上限設定が将来変わっても追従する)。
+        self.assertEqual(transcriber._effectiveMaxLastSampleSeconds(), 200)
+
+
+class TestApiTranscriptionEngines(unittest.TestCase):
+    """Groq/OpenAI/カスタムサーバー (OpenAICompatibleTranscriptionProvider) 経由の
+    ディスパッチ。プロバイダ自体の挙動 (SDK呼び出し詳細) は
+    test_transcription_providers.py で検証済みのため、ここでは
+    AudioTranscriber 側の配線・エラー伝播・複数言語候補ループのみを見る。
+    """
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.OpenAICompatibleTranscriptionProvider")
+    def test_constructs_provider_with_engine_specific_credentials(self, provider_cls, _) -> None:
+        AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Groq_Whisper",
+            api_key="sk-groq", base_url="https://api.groq.com/openai/v1", api_model="whisper-large-v3",
+        )
+
+        provider_cls.assert_called_once_with(
+            api_key="sk-groq",
+            base_url="https://api.groq.com/openai/v1",
+            model="whisper-large-v3",
+            engine_name="Groq_Whisper",
+        )
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.OpenAICompatibleTranscriptionProvider")
+    def test_transcribes_via_api_provider_and_updates_transcript(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.return_value = ("hello", 0.9, True)
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "OpenAI_Whisper",
+            api_key="sk-openai", base_url="https://api.openai.com/v1", api_model="whisper-1",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.getTranscript()["text"], "hello")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.OpenAICompatibleTranscriptionProvider")
+    def test_api_error_sets_recognition_error_and_error_code(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.side_effect = TranscriptionApiError(
+            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED
+        )
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Custom_Whisper",
+            api_key="", base_url="http://localhost:8000/v1", api_model="whisper",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertTrue(transcriber.last_recognition_error)
+        self.assertEqual(transcriber.last_api_error_code, ErrorCode.TRANSCRIPTION_API_AUTH_FAILED)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.OpenAICompatibleTranscriptionProvider")
+    def test_clears_previous_error_state_before_a_successful_call(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.return_value = ("hello", 0.9, True)
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Groq_Whisper",
+            api_key="sk-groq", base_url="https://api.groq.com/openai/v1", api_model="whisper-large-v3",
+        )
+        transcriber.last_recognition_error = True
+        transcriber.last_api_error_code = ErrorCode.TRANSCRIPTION_API_TIMEOUT
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertFalse(transcriber.last_recognition_error)
+        self.assertIsNone(transcriber.last_api_error_code)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.OpenAICompatibleTranscriptionProvider")
+    def test_definitive_result_stops_trying_further_language_candidates(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.return_value = ("hello", 0.9, True)
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Groq_Whisper",
+            api_key="sk-groq", base_url="https://api.groq.com/openai/v1", api_model="whisper-large-v3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese", "English"], ["Japan", "United States"])
+
+        self.assertEqual(provider_cls.return_value.transcribe.call_count, 1)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.OpenAICompatibleTranscriptionProvider")
+    def test_keeps_trying_remaining_candidates_when_not_definitive(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.side_effect = [
+            ("low", 0.2, False),
+            ("high", 0.8, False),
+        ]
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Groq_Whisper",
+            api_key="sk-groq", base_url="https://api.groq.com/openai/v1", api_model="whisper-large-v3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese", "English"], ["Japan", "United States"])
+
+        self.assertEqual(provider_cls.return_value.transcribe.call_count, 2)
+        self.assertEqual(transcriber.getTranscript()["text"], "high")
+
+
+class TestDeepgramTranscriptionEngine(unittest.TestCase):
+    """Deepgram (DeepgramProvider) 経由のディスパッチ。base_url を持たない
+    点が Groq/OpenAI/カスタムサーバーと異なる。"""
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_constructs_provider_with_api_key_and_model_only(self, provider_cls, _) -> None:
+        AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3",
+        )
+
+        provider_cls.assert_called_once_with(api_key="dg-test", model="nova-3", model_languages=None)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_passes_model_languages_through_to_provider(self, provider_cls, _) -> None:
+        AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3", api_model_languages=["en", "ja"],
+        )
+
+        provider_cls.assert_called_once_with(api_key="dg-test", model="nova-3", model_languages=["en", "ja"])
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_transcribes_via_provider_and_updates_transcript(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.return_value = ("hello", 0.9, True)
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.getTranscript()["text"], "hello")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_api_error_sets_recognition_error_and_error_code(self, provider_cls, _) -> None:
+        provider_cls.return_value.transcribe.side_effect = TranscriptionApiError(
+            ErrorCode.TRANSCRIPTION_API_AUTH_FAILED
+        )
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-bad", api_model="nova-3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertTrue(transcriber.last_recognition_error)
+        self.assertEqual(transcriber.last_api_error_code, ErrorCode.TRANSCRIPTION_API_AUTH_FAILED)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    @patch("models.transcription.transcription_transcriber.DeepgramProvider")
+    def test_single_call_regardless_of_candidate_language_count(self, provider_cls, _) -> None:
+        # DeepgramProvider は常に is_definitive=True を返す (1回の呼び出しで
+        # 自動言語検出が完結するため)。複数候補言語を渡しても1回しか
+        # 呼ばれないことを確認する。
+        provider_cls.return_value.transcribe.return_value = ("hello", 0.9, True)
+        transcriber = AudioTranscriber(
+            False, FakeAudioSource(), 3, 10, "Deepgram",
+            api_key="dg-test", api_model="nova-3",
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese", "English"], ["Japan", "United States"])
+
+        self.assertEqual(provider_cls.return_value.transcribe.call_count, 1)
+
+
+class TestWhisperResilienceAcrossCandidates(unittest.TestCase):
+    """ローカル Whisper は1候補目で例外が出ても2候補目を試す
+    (エラーハンドリングを Google/API系と共通化した副次効果)。
+    """
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_continues_to_next_language_after_an_error(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.side_effect = [
+            RuntimeError("boom"),
+            ([], MagicMock(text="ok", language_probability=0.7, language="ja")),
+        ]
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        with patch("models.transcription.transcription_transcriber.errorLogging"):
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese", "English"], ["Japan", "United States"])
+
+        self.assertTrue(transcriber.last_recognition_error)
+        self.assertEqual(transcriber.whisper_model.transcribe.call_count, 2)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_does_not_reset_error_flag_at_start_of_call(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0, language="ja"))
+        transcriber.last_recognition_error = True
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", datetime.now()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertTrue(transcriber.last_recognition_error)
 
 
 class TestMutedMicMessage(unittest.TestCase):

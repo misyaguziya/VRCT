@@ -31,11 +31,69 @@ except Exception:
     OSCAccess = None  # type: ignore
 
 try:
+    # tinyoscquery.OSCQueryBrowser 自体は zeroconf.ServiceBrowser を内部で
+    # 使っているが、外部からコールバックを差し込む口が無い。VRChatの
+    # OSCQueryサービスが後から (VRCTより後に) 起動しても検出できるよう、
+    # mDNSのサービス出現をイベント駆動で受け取るために zeroconf を直接使う
+    # (waitForVrchatOscQueryConnectionAsync 参照。tinyoscqueryの依存関係
+    # として既にインストール済みのため追加の依存は増えない)。
+    from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
+except Exception:
+    ServiceBrowser = None  # type: ignore
+    ServiceListener = object  # type: ignore
+    Zeroconf = None  # type: ignore
+
+try:
     from utils import errorLogging
 except Exception:
     def errorLogging() -> None:
         import traceback
         print("Error occurred:", traceback.format_exc())
+
+
+class _VrchatOscQueryFoundListener(ServiceListener):
+    """VRChat の OSCQuery サービス (`_oscjson._tcp.local.`) が mDNS で
+    現れた瞬間に、一度だけ `on_found` を呼ぶ。
+
+    zeroconf のコールバックは zeroconf 自身のバックグラウンドスレッドで
+    発火する。`on_found` の中身は `changeHandlerMute` (model.py) と同様、
+    呼び出し元が必要ならスレッドセーフに扱うこと。
+    """
+
+    def __init__(self, target_name: str, on_found: Callable[[], None]) -> None:
+        self._target_name = target_name
+        self._on_found = on_found
+        self._fired = False
+
+    def add_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
+        self._check(zc, type_, name)
+
+    def update_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
+        self._check(zc, type_, name)
+
+    def remove_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
+        pass
+
+    def _check(self, zc: "Zeroconf", type_: str, name: str) -> None:
+        if self._fired or type_ != "_oscjson._tcp.local." or OSCQueryClient is None:
+            return
+        try:
+            info = zc.get_service_info(type_, name)
+            if info is None:
+                return
+            host_info = OSCQueryClient(info).get_host_info()
+            if host_info is None or self._target_name not in host_info.name:
+                return
+        except Exception:
+            errorLogging()
+            return
+        # 二重発火を避ける (add_service/update_service が同じサービスに
+        # 対して連続して呼ばれることがある)。
+        self._fired = True
+        try:
+            self._on_found()
+        except Exception:
+            errorLogging()
 
 class OSCHandler:
     """Thin wrapper managing OSC send/receive and optional OSCQuery advertising.
@@ -64,10 +122,57 @@ class OSCHandler:
         self.osc_server_port: Optional[int] = None
         self.dict_filter_and_target: Dict[str, Callable] = {}
         self.browser = None
+        # waitForVrchatOscQueryConnectionAsync() 用。見つかるまで (または
+        # stopWaitingForVrchatOscQueryConnection()/oscServerStop() で
+        # 止めるまで) 生き続ける、self.browser とは別の zeroconf インスタンス。
+        self._vrchat_watch_zc: Optional[Any] = None
+        self._vrchat_watch_browser: Optional[Any] = None
 
     def getIsOscQueryEnabled(self) -> bool:
         """Return whether OSCQuery support is enabled (local addresses only)."""
         return self.is_osc_query_enabled
+
+    def waitForVrchatOscQueryConnectionAsync(self, on_found: Callable[[], None]) -> None:
+        """VRChatのOSCQueryサービスがmDNSで現れるのを非同期に監視し、
+        見つかった瞬間に一度だけ `on_found` を呼ぶ。
+
+        VRCTがVRChatより先に起動した場合、`getOSCParameterValue()` が
+        使う `self.browser` は毎回その場で `find_service_by_name()` する
+        (＝呼ばれない限り再探索しない) ため、呼び出し元 (model.py の
+        `setMuteSelfStatus()`) を一度だけ叩いても VRChat 未起動なら
+        見つからないまま終わる。この監視はそれとは独立に、mDNSの
+        サービス出現イベントをプッシュ通知として受け取ることで、
+        VRChatが後から起動しても取りこぼさずに気づけるようにする。
+
+        OSCQueryが無効 (non-local IP) の場合や zeroconf が使えない場合は
+        何もしない。既に監視中の場合も何もしない (多重起動防止)。
+
+        NOTE: `on_found` は zeroconf 自身のバックグラウンドスレッドで
+        呼ばれる。呼び出し元は必要ならスレッドセーフに扱うこと。
+        """
+        if not self.is_osc_query_enabled or Zeroconf is None or ServiceBrowser is None:
+            return
+        if self._vrchat_watch_zc is not None:
+            return
+        try:
+            listener = _VrchatOscQueryFoundListener(self.osc_server_name, on_found)
+            self._vrchat_watch_zc = Zeroconf()
+            self._vrchat_watch_browser = ServiceBrowser(
+                self._vrchat_watch_zc, ["_oscjson._tcp.local."], listener
+            )
+        except Exception:
+            errorLogging()
+            self.stopWaitingForVrchatOscQueryConnection()
+
+    def stopWaitingForVrchatOscQueryConnection(self) -> None:
+        """`waitForVrchatOscQueryConnectionAsync()` の監視を止めて後片付けする。"""
+        if self._vrchat_watch_zc is not None:
+            try:
+                self._vrchat_watch_zc.close()
+            except Exception:
+                pass
+        self._vrchat_watch_zc = None
+        self._vrchat_watch_browser = None
 
     def setOscIpAddress(self, ip_address: str) -> None:
         """Change the OSC target IP address and reinitialize services."""
@@ -218,6 +323,7 @@ class OSCHandler:
             except Exception:
                 pass
             self.browser = None
+        self.stopWaitingForVrchatOscQueryConnection()
 
 if __name__ == "__main__":
     handler = OSCHandler()
