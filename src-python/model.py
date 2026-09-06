@@ -28,7 +28,12 @@ from config import config
 
 from models.translation.translation_translator import Translator
 from models.osc.osc import OSCHandler
-from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
+from models.transcription.transcription_recorder import (
+    SelectedMicEnergyAndAudioRecorder,
+    SelectedSpeakerEnergyAndAudioRecorder,
+    SelectedMicVadRecorder,
+    SelectedSpeakerVadRecorder,
+)
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
@@ -607,6 +612,8 @@ class MicSession(_AudioDeviceSession):
         phrase_timeout = config.MIC_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
+        if config.ENABLE_VAD is True:
+            return SelectedMicVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedMicEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.MIC_THRESHOLD,
@@ -628,6 +635,7 @@ class MicSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            vad_segmented=config.ENABLE_VAD is True,
             **self._resolve_api_transcription_kwargs(),
         )
 
@@ -665,6 +673,8 @@ class SpeakerSession(_AudioDeviceSession):
         phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
+        if config.ENABLE_VAD is True:
+            return SelectedSpeakerVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedSpeakerEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.SPEAKER_THRESHOLD,
@@ -686,6 +696,7 @@ class SpeakerSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            vad_segmented=config.ENABLE_VAD is True,
             **self._resolve_api_transcription_kwargs(),
         )
 

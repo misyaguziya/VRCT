@@ -49,6 +49,13 @@ class AudioTranscriber:
 - **device**: 計算デバイス（"cpu"/"cuda"）
 - **device_index**: デバイスインデックス
 - **compute_type**: 計算精度タイプ
+- **vad_segmented**: `config.ENABLE_VAD` 連動 (既定 False)。True の場合、audio_queue の
+  各アイテムは `(raw_bytes, recorded_at, reason)` の3要素タプルで、`reason` が
+  `"silence"`/`"flush"` (自然な区切り) の場合は蓄積分をまとめて即座に確定・
+  文字起こしする。`reason="max_duration"` (VAD の安全弁による無音を挟まない強制
+  打ち切り) の場合は単独送信せず蓄積を続ける (単語の途中で始まり/終わる不自然な
+  断片を単独送信すると、エンジン側の信頼度フィルタに丸ごと棄却されるリスクが
+  あるため、2026-09-06 実機で確認)。詳細は `transcription_recorder.md` 参照。
 
 ## 主要メソッド
 
