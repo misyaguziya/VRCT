@@ -3,11 +3,23 @@
 This class focuses on converting incoming raw audio buffers into text using
 either the Google web recognizer (online) or a local Whisper model (offline).
 
-VAD ストリーミング撤退 (ADR-0004) 以降、キューには
-(raw_bytes, recorded_at) タプルだけが積まれる。フレーズ境界は
-`speech_recognition.listen_energy_and_audio_in_background` の phrase_time_limit と
-AudioTranscriber.updateLastSampleAndPhraseStatus の phrase_timeout で決まる。
+キューには常に (raw_bytes, recorded_at) タプルが積まれる。エネルギー
+閾値方式 (既定) では、フレーズ境界は
+`speech_recognition.listen_energy_and_audio_in_background` の
+phrase_time_limit と AudioTranscriber.transcribeAudioQueue の
+phrase_timeout/MAX_PHRASE_DURATION_SECONDS で決まる。VAD方式
+(config.ENABLE_VAD、2026-09-06にオプトインとして再導入) では、
+キューの各アイテムは既に `audio_vad.VadSegmenter` が区切り終えた
+1フレーズであり、蓄積せず即座に確定・文字起こしする
+(`self.vad_segmented`、詳細は transcribeAudioQueue 参照)。
 partial (発話中の暫定結果) 通知は行わない。
+
+フレーズが「完成した」と判断できるまでは文字起こしを実行しない
+(2026-09-06のコードレビュー議論で「確定してから送る」方式に変更)。
+以前は溜まっているチャンクがあれば毎回その時点の last_sample 全体を
+再送信していたため、無音ギャップが来ない継続発話 (大人数の会話など) で
+送るたびに音声が長くなり推論がさらに遅くなる、という雪だるま式の遅延が
+生じていた。詳細は transcribeAudioQueue の docstring 参照。
 """
 
 import time
@@ -18,7 +30,7 @@ import wave
 from typing import Any, Dict, List, Optional
 from speech_recognition import Recognizer, AudioData, AudioFile
 from speech_recognition.exceptions import UnknownValueError
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pyaudiowpatch import get_sample_size, paInt16
 from .transcription_whisper import getWhisperModel, checkWhisperWeight
 from .transcription_providers import (
@@ -46,17 +58,12 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 GOOGLE_RECOGNIZE_TIMEOUT_SECONDS = 10
 
-# last_sample の長さ上限の下限値 (フェーズ3項目20)。last_sample は無音
-# ギャップが phrase_timeout 秒を超えるまでリセットされないため、発話・
-# 環境音が途切れないまま続くと無制限に伸び続け、推論がさらに遅くなって
-# もっと溜まる、という正のフィードバックループになりうる (audio_queue
-# 側の有界化 [model.py の _AUDIO_QUEUE_MAXSIZE] とあわせて対応)。
-# 実際に使う実効上限は _effectiveMaxLastSampleSeconds() が
-# self.phrase_timeout から動的に算出する (この定数はその下限)。
-# 固定値だけに頼ると、UI側の phrase_timeout/record_timeout の設定可能
-# 上限が将来変わった場合に追従できず、正常な長いフレーズを誤って
-# 切り詰めかねないため (レビュー指摘)。
-MAX_LAST_SAMPLE_SECONDS = 60
+# 無音ギャップが来ない継続発話でも、一定時間ごとに強制的にフレーズを
+# 区切って確定させる安全弁 (フェーズ3項目20の代替。2026-09-06の
+# コードレビューで「確定してから送る」方式に変更した際に導入)。
+# kikitan/PuriPuly-heart (他ツールのVAD実装、docs/ref/ 参照) を参考に、
+# self.phrase_timeout とは独立した固定値にしている。
+MAX_PHRASE_DURATION_SECONDS = 15
 
 
 class AudioTranscriber:
@@ -84,10 +91,18 @@ class AudioTranscriber:
         base_url: Optional[str] = None,
         api_model: Optional[str] = None,
         api_model_languages: Optional[List[str]] = None,
+        vad_segmented: bool = False,
     ) -> None:
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
+        # True の場合、audio_queue に積まれる各アイテムは既に VAD
+        # (audio_vad.VadSegmenter) がプリロール・hangover・max_speech_frames
+        # で区切り終えた「完成済みの1フレーズ」である。この場合は
+        # phrase_timeout/MAX_PHRASE_DURATION_SECONDS による蓄積・再分割を
+        # 行わず、キューから取り出した各アイテムをそのまま単独で確定・
+        # 文字起こしする (詳細は transcribeAudioQueue の docstring 参照)。
+        self.vad_segmented = vad_segmented
         self.transcript_data: List[Dict[str, Any]] = []
         self.transcript_changed_event = Event()
         self.last_recognition_error = False
@@ -104,7 +119,7 @@ class AudioTranscriber:
             "channels": source.channels,
             "last_sample": bytes(),
             "last_spoken": None,
-            "new_phrase": True,
+            "phrase_started_at": None,
             "process_data_func": self.processSpeakerData if speaker else self.processMicData,
         }
 
@@ -161,26 +176,146 @@ class AudioTranscriber:
         no_speech_prob: float = 0.6,
         no_repeat_ngram_size: int = 0,
     ) -> bool:
-        try:
-            audio, time_spoken = audio_queue.get_nowait()
-        except Empty:
-            time.sleep(0.01)
-            return False
-        # まとめて drain して最新まで反映する (backlog を残さない)
-        self.updateLastSampleAndPhraseStatus(audio, time_spoken)
+        """キューを非ブロッキングで drain し、フレーズが完成したと判断
+        できた時だけ実際に文字起こしを実行する。
+
+        以前は「キューに何かあれば毎回、その時点の last_sample 全体を
+        再送信する」実装だったため、無音ギャップが来ない継続発話
+        (大人数の会話など) で、送るたびに音声が長くなり推論がさらに
+        遅くなる → もっと溜まる、という雪だるま式の遅延が生じていた
+        (コードレビュー2026-09-06)。フレーズが完成するまでは蓄積する
+        だけにし、以下いずれかの条件で「完成」とみなして初めて送信する:
+
+          1. 無音ギャップ (self.phrase_timeout 秒) を超えた
+          2. 継続時間が MAX_PHRASE_DURATION_SECONDS を超えた
+          3. (キューが空になった後) 実時間で self.phrase_timeout 秒
+             経過した (発話がそこで終わっていれば、次のチャンクは
+             永久に来ないため、次のチャンク到達を待つだけでは検知できない)
+
+        蓄積するだけのラウンドは何も送信せず False を返す。呼び出し元
+        (model.py の sendTranscript) は前回表示した内容をそのまま残せば
+        よい。
+
+        self.vad_segmented が True の場合 (config.ENABLE_VAD)、キューの各
+        アイテムは (raw_bytes, recorded_at, reason) の3要素タプルで、
+        reason は "silence"/"flush" (自然な区切り) または "max_duration"
+        (無音を挟まない強制打ち切り、audio_vad.VadSegmenter.max_speech_frames
+        の安全弁) のいずれか。
+
+        当初は reason を区別せず「VAD が返す各アイテムは常に完成済みの
+        1フレーズ」として毎回単独で確定・送信していたが、実機検証で
+        「長い連続発話ほど内容が丸ごと抜け落ちる」regressionが判明した
+        (2026-09-06)。原因は reason="max_duration" の断片 (単語の途中で
+        始まり/終わる不自然な音声) を単独でエンジンに送ると、境界の
+        不自然さでエンジン側の信頼度フィルタ (Whisper の avg_logprob/
+        no_speech_prob、Google の recognize_google が返す
+        UnknownValueError) に断片ごと棄却されやすいこと。PuriPuly-heart
+        (docs/ref/PuriPuly-heart) を参考に、reason=="max_duration" の
+        断片は単独送信せず蓄積し、次に自然な区切り (silence/flush) が
+        来た時点でまとめて確定・送信する。話者が本当にノンストップで
+        話し続け自然な区切りが長時間来ない病的なケースの保険として、
+        エネルギー閾値方式と同じ MAX_PHRASE_DURATION_SECONDS 安全弁も
+        維持する。
+        """
+        source_info = self.audio_sources
+        transcribed = False
+
+        def finalize() -> None:
+            nonlocal transcribed
+            if source_info["last_sample"] and self._finalizeAndTranscribe(
+                languages, countries, avg_logprob, no_speech_prob, no_repeat_ngram_size
+            ):
+                transcribed = True
+            source_info["last_sample"] = bytes()
+            source_info["phrase_started_at"] = None
+
+        if self.vad_segmented:
+            while True:
+                try:
+                    data, time_spoken, reason = audio_queue.get_nowait()
+                except Empty:
+                    break
+
+                if source_info["phrase_started_at"] is None:
+                    source_info["phrase_started_at"] = time_spoken
+                source_info["last_sample"] += data
+                source_info["last_spoken"] = time_spoken
+                accumulated_sec = (time_spoken - source_info["phrase_started_at"]).total_seconds()
+
+                if reason != "max_duration":
+                    # 自然な区切り (silence/flush) → ここまでの蓄積分を
+                    # まとめて確定・送信する。
+                    printLog(
+                        f"[VAD-merge][{'speaker' if self.speaker else 'mic'}] "
+                        f"finalize reason={reason!r} accumulated={accumulated_sec:.2f}s "
+                        f"bytes={len(source_info['last_sample'])}"
+                    )
+                    finalize()
+                elif accumulated_sec >= MAX_PHRASE_DURATION_SECONDS:
+                    # 話者が本当にノンストップで話し続け、VAD 側の
+                    # max_speech_frames が silence/flush を伴わず
+                    # max_duration を繰り返し返し続ける病的なケースの保険。
+                    printLog(
+                        f"[VAD-merge][{'speaker' if self.speaker else 'mic'}] "
+                        f"safety-net finalize reason={reason!r} accumulated={accumulated_sec:.2f}s "
+                        f"bytes={len(source_info['last_sample'])}"
+                    )
+                    finalize()
+                else:
+                    # reason == "max_duration" かつ上記安全弁未到達 →
+                    # 単独送信せず蓄積を継続する (次のアイテムへ)。
+                    printLog(
+                        f"[VAD-merge][{'speaker' if self.speaker else 'mic'}] "
+                        f"accumulate reason={reason!r} accumulated={accumulated_sec:.2f}s "
+                        f"bytes={len(source_info['last_sample'])}"
+                    )
+            if not transcribed:
+                time.sleep(0.01)
+            return transcribed
+
         while True:
             try:
-                audio, time_spoken = audio_queue.get_nowait()
+                data, time_spoken = audio_queue.get_nowait()
             except Empty:
                 break
-            self.updateLastSampleAndPhraseStatus(audio, time_spoken)
-        # drainしたチャンク全件を反映した後に1回だけ上限を適用する。
-        # チャンク単位で毎回切り詰めても最終結果は同じだが (末尾切り出しは
-        # 冪等)、backlogが溜まっている時ほど無駄な大きいバイト列コピーが
-        # 繰り返されてしまうため、ここでまとめて行う (レビュー指摘、
-        # フェーズ3項目20)。
-        self._capLastSampleLength(self.audio_sources)
 
+            if (
+                source_info["last_spoken"] is not None
+                and time_spoken - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout)
+            ):
+                finalize()
+
+            if source_info["phrase_started_at"] is None:
+                source_info["phrase_started_at"] = time_spoken
+
+            source_info["last_sample"] += data
+            source_info["last_spoken"] = time_spoken
+
+            if time_spoken - source_info["phrase_started_at"] >= timedelta(seconds=MAX_PHRASE_DURATION_SECONDS):
+                finalize()
+
+        if (
+            source_info["last_sample"]
+            and source_info["last_spoken"] is not None
+            and datetime.now() - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout)
+        ):
+            finalize()
+
+        if not transcribed:
+            time.sleep(0.01)
+        return transcribed
+
+    def _finalizeAndTranscribe(
+        self,
+        languages: List[str],
+        countries: List[str],
+        avg_logprob: float,
+        no_speech_prob: float,
+        no_repeat_ngram_size: int,
+    ) -> bool:
+        """確定した audio_sources['last_sample'] を実際に文字起こしする。
+        last_sample のクリアは呼び出し元 (transcribeAudioQueue) が行う。
+        """
         # Google/API系はネットワーク経由のためエラーが一時的なことが多く、
         # 呼び出しの都度エラー状態をクリアして UI に古いエラーを残さない。
         # ローカル Whisper は従来からこのリセットを行っておらず、その挙動は
@@ -231,46 +366,6 @@ class AudioTranscriber:
             self.updateTranscript(best)
         return True
 
-    def updateLastSampleAndPhraseStatus(self, data: bytes, time_spoken) -> None:
-        source_info = self.audio_sources
-        if source_info["last_spoken"] and time_spoken - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout):
-            source_info["last_sample"] = bytes()
-            source_info["new_phrase"] = True
-        else:
-            source_info["new_phrase"] = False
-
-        source_info["last_sample"] += data
-        source_info["last_spoken"] = time_spoken
-
-    def _effectiveMaxLastSampleSeconds(self) -> int:
-        """last_sample の実効上限秒数。
-
-        MAX_LAST_SAMPLE_SECONDS を下限としつつ、self.phrase_timeout の
-        倍を下回らないようにする。以前は固定60秒だったが、UI側の
-        phrase_timeout/record_timeout の設定可能上限 (Transcription.jsx)
-        にコメントで依存するだけで、Python側には何の強制力も無かった
-        (レビュー指摘)。ユーザーが実際に設定した phrase_timeout から
-        動的に算出することで、UI側の上限が将来変わっても追従する。
-        """
-        return max(MAX_LAST_SAMPLE_SECONDS, self.phrase_timeout * 2)
-
-    def _capLastSampleLength(self, source_info: Dict[str, Any]) -> None:
-        """last_sample が実効上限を超えていたら、古い方 (先頭) から
-        切り捨てる (フェーズ3項目20)。sample_rate/sample_width/channels/
-        phrase_timeoutは常にint (config.py・speech_recognition側で保証)
-        なので、max_bytesは常にsample_width*channelsの正確な倍数になり
-        PCMサンプル境界はずれない。
-        """
-        frame_size = source_info["sample_width"] * source_info["channels"]
-        if frame_size <= 0:
-            return
-        max_bytes = source_info["sample_rate"] * frame_size * self._effectiveMaxLastSampleSeconds()
-        last_sample = source_info["last_sample"]
-        if max_bytes > 0 and len(last_sample) > max_bytes:
-            dropped_bytes = len(last_sample) - max_bytes
-            source_info["last_sample"] = last_sample[-max_bytes:]
-            printLog(f"last_sample exceeded its cap; dropped {dropped_bytes} bytes of the oldest audio")
-
     def processMicData(self) -> AudioData:
         audio_data = AudioData(
             self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"]
@@ -298,15 +393,15 @@ class AudioTranscriber:
         return audio
 
     def updateTranscript(self, result: dict) -> None:
-        source_info = self.audio_sources
+        """呼び出し元 (_finalizeAndTranscribe) は完成したフレーズ1件に
+        つき1回だけ呼ぶため、常に新しいエントリとして挿入する
+        (「まだ確定していない同一フレーズを上書きする」という概念は
+        「確定してから送る」設計では発生しない)。
+        """
         transcript = self.transcript_data
-
-        if source_info["new_phrase"] or len(transcript) == 0:
-            if len(transcript) > self.max_phrases:
-                transcript.pop(-1)
-            transcript.insert(0, result)
-        else:
-            transcript[0] = result
+        if len(transcript) > self.max_phrases:
+            transcript.pop(-1)
+        transcript.insert(0, result)
 
     def getTranscript(self) -> dict:
         if len(self.transcript_data) > 0:
@@ -318,4 +413,5 @@ class AudioTranscriber:
     def clearTranscriptData(self) -> None:
         self.transcript_data.clear()
         self.audio_sources["last_sample"] = bytes()
-        self.audio_sources["new_phrase"] = True
+        self.audio_sources["last_spoken"] = None
+        self.audio_sources["phrase_started_at"] = None
