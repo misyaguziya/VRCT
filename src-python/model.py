@@ -14,7 +14,7 @@ from os import stat as os_stat
 from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 from requests import get as requests_get
 from typing import Callable, Optional, cast
@@ -100,6 +100,20 @@ class ReleaseInfo:
     version: str
     is_prerelease: bool
     published_at: str
+
+
+# audio_queue の有界化 (フェーズ3項目20)。文字起こしが実時間に追いつけ
+# ない状況 (例: CPUでWhisper large-v3) で無制限に溜まると、drain時に
+# last_sample がまとめて連結されて音声が長くなり、推論がさらに遅くなって
+# もっと溜まる、という正のフィードバックループになる
+# (transcription_transcriber.py 側の last_sample 長上限とあわせて対応)。
+# 1チャンクは最大 record_timeout 秒 (UI 設定上限30秒) なので、理論上の
+# 最悪ケースでは 20 チャンク × 30秒 = 最大600秒分の生音声をキュー自体が
+# 保持しうる (last_sample 側の安全マージンより大きい)。ただしこれに
+# 到達するには単発の推論呼び出しが10分近く返らない必要があり非現実的
+# なため、値はそのまま維持する (レビューで指摘・検討済み)。20 は
+# 「文字起こしが実時間の何倍も遅れた」状態のみで発動する余裕を持たせた値。
+_AUDIO_QUEUE_MAXSIZE = 20
 
 
 class _DiscardQueue(Queue):
@@ -348,9 +362,22 @@ class _AudioDeviceSession:
             self._recorder.pause()
 
     def resume(self) -> None:
+        # 以前は while not empty(): get() という non-atomic な
+        # チェック→ブロッキングgetだったため、_print_transcript
+        # スレッド (transcribeAudioQueue) が同時に同じキューを
+        # drainしていると、resume() が empty()==False を見た直後に
+        # その最後の1件を向こうに取られてしまい、後続のブロッキング
+        # get() が (もう誰も put しないため) 永久に返らずハングし、
+        # self._recorder.resume() が一生呼ばれなくなるバグがあった
+        # (レビューで指摘、実機ではVRChatの素早いミュート/アンミュート
+        # 切り替えで再現しうる)。get_nowait() のみを使えば、他スレッド
+        # と競合しても即座に Empty を返すだけでブロックし得ない。
         if isinstance(self._audio_queue, Queue):
-            while not self._audio_queue.empty():
-                self._audio_queue.get()
+            while True:
+                try:
+                    self._audio_queue.get_nowait()
+                except Empty:
+                    break
         if self._recorder is not None and callable(self._recorder.resume):
             self._recorder.resume()
 
@@ -380,8 +407,11 @@ class _AudioDeviceSession:
         try:
             self._recorder = self._create_recorder(device)
 
-            audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
-            energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
+            audio_queue = Queue(maxsize=_AUDIO_QUEUE_MAXSIZE) if "transcript" in self.features else _DiscardQueue()
+            # energy_queue はメーター表示用で直近の値のみ意味を持つため、
+            # audio_queue と同じ理由 (レビュー指摘、フェーズ3項目20) で
+            # 有界化する。maxsize=1 で「最新の未読み取り値のみ保持」にする。
+            energy_queue: Optional[Queue] = Queue(maxsize=1) if "energy" in self.features else None
             self._audio_queue = audio_queue
             self._recorder.recordIntoQueue(audio_queue, energy_queue)
         except Exception:

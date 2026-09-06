@@ -171,5 +171,38 @@ class TestWriterStartupIsRaceFree(_StdoutWriterTestCase):
         self.assertEqual(len(stdout_writer_threads), 1)
 
 
+class PutDroppingOldestOnFullTests(unittest.TestCase):
+    """_enqueueLogLine (項目18) から切り出した共通ヘルパー。項目20で
+    audio_queue/energy_queue にも展開したため、両者から独立して
+    直接検証する (レビュー指摘: 以前は同じロジックが2箇所に手書きで
+    重複していた)。"""
+
+    def test_puts_normally_when_not_full(self) -> None:
+        q = Queue(maxsize=2)
+        evicted = utils.putDroppingOldestOnFull(q, "a")
+        self.assertFalse(evicted)
+        self.assertEqual(list(q.queue), ["a"])
+
+    def test_evicts_the_oldest_item_when_full(self) -> None:
+        q = Queue(maxsize=2)
+        q.put("a")
+        q.put("b")
+        evicted = utils.putDroppingOldestOnFull(q, "c")
+        self.assertTrue(evicted)
+        self.assertEqual(list(q.queue), ["b", "c"])
+
+    def test_works_on_an_already_empty_queue_racing_another_consumer(self) -> None:
+        # get_nowait() が Empty を送出するタイミング (満杯判定直後に
+        # 別スレッドが先に空にした場合) でも例外を出さずに積めること。
+        q = Queue(maxsize=1)
+        q.put("stale")
+        # 満杯にした直後、内部でget_nowaitする前に誰か(このテストの
+        # シミュレーションとしてここで先に)空にしてしまうケース。
+        q.get_nowait()
+        evicted = utils.putDroppingOldestOnFull(q, "fresh")
+        self.assertFalse(evicted)
+        self.assertEqual(list(q.queue), ["fresh"])
+
+
 if __name__ == "__main__":
     unittest.main()

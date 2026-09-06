@@ -383,6 +383,130 @@ class TestRecorderPipeline(unittest.TestCase):
         # energy_queue が指定されていない場合、callback_energy は渡されない
         self.assertIsNone(captured["energy_callback"])
 
+    def test_audio_callback_drops_oldest_chunk_when_queue_is_full(self) -> None:
+        """文字起こしが実時間に追いつけず audio_queue (有界) が満杯に
+        なった場合、put でブロックすると listener スレッド (このcallback
+        自体) が止まり録音が滞ってしまう。ブロックせず最も古いチャンクを
+        1つ捨てて最新を積むこと (フェーズ3項目20)。"""
+        recorder = BaseEnergyAndAudioRecorder(
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
+        )
+        captured: dict = {}
+
+        def fake_listen(
+            source,
+            callback,
+            phrase_time_limit=None,
+            callback_energy=None,
+            phrase_timeout=1,
+            record_timeout=5,
+        ):
+            captured["audio_callback"] = callback
+            return (MagicMock(), MagicMock(), MagicMock())
+
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = fake_listen
+
+        audio_queue: Queue = Queue(maxsize=2)
+        recorder.recordIntoQueue(audio_queue)
+
+        def make_audio(raw: bytes):
+            fake_audio = MagicMock()
+            fake_audio.get_raw_data.return_value = raw
+            return fake_audio
+
+        callback = captured["audio_callback"]
+        callback(None, make_audio(b"\x01"))
+        callback(None, make_audio(b"\x02"))
+        self.assertEqual(audio_queue.qsize(), 2)
+
+        # キューは満杯。ブロックせず古い方 (\x01) を捨てて \x03 を積むはず。
+        callback(None, make_audio(b"\x03"))
+
+        self.assertEqual(audio_queue.qsize(), 2)
+        remaining = [audio_queue.get_nowait()[0] for _ in range(2)]
+        self.assertEqual(remaining, [b"\x02", b"\x03"])
+
+    def test_audio_callback_logs_when_it_drops_a_chunk(self) -> None:
+        """キューが満杯でチャンクを捨てる際は、無音のままにせず
+        printLog に残すこと (レビュー指摘: 以前は完全にサイレントだった)。"""
+        recorder = BaseEnergyAndAudioRecorder(
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
+        )
+        captured: dict = {}
+
+        def fake_listen(
+            source,
+            callback,
+            phrase_time_limit=None,
+            callback_energy=None,
+            phrase_timeout=1,
+            record_timeout=5,
+        ):
+            captured["audio_callback"] = callback
+            return (MagicMock(), MagicMock(), MagicMock())
+
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = fake_listen
+
+        audio_queue: Queue = Queue(maxsize=1)
+        recorder.recordIntoQueue(audio_queue)
+
+        def make_audio(raw: bytes):
+            fake_audio = MagicMock()
+            fake_audio.get_raw_data.return_value = raw
+            return fake_audio
+
+        callback = captured["audio_callback"]
+        with patch("models.transcription.transcription_recorder.printLog") as mock_print_log:
+            callback(None, make_audio(b"\x01"))
+            mock_print_log.assert_not_called()
+            callback(None, make_audio(b"\x02"))  # ここで満杯になり \x01 を捨てる
+            mock_print_log.assert_called_once()
+
+    def test_energy_callback_drops_oldest_when_queue_is_full(self) -> None:
+        """energy_queue はメーター表示用で直近の値のみ意味を持つため、
+        満杯なら古い値を捨てて最新に置き換わること (レビュー指摘)。"""
+        recorder = BaseEnergyAndAudioRecorder(
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=5,
+        )
+        captured: dict = {}
+
+        def fake_listen(
+            source,
+            callback,
+            phrase_time_limit=None,
+            callback_energy=None,
+            phrase_timeout=1,
+            record_timeout=5,
+        ):
+            captured["energy_callback"] = callback_energy
+            return (MagicMock(), MagicMock(), MagicMock())
+
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = fake_listen
+
+        energy_queue: Queue = Queue(maxsize=1)
+        recorder.recordIntoQueue(Queue(), energy_queue)
+
+        captured["energy_callback"](111)
+        captured["energy_callback"](222)  # 満杯 -> 111 を捨てて 222 に置き換わるはず
+
+        self.assertEqual(energy_queue.qsize(), 1)
+        self.assertEqual(energy_queue.get_nowait(), 222)
+
     def test_energy_callback_pushes_energy_without_waiting_for_phrase(self) -> None:
         """callback_energy はフレーズ確定を待たず、生チャンクの読み取りの
         たびに呼ばれる想定 (config パネルの音量メーターのリアルタイム更新に

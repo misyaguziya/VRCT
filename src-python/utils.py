@@ -171,21 +171,37 @@ def _enqueueResponseLine(line: str) -> None:
     _stdout_response_queue.put(line)
 
 
-def _enqueueLogLine(line: str) -> None:
-    _ensureStdoutWriterStarted()
+def putDroppingOldestOnFull(q: "queue.Queue", item: Any) -> bool:
+    """非ブロッキングでqに積む。満杯なら最も古い項目を1つ捨てて積み直す。
+
+    ブロッキングpush (put()) は呼び出し元スレッド (録音コールバックや
+    ログ出力元などリアルタイム処理を行うプロデューサ) を止めてしまう
+    ため、常にput_nowaitのみを使う。あふれた場合は直近の状態の方が
+    有用という前提で、古いものから捨てる (フェーズ3項目18で導入、
+    項目20でaudio_queueにも展開する際に共通ヘルパーへ切り出した)。
+
+    Returns:
+        満杯で古い項目を1つ捨てた場合はTrue。呼び出し元が「捨てが
+        発生したこと」をログに残したい場合に使う。
+    """
     try:
-        _stdout_log_queue.put_nowait(line)
+        q.put_nowait(item)
+        return False
     except queue.Full:
-        # 診断用ログなので、あふれたら一番古いものを1つ捨てて新しいものを
-        # 積む (直近の状態のほうが有用なため)。
         try:
-            _stdout_log_queue.get_nowait()
+            q.get_nowait()
         except queue.Empty:
             pass
         try:
-            _stdout_log_queue.put_nowait(line)
+            q.put_nowait(item)
         except queue.Full:
             pass
+        return True
+
+
+def _enqueueLogLine(line: str) -> None:
+    _ensureStdoutWriterStarted()
+    putDroppingOldestOnFull(_stdout_log_queue, line)
 
 
 def _collectWeightFileStats(root: str) -> Dict[str, Dict[str, float]]:

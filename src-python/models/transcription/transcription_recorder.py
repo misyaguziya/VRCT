@@ -22,7 +22,7 @@ import threading
 from typing import Any
 from speech_recognition import AudioSource, Recognizer, Microphone
 from datetime import datetime
-from utils import errorLogging, printLog
+from utils import errorLogging, printLog, putDroppingOldestOnFull
 from device_manager import pyaudio_op_lock
 
 # 直前に同じ物理デバイスを force-stop した直後は、WASAPI 側の解放が
@@ -202,7 +202,15 @@ class BaseEnergyAndAudioRecorder:
         def audio_callback(_, audio) -> None:
             try:
                 raw = audio.get_raw_data()
-                audio_queue.put((raw, datetime.now()))
+                item = (raw, datetime.now())
+                # 文字起こしが実時間に追いつけていない状況。ここでブロック
+                # すると listener スレッド (このコールバック自体) が止まり
+                # 録音が滞るため、非ブロッキングで積み、満杯なら最も古い
+                # チャンクを1つ捨てて追いつく方を優先する (フェーズ3項目20)。
+                # audio_queue に maxsize が無い場合 (_DiscardQueue 等) は
+                # 常にFalseが返る (Fullが発生しないため)。
+                if putDroppingOldestOnFull(audio_queue, item):
+                    printLog("audio_queue is full; dropped the oldest queued chunk to keep up")
             except Exception:
                 # listener スレッドを絶対に殺さない (再入時に stream が
                 # 停止するのを避けるため)
@@ -210,7 +218,11 @@ class BaseEnergyAndAudioRecorder:
 
         def energy_callback(energy) -> None:
             try:
-                energy_queue.put(energy)
+                # 音量メーター用途で直近の値のみ意味を持つため、
+                # audio_queue と同じ理由で非ブロッキング化し、消費側
+                # (sendEnergy) が追いつけない場合は古い値を捨てる
+                # (フェーズ3項目20、energy_queue は maxsize=1 で構築される)。
+                putDroppingOldestOnFull(energy_queue, energy)
             except Exception:
                 errorLogging()
 
