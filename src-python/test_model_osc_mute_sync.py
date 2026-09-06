@@ -6,7 +6,7 @@
   changeHandlerMute (model.py: startReceiveOSC 内) は
   mic_lifecycle_lock を一切持たない任意のスレッドで走っていた。
   Auto Mic Select のデバイス切替や mainloop ワーカーが直接呼ぶ start/stop 系
-  (audio_lifecycle_worker 経由/直接ロック経由いずれも _stop()/_start() を
+  (mic_lifecycle_worker 経由/直接ロック経由いずれも _stop()/_start() を
   実行しうる) とミュート連打による pause()/resume() が無ロックで交錯すると、
   壊れた Recorder に触れて例外になったり、resume() が新しい _audio_queue を
   drain して録音済み音声を取りこぼす。
@@ -14,7 +14,7 @@
   修正 (2 段階):
   1. changeHandlerMute は self.changeMicTranscriptStatus() をインラインで
      呼ぶのではなく、Auto Select の他のデバイス操作と同じ
-     audio_lifecycle_worker の FIFO キューに投げて直列実行させる。
+     mic_lifecycle_worker の FIFO キューに投げて直列実行させる。
   2. 実行される関数自体を mic_mute_status_change_callback
      (= Controller.init() (_bootstrapModel()) が登録する
      mic_lifecycle_lock 付きラッパー _changeMicTranscriptStatusLocked)
@@ -45,8 +45,8 @@ class OscMuteHandlerRoutesThroughWorkerTests(unittest.TestCase):
         self._original_mute_status = getattr(self.model, "mic_mute_status", None)
         self._had_mic_session = hasattr(self.model, "_mic_session")
         self._original_mic_session = getattr(self.model, "_mic_session", None)
-        self._had_worker = hasattr(self.model, "audio_lifecycle_worker")
-        self._original_worker = getattr(self.model, "audio_lifecycle_worker", None)
+        self._had_worker = hasattr(self.model, "mic_lifecycle_worker")
+        self._original_worker = getattr(self.model, "mic_lifecycle_worker", None)
         self._had_osc_handler = hasattr(self.model, "osc_handler")
         self._original_osc_handler = getattr(self.model, "osc_handler", None)
         self._had_mute_callback = hasattr(self.model, "mic_mute_status_change_callback")
@@ -56,8 +56,8 @@ class OscMuteHandlerRoutesThroughWorkerTests(unittest.TestCase):
         self.model.mic_mute_status = False
         self.model._mic_session = MagicMock()
         self.enqueued = []
-        self.model.audio_lifecycle_worker = MagicMock()
-        self.model.audio_lifecycle_worker.enqueue.side_effect = lambda fn: self.enqueued.append(fn)
+        self.model.mic_lifecycle_worker = MagicMock()
+        self.model.mic_lifecycle_worker.enqueue.side_effect = lambda fn: self.enqueued.append(fn)
         self.model.osc_handler = MagicMock()
         self.model.osc_handler.osc_parameter_muteself = "/avatar/parameters/MuteSelf"
         # デフォルトは未登録 (フォールバック経路) を検証する。登録済みの
@@ -73,7 +73,7 @@ class OscMuteHandlerRoutesThroughWorkerTests(unittest.TestCase):
             ("_inited", self._had_inited, self._original_inited),
             ("mic_mute_status", self._had_mute_status, self._original_mute_status),
             ("_mic_session", self._had_mic_session, self._original_mic_session),
-            ("audio_lifecycle_worker", self._had_worker, self._original_worker),
+            ("mic_lifecycle_worker", self._had_worker, self._original_worker),
             ("osc_handler", self._had_osc_handler, self._original_osc_handler),
             ("mic_mute_status_change_callback", self._had_mute_callback, self._original_mute_callback),
         ):
