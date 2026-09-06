@@ -71,7 +71,7 @@ const TranslatorBox = (props) => {
     return (
         <div className={box_class_name} onClick={selectTranslator}>
             <p className={styles.translator_name}>{props.label}</p>
-            {props.is_default && <p className={label_default_class_name}>{t("main_page.translator_label_default")}</p>}
+            {props.is_default && <p className={label_default_class_name}>{t("common.default_label")}</p>}
         </div>
     );
 };

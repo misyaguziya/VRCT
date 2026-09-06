@@ -46,6 +46,14 @@ const useStartPython = () => {
         const command = Command.sidecar("bin/VRCT-sidecar");
         command.on("error", error => console.error(`error: "${error}"`));
         command.stdout.on("data", (line) => {
+            // Windows上のPython(CRLF)とTauriのread_line(\rまたは\nで区切る仕様)により、
+            // バッファ境界等で改行単体('\n')が空行として渡ることがある。
+            // JSON内の改行はエスケープされるためデータ欠落ではなく、パースエラーを防ぐため空行はスキップする。
+            if (typeof line === "string" && line.trim() === "") {
+                console.debug("Empty line received from sidecar stdout:", JSON.stringify(line));
+                return;
+            }
+
             let parsed_data = "";
             try {
                 parsed_data = JSON.parse(line);

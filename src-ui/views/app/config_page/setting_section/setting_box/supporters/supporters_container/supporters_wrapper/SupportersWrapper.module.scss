@@ -1,3 +1,5 @@
+@import "@scss_mixins";
+
 .container {
     display: flex;
     justify-content: center;
@@ -56,8 +58,6 @@
         height: 1.4rem;
     }
 }
-$progress_ease: cubic-bezier(0, 1, 0.75, 1);
-// Duplicated
 .supporter_icon_wrapper {
     height: 4rem;
     aspect-ratio: 1 /1;

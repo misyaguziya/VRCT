@@ -14,10 +14,11 @@
 //     background-color: var(--warning_bc_color);
 // }
 
-// .is_error {
-//     background-color: var(--error_bc_color);
-// }
-
+.is_error {
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
+}
 
 .megaphone_svg {
     color: var(--dark_200_color);

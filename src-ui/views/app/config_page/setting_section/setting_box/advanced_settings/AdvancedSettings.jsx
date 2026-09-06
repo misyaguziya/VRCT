@@ -81,6 +81,7 @@ const OscPortContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentOscPort.state}
             width="10rem"
+            type="number"
         />
     );
 };
@@ -179,6 +180,7 @@ const WebsocketPortContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentWebsocketPort.state}
             width="10rem"
+            type="number"
         />
     );
 };
@@ -294,6 +296,7 @@ const ObsBrowserSourcePortContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourcePort.state}
             width="10rem"
+            type="number"
         />
     );
 };
@@ -325,6 +328,7 @@ const ObsBrowserSourceMaxMessagesContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceMaxMessages.state}
             width="10rem"
+            type="number"
         />
     );
 };
@@ -356,6 +360,7 @@ const ObsBrowserSourceDisplayDurationContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceDisplayDuration.state}
             width="10rem"
+            type="number"
         />
     );
 };
@@ -387,6 +392,7 @@ const ObsBrowserSourceFadeoutDurationContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFadeoutDuration.state}
             width="10rem"
+            type="number"
         />
     );
 };
@@ -418,6 +424,7 @@ const ObsBrowserSourceFontSizeContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFontSize.state}
             width="10rem"
+            type="number"
         />
     );
 };
@@ -479,6 +486,7 @@ const ObsBrowserSourceFontOutlineThicknessContainer = () => {
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFontOutlineThickness.state}
             width="10rem"
+            type="number"
         />
     );
 };

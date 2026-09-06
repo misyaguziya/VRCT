@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import styles from "./Checkbox.module.scss";
 export const Checkbox = ({
-    checkboxId,
+    label,
     variable,
     is_available = true,
     toggleFunction,
@@ -19,7 +19,6 @@ export const Checkbox = ({
         <div className={styles.checkbox_container}>
             <label
                 className={wrapper_class_names}
-                htmlFor={checkboxId}
                 style={{
                     "--checkbox-size": size,
                     "--checkbox-border-width": borderWidth,
@@ -31,7 +30,7 @@ export const Checkbox = ({
                 ) : (
                     <input
                         type="checkbox"
-                        id={checkboxId}
+                        aria-label={label}
                         checked={variable.data}
                         onClick={(e) => e.stopPropagation()}
                         onChange={() => {
@@ -43,7 +42,7 @@ export const Checkbox = ({
                 )}
                 <span className={styles.cbx}>
                     <svg viewBox="0 0 12 12">
-                        <polyline points="1 6.29411765 4.5 10 11 1"></polyline>
+                        <polyline points="1.2 6.79411765 4.6 10.5 11.1 1.5" pathLength="1"></polyline>
                     </svg>
                 </span>
             </label>

@@ -13,12 +13,24 @@ const _Entry = forwardRef((props, ref) => {
             inputRef.current.blur();
         }
     }));
+    const is_disabled = props.is_disabled || false;
     const input_class_names = clsx(styles.entry_input_area, {
-        [styles.is_disabled]: props.is_disabled,
+        [styles.is_disabled]: is_disabled,
     });
     const input_wrapper_class_names = clsx(styles.entry_wrapper, {
         [styles.is_activated]: props.is_activated,
     });
+
+    const handleKeyDown = (e) => {
+        props.onKeyDown?.(e);
+        if (
+            e.key === "Enter" &&
+            !e.nativeEvent.isComposing &&
+            e.keyCode !== 229
+        ) {
+            props.onEnterPressed?.(e);
+        }
+    };
 
     return (
         <div
@@ -27,17 +39,22 @@ const _Entry = forwardRef((props, ref) => {
         >
             <div className={input_wrapper_class_names}>
                 <input
+                    type={props.type || "text"}
                     ref={inputRef}
-                    text={props.text ? props.text : "text"}
                     placeholder={props.placeholder ? props.placeholder : ""}
                     className={input_class_names}
-                    value={props.ui_variable === null ? "" : props.ui_variable}
+                    value={props.ui_variable ?? ""}
                     onChange={(e) => props.onChange?.(e)}
                     onFocus={(e) => props.onFocus?.(e)}
                     onBlur={(e) => props.onBlur?.(e)}
-                    onKeyDown={(e) => props.onKeyDown?.(e)}
+                    onKeyDown={handleKeyDown}
                     onKeyUp={(e) => props.onKeyUp?.(e)}
+                    onWheel={(e) => {
+                        props.onWheel?.(e);
+                        e.currentTarget.blur();
+                    }}
                     readOnly={props.readOnly === true ? true : false}
+                    disabled={is_disabled}
                 />
             </div>
         </div>

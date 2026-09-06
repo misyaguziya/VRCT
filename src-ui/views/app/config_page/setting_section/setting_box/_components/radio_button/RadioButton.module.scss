@@ -7,9 +7,11 @@
     flex-shrink: 0;
     flex-wrap: wrap;
     max-width: 70%;
+
     &.column {
         flex-direction: column;
         align-items: stretch;
+
         .radio_button_container {
             .radio_button_wrapper {
                 flex-grow: 1;
@@ -22,7 +24,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 2rem;
+    gap: 1.2rem;
     position: relative;
 }
 
@@ -35,18 +37,39 @@
     gap: 1rem;
     padding: 0.6rem 0.8rem;
     border-radius: 0.4rem;
+
     &:hover {
         background-color: var(--dark_850_color);
     }
+
     &:active {
         background-color: var(--dark_925_color);
     }
+
     &.is_selected {
         pointer-events: none;
+
+        .capacity_label {
+            color: var(--dark_350_color);
+        }
+
+        .default_badge {
+            outline-color: var(--primary_300_color);
+        }
     }
+
     &.disabled {
         pointer-events: none;
         color: var(--dark_600_color);
+
+        .capacity_label {
+            color: var(--dark_600_color);
+        }
+
+        .default_badge {
+            color: var(--dark_600_color);
+            outline-color: var(--dark_850_color);
+        }
     }
 }
 
@@ -60,10 +83,12 @@
     transition: border-color .1s ease, border-width .1s ease;
     flex-shrink: 0;
     cursor: inherit;
+
     &:checked {
         border-color: var(--primary_400_color);
         border-width: 0.6rem;
     }
+
     &:disabled {
         border-color: var(--dark_825_color);
     }
@@ -72,6 +97,31 @@
 .radio_button_label {
     font-size: 1.4rem;
     font-weight: 400;
+    flex-shrink: 0;
+}
+
+.capacity_label {
+    margin-left: auto;
+    font-size: 1.2rem;
+    color: var(--dark_500_color);
+    text-align: right;
+    font-weight: 400;
+    user-select: none;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+.default_badge {
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.2rem;
+    background-color: var(--dark_875_color);
+    outline: 0.1rem solid var(--dark_800_color);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
     flex-shrink: 0;
 }
 

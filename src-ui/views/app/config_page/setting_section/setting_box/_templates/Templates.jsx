@@ -22,22 +22,11 @@ import {
     ConnectionCheckButton,
 } from "../_components";
 import { Checkbox } from "@common_components";
-
-export const useOnMouseLeaveDropdownMenu = () => {
-    const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
-
-    const onMouseLeaveFunction = () => {
-        updateIsOpenedDropdownMenu("");
-    };
-
-    return { onMouseLeaveFunction };
-};
+import { useI18n } from "@useI18n";
 
 export const DropdownMenuContainer = (props) => {
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
     return (
-        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
+        <TemplatesContainerWrapper {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
             <DropdownMenu {...props} />
         </TemplatesContainerWrapper>
@@ -45,12 +34,10 @@ export const DropdownMenuContainer = (props) => {
 };
 
 export const MultiDropdownMenuContainer = (props) => {
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
     return (
-        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
+        <TemplatesContainerWrapper {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
             <MultiDropdownMenu dropdown_settings={props.dropdown_settings} is_break_point={currentIsBreakPoint.data} />
         </TemplatesContainerWrapper>
@@ -62,7 +49,6 @@ const TemplatesContainerWrapper = ({
     add_break_point = true,
     flex_column = false,
     remove_border_bottom = false,
-    onMouseLeaveFunction = null,
 }) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
@@ -73,7 +59,7 @@ const TemplatesContainerWrapper = ({
     });
 
     return (
-        <div className={container_class} onMouseLeave={onMouseLeaveFunction}>
+        <div className={container_class}>
             {children}
         </div>
     );
@@ -149,12 +135,15 @@ export const RadioButtonContainer = (props) => (
 );
 
 export const AuthKeyContainer = (props) => {
-    const webpage_settings = {
-        webpage_url: props.webpage_url,
-        open_webpage_label: props.open_webpage_label,
-    };
+    const { t } = useI18n();
+
     return (
-        <CommonContainer Component={AuthKey} {...props} {...webpage_settings} />
+        <CommonContainer
+            Component={AuthKey}
+            webpage_url={props.webpage_url}
+            open_webpage_label={t("config_page.common.open_auth_key_webpage")}
+            {...props}
+        />
     );
 };
 

@@ -110,14 +110,12 @@ export const Slider = (props) => {
         };
     }, [isDragging, calculateValue, onChangeFunction, onChangeCommittedFunction, ui_value]);
 
-    const handleMouseEnter = (e) => {
+    const handleMouseEnter = () => {
         setIsHovered(true);
-        if (props.onMouseEnterFunction) props.onMouseEnterFunction(e);
     };
 
-    const handleMouseLeave = (e) => {
+    const handleMouseLeave = () => {
         setIsHovered(false);
-        if (props.onMouseLeaveFunction) props.onMouseLeaveFunction(e);
     };
 
     const percentage = Math.max(0, Math.min((localValue - min) / (max - min), 1)) * 100;
