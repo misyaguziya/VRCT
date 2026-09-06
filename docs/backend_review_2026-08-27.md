@@ -656,7 +656,7 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 | 17 | **`TranslationProvider` レジストリの導入** 🟢 `286525c8`（詳細は下記補足） | A（**最も投資対効果が高い**。約 1,500 行削減、追加コスト 8 箇所 → 1 箇所） |
 | 18 | stdout 出力を専用スレッド + 有界キューに移行、フロントエンド消失時の自己終了 🟢 `c9ff7bd4`（詳細は下記補足） | B（35 秒フリーズ + `Errno 22` の根本対策） |
 | 19 | watchdog のエスカレーション（グレースフル → タイムアウト後 `os._exit`）と one-shot 化 🟢 `853bc8ca`（詳細は下記補足） | B（18 と組み合わせて初めて「フリーズしたら確実に落ちる」が成立） |
-| 20 | `audio_queue` の有界化と `last_sample` 長の上限 | B（バックプレッシャの明示） |
+| 20 | `audio_queue` の有界化と `last_sample` 長の上限 🟢 `88b1c1d2`（詳細は下記補足） | B（バックプレッシャの明示） |
 | 21 | `AudioLifecycleWorker` の mic/speaker 分割・重複除去・停止 API | B |
 | 22 | `Controller.__init__` への DI 導入 + `model.init()` を `Controller.init()` へ移動 🟢 `c2b61fa5`（詳細は下記補足） | A |
 | 23 | `Controller` のドメイン分割（17 完了後、単純 get/set のテーブル駆動化を先に） 🟡 `d6c67fae`（テーブル駆動化のみ完了、ドメイン分割は見送り、詳細は下記補足） | A |
@@ -679,6 +679,21 @@ CSP が無効なので WebView 内で任意スクリプトが実行され得ま�
 > `Main.escalateShutdown()`を新設し、watchdogのコールバックをこちらに差し替えた。グレースフルな`self.stop()`は別スレッドで試みつつ、他のロックに一切触れない`threading.Timer(30, os._exit, args=(1,))`を独立したハードデッドラインとして仕掛ける。グレースフル処理が何に詰まっていても(例外が出ても)、30秒後には必ず`os._exit()`でプロセスを終了させる。猶予30秒は`controller.shutdown()`の理論上の最大所要時間(mic/speaker停止×2 + energy停止×2、各最大15秒)を踏まえてユーザーと合意して決定した。feedが来ない限りwatchdogは20秒おきにコールバックを呼び続けるため、二重に停止処理・タイマーを積み上げないようone-shot化(ロック付きフラグ)した。`self.stop()`自体はグレースフル処理の実体として、またCtrl+C(`KeyboardInterrupt`)時の経路として引き続き使用しており、削除していない。
 >
 > 新規テスト4件(`test_mainloop_watchdog_escalation.py`: 二重発火防止、グレースフル処理が永久ブロックしてもハードデッドラインで強制終了、グレースフル完了時はタイマーが正しくキャンセルされる、グレースフル処理内で例外が出ても`os._exit`に到達する)を追加。全体483件を3回連続実行して安定を確認済み。
+>
+> **項目20の補足(2026-09-06, `88b1c1d2`)**: `audio_queue`(`model.py`)を`maxsize=20`で有界化し、満杯時はブロックせず最も古いチャンクを1つ捨てて追いつく方を優先するようにした。`last_sample`(`transcription_transcriber.py`)は無音ギャップが`phrase_timeout`秒を超えるまでリセットされない設計のため、発話・環境音が途切れないまま続くと無制限に伸び続け「溜まる→音声が長くなる→推論がさらに遅くなる→さらに溜まる」という正のフィードバックループになりうる問題に、長さの実効上限(古い方から切り捨て)を設けて対処した。
+>
+> 実装後に`/code-review`(xhigh、10角度×検証×スイープ)を実行し、10件の指摘のうち8件を修正・1件は現状維持・1件は変更不要と確認した:
+> - **`_AudioDeviceSession.resume()`のTOCTOUハング(既存バグ)を修正**: 以前は`while not empty(): get()`という非アトミックなcheck-then-actで、`_print_transcript`スレッドが同時にキューをdrainしていると`resume()`の後続の無限待ち`get()`が永久にブロックし、`self._recorder.resume()`が一生呼ばれずマイクが停止したまま戻らなくなる(VRChatの素早いミュート/アンミュート切り替えで再現しうる)。`get_nowait()`のみを使うdrainに変更し、原理的にブロックし得なくした。
+> - **チャンク破棄・`last_sample`切り詰めが完全にサイレントだった**問題に`printLog`を追加。
+> - `MAX_LAST_SAMPLE_SECONDS`(60秒)が「UI側の設定可能上限(30秒)」とコメントだけで結びついておりPython側に強制力が無かった問題を、`_effectiveMaxLastSampleSeconds() = max(60, self.phrase_timeout * 2)`として実際のユーザー設定値から動的に算出する方式に変更。
+> - `audio_callback`/`energy_callback`の「非ブロッキングput、満杯なら最古を1つ捨てて再put」ロジックが`utils.py`の`_enqueueLogLine`(項目18)と重複していたため、`putDroppingOldestOnFull()`として共通ヘルパーへ切り出した。
+> - `energy_queue`も同じ理由で無制限だったため`maxsize=1`(最新値のみ保持)で有界化。
+> - `_capLastSampleLength`をチャンク単位ではなくdrainループ全体の後に1回だけ呼ぶよう変更し(最終結果は数学的に同一)、backlog時の無駄な大きいバイト列コピーを削減。
+> - 常に無意味だった`max_bytes -= max_bytes % frame_size`(丸めのつもりが数式上絶対に0にしかならない死んだコード)を削除。
+>
+> 一方、`_AUDIO_QUEUE_MAXSIZE`(20チャンク、理論上最悪600秒分バッファしうる = last_sample側の60秒上限よりかなり大きい)はレビューで指摘されたが、到達には単発のWhisper推論呼び出しが10分近く返らない必要があり非現実的と判断しそのまま維持(コメントのみ実態を正直に修正)。内側の`except Full: pass`(現状の単一プロデューサ設計では到達不能)も、`utils.py`の既存パターンと完全に一致しており逸脱ではないため変更不要と判断。
+>
+> 新規/更新テスト13件を追加。全体500件を3回連続実行して安定を確認済み。
 >
 > **項目22の補足**: `Controller.__init__(self, config_override=None, model_override=None)` を追加し、既存の全呼び出し・`@patch("controller.model")` ベースのテストとの互換性を保ったままDIの足場を用意した(`self._config`/`self._model` として保持、現時点で実際に使っているのは `_bootstrapModel()` のみ — このクラスの残り数千行はまだ裸のモジュールレベル `config`/`model` を直接参照しており、項目23の対象)。
 >
