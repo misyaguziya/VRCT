@@ -288,7 +288,7 @@ class TestConfirmedCompleteTranscription(unittest.TestCase):
 
 
 class TestVadSegmentedTranscription(unittest.TestCase):
-    """config.ENABLE_VAD 経由 (vad_segmented=True) の場合、audio_queue の
+    """config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD 経由 (vad_segmented=True) の場合、audio_queue の
     各アイテムは (raw_bytes, recorded_at, reason) の3要素タプル。
 
     当初は reason を区別せず毎回単独で確定・送信していたが、実機検証で

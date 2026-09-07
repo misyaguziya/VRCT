@@ -301,7 +301,7 @@ class BaseVadAndAudioRecorder:
     「静かな出だしを取りこぼす」症状への対策として、2026-09-06に
     2度目の実機検証成功実装 (WIP commit 0e4a8d84) を土台に再導入した。
 
-    オプトイン機能 (config.ENABLE_VAD、既定 False) の実装で、既定の
+    オプトイン機能 (config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD、既定 False) の実装で、既定の
     エネルギー閾値方式の挙動には一切影響しない。
     """
 
