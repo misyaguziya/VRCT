@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 import model as model_module
 from model import MicSession, SpeakerSession
+from config import config
 
 
 class _FakeAudioTranscriber:
@@ -69,6 +70,20 @@ class TestMicSessionDeviceDiff(unittest.TestCase):
     def setUp(self) -> None:
         _FakeAudioRecorder.instances.clear()
         _CapturingThreadFnc.instances.clear()
+        # このテストは _create_recorder() がエネルギー閾値方式の
+        # Recorder を作ることを前提に @patch("model.SelectedMic...") して
+        # いる。config.json 側で MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD が true になっていると
+        # SelectedMicVadRecorder (未パッチの実クラス) が代わりに作られて
+        # しまい、フェイクが一切呼ばれなくなる。ここでは常に False に
+        # 固定してこのテストの前提を守る。
+        self._original_mic_enable_vad = config.MIC_ENABLE_VAD
+        self._original_speaker_enable_vad = config.SPEAKER_ENABLE_VAD
+        config.MIC_ENABLE_VAD = False
+        config.SPEAKER_ENABLE_VAD = False
+
+    def tearDown(self) -> None:
+        config.MIC_ENABLE_VAD = self._original_mic_enable_vad
+        config.SPEAKER_ENABLE_VAD = self._original_speaker_enable_vad
 
     @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
     @patch("model.AudioTranscriber", _FakeAudioTranscriber)
@@ -124,6 +139,15 @@ class TestSpeakerSessionDeviceDiff(unittest.TestCase):
     def setUp(self) -> None:
         _FakeAudioRecorder.instances.clear()
         _CapturingThreadFnc.instances.clear()
+        # TestMicSessionDeviceDiff.setUp と同じ理由。
+        self._original_mic_enable_vad = config.MIC_ENABLE_VAD
+        self._original_speaker_enable_vad = config.SPEAKER_ENABLE_VAD
+        config.MIC_ENABLE_VAD = False
+        config.SPEAKER_ENABLE_VAD = False
+
+    def tearDown(self) -> None:
+        config.MIC_ENABLE_VAD = self._original_mic_enable_vad
+        config.SPEAKER_ENABLE_VAD = self._original_speaker_enable_vad
 
     @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
     @patch("model.AudioTranscriber", _FakeAudioTranscriber)
