@@ -98,7 +98,7 @@ export const UpdateModal = () => {
     ];
     const compute_mode_options = [
         { id: "cpu", label: t("update_modal.compute_mode_cpu") },
-        { id: "gpu", label: t("update_modal.compute_mode_gpu") },
+        { id: "cuda", label: t("update_modal.compute_mode_cuda") },
     ];
 
     const selected_release = filtered_releases.find((r) => r.version === pending_version);
@@ -175,8 +175,8 @@ export const UpdateModal = () => {
         const ch = channel === "beta"
             ? t("update_modal.channel_beta")
             : t("update_modal.channel_stable");
-        const cm = compute_mode === "gpu"
-            ? t("update_modal.compute_mode_gpu")
+        const cm = compute_mode === "cuda"
+            ? t("update_modal.compute_mode_cuda")
             : t("update_modal.compute_mode_cpu");
         return `${version} · ${cm} · ${ch}`;
     };
@@ -201,8 +201,8 @@ export const UpdateModal = () => {
             })
         );
     }
-    if (is_compute_mode_changed && effective_compute_mode === "gpu") {
-        warnings.push(t("update_modal.warn_gpu_extra_size"));
+    if (is_compute_mode_changed && effective_compute_mode === "cuda") {
+        warnings.push(t("update_modal.warn_cuda_extra_size"));
     }
     if (is_channel_changed && effective_channel === "beta") {
         warnings.push(t("update_modal.warn_switch_to_beta"));

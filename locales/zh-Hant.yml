@@ -81,7 +81,7 @@ update_modal:
     channel_stable: "穩定版"
     channel_beta: "測試版"
     compute_mode_cpu: "CPU 版"
-    compute_mode_gpu: "GPU 版 (CUDA)"
+    compute_mode_cuda: "GPU 版 (CUDA)"
     beta_suffix: "測試版"
     latest_suffix: "最新"
     install_latest_button: "立即更新"
@@ -100,7 +100,7 @@ update_modal:
     change_col_current: "目前"
     change_col_after: "安裝後"
     warn_downgrade: "這是從 {{from}} 到 {{to}} 的降級。設定檔的相容性無法保證。"
-    warn_gpu_extra_size: "GPU 版大約需要 5GB 的額外下載。"
+    warn_cuda_extra_size: "GPU 版大約需要 5GB 的額外下載。"
     warn_switch_to_beta: "將切換至測試版頻道，之後的更新通知也將以測試版為主。"
     warn_switch_to_stable: "將切換至穩定版頻道，之後的更新通知也將以穩定版為主。"
 
@@ -370,7 +370,7 @@ config_page:
             channel_beta:
             compute_mode_label:
             compute_mode_cpu: "CPU"
-            compute_mode_gpu: "GPU (CUDA)"
+            compute_mode_cuda: "GPU (CUDA)"
             version_label: "要安裝的版本"
             version_desc:
             no_versions_available:
