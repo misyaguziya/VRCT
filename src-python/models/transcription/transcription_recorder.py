@@ -19,7 +19,7 @@ in tests.
 """
 
 import threading
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 from speech_recognition import AudioSource, Recognizer, Microphone
 from datetime import datetime
 from utils import errorLogging, printLog, putDroppingOldestOnFull
@@ -305,17 +305,7 @@ class BaseVadAndAudioRecorder:
     エネルギー閾値方式の挙動には一切影響しない。
     """
 
-    # PuriPuly-heart の `VadGating.PEER_MAX_SEGMENT_MS` (7秒、
-    # docs/ref/PuriPuly-heart 参照) を参考値としてそのまま採用する既定値。
-    _DEFAULT_MAX_SPEECH_SECONDS = 7.0
-
-    def __init__(
-        self,
-        source: Any,
-        record_timeout: int,
-        label: str = "vad",
-        max_speech_seconds: Optional[float] = None,
-    ) -> None:
+    def __init__(self, source: Any, record_timeout: int, label: str = "vad") -> None:
         self.recorder = Recognizer()
         self.record_timeout = record_timeout
         self.stop = None
@@ -338,25 +328,20 @@ class BaseVadAndAudioRecorder:
         # 強制打ち切り (reason="max_duration") された断片は
         # AudioTranscriber 側で単独送信せず蓄積するよう変更した (下記
         # audio_callback の reason 伝播、transcription_transcriber.py 参照)
-        # ため、この値は基本的に「1回のエンジン呼び出しの粒度」ではなく
-        # 純粋に「無音が来ない場合の安全弁」の役割になった。
+        # ため、この値は「1回のエンジン呼び出しの粒度」ではなく純粋に
+        #「無音が来ない場合の安全弁」の役割になった。PuriPuly-heart の
+        # `VadGating.PEER_MAX_SEGMENT_MS` (7秒、docs/ref/PuriPuly-heart 参照)
+        # を参考値としてそのまま採用する。
         #
-        # ただし Google (無料/非公式エンドポイント) だけは例外
-        # (2026-09-07): 実機検証で、無音を挟まない単一の自然な発話区間
-        # (max_duration に一度も触れない) が、Google側のばらつきで丸ごと
-        # 無応答になるケースを確認した。VRCT v3.5.0 (エネルギー閾値方式、
-        # record_timeout=3秒) は無音の有無に関わらず3秒ごとに機械的に
-        # 区切っていたため、3秒を超えるほぼ全ての発話が「発話の先頭から
-        # の累積」を内容の異なる複数バージョンでGoogleに複数回送る形になり、
-        # 個々の呼び出しの失敗が結果に出にくかったと考えられる。
-        # AudioTranscriber側の「育っていくバッファを都度再送信する」
-        # (interim_send) 対応と組み合わせるため、Google の場合は
-        # max_speech_seconds を短く (呼び出し元 model.py から3秒相当を
-        # 渡す) して、v3.5.0と同じ「複数回チャンスがある」構造を再現する。
-        max_speech_seconds = (
-            max_speech_seconds if max_speech_seconds is not None else self._DEFAULT_MAX_SPEECH_SECONDS
-        )
-        max_speech_frames = max(1, round(max_speech_seconds * 1000 / FRAME_DURATION_MS))
+        # 2026-09-07: Google (無料/非公式エンドポイント) 向けにこの値を
+        # エンジン別に短縮する対策を一時的に試したが、実機検証で
+        # 「呼び出し頻度が上がり過ぎて処理が悪化した」regressionが確認され
+        # 撤回した。最終的には AudioTranscriber 側でクリップ前後に無音
+        # パディングを付与するだけで無応答/内容欠落が解消したため
+        # (transcription_transcriber.py の VAD_PRE_PAD_MS/VAD_POST_PAD_MS
+        # 参照)、この値はエンジンを問わず常に固定 (7秒) のままでよい。
+        _MAX_SPEECH_DURATION_MS = 7000
+        max_speech_frames = max(1, round(_MAX_SPEECH_DURATION_MS / FRAME_DURATION_MS))
         # diagnostic_callback を printLog に繋いでおく。process.log に
         # speech_start/speech_end の実測タイミングが残るので、体感の遅さの
         # 原因 (hangover 待ち・モデル初回ロード・処理そのもの等) を
@@ -490,23 +475,17 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
 
 
 class SelectedMicVadRecorder(BaseVadAndAudioRecorder):
-    def __init__(
-        self, device: dict, record_timeout: int = 5, max_speech_seconds: Optional[float] = None
-    ) -> None:
+    def __init__(self, device: dict, record_timeout: int = 5) -> None:
         source = _create_microphone(
             {},
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
         )
-        super().__init__(
-            source=source, record_timeout=record_timeout, label="mic", max_speech_seconds=max_speech_seconds
-        )
+        super().__init__(source=source, record_timeout=record_timeout, label="mic")
 
 
 class SelectedSpeakerVadRecorder(BaseVadAndAudioRecorder):
-    def __init__(
-        self, device: dict, record_timeout: int = 5, max_speech_seconds: Optional[float] = None
-    ) -> None:
+    def __init__(self, device: dict, record_timeout: int = 5) -> None:
         source = _create_microphone(
             {"speaker": True},
             speaker=True,
@@ -514,6 +493,4 @@ class SelectedSpeakerVadRecorder(BaseVadAndAudioRecorder):
             sample_rate=int(device.get("defaultSampleRate", 16000)),
             channels=int(device.get("maxInputChannels", 1)),
         )
-        super().__init__(
-            source=source, record_timeout=record_timeout, label="speaker", max_speech_seconds=max_speech_seconds
-        )
+        super().__init__(source=source, record_timeout=record_timeout, label="speaker")

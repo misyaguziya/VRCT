@@ -264,53 +264,27 @@ class TestConfirmedCompleteTranscription(unittest.TestCase):
         self.assertEqual(transcriber.whisper_model.transcribe.call_count, 2)
         self.assertEqual(transcriber.audio_sources["last_sample"], b"\x03\x00")
 
-
-class TestGoogleInterimSendNonVad(unittest.TestCase):
-    """エネルギー閾値方式 (vad_segmented=False) でも、Google だけは
-    「確定してから1回だけ送る」を経由せず、チャンクが来るたびに発話の
-    先頭からの累積バッファを再送信する (2026-09-07、VAD方式と同じ理由:
-    v3.5.0 と同じ「育っていくバッファ」方式でないと、Google がある程度の
-    長さ・複雑さの音声で内容を欠落させることが実機で判明したため)。"""
-
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
-    def test_google_resends_the_growing_buffer_on_every_chunk(self, _) -> None:
-        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
-        seen_buffers = []
-
-        def _record_and_recognize(audio_data, **_kwargs):
-            seen_buffers.append(transcriber.audio_sources["last_sample"])
-            return ("hello", 0.9)
-
-        transcriber.audio_recognizer.recognize_google = MagicMock(side_effect=_record_and_recognize)
-        audio_queue = Queue()
-        now = datetime.now()
-        audio_queue.put((b"\x01\x00", now))
-        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100)))
-
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
-
-        self.assertTrue(result)
-        self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 2)
-        self.assertEqual(seen_buffers, [b"\x01\x00", b"\x01\x00\x02\x00"])
-        # まだ無音ギャップが来ていないのでリセットされていない。
-        self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00\x02\x00")
-
-    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
-    def test_whisper_does_not_interim_send_while_still_accumulating(self, _) -> None:
-        """Whisper (Google以外) は引き続き「確定してから1回だけ送る」
-        方式のまま (Google 限定の interim_send 挙動であることの回帰
-        テスト)。"""
+    def test_does_not_pad_the_clip_when_not_vad_segmented(self, _) -> None:
+        """VAD_PRE_PAD_MS/VAD_POST_PAD_MS はVAD方式 (vad_segmented=True)
+        限定で、エネルギー閾値方式 (v3.5.0から変わらない挙動) には適用
+        しない。"""
         transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
         transcriber.transcription_engine = "Whisper"
         transcriber.whisper_model = MagicMock()
+        seen_raw_lengths = []
+
+        def _record_and_transcribe(raw, **_kwargs):
+            seen_raw_lengths.append(len(raw))
+            return ([], MagicMock(language_probability=1.0))
+
+        transcriber.whisper_model.transcribe.side_effect = _record_and_transcribe
         audio_queue = Queue()
-        audio_queue.put((b"\x01\x00", datetime.now()))
+        audio_queue.put((b"\x01\x00\x02\x00", _already_old_timestamp()))
 
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
-        self.assertFalse(result)
-        transcriber.whisper_model.transcribe.assert_not_called()
-        self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00")
+        self.assertEqual(seen_raw_lengths[0], 2)
 
 
 class TestVadSegmentedTranscription(unittest.TestCase):
@@ -404,7 +378,10 @@ class TestVadSegmentedTranscription(unittest.TestCase):
 
         self.assertTrue(result)
         transcriber.whisper_model.transcribe.assert_called_once()
-        self.assertEqual(seen_last_samples, [b"\x01\x00\x02\x00\x03\x00"])
+        # VAD確定時は前後に無音パディングが付与されるため、生の連結結果
+        # そのものではなく、それを含んでいることを確認する。
+        self.assertEqual(len(seen_last_samples), 1)
+        self.assertIn(b"\x01\x00\x02\x00\x03\x00", seen_last_samples[0])
         self.assertEqual(transcriber.audio_sources["last_sample"], b"")
 
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
@@ -446,72 +423,37 @@ class TestVadSegmentedTranscription(unittest.TestCase):
         transcriber.whisper_model.transcribe.assert_not_called()
 
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
-    def test_google_resends_the_growing_buffer_from_the_true_start_on_every_chunk(self, _) -> None:
-        """2026-09-07: Google (無料/非公式エンドポイント) は「クリップの
-        長さ」ではなく「クリップが発話の本当の先頭から始まっているか」に
-        敏感だと実機検証で判明した (v3.5.0 は常に発話の先頭からの累積
-        バッファを送っていたため長いクリップでも欠落しなかった一方、
-        機械的な固定秒数分割は2つ目以降が発話の途中から始まる音声になり
-        失敗しやすかった)。そのため Google に限り reason を問わず毎回、
-        発話の先頭からここまでの累積バッファ全体を再送信する
-        (interim_send、last_sample はリセットしない)。"""
-        transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Google", vad_segmented=True)
-        seen_buffers = []
-
-        def _record_and_recognize(audio_data, **_kwargs):
-            seen_buffers.append(transcriber.audio_sources["last_sample"])
-            return ("hello", 0.9)
-
-        transcriber.audio_recognizer.recognize_google = MagicMock(side_effect=_record_and_recognize)
-        audio_queue = Queue()
-        now = datetime.now()
-        audio_queue.put((b"\x01\x00", now, "max_duration"))
-        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "max_duration"))
-
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
-
-        self.assertTrue(result)
-        self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 2)
-        # 2回目の送信は1回目の音声を含む、常に先頭からの累積バッファ。
-        self.assertEqual(seen_buffers, [b"\x01\x00", b"\x01\x00\x02\x00"])
-        # 自然な区切りが来ていないので、まだリセットされていない。
-        self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00\x02\x00")
-
-    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
-    def test_google_finalizes_and_resets_on_a_natural_reason_after_interim_sends(self, _) -> None:
-        transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Google", vad_segmented=True)
-        transcriber.audio_recognizer.recognize_google = MagicMock(return_value=("hello", 0.9))
-        audio_queue = Queue()
-        now = datetime.now()
-        audio_queue.put((b"\x01\x00", now, "max_duration"))
-        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
-
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
-
-        self.assertTrue(result)
-        self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 2)
-        # silence で確定したので、次のフレーズのためにリセットされている。
-        self.assertEqual(transcriber.audio_sources["last_sample"], b"")
-
-    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
-    def test_whisper_does_not_interim_send_on_max_duration_unlike_google(self, _) -> None:
-        """同じ vad_segmented=True でも、Google 以外のエンジン
-        (Whisper/Groq等) は reason=="max_duration" の間はエンジンを一切
-        呼ばず蓄積だけする (Google 限定の interim_send 挙動であることの
-        回帰テスト)。"""
+    def test_pads_the_finalized_clip_with_silence_regardless_of_engine(self, _) -> None:
+        """2026-09-07: VAD が確定したクリップは、エンジンを問わず前後に
+        無音パディングを付与してからエンジンに渡す (VAD_PRE_PAD_MS/
+        VAD_POST_PAD_MS)。当初は Google だけを対象にした特別扱い
+        (育っていくバッファの都度再送信等) を試したが、パディングだけで
+        問題が解消したためGoogle固有の分岐は全て撤回し、この一律の
+        パディングに一本化した。"""
         transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Whisper", vad_segmented=True)
         transcriber.transcription_engine = "Whisper"
         transcriber.whisper_model = MagicMock()
+        seen_raw_lengths = []
+
+        def _record_and_transcribe(raw, **_kwargs):
+            seen_raw_lengths.append(len(raw))
+            return ([], MagicMock(language_probability=1.0))
+
+        transcriber.whisper_model.transcribe.side_effect = _record_and_transcribe
         audio_queue = Queue()
-        now = datetime.now()
-        audio_queue.put((b"\x01\x00", now, "max_duration"))
-        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "max_duration"))
+        audio_queue.put((b"\x01\x00\x02\x00", datetime.now(), "silence"))
 
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
-        self.assertFalse(result)
-        transcriber.whisper_model.transcribe.assert_not_called()
-        self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00\x02\x00")
+        sample_rate = transcriber.audio_sources["sample_rate"]
+        sample_width = transcriber.audio_sources["sample_width"]
+        bytes_per_ms = sample_rate * sample_width / 1000
+        expected_pad = int(bytes_per_ms * 300) + int(bytes_per_ms * 500)
+        # LocalWhisperProvider は raw を float32 配列に変換してから渡すため
+        # バイト数ではなくサンプル数で比較する (int16 2バイト/サンプル)。
+        original_samples = len(b"\x01\x00\x02\x00") // 2
+        expected_pad_samples = expected_pad // 2
+        self.assertEqual(seen_raw_lengths[0], original_samples + expected_pad_samples)
 
 
 class TestApiTranscriptionEngines(unittest.TestCase):

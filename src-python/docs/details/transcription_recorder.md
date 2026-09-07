@@ -119,23 +119,18 @@ PuriPuly-heart の `PEER_MAX_SEGMENT_MS` (7秒) を参考にした固定値に�
 (record_timeout 連動だと既定3秒ごとに強制打ち切りが頻発し、上記
 regressionの発生頻度を上げていたため)。
 
-**2026-09-07、Google エンジンだけこの7秒を再度短縮する対策を試したが撤回した。**
-`BaseVadAndAudioRecorder`/`SelectedMic・SpeakerVadRecorder` に
-`max_speech_seconds` 引数 (既定 `None` = 7秒のまま) を追加し、一時期
-`model.py` の `_create_recorder` が `config.SELECTED_TRANSCRIPTION_ENGINE
-== "Google"` の場合だけ3秒を渡すようにしていた。狙いは、VRCT v3.5.0
-(エネルギー閾値方式、`record_timeout`=3秒) が無音の有無に関わらず3秒
-ごとに機械的に区切っていたため、3秒を超えるほぼ全ての発話が「発話の
-先頭からの累積」を内容の異なる複数バージョンでGoogleに複数回送る構造に
-なっており個々の呼び出しの失敗が結果に出にくかった、という点を
-`AudioTranscriber` 側の `interim_send` (育っていくバッファを都度再送信、
-`transcription_transcriber.py` 参照) と組み合わせて再現することだったが、
-実機検証で「呼び出し頻度が上がり過ぎ、無料/非公式エンドポイント側で
-暗黙のスロットリング等が起きた可能性がある」regressionが確認されたため
-撤回した。`max_speech_seconds` 引数自体 (既定7秒を上書きする汎用機構) は
-残しているが、`model.py` からは現在どのエンジンに対しても上書きしない
-(常に既定の7秒)。Google無料エンドポイントの信頼性向上は別途の課題として
-未解決のまま。
+**2026-09-07、Google (無料/非公式エンドポイント) で「ネットワークエラーは
+無いのに認識結果が0件で返る」問題が見つかり、いくつかの対策を試した末に
+撤回した経緯がある。** 一時期 `max_speech_seconds` 引数を追加して Google
+だけこの7秒を3秒に短縮したり、`AudioTranscriber` 側で Google だけ
+「育っていくバッファを都度再送信する」(`interim_send`) 特別扱いを
+していたが、いずれも実機検証で効果が薄い/副作用がある (呼び出し頻度が
+上がり過ぎて処理が悪化する等) と判明し撤回した。最終的には
+`AudioTranscriber` が確定したクリップの前後に無音パディングを付与する
+だけ (`transcription_transcriber.py` の `VAD_PRE_PAD_MS`/`VAD_POST_PAD_MS`
+参照、エンジンを問わず一律に適用) で問題が解消することを実機で確認し、
+Google 固有の特別扱いは全て撤回して一本化した。この Recorder 自体には
+Google固有の分岐は無く、`max_speech_frames` は常に固定 (7秒) のまま。
 
 マイク/スピーカーそれぞれのデバイスを開いて `BaseEnergyAndAudioRecorder` を構築します。
 `SelectedSpeakerEnergyAndAudioRecorder` は `enable_stall_watchdog=False` を固定で渡します。
