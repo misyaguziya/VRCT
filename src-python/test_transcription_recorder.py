@@ -617,6 +617,22 @@ class TestVadRecorderPipeline(unittest.TestCase):
         )
         self.assertAlmostEqual(recorder_short.vad_adapter.segmenter.max_speech_frames, 219, delta=2)
 
+    def test_max_speech_seconds_override_replaces_the_puripuly_referenced_default(self) -> None:
+        """2026-09-07: Google (無料/非公式エンドポイント) は、無音を挟まない
+        単一の自然な発話区間 (max_duration に一度も触れない) でも実機で
+        丸ごと無応答になるケースが確認された。v3.5.0 (エネルギー閾値方式、
+        3秒ごとに機械的に区切る) は3秒を超えるほぼ全ての発話を「発話の
+        先頭からの累積」で複数回Googleに送る構造になっており、個々の
+        呼び出しの失敗が結果に出にくかったと考えられる。model.py が
+        Google の場合だけ max_speech_seconds=3.0 相当を渡し、
+        AudioTranscriber側の interim_send と組み合わせて同じ構造を
+        再現できるよう、明示的に渡した値が既定 (7秒) を上書きすることを
+        確認する。"""
+        recorder = BaseVadAndAudioRecorder(RecorderAudioSource(), record_timeout=3, max_speech_seconds=3.0)
+
+        # 3秒 / 32ms(1フレーム) ≒ 94 フレーム。
+        self.assertAlmostEqual(recorder.vad_adapter.segmenter.max_speech_frames, 94, delta=2)
+
     def test_wires_diagnostic_logging_with_a_kind_specific_label(self) -> None:
         """体感の遅さ (モデル初回ロード・hangover 待ち等) を実機ログから
         切り分けられるよう、speech_start/speech_end が process.log に
