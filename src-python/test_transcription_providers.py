@@ -97,42 +97,6 @@ class TestGoogleProvider(unittest.TestCase):
 
         recognizer.recognize_google.assert_called_once()
 
-    def test_pads_the_clip_with_silence_before_sending(self) -> None:
-        """2026-09-07: ネットワークエラーは無いのに認識結果が0件で返る
-        (UnknownValueError) ケースを実機で確認した。kikitan-translatorの
-        VAD実装やPuriPuly-heartのring_buffer_ms=500 (docs/ref/ 参照) を
-        参考に、クリップの境界がエンジン側のエンドポイント判定に与える
-        影響を確認する実験として、送信直前に前300ms/後500msの無音
-        (ゼロバイト) を付与する。"""
-        recognizer = MagicMock()
-        recognizer.recognize_google.return_value = ("hello", 0.9)
-        provider = GoogleProvider(recognizer)
-        original = _audio_data(1.0)
-
-        provider.transcribe(
-            original, "English", "United States",
-            avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
-        )
-
-        sent_audio_data = recognizer.recognize_google.call_args.args[0]
-        bytes_per_ms = original.sample_rate * original.sample_width / 1000
-        expected_pre = int(bytes_per_ms * 300)
-        expected_post = int(bytes_per_ms * 500)
-        self.assertEqual(
-            len(sent_audio_data.frame_data),
-            expected_pre + len(original.frame_data) + expected_post,
-        )
-        self.assertEqual(sent_audio_data.frame_data[:expected_pre], b"\x00" * expected_pre)
-        self.assertEqual(sent_audio_data.frame_data[-expected_post:], b"\x00" * expected_post)
-        # パディングを除いた中身は元の音声そのまま (無音を足すだけで、
-        # 実際の音声データ自体は加工しない)。
-        self.assertEqual(
-            sent_audio_data.frame_data[expected_pre:-expected_post], original.frame_data
-        )
-        # sample_rate/sample_width は元のまま。
-        self.assertEqual(sent_audio_data.sample_rate, original.sample_rate)
-        self.assertEqual(sent_audio_data.sample_width, original.sample_width)
-
 
 class TestLocalWhisperProvider(unittest.TestCase):
     def _make_audio_data(self) -> MagicMock:

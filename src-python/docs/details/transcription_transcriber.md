@@ -53,14 +53,13 @@ class AudioTranscriber:
   各アイテムは `(raw_bytes, recorded_at, reason)` の3要素タプルで、`reason` が
   `"silence"`/`"flush"` (自然な区切り) の場合は蓄積分をまとめて即座に確定・
   文字起こしする。`reason="max_duration"` (VAD の安全弁による無音を挟まない強制
-  打ち切り) の場合、Whisper 等は単独送信せず蓄積を続ける (単語の途中で始まり/
-  終わる不自然な断片を単独送信すると、エンジン側の信頼度フィルタに丸ごと
-  棄却されるリスクがあるため、2026-09-06 実機で確認)。**Google エンジンのみ
-  別扱い** (2026-09-07): reason に関わらず新しいチャンクが来るたびに、発話の
-  先頭からここまでの累積バッファ全体を都度再送信する
-  (`interim_send`、VRCT v3.5.0 と同じ「育っていくバッファ」方式。詳細は
-  `transcribeAudioQueue` のdocstring参照)。`vad_segmented=False` (エネルギー
-  閾値方式) でも Google だけはこの再送信方式になる。詳細は
+  打ち切り) の場合は単独送信せず蓄積を続ける (単語の途中で始まり/終わる不自然な
+  断片を単独送信すると、エンジン側の信頼度フィルタに丸ごと棄却されるリスクが
+  あるため、2026-09-06 実機で確認)。確定したクリップには前後に無音パディング
+  (`_padWithSilenceForVad`、`VAD_PRE_PAD_MS`/`VAD_POST_PAD_MS`) を一律に付与する
+  (2026-09-07。エンジンを問わず適用。当初は Google だけ「育っていくバッファを
+  都度再送信する」等の特別扱いをしていたが、パディングだけで問題が解消したため
+  撤回し一本化した)。詳細は `transcribeAudioQueue` のdocstringと
   `transcription_recorder.md` 参照。
 
 ## 主要メソッド
