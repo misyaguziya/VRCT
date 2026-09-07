@@ -67,6 +67,21 @@ class AudioTranscriber:
   再送信方式になる (ただし無音パディングは付与されない)。詳細は
   `transcribeAudioQueue` のdocstringと `transcription_recorder.md` 参照。
 
+#### ASR成功率の計測 (`asr_attempts`/`asr_successes`)
+
+`_finalizeAndTranscribe` が呼ばれるたびに (VAD方式のinterim_send含め、
+実際にエンジンを呼ぶ1回を1試行として) `self.asr_attempts` をインクリメント
+し、テキストが得られた場合のみ `self.asr_successes` もインクリメントする
+(2026-09-07)。呼び出しのたびに `printLog` で
+`[ASR-stats][mic|speaker][エンジン名] this_call=success|failure
+attempts=N successes=M rate=X%` の形式でログに残す。Google無料エンドポ
+イントの信頼性対策 (無音パディング・interim_send) の効果を、ログの手動
+突き合わせではなく数値で継続的に確認できるようにするための計測機能。
+セッション中は `AudioTranscriber` インスタンスが存続する限り累積し
+(mute/unmute等での `clearTranscriptData()` では リセットしない)、
+文字起こしエンジンの切り替え等で新しいインスタンスが作られると0から
+再スタートする。
+
 ## 主要メソッド
 
 ### 音声認識処理

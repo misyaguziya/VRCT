@@ -121,6 +121,13 @@ class AudioTranscriber:
         self.transcript_changed_event = Event()
         self.last_recognition_error = False
         self.last_api_error_code: Optional[ErrorCode] = None
+        # ASR呼び出しの成功/失敗率の計測 (2026-09-07)。Google無料エンドポ
+        # イントの信頼性対策 (無音パディング・interim_send) の効果を、
+        # ログの手動突き合わせではなく数値で継続的に確認できるようにする
+        # ため。_finalizeAndTranscribe が呼ばれるたびに1回の「試行」として
+        # カウントし、テキストが得られた場合のみ「成功」とする。
+        self.asr_attempts = 0
+        self.asr_successes = 0
         self.audio_recognizer = Recognizer()
         self.audio_recognizer.operation_timeout = GOOGLE_RECOGNIZE_TIMEOUT_SECONDS
         self.transcription_engine = "Google"
@@ -454,8 +461,17 @@ class AudioTranscriber:
         except Exception:
             errorLogging()
 
-        if best["text"] != "":
+        self.asr_attempts += 1
+        succeeded = best["text"] != ""
+        if succeeded:
+            self.asr_successes += 1
             self.updateTranscript(best)
+        success_rate = (self.asr_successes / self.asr_attempts) * 100
+        printLog(
+            f"[ASR-stats][{'speaker' if self.speaker else 'mic'}][{self.transcription_engine}] "
+            f"this_call={'success' if succeeded else 'failure'} "
+            f"attempts={self.asr_attempts} successes={self.asr_successes} rate={success_rate:.1f}%"
+        )
         return True
 
     def processMicData(self) -> AudioData:
