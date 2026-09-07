@@ -63,6 +63,14 @@ const useStartPython = () => {
             }
         });
         command.stderr.on("data", line => {
+            // Python の warnings.warn() は既定で stderr に書き出される。良性の警告
+            // (FutureWarning 等: 依存ライブラリの将来非互換の予告など) まで致命的な
+            // エラー通知に昇格させると、実際にはクラッシュしていないのに
+            // 「An error occurred」ダイアログが出てしまう。警告行はログに残すだけにする。
+            if (typeof line === "string" && /\b[A-Za-z]*Warning: /.test(line)) {
+                console.warn("stderr (warning, ignored)", line);
+                return;
+            }
             showNotification_Error(
                 `An error occurred. Please restart VRCT or contact the developers. The last line:${JSON.stringify(line)}`, { hide_duration: null }
             );
