@@ -35,9 +35,9 @@ export const UpdateModal = () => {
     const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
     const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
 
-    const [pending_channel, setPendingChannel] = useState(null);
-    const [pending_compute_mode, setPendingComputeMode] = useState(null);
-    const [pending_version, setPendingVersion] = useState("");
+    const [tmp_selected_channel, setTmpSelectedChannel] = useState(null);
+    const [tmp_selected_compute_mode, setTmpSelectedComputeMode] = useState(null);
+    const [tmp_selected_version, setTmpSelectedVersion] = useState("");
 
     useEffect(() => {
         getAvailableReleases();
@@ -45,19 +45,19 @@ export const UpdateModal = () => {
     }, []);
 
     useEffect(() => {
-        if (pending_channel !== null) return;
+        if (tmp_selected_channel !== null) return;
         if (!currentReleaseChannel.data) return;
-        setPendingChannel(currentReleaseChannel.data);
-    }, [currentReleaseChannel.data, pending_channel]);
+        setTmpSelectedChannel(currentReleaseChannel.data);
+    }, [currentReleaseChannel.data, tmp_selected_channel]);
 
     useEffect(() => {
-        if (pending_compute_mode !== null) return;
+        if (tmp_selected_compute_mode !== null) return;
         if (!currentComputeMode.data) return;
-        setPendingComputeMode(currentComputeMode.data);
-    }, [currentComputeMode.data, pending_compute_mode]);
+        setTmpSelectedComputeMode(currentComputeMode.data);
+    }, [currentComputeMode.data, tmp_selected_compute_mode]);
 
-    const effective_channel = pending_channel ?? currentReleaseChannel.data ?? "stable";
-    const effective_compute_mode = pending_compute_mode ?? currentComputeMode.data ?? "cpu";
+    const effective_channel = tmp_selected_channel ?? currentReleaseChannel.data ?? "stable";
+    const effective_compute_mode = tmp_selected_compute_mode ?? currentComputeMode.data ?? "cpu";
 
     const filtered_releases = useMemo(() => {
         const list = currentAvailableReleases.data;
@@ -84,13 +84,13 @@ export const UpdateModal = () => {
 
     useEffect(() => {
         if (filtered_releases.length === 0) {
-            if (pending_version !== "") setPendingVersion("");
+            if (tmp_selected_version !== "") setTmpSelectedVersion("");
             return;
         }
-        const exists = filtered_releases.some((release) => release.version === pending_version);
+        const exists = filtered_releases.some((release) => release.version === tmp_selected_version);
         if (exists) return;
-        setPendingVersion(filtered_releases[0].version);
-    }, [filtered_releases, pending_version]);
+        setTmpSelectedVersion(filtered_releases[0].version);
+    }, [filtered_releases, tmp_selected_version]);
 
     const channel_options = [
         { id: "stable", label: t("update_modal.channel_stable") },
@@ -101,18 +101,18 @@ export const UpdateModal = () => {
         { id: "cuda", label: t("update_modal.compute_mode_cuda") },
     ];
 
-    const selected_release = filtered_releases.find((r) => r.version === pending_version);
-    const version_variable = { state: currentAvailableReleases.state, data: pending_version };
+    const selected_release = filtered_releases.find((r) => r.version === tmp_selected_version);
+    const version_variable = { state: currentAvailableReleases.state, data: tmp_selected_version };
     const channel_variable = { state: currentReleaseChannel.state, data: effective_channel };
     const compute_mode_variable = { state: "ok", data: effective_compute_mode };
 
     const is_channel_changed =
-        pending_channel !== null && pending_channel !== currentReleaseChannel.data;
+        tmp_selected_channel !== null && tmp_selected_channel !== currentReleaseChannel.data;
     const is_compute_mode_changed =
-        pending_compute_mode !== null && pending_compute_mode !== currentComputeMode.data;
+        tmp_selected_compute_mode !== null && tmp_selected_compute_mode !== currentComputeMode.data;
     const is_version_changed =
         selected_release && selected_release.version !== currentSoftwareVersion.data;
-    const has_any_pending_change =
+    const has_any_tmp_selected_change =
         is_channel_changed || is_compute_mode_changed || is_version_changed;
 
     const is_update_available =
@@ -121,7 +121,7 @@ export const UpdateModal = () => {
 
     // Hero mode
     let hero_mode; // "custom" | "update_available" | "up_to_date"
-    if (has_any_pending_change) hero_mode = "custom";
+    if (has_any_tmp_selected_change) hero_mode = "custom";
     else if (is_update_available) hero_mode = "update_available";
     else hero_mode = "up_to_date";
 
@@ -143,8 +143,8 @@ export const UpdateModal = () => {
 
     const onClickInstall = () => {
         if (!is_ready_to_install) return;
-        if (pending_channel && pending_channel !== currentReleaseChannel.data) {
-            setReleaseChannel(pending_channel);
+        if (tmp_selected_channel && tmp_selected_channel !== currentReleaseChannel.data) {
+            setReleaseChannel(tmp_selected_channel);
         }
         updateIsSoftwareUpdating(true);
         if (effective_compute_mode === "cpu") {
@@ -157,7 +157,7 @@ export const UpdateModal = () => {
     const onClickInstallLatest = () => {
         // shortcut used by the "update available" hero — apply current channel's latest
         if (!filtered_releases[0]) return;
-        setPendingVersion(filtered_releases[0].version);
+        setTmpSelectedVersion(filtered_releases[0].version);
         // fall through to the same install flow immediately
         updateIsSoftwareUpdating(true);
         if (effective_compute_mode === "cpu") {
@@ -330,7 +330,7 @@ export const UpdateModal = () => {
                         name="update_modal_channel"
                         options={channel_options}
                         checked_variable={channel_variable}
-                        selectFunction={setPendingChannel}
+                        selectFunction={setTmpSelectedChannel}
                     />
                 </div>
                 <div className={styles.row}>
@@ -342,7 +342,7 @@ export const UpdateModal = () => {
                         name="update_modal_compute_mode"
                         options={compute_mode_options}
                         checked_variable={compute_mode_variable}
-                        selectFunction={setPendingComputeMode}
+                        selectFunction={setTmpSelectedComputeMode}
                     />
                 </div>
                 <div className={styles.row}>
@@ -356,9 +356,9 @@ export const UpdateModal = () => {
                     />
                     <DropdownMenu
                         dropdown_id="update_modal_version"
-                        selected_id={pending_version}
+                        selected_id={tmp_selected_version}
                         list={list_for_ui}
-                        selectFunction={(data) => setPendingVersion(data.selected_id)}
+                        selectFunction={(data) => setTmpSelectedVersion(data.selected_id)}
                         state={version_variable.state}
                     />
                 </div>
