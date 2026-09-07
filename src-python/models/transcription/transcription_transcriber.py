@@ -8,7 +8,7 @@ either the Google web recognizer (online) or a local Whisper model (offline).
 `speech_recognition.listen_energy_and_audio_in_background` の
 phrase_time_limit と AudioTranscriber.transcribeAudioQueue の
 phrase_timeout/MAX_PHRASE_DURATION_SECONDS で決まる。VAD方式
-(config.ENABLE_VAD、2026-09-06にオプトインとして再導入) では、
+(config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD、2026-09-06にオプトインとして再導入) では、
 キューの各アイテムは既に `audio_vad.VadSegmenter` が区切り終えた
 1フレーズであり、蓄積せず即座に確定・文字起こしする
 (`self.vad_segmented`、詳細は transcribeAudioQueue 参照)。
@@ -65,7 +65,7 @@ GOOGLE_RECOGNIZE_TIMEOUT_SECONDS = 10
 # self.phrase_timeout とは独立した固定値にしている。
 MAX_PHRASE_DURATION_SECONDS = 15
 
-# VAD方式 (config.ENABLE_VAD) で確定したクリップの前後に付与する無音
+# VAD方式 (config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD) で確定したクリップの前後に付与する無音
 # (ゼロバイト) パディング。2026-09-07: Google (無料/非公式エンドポイント)
 # で「ネットワークエラーは無いのに認識結果が0件で返る」
 # (UnknownValueError) ケースを実機で確認した。当初は Google だけの
@@ -217,7 +217,7 @@ class AudioTranscriber:
         (model.py の sendTranscript) は前回表示した内容をそのまま残せば
         よい。
 
-        self.vad_segmented が True の場合 (config.ENABLE_VAD)、キューの各
+        self.vad_segmented が True の場合 (config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD)、キューの各
         アイテムは (raw_bytes, recorded_at, reason) の3要素タプルで、
         reason は "silence"/"flush" (自然な区切り) または "max_duration"
         (無音を挟まない強制打ち切り、audio_vad.VadSegmenter.max_speech_frames

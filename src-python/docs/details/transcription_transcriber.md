@@ -49,7 +49,7 @@ class AudioTranscriber:
 - **device**: 計算デバイス（"cpu"/"cuda"）
 - **device_index**: デバイスインデックス
 - **compute_type**: 計算精度タイプ
-- **vad_segmented**: `config.ENABLE_VAD` 連動 (既定 False)。True の場合、audio_queue の
+- **vad_segmented**: `config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD` 連動 (既定 False)。True の場合、audio_queue の
   各アイテムは `(raw_bytes, recorded_at, reason)` の3要素タプルで、`reason` が
   `"silence"`/`"flush"` (自然な区切り) の場合は蓄積分をまとめて即座に確定・
   文字起こしする。`reason="max_duration"` (VAD の安全弁による無音を挟まない強制

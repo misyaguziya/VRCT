@@ -621,7 +621,7 @@ class MicSession(_AudioDeviceSession):
         phrase_timeout = config.MIC_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
-        if config.ENABLE_VAD is True:
+        if config.MIC_ENABLE_VAD is True:
             return SelectedMicVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedMicEnergyAndAudioRecorder(
             device=device,
@@ -644,7 +644,7 @@ class MicSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
-            vad_segmented=config.ENABLE_VAD is True,
+            vad_segmented=config.MIC_ENABLE_VAD is True,
             **self._resolve_api_transcription_kwargs(),
         )
 
@@ -682,7 +682,7 @@ class SpeakerSession(_AudioDeviceSession):
         phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
-        if config.ENABLE_VAD is True:
+        if config.SPEAKER_ENABLE_VAD is True:
             return SelectedSpeakerVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedSpeakerEnergyAndAudioRecorder(
             device=device,
@@ -705,7 +705,7 @@ class SpeakerSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
-            vad_segmented=config.ENABLE_VAD is True,
+            vad_segmented=config.SPEAKER_ENABLE_VAD is True,
             **self._resolve_api_transcription_kwargs(),
         )
 

@@ -15,7 +15,7 @@
 - `BaseEnergyRecorder` / `SelectedMicEnergyRecorder` / `SelectedSpeakerEnergyRecorder`
   (エナジー計測専用、speech_recognition の `listen_energy_in_background` を使う旧経路)
 
-**2026-09-06、`config.ENABLE_VAD` (既定 False) でのオプトインとして VAD を再導入**しました
+**2026-09-06、`config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD` (既定 False) でのオプトインとして VAD を再導入**しました
 (過去2度、この領域で挑戦して未完了/リバートに終わっている経緯があるため、既定は従来通りの
 エネルギー閾値方式のまま)。動機は「文章の途中で切れて意味が繋がらない」「静かな出だしの
 音声を取りこぼす」という実機での指摘: エネルギー閾値方式の `phrase_time_limit`
@@ -71,7 +71,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
                  phrase_time_limit: int, record_timeout: int = 5)
 ```
 
-### BaseVadAndAudioRecorder クラス (`config.ENABLE_VAD` オプトイン)
+### BaseVadAndAudioRecorder クラス (`config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD` オプトイン)
 ```python
 class BaseVadAndAudioRecorder:
     def __init__(self, source: Any, record_timeout: int, label: str = "vad")
@@ -93,7 +93,7 @@ class SelectedSpeakerVadRecorder(BaseVadAndAudioRecorder):
     def __init__(self, device: dict, record_timeout: int = 5)
 ```
 `model.py` の `MicSession._create_recorder`/`SpeakerSession._create_recorder` が
-`config.ENABLE_VAD is True` の場合にこちらを選ぶ。`AudioTranscriber` 側も
+`config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD is True` の場合にこちらを選ぶ。`AudioTranscriber` 側も
 `vad_segmented=True` で構築される。
 
 audio_queue に積まれるアイテムの形はエネルギー閾値方式と異なり
@@ -190,7 +190,7 @@ adjustForNoise() -> None
 `Recognizer.listen_energy_and_audio_in_background`（`listen_in_background` 相当に
 `callback_energy` フックを足したもの、エネルギー閾値方式）または
 `Recognizer.listen_with_segmenter_in_background`（区切り判定を `segmenter` に完全委任する
-汎用の差し込み点、`config.ENABLE_VAD` 時）のいずれかを使います。`callback_energy` は
+汎用の差し込み点、`config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD` 時）のいずれかを使います。`callback_energy` は
 フレーズ確定を待たず生チャンク読み取りのたびに呼ばれ、Config パネルの音量メーターを
 リアルタイム更新するために必須です（`listen_in_background` だけではフレーズ確定時にしか
 エナジー値が取れず、音量メーターが動かなくなるデグレードが発生していました）。listener
@@ -241,10 +241,10 @@ adjustForNoise() -> None
 ## 関連モジュール
 
 - `transcription_transcriber.py` (`AudioTranscriber`): `(raw_bytes, recorded_at)` タプルを
-  受け取り、フレーズを組み立てて認識エンジンに渡す。`vad_segmented=True` (config.ENABLE_VAD)
+  受け取り、フレーズを組み立てて認識エンジンに渡す。`vad_segmented=True` (config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD)
   では蓄積せず各アイテムを単独で確定・文字起こしする。
 - `models/transcription/audio_vad.py` (`VadSegmenter`/`VadRecognizerAdapter`):
-  `config.ENABLE_VAD` 時の発話区間検出本体。Silero VAD (faster-whisper 同梱 ONNX) による
+  `config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD` 時の発話区間検出本体。Silero VAD (faster-whisper 同梱 ONNX) による
   プリロール・anchor方式ヒステリシス・`max_speech_frames` 安全弁の実装。
 - `device_manager.py`: `pyaudio_op_lock` の定義元、デバイス列挙・監視。
 - `model.py`: `MicSession`/`SpeakerSession` (`_AudioDeviceSession`) が
@@ -252,4 +252,4 @@ adjustForNoise() -> None
   統合管理する。`Model.startMic/SpeakerTranscript`・`startCheckMic/
   SpeakerEnergy` は Session への薄いラッパー。`_DiscardQueue` の定義元でも
   ある。詳細は `model.md` を参照。
-- `config.py`: 録音設定管理 (`MIC_THRESHOLD` 等) と `ENABLE_VAD` (既定 False、オプトイン)。
+- `config.py`: 録音設定管理 (`MIC_THRESHOLD` 等) と `MIC_ENABLE_VAD`/`SPEAKER_ENABLE_VAD` (既定 False、オプトイン、マイク/スピーカー個別)。
