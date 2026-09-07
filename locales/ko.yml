@@ -81,7 +81,7 @@ update_modal:
     channel_stable: "정식판"
     channel_beta: "베타판"
     compute_mode_cpu: "CPU 버전"
-    compute_mode_gpu: "GPU 버전 (CUDA)"
+    compute_mode_cuda: "GPU 버전 (CUDA)"
     beta_suffix: "베타"
     latest_suffix: "최신"
     install_latest_button: "지금 업데이트"
@@ -100,7 +100,7 @@ update_modal:
     change_col_current: "현재"
     change_col_after: "설치 후"
     warn_downgrade: "{{from}}에서 {{to}}로의 다운그레이드입니다. 설정 파일의 호환성은 보장되지 않습니다."
-    warn_gpu_extra_size: "GPU 버전은 약 5GB의 추가 다운로드가 필요합니다."
+    warn_cuda_extra_size: "GPU 버전은 약 5GB의 추가 다운로드가 필요합니다."
     warn_switch_to_beta: "베타 채널로 전환됩니다. 이후 업데이트 알림도 베타판을 기준으로 합니다."
     warn_switch_to_stable: "정식 채널로 전환됩니다. 이후 업데이트 알림도 정식판을 기준으로 합니다."
 
@@ -370,7 +370,7 @@ config_page:
             channel_beta:
             compute_mode_label:
             compute_mode_cpu: "CPU"
-            compute_mode_gpu: "GPU (CUDA)"
+            compute_mode_cuda: "GPU (CUDA)"
             version_label: "설치할 버전"
             version_desc:
             no_versions_available:
