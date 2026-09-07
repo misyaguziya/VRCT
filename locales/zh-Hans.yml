@@ -361,6 +361,37 @@ config_page:
             desc:
             aptabase_privacy_policy_label:
 
+    ocr:
+        section_title: "VRChat 聊天 OCR"
+        section_desc: "识别屏幕上显示的 VRChat 聊天气泡文字，并通过现有的翻译流程处理。结果会显示在主消息日志和 SteamVR 悬浮窗中，不会发送到 VRChat 的 OSC 聊天框。"
+        capture_target: "捕获对象"
+        language: "语言"
+        performance: "性能"
+        enable_ocr_capture:
+            label: "启用 VRChat 聊天 OCR"
+            desc: "开始后台任务，捕获 VRChat 窗口(SteamVR 运行时为头显镜像画面)并翻译检测到的聊天气泡。"
+        window_title:
+            label: "窗口名称"
+            desc: "与可见窗口标题的部分匹配(不区分大小写)。如果你使用的客户端窗口标题不是 'VRChat'(例如修改版启动器)，请更改此项。"
+        source_language:
+            label: "OCR 识别语言"
+            desc: "捕获的气泡所使用的语言。'auto' 会加载日语+英语识别引擎。指定具体语言(如 'Japanese')则只加载该语言。更改后需重新启动 OCR 才会生效。"
+        use_gpu:
+            label: "OCR 使用 GPU"
+            desc: "在可用时使用 CUDA 运行 EasyOCR。若 GPU 初始化失败(例如使用 Whisper 时显存不足)会自动切换到 CPU。"
+        poll_interval_ms:
+            label: "捕获间隔 (毫秒)"
+            desc: "OCR 循环获取新帧的频率。数值越低响应越快，但 CPU/GPU 负载越高。默认值：750。"
+        min_confidence:
+            label: "最低 OCR 置信度"
+            desc: "低于此 EasyOCR 置信度分数的文字会被丢弃。调高可减少误检测，调低可捕捉较模糊的气泡。默认值：0.55。"
+        bubble_min_text_length:
+            label: "最小文字长度"
+            desc: "字符数低于此值的气泡将被忽略。默认值：2。"
+        dedup_cooldown_sec:
+            label: "去重冷却时间 (秒)"
+            desc: "同一文字翻译一次后再次被抑制的时长。VRChat 气泡通常停留约 7 秒，因此 8 秒是比较合适的默认值。"
+
     updater:
         install_panel:
             section_label:
