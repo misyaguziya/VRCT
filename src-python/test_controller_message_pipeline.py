@@ -479,19 +479,18 @@ class TestSpeakerMessage(_MessagePipelineTestBase):
 
 
 class TestChatMessage(_MessagePipelineTestBase):
-    def test_empty_message_crashes_known_bug(self) -> None:
-        """既知のバグ: 空メッセージだと`if len(message) > 0:`ブロックが
-        丸ごとスキップされ、`translation`/`transliteration_message`/
-        `transliteration_translation`が未初期化のまま戻り値の構築で
-        参照され`UnboundLocalError`になる(mic/speakerには同種の
-        `elif len(message) == 0: pass`という安全な分岐があるが、chatには
-        それすら無い)。この特性テストは今の(バグを含む)挙動をそのまま
-        固定化する目的で書いており、MessagePipeline統合時にこのバグも
-        修正し、このテストをクラッシュしないことの確認に更新する。
+    def test_empty_message_returns_shape_without_crashing(self) -> None:
+        """MessagePipeline統合(2026-09-07)で修正: 以前は空メッセージだと
+        `UnboundLocalError`でクラッシュしていたが、今は正しい空の結果
+        shapeを返す。
         """
-        with self.assertRaises(UnboundLocalError):
-            self.controller.chatMessage({"id": "1", "message": ""})
+        result = self.controller.chatMessage({"id": "1", "message": ""})
+        self.assertEqual(result["status"], 200)
+        self.assertEqual(result["result"]["id"], "1")
+        self.assertEqual(result["result"]["original"], {"message": "", "transliteration": []})
+        self.assertEqual(result["result"]["translations"], [])
         self._model.getInputTranslate.assert_not_called()
+        self._model.addTranslationHistory.assert_called_once_with("chat", "")
 
     def test_no_word_filter_for_typed_chat(self) -> None:
         # chatMessage はタイプ入力なのでワードフィルタを一切適用しない(意図的な仕様)。
@@ -504,7 +503,10 @@ class TestChatMessage(_MessagePipelineTestBase):
     def test_translation_success_returns_shape(self) -> None:
         self._model.getInputTranslate.return_value = (["hola"], [True])
         result = self.controller.chatMessage({"id": "42", "message": "hello"})
-        self._model.getInputTranslate.assert_called_once_with("hello")
+        # MessagePipeline統合により、以前は省略していた source_language を
+        # 明示的に None として渡すようになった(model.getInputTranslate側の
+        # 既定値と同じなので、渡し方が変わっただけで挙動は同じ)。
+        self._model.getInputTranslate.assert_called_once_with("hello", source_language=None)
         self.assertEqual(result["status"], 200)
         self.assertEqual(result["result"]["id"], "42")
         self.assertEqual(result["result"]["original"]["message"], "hello")
@@ -556,14 +558,20 @@ class TestChatMessage(_MessagePipelineTestBase):
         self.controller.chatMessage({"id": "1", "message": "hello"})
         self._model.oscSendMessage.assert_not_called()
 
-    def test_overlay_updates_even_when_unavailable_known_bug(self) -> None:
-        """既知のバグ: chatMessageは`_is_overlay_available()`のガードが無く、
-        mic/speakerと異なり利用不可能な状態でもオーバーレイ更新を試みる。
-        MessagePipeline統合時にこの挙動は修正される予定(この特性テストは
-        修正時にこのテストごと更新する)。
+    def test_overlay_skipped_when_unavailable(self) -> None:
+        """MessagePipeline統合(2026-09-07)で修正: 以前はchatMessageだけ
+        `_is_overlay_available()`のガードが無く、利用不可能な状態でも
+        オーバーレイ更新を試みていた。今はmic/speakerと同じガードを通る。
         """
         config.OVERLAY_LARGE_LOG = True
         self.controller._is_overlay_available = lambda: False
+        self._model.getInputTranslate.return_value = (["hola"], [True])
+        self.controller.chatMessage({"id": "1", "message": "hello"})
+        self._model.updateOverlayLargeLog.assert_not_called()
+
+    def test_overlay_updates_when_available(self) -> None:
+        config.OVERLAY_LARGE_LOG = True
+        self.controller._is_overlay_available = lambda: True
         self._model.getInputTranslate.return_value = (["hola"], [True])
         self.controller.chatMessage({"id": "1", "message": "hello"})
         self._model.updateOverlayLargeLog.assert_called_once()
