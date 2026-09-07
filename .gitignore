@@ -61,3 +61,8 @@ CLAUDE.md
 docs/adr/
 src-python/docs/ref/
 src-python/telemetry_state.json
+
+# OCR bubble-detector training data collected via tools/ocr_dataset_collector.py
+# and tools/gemini_bbox_labeler.py (large binary screenshots, dev-machine only).
+/dataset_collected/
+/yolo_labels/
