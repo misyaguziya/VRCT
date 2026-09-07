@@ -28,7 +28,12 @@ from config import config
 
 from models.translation.translation_translator import Translator
 from models.osc.osc import OSCHandler
-from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
+from models.transcription.transcription_recorder import (
+    SelectedMicEnergyAndAudioRecorder,
+    SelectedSpeakerEnergyAndAudioRecorder,
+    SelectedMicVadRecorder,
+    SelectedSpeakerVadRecorder,
+)
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
@@ -114,6 +119,15 @@ class ReleaseInfo:
 # なため、値はそのまま維持する (レビューで指摘・検討済み)。20 は
 # 「文字起こしが実時間の何倍も遅れた」状態のみで発動する余裕を持たせた値。
 _AUDIO_QUEUE_MAXSIZE = 20
+
+# 2026-09-07: Google (無料/非公式エンドポイント) に限り VadSegmenter の
+# max_speech_frames を3秒 (v3.5.0のRECORD_TIMEOUT相当) に短縮する対策を
+# 一度試したが、実機検証で「処理が悪化した」(呼び出し頻度が上がり過ぎ、
+# 無料/非公式エンドポイント側で暗黙のスロットリング等が起きている
+# 可能性がある) と判明したため撤回した。BaseVadAndAudioRecorder /
+# SelectedMic・SpeakerVadRecorder の max_speech_seconds 引数自体は
+# 汎用の上書き機構として残しているが、model.py からは既定値 (7秒、
+# PuriPuly-heart 参考値) を上書きしない。
 
 
 class _DiscardQueue(Queue):
@@ -607,6 +621,8 @@ class MicSession(_AudioDeviceSession):
         phrase_timeout = config.MIC_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
+        if config.MIC_ENABLE_VAD is True:
+            return SelectedMicVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedMicEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.MIC_THRESHOLD,
@@ -628,6 +644,7 @@ class MicSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            vad_segmented=config.MIC_ENABLE_VAD is True,
             **self._resolve_api_transcription_kwargs(),
         )
 
@@ -665,6 +682,8 @@ class SpeakerSession(_AudioDeviceSession):
         phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
+        if config.SPEAKER_ENABLE_VAD is True:
+            return SelectedSpeakerVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedSpeakerEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.SPEAKER_THRESHOLD,
@@ -686,6 +705,7 @@ class SpeakerSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            vad_segmented=config.SPEAKER_ENABLE_VAD is True,
             **self._resolve_api_transcription_kwargs(),
         )
 

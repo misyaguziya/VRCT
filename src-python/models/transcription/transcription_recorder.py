@@ -19,11 +19,12 @@ in tests.
 """
 
 import threading
-from typing import Any
+from typing import Any, Callable
 from speech_recognition import AudioSource, Recognizer, Microphone
 from datetime import datetime
 from utils import errorLogging, printLog, putDroppingOldestOnFull
 from device_manager import pyaudio_op_lock
+from models.transcription.audio_vad import FRAME_DURATION_MS, VadRecognizerAdapter, VadSegmenter
 
 # 直前に同じ物理デバイスを force-stop した直後は、WASAPI 側の解放が
 # 完了しておらず Microphone.__enter__ 内の PyAudio.open() がブロックし
@@ -138,6 +139,43 @@ def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) ->
     return _LockedAudioSource(result["source"])
 
 
+def _wrapStopperWithBlockingReadUnblock(source: Any, raw_stop: Callable[..., None]) -> Callable[..., None]:
+    """`listen_energy_and_audio_in_background`/`listen_with_segmenter_in_background`
+    が返す生の stopper を、ブロッキング中の `stream.read()` を強制的に
+    解除してから呼ぶようにラップする。エネルギー閾値方式/VAD方式の
+    両 Recorder に共通する問題への対処なので、ここに集約して二重実装に
+    よるドリフトを避ける。
+
+    speech_recognition 側の stopper は listener スレッドの join() に
+    タイムアウトを持たない。listener は self.source.stream.read() で
+    ブロックしており、WASAPI ループバックの無音時などデータが来なく
+    なると read() は返らず、stop() が永久にブロックしてしまう。
+    Pa_StopStream (pyaudio_stream.stop_stream) は稼働中のストリームを
+    別スレッドから止める用途の API で、進行中の read を強制的に返させる。
+    Pa_CloseStream と異なり別スレッドから呼んでもデッドロックしない。
+    self.source.stream は speech_recognition の MicrophoneStream ラッパで、
+    実 PyAudio stream は .pyaudio_stream 属性経由でアクセスする。
+    """
+
+    def stopper(wait_for_stop: bool = True) -> None:
+        try:
+            with pyaudio_op_lock:
+                sr_stream = getattr(source, "stream", None)
+                pa_stream = (
+                    getattr(sr_stream, "pyaudio_stream", None)
+                    if sr_stream is not None
+                    else None
+                )
+                if pa_stream is not None and not pa_stream.is_stopped():
+                    pa_stream.stop_stream()
+        except Exception:
+            # 既に停止済み等、想定内の失敗もあり得るが原因調査のため記録する
+            errorLogging()
+        raw_stop(wait_for_stop=wait_for_stop)
+
+    return stopper
+
+
 class BaseEnergyAndAudioRecorder:
     """Records audio and/or a raw energy stream from a single physical device.
 
@@ -240,37 +278,150 @@ class BaseEnergyAndAudioRecorder:
             errorLogging()
             raise
 
-        def stopper(wait_for_stop: bool = True) -> None:
-            # speech_recognition 側の stopper は listener スレッドの
-            # join() にタイムアウトを持たない。listener は
-            # self.source.stream.read() でブロックしており、WASAPI
-            # ループバックの無音時などデータが来なくなると read() は
-            # 返らず、stop() が永久にブロックしてしまう
-            # (過去に 9665bb5a で判明・修正され、ADR-0004 の保持リスト
-            #  でも forward-port 対象とされていたが、VAD 実装ごと revert
-            #  された際に一緒に失われていた)。
-            # Pa_StopStream (pyaudio_stream.stop_stream) は稼働中の
-            # ストリームを別スレッドから止める用途の API で、進行中の
-            # read を強制的に返させる。Pa_CloseStream と異なり別スレッド
-            # から呼んでもデッドロックしない。self.source.stream は
-            # speech_recognition の MicrophoneStream ラッパで、実 PyAudio
-            # stream は .pyaudio_stream 属性経由でアクセスする。
-            try:
-                with pyaudio_op_lock:
-                    sr_stream = getattr(self.source, "stream", None)
-                    pa_stream = (
-                        getattr(sr_stream, "pyaudio_stream", None)
-                        if sr_stream is not None
-                        else None
-                    )
-                    if pa_stream is not None and not pa_stream.is_stopped():
-                        pa_stream.stop_stream()
-            except Exception:
-                # 既に停止済み等、想定内の失敗もあり得るが原因調査のため記録する
-                errorLogging()
-            stop(wait_for_stop=wait_for_stop)
+        self.stop = _wrapStopperWithBlockingReadUnblock(self.source, stop)
+        self.pause = pause
+        self.resume = resume
 
-        self.stop = stopper
+
+class BaseVadAndAudioRecorder:
+    """`BaseEnergyAndAudioRecorder` の VAD 版。フレーズ境界検出を
+    `speech_recognition` の energy_threshold/pause_threshold ではなく、
+    `VadRecognizerAdapter` (Silero VAD ベースの `VadSegmenter`) に委譲する。
+
+    ストリームの open/close・停止/一時停止の仕組み (`_create_microphone`
+    による同一デバイス二重オープン防止、`_wrapStopperWithBlockingReadUnblock`
+    によるブロッキング read の強制解除) は `BaseEnergyAndAudioRecorder` と
+    完全に同じものをそのまま流用する。差分は「フレーズ区切りの判定方法」
+    だけに閉じている。
+
+    VAD は発話開始前のプリロール (pre_speech_pad_frames) と、無音か
+    どうかの実際の確率で終端を判定する anchor 方式のヒステリシスを持つ。
+    これはエネルギー閾値方式の `phrase_time_limit` (record_timeout 秒で
+    単語の途中でも問答無用で打ち切る) が引き起こす「文章の途中で切れる」
+    「静かな出だしを取りこぼす」症状への対策として、2026-09-06に
+    2度目の実機検証成功実装 (WIP commit 0e4a8d84) を土台に再導入した。
+
+    オプトイン機能 (config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD、既定 False) の実装で、既定の
+    エネルギー閾値方式の挙動には一切影響しない。
+    """
+
+    def __init__(self, source: Any, record_timeout: int, label: str = "vad") -> None:
+        self.recorder = Recognizer()
+        self.record_timeout = record_timeout
+        self.stop = None
+        self.pause = None
+        self.resume = None
+
+        if source is None:
+            raise ValueError("audio source can't be None")
+
+        self.source = source
+        self.device_error_event = threading.Event()
+        # max_speech_frames を record_timeout (既定3秒) に連動させていた
+        # 時期があったが、実機検証で「長い連続発話ほど内容が丸ごと
+        # 抜け落ちる」regressionを引き起こした (2026-09-06)。無音を挟まない
+        # 継続発話で record_timeout 秒ごとに強制打ち切りが頻発し、単語の
+        # 途中で始まり/終わる不自然な断片を単独でエンジンに送ることになる
+        # 結果、境界の不自然さでエンジン側の信頼度フィルタ (Whisper の
+        # avg_logprob/no_speech_prob、Google の recognize_google が返す
+        # UnknownValueError) に断片ごと棄却されるケースが増えていた。
+        # 強制打ち切り (reason="max_duration") された断片は
+        # AudioTranscriber 側で単独送信せず蓄積するよう変更した (下記
+        # audio_callback の reason 伝播、transcription_transcriber.py 参照)
+        # ため、この値は「1回のエンジン呼び出しの粒度」ではなく純粋に
+        #「無音が来ない場合の安全弁」の役割になった。PuriPuly-heart の
+        # `VadGating.PEER_MAX_SEGMENT_MS` (7秒、docs/ref/PuriPuly-heart 参照)
+        # を参考値としてそのまま採用する。
+        #
+        # 2026-09-07: Google (無料/非公式エンドポイント) 向けにこの値を
+        # エンジン別に短縮する対策を一時的に試したが、実機検証で
+        # 「呼び出し頻度が上がり過ぎて処理が悪化した」regressionが確認され
+        # 撤回した。最終的には AudioTranscriber 側でクリップ前後に無音
+        # パディングを付与するだけで無応答/内容欠落が解消したため
+        # (transcription_transcriber.py の VAD_PRE_PAD_MS/VAD_POST_PAD_MS
+        # 参照)、この値はエンジンを問わず常に固定 (7秒) のままでよい。
+        _MAX_SPEECH_DURATION_MS = 7000
+        max_speech_frames = max(1, round(_MAX_SPEECH_DURATION_MS / FRAME_DURATION_MS))
+        # diagnostic_callback を printLog に繋いでおく。process.log に
+        # speech_start/speech_end の実測タイミングが残るので、体感の遅さの
+        # 原因 (hangover 待ち・モデル初回ロード・処理そのもの等) を
+        # 実機ログから切り分けられるようにするため。
+        self.vad_adapter = VadRecognizerAdapter(
+            native_sample_rate=source.SAMPLE_RATE,
+            native_sample_width=source.SAMPLE_WIDTH,
+            native_channels=getattr(source, "channels", 1),
+            segmenter=VadSegmenter(
+                max_speech_frames=max_speech_frames,
+                diagnostic_callback=printLog,
+                diagnostic_label=label,
+            ),
+        )
+        # AudioTranscriber は self.SAMPLE_RATE/SAMPLE_WIDTH/channels を、
+        # audio_queue に積まれる生バイト列 (last_sample) の実際の形式として
+        # そのまま AudioData の再構成に使う (processMicData/processSpeakerData)。
+        # VAD 経由の音声は常に vad_adapter が正規化した 16kHz/16bit/mono に
+        # なっているため、ここはネイティブなデバイスのフォーマット
+        # (source.SAMPLE_RATE 等) ではなく vad_adapter 側の値を公開する。
+        # 混同するとサンプルレートが違う音声として再生/認識され、
+        # 認識精度が壊滅的に低下する (実機で確認済みの不具合)。
+        self.SAMPLE_RATE = self.vad_adapter.sample_rate
+        self.SAMPLE_WIDTH = self.vad_adapter.sample_width
+        self.channels = 1
+
+    def adjustForNoise(self) -> None:
+        # VAD はエネルギー閾値のキャリブレーションを必要としないため no-op。
+        # BaseEnergyAndAudioRecorder と同じインターフェースを保つために存在する。
+        pass
+
+    def recordIntoQueue(self, audio_queue: Any, energy_queue: Any = None) -> None:
+        """listen_with_segmenter_in_background で VAD が確定した発話区間ごとに
+        audio を audio_queue に積む。audio_queue には
+        (raw_bytes, recorded_at, reason) の3要素タプルを push する
+        (BaseEnergyAndAudioRecorder の2要素タプルとは形が異なる点に注意)。
+
+        reason は "silence"/"flush"/"max_duration"/None のいずれか
+        (`audio_vad.SpeechSegment.reason`、custom_speech_recognition フォークの
+        `AudioData.segment_reason` として伝播されたもの)。
+        AudioTranscriber.transcribeAudioQueue は reason=="max_duration"
+        (無音を挟まない強制打ち切り) の場合は単独で確定・送信せず蓄積し、
+        それ以外 (自然な区切り) の場合だけ即座に確定・送信する
+        (2026-09-06、実機で「強制打ち切り断片が単独送信され、エンジン側の
+        信頼度フィルタで丸ごと棄却される」regressionが判明したための対策)。
+        """
+
+        def audio_callback(_, audio) -> None:
+            try:
+                raw = audio.get_raw_data()
+                reason = getattr(audio, "segment_reason", None)
+                item = (raw, datetime.now(), reason)
+                # BaseEnergyAndAudioRecorder.audio_callback と同じ理由
+                # (フェーズ3項目20)。VAD 経由でも文字起こしが実時間に
+                # 追いつけない状況は起こり得るため同じ有界化を適用する。
+                if putDroppingOldestOnFull(audio_queue, item):
+                    printLog("audio_queue is full; dropped the oldest queued chunk to keep up")
+            except Exception:
+                errorLogging()
+
+        def energy_callback(energy) -> None:
+            try:
+                putDroppingOldestOnFull(energy_queue, energy)
+            except Exception:
+                errorLogging()
+
+        try:
+            stop, pause, resume = self.recorder.listen_with_segmenter_in_background(
+                source=self.source,
+                callback=audio_callback,
+                segmenter=self.vad_adapter,
+                callback_energy=energy_callback if energy_queue is not None else None,
+                record_timeout=self.record_timeout,
+            )
+        except Exception:
+            self.device_error_event.set()
+            errorLogging()
+            raise
+
+        self.stop = _wrapStopperWithBlockingReadUnblock(self.source, stop)
         self.pause = pause
         self.resume = resume
 
@@ -321,3 +472,25 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             phrase_time_limit=phrase_time_limit,
             record_timeout=record_timeout,
         )
+
+
+class SelectedMicVadRecorder(BaseVadAndAudioRecorder):
+    def __init__(self, device: dict, record_timeout: int = 5) -> None:
+        source = _create_microphone(
+            {},
+            device_index=int(device.get("index", -1)),
+            sample_rate=int(device.get("defaultSampleRate", 16000)),
+        )
+        super().__init__(source=source, record_timeout=record_timeout, label="mic")
+
+
+class SelectedSpeakerVadRecorder(BaseVadAndAudioRecorder):
+    def __init__(self, device: dict, record_timeout: int = 5) -> None:
+        source = _create_microphone(
+            {"speaker": True},
+            speaker=True,
+            device_index=int(device.get("index", -1)),
+            sample_rate=int(device.get("defaultSampleRate", 16000)),
+            channels=int(device.get("maxInputChannels", 1)),
+        )
+        super().__init__(source=source, record_timeout=record_timeout, label="speaker")

@@ -101,11 +101,27 @@ class GoogleProvider:
         no_repeat_ngram_size: int,
         force_language: bool,
     ) -> Tuple[str, float, bool]:
+        # 2026-09-07: クリップ前後の無音パディングやクリップ分割を
+        # このプロバイダ内で行う対策を試したが、実機検証の結果「クリップの
+        # 前後に無音パディングを付与する」対策はエンジンを問わず
+        # AudioTranscriber 側 (transcription_transcriber.py) で一律に適用する
+        # 形に一本化した。Google はこれに加えて「育っていくバッファを都度
+        # 再送信する」(interim_send、AudioTranscriber側) も併用しているが、
+        # このプロバイダ自体は毎回渡された audio_data を1回認識するだけで
+        # 良く、パディングや再送信ロジックを知る必要はない。
         try:
+            # join_all_results=True: このエンドポイントは、1クリップに
+            # 複数の発話区間 (無音を挟んだ複数の文) が含まれる場合、それ
+            # ぞれを別々の result ブロックとして返すことがある。既定
+            # (最初のブロックだけを使う) のままだと後続の発話が黙って
+            # 失われる (2026-09-07、実機で確認・custom_speech_recognition
+            # フォーク側で修正)。これは上記のパディング対策とは独立した
+            # 別の不具合修正なので撤回せず維持する。
             text, confidence = self._recognizer.recognize_google(
                 audio_data,
                 language=transcription_lang[language][country]["Google"],
                 with_confidence=True,
+                join_all_results=True,
             )
         except UnknownValueError:
             return "", 0.0, False

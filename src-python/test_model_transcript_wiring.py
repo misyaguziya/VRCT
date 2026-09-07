@@ -92,11 +92,24 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
         config._SELECTED_MIC_DEVICE = "TestMicDevice"
         config._SELECTED_SPEAKER_DEVICE = "TestSpeakerDevice"
 
+        # このテストは _create_recorder() がエネルギー閾値方式の
+        # Recorder を作ることを前提に @patch("model.SelectedMic...") して
+        # いる。config.json 側で MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD が true になっていると
+        # SelectedMicVadRecorder (未パッチの実クラス) が代わりに作られて
+        # しまい、フェイクが一切呼ばれなくなる。ここでは常に False に
+        # 固定してこのテストの前提を守る。
+        self._original_mic_enable_vad = config.MIC_ENABLE_VAD
+        self._original_speaker_enable_vad = config.SPEAKER_ENABLE_VAD
+        config.MIC_ENABLE_VAD = False
+        config.SPEAKER_ENABLE_VAD = False
+
     def tearDown(self) -> None:
         self._ensure_initialized_patch.stop()
         config._SELECTED_MIC_HOST = self._original_mic_host
         config._SELECTED_MIC_DEVICE = self._original_mic_device
         config._SELECTED_SPEAKER_DEVICE = self._original_speaker_device
+        config.MIC_ENABLE_VAD = self._original_mic_enable_vad
+        config.SPEAKER_ENABLE_VAD = self._original_speaker_enable_vad
 
     @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
     @patch("model.AudioTranscriber", _FakeAudioTranscriber)

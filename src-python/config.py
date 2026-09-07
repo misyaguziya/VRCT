@@ -843,6 +843,16 @@ class Config:
     SPEAKER_NO_SPEECH_PROB = ManagedProperty('SPEAKER_NO_SPEECH_PROB', type_=(int, float))
     SPEAKER_NO_REPEAT_NGRAM_SIZE = ManagedProperty('SPEAKER_NO_REPEAT_NGRAM_SIZE', type_=int)
 
+    # -- VAD (Silero) によるマイク/スピーカーの発話区間検出 ---
+    # 既定は False (従来通りのエネルギー閾値方式)。過去に2度、この領域
+    # (WASAPI/PyAudio) で挑戦して未完了/リバートに終わっている経緯が
+    # あるため、オプトインとして導入する (フェーズ3、2026-09-06)。
+    # マイク/スピーカーは音声特性(ノイズ、話者数、無音区間の傾向)が
+    # 異なるため、他の MIC_*/SPEAKER_* 設定と同様に個別に切り替え可能と
+    # する (2026-09-07、単一の ENABLE_VAD から分割)。
+    MIC_ENABLE_VAD = ManagedProperty('MIC_ENABLE_VAD', type_=bool)
+    SPEAKER_ENABLE_VAD = ManagedProperty('SPEAKER_ENABLE_VAD', type_=bool)
+
     # --- Auth and API settings ---
     # 旧 config.json との後方互換のため、不足キーは既定値（None）で補完し、余剰キーは無視する。
     AUTH_KEYS = ValidatedProperty('AUTH_KEYS',
@@ -1141,6 +1151,8 @@ class Config:
         self._SPEAKER_AVG_LOGPROB = -0.8
         self._SPEAKER_NO_SPEECH_PROB = 0.6
         self._SPEAKER_NO_REPEAT_NGRAM_SIZE = 0
+        self._MIC_ENABLE_VAD = False
+        self._SPEAKER_ENABLE_VAD = False
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
