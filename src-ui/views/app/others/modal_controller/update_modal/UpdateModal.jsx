@@ -41,7 +41,6 @@ export const UpdateModal = () => {
 
     useEffect(() => {
         getAvailableReleases();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
