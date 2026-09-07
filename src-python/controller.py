@@ -1027,15 +1027,7 @@ class Controller:
                 pass
             else:
                 try:
-                    if config.USE_EXCLUDE_WORDS is True:
-                        replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
-                        translation, success = model.getInputTranslate(replacement_message)
-
-                        message = self.removeExclamations(message)
-                        for i in range(len(translation)):
-                            translation[i] = self.restoreText(translation[i], replacement_dict)
-                    else:
-                        translation, success = model.getInputTranslate(message)
+                    translation, success = model.getInputTranslate(message)
 
                     if all(success) is not True:
                         self.changeToCTranslate2Process()
@@ -3470,46 +3462,6 @@ class Controller:
     def stopTranscriptionReceiveMessage(self) -> None:
         with self.speaker_lifecycle_lock:
             self._stopTranscriptionReceiveMessageLocked()
-
-    @staticmethod
-    def replaceExclamationsWithRandom(text):
-        # ![...] にマッチする正規表現
-        pattern = r'!\[(.*?)\]'
-
-        # 乱数と置換部分を保存する辞書
-        replacement_dict = {}
-
-        num = 4096
-        # マッチした部分を4096から始まる整数に置換する。置換毎に4097, 4098, ... と増える
-        def replace(match):
-            original = match.group(1)
-            nonlocal num
-            rand_value = hex(num)
-            replacement_dict[rand_value] = original
-            num += 1
-            return f" ${rand_value} "
-
-        # 文章内の ![] の部分を置換
-        replaced_text = re.sub(pattern, replace, text)
-
-        return replaced_text, replacement_dict
-
-    @staticmethod
-    def restoreText(escaped_text, escape_dict):
-        # 大文字小文字を無視して置換するために、正規表現を使う
-        for escape_seq, char in escape_dict.items():
-            # escaped_text の部分を pattern で置換
-            pattern = re.escape(f"${escape_seq}") + r"|\$\s+" + re.escape(escape_seq)
-            escaped_text = re.sub(pattern, char, escaped_text, flags=re.IGNORECASE)
-        return escaped_text
-
-    @staticmethod
-    def removeExclamations(text):
-        # ![...] を [...] に置換する正規表現
-        pattern = r'!\[(.*?)\]'
-        # ![...] の部分を [] 内のテキストに置換
-        cleaned_text = re.sub(pattern, r'\1', text)
-        return cleaned_text
 
     def updateDownloadedCTranslate2ModelWeight(self) -> None:
         # キャッシュされた結果を使用（起動時の重複チェックを回避）
