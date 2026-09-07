@@ -576,6 +576,73 @@ class TestGoogleInterimSendNonVad(unittest.TestCase):
         self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00")
 
 
+class TestAsrSuccessRateTracking(unittest.TestCase):
+    """2026-09-07: Google無料エンドポイントの信頼性対策 (無音パディング・
+    interim_send) の効果を、ログの手動突き合わせではなく数値で継続的に
+    確認できるよう、_finalizeAndTranscribe の呼び出しごとに成功/失敗を
+    カウントする。"""
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_counts_a_successful_call(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = (
+            [MagicMock(text="hello", avg_logprob=-0.1, no_speech_prob=0.1)],
+            MagicMock(language="ja", language_probability=1.0),
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", _already_old_timestamp()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.asr_attempts, 1)
+        self.assertEqual(transcriber.asr_successes, 1)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_counts_a_failed_call_without_incrementing_successes(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.audio_recognizer.recognize_google = MagicMock(side_effect=UnknownValueError())
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", _already_old_timestamp()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.asr_attempts, 1)
+        self.assertEqual(transcriber.asr_successes, 0)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_accumulates_across_multiple_calls(self, _) -> None:
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.audio_recognizer.recognize_google = MagicMock(
+            side_effect=[("hello", 0.9), UnknownValueError(), ("world", 0.8)]
+        )
+        audio_queue = Queue()
+        for i in range(3):
+            audio_queue.put((bytes([i]), _already_old_timestamp() + timedelta(seconds=i * 20)))
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.asr_attempts, 3)
+        self.assertEqual(transcriber.asr_successes, 2)
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_interim_send_and_finalize_each_count_as_their_own_attempt(self, _) -> None:
+        """Google の interim_send (育っていくバッファの都度再送信) は
+        実際にエンジンを毎回呼ぶため、それぞれ独立した試行としてカウント
+        されるべき (フレーズ単位ではなく呼び出し単位の集計)。"""
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Google", vad_segmented=True)
+        transcriber.audio_recognizer.recognize_google = MagicMock(return_value=("hello", 0.9))
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put((b"\x01\x00", now, "max_duration"))
+        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        self.assertEqual(transcriber.asr_attempts, 2)
+        self.assertEqual(transcriber.asr_successes, 2)
+
+
 class TestApiTranscriptionEngines(unittest.TestCase):
     """Groq/OpenAI/カスタムサーバー (OpenAICompatibleTranscriptionProvider) 経由の
     ディスパッチ。プロバイダ自体の挙動 (SDK呼び出し詳細) は
