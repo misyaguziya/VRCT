@@ -8,6 +8,21 @@ from typing import Any, Tuple
 from threading import Thread, Event, Lock, Timer
 from queue import Queue, Empty
 import logging
+import warnings
+
+# google-auth 2.42.0 以降は google/auth/transport/grpc.py の import 時に
+# 「grpcio < 1.83.0 は Post-Quantum Cryptography 非対応」という FutureWarning を
+# 出す。requirements では grpcio>=1.83.0 に更新済みなので通常は発火しないが、
+# 古い grpcio が残った開発環境向けのフォールバックとして残す。warnings.warn は
+# 既定で stderr に書かれ、フロントの StartPythonController が sidecar の stderr
+# 出力を致命的エラー通知に昇格させるため、良性の警告が「An error occurred」
+# ダイアログに化けてしまう。どの google import よりも前にフィルタを設定する。
+warnings.filterwarnings(
+    "ignore",
+    message=r"grpcio < 1\.83\.0 does not support Post-Quantum Cryptography.*",
+    category=FutureWarning,
+)
+
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
 
