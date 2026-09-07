@@ -11,8 +11,14 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 `src-python/models/ocr/` 配下に配置されており、既存の `models/transcription/` の構造（recorder → transcriber → pipeline）を踏襲しています。
 
 ### ocr_capture_hwnd.py — HWND ウィンドウキャプチャ
-- `mss` で "VRChat" ウィンドウのクライアント領域を BGR ndarray として取得
-- ウィンドウ検索は `models/clipboard/clipboard.py` の `find_windows_by_title_substring` と同型
+- Win32 API (`ctypes`、`user32.PrintWindow`/`PW_RENDERFULLCONTENT`) で対象ウィンドウの
+  クライアント領域を直接レンダリングし BGR ndarray として取得。`mss` 等の画面座標
+  グラブは使っていない — VRCT自身が画面上でVRChatウィンドウに重なっている場合、
+  座標ベースのグラブだと最前面(=VRCT側)を誤って撮ってしまうため、ウィンドウ自身の
+  サーフェスから直接描画させる `PrintWindow` を採用している
+- 対象ウィンドウはタイトルの部分一致(大文字小文字を区別しない)で検索する。既定は
+  "VRChat" だが `config.OCR_WINDOW_TITLE` で変更可能(改造版ランチャー等で
+  ウィンドウタイトルが異なるクライアントに対応するため)
 - 最小化時（`IsIconic`）や空フレームは None を返してスキップ
 
 ### ocr_capture_openvr.py — OpenVR ミラーテクスチャキャプチャ
@@ -151,6 +157,7 @@ OpenVR の初期化は**プロセス単位**で、`models/overlay/overlay.py` �
 | `ENABLE_OCR_CAPTURE` | bool | False | OCR パイプラインの有効化（serialize=False, 起動毎にオフ） |
 | `OCR_ENGINE` | str | "EasyOCR" | 使用エンジン（将来の切替のため） |
 | `OCR_SOURCE_LANGUAGE` | str | "auto" | 読み取り対象の言語（"auto" = 現在タブの target language に追従、リーダーは JP+EN） |
+| `OCR_WINDOW_TITLE` | str | "VRChat" | キャプチャ対象ウィンドウのタイトル部分一致文字列（大文字小文字を区別しない） |
 | `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
 | `OCR_MIN_CONFIDENCE` | float | 0.55 | OCR 信頼度の下限（0.1〜0.99） |
 | `OCR_USE_GPU` | bool | True | GPU 使用（失敗時 CPU 自動フォールバック） |

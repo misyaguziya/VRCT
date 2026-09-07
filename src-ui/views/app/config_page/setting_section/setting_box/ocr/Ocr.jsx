@@ -1,5 +1,6 @@
 import styles from "./Ocr.module.scss";
 
+import { useI18n } from "@useI18n";
 import { useOcr, useSaveButtonLogic } from "@logics_configs";
 
 import {
@@ -11,32 +12,29 @@ import {
 import { SectionLabelComponent } from "../_components";
 
 export const Ocr = () => {
+    const { t } = useI18n();
     return (
         <div className={styles.container}>
             <div className={styles.section}>
-                <SectionLabelComponent label="VRChat chat OCR" />
+                <SectionLabelComponent label={t("config_page.ocr.section_title")} />
                 <p className={styles.description}>
-                    Capture VRChat chat bubbles on screen, run OCR, and route
-                    the recognized text through the existing translation
-                    pipeline. Output is mirrored to the main message log and
-                    the SteamVR overlay; it is never sent to VRChat's OSC
-                    chatbox.
+                    {t("config_page.ocr.section_desc")}
                 </p>
                 <EnableOcrCaptureContainer />
             </div>
 
             <div className={styles.section}>
-                <SectionLabelComponent label="Capture target" />
+                <SectionLabelComponent label={t("config_page.ocr.capture_target")} />
                 <OcrWindowTitleContainer />
             </div>
 
             <div className={styles.section}>
-                <SectionLabelComponent label="Language" />
+                <SectionLabelComponent label={t("config_page.ocr.language")} />
                 <OcrSourceLanguageContainer />
             </div>
 
             <div className={styles.section}>
-                <SectionLabelComponent label="Performance" />
+                <SectionLabelComponent label={t("config_page.ocr.performance")} />
                 <OcrUseGpuContainer />
                 <OcrPollIntervalMsContainer />
                 <OcrMinConfidenceContainer />
@@ -48,11 +46,12 @@ export const Ocr = () => {
 };
 
 const EnableOcrCaptureContainer = () => {
+    const { t } = useI18n();
     const { currentEnableOcrCapture, toggleEnableOcrCapture } = useOcr();
     return (
         <CheckboxContainer
-            label="Enable VRChat chat OCR"
-            desc="Starts a background loop that captures the VRChat window (or the HMD mirror when SteamVR is running) and translates detected chat bubbles."
+            label={t("config_page.ocr.enable_ocr_capture.label")}
+            desc={t("config_page.ocr.enable_ocr_capture.desc")}
             variable={currentEnableOcrCapture}
             toggleFunction={toggleEnableOcrCapture}
         />
@@ -60,6 +59,7 @@ const EnableOcrCaptureContainer = () => {
 };
 
 const OcrWindowTitleContainer = () => {
+    const { t } = useI18n();
     const { currentOcrWindowTitle, setOcrWindowTitle } = useOcr();
 
     const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
@@ -73,8 +73,8 @@ const OcrWindowTitleContainer = () => {
 
     return (
         <EntryWithSaveButtonContainer
-            label="Window name"
-            desc={"Substring match (case-insensitive) against visible window titles. Change this if you run a client whose window isn't titled 'VRChat' (e.g. a modified launcher)."}
+            label={t("config_page.ocr.window_title.label")}
+            desc={t("config_page.ocr.window_title.desc")}
             variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
@@ -85,6 +85,7 @@ const OcrWindowTitleContainer = () => {
 };
 
 const OcrSourceLanguageContainer = () => {
+    const { t } = useI18n();
     const { currentOcrSourceLanguage, setOcrSourceLanguage } = useOcr();
 
     const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
@@ -98,8 +99,8 @@ const OcrSourceLanguageContainer = () => {
 
     return (
         <EntryWithSaveButtonContainer
-            label="OCR source language"
-            desc={"Language the captured bubbles are written in. 'auto' loads Japanese + English readers. Set a VRCT language name (e.g. 'Japanese') to load only that reader. Applied on the next OCR start."}
+            label={t("config_page.ocr.source_language.label")}
+            desc={t("config_page.ocr.source_language.desc")}
             variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
@@ -110,11 +111,12 @@ const OcrSourceLanguageContainer = () => {
 };
 
 const OcrUseGpuContainer = () => {
+    const { t } = useI18n();
     const { currentOcrUseGpu, toggleOcrUseGpu } = useOcr();
     return (
         <CheckboxContainer
-            label="Use GPU for OCR"
-            desc="Runs EasyOCR on CUDA when available. Falls back to CPU automatically if GPU init fails (e.g. VRAM tight after Whisper)."
+            label={t("config_page.ocr.use_gpu.label")}
+            desc={t("config_page.ocr.use_gpu.desc")}
             variable={currentOcrUseGpu}
             toggleFunction={toggleOcrUseGpu}
         />
@@ -122,11 +124,12 @@ const OcrUseGpuContainer = () => {
 };
 
 const OcrPollIntervalMsContainer = () => {
+    const { t } = useI18n();
     const { currentOcrPollIntervalMs, setOcrPollIntervalMs } = useOcr();
     return (
         <SliderContainer
-            label="Capture interval (ms)"
-            desc="How often the OCR loop grabs a new frame. Lower = more responsive, higher CPU/GPU. Default: 750."
+            label={t("config_page.ocr.poll_interval_ms.label")}
+            desc={t("config_page.ocr.poll_interval_ms.desc")}
             variable={currentOcrPollIntervalMs.data}
             setterFunction={setOcrPollIntervalMs}
             min={200}
@@ -137,11 +140,12 @@ const OcrPollIntervalMsContainer = () => {
 };
 
 const OcrMinConfidenceContainer = () => {
+    const { t } = useI18n();
     const { currentOcrMinConfidence, setOcrMinConfidence } = useOcr();
     return (
         <SliderContainer
-            label="Minimum OCR confidence"
-            desc="Words below this EasyOCR confidence score are discarded. Raise to reduce false positives; lower to catch faint bubbles. Default: 0.55."
+            label={t("config_page.ocr.min_confidence.label")}
+            desc={t("config_page.ocr.min_confidence.desc")}
             variable={currentOcrMinConfidence.data}
             setterFunction={setOcrMinConfidence}
             min={0.2}
@@ -152,11 +156,12 @@ const OcrMinConfidenceContainer = () => {
 };
 
 const OcrBubbleMinTextLengthContainer = () => {
+    const { t } = useI18n();
     const { currentOcrBubbleMinTextLength, setOcrBubbleMinTextLength } = useOcr();
     return (
         <SliderContainer
-            label="Minimum text length"
-            desc="Bubbles with fewer characters than this are ignored. Default: 2."
+            label={t("config_page.ocr.bubble_min_text_length.label")}
+            desc={t("config_page.ocr.bubble_min_text_length.desc")}
             variable={currentOcrBubbleMinTextLength.data}
             setterFunction={setOcrBubbleMinTextLength}
             min={1}
@@ -167,11 +172,12 @@ const OcrBubbleMinTextLengthContainer = () => {
 };
 
 const OcrDedupCooldownSecContainer = () => {
+    const { t } = useI18n();
     const { currentOcrDedupCooldownSec, setOcrDedupCooldownSec } = useOcr();
     return (
         <SliderContainer
-            label="Dedup cooldown (seconds)"
-            desc="How long the same text stays suppressed after being translated once. VRChat bubbles linger ~7 s so 8 s is a good default."
+            label={t("config_page.ocr.dedup_cooldown_sec.label")}
+            desc={t("config_page.ocr.dedup_cooldown_sec.desc")}
             variable={currentOcrDedupCooldownSec.data}
             setterFunction={setOcrDedupCooldownSec}
             min={1}

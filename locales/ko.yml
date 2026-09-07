@@ -361,6 +361,37 @@ config_page:
             desc:
             aptabase_privacy_policy_label:
 
+    ocr:
+        section_title: "VRChat 채팅 OCR"
+        section_desc: "화면에 표시되는 VRChat 채팅 말풍선을 OCR로 인식하여 기존 번역 파이프라인으로 전달합니다. 결과는 메인 메시지 로그와 SteamVR 오버레이에 표시됩니다. VRChat의 OSC 채팅박스로는 전송되지 않습니다."
+        capture_target: "캡처 대상"
+        language: "언어"
+        performance: "성능"
+        enable_ocr_capture:
+            label: "VRChat 채팅 OCR 사용"
+            desc: "VRChat 창(SteamVR 실행 중에는 HMD 미러 화면)을 캡처하여 감지된 채팅 말풍선을 번역하는 백그라운드 작업을 시작합니다."
+        window_title:
+            label: "창 이름"
+            desc: "표시되는 창 제목과의 부분 일치(대소문자 구분 없음)입니다. 창 제목이 'VRChat'이 아닌 클라이언트(수정된 런처 등)를 사용하는 경우 이 값을 변경하세요."
+        source_language:
+            label: "OCR 인식 언어"
+            desc: "캡처된 말풍선에 사용된 언어입니다. 'auto'는 일본어+영어 인식 엔진을 불러옵니다. 특정 언어(예: 'Japanese')를 지정하면 해당 언어만 불러옵니다. 다음 OCR 시작 시 적용됩니다."
+        use_gpu:
+            label: "OCR에 GPU 사용"
+            desc: "가능한 경우 EasyOCR을 CUDA로 실행합니다. GPU 초기화에 실패하면(Whisper 사용 중 VRAM 부족 등) 자동으로 CPU로 대체됩니다."
+        poll_interval_ms:
+            label: "캡처 간격 (밀리초)"
+            desc: "OCR 루프가 새 프레임을 가져오는 빈도입니다. 값이 작을수록 반응은 빨라지지만 CPU/GPU 부하가 커집니다. 기본값: 750."
+        min_confidence:
+            label: "최소 OCR 신뢰도"
+            desc: "이 EasyOCR 신뢰도 점수보다 낮은 단어는 무시됩니다. 오탐지를 줄이려면 값을 높이고, 흐릿한 말풍선까지 잡으려면 값을 낮추세요. 기본값: 0.55."
+        bubble_min_text_length:
+            label: "최소 텍스트 길이"
+            desc: "이 글자 수보다 짧은 말풍선은 무시됩니다. 기본값: 2."
+        dedup_cooldown_sec:
+            label: "중복 억제 쿨다운 (초)"
+            desc: "같은 텍스트를 한 번 번역한 후 다시 억제되는 시간입니다. VRChat 말풍선은 약 7초간 남아있으므로 8초가 적절한 기본값입니다."
+
     updater:
         install_panel:
             section_label:

@@ -369,6 +369,37 @@ config_page:
             desc: "開発者が「みんな使ってくれてるんだな～」ってにやにやしながら機能改善するための使用状況データを送信します。\n※会話内容など個人情報は一切送信しません。"
             aptabase_privacy_policy_label: "Aptabase プライバシーポリシー"
 
+    ocr:
+        section_title: "VRChatチャットOCR"
+        section_desc: "画面に表示されるVRChatのチャット吹き出しをOCRで読み取り、既存の翻訳パイプラインに送ります。結果はメインのメッセージログとSteamVRオーバーレイに表示されます。VRChatのOSCチャットボックスへは送信されません。"
+        capture_target: "キャプチャ対象"
+        language: "言語"
+        performance: "パフォーマンス"
+        enable_ocr_capture:
+            label: "VRChatチャットOCRを有効にする"
+            desc: "VRChatのウィンドウ（SteamVR起動中はHMDのミラー映像）をキャプチャし、検出したチャット吹き出しを翻訳するバックグラウンド処理を開始します。"
+        window_title:
+            label: "ウィンドウ名"
+            desc: "表示されているウィンドウタイトルとの部分一致（大文字小文字を区別しません）。「VRChat」というタイトルではないクライアント（改造版ランチャー等）を使用している場合はここを変更してください。"
+        source_language:
+            label: "OCR読み取り言語"
+            desc: "キャプチャする吹き出しに書かれている言語です。「auto」は日本語+英語の読み取りエンジンを読み込みます。特定の言語（例:「Japanese」）を指定すると、その言語のみを読み込みます。次回OCR開始時に反映されます。"
+        use_gpu:
+            label: "OCRにGPUを使用する"
+            desc: "利用可能な場合、EasyOCRをCUDAで実行します。GPUの初期化に失敗した場合（Whisper使用中でVRAMが逼迫している場合等）は自動的にCPUにフォールバックします。"
+        poll_interval_ms:
+            label: "キャプチャ間隔（ミリ秒）"
+            desc: "OCRループが新しいフレームを取得する頻度です。小さいほど反応が早くなりますが、CPU/GPU負荷が高くなります。既定値: 750。"
+        min_confidence:
+            label: "OCR信頼度の下限"
+            desc: "このEasyOCRの信頼度スコアを下回る単語は破棄されます。誤検出を減らすには上げ、薄い吹き出しも拾うには下げてください。既定値: 0.55。"
+        bubble_min_text_length:
+            label: "最小文字数"
+            desc: "この文字数未満の吹き出しは無視されます。既定値: 2。"
+        dedup_cooldown_sec:
+            label: "重複抑制クールダウン（秒）"
+            desc: "一度翻訳したテキストが再度抑制される期間です。VRChatの吹き出しは約7秒残るため、8秒が適切な既定値です。"
+
     updater:
         install_panel:
             section_label: "バージョン・構成の選択"
