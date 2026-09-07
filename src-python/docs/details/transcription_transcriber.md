@@ -56,11 +56,16 @@ class AudioTranscriber:
   打ち切り) の場合は単独送信せず蓄積を続ける (単語の途中で始まり/終わる不自然な
   断片を単独送信すると、エンジン側の信頼度フィルタに丸ごと棄却されるリスクが
   あるため、2026-09-06 実機で確認)。確定したクリップには前後に無音パディング
-  (`_padWithSilenceForVad`、`VAD_PRE_PAD_MS`/`VAD_POST_PAD_MS`) を一律に付与する
-  (2026-09-07。エンジンを問わず適用。当初は Google だけ「育っていくバッファを
-  都度再送信する」等の特別扱いをしていたが、パディングだけで問題が解消したため
-  撤回し一本化した)。詳細は `transcribeAudioQueue` のdocstringと
-  `transcription_recorder.md` 参照。
+  (`_padWithSilenceForVad`、`VAD_PRE_PAD_MS`/`VAD_POST_PAD_MS`) をエンジンを
+  問わず一律に付与する (2026-09-07)。**Google エンジンのみ追加で別扱い**:
+  パディング単体でも改善は確認できたが、実機の再検証でパディングだけでは
+  無応答が再発することが判明したため、reason に関わらず新しいチャンクが
+  来るたびに「発話の先頭からここまでの累積バッファ」全体を都度再送信する
+  (`interim_send`、VRCT v3.5.0 と同じ「育っていくバッファ」方式。送信の
+  たびにパディングも付与するが、蓄積用の内容自体には混ざらない)。
+  `vad_segmented=False` (エネルギー閾値方式) でも Google だけはこの
+  再送信方式になる (ただし無音パディングは付与されない)。詳細は
+  `transcribeAudioQueue` のdocstringと `transcription_recorder.md` 参照。
 
 ## 主要メソッド
 

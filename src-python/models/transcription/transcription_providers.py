@@ -101,14 +101,14 @@ class GoogleProvider:
         no_repeat_ngram_size: int,
         force_language: bool,
     ) -> Tuple[str, float, bool]:
-        # 2026-09-07: クリップ前後の無音パディングやクリップ分割・
-        # 「育っていくバッファを都度再送信する」方式など、Google だけを
-        # 特別扱いする対策をいくつか試したが、実機検証の結果「VAD が渡す
-        # クリップの前後に無音パディングを付与する」対策 (エンジンを問わず
-        # AudioTranscriber 側で適用、transcription_transcriber.py 参照) 単体
-        # で無応答/内容欠落が解消することを確認したため、Google 固有の
-        # 特別扱いは全て撤回した。このプロバイダは audio_data をそのまま
-        # 1回認識するだけで良い。
+        # 2026-09-07: クリップ前後の無音パディングやクリップ分割を
+        # このプロバイダ内で行う対策を試したが、実機検証の結果「クリップの
+        # 前後に無音パディングを付与する」対策はエンジンを問わず
+        # AudioTranscriber 側 (transcription_transcriber.py) で一律に適用する
+        # 形に一本化した。Google はこれに加えて「育っていくバッファを都度
+        # 再送信する」(interim_send、AudioTranscriber側) も併用しているが、
+        # このプロバイダ自体は毎回渡された audio_data を1回認識するだけで
+        # 良く、パディングや再送信ロジックを知る必要はない。
         try:
             # join_all_results=True: このエンドポイントは、1クリップに
             # 複数の発話区間 (無音を挟んだ複数の文) が含まれる場合、それ

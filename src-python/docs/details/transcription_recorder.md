@@ -120,17 +120,18 @@ PuriPuly-heart の `PEER_MAX_SEGMENT_MS` (7秒) を参考にした固定値に�
 regressionの発生頻度を上げていたため)。
 
 **2026-09-07、Google (無料/非公式エンドポイント) で「ネットワークエラーは
-無いのに認識結果が0件で返る」問題が見つかり、いくつかの対策を試した末に
-撤回した経緯がある。** 一時期 `max_speech_seconds` 引数を追加して Google
-だけこの7秒を3秒に短縮したり、`AudioTranscriber` 側で Google だけ
-「育っていくバッファを都度再送信する」(`interim_send`) 特別扱いを
-していたが、いずれも実機検証で効果が薄い/副作用がある (呼び出し頻度が
-上がり過ぎて処理が悪化する等) と判明し撤回した。最終的には
-`AudioTranscriber` が確定したクリップの前後に無音パディングを付与する
-だけ (`transcription_transcriber.py` の `VAD_PRE_PAD_MS`/`VAD_POST_PAD_MS`
-参照、エンジンを問わず一律に適用) で問題が解消することを実機で確認し、
-Google 固有の特別扱いは全て撤回して一本化した。この Recorder 自体には
-Google固有の分岐は無く、`max_speech_frames` は常に固定 (7秒) のまま。
+無いのに認識結果が0件で返る」問題が見つかり、複数の対策を試した経緯が
+ある。** 一時期 `max_speech_seconds` 引数を追加して Google だけこの7秒を
+3秒に短縮する対策を試したが、実機検証で「呼び出し頻度が上がり過ぎて
+処理が悪化する」regressionが確認され撤回した (この引数自体は削除済み、
+`max_speech_frames` は常にエンジンを問わず固定7秒)。一方、
+`AudioTranscriber` 側の「確定したクリップの前後に無音パディングを付与する」
+(`VAD_PRE_PAD_MS`/`VAD_POST_PAD_MS`、エンジンを問わず一律に適用) と
+「Google だけ育っていくバッファを都度再送信する」(`interim_send`) は
+どちらも有効な対策と判断し、両方を維持している (パディング単体では実機の
+再検証で無応答が再発したため、2つを併用する形に落ち着いた)。この
+Recorder 自体には Google固有の分岐は無く、上記2つの対策は
+`transcription_transcriber.py` 側で完結している。
 
 マイク/スピーカーそれぞれのデバイスを開いて `BaseEnergyAndAudioRecorder` を構築します。
 `SelectedSpeakerEnergyAndAudioRecorder` は `enable_stall_watchdog=False` を固定で渡します。
