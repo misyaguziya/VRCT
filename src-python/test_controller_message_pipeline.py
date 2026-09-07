@@ -220,7 +220,11 @@ class TestMicMessage(_MessagePipelineTestBase):
     def test_transliteration_uses_own_configured_language(self) -> None:
         config.CONVERT_MESSAGE_TO_HIRAGANA = True
         your_langs = config.SELECTED_YOUR_LANGUAGES
+        # language/countryの組み合わせが不整合だと_selected_your_languages_validator
+        # がサイレントに旧値へフォールバックするため、両方を明示的に設定する
+        # (config.jsonに実機検証等で保存された既存の言語設定に依存しないため)。
         your_langs["1"]["1"]["language"] = "Japanese"
+        your_langs["1"]["1"]["country"] = "Japan"
         config.SELECTED_YOUR_LANGUAGES = your_langs
         self._model.getInputTranslate.return_value = (["hola"], [True])
         self.controller.micMessage({"text": "hello", "language": "English"})
