@@ -120,6 +120,15 @@ class ReleaseInfo:
 # 「文字起こしが実時間の何倍も遅れた」状態のみで発動する余裕を持たせた値。
 _AUDIO_QUEUE_MAXSIZE = 20
 
+# 2026-09-07: Google (無料/非公式エンドポイント) に限り VadSegmenter の
+# max_speech_frames を3秒 (v3.5.0のRECORD_TIMEOUT相当) に短縮する対策を
+# 一度試したが、実機検証で「処理が悪化した」(呼び出し頻度が上がり過ぎ、
+# 無料/非公式エンドポイント側で暗黙のスロットリング等が起きている
+# 可能性がある) と判明したため撤回した。BaseVadAndAudioRecorder /
+# SelectedMic・SpeakerVadRecorder の max_speech_seconds 引数自体は
+# 汎用の上書き機構として残しているが、model.py からは既定値 (7秒、
+# PuriPuly-heart 参考値) を上書きしない。
+
 
 class _DiscardQueue(Queue):
     """Queue that silently drops everything put into it.

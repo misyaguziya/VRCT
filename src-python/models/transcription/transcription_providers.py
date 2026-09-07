@@ -45,6 +45,21 @@ except Exception:
 # (connect, read) タイムアウト。実機検証の結果次第で調整する。
 _HTTP_TIMEOUT = (10, 60)
 
+# Google (無料/非公式エンドポイント) 送信直前にのみ付与する無音パディング。
+# 2026-09-07: 実機検証で「ネットワークエラーは一切無いのに、認識できた
+# テキストが0件で返ってくる」(UnknownValueError) ケースを確認した。
+# kikitan-translator (docs/ref/kikitan-translator) のVAD実装が発話区間の
+# 前後に無音バッファを持たせていること、PuriPuly-heart
+# (docs/ref/PuriPuly-heart) の ring_buffer_ms=500 (発話前に保持する
+# リングバッファ長) を参考に、クリップの境界がエンジン側のエンドポイント
+# 判定に与える影響を確認する実験として、実際の音声ではなく無音
+# (ゼロバイト) を前後に付与してから送信する。実際の発話音声を追加で
+# キャプチャするわけではないため、他のロジック (VAD自体のプリロール等)
+# には一切影響しない。
+_GOOGLE_PRE_PAD_MS = 300
+_GOOGLE_POST_PAD_MS = 500
+
+
 
 class TranscriptionApiError(Exception):
     """API 系エンジンでの文字起こし失敗を、対応する `ErrorCode` 付きで表す。"""
@@ -90,6 +105,23 @@ class GoogleProvider:
     def __init__(self, recognizer: Recognizer) -> None:
         self._recognizer = recognizer
 
+    def _with_silence_padding(self, audio_data: AudioData) -> AudioData:
+        """クリップの前後に無音 (ゼロバイト) を付与した新しい AudioData を返す。
+
+        実際の音声を追加でキャプチャするわけではなく、送信直前にのみ
+        digital silence を足すだけなので、VAD側のプリロールや他の
+        ロジックには一切影響しない。効果測定のための実験的対策
+        (2026-09-07、_GOOGLE_PRE_PAD_MS/_GOOGLE_POST_PAD_MS 参照)。
+        """
+        bytes_per_ms = audio_data.sample_rate * audio_data.sample_width / 1000
+        pre_silence = b"\x00" * int(bytes_per_ms * _GOOGLE_PRE_PAD_MS)
+        post_silence = b"\x00" * int(bytes_per_ms * _GOOGLE_POST_PAD_MS)
+        return AudioData(
+            pre_silence + audio_data.frame_data + post_silence,
+            audio_data.sample_rate,
+            audio_data.sample_width,
+        )
+
     def transcribe(
         self,
         audio_data: AudioData,
@@ -101,11 +133,30 @@ class GoogleProvider:
         no_repeat_ngram_size: int,
         force_language: bool,
     ) -> Tuple[str, float, bool]:
+        # 2026-09-07: 一度は「送信前にクリップを固定秒数へ分割する」対策を
+        # 試したが、実機検証で無効と判明し撤回した。原因は「長さ」では
+        # なく「クリップの起点」だった: v3.5.0 (エネルギー閾値方式、
+        # 常に無音から立ち上がった発話の本当の先頭からの累積バッファを
+        # 送信) は10秒を超える長いクリップでも欠落しなかった一方、この
+        # プロバイダが機械的に切り出した2つ目以降のチャンクは発話の途中
+        # から始まる音声になり、Google側が認識に失敗しやすいと考えられる。
+        # 対応は呼び出し元 (AudioTranscriber.transcribeAudioQueue) 側で行う:
+        # Google の場合は確定を待たず、発話の先頭からの累積バッファを
+        # 都度このメソッドへ渡して再送信する (v3.5.0 と同じ「育っていく
+        # バッファ」方式)。このメソッド自体は audio_data をそのまま1回
+        # 認識するだけで良い。
         try:
+            # join_all_results=True: このエンドポイントは、1クリップに
+            # 複数の発話区間 (無音を挟んだ複数の文) が含まれる場合、それ
+            # ぞれを別々の result ブロックとして返すことがある。既定
+            # (最初のブロックだけを使う) のままだと後続の発話が黙って
+            # 失われる (2026-09-07、実機で確認・custom_speech_recognition
+            # フォーク側で修正)。
             text, confidence = self._recognizer.recognize_google(
-                audio_data,
+                self._with_silence_padding(audio_data),
                 language=transcription_lang[language][country]["Google"],
                 with_confidence=True,
+                join_all_results=True,
             )
         except UnknownValueError:
             return "", 0.0, False

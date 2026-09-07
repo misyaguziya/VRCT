@@ -119,6 +119,24 @@ PuriPuly-heart の `PEER_MAX_SEGMENT_MS` (7秒) を参考にした固定値に�
 (record_timeout 連動だと既定3秒ごとに強制打ち切りが頻発し、上記
 regressionの発生頻度を上げていたため)。
 
+**2026-09-07、Google エンジンだけこの7秒を再度短縮する対策を試したが撤回した。**
+`BaseVadAndAudioRecorder`/`SelectedMic・SpeakerVadRecorder` に
+`max_speech_seconds` 引数 (既定 `None` = 7秒のまま) を追加し、一時期
+`model.py` の `_create_recorder` が `config.SELECTED_TRANSCRIPTION_ENGINE
+== "Google"` の場合だけ3秒を渡すようにしていた。狙いは、VRCT v3.5.0
+(エネルギー閾値方式、`record_timeout`=3秒) が無音の有無に関わらず3秒
+ごとに機械的に区切っていたため、3秒を超えるほぼ全ての発話が「発話の
+先頭からの累積」を内容の異なる複数バージョンでGoogleに複数回送る構造に
+なっており個々の呼び出しの失敗が結果に出にくかった、という点を
+`AudioTranscriber` 側の `interim_send` (育っていくバッファを都度再送信、
+`transcription_transcriber.py` 参照) と組み合わせて再現することだったが、
+実機検証で「呼び出し頻度が上がり過ぎ、無料/非公式エンドポイント側で
+暗黙のスロットリング等が起きた可能性がある」regressionが確認されたため
+撤回した。`max_speech_seconds` 引数自体 (既定7秒を上書きする汎用機構) は
+残しているが、`model.py` からは現在どのエンジンに対しても上書きしない
+(常に既定の7秒)。Google無料エンドポイントの信頼性向上は別途の課題として
+未解決のまま。
+
 マイク/スピーカーそれぞれのデバイスを開いて `BaseEnergyAndAudioRecorder` を構築します。
 `SelectedSpeakerEnergyAndAudioRecorder` は `enable_stall_watchdog=False` を固定で渡します。
 WASAPI ループバックは再生されていない間ずっと無音でブロックするのが正常な状態であり、これを

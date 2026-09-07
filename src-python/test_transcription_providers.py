@@ -21,7 +21,7 @@ from openai import (
     AuthenticationError,
     RateLimitError,
 )
-from speech_recognition import UnknownValueError
+from speech_recognition import AudioData, UnknownValueError
 
 from errors import ErrorCode
 from models.transcription.transcription_providers import (
@@ -37,6 +37,11 @@ def _segment(text: str, avg_logprob: float = -0.1, no_speech_prob: float = 0.1) 
     return SimpleNamespace(text=text, avg_logprob=avg_logprob, no_speech_prob=no_speech_prob)
 
 
+def _audio_data(seconds: float, sample_rate: int = 16000, sample_width: int = 2) -> AudioData:
+    frame_count = int(seconds * sample_rate)
+    return AudioData(b"\x00" * (frame_count * sample_width), sample_rate, sample_width)
+
+
 class TestGoogleProvider(unittest.TestCase):
     def test_returns_text_and_confidence_on_success(self) -> None:
         recognizer = MagicMock()
@@ -44,7 +49,7 @@ class TestGoogleProvider(unittest.TestCase):
         provider = GoogleProvider(recognizer)
 
         text, confidence, is_definitive = provider.transcribe(
-            MagicMock(), "English", "United States",
+            _audio_data(1.0), "English", "United States",
             avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
         )
 
@@ -56,6 +61,10 @@ class TestGoogleProvider(unittest.TestCase):
         recognizer.recognize_google.assert_called_once()
         _, kwargs = recognizer.recognize_google.call_args
         self.assertEqual(kwargs["language"], "en-US")
+        # 複数発話区間を含む音声 (発話の先頭から累積したクリップ等) で
+        # 後続の発話が黙って失われないよう、常に全ブロックを連結させる
+        # (2026-09-07、custom_speech_recognitionフォーク側の修正と対)。
+        self.assertTrue(kwargs["join_all_results"])
 
     def test_returns_empty_text_on_unknown_value_error(self) -> None:
         recognizer = MagicMock()
@@ -63,13 +72,66 @@ class TestGoogleProvider(unittest.TestCase):
         provider = GoogleProvider(recognizer)
 
         text, confidence, is_definitive = provider.transcribe(
-            MagicMock(), "Japanese", "Japan",
+            _audio_data(1.0), "Japanese", "Japan",
             avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
         )
 
         self.assertEqual(text, "")
         self.assertEqual(confidence, 0.0)
         self.assertFalse(is_definitive)
+
+    def test_does_not_split_long_audio(self) -> None:
+        """2026-09-07: 一度は固定秒数へのクライアント側分割を試したが、
+        実機検証の結果「クリップの長さ」ではなく「発話の先頭から始まって
+        いるか」が問題の本質だったと判明し撤回した (呼び出し元
+        AudioTranscriber側で対応する)。このプロバイダは audio_data を
+        そのまま1回だけ認識する。"""
+        recognizer = MagicMock()
+        recognizer.recognize_google.return_value = ("hello world", 0.9)
+        provider = GoogleProvider(recognizer)
+
+        provider.transcribe(
+            _audio_data(20.0), "English", "United States",
+            avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+        )
+
+        recognizer.recognize_google.assert_called_once()
+
+    def test_pads_the_clip_with_silence_before_sending(self) -> None:
+        """2026-09-07: ネットワークエラーは無いのに認識結果が0件で返る
+        (UnknownValueError) ケースを実機で確認した。kikitan-translatorの
+        VAD実装やPuriPuly-heartのring_buffer_ms=500 (docs/ref/ 参照) を
+        参考に、クリップの境界がエンジン側のエンドポイント判定に与える
+        影響を確認する実験として、送信直前に前300ms/後500msの無音
+        (ゼロバイト) を付与する。"""
+        recognizer = MagicMock()
+        recognizer.recognize_google.return_value = ("hello", 0.9)
+        provider = GoogleProvider(recognizer)
+        original = _audio_data(1.0)
+
+        provider.transcribe(
+            original, "English", "United States",
+            avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
+        )
+
+        sent_audio_data = recognizer.recognize_google.call_args.args[0]
+        bytes_per_ms = original.sample_rate * original.sample_width / 1000
+        expected_pre = int(bytes_per_ms * 300)
+        expected_post = int(bytes_per_ms * 500)
+        self.assertEqual(
+            len(sent_audio_data.frame_data),
+            expected_pre + len(original.frame_data) + expected_post,
+        )
+        self.assertEqual(sent_audio_data.frame_data[:expected_pre], b"\x00" * expected_pre)
+        self.assertEqual(sent_audio_data.frame_data[-expected_post:], b"\x00" * expected_post)
+        # パディングを除いた中身は元の音声そのまま (無音を足すだけで、
+        # 実際の音声データ自体は加工しない)。
+        self.assertEqual(
+            sent_audio_data.frame_data[expected_pre:-expected_post], original.frame_data
+        )
+        # sample_rate/sample_width は元のまま。
+        self.assertEqual(sent_audio_data.sample_rate, original.sample_rate)
+        self.assertEqual(sent_audio_data.sample_width, original.sample_width)
 
 
 class TestLocalWhisperProvider(unittest.TestCase):
