@@ -43,18 +43,6 @@ export const UpdateModal = () => {
         getAvailableReleases();
     }, []);
 
-    useEffect(() => {
-        if (tmp_selected_channel !== null) return;
-        if (!currentReleaseChannel.data) return;
-        setTmpSelectedChannel(currentReleaseChannel.data);
-    }, [currentReleaseChannel.data, tmp_selected_channel]);
-
-    useEffect(() => {
-        if (tmp_selected_compute_mode !== null) return;
-        if (!currentComputeMode.data) return;
-        setTmpSelectedComputeMode(currentComputeMode.data);
-    }, [currentComputeMode.data, tmp_selected_compute_mode]);
-
     const effective_channel = tmp_selected_channel ?? currentReleaseChannel.data ?? "stable";
     const effective_compute_mode = tmp_selected_compute_mode ?? currentComputeMode.data ?? "cpu";
 
@@ -105,14 +93,20 @@ export const UpdateModal = () => {
     const channel_variable = { state: currentReleaseChannel.state, data: effective_channel };
     const compute_mode_variable = { state: "ok", data: effective_compute_mode };
 
-    const is_channel_changed =
-        tmp_selected_channel !== null && tmp_selected_channel !== currentReleaseChannel.data;
-    const is_compute_mode_changed =
-        tmp_selected_compute_mode !== null && tmp_selected_compute_mode !== currentComputeMode.data;
+    const latest_release_version = filtered_releases[0]?.version;
+
+    const is_channel_changed = effective_channel !== currentReleaseChannel.data;
+    const is_compute_mode_changed = effective_compute_mode !== currentComputeMode.data;
+    const is_version_customized = Boolean(
+        tmp_selected_version &&
+        latest_release_version &&
+        tmp_selected_version !== latest_release_version
+    );
+
     const is_version_changed =
         selected_release && selected_release.version !== currentSoftwareVersion.data;
-    const has_any_tmp_selected_change =
-        is_channel_changed || is_compute_mode_changed || is_version_changed;
+
+    const is_custom = is_channel_changed || is_compute_mode_changed || is_version_customized;
 
     const is_update_available =
         currentLatestSoftwareVersionInfo.data.is_update_available === true;
@@ -120,7 +114,7 @@ export const UpdateModal = () => {
 
     // Hero mode
     let hero_mode; // "custom" | "update_available" | "up_to_date"
-    if (has_any_tmp_selected_change) hero_mode = "custom";
+    if (is_custom) hero_mode = "custom";
     else if (is_update_available) hero_mode = "update_available";
     else hero_mode = "up_to_date";
 
@@ -142,8 +136,8 @@ export const UpdateModal = () => {
 
     const onClickInstall = () => {
         if (!is_ready_to_install) return;
-        if (tmp_selected_channel && tmp_selected_channel !== currentReleaseChannel.data) {
-            setReleaseChannel(tmp_selected_channel);
+        if (effective_channel !== currentReleaseChannel.data) {
+            setReleaseChannel(effective_channel);
         }
         updateIsSoftwareUpdating(true);
         if (effective_compute_mode === "cpu") {
