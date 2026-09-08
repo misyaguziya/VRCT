@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Any
 from time import sleep
 from threading import Thread, Lock, Event
@@ -43,6 +44,26 @@ _PAUSE_BARRIER_TIMEOUT_SEC = 5.0
 # transcription 側で同じデバイスの loopback stream を open すると hang)。
 # device_manager.update() と recorder の Microphone open で共通に使う。
 pyaudio_op_lock: Lock = Lock()
+
+
+@dataclass(frozen=True)
+class _DeviceSnapshot:
+    """mic/speakerのデバイス一覧4フィールドをまとめて原子的にスワップする
+    ための不変スナップショット(バックエンドレビュー フェーズ4項目32)。
+
+    以前は DeviceManager.update() 内でこの4つを個別の self.属性へ順に
+    代入していた。列挙処理自体は pyaudio_op_lock 配下で保護されていたが、
+    その後のこの4つの代入は無保護だったため、別スレッド(mainloopワーカー
+    が getMicDevices()/getDefaultMicDevice() 等を連続で呼ぶ経路)から見ると
+    「新しい mic_devices + 古い default_mic_device」のような、新旧が
+    混在した組み合わせを観測しうった。1つのオブジェクトへの単一代入に
+    一本化することで、読み手は常にどちらか一方の完全なスナップショットの
+    みを見るようになる。
+    """
+    mic_devices: Dict[str, List[Dict[str, Any]]]
+    default_mic_device: Dict[str, Any]
+    speaker_devices: List[Dict[str, Any]]
+    default_speaker_device: Dict[str, Any]
 
 
 class Client(MMNotificationClient):
@@ -116,10 +137,12 @@ class DeviceManager:
         if getattr(self, "_initialized", False):
             return
 
-        self.mic_devices: Dict[str, List[Dict[str, Any]]] = {"NoHost": [{"index": -1, "name": "NoDevice"}]}
-        self.default_mic_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
-        self.speaker_devices: List[Dict[str, Any]] = [{"index": -1, "name": "NoDevice"}]
-        self.default_speaker_device: Dict[str, Any] = {"device": {"index": -1, "name": "NoDevice"}}
+        self._device_snapshot = _DeviceSnapshot(
+            mic_devices={"NoHost": [{"index": -1, "name": "NoDevice"}]},
+            default_mic_device={"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}},
+            speaker_devices=[{"index": -1, "name": "NoDevice"}],
+            default_speaker_device={"device": {"index": -1, "name": "NoDevice"}},
+        )
 
         # Initialize previous state trackers
         self.prev_mic_host: List[str] = [host for host in self.mic_devices]
@@ -215,6 +238,26 @@ class DeviceManager:
             # swallow to avoid breaking initialization
             pass
 
+    # mic_devices/default_mic_device/speaker_devices/default_speaker_device は
+    # _DeviceSnapshot 経由の読み取り専用プロパティ(項目32)。既存の呼び出し
+    # 側 (getMicDevices() 等、_applyDeviceDiffs() 等) は素の属性アクセスと
+    # 見分けが付かないため変更不要。
+    @property
+    def mic_devices(self) -> Dict[str, List[Dict[str, Any]]]:
+        return self._device_snapshot.mic_devices
+
+    @property
+    def default_mic_device(self) -> Dict[str, Any]:
+        return self._device_snapshot.default_mic_device
+
+    @property
+    def speaker_devices(self) -> List[Dict[str, Any]]:
+        return self._device_snapshot.speaker_devices
+
+    @property
+    def default_speaker_device(self) -> Dict[str, Any]:
+        return self._device_snapshot.default_speaker_device
+
     def update(self):
         buffer_mic_devices: Dict[str, List[Dict[str, Any]]] = {}
         buffer_default_mic_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
@@ -223,10 +266,12 @@ class DeviceManager:
 
         if PyAudio is None:
             # PyAudio not available; leave defaults in place
-            self.mic_devices = buffer_mic_devices or {"NoHost": [{"index": -1, "name": "NoDevice"}]}
-            self.default_mic_device = buffer_default_mic_device
-            self.speaker_devices = buffer_speaker_devices or [{"index": -1, "name": "NoDevice"}]
-            self.default_speaker_device = buffer_default_speaker_device
+            self._device_snapshot = _DeviceSnapshot(
+                mic_devices=buffer_mic_devices or {"NoHost": [{"index": -1, "name": "NoDevice"}]},
+                default_mic_device=buffer_default_mic_device,
+                speaker_devices=buffer_speaker_devices or [{"index": -1, "name": "NoDevice"}],
+                default_speaker_device=buffer_default_speaker_device,
+            )
             return
 
         try:
@@ -312,10 +357,12 @@ class DeviceManager:
         except Exception:
             errorLogging()
 
-        self.mic_devices = buffer_mic_devices
-        self.default_mic_device = buffer_default_mic_device
-        self.speaker_devices = buffer_speaker_devices
-        self.default_speaker_device = buffer_default_speaker_device
+        self._device_snapshot = _DeviceSnapshot(
+            mic_devices=buffer_mic_devices,
+            default_mic_device=buffer_default_mic_device,
+            speaker_devices=buffer_speaker_devices,
+            default_speaker_device=buffer_default_speaker_device,
+        )
 
     def _applyDeviceDiffs(self) -> None:
         """update() 後の一覧と prev_* を比較して update_flag_* を立て、
