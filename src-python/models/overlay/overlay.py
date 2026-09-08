@@ -13,11 +13,22 @@ try:
 except ImportError:
     import openvr_session
 try:
-    from utils import errorLogging
+    from utils import errorLogging, printLog
 except ImportError:
     def errorLogging():
         import traceback
         print(traceback.format_exc())
+    def printLog(log, data=None):
+        print(log, data)
+
+# updateImage()の再初期化待ちループ / shutdownOverlay()のスレッドjoinの
+# 上限(バックエンドレビュー フェーズ4項目31)。Pythonのスレッドは外部から
+# 強制終了できないため、これらのタイムアウトは「詰まったスレッドを殺す」
+# ものではなく、「呼び出し元(mainloopワーカースレッド等)を無期限に
+# ブロックしないよう待つのを諦める」ためのもの。
+_REINIT_WAIT_TIMEOUT_SEC = 5.0
+_REINIT_WAIT_POLL_INTERVAL_SEC = 0.1
+_SHUTDOWN_JOIN_TIMEOUT_SEC = 5.0
 
 try:
     from . import overlay_utils as utils
@@ -152,12 +163,23 @@ class Overlay:
                 self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
             except Exception:
                 self.reStartOverlay()
-                while self.initialized is False:
-                    time.sleep(0.1)
-                try:
-                    self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
-                except Exception:
-                    errorLogging()
+                deadline = time.monotonic() + _REINIT_WAIT_TIMEOUT_SEC
+                while self.initialized is False and time.monotonic() < deadline:
+                    time.sleep(_REINIT_WAIT_POLL_INTERVAL_SEC)
+                if self.initialized is True:
+                    try:
+                        self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
+                    except Exception:
+                        errorLogging()
+                else:
+                    # SteamVR/オーバーレイの再初期化が_REINIT_WAIT_TIMEOUT_SEC秒
+                    # 以内に終わらなかった(例: SteamVRが落ちたまま)。呼び出し元
+                    # (mainloopワーカースレッド)を無期限にブロックしないよう、
+                    # この更新は諦める。
+                    printLog(
+                        f"overlay: {size}の再初期化が{_REINIT_WAIT_TIMEOUT_SEC}s"
+                        "でタイムアウトしたため、この画像更新は諦めます"
+                    )
 
             self.updateOpacity(self.settings[size]["opacity"], size)
             self.lastUpdate[size] = time.monotonic()
@@ -292,7 +314,28 @@ class Overlay:
         if self.initialized is True and self.init_process is False:
             if isinstance(self.thread_overlay, Thread):
                 self.loop = False
-                self.thread_overlay.join()
+                self.thread_overlay.join(timeout=_SHUTDOWN_JOIN_TIMEOUT_SEC)
+                if self.thread_overlay.is_alive():
+                    # mainloop()がOpenVRのブロッキング呼び出し等で詰まって
+                    # いる可能性がある。Pythonのスレッドは外部から強制終了
+                    # できないため、これ以上は待たずに諦める。
+                    #
+                    # self.overlay/self.systemはここで破棄しない: 詰まって
+                    # いるスレッドが後で復帰した際に、None化されたオブジェ
+                    # クトへ触れて例外になる恐れがあるため。代償として
+                    # OpenVRのオーバーレイハンドルとセッション参照が1つ分
+                    # リークするが、self.initializedはFalseに戻すことで
+                    # 次の startOverlay() が新しいオーバーレイを作り直せる
+                    # ようにする(=再起動しなくても機能を復旧できることを
+                    # 優先する。バックエンドレビュー フェーズ4項目31)。
+                    printLog(
+                        f"overlay: shutdownOverlayのスレッドjoinが"
+                        f"{_SHUTDOWN_JOIN_TIMEOUT_SEC}sでタイムアウトしました"
+                        "(古いスレッドは残存、ハンドルはリークします)"
+                    )
+                    self.thread_overlay = None
+                    self.initialized = False
+                    return
                 self.thread_overlay = None
             if isinstance(self.overlay, openvr.IVROverlay):
                 for size in self.settings.keys():
