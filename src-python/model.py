@@ -1421,6 +1421,21 @@ class Model:
         self.osc_handler.setDictFilterAndTarget(dict_filter_and_target)
         self.osc_handler.receiveOscParameters()
 
+    def stopReceiveOSC(self):
+        """OSC受信サーバ(UDP + OSCQuery HTTP + zeroconf監視)を停止する。
+
+        アプリ終了時(Controller.shutdown())専用の呼び出し口。
+        setOscIpAddress()/setOscPort()は再起動のため内部で直接
+        osc_handler.oscServerStop()を呼んでおり、このメソッドは経由しない。
+        以前はアプリ終了時にこれらを止める経路が無く(フェーズ3項目21で一度
+        「未使用」と判断され削除された`stopReceiveOSC`とは別の、実際に
+        呼ばれる経路として再設置)、OSCQueryのzeroconfサービス広告が
+        `close()`されないままプロセスが終了していた(バックエンドレビュー
+        フェーズ4項目30)。
+        """
+        self.ensure_initialized()
+        self.osc_handler.oscServerStop()
+
     def getIsOscQueryEnabled(self):
         self.ensure_initialized()
         return self.osc_handler.getIsOscQueryEnabled()

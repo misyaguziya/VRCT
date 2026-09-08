@@ -294,10 +294,20 @@ class OSCHandler:
                 sleep(1)
 
     def oscServerServe(self) -> None:
-        """Run the OSC server loop with a longer poll interval to reduce CPU."""
-        # ポーリング間隔を長くして（2秒から10秒に）CPUの使用率を削減
+        """Run the OSC server loop.
+
+        poll_interval を短くする(10秒→0.5秒、バックエンドレビュー
+        フェーズ4項目30)。`serve_forever(poll_interval)` は内部で
+        `selector.select(timeout=poll_interval)` を使うだけなので、
+        間隔を縮めてもCPU使用率はほぼ変わらない(以前のコメントの
+        「CPU使用率削減のため2秒→10秒に」は根拠が薄いとレビューで
+        指摘された)。一方 `oscServerStop()` が呼ぶ`BaseServer.shutdown()`は
+        このpoll_interval単位でしか停止要求を確認しないため、10秒のままだと
+        OSCのIP/ポート変更(`setOscIpAddress`/`setOscPort`)や、アプリ終了時の
+        `oscServerStop()`呼び出しだけでUIが最大10秒無応答になっていた。
+        """
         if self.osc_server is not None:
-            self.osc_server.serve_forever(10)
+            self.osc_server.serve_forever(0.5)
 
     def oscServerStop(self) -> None:
         """Stop and clean up any running OSC server and OSCQuery service."""
