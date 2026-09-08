@@ -655,6 +655,18 @@ class Main:
         self._threads.append(th_receiver)
 
     def _call_handler(self, endpoint: str, data: Any = None) -> tuple:
+        # 2026-08-27のバックエンドレビュー(フェーズ4項目29)で撤去した
+        # `time.sleep(0.2)`がここにあった。エンドポイントロックを保持した
+        # ままの待機で、ワーカー3本×5req/s=最大15req/sにスループットを
+        # 固定していた(起動時の`updateConfigSettings()`が近い100個の
+        # `/get/data/*`を舐めるため無視できない遅延だった)。コメントは
+        # 「処理の安定化のために少し待機」とあるだけで具体的な根拠は
+        # 無く、レビューア2名から「本来直すべき競合を隠している疑いが
+        # 強い」と指摘されていた。実際、当時無ロックだったOSCミュート同期
+        # (フェーズ1項目6)・Auto Select(項目7)・CTranslate2
+        # translator/tokenizer(項目10)はいずれもこの待機がたまたま時間差
+        # で競合を回避していた可能性があったが、フェーズ1〜3で全て専用の
+        # ロックが入ったため、この待機は撤去して問題ないと判断した。
         result = None
         status = 500
         handler = self.mapping.get(endpoint)
@@ -669,7 +681,6 @@ class Main:
                 response = handler["variable"](data)
                 status = response.get("status", 500)
                 result = response.get("result", None)
-                time.sleep(0.2)
             except Exception:
                 errorLogging()
                 result = "Internal error"
