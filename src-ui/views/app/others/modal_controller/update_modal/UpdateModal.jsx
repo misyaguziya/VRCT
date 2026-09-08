@@ -37,22 +37,24 @@ export const UpdateModal = () => {
 
     const [tmp_selected_channel, setTmpSelectedChannel] = useState(null);
     const [tmp_selected_compute_mode, setTmpSelectedComputeMode] = useState(null);
-    const [tmp_selected_version, setTmpSelectedVersion] = useState("");
+    const [tmp_selected_version, setTmpSelectedVersion] = useState(null);
 
     useEffect(() => {
         getAvailableReleases();
     }, []);
 
-    const effective_channel = tmp_selected_channel ?? currentReleaseChannel.data ?? "stable";
-    const effective_compute_mode = tmp_selected_compute_mode ?? currentComputeMode.data ?? "cpu";
+    const target_channel = tmp_selected_channel ?? currentReleaseChannel.data ?? "stable";
+    const target_compute_mode = tmp_selected_compute_mode ?? currentComputeMode.data ?? "cpu";
 
     const filtered_releases = useMemo(() => {
         const list = currentAvailableReleases.data;
-        if (effective_channel === "beta") {
+        if (target_channel === "beta") {
             return list.filter((release) => release.is_prerelease);
         }
         return list.filter((release) => !release.is_prerelease);
-    }, [currentAvailableReleases.data, effective_channel]);
+    }, [currentAvailableReleases.data, target_channel]);
+
+    const target_version = tmp_selected_version ?? filtered_releases[0]?.version ?? "";
 
     const list_for_ui = useMemo(() => {
         const result = {};
@@ -70,13 +72,10 @@ export const UpdateModal = () => {
     }, [filtered_releases, t]);
 
     useEffect(() => {
-        if (filtered_releases.length === 0) {
-            if (tmp_selected_version !== "") setTmpSelectedVersion("");
-            return;
+        if (tmp_selected_version === null) return;
+        if (!filtered_releases.some((r) => r.version === tmp_selected_version)) {
+            setTmpSelectedVersion(null);
         }
-        const exists = filtered_releases.some((release) => release.version === tmp_selected_version);
-        if (exists) return;
-        setTmpSelectedVersion(filtered_releases[0].version);
     }, [filtered_releases, tmp_selected_version]);
 
     const channel_options = [
@@ -88,23 +87,21 @@ export const UpdateModal = () => {
         { id: "cuda", label: t("update_modal.compute_mode_cuda") },
     ];
 
-    const selected_release = filtered_releases.find((r) => r.version === tmp_selected_version);
-    const version_variable = { state: currentAvailableReleases.state, data: tmp_selected_version };
-    const channel_variable = { state: currentReleaseChannel.state, data: effective_channel };
-    const compute_mode_variable = { state: "ok", data: effective_compute_mode };
+    const version_variable = { state: currentAvailableReleases.state, data: target_version };
+    const channel_variable = { state: currentReleaseChannel.state, data: target_channel };
+    const compute_mode_variable = { state: "ok", data: target_compute_mode };
 
     const latest_release_version = filtered_releases[0]?.version;
 
-    const is_channel_changed = effective_channel !== currentReleaseChannel.data;
-    const is_compute_mode_changed = effective_compute_mode !== currentComputeMode.data;
+    const is_channel_changed = target_channel !== currentReleaseChannel.data;
+    const is_compute_mode_changed = target_compute_mode !== currentComputeMode.data;
     const is_version_customized = Boolean(
-        tmp_selected_version &&
+        target_version &&
         latest_release_version &&
-        tmp_selected_version !== latest_release_version
+        target_version !== latest_release_version
     );
 
-    const is_version_changed =
-        selected_release && selected_release.version !== currentSoftwareVersion.data;
+    const is_version_changed = Boolean(target_version) && target_version !== currentSoftwareVersion.data;
 
     const is_custom = is_channel_changed || is_compute_mode_changed || is_version_customized;
 
@@ -130,20 +127,20 @@ export const UpdateModal = () => {
         return ap > bp;
     };
     const is_downgrade =
-        is_version_changed && isSemverGreater(currentSoftwareVersion.data, selected_release.version);
+        is_version_changed && isSemverGreater(currentSoftwareVersion.data, target_version);
 
-    const is_ready_to_install = Boolean(selected_release) && filtered_releases.length > 0;
+    const is_ready_to_install = Boolean(target_version) && filtered_releases.length > 0;
 
     const onClickInstall = () => {
         if (!is_ready_to_install) return;
-        if (effective_channel !== currentReleaseChannel.data) {
-            setReleaseChannel(effective_channel);
+        if (target_channel !== currentReleaseChannel.data) {
+            setReleaseChannel(target_channel);
         }
         updateIsSoftwareUpdating(true);
-        if (effective_compute_mode === "cpu") {
-            updateSoftware(selected_release.version);
+        if (target_compute_mode === "cpu") {
+            updateSoftware(target_version);
         } else {
-            updateSoftware_CUDA(selected_release.version);
+            updateSoftware_CUDA(target_version);
         }
     };
 
@@ -153,7 +150,7 @@ export const UpdateModal = () => {
         setTmpSelectedVersion(filtered_releases[0].version);
         // fall through to the same install flow immediately
         updateIsSoftwareUpdating(true);
-        if (effective_compute_mode === "cpu") {
+        if (target_compute_mode === "cpu") {
             updateSoftware(filtered_releases[0].version);
         } else {
             updateSoftware_CUDA(filtered_releases[0].version);
@@ -180,8 +177,8 @@ export const UpdateModal = () => {
         currentComputeMode.data,
     );
 
-    const target_summary = selected_release
-        ? composeSummary(selected_release.version, effective_channel, effective_compute_mode)
+    const target_summary = target_version
+        ? composeSummary(target_version, target_channel, target_compute_mode)
         : "";
 
     // Warning list for "custom" hero
@@ -190,17 +187,17 @@ export const UpdateModal = () => {
         warnings.push(
             t("update_modal.warn_downgrade", {
                 from: currentSoftwareVersion.data,
-                to: selected_release.version,
+                to: target_version,
             })
         );
     }
-    if (is_compute_mode_changed && effective_compute_mode === "cuda") {
+    if (is_compute_mode_changed && target_compute_mode === "cuda") {
         warnings.push(t("update_modal.warn_cuda_extra_size"));
     }
-    if (is_channel_changed && effective_channel === "beta") {
+    if (is_channel_changed && target_channel === "beta") {
         warnings.push(t("update_modal.warn_switch_to_beta"));
     }
-    if (is_channel_changed && effective_channel === "stable") {
+    if (is_channel_changed && target_channel === "stable") {
         warnings.push(t("update_modal.warn_switch_to_stable"));
     }
 
@@ -217,7 +214,7 @@ export const UpdateModal = () => {
                     <div className={styles.hero_headline}>
                         {latest_version}
                         <span className={styles.hero_headline_sub}>
-                            {effective_channel === "beta"
+                            {target_channel === "beta"
                                 ? t("update_modal.channel_beta")
                                 : t("update_modal.channel_stable")}
                         </span>
@@ -349,7 +346,7 @@ export const UpdateModal = () => {
                     />
                     <DropdownMenu
                         dropdown_id="update_modal_version"
-                        selected_id={tmp_selected_version}
+                        selected_id={target_version}
                         list={list_for_ui}
                         selectFunction={(data) => setTmpSelectedVersion(data.selected_id)}
                         state={version_variable.state}
