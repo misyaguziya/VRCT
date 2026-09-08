@@ -40,6 +40,11 @@ except ImportError:
     from models.telemetry.core import TelemetryCore
 
 
+# _start_event_loop() がイベントループスレッドの起動を待つ上限
+# (バックエンドレビュー フェーズ4項目32)。
+_EVENT_LOOP_READY_TIMEOUT_SEC = 5.0
+
+
 class Telemetry:
     _instance = None
 
@@ -65,15 +70,37 @@ class Telemetry:
         if self._loop_thread is not None and self._loop_thread.is_alive():
             return
 
+        # `while self._loop is None: pass` (busy-spin) だった箇所を
+        # threading.Event に置き換える(バックエンドレビュー フェーズ4
+        # 項目32)。busy-spinはCPU1コアを100%消費し続け、万一
+        # asyncio.new_event_loop()が失敗してself._loopが一生Noneのまま
+        # だと無限に回り続けていた。Event.wait(timeout=...)ならスリープ
+        # して待つため無駄なCPU消費が無く、タイムアウトで確実に戻る。
+        loop_ready = threading.Event()
+
         def run_loop():
-            self._loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self._loop)
+            try:
+                self._loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(self._loop)
+            except Exception:
+                # self._loop は None のまま。以降 _run_async/_schedule_async
+                # 等の `if self._loop is None: return` ガードにより
+                # テレメトリは黙って無効化される (このモジュール全体の
+                # 「失敗しても本体機能に影響させない」方針に合わせる)。
+                # ここで return しないと、下の run_forever() が
+                # None.run_forever() で AttributeError になり、この
+                # バックグラウンドスレッドが未処理例外で落ちてしまう。
+                return
+            finally:
+                # 失敗時もwait()側を解放する(でなければタイムアウトまで
+                # 待たされた末に self._loop が None のまま、という分かり
+                # にくい状態になる)。
+                loop_ready.set()
             self._loop.run_forever()
 
         self._loop_thread = threading.Thread(target=run_loop, daemon=True, name="telemetry_loop")
         self._loop_thread.start()
-        while self._loop is None:
-            pass
+        loop_ready.wait(timeout=_EVENT_LOOP_READY_TIMEOUT_SEC)
 
     def _stop_event_loop(self, timeout: float = 5.0):
         if self._loop is None:
