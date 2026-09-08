@@ -177,29 +177,24 @@ export const UpdateModal = () => {
         currentComputeMode.data,
     );
 
-    const target_summary = target_version
-        ? composeSummary(target_version, target_channel, target_compute_mode)
-        : "";
+    // Warning items for corresponding rows
+    const warning_compute_mode =
+        is_compute_mode_changed && target_compute_mode === "cuda"
+            ? t("update_modal.warn_cuda_extra_size")
+            : null;
 
-    // Warning list for "custom" hero
-    const warnings = [];
-    if (is_downgrade) {
-        warnings.push(
-            t("update_modal.warn_downgrade", {
-                from: currentSoftwareVersion.data,
-                to: target_version,
-            })
-        );
-    }
-    if (is_compute_mode_changed && target_compute_mode === "cuda") {
-        warnings.push(t("update_modal.warn_cuda_extra_size"));
-    }
-    if (is_channel_changed && target_channel === "beta") {
-        warnings.push(t("update_modal.warn_switch_to_beta"));
-    }
-    if (is_channel_changed && target_channel === "stable") {
-        warnings.push(t("update_modal.warn_switch_to_stable"));
-    }
+    const warning_channel = is_channel_changed
+        ? target_channel === "beta"
+            ? t("update_modal.warn_switch_to_beta")
+            : t("update_modal.warn_switch_to_stable")
+        : null;
+
+    const warning_version = is_downgrade
+        ? t("update_modal.warn_downgrade", {
+            from: currentSoftwareVersion.data,
+            to: target_version,
+        })
+        : null;
 
     return (
         <div className={styles.modal_body}>
@@ -253,48 +248,125 @@ export const UpdateModal = () => {
             )}
 
             {hero_mode === "custom" && (
-                <>
-                    <div className={styles.hero_frame}>
-                        <div className={styles.hero_caption}>
-                            {t("update_modal.hero_custom")}
-                        </div>
-                        <div className={styles.change_row}>
-                            <div className={styles.change_col}>
-                                <div className={styles.change_col_label}>
-                                    {t("update_modal.change_col_current")}
-                                </div>
-                                <div className={styles.change_col_value}>{current_summary}</div>
-                            </div>
-                            <div className={styles.change_arrow}>→</div>
-                            <div className={styles.change_col}>
-                                <div className={styles.change_col_label}>
-                                    {t("update_modal.change_col_after")}
-                                </div>
-                                <div className={styles.change_col_value}>
-                                    {target_summary || "—"}
-                                </div>
-                            </div>
-                        </div>
-                        <button
-                            className={styles.install_button}
-                            onClick={onClickInstall}
-                            disabled={!is_ready_to_install}
-                        >
-                            {t("update_modal.install_button")}
-                        </button>
+                <div className={styles.hero_frame}>
+                    <div className={styles.hero_caption}>
+                        {t("update_modal.hero_custom")}
                     </div>
-
-                    {warnings.length > 0 && (
-                        <div className={styles.warnings_section}>
-                            {warnings.map((w, i) => (
-                                <div className={styles.warning_item} key={i}>
-                                    <WarningSvg className={styles.warning_svg} />
-                                    <p className={styles.warning_text}>{w}</p>
-                                </div>
-                            ))}
+                    <div className={styles.diff_table}>
+                        <div className={styles.diff_header}>
+                            <div />
+                            <div className={styles.diff_header_cell_before}>
+                                {t("update_modal.change_col_current")}
+                            </div>
+                            <div />
+                            <div className={styles.diff_header_cell_after}>
+                                {t("update_modal.change_col_after")}
+                            </div>
                         </div>
-                    )}
-                </>
+
+                        {/* Row 1: デバイス構成 */}
+                        <div className={clsx(styles.diff_group, is_compute_mode_changed && styles.diff_group_changed)}>
+                            <div className={styles.diff_row}>
+                                <div className={styles.diff_item_label}>
+                                    {t("update_modal.compute_mode_label")}
+                                </div>
+                                <div className={styles.diff_val_before}>
+                                    {currentComputeMode.data === "cuda"
+                                        ? t("update_modal.compute_mode_cuda")
+                                        : t("update_modal.compute_mode_cpu")}
+                                </div>
+                                <div className={styles.diff_arrow_container}>
+                                    <svg
+                                        className={clsx(styles.diff_arrow_svg, is_compute_mode_changed && styles.diff_arrow_svg_changed)}
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
+                                    </svg>
+                                </div>
+                                <div className={clsx(styles.diff_val_after, is_compute_mode_changed && styles.diff_val_changed)}>
+                                    {target_compute_mode === "cuda"
+                                        ? t("update_modal.compute_mode_cuda")
+                                        : t("update_modal.compute_mode_cpu")}
+                                </div>
+                            </div>
+                            {warning_compute_mode && (
+                                <div className={styles.diff_row_warning}>
+                                    <WarningSvg className={styles.diff_warning_svg} />
+                                    <p className={styles.diff_warning_text}>{warning_compute_mode}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Row 2: リリースチャンネル */}
+                        <div className={clsx(styles.diff_group, is_channel_changed && styles.diff_group_changed)}>
+                            <div className={styles.diff_row}>
+                                <div className={styles.diff_item_label}>
+                                    {t("update_modal.channel_label")}
+                                </div>
+                                <div className={styles.diff_val_before}>
+                                    {currentReleaseChannel.data === "beta"
+                                        ? t("update_modal.channel_beta")
+                                        : t("update_modal.channel_stable")}
+                                </div>
+                                <div className={styles.diff_arrow_container}>
+                                    <svg
+                                        className={clsx(styles.diff_arrow_svg, is_channel_changed && styles.diff_arrow_svg_changed)}
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
+                                    </svg>
+                                </div>
+                                <div className={clsx(styles.diff_val_after, is_channel_changed && styles.diff_val_changed)}>
+                                    {target_channel === "beta"
+                                        ? t("update_modal.channel_beta")
+                                        : t("update_modal.channel_stable")}
+                                </div>
+                            </div>
+                            {warning_channel && (
+                                <div className={styles.diff_row_warning}>
+                                    <WarningSvg className={styles.diff_warning_svg} />
+                                    <p className={styles.diff_warning_text}>{warning_channel}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Row 3: バージョン */}
+                        <div className={clsx(styles.diff_group, is_version_changed && styles.diff_group_changed)}>
+                            <div className={styles.diff_row}>
+                                <div className={styles.diff_item_label}>
+                                    {t("update_modal.version_label")}
+                                </div>
+                                <div className={styles.diff_val_before}>
+                                    {currentSoftwareVersion.data}
+                                </div>
+                                <div className={styles.diff_arrow_container}>
+                                    <svg
+                                        className={clsx(styles.diff_arrow_svg, is_version_changed && styles.diff_arrow_svg_changed)}
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
+                                    </svg>
+                                </div>
+                                <div className={clsx(styles.diff_val_after, is_version_changed && styles.diff_val_changed)}>
+                                    {target_version || "—"}
+                                </div>
+                            </div>
+                            {warning_version && (
+                                <div className={styles.diff_row_warning}>
+                                    <WarningSvg className={styles.diff_warning_svg} />
+                                    <p className={styles.diff_warning_text}>{warning_version}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <button
+                        className={styles.install_button}
+                        onClick={onClickInstall}
+                        disabled={!is_ready_to_install}
+                    >
+                        {t("update_modal.install_button")}
+                    </button>
+                </div>
             )}
 
             {/* Section: pick a different version */}
@@ -311,18 +383,7 @@ export const UpdateModal = () => {
             </div>
 
             <div className={styles.rows}>
-                <div className={styles.row}>
-                    <LabelComponent
-                        label={t("update_modal.channel_label")}
-                        desc={t("update_modal.channel_desc")}
-                    />
-                    <RadioButton
-                        name="update_modal_channel"
-                        options={channel_options}
-                        checked_variable={channel_variable}
-                        selectFunction={setTmpSelectedChannel}
-                    />
-                </div>
+                {/* 1. デバイス構成 */}
                 <div className={styles.row}>
                     <LabelComponent
                         label={t("update_modal.compute_mode_label")}
@@ -335,6 +396,20 @@ export const UpdateModal = () => {
                         selectFunction={setTmpSelectedComputeMode}
                     />
                 </div>
+                {/* 2. リリースチャンネル */}
+                <div className={styles.row}>
+                    <LabelComponent
+                        label={t("update_modal.channel_label")}
+                        desc={t("update_modal.channel_desc")}
+                    />
+                    <RadioButton
+                        name="update_modal_channel"
+                        options={channel_options}
+                        checked_variable={channel_variable}
+                        selectFunction={setTmpSelectedChannel}
+                    />
+                </div>
+                {/* 3. インストールするバージョン */}
                 <div className={styles.row}>
                     <LabelComponent
                         label={t("update_modal.version_label")}

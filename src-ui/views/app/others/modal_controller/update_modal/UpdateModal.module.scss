@@ -64,38 +64,122 @@
     text-align: center;
 }
 
-/* ===== Change preview inside "custom" hero ===== */
-.change_row {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    width: 100%;
-    max-width: 62rem;
-    justify-content: center;
-}
-.change_col {
+/* ===== Change preview (diff table) inside "custom" hero ===== */
+.diff_table {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    align-items: center;
-    min-width: 0;
-    flex-shrink: 1;
+    width: 100%;
+    max-width: 58rem;
+    background-color: var(--dark_875_color);
+    border: 0.1rem solid var(--dark_700_color);
+    border-radius: 0.6rem;
+    overflow: hidden;
 }
-.change_col_label {
+
+.diff_header {
+    display: grid;
+    grid-template-columns: 13rem 1fr 4rem 1fr;
+    align-items: center;
+    padding: 1rem 1.6rem 0.8rem 1.6rem;
+    border-bottom: 0.1rem solid var(--dark_700_color);
     font-size: 1.2rem;
     font-weight: 300;
     color: var(--dark_500_color);
 }
-.change_col_value {
-    font-size: 1.6rem;
-    font-weight: 400;
-    text-align: center;
-    overflow-wrap: anywhere;
+.diff_header_cell_before {
+    text-align: right;
 }
-.change_arrow {
-    font-size: 2rem;
+.diff_header_cell_after {
+    text-align: left;
+}
+
+.diff_group {
+    display: flex;
+    flex-direction: column;
+    padding: 0 1.6rem;
+    border-bottom: 0.1rem solid var(--dark_800_color);
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+.diff_group_changed {
+    background-color: rgba(255, 255, 255, 0.015);
+}
+
+.diff_row {
+    display: grid;
+    grid-template-columns: 13rem 1fr 4rem 1fr;
+    align-items: center;
+    height: 4.4rem;
+    min-height: 4.4rem;
+}
+
+.diff_item_label {
+    font-size: 1.3rem;
+    font-weight: 300;
+    color: var(--dark_500_color);
+    white-space: nowrap;
+}
+
+.diff_val_before {
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--dark_400_color);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.diff_arrow_container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.diff_arrow_svg {
+    width: 2rem;
+    height: 2rem;
     color: var(--dark_600_color);
     flex-shrink: 0;
+}
+.diff_arrow_svg_changed {
+    color: var(--primary_300_color);
+}
+
+.diff_val_after {
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--dark_400_color);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.diff_val_changed {
+    font-weight: 500;
+    color: var(--primary_300_color);
+}
+
+/* Inline row warning */
+.diff_row_warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    padding: 0.4rem 0 1.2rem 0;
+}
+.diff_warning_svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    color: var(--warning_color);
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+}
+.diff_warning_text {
+    font-size: 1.2rem;
+    line-height: 1.4;
+    color: var(--warning_color);
+    overflow-wrap: break-word;
 }
 
 /* ===== Warning list (matches LabelComponent .warning_item) ===== */
