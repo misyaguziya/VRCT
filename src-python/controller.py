@@ -33,6 +33,17 @@ _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
 # 万一ロックが本当に返ってこない場合でも終了処理自体を無期限に止めない。
 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC = 20.0
 
+# shutdown() が OSC/WebSocket/OBS Browser Source/Overlay の各停止関数を
+# 待つ上限(フェーズ4項目30)。いずれも自前でタイムアウト付きjoinを持つ設計
+# (OSCは serve_forever(0.5) 化により概ね0.5秒以内、WebSocket/OBSは
+# join(timeout=2.0)) だが、唯一 Overlay.shutdownOverlay() の
+# thread_overlay.join() だけは現状無タイムアウトのまま(フェーズ4項目31で
+# 対応予定)。ここで一律に境界を設けることで、万一そのいずれかが想定外に
+# 詰まっても shutdown() 自体は無期限にハングしない(_stopLockedForShutdownと
+# 同じ考え方)。タイムアウトした場合、対象スレッドはdaemonのまま走らせて
+# 諦める(=リソースはプロセス終了が最終的に片付ける)。
+_SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC = 5.0
+
 # TRANSLATION_PROVIDER_REGISTRY (フェーズ3項目17) 登録エンジンの
 # 「認証/モデル一覧取得/モデル変更/クライアント更新」を model.py の
 # どのメソッド"名"に委譲するかの対応表。エンジンを1つレジストリに追加する際、
@@ -347,6 +358,28 @@ class Controller:
         except Exception:
             errorLogging()
 
+    @staticmethod
+    def _stopServiceForShutdown(stop_fn: Callable[[], None], label: str) -> None:
+        """shutdown() 専用: stop_fn() を最大 _SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC
+        秒の別スレッドで実行する。OSC/WebSocket/OBS Browser Source/Overlayの
+        各停止処理を、詰まっても shutdown() 自体を道連れにしない形で呼ぶための
+        共通ヘルパー(フェーズ4項目30)。
+        """
+        def _run() -> None:
+            try:
+                stop_fn()
+            except Exception:
+                errorLogging()
+
+        thread = Thread(target=_run, daemon=True)
+        thread.start()
+        thread.join(timeout=_SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC)
+        if thread.is_alive():
+            printLog(
+                f"shutdown: {label} の停止が {_SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC}s "
+                "でタイムアウトしました(プロセス終了時に破棄されます)"
+            )
+
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
 
@@ -407,6 +440,16 @@ class Controller:
         self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopSpeakerTranscript, "speaker transcript")
         self._stopLockedForShutdown(self.mic_lifecycle_lock, model.stopCheckMicEnergy, "mic energy")
         self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopCheckSpeakerEnergy, "speaker energy")
+        # OSC / WebSocket / OBS Browser Source / Overlay も明示的に停止する
+        # (フェーズ4項目30)。以前はここが抜けており daemon thread としての
+        # プロセス終了任せになっていた: OSCQueryはzeroconfでサービス広告を
+        # 出しているため、close()無しの終了は他アプリ側に無効なレコードを
+        # 残す。呼び出し順は「依存する側を先に」— OBS Browser SourceはWebSocket
+        # サーバ経由でメッセージを受け取るため、OBSを先に止める。
+        self._stopServiceForShutdown(model.stopReceiveOSC, "OSC receive server")
+        self._stopServiceForShutdown(model.stopObsBrowserSourceServer, "OBS browser source server")
+        self._stopServiceForShutdown(model.stopWebSocketServer, "WebSocket server")
+        self._stopServiceForShutdown(model.shutdownOverlay, "Overlay")
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a
