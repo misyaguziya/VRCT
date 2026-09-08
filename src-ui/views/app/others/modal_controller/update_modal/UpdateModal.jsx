@@ -256,7 +256,7 @@ export const UpdateModal = () => {
                 <>
                     <div className={styles.hero_frame}>
                         <div className={styles.hero_caption}>
-                            {t("update_modal.hero_custom_pending")}
+                            {t("update_modal.hero_custom")}
                         </div>
                         <div className={styles.change_row}>
                             <div className={styles.change_col}>
