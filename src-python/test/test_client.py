@@ -4,7 +4,7 @@ stdin/stdoutを介してバックエンドと通信し、エンドポイント�
 
 使用方法:
 1. バックエンドを起動: python mainloop.py
-2. 別のターミナルでこのスクリプトを実行: python test_client.py
+2. 別のターミナルでこのスクリプトを実行: python test/test_client.py
 3. エンドポイントとデータを指定してテストを実行
 """
 import os

@@ -3,7 +3,7 @@ import time
 import random
 
 # config.json の削除と mainloop (実バックエンド一式) の import は、
-# このファイルが `python test_endpoints.py` として直接実行された時
+# このファイルが `python test/test_endpoints.py` として直接実行された時
 # (__main__ ブロック) にのみ行う。"test_" プレフィックスのため pytest
 # に (test_*.py の命名規則により、実際のテストスイートでは無いにも
 # 関わらず) import されうるが、ここに無条件で置くと単に import
