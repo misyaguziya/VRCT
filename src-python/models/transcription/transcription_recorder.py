@@ -205,7 +205,18 @@ class BaseEnergyAndAudioRecorder:
         self.recorder.energy_threshold = energy_threshold
         self.recorder.dynamic_energy_threshold = dynamic_energy_threshold
         self.phrase_time_limit = phrase_time_limit
-        self.record_timeout = record_timeout
+        # record_timeout=0 (以下) は「無制限録音」の意図として扱う (issue #113)。
+        # custom_speech_recognition 3.10.4.3 以降は録音ループ冒頭で
+        #   if time.time() - record_start_time > record_timeout: raise WaitTimeoutError
+        # というガードが入り、0 を渡すとループ突入直後に必ず真になって
+        # 1 バッファも読めないまま録音が中断され、音声が一切拾えなくなる。
+        # v3.1.0 時代の実質挙動 (record_timeout 無視) に合わせ、非正値は
+        # 事実上の無制限 (inf) に正規化する。フレーズ終端は energy ベースの
+        # 無音検出 (と phrase_time_limit) が引き続き担う。
+        if not record_timeout or record_timeout <= 0:
+            self.record_timeout = float("inf")
+        else:
+            self.record_timeout = record_timeout
         self.stop = None
         self.pause = None
         self.resume = None
