@@ -46,11 +46,18 @@ class TestModelUpdate(unittest.TestCase):
         # channel here so these tests exercise the hash path deterministically
         # regardless of the developer's local config.json (matches
         # test_model_http_timeouts.CheckSoftwareUpdatedTimeoutTests).
-        self._original_release_channel = config.SELECTED_RELEASE_CHANNEL
-        config.SELECTED_RELEASE_CHANNEL = "stable"
-
-    def tearDown(self) -> None:
-        config.SELECTED_RELEASE_CHANNEL = self._original_release_channel
+        #
+        # Patch the ManagedProperty descriptor on the class rather than doing a
+        # plain `config.SELECTED_RELEASE_CHANNEL = "stable"`: the latter goes
+        # through ManagedProperty.__set__ -> config.saveConfig(), which schedules
+        # a debounced rewrite of the developer's real config.json. Swapping the
+        # class attribute for a plain string skips the persistence layer
+        # entirely, and addCleanup restores the descriptor after the test.
+        channel_patcher = patch.object(
+            type(config), "SELECTED_RELEASE_CHANNEL", "stable"
+        )
+        channel_patcher.start()
+        self.addCleanup(channel_patcher.stop)
 
     @patch("model.errorLogging")
     @patch("model.requests_get")
@@ -209,7 +216,7 @@ class TestModelUpdate(unittest.TestCase):
             call for call in requests_get.call_args_list
             if call.args and call.args[0] == sha_asset_url
         ]
-        self.assertEqual(len(sidecar_calls), 3)
+        self.assertEqual(len(sidecar_calls), Model._SHA256_SIDECAR_ATTEMPTS)
 
     @patch("model.os_exit")
     @patch("model.psutil_Process")

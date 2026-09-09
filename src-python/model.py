@@ -1695,7 +1695,7 @@ class Model:
                 "Setup file SHA-256 could not be verified (no .sha256 asset found for "
                 f"{target_version or 'the latest release'}); falling back to size-only validation"
             )
-        return Model._downloadSetup(expected_sha256) is not False
+        return Model._downloadSetup(expected_sha256)
 
     @staticmethod
     def updateSoftware(target_version: Optional[str] = None):
