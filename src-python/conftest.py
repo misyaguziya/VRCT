@@ -1,4 +1,4 @@
-"""pytest collection configuration for src-python.
+"""pytest collection configuration for src-python/test.
 
 collect_ignore excludes files that match pytest's test_*.py discovery glob
 by naming coincidence but are not pytest suites: standalone, manually-run
@@ -11,10 +11,10 @@ __init__-having "test" classes) is enough to trigger those side effects
 against whatever real config.json happens to be in the working directory.
 
 Neither file is meant to run under pytest; both are still fully usable
-the documented way (`python test_endpoints.py`, `python test_client.py`).
+the documented way (`python test/test_endpoints.py`, `python test/test_client.py`).
 """
 
 collect_ignore = [
-    "test_endpoints.py",
-    "test_client.py",
+    "test/test_endpoints.py",
+    "test/test_client.py",
 ]
