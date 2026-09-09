@@ -679,6 +679,22 @@ class Config:
     _HF_REPO_STABLE = "ms-software/VRCT"
     _HF_REPO_BETA = "ms-software/VRCT-beta"
 
+    # VERSION に含まれていれば beta チャンネル扱いとする接尾辞。NSIS
+    # インストーラの .onInit (template.nsi) が ${VERSION} に対して行って
+    # いる "-beta"/"-rc" 判定と同じルール。load_config() が起動のたびに
+    # SELECTED_RELEASE_CHANNEL をこの基準へ再同期する際に使う。
+    _RELEASE_CHANNEL_BETA_MARKERS = ("-beta", "-rc")
+
+    @staticmethod
+    def _channelForVersion(version: str) -> str:
+        """バージョン文字列(例: "3.5.1-beta.1")からリリースチャンネルを
+        機械的に判定する。NSISインストーラの.onInit(template.nsi)が
+        ${VERSION}に対して行う判定と同じルール。"""
+        return (
+            "beta" if any(marker in version for marker in Config._RELEASE_CHANNEL_BETA_MARKERS)
+            else "stable"
+        )
+
     # Groq/OpenAI 公式の音声書き起こしAPIのエンドポイントは固定 (ユーザー
     # 編集不可)。カスタムサーバーのみ TRANSCRIPTION_CUSTOM_URL で
     # ユーザーが指定する (issue #100 のローカル/LANサーバー向け)。
@@ -1298,6 +1314,21 @@ class Config:
                                 continue
                         except Exception:
                             errorLogging()
+
+        # config.json から読み込んだ SELECTED_RELEASE_CHANNEL は、前回起動時に
+        # UI でチャンネルを切り替えた「つもり」の値をそのまま引き継いでいる
+        # 可能性がある。model.updateSoftware()/updateCudaSoftware() は
+        # インストーラ (NSIS) を起動した直後に VRCT を即終了する設計のため、
+        # ユーザーがインストーラをキャンセルしても config.json には新
+        # チャンネルが書き込まれたまま残ってしまう(実際にインストール
+        # されているのは元のバージョンのまま)。起動のたびに、実際に
+        # 動いている VERSION から機械的に再判定して上書きすることで、この
+        # 不整合を自己修復する(NSIS 側の .onInit が ${VERSION} の
+        # "-beta"/"-rc" サフィックスから同じ判定をしているのと同じ
+        # ルール)。UI 経由の明示的な変更 (setSelectedReleaseChannel) 自体は
+        # 今まで通り可能で、これは「起動時だけは実態を優先する」上書きに
+        # すぎない。
+        self.SELECTED_RELEASE_CHANNEL = self._channelForVersion(self.VERSION)
 
         # インストーラ (NSIS) が選択した UI 言語の反映。NSIS 側は config.json
         # を直接 JSON パースせず (UTF-8/非ASCII文字を含む既存ファイルで
