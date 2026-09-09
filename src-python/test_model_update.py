@@ -171,6 +171,91 @@ class TestModelUpdate(unittest.TestCase):
     @patch("model.psutil_Process")
     @patch("model.Popen")
     @patch("model.requests_get")
+    def test_aborts_when_published_sha256_sidecar_cannot_be_fetched(
+        self,
+        requests_get: Mock,
+        popen: Mock,
+        psutil_process: Mock,
+        os_exit: Mock,
+    ) -> None:
+        # The release advertises a ".sha256" sidecar, but every attempt to
+        # download it fails. This is NOT the same as a release that has no
+        # sidecar at all (which may fall back to the size-only check): here a
+        # checksum WAS published and we could not obtain it, so tampering
+        # cannot be ruled out and the installer must not be launched.
+        sha_asset_url = "https://example.invalid/VRCT_9.9.9_x64-setup.exe.sha256"
+
+        def fake_get(url, *args, **kwargs):
+            if url == config.GITHUB_URL:
+                return _make_json_response({
+                    "name": "9.9.9",
+                    "assets": [{
+                        "name": "VRCT_9.9.9_x64-setup.exe.sha256",
+                        "browser_download_url": sha_asset_url,
+                    }],
+                })
+            if url == sha_asset_url:
+                raise Exception("sidecar fetch failed")
+            return _make_download_response(self.payload)
+
+        requests_get.side_effect = fake_get
+
+        Model.updateCudaSoftware()
+
+        popen.assert_not_called()
+        os_exit.assert_not_called()
+        # the sidecar fetch is retried, not attempted only once
+        sidecar_calls = [
+            call for call in requests_get.call_args_list
+            if call.args and call.args[0] == sha_asset_url
+        ]
+        self.assertEqual(len(sidecar_calls), 3)
+
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_installs_when_sha256_sidecar_recovers_on_retry(
+        self,
+        requests_get: Mock,
+        popen: Mock,
+        psutil_process: Mock,
+        os_exit: Mock,
+    ) -> None:
+        # A transient failure on the tiny ".sha256" request must not sink an
+        # otherwise-valid update: the first attempt fails, the retry returns
+        # the correct digest, and the install proceeds.
+        sha_asset_url = "https://example.invalid/VRCT_9.9.9_x64-setup.exe.sha256"
+        sidecar_attempts = {"n": 0}
+
+        def fake_get(url, *args, **kwargs):
+            if url == config.GITHUB_URL:
+                return _make_json_response({
+                    "name": "9.9.9",
+                    "assets": [{
+                        "name": "VRCT_9.9.9_x64-setup.exe.sha256",
+                        "browser_download_url": sha_asset_url,
+                    }],
+                })
+            if url == sha_asset_url:
+                sidecar_attempts["n"] += 1
+                if sidecar_attempts["n"] == 1:
+                    raise Exception("transient sidecar failure")
+                return _make_text_response(self.actual_sha256)
+            return _make_download_response(self.payload)
+
+        requests_get.side_effect = fake_get
+
+        Model.updateCudaSoftware()
+
+        self.assertEqual(sidecar_attempts["n"], 2)
+        popen.assert_called_once()
+        os_exit.assert_called_once_with(0)
+
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
     def test_quits_app_after_launching_setup(
         self,
         requests_get: Mock,
