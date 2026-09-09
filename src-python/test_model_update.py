@@ -34,6 +34,23 @@ class TestModelUpdate(unittest.TestCase):
         # file must clear that threshold.
         self.payload = b"data" * 300_000
         self.actual_sha256 = hashlib.sha256(self.payload).hexdigest()
+        # updateSoftware()/updateCudaSoftware() resolve the GitHub Release (to
+        # find its ".sha256" sidecar asset) via Model._resolveReleaseForVersion(),
+        # which branches on config.SELECTED_RELEASE_CHANNEL: the "stable" path
+        # hits config.GITHUB_URL (which every test below mocks), while the "beta"
+        # path instead walks Model._fetchGithubReleases() -> config.
+        # GITHUB_RELEASES_LIST_URL (which they do not). Left on a "beta" ambient
+        # config, release resolution returns None, _fetchExpectedSha256() yields
+        # None, and hash verification is silently skipped -- so the
+        # sha256-mismatch test would see the installer launched anyway. Pin the
+        # channel here so these tests exercise the hash path deterministically
+        # regardless of the developer's local config.json (matches
+        # test_model_http_timeouts.CheckSoftwareUpdatedTimeoutTests).
+        self._original_release_channel = config.SELECTED_RELEASE_CHANNEL
+        config.SELECTED_RELEASE_CHANNEL = "stable"
+
+    def tearDown(self) -> None:
+        config.SELECTED_RELEASE_CHANNEL = self._original_release_channel
 
     @patch("model.errorLogging")
     @patch("model.requests_get")
