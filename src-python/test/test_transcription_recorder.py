@@ -292,6 +292,28 @@ class TestRecorderPipeline(unittest.TestCase):
         recorder.stop()
         stop.assert_called_once_with(wait_for_stop=True)
 
+    def test_record_timeout_zero_is_treated_as_unlimited(self) -> None:
+        # issue #113: record_timeout=0 を渡すと custom_speech_recognition の
+        # 録音ループ冒頭ガードで即 WaitTimeoutError になり音声が一切拾えない。
+        # 非正値は inf に正規化して「無制限録音」として扱う。
+        recorder = BaseEnergyAndAudioRecorder(
+            RecorderAudioSource(),
+            energy_threshold=300,
+            dynamic_energy_threshold=False,
+            phrase_time_limit=3,
+            record_timeout=0,
+        )
+        self.assertEqual(recorder.record_timeout, float("inf"))
+
+        stop = MagicMock(name="stop")
+        recorder.recorder = MagicMock()
+        recorder.recorder.listen_energy_and_audio_in_background = MagicMock(
+            return_value=(stop, MagicMock(), MagicMock())
+        )
+        recorder.recordIntoQueue(Queue())
+        _, kwargs = recorder.recorder.listen_energy_and_audio_in_background.call_args
+        self.assertEqual(kwargs.get("record_timeout"), float("inf"))
+
     def test_stop_force_stops_stream_before_delegating(self) -> None:
         """listener が stream.read() でブロックしていると、speech_recognition
         側の stop (listener_thread.join() にタイムアウト無し) が永久に
