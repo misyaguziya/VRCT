@@ -107,6 +107,18 @@ class ReleaseInfo:
     published_at: str
 
 
+class SetupSha256Unavailable(Exception):
+    """setup.exe の ".sha256" サイドカーアセットが GitHub Release に存在する
+    のに、その中身をリトライしても取得/パースできなかったことを表す。
+
+    ".sha256" アセットがそもそも無い古い Release (この検証より前に公開された
+    もの) は「検証対象が無い」だけなのでサイズチェックのみへフォールバック
+    してよい。一方こちらは「チェックサムが公開されているのに入手できな
+    かった」状態であり、配布物がすり替えられている可能性を排除できない。
+    呼び出し側はサイズチェックへ格下げせず、更新自体を中止する。
+    """
+
+
 # audio_queue の有界化 (フェーズ3項目20)。文字起こしが実時間に追いつけ
 # ない状況 (例: CPUでWhisper large-v3) で無制限に溜まると、drain時に
 # last_sample がまとめて連結されて音声が長くなり、推論がさらに遅くなって
@@ -157,18 +169,11 @@ class threadFnc(Thread):
         self.fnc = fnc
         self.end_fnc = end_fnc
         self.loop = True
-        self._pause = False
         self._args = args
         self._kwargs = kwargs
 
     def stop(self) -> None:
         self.loop = False
-
-    def pause(self) -> None:
-        self._pause = True
-
-    def resume(self) -> None:
-        self._pause = False
 
     def run(self) -> None:
         try:
@@ -178,8 +183,6 @@ class threadFnc(Thread):
                 except Exception:
                     # Protect the thread from terminating on user exceptions
                     errorLogging()
-                while self._pause:
-                    sleep(0.1)
         finally:
             if callable(self.end_fnc):
                 try:
@@ -790,6 +793,15 @@ class Model:
         self.websocket_server_loop = False
         self.websocket_server_alive = False
         self.th_websocket_server = None
+        # start/stopWebSocketServer()のcheck-then-set(TOCTOU)を防ぐ。
+        # 以前は無ロックだったため、2本の別エンドポイント
+        # (/set/enable/websocket_server と /set/enable/obs_browser_source、
+        # 両方ともstartWebSocketServer()を呼びうる)がほぼ同時に呼ばれると
+        # 両方とも「未起動」を観測して同じポートへの2本目のbindを試み、
+        # 後勝ちのth_websocket_server代入で先に起動した方のスレッド参照が
+        # 失われ二度と停止できなくなり得た(バックエンドレビュー
+        # フェーズ4項目32)。
+        self._websocket_lifecycle_lock = Lock()
         self.obs_browser_source_server = None
         self.clipboard = Clipboard()
         self.telemetry = Telemetry()
@@ -1421,6 +1433,21 @@ class Model:
         self.osc_handler.setDictFilterAndTarget(dict_filter_and_target)
         self.osc_handler.receiveOscParameters()
 
+    def stopReceiveOSC(self):
+        """OSC受信サーバ(UDP + OSCQuery HTTP + zeroconf監視)を停止する。
+
+        アプリ終了時(Controller.shutdown())専用の呼び出し口。
+        setOscIpAddress()/setOscPort()は再起動のため内部で直接
+        osc_handler.oscServerStop()を呼んでおり、このメソッドは経由しない。
+        以前はアプリ終了時にこれらを止める経路が無く(フェーズ3項目21で一度
+        「未使用」と判断され削除された`stopReceiveOSC`とは別の、実際に
+        呼ばれる経路として再設置)、OSCQueryのzeroconfサービス広告が
+        `close()`されないままプロセスが終了していた(バックエンドレビュー
+        フェーズ4項目30)。
+        """
+        self.ensure_initialized()
+        self.osc_handler.oscServerStop()
+
     def getIsOscQueryEnabled(self):
         self.ensure_initialized()
         return self.osc_handler.getIsOscQueryEnabled()
@@ -1502,6 +1529,10 @@ class Model:
     # サフィックス。release.yml 側で <installer名>.sha256 という名前で
     # 追加アップロードしている前提。
     _SHA256_ASSET_SUFFIX = ".sha256"
+    # ".sha256" サイドカー (数十バイトの小さなファイル) の取得リトライ回数。
+    # これ1つの一時的な通信失敗で更新全体を止めてしまわないための保険。
+    # setup.exe 本体の _downloadSetup (5回) より軽い処理なので控えめに3回。
+    _SHA256_SIDECAR_ATTEMPTS = 3
 
     @staticmethod
     def _resolveReleaseForVersion(target_version: Optional[str] = None) -> Optional[dict]:
@@ -1534,25 +1565,50 @@ class Model:
     def _fetchExpectedSha256(release: Optional[dict]) -> Optional[str]:
         # release の assets から "<setup.exe名>.sha256" というサイドカー
         # アセットを探し、中身 (16進ダイジェスト文字列) を取得して返す。
-        # release.yml が SHA-256 を公開するようになる前の古いリリースには
-        # このアセットが存在しないため、その場合は None を返す。呼び出し側
-        # はこれを「検証不能」として扱い、サイズチェックのみへフォール
-        # バックする (古いバージョンの再インストール/ダウングレードが
-        # 完全にできなくなるのを避けるため)。
+        #
+        # 戻り値の意味:
+        #   - digest 文字列 : 期待する SHA-256 が取れた
+        #   - None          : この release には ".sha256" アセットが存在しない
+        #                     (この検証より前に公開された古い release)。呼び出し
+        #                     側はサイズチェックのみへフォールバックしてよい。
+        #                     古いバージョンの再インストール/ダウングレードを
+        #                     壊さないための措置。
+        # 例外 SetupSha256Unavailable:
+        #   ".sha256" アセットは存在するのに、リトライしても有効なダイジェスト
+        #   を取得できなかった。「検証対象が無い」のとは異なり、すり替えの
+        #   可能性を排除できないため、呼び出し側は更新を中止する。
         if not isinstance(release, dict):
             return None
         assets = release.get("assets")
         if not isinstance(assets, list):
             return None
-        for asset in assets:
-            if not isinstance(asset, dict):
-                continue
-            name = asset.get("name")
-            if not isinstance(name, str) or not name.endswith(Model._SHA256_ASSET_SUFFIX):
-                continue
-            url = asset.get("browser_download_url")
-            if not isinstance(url, str):
-                continue
+        sidecar_urls = [
+            asset["browser_download_url"]
+            for asset in assets
+            if isinstance(asset, dict)
+            and isinstance(asset.get("name"), str)
+            and asset["name"].endswith(Model._SHA256_ASSET_SUFFIX)
+            and isinstance(asset.get("browser_download_url"), str)
+        ]
+        if not sidecar_urls:
+            return None
+        for url in sidecar_urls:
+            digest = Model._fetchSha256Digest(url)
+            if digest is not None:
+                return digest
+        raise SetupSha256Unavailable(
+            f"{len(sidecar_urls)} '.sha256' sidecar asset(s) present on the "
+            "release but none yielded a valid SHA-256 digest after retrying"
+        )
+
+    @staticmethod
+    def _fetchSha256Digest(url: str) -> Optional[str]:
+        # ".sha256" は数十バイトの小さなファイルだが、これ1つの一時的な
+        # 取得失敗で更新全体を止めてしまわないよう _SHA256_SIDECAR_ATTEMPTS
+        # 回リトライする。有効な16進ダイジェスト (64桁) が取れなければ None。
+        # レスポンスは得られたが中身がチェックサムでない (空 / 途中で切れた /
+        # HTML エラーページ等) 場合も失敗扱いでリトライする。
+        for _ in range(Model._SHA256_SIDECAR_ATTEMPTS):
             try:
                 res = requests_get(url, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
@@ -1613,17 +1669,39 @@ class Model:
         return False
 
     @staticmethod
-    def updateSoftware(target_version: Optional[str] = None):
-        if target_version is not None and not Model._isVersionSupported(target_version):
-            return
+    def _downloadVerifiedSetup(target_version: Optional[str]) -> bool:
+        # GitHub Release を解決して期待する SHA-256 を求め、setup.exe を
+        # ダウンロード & 検証する。updateSoftware()/updateCudaSoftware() の
+        # 共通前処理。
+        #
+        # 戻り値 True  : VRCT_setup.exe がディスク上にあり起動して問題ない
+        # 戻り値 False : 呼び出し側は何も起動せず中止すること。内訳は
+        #   - ダウンロード or ハッシュ検証に失敗した (_downloadSetup が False)
+        #   - ".sha256" が公開されているのに取得できなかった
+        #     (SetupSha256Unavailable)。サイズチェックのみへは格下げしない。
         release = Model._resolveReleaseForVersion(target_version)
-        expected_sha256 = Model._fetchExpectedSha256(release)
+        try:
+            expected_sha256 = Model._fetchExpectedSha256(release)
+        except SetupSha256Unavailable:
+            printLog(
+                "Setup file SHA-256 sidecar was published for "
+                f"{target_version or 'the latest release'} but could not be "
+                "retrieved; aborting update (not falling back to size-only "
+                "validation)"
+            )
+            return False
         if expected_sha256 is None:
             printLog(
                 "Setup file SHA-256 could not be verified (no .sha256 asset found for "
                 f"{target_version or 'the latest release'}); falling back to size-only validation"
             )
-        if Model._downloadSetup(expected_sha256) is False:
+        return Model._downloadSetup(expected_sha256)
+
+    @staticmethod
+    def updateSoftware(target_version: Optional[str] = None):
+        if target_version is not None and not Model._isVersionSupported(target_version):
+            return
+        if not Model._downloadVerifiedSetup(target_version):
             return
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1641,14 +1719,7 @@ class Model:
     def updateCudaSoftware(target_version: Optional[str] = None):
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
-        release = Model._resolveReleaseForVersion(target_version)
-        expected_sha256 = Model._fetchExpectedSha256(release)
-        if expected_sha256 is None:
-            printLog(
-                "Setup file SHA-256 could not be verified (no .sha256 asset found for "
-                f"{target_version or 'the latest release'}); falling back to size-only validation"
-            )
-        if Model._downloadSetup(expected_sha256) is False:
+        if not Model._downloadVerifiedSetup(target_version):
             return
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -2017,64 +2088,71 @@ class Model:
     def startWebSocketServer(self, host, port):
         """WebSocketサーバーを起動し、別スレッドで実行する"""
         self.ensure_initialized()
-        if self.websocket_server_alive is True:
-            # サーバーが既に起動している場合は何もしない
-            return
+        with self._websocket_lifecycle_lock:
+            if self.websocket_server_alive is True:
+                # サーバーが既に起動している場合は何もしない
+                return
 
-        self.websocket_server_loop = True
-        self.websocket_server_alive = False  # 初期状態を明示
+            self.websocket_server_loop = True
+            self.websocket_server_alive = False  # 初期状態を明示
 
-        async def WebSocketServerMain():
-            try:
-                self.websocket_server = WebSocketServer(
-                    host=host,
-                    port=port,
-                    token=config.WEBSOCKET_AUTH_TOKEN,
-                )
-                self.websocket_server.set_message_handler(self.message_handler)
-                self.websocket_server.start()
-                self.websocket_server_alive = True
+            async def WebSocketServerMain():
+                try:
+                    self.websocket_server = WebSocketServer(
+                        host=host,
+                        port=port,
+                        token=config.WEBSOCKET_AUTH_TOKEN,
+                    )
+                    self.websocket_server.set_message_handler(self.message_handler)
+                    self.websocket_server.start()
+                    self.websocket_server_alive = True
 
-                # イベントループが終了するまで待機
-                while self.websocket_server_loop:
-                    # self.websocket_server.send("Server is running...")
-                    await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
+                    # イベントループが終了するまで待機
+                    while self.websocket_server_loop:
+                        # self.websocket_server.send("Server is running...")
+                        await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
 
-            except Exception:
-                errorLogging()
-                # 具体的なエラー内容をログに残す場合
-                # self.logger.error(f"WebSocket server error: {str(e)}")
-            finally:
-                # 確実にサーバーを停止
-                if hasattr(self, 'websocket_server') and self.websocket_server:
-                    self.websocket_server.stop()
-                self.websocket_server_alive = False
+                except Exception:
+                    errorLogging()
+                    # 具体的なエラー内容をログに残す場合
+                    # self.logger.error(f"WebSocket server error: {str(e)}")
+                finally:
+                    # 確実にサーバーを停止
+                    if hasattr(self, 'websocket_server') and self.websocket_server:
+                        self.websocket_server.stop()
+                    self.websocket_server_alive = False
 
-        self.th_websocket_server = Thread(target=lambda: asyncio.run(WebSocketServerMain()))
-        self.th_websocket_server.daemon = True
-        self.th_websocket_server.start()
+            self.th_websocket_server = Thread(target=lambda: asyncio.run(WebSocketServerMain()))
+            self.th_websocket_server.daemon = True
+            self.th_websocket_server.start()
 
     def stopWebSocketServer(self):
         """WebSocketサーバーを停止する"""
         self.ensure_initialized()
-        if not hasattr(self, 'th_websocket_server') or self.th_websocket_server is None:
-            return
+        with self._websocket_lifecycle_lock:
+            if not hasattr(self, 'th_websocket_server') or self.th_websocket_server is None:
+                return
 
-        self.websocket_server_loop = False
+            self.websocket_server_loop = False
 
-        try:
-            # 一定時間待機してからタイムアウト
-            self.th_websocket_server.join(timeout=2.0)
+            try:
+                # 一定時間待機してからタイムアウト
+                self.th_websocket_server.join(timeout=2.0)
 
-            if self.th_websocket_server.is_alive():
-                # タイムアウト後もスレッドが生きている場合の処理
-                self.logger.warning("WebSocket server thread did not terminate properly")
-        except Exception:
-            errorLogging()
-        finally:
-            self.th_websocket_server = None
-            self.websocket_server = None
-            self.websocket_server_alive = False
+                if self.th_websocket_server.is_alive():
+                    # タイムアウト後もスレッドが生きている場合の処理。
+                    # 以前はself.logger.warning(...)だったが、self.loggerは
+                    # LOGGER_FEATURE無効時(既定)はNoneのため、この警告経路
+                    # 自体がAttributeErrorになり本来のメッセージが記録され
+                    # ずに失われていた(バックエンドレビュー フェーズ4
+                    # 項目32)。self.loggerに依存しないprintLogに変更。
+                    printLog("WebSocket server thread did not terminate properly")
+            except Exception:
+                errorLogging()
+            finally:
+                self.th_websocket_server = None
+                self.websocket_server = None
+                self.websocket_server_alive = False
 
     def checkWebSocketServerAlive(self):
         """WebSocketサーバーの稼働状態を確認する"""

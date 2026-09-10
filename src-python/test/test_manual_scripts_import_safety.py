@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-_SRC_PYTHON_DIR = os.path.dirname(os.path.abspath(__file__))
+_TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 _MARKER = '{"marker": "should survive import"}'
 
 
@@ -21,7 +21,7 @@ class ManualDiagnosticScriptsDoNotDeleteConfigOnImportTests(unittest.TestCase):
     discovery, not an explicitly named path) must not delete config.json
     in the current working directory or trigger heavy real-app
     initialization. That must only happen when the script is executed
-    directly (`python test_endpoints.py` / `python test_client.py`,
+    directly (`python test/test_endpoints.py` / `python test/test_client.py`,
     i.e. under __main__), which is their documented usage.
     """
 
@@ -34,7 +34,7 @@ class ManualDiagnosticScriptsDoNotDeleteConfigOnImportTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-c",
-                    f"import sys; sys.path.insert(0, {_SRC_PYTHON_DIR!r}); import {module_name}",
+                    f"import sys; sys.path.insert(0, {_TEST_DIR!r}); import {module_name}",
                 ],
                 cwd=tmp_dir,
                 capture_output=True,

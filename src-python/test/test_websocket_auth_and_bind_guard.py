@@ -162,30 +162,48 @@ class WebSocketAuthTokenPersistenceTests(unittest.TestCase):
 
 
 class WebSocketServerTokenAuthTests(unittest.IsolatedAsyncioTestCase):
+    """websockets の asyncio 実装では process_request(connection, request) が
+    呼ばれ、拒否は connection.respond() が返す Response で表現される。
+    ここでは connection / request を最小限モックして検証する。"""
+
+    @staticmethod
+    def _call(server: WebSocketServer, path: str):
+        sentinel = object()
+        connection = MagicMock()
+        connection.respond.return_value = sentinel
+        request = MagicMock()
+        request.path = path
+        return server._process_request(connection, request), connection, sentinel
+
     async def test_missing_token_is_rejected(self) -> None:
         server = WebSocketServer(token="secret123")
-        result = await server._process_request("/", {})
-        self.assertIsNotNone(result)
-        status, _headers, _body = result
-        self.assertEqual(status, HTTPStatus.FORBIDDEN)
+        coro, connection, sentinel = self._call(server, "/")
+        result = await coro
+        self.assertIs(result, sentinel)
+        connection.respond.assert_called_once()
+        self.assertEqual(connection.respond.call_args[0][0], HTTPStatus.FORBIDDEN)
 
     async def test_wrong_token_is_rejected(self) -> None:
         server = WebSocketServer(token="secret123")
-        result = await server._process_request("/?token=wrong", {})
-        self.assertIsNotNone(result)
-        status, _headers, _body = result
-        self.assertEqual(status, HTTPStatus.FORBIDDEN)
+        coro, connection, sentinel = self._call(server, "/?token=wrong")
+        result = await coro
+        self.assertIs(result, sentinel)
+        self.assertEqual(connection.respond.call_args[0][0], HTTPStatus.FORBIDDEN)
 
     async def test_correct_token_is_accepted(self) -> None:
         server = WebSocketServer(token="secret123")
-        result = await server._process_request("/?token=secret123", {})
+        coro, connection, _sentinel = self._call(server, "/?token=secret123")
+        result = await coro
         self.assertIsNone(result, "正しいトークンなのにハンドシェイクが拒否された")
+        connection.respond.assert_not_called()
 
     async def test_no_token_configured_skips_verification(self) -> None:
         # token=None (デフォルト) の場合は検証しない (後方互換・テスト用)。
         server = WebSocketServer(token=None)
-        result = await server._process_request("/", {})
+        coro, connection, _sentinel = self._call(server, "/")
+        result = await coro
         self.assertIsNone(result)
+        connection.respond.assert_not_called()
 
 
 class ObsBrowserSourceEmbedsTokenTests(unittest.TestCase):

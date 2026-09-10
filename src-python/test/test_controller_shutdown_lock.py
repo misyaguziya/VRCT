@@ -104,6 +104,100 @@ class StopLockedForShutdownTests(unittest.TestCase):
         self.assertEqual(order, ["stop_fn:start", "stop_fn:end", "other:acquired"])
 
 
+class StopServiceForShutdownTests(unittest.TestCase):
+    """`_stopServiceForShutdown` (フェーズ4項目30) のテスト。
+
+    OSC/WebSocket/OBS Browser Source/Overlayの各停止処理を、詰まっても
+    shutdown() 自体を道連れにしない形で呼ぶための共通ヘルパー。
+    """
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+
+    def test_calls_stop_fn(self) -> None:
+        calls = []
+        self.controller._stopServiceForShutdown(lambda: calls.append(1), "test")
+
+        self.assertEqual(calls, [1])
+
+    def test_exception_in_stop_fn_is_caught_and_does_not_propagate(self) -> None:
+        def failing_stop_fn() -> None:
+            raise RuntimeError("boom")
+
+        with patch.object(controller_module, "errorLogging") as mock_error_logging:
+            try:
+                self.controller._stopServiceForShutdown(failing_stop_fn, "test")
+            except RuntimeError:
+                self.fail("_stopServiceForShutdown が stop_fn の例外を伝播させてはいけない")
+            mock_error_logging.assert_called_once()
+
+    def test_returns_promptly_even_if_stop_fn_hangs_forever(self) -> None:
+        # Overlay.shutdownOverlay() の thread_overlay.join() のように、万一
+        # stop_fn 自体が無期限にブロックしても、_stopServiceForShutdown は
+        # タイムアウトして戻ること (shutdown() 自体を道連れにしない)。
+        never_set = threading.Event()
+
+        def hanging_stop_fn() -> None:
+            never_set.wait()  # タイムアウトまで戻らない
+
+        with patch.object(controller_module, "_SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC", 0.2):
+            with patch.object(controller_module, "printLog") as mock_print_log:
+                start = time.time()
+                self.controller._stopServiceForShutdown(hanging_stop_fn, "hanging service")
+                elapsed = time.time() - start
+
+        self.assertLess(elapsed, 2.0, "タイムアウトを超えて長時間ブロックしてはいけない")
+        mock_print_log.assert_called_once()
+        never_set.set()  # 後始末: バックグラウンドのdaemonスレッドを解放する
+
+
+class ShutdownStopsOscWebsocketObsOverlayTests(unittest.TestCase):
+    """shutdown() が OSC/WebSocket/OBS Browser Source/Overlay の停止を
+    _stopServiceForShutdown 経由で呼んでいることを確認する
+    (フェーズ4項目30)。"""
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+        self.controller.mic_lifecycle_lock = threading.Lock()
+        self.controller.speaker_lifecycle_lock = threading.Lock()
+        self.controller._stopLockedForShutdown = lambda lock, stop_fn, label: None
+        self.serviced_calls = []
+        self.controller._stopServiceForShutdown = (
+            lambda stop_fn, label: self.serviced_calls.append((stop_fn, label))
+        )
+
+    @patch("controller.device_manager")
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_shutdown_stops_all_four_services_in_dependency_order(
+        self, mock_config, mock_model, mock_device_manager
+    ) -> None:
+        mock_model.telemetryShutdown.return_value = None
+        self.controller.shutdown()
+
+        stopped_fns = [call[0] for call in self.serviced_calls]
+        labels = [call[1] for call in self.serviced_calls]
+
+        self.assertEqual(
+            stopped_fns,
+            [
+                mock_model.stopReceiveOSC,
+                mock_model.stopObsBrowserSourceServer,
+                mock_model.stopWebSocketServer,
+                mock_model.shutdownOverlay,
+            ],
+        )
+        self.assertEqual(
+            labels,
+            [
+                "OSC receive server",
+                "OBS browser source server",
+                "WebSocket server",
+                "Overlay",
+            ],
+        )
+
+
 class ShutdownUsesLockedStopHelpersTests(unittest.TestCase):
     """shutdown() 本体が、生の model.* 呼び出しではなく
     _stopLockedForShutdown 経由で 4 つの停止関数を呼んでいることを確認する。"""
