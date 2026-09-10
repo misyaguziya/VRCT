@@ -144,19 +144,6 @@ export const UpdateModal = () => {
         }
     };
 
-    const onClickInstallLatest = () => {
-        // shortcut used by the "update available" hero — apply current channel's latest
-        if (!filtered_releases[0]) return;
-        setTmpSelectedVersion(filtered_releases[0].version);
-        // fall through to the same install flow immediately
-        updateIsSoftwareUpdating(true);
-        if (target_compute_mode === "cpu") {
-            updateSoftware(filtered_releases[0].version);
-        } else {
-            updateSoftware_CUDA(filtered_releases[0].version);
-        }
-    };
-
     const onClickRefresh = () => getAvailableReleases();
     const onClickClose = () => updateOpenedQuickSetting("");
 
@@ -219,8 +206,8 @@ export const UpdateModal = () => {
                     </div>
                     <button
                         className={styles.install_button}
-                        onClick={onClickInstallLatest}
-                        disabled={!filtered_releases[0]}
+                        onClick={onClickInstall}
+                        disabled={!is_ready_to_install}
                     >
                         {t("update_modal.install_latest_button")}
                     </button>
