@@ -86,7 +86,6 @@ update_modal:
     latest_suffix: "Latest"
     install_latest_button: "Install Latest"
     install_button: "Install with These Choices"
-    close_button: "Close"
     section_pick_variant: "Pick a different version or build"
     refresh_button: "Refresh"
     refresh_button_title: "Fetch the latest release list"

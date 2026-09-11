@@ -11,7 +11,6 @@ import {
     useAvailableReleases,
 } from "@logics_common";
 import { useUpdater } from "@logics_configs";
-import { useStore_OpenedQuickSetting } from "@store";
 
 import {
     SectionLabelComponent,
@@ -26,7 +25,6 @@ import RefreshSvg from "@images/refresh.svg?react";
 
 export const UpdateModal = () => {
     const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
 
     const { currentSoftwareVersion, currentLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { currentComputeMode } = useComputeMode();
@@ -130,7 +128,6 @@ export const UpdateModal = () => {
     };
 
     const onClickRefresh = () => getAvailableReleases();
-    const onClickClose = () => updateOpenedQuickSetting("");
 
     return (
         <div className={styles.modal_body}>
@@ -217,13 +214,6 @@ export const UpdateModal = () => {
                         state={version_variable.state}
                     />
                 </div>
-            </div>
-
-            {/* Footer actions */}
-            <div className={styles.actions}>
-                <button className={styles.close_button} onClick={onClickClose}>
-                    {t("update_modal.close_button")}
-                </button>
             </div>
         </div>
     );
