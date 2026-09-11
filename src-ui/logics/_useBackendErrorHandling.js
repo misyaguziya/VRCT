@@ -177,14 +177,21 @@ export const _useBackendErrorHandling = () => {
                 showNotification_Error(t("common_error.invalid_value_speaker_max_phrase"), { category_id: error_code });
                 return;
             case "VALIDATION_INVALID_IP":
-            case "VALIDATION_CANNOT_SET_IP":
-                if (endpoint === "/set/data/websocket_host") {
+            case "VALIDATION_CANNOT_SET_IP": {
+                // Only restore the setting that actually produced the error.
+                // Do not treat an unknown future IP endpoint as OSC, otherwise
+                // an unrelated field could be overwritten with its fallback.
+                const ip_setting_name = endpoint?.startsWith("/set/data/")
+                    ? endpoint.slice("/set/data/".length)
+                    : null;
+                if (ip_setting_name === "websocket_host") {
                     updateWebsocketHost(data);
-                } else {
+                } else if (ip_setting_name === "osc_ip_address") {
                     updateOscIpAddress(data);
                 }
                 showNotification_Error(message, { category_id: error_code });
                 return;
+            }
             case "VALIDATION_OSC_PORT_INVALID":
                 updateOscPort(data);
                 showNotification_Error(message, { category_id: error_code });
