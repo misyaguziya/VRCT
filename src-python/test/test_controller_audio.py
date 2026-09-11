@@ -172,6 +172,64 @@ class TestTranscriptionEnableFailureState(unittest.TestCase):
         start_speaker.assert_called_once()
 
 
+class TestTranscriptionVramStartFailureState(unittest.TestCase):
+    """音声認識開始時の VRAM エラーが専用通知と OFF 同期を行う契約。"""
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+        self.controller.mic_lifecycle_lock = Lock()
+        self.controller.speaker_lifecycle_lock = Lock()
+        self.controller.run_mapping = {
+            "error_transcription_mic_vram_overflow": "/run/error_transcription_mic_vram_overflow",
+            "error_transcription_speaker_vram_overflow": "/run/error_transcription_speaker_vram_overflow",
+            "disable_transcription_send": "/set/disable/transcription_send",
+            "disable_transcription_receive": "/set/disable/transcription_receive",
+        }
+        self.run_calls = []
+        self.controller.run = lambda status, endpoint, result: self.run_calls.append(
+            (status, endpoint, result)
+        )
+        self._original_send = config.ENABLE_TRANSCRIPTION_SEND
+        self._original_receive = config.ENABLE_TRANSCRIPTION_RECEIVE
+
+    def tearDown(self) -> None:
+        config.ENABLE_TRANSCRIPTION_SEND = self._original_send
+        config.ENABLE_TRANSCRIPTION_RECEIVE = self._original_receive
+
+    @patch("controller.model.stopMicTranscript")
+    @patch("controller.model.detectVRAMError", return_value=(True, "out of memory"))
+    @patch("controller.model.startMicTranscript", side_effect=RuntimeError("CUDA out of memory"))
+    def test_mic_vram_failure_notifies_and_disables(self, _start, _detect, stop_mic) -> None:
+        config.ENABLE_TRANSCRIPTION_SEND = True
+
+        result = self.controller.startTranscriptionSendMessage()
+
+        self.assertFalse(result)
+        self.assertFalse(config.ENABLE_TRANSCRIPTION_SEND)
+        self.assertEqual(self.run_calls[0][0:2], (400, "/run/error_transcription_mic_vram_overflow"))
+        self.assertEqual(self.run_calls[0][2]["error_code"], "TRANSCRIPTION_VRAM_MIC")
+        self.assertEqual(self.run_calls[1], (200, "/set/disable/transcription_send", False))
+        stop_mic.assert_called_once_with()
+
+    @patch("controller.model.stopSpeakerTranscript")
+    @patch("controller.model.detectVRAMError", return_value=(True, "out of memory"))
+    @patch("controller.model.startSpeakerTranscript", side_effect=RuntimeError("CUDA out of memory"))
+    def test_speaker_vram_failure_notifies_and_disables(self, _start, _detect, stop_speaker) -> None:
+        config.ENABLE_TRANSCRIPTION_RECEIVE = True
+
+        result = self.controller.startTranscriptionReceiveMessage()
+
+        self.assertFalse(result)
+        self.assertFalse(config.ENABLE_TRANSCRIPTION_RECEIVE)
+        self.assertEqual(
+            self.run_calls[0][0:2],
+            (400, "/run/error_transcription_speaker_vram_overflow"),
+        )
+        self.assertEqual(self.run_calls[0][2]["error_code"], "TRANSCRIPTION_VRAM_SPEAKER")
+        self.assertEqual(self.run_calls[1], (200, "/set/disable/transcription_receive", False))
+        stop_speaker.assert_called_once_with()
+
+
 class TestDeviceSelectionRecovery(unittest.TestCase):
     """デバイス抜去後に stale な選択値を残さない契約。"""
 

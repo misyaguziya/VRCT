@@ -114,6 +114,10 @@ except Exception as e:
 ### 認証エラー
 - ✅ `setDeeplAuthKey` - `ErrorCode.AUTH_DEEPL_LENGTH`, `ErrorCode.AUTH_DEEPL_FAILED`
 
+### 音声認識開始時の VRAM エラー
+- ✅ `startTranscriptionSendMessage` - `ErrorCode.TRANSCRIPTION_VRAM_MIC`
+- ✅ `startTranscriptionReceiveMessage` - `ErrorCode.TRANSCRIPTION_VRAM_SPEAKER`
+
 ## 未移行の箇所（要対応）
 
 以下の箇所は同様のパターンで移行が必要です:
@@ -141,10 +145,6 @@ except Exception as e:
 - ⬜ `setWebSocketHost` - `ErrorCode.VALIDATION_INVALID_IP`, `ErrorCode.WEBSOCKET_HOST_INVALID`
 - ⬜ `setWebSocketPort` - `ErrorCode.WEBSOCKET_PORT_UNAVAILABLE`
 - ⬜ `setEnableWebSocketServer` - `ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE`
-
-### 音声認識VRAM関連
-- ⬜ `startTranscriptionSendMessage` - `ErrorCode.TRANSCRIPTION_VRAM_MIC`, `ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM`
-- ⬜ `startTranscriptionReceiveMessage` - `ErrorCode.TRANSCRIPTION_VRAM_SPEAKER`, `ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM`
 
 ## エラーコードとエンドポイントの対応
 

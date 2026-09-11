@@ -3495,15 +3495,19 @@ class Controller:
                     # 保持しているため、ロックを取り直す公開版
                     # (stopTranscriptionSendMessage) ではなく内部版を呼ぶ。
                     self._stopTranscriptionSendMessageLocked()
-                    disable_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
-                        data=False
-                    )
-                    self.run(
-                        disable_response["status"],
-                        self.run_mapping["enable_transcription_send"],
-                        disable_response["result"],
-                    )
+                    # UI の状態同期は enable 通知ではなく、状態更新用の
+                    # disable endpoint へ送る。_start() が先に構造化 pipeline
+                    # error を通知していた場合は、micMessage() が既に config
+                    # を False にしているため重複通知しない。
+                    if config.ENABLE_TRANSCRIPTION_SEND is True:
+                        self.run(
+                            200,
+                            self.run_mapping.get(
+                                "disable_transcription_send",
+                                "/set/disable/transcription_send",
+                            ),
+                            False,
+                        )
                     config.ENABLE_TRANSCRIPTION_SEND = False
                     return False
                 else:
@@ -3543,15 +3547,17 @@ class Controller:
                     # ここでスピーカーの音声認識を停止 (内部版、詳細は
                     # startTranscriptionSendMessage 側のコメント参照)
                     self._stopTranscriptionReceiveMessageLocked()
-                    disable_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
-                        data=False
-                    )
-                    self.run(
-                        disable_response["status"],
-                        self.run_mapping["enable_transcription_receive"],
-                        disable_response["result"],
-                    )
+                    # Mic と同様、UI の状態同期は disable endpoint に送る。
+                    # pipeline error 経由で既に同期済みなら重複通知しない。
+                    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+                        self.run(
+                            200,
+                            self.run_mapping.get(
+                                "disable_transcription_receive",
+                                "/set/disable/transcription_receive",
+                            ),
+                            False,
+                        )
                     config.ENABLE_TRANSCRIPTION_RECEIVE = False
                     return False
                 else:
