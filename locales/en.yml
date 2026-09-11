@@ -75,10 +75,8 @@ update_modal:
     # is_current_compute_device: "The version currently in use"
     # New UpdateModal (unified with the former Updater tab)
     title: "Update"
-    hero_update_available: "UPDATE AVAILABLE"
-    hero_up_to_date: "LATEST"
-    hero_up_to_date_desc: "You are on the latest version — no update needed."
-    hero_custom: "REVIEW YOUR CHANGES"
+    summary_up_to_date: "LATEST"
+    summary_up_to_date_desc: "You are on the latest version — no update needed."
     current_prefix: "Current: "
     channel_stable: "Stable"
     channel_beta: "Beta"

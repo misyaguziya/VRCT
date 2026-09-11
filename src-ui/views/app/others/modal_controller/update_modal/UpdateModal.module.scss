@@ -6,45 +6,32 @@
     height: 100%;
 }
 
-/* ===== Hero framed banner (matches existing .update_section pattern) ===== */
-.hero_frame {
-    position: relative;
-    border: 0.1rem solid var(--dark_600_color);
-    border-radius: 0.4rem;
-    padding: 6rem 2rem 4rem 2rem;
+/* ===== Update Summary ===== */
+.summary_container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.6rem;
-    flex-shrink: 0;
+    gap: 2rem;
+    width: 100%;
+    margin-bottom: 3.2rem;
 }
 
-/* Legend caption sits on the top border and breaks it via the modal bg */
-.hero_caption {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--dark_900_color);
-    padding: 0 1rem;
-    font-size: 1.2rem;
-    font-weight: 300;
-    letter-spacing: 0.04em;
-    color: var(--dark_500_color);
+.status_badge {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    white-space: nowrap;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--primary_300_color);
 }
-.hero_caption_primary { color: var(--primary_300_color); }
-.hero_caption_ok { color: var(--primary_300_color); }
-.hero_caption_svg {
-    width: 1.4rem;
+.status_badge_svg {
+    width: 1.6rem;
+    height: 1.6rem;
     flex-shrink: 0;
     color: currentColor;
 }
 
-.hero_headline {
+.summary_headline {
     font-size: 2rem;
     font-weight: 400;
     text-align: center;
@@ -52,19 +39,19 @@
     align-items: baseline;
     gap: 0.8rem;
 }
-.hero_headline_sub {
+.summary_headline_sub {
     font-size: 1.4rem;
     font-weight: 300;
     color: var(--dark_500_color);
 }
-.hero_current {
+.summary_current {
     font-size: 1.4rem;
     font-weight: 300;
     color: var(--dark_500_color);
     text-align: center;
 }
 
-/* ===== Change preview (diff table) inside "custom" hero ===== */
+/* ===== Change preview (diff table) inside summary ===== */
 .diff_table {
     display: flex;
     flex-direction: column;
@@ -228,7 +215,6 @@
     color: var(--dark_500_color);
     font-size: 1.2rem;
     cursor: pointer;
-    transition: color 0.12s ease-in-out, border-color 0.12s ease-in-out;
     margin-bottom: 2rem; /* align with SectionLabelComponent's padding-bottom */
 }
 .refresh_button:hover {
@@ -260,19 +246,23 @@
 }
 
 /* ===== Buttons ===== */
-/* Primary — verbatim Updater.install_button */
+/* Primary */
 .install_button {
     background-color: var(--primary_600_color);
     color: var(--dark_basic_text_color);
     border: none;
-    border-radius: 0.6rem;
+    border-radius: 0.4rem;
     padding: 1.2rem 3.2rem;
     font-size: 1.6rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.12s ease-in-out, opacity 0.12s ease-in-out;
+    white-space: nowrap;
+    margin-top: 0.4rem;
 }
 .install_button:hover {
+    background-color: var(--primary_500_color);
+}
+.install_button:active {
     background-color: var(--primary_700_color);
 }
 .install_button:disabled {

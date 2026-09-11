@@ -75,10 +75,8 @@ update_modal:
     # is_current_compute_device: "現在使用中のバージョン"
     # 新UpdateModal (旧Updaterタブと統合)
     title: "アップデート"
-    hero_update_available: "アップデートあり"
-    hero_up_to_date: "最新版"
-    hero_up_to_date_desc: "最新版を使用中です。アップデートの必要はありません。"
-    hero_custom: "変更内容の確認"
+    summary_up_to_date: "最新版"
+    summary_up_to_date_desc: "最新版を使用中です。アップデートの必要はありません。"
     current_prefix: "現在: "
     channel_stable: "安定版"
     channel_beta: "Beta版"

@@ -47,7 +47,7 @@ export const UpdateModal = () => {
     const target_compute_mode = tmp_selected_compute_mode ?? currentComputeMode.data ?? "cpu";
 
     const filtered_releases = useMemo(() => {
-        const list = currentAvailableReleases.data;
+        const list = Array.isArray(currentAvailableReleases.data) ? currentAvailableReleases.data : [];
         if (target_channel === "beta") {
             return list.filter((release) => release.is_prerelease);
         }
@@ -101,33 +101,18 @@ export const UpdateModal = () => {
         target_version !== latest_release_version
     );
 
-    const is_version_changed = Boolean(target_version) && target_version !== currentSoftwareVersion.data;
-
     const is_custom = is_channel_changed || is_compute_mode_changed || is_version_customized;
 
     const is_update_available =
         currentLatestSoftwareVersionInfo.data.is_update_available === true;
-    const latest_version = currentLatestSoftwareVersionInfo.data.new_version;
 
-    // Hero mode
-    let hero_mode; // "custom" | "update_available" | "up_to_date"
-    if (is_custom) hero_mode = "custom";
-    else if (is_update_available) hero_mode = "update_available";
-    else hero_mode = "up_to_date";
+    const is_latest_newer = Boolean(latest_release_version) && latest_release_version !== currentSoftwareVersion.data;
 
-    const isSemverGreater = (a, b) => {
-        // Fallback simple semver compare (major.minor.patch[-pre]) — used only for downgrade badge.
-        // The backend already validates supported versions, so this is UI-only sugar.
-        if (!a || !b) return false;
-        const parse = (v) => v.replace(/^v/, "").split("-")[0].split(".").map((n) => parseInt(n, 10) || 0);
-        const [aM, am, ap] = parse(a);
-        const [bM, bm, bp] = parse(b);
-        if (aM !== bM) return aM > bM;
-        if (am !== bm) return am > bm;
-        return ap > bp;
-    };
-    const is_downgrade =
-        is_version_changed && isSemverGreater(currentSoftwareVersion.data, target_version);
+    const summary_mode = useMemo(() => {
+        if (is_custom) return "custom";
+        if (is_update_available && is_latest_newer) return "update_available";
+        return "up_to_date";
+    }, [is_custom, is_update_available, is_latest_newer]);
 
     const is_ready_to_install = Boolean(target_version) && filtered_releases.length > 0;
 
@@ -147,216 +132,34 @@ export const UpdateModal = () => {
     const onClickRefresh = () => getAvailableReleases();
     const onClickClose = () => updateOpenedQuickSetting("");
 
-    // Description strings for the summary
-    const composeSummary = (version, channel, compute_mode) => {
-        const ch = channel === "beta"
-            ? t("update_modal.channel_beta")
-            : t("update_modal.channel_stable");
-        const cm = compute_mode === "cuda"
-            ? t("update_modal.compute_mode_cuda")
-            : t("update_modal.compute_mode_cpu");
-        return `${version} · ${cm} · ${ch}`;
-    };
-
-    const current_summary = composeSummary(
-        currentSoftwareVersion.data,
-        currentReleaseChannel.data,
-        currentComputeMode.data,
-    );
-
-    // Warning items for corresponding rows
-    const warning_compute_mode =
-        is_compute_mode_changed && target_compute_mode === "cuda"
-            ? t("update_modal.warn_cuda_extra_size")
-            : null;
-
-    const warning_channel = is_channel_changed
-        ? target_channel === "beta"
-            ? t("update_modal.warn_switch_to_beta")
-            : t("update_modal.warn_switch_to_stable")
-        : null;
-
-    const warning_version = is_downgrade
-        ? t("update_modal.warn_downgrade", {
-            from: currentSoftwareVersion.data,
-            to: target_version,
-        })
-        : null;
-
     return (
         <div className={styles.modal_body}>
             <SectionLabelComponent label={t("update_modal.title")} />
 
-            {/* Hero (framed banner) — state-aware */}
-            {hero_mode === "update_available" && (
-                <div className={styles.hero_frame}>
-                    <div className={clsx(styles.hero_caption, styles.hero_caption_primary)}>
-                        {t("update_modal.hero_update_available")}
-                    </div>
-                    <div className={styles.hero_headline}>
-                        {latest_version}
-                        <span className={styles.hero_headline_sub}>
-                            {target_channel === "beta"
-                                ? t("update_modal.channel_beta")
-                                : t("update_modal.channel_stable")}
-                        </span>
-                    </div>
-                    <div className={styles.hero_current}>
-                        {t("update_modal.current_prefix")}{current_summary}
-                    </div>
+            {/* Update Summary */}
+            <div className={styles.summary_container}>
+                <UpdateSummary
+                    summary_mode={summary_mode}
+                    current_compute_mode={currentComputeMode.data}
+                    target_compute_mode={target_compute_mode}
+                    current_channel={currentReleaseChannel.data}
+                    target_channel={target_channel}
+                    current_version={currentSoftwareVersion.data}
+                    target_version={target_version}
+                />
+                {summary_mode !== "up_to_date" && (
                     <button
                         className={styles.install_button}
                         onClick={onClickInstall}
                         disabled={!is_ready_to_install}
                     >
-                        {t("update_modal.install_latest_button")}
+                        {summary_mode === "update_available"
+                            ? t("update_modal.install_latest_button")
+                            : t("update_modal.install_button")}
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
-            {hero_mode === "up_to_date" && (
-                <div className={styles.hero_frame}>
-                    <div className={clsx(styles.hero_caption, styles.hero_caption_ok)}>
-                        <CheckMarkSvg className={styles.hero_caption_svg} />
-                        {t("update_modal.hero_up_to_date")}
-                    </div>
-                    <div className={styles.hero_headline}>
-                        {currentSoftwareVersion.data}
-                        <span className={styles.hero_headline_sub}>
-                            {currentReleaseChannel.data === "beta"
-                                ? t("update_modal.channel_beta")
-                                : t("update_modal.channel_stable")}
-                        </span>
-                    </div>
-                    <div className={styles.hero_current}>
-                        {t("update_modal.hero_up_to_date_desc")}
-                    </div>
-                </div>
-            )}
-
-            {hero_mode === "custom" && (
-                <div className={styles.hero_frame}>
-                    <div className={styles.hero_caption}>
-                        {t("update_modal.hero_custom")}
-                    </div>
-                    <div className={styles.diff_table}>
-                        <div className={styles.diff_header}>
-                            <div />
-                            <div className={styles.diff_header_cell_before}>
-                                {t("update_modal.change_col_current")}
-                            </div>
-                            <div />
-                            <div className={styles.diff_header_cell_after}>
-                                {t("update_modal.change_col_after")}
-                            </div>
-                        </div>
-
-                        {/* Row 1: デバイス構成 */}
-                        <div className={clsx(styles.diff_group, is_compute_mode_changed && styles.diff_group_changed)}>
-                            <div className={styles.diff_row}>
-                                <div className={styles.diff_item_label}>
-                                    {t("update_modal.compute_mode_label")}
-                                </div>
-                                <div className={styles.diff_val_before}>
-                                    {currentComputeMode.data === "cuda"
-                                        ? t("update_modal.compute_mode_cuda")
-                                        : t("update_modal.compute_mode_cpu")}
-                                </div>
-                                <div className={styles.diff_arrow_container}>
-                                    <svg
-                                        className={clsx(styles.diff_arrow_svg, is_compute_mode_changed && styles.diff_arrow_svg_changed)}
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
-                                    </svg>
-                                </div>
-                                <div className={clsx(styles.diff_val_after, is_compute_mode_changed && styles.diff_val_changed)}>
-                                    {target_compute_mode === "cuda"
-                                        ? t("update_modal.compute_mode_cuda")
-                                        : t("update_modal.compute_mode_cpu")}
-                                </div>
-                            </div>
-                            {warning_compute_mode && (
-                                <div className={styles.diff_row_warning}>
-                                    <WarningSvg className={styles.diff_warning_svg} />
-                                    <p className={styles.diff_warning_text}>{warning_compute_mode}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Row 2: リリースチャンネル */}
-                        <div className={clsx(styles.diff_group, is_channel_changed && styles.diff_group_changed)}>
-                            <div className={styles.diff_row}>
-                                <div className={styles.diff_item_label}>
-                                    {t("update_modal.channel_label")}
-                                </div>
-                                <div className={styles.diff_val_before}>
-                                    {currentReleaseChannel.data === "beta"
-                                        ? t("update_modal.channel_beta")
-                                        : t("update_modal.channel_stable")}
-                                </div>
-                                <div className={styles.diff_arrow_container}>
-                                    <svg
-                                        className={clsx(styles.diff_arrow_svg, is_channel_changed && styles.diff_arrow_svg_changed)}
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
-                                    </svg>
-                                </div>
-                                <div className={clsx(styles.diff_val_after, is_channel_changed && styles.diff_val_changed)}>
-                                    {target_channel === "beta"
-                                        ? t("update_modal.channel_beta")
-                                        : t("update_modal.channel_stable")}
-                                </div>
-                            </div>
-                            {warning_channel && (
-                                <div className={styles.diff_row_warning}>
-                                    <WarningSvg className={styles.diff_warning_svg} />
-                                    <p className={styles.diff_warning_text}>{warning_channel}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Row 3: バージョン */}
-                        <div className={clsx(styles.diff_group, is_version_changed && styles.diff_group_changed)}>
-                            <div className={styles.diff_row}>
-                                <div className={styles.diff_item_label}>
-                                    {t("update_modal.version_label")}
-                                </div>
-                                <div className={styles.diff_val_before}>
-                                    {currentSoftwareVersion.data}
-                                </div>
-                                <div className={styles.diff_arrow_container}>
-                                    <svg
-                                        className={clsx(styles.diff_arrow_svg, is_version_changed && styles.diff_arrow_svg_changed)}
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
-                                    </svg>
-                                </div>
-                                <div className={clsx(styles.diff_val_after, is_version_changed && styles.diff_val_changed)}>
-                                    {target_version || "—"}
-                                </div>
-                            </div>
-                            {warning_version && (
-                                <div className={styles.diff_row_warning}>
-                                    <WarningSvg className={styles.diff_warning_svg} />
-                                    <p className={styles.diff_warning_text}>{warning_version}</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <button
-                        className={styles.install_button}
-                        onClick={onClickInstall}
-                        disabled={!is_ready_to_install}
-                    >
-                        {t("update_modal.install_button")}
-                    </button>
-                </div>
-            )}
-
-            {/* Section: pick a different version */}
             <div className={styles.subsection_head}>
                 <SectionLabelComponent label={t("update_modal.section_pick_variant")} />
                 <button
@@ -422,6 +225,174 @@ export const UpdateModal = () => {
                     {t("update_modal.close_button")}
                 </button>
             </div>
+        </div>
+    );
+};
+
+/* ===== Subcomponents: UpdateSummary switcher ===== */
+const UpdateSummary = ({ summary_mode, ...props }) => {
+    switch (summary_mode) {
+        case "update_available":
+        case "custom":
+            return <SummaryCustomDiff {...props} />;
+        case "up_to_date":
+            return <SummaryUpToDate {...props} />;
+        default:
+            return null;
+    }
+};
+
+const SummaryUpToDate = ({ current_version, current_channel }) => {
+    const { t } = useI18n();
+    return (
+        <>
+            <div className={styles.status_badge}>
+                <CheckMarkSvg className={styles.status_badge_svg} />
+                <span>{t("update_modal.summary_up_to_date")}</span>
+            </div>
+            <div className={styles.summary_headline}>
+                {current_version}
+                <span className={styles.summary_headline_sub}>
+                    {current_channel === "beta"
+                        ? t("update_modal.channel_beta")
+                        : t("update_modal.channel_stable")}
+                </span>
+            </div>
+            <div className={styles.summary_current}>
+                {t("update_modal.summary_up_to_date_desc")}
+            </div>
+        </>
+    );
+};
+
+const isSemverGreater = (a, b) => {
+    // Fallback simple semver compare (major.minor.patch[-pre]) — used only for downgrade badge.
+    // The backend already validates supported versions, so this is UI-only sugar.
+    if (!a || !b) return false;
+    const parse = (v) => v.replace(/^v/, "").split("-")[0].split(".").map((n) => parseInt(n, 10) || 0);
+    const [aM, am, ap] = parse(a);
+    const [bM, bm, bp] = parse(b);
+    if (aM !== bM) return aM > bM;
+    if (am !== bm) return am > bm;
+    return ap > bp;
+};
+
+const DiffRow = ({ label, before, after, is_changed, warning }) => (
+    <div className={clsx(styles.diff_group, is_changed && styles.diff_group_changed)}>
+        <div className={styles.diff_row}>
+            <div className={styles.diff_item_label}>{label}</div>
+            <div className={styles.diff_val_before}>{before}</div>
+            <div className={styles.diff_arrow_container}>
+                <svg
+                    className={clsx(styles.diff_arrow_svg, is_changed && styles.diff_arrow_svg_changed)}
+                    viewBox="0 0 24 24"
+                >
+                    <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
+                </svg>
+            </div>
+            <div className={clsx(styles.diff_val_after, is_changed && styles.diff_val_changed)}>
+                {after}
+            </div>
+        </div>
+        {warning && (
+            <div className={styles.diff_row_warning}>
+                <WarningSvg className={styles.diff_warning_svg} />
+                <p className={styles.diff_warning_text}>{warning}</p>
+            </div>
+        )}
+    </div>
+);
+
+const SummaryCustomDiff = ({
+    current_compute_mode,
+    target_compute_mode,
+    current_channel,
+    target_channel,
+    current_version,
+    target_version,
+}) => {
+    const { t } = useI18n();
+
+    const is_compute_mode_changed = target_compute_mode !== current_compute_mode;
+    const is_channel_changed = target_channel !== current_channel;
+    const is_version_changed = Boolean(target_version) && target_version !== current_version;
+
+    const is_downgrade =
+        is_version_changed && isSemverGreater(current_version, target_version);
+
+    const warning_compute_mode =
+        is_compute_mode_changed && target_compute_mode === "cuda"
+            ? t("update_modal.warn_cuda_extra_size")
+            : null;
+
+    const warning_channel = is_channel_changed
+        ? target_channel === "beta"
+            ? t("update_modal.warn_switch_to_beta")
+            : t("update_modal.warn_switch_to_stable")
+        : null;
+
+    const warning_version = is_downgrade
+        ? t("update_modal.warn_downgrade", {
+            from: current_version,
+            to: target_version,
+        })
+        : null;
+
+    return (
+        <div className={styles.diff_table}>
+            <div className={styles.diff_header}>
+                <div />
+                <div className={styles.diff_header_cell_before}>
+                    {t("update_modal.change_col_current")}
+                </div>
+                <div />
+                <div className={styles.diff_header_cell_after}>
+                    {t("update_modal.change_col_after")}
+                </div>
+            </div>
+
+            {/* Row 1: デバイス構成 */}
+            <DiffRow
+                label={t("update_modal.compute_mode_label")}
+                before={
+                    current_compute_mode === "cuda"
+                        ? t("update_modal.compute_mode_cuda")
+                        : t("update_modal.compute_mode_cpu")
+                }
+                after={
+                    target_compute_mode === "cuda"
+                        ? t("update_modal.compute_mode_cuda")
+                        : t("update_modal.compute_mode_cpu")
+                }
+                is_changed={is_compute_mode_changed}
+                warning={warning_compute_mode}
+            />
+
+            {/* Row 2: リリースチャンネル */}
+            <DiffRow
+                label={t("update_modal.channel_label")}
+                before={
+                    current_channel === "beta"
+                        ? t("update_modal.channel_beta")
+                        : t("update_modal.channel_stable")
+                }
+                after={
+                    target_channel === "beta"
+                        ? t("update_modal.channel_beta")
+                        : t("update_modal.channel_stable")
+                }
+                is_changed={is_channel_changed}
+                warning={warning_channel}
+            />
+
+            {/* Row 3: バージョン */}
+            <DiffRow
+                label={t("update_modal.version_label")}
+                before={current_version}
+                after={target_version || "—"}
+                is_changed={is_version_changed}
+                warning={warning_version}
+            />
         </div>
     );
 };
