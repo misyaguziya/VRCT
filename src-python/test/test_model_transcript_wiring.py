@@ -144,6 +144,27 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
         self.assertEqual(len(received), 1)
         self.assertTrue(received[0]["recognition_error"])
 
+    @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
+    @patch("model.AudioTranscriber", _FakeAudioTranscriber)
+    @patch("model.SelectedMicEnergyAndAudioRecorder", _FakeAudioRecorder)
+    def test_late_old_worker_cleanup_does_not_clear_new_transcriber(self) -> None:
+        session = MicSession()
+        session.transcript_fnc = lambda result: None
+        old_device = {"name": "MicA", "index": 3}
+
+        session.reconfigure(transcript=True, device=old_device)
+        old_worker = _CapturingThreadFnc.instances[-1]
+        old_transcriber = session._transcriber
+        new_transcriber = object()
+        session._transcriber = new_transcriber
+
+        # Simulate the old worker finally running its end callback after a
+        # reconfigure() has already installed a replacement transcriber.
+        old_worker.end_fnc()
+
+        self.assertIsNotNone(old_transcriber)
+        self.assertIs(session._transcriber, new_transcriber)
+
 
 if __name__ == "__main__":
     unittest.main()
