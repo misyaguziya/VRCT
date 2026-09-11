@@ -728,8 +728,6 @@ Section Install
     StrCpy $existing_install "1"
   ${EndIf}
 
-  SetOutPath $INSTDIR
-
   !insertmacro CheckIfAppIsRunning
 
   !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
