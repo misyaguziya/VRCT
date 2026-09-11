@@ -7,7 +7,7 @@ import numpy as np
 
 from speech_recognition.exceptions import RequestError, UnknownValueError
 
-from errors import ErrorCode
+from errors import AudioPipelineError, ErrorCode
 from models.transcription.transcription_providers import TranscriptionApiError
 from models.transcription.transcription_transcriber import (
     AudioTranscriber,
@@ -75,7 +75,8 @@ class TestGoogleRecognizerTimeout(unittest.TestCase):
         audio_queue = Queue()
         audio_queue.put((b"\x01\x00", _already_old_timestamp()))
 
-        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        with self.assertRaises(AudioPipelineError):
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
         mock_error_logging.assert_called_once()
 
@@ -89,7 +90,8 @@ class TestGoogleRecognizerTimeout(unittest.TestCase):
         audio_queue = Queue()
         audio_queue.put((b"\x01\x00", _already_old_timestamp()))
 
-        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        with self.assertRaises(AudioPipelineError):
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
         self.assertTrue(transcriber.last_recognition_error)
 
@@ -693,7 +695,8 @@ class TestApiTranscriptionEngines(unittest.TestCase):
         audio_queue = Queue()
         audio_queue.put((b"\x01\x00", _already_old_timestamp()))
 
-        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        with self.assertRaises(AudioPipelineError):
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
         self.assertTrue(transcriber.last_recognition_error)
         self.assertEqual(transcriber.last_api_error_code, ErrorCode.TRANSCRIPTION_API_AUTH_FAILED)
@@ -803,7 +806,8 @@ class TestDeepgramTranscriptionEngine(unittest.TestCase):
         audio_queue = Queue()
         audio_queue.put((b"\x01\x00", _already_old_timestamp()))
 
-        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        with self.assertRaises(AudioPipelineError):
+            transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
         self.assertTrue(transcriber.last_recognition_error)
         self.assertEqual(transcriber.last_api_error_code, ErrorCode.TRANSCRIPTION_API_AUTH_FAILED)
@@ -845,7 +849,10 @@ class TestWhisperResilienceAcrossCandidates(unittest.TestCase):
         audio_queue.put((b"\x01\x00", _already_old_timestamp()))
 
         with patch("models.transcription.transcription_transcriber.errorLogging"):
-            transcriber.transcribeAudioQueue(audio_queue, ["Japanese", "English"], ["Japan", "United States"])
+            with self.assertRaises(AudioPipelineError):
+                transcriber.transcribeAudioQueue(
+                    audio_queue, ["Japanese", "English"], ["Japan", "United States"]
+                )
 
         self.assertTrue(transcriber.last_recognition_error)
         self.assertEqual(transcriber.whisper_model.transcribe.call_count, 2)

@@ -609,6 +609,11 @@ def _mic_host_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    # デバイスが一時的に存在しない状態を表す永続化用 sentinel。
+    # 実デバイス一覧に含まれない場合でも、抜去後の選択状態を安全に
+    # `NoHost` へ戻せる必要がある。
+    if val == "NoHost":
+        return val
     hosts = list(device_manager.getMicDevices().keys())
     return val if val in hosts else None
 
@@ -617,6 +622,10 @@ def _mic_device_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    # `NoDevice` は「選択中のデバイスなし」を表す sentinel。実デバイス
+    # が残っている一覧にも安全に設定できるよう、一覧検証より先に許可する。
+    if val == "NoDevice":
+        return val
     try:
         devices = device_manager.getMicDevices().get(inst.SELECTED_MIC_HOST, [])
         names = [d.get('name') for d in devices]
@@ -629,6 +638,8 @@ def _speaker_device_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    if val == "NoDevice":
+        return val
     try:
         names = [d.get('name') for d in device_manager.getSpeakerDevices()]
         return val if val in names else None

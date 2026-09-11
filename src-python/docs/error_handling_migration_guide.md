@@ -171,6 +171,58 @@ UI開発者はこのマッピングを参照して、各エンドポイントが
 
 ## UI側での活用
 
+## 音声パイプライン実行時エラー通知
+
+録音・VAD・音声認識の実行中に復旧不能なエラーが発生した場合は、既存の
+`/run/transcription_recognition_error` 通知を1セッションにつき1回送信する。
+通知前に録音、関連スレッド、キューを停止・破棄する。`recoverable` は現時点では
+常に `false` で、再開は UI のユーザー操作で行う。
+
+```json
+{
+  "error_code": "VAD_INFERENCE_ERROR",
+  "stage": "vad",
+  "source": "mic",
+  "message": "Voice activity detection failed",
+  "recoverable": false
+}
+```
+
+`stage` は `recording` / `vad` / `asr` / `cleanup` のいずれか、`source` は
+`mic` / `speaker` のいずれかとする。UI に渡す `message` は安全な概要のみとし、
+元の例外文字列・traceback は error.log にのみ記録する。
+
+パイプラインエラー通知に先立ち、対象ソースの既存 disable 通知も送信する。
+Mic は `/set/disable/transcription_send`、Speaker は
+`/set/disable/transcription_receive` に `result: false` を送る。これにより、
+バックエンドの設定状態とUIのON/OFF表示を同時にOFFへ同期する。
+
+デバイス一覧の更新で選択中デバイスが消失した場合も同じ状態同期を行う。
+デバイス一覧の監視自体は Auto Select の ON/OFF から分離して常時維持するため、
+Auto Select が OFF でもデバイス再接続時に一覧を更新できる。
+Auto Select が ON なら、現在検出されている OS の既定デバイスへ選択を切り替える。
+既定デバイス情報が一時的に取得できない場合は、検出済み一覧の実デバイスへ
+フォールバックする。Auto Select が OFF の場合も、検出済み一覧の実デバイスへ
+切り替え、稼働中の録音 Session を再構成する。検出済みデバイスがない場合だけ、
+選択値を `NoHost` / `NoDevice`（speaker は `NoDevice`）に戻して、実行中の録音系機能を停止する。
+選択値の変更は既存の `selected_mic_host` / `selected_mic_device` /
+`selected_speaker_device` 通知で UI へ伝える。
+
+初期エラーコードは以下の通り。
+
+```text
+AUDIO_OPEN_ERROR
+AUDIO_READ_ERROR
+VAD_INFERENCE_ERROR
+TRANSCRIBER_INIT_ERROR
+ASR_ERROR
+CLEANUP_TIMEOUT
+```
+
+Mic と Speaker でエラーコードを分けず、どちらで発生したかは `source` で判定する。
+
+エラー通知を受けた側は、確定文字列として処理してはならない。
+
 UI側では`error_code`を使用して、エラーの種類を判定し、適切な処理を行うことができます:
 
 ```javascript
