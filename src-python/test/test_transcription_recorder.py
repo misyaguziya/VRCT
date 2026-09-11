@@ -119,6 +119,40 @@ class TestCreateMicrophone(unittest.TestCase):
 
         never_returns.set()  # リークしたバックグラウンドスレッドを解放する
 
+    def test_closes_source_that_finishes_after_timeout(self) -> None:
+        """タイムアウト後に遅れて成功した open のソースを解放する。"""
+        release_open = threading.Event()
+
+        class LateSource:
+            def __init__(self) -> None:
+                self.stream = object()
+                self.exit_called = threading.Event()
+
+            def __exit__(self, exc_type, exc_value, traceback) -> None:
+                self.stream = None
+                self.exit_called.set()
+
+        late_source = LateSource()
+
+        def delayed_open(*args, **kwargs):
+            release_open.wait(timeout=1)
+            return late_source
+
+        with patch(
+            "models.transcription.transcription_recorder._open_with_fallback",
+            side_effect=delayed_open,
+        ):
+            with patch(
+                "models.transcription.transcription_recorder._MIC_OPEN_TIMEOUT_SEC",
+                0.05,
+            ):
+                with self.assertRaisesRegex(OSError, "Timed out"):
+                    _create_microphone({}, device_index=10)
+
+        release_open.set()
+        self.assertTrue(late_source.exit_called.wait(timeout=1))
+        self.assertIsNone(late_source.stream)
+
 
 class TestLockedAudioSource(unittest.TestCase):
     """mic/speaker の listener スレッドが本番ストリームを open する瞬間
