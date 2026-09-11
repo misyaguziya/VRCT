@@ -122,7 +122,15 @@ jobs:
           $shaPath = "./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe.sha256"
           $hash = (Get-FileHash -Path $exePath -Algorithm SHA256).Hash.ToLower()
           Set-Content -Path $shaPath -Value $hash -NoNewline -Encoding ascii
+          $cpuZipShaPath = "./VRCT.zip.sha256"
+          $gpuZipShaPath = "./VRCT_cuda.zip.sha256"
+          $cpuZipHash = (Get-FileHash -Path "./VRCT.zip" -Algorithm SHA256).Hash.ToLower()
+          $gpuZipHash = (Get-FileHash -Path "./VRCT_cuda.zip" -Algorithm SHA256).Hash.ToLower()
+          Set-Content -Path $cpuZipShaPath -Value $cpuZipHash -NoNewline -Encoding ascii
+          Set-Content -Path $gpuZipShaPath -Value $gpuZipHash -NoNewline -Encoding ascii
           echo "sha_path=$shaPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          echo "cpu_zip_sha_path=$cpuZipShaPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          echo "gpu_zip_sha_path=$gpuZipShaPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Upload to Hugging Face Hub
         env:
@@ -135,6 +143,8 @@ jobs:
           New-Item -ItemType Directory -Force -Path $UPLOAD_DIR
           Copy-Item -Path ./VRCT.zip -Destination "$UPLOAD_DIR/VRCT.zip"
           Copy-Item -Path ./VRCT_cuda.zip -Destination "$UPLOAD_DIR/VRCT_cuda.zip"
+          Copy-Item -Path ${{ steps.sha256.outputs.cpu_zip_sha_path }} -Destination "$UPLOAD_DIR/VRCT.zip.sha256"
+          Copy-Item -Path ${{ steps.sha256.outputs.gpu_zip_sha_path }} -Destination "$UPLOAD_DIR/VRCT_cuda.zip.sha256"
           Copy-Item -Path "./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe" -Destination "$UPLOAD_DIR/VRCT_setup.exe"
 
           hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ${{ steps.channel.outputs.hf_repo }} $UPLOAD_DIR
