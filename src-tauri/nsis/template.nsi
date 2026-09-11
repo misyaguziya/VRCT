@@ -711,7 +711,19 @@ SectionEnd
   app_check_done:
 !macroend
 
+Var /GLOBAL existing_install
+
 Section Install
+  ; Remember whether this is an update before SetOutPath can create the
+  ; directory.  A failed update must not remove an existing installation or
+  ; user data that the installer did not create.
+  StrCpy $existing_install "0"
+  ${If} ${FileExists} "$INSTDIR\uninstall.exe"
+  ${OrIf} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+  ${OrIf} ${FileExists} "$INSTDIR\config.json"
+    StrCpy $existing_install "1"
+  ${EndIf}
+
   SetOutPath $INSTDIR
 
   !insertmacro CheckIfAppIsRunning
@@ -1168,6 +1180,7 @@ Section Install
     Delete "$TEMP\$file_name.bad"
     Rename "$TEMP\$file_name" "$TEMP\$file_name.bad"
     DetailPrint "Giving up after 3 attempts; kept archive at $TEMP\$file_name.bad"
+    Call CleanupFailedInstall
     MessageBox MB_OK|MB_ICONSTOP "Could not download and unpack $file_name after 3 attempts.$\r$\n$\r$\nYour connection may be unstable or the disk may be full. The last download was kept for troubleshooting at:$\r$\n$TEMP\$file_name.bad$\r$\n$\r$\nPlease try again later." /SD IDOK
     Abort
 
@@ -1222,6 +1235,41 @@ Section Install
   ; Auto close this page for passive mode
   ${IfThen} $PassiveMode == 1 ${|} SetAutoClose true ${|}
 SectionEnd
+
+Function CleanupFailedInstall
+  ; Keep the .bad archive for diagnostics, but remove temporary fragments and
+  ; the checksum sidecar regardless of whether this was a new install or an
+  ; update.
+  Delete "$TEMP\$file_name"
+  Delete "$TEMP\$file_name.p0"
+  Delete "$TEMP\$file_name.p1"
+  Delete "$TEMP\$file_name.p2"
+  Delete "$TEMP\$file_name.p3"
+  Delete "$package_hash_path"
+
+  ; Updating in place can leave a mixture of old and new files after a failed
+  ; extraction.  Without a staging directory or rollback manifest, preserving
+  ; the existing tree is safer than deleting user data or the previous app.
+  ${If} $existing_install == "1"
+    DetailPrint "Existing installation preserved after failure"
+    Return
+  ${EndIf}
+
+  ; For a new install, remove only files owned by the generated installer.
+  ; User data is intentionally not targeted here.
+  Delete "$INSTDIR\${MAINBINARYNAME}.exe"
+  {{#each resources}}
+    Delete "$INSTDIR\\{{this.[1]}}"
+  {{/each}}
+  {{#each binaries}}
+    Delete "$INSTDIR\\{{this}}"
+  {{/each}}
+  RmDir /r "$INSTDIR\_internal"
+  {{#each resources_ancestors}}
+    RMDir "$INSTDIR\\{{this}}"
+  {{/each}}
+  RMDir "$INSTDIR"
+FunctionEnd
 
 Function .onInstSuccess
   ; Check for `/R` flag only in silent and passive installers because
