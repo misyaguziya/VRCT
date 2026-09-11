@@ -103,8 +103,7 @@ fn main() {
 
 fn find_project_root(start: &Path) -> Option<PathBuf> {
     let mut cursor = start.parent();
-    for _ in 0..10 {
-        let dir = cursor?;
+    while let Some(dir) = cursor {
         if dir.join(".venv").join("Scripts").join("python.exe").exists()
             && dir.join("src-python").join("mainloop.py").exists()
         {
