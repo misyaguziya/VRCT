@@ -755,6 +755,11 @@ Section Install
   Var /GLOBAL dl_id1
   Var /GLOBAL dl_id2
   Var /GLOBAL dl_id3
+  Var /GLOBAL package_hash_path
+  Var /GLOBAL package_hash_id
+  Var /GLOBAL package_hash_available
+  Var /GLOBAL expected_package_hash
+  Var /GLOBAL actual_package_hash
   ${If} $SelectedEdition == "gpu"
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
     StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_GPU}
@@ -832,6 +837,68 @@ Section Install
 
   StrCpy $cmder_dl "https://huggingface.co/$release_repo/resolve/$release_revision/$file_name"
   DetailPrint "Got URL : $cmder_dl"
+
+  ; New releases publish a SHA-256 sidecar next to each package. Download it
+  ; before the large archive so a package can be rejected before extraction.
+  ; A missing sidecar is treated as a legacy release for backward-compatible
+  ; rollback support; other sidecar download failures are fatal.
+  StrCpy $package_hash_path "$TEMP\$file_name.sha256"
+  Delete "$package_hash_path"
+  StrCpy $package_hash_available "0"
+  DetailPrint "Downloading package checksum..."
+  NScurl::http GET "$cmder_dl.sha256" "$package_hash_path" /BACKGROUND /COMPLETETIMEOUT 30s /END
+  Pop $package_hash_id
+  NScurl::wait /ID $package_hash_id /END
+  NScurl::query /ID $package_hash_id "@ERROR@"
+  Pop $0
+  ${If} $0 == "OK"
+    ClearErrors
+    FileOpen $0 "$package_hash_path" r
+    IfErrors package_hash_file_invalid
+    FileRead $0 $expected_package_hash
+    IfErrors package_hash_read_invalid
+    FileClose $0
+    StrLen $1 $expected_package_hash
+    ${If} $1 != 64
+      Goto package_hash_invalid
+    ${EndIf}
+    StrCpy $package_hash_available "1"
+    DetailPrint "Package checksum downloaded"
+    Goto package_hash_ready
+  ${EndIf}
+
+  NScurl::query /ID $package_hash_id "@ERRORTYPE@|@ERRORCODE@"
+  Pop $1
+  ${If} $1 == "HTTP|404"
+    DetailPrint "Package checksum is unavailable; using legacy size-only validation"
+    Delete "$package_hash_path"
+    Goto package_hash_ready
+  ${EndIf}
+  DetailPrint "Could not download package checksum ($1)"
+  Delete "$package_hash_path"
+  MessageBox MB_OK|MB_ICONSTOP "Could not download the package checksum. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+  Abort
+
+  package_hash_file_invalid:
+    Delete "$package_hash_path"
+    DetailPrint "Package checksum could not be read"
+    MessageBox MB_OK|MB_ICONSTOP "The package checksum could not be read. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+    Abort
+
+  package_hash_read_invalid:
+    FileClose $0
+    Delete "$package_hash_path"
+    DetailPrint "Package checksum could not be read"
+    MessageBox MB_OK|MB_ICONSTOP "The package checksum could not be read. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+    Abort
+
+  package_hash_invalid:
+    Delete "$package_hash_path"
+    DetailPrint "Package checksum is invalid"
+    MessageBox MB_OK|MB_ICONSTOP "The package checksum is invalid. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+    Abort
+
+  package_hash_ready:
 
   ; The archive is unpacked with Windows' bundled bsdtar (see below). Bail out
   ; early with a clear message if it is missing rather than downloading GBs
@@ -1055,6 +1122,20 @@ Section Install
       Goto attempt_failed
     par_ok:
     ${EndIf}
+
+    ${If} $package_hash_available == "1"
+      NScurl::sha256 -file "$TEMP\$file_name"
+      Pop $actual_package_hash
+      ${If} $actual_package_hash != $expected_package_hash
+        DetailPrint "Package SHA-256 mismatch"
+        Delete "$TEMP\$file_name"
+        Delete "$package_hash_path"
+        MessageBox MB_OK|MB_ICONSTOP "The downloaded package failed SHA-256 verification. Installation was aborted." /SD IDOK
+        Abort
+      ${EndIf}
+      DetailPrint "Package SHA-256 verified"
+    ${EndIf}
+    Delete "$package_hash_path"
 
     DetailPrint "Extracting $file_name ..."
     ; NSIS unzip plugins (nsisunz, and Nsis7z regardless of its embedded 7-Zip
