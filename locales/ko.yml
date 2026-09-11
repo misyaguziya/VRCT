@@ -85,7 +85,6 @@ update_modal:
     latest_suffix: "최신"
     install_latest_button: "최신 버전 설치"
     install_button: "이 설정으로 설치"
-    close_button: "닫기"
     section_pick_variant: "다른 버전 또는 구성 선택"
     refresh_button: "새로 고침"
     refresh_button_title: "최신 목록 가져오기"

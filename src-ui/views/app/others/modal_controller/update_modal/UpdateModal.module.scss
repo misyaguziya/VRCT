@@ -278,28 +278,3 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
-
-/* Close — matches deny_button */
-.actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1.2rem;
-    padding-top: 1rem;
-    margin-top: auto;
-}
-.close_button {
-    background-color: var(--dark_825_color);
-    color: var(--dark_basic_text_color);
-    border: none;
-    border-radius: 0.4rem;
-    font-size: 1.6rem;
-    padding: 1rem;
-    min-width: 10rem;
-    cursor: pointer;
-}
-.close_button:hover {
-    background-color: var(--dark_800_color);
-}
-.close_button:active {
-    background-color: var(--dark_850_color);
-}

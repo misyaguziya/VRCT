@@ -86,7 +86,6 @@ update_modal:
     latest_suffix: "最新"
     install_latest_button: "最新版をインストール"
     install_button: "この設定でインストール"
-    close_button: "閉じる"
     section_pick_variant: "別のバージョン・構成を選ぶ"
     refresh_button: "再取得"
     refresh_button_title: "最新の一覧を取得"
