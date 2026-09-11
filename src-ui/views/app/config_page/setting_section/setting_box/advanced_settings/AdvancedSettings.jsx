@@ -286,7 +286,7 @@ const ObsBrowserSourcePortContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourcePort.state === "pending") return;
         setInputValue(`${currentObsBrowserSourcePort.data}`);
-    }, [currentObsBrowserSourcePort]);
+    }, [currentObsBrowserSourcePort.data, currentObsBrowserSourcePort.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -318,7 +318,7 @@ const ObsBrowserSourceMaxMessagesContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceMaxMessages.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceMaxMessages.data}`);
-    }, [currentObsBrowserSourceMaxMessages]);
+    }, [currentObsBrowserSourceMaxMessages.data, currentObsBrowserSourceMaxMessages.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -350,7 +350,7 @@ const ObsBrowserSourceDisplayDurationContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceDisplayDuration.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceDisplayDuration.data}`);
-    }, [currentObsBrowserSourceDisplayDuration]);
+    }, [currentObsBrowserSourceDisplayDuration.data, currentObsBrowserSourceDisplayDuration.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -382,7 +382,7 @@ const ObsBrowserSourceFadeoutDurationContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFadeoutDuration.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFadeoutDuration.data}`);
-    }, [currentObsBrowserSourceFadeoutDuration]);
+    }, [currentObsBrowserSourceFadeoutDuration.data, currentObsBrowserSourceFadeoutDuration.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -414,7 +414,7 @@ const ObsBrowserSourceFontSizeContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontSize.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontSize.data}`);
-    }, [currentObsBrowserSourceFontSize]);
+    }, [currentObsBrowserSourceFontSize.data, currentObsBrowserSourceFontSize.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -445,7 +445,7 @@ const ObsBrowserSourceFontColorContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontColor.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontColor.data}`);
-    }, [currentObsBrowserSourceFontColor]);
+    }, [currentObsBrowserSourceFontColor.data, currentObsBrowserSourceFontColor.state]);
 
     return (
         <ColorEntryWithSaveButtonContainer
@@ -476,7 +476,7 @@ const ObsBrowserSourceFontOutlineThicknessContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontOutlineThickness.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontOutlineThickness.data}`);
-    }, [currentObsBrowserSourceFontOutlineThickness]);
+    }, [currentObsBrowserSourceFontOutlineThickness.data, currentObsBrowserSourceFontOutlineThickness.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -507,7 +507,7 @@ const ObsBrowserSourceFontOutlineColorContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontOutlineColor.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontOutlineColor.data}`);
-    }, [currentObsBrowserSourceFontOutlineColor]);
+    }, [currentObsBrowserSourceFontOutlineColor.data, currentObsBrowserSourceFontOutlineColor.state]);
 
     return (
         <ColorEntryWithSaveButtonContainer
