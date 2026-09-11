@@ -131,8 +131,9 @@ class DeviceManager:
     def init(self) -> None:
         """Initialize internal state. This is intentionally separate from object
         creation so importing the module won't start threads or access OS
-        audio APIs. Call `device_manager.init()` and then
-        `device_manager.startMonitoring()` explicitly when ready.
+        audio APIs. Call `device_manager.init()` and then explicitly enable
+        monitoring with `startMonitoring()` or
+        `setDeviceListMonitoringActive()` when ready.
         """
         if getattr(self, "_initialized", False):
             return
@@ -198,6 +199,11 @@ class DeviceManager:
         # 追加で pyaudio_op_lock を取りに行かないため、両ロック間に
         # 循環待ちは生じない)。
         self._lifecycle_lock: Lock = Lock()
+
+        # デバイス一覧の監視は Auto Select 状態とは独立して管理する。
+        # Auto Select が両方 OFF でも、抜き差し後の一覧更新は継続する必要が
+        # あるため、一覧監視のライフサイクルを別フラグにする。
+        self._device_list_monitoring_active: bool = False
 
         # Auto Select 状態を mic/speaker で独立管理する。
         # 監視スレッド自体は 1 本 (update() が両方のリストを一括で refresh する
@@ -555,6 +561,19 @@ class DeviceManager:
                 self._stopSpeakerEndpointTrackerLocked()
             self._syncMonitoringLifecycleLocked()
 
+    def setDeviceListMonitoringActive(self, active: bool) -> None:
+        """デバイス一覧監視の有効/無効を設定する。
+
+        デバイスの再接続を検出するための一覧更新は、Auto Select の設定とは
+        独立して動作させる。Auto Select が両方 OFF の場合でもこのフラグが
+        active なら monitoring スレッドを維持し、一覧 callback を発火する。
+        Auto Select の選択変更や endpoint tracker の起動は、従来どおり
+        setMicAutoActive/setSpeakerAutoActive 側のフラグで制御する。
+        """
+        with self._lifecycle_lock:
+            self._device_list_monitoring_active = active
+            self._syncMonitoringLifecycleLocked()
+
     def _stopMicEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。
 
@@ -691,13 +710,19 @@ class DeviceManager:
         return None
 
     def _syncMonitoringLifecycleLocked(self) -> None:
-        """mic/speaker の active フラグに応じて monitoring スレッドを起動/停止。
+        """一覧監視または Auto Select の active フラグに応じて monitoring を起動/停止。
 
-        少なくとも 1 サイドが active なら起動、両方 inactive なら停止。
-        個々の設定変更 (setMicAutoActive/setSpeakerAutoActive) の後に呼ぶ。
+        一覧監視または少なくとも 1 サイドの Auto Select が active なら起動し、
+        すべて inactive なら停止する。個々の設定変更
+        (setDeviceListMonitoringActive/setMicAutoActive/setSpeakerAutoActive) の
+        後に呼ぶ。
         _lifecycle_lock を既に保持している前提の内部実装。
         """
-        any_active = self._mic_auto_active or self._speaker_auto_active
+        any_active = (
+            self._device_list_monitoring_active
+            or self._mic_auto_active
+            or self._speaker_auto_active
+        )
         if any_active:
             self._startMonitoringLocked()
         else:

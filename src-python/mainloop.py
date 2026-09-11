@@ -61,6 +61,10 @@ run_mapping = {
     "enable_translation":"/run/enable_translation",
     "enable_transcription_send":"/run/enable_transcription_send",
     "enable_transcription_receive":"/run/enable_transcription_receive",
+    "disable_transcription_send":"/set/disable/transcription_send",
+    "disable_transcription_receive":"/set/disable/transcription_receive",
+    "disable_check_mic_threshold":"/set/disable/check_mic_threshold",
+    "disable_check_speaker_threshold":"/set/disable/check_speaker_threshold",
 
     "connected_network":"/run/connected_network",
     "enable_ai_models":"/run/enable_ai_models",

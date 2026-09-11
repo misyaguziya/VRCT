@@ -15,7 +15,7 @@ from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
 from queue import Queue, Empty
-from threading import Thread, Lock
+from threading import Thread, Lock, current_thread
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -55,6 +55,7 @@ from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
+from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 
@@ -329,6 +330,10 @@ class _AudioDeviceSession:
         self._energy_progressbar: Optional[threadFnc] = None
         self.transcript_fnc: Optional[Callable[[dict], None]] = None
         self.energy_fnc: Callable[[float], None] = lambda v: None
+        self._stop_lock = Lock()
+        self._pipeline_error_lock = Lock()
+        self._pipeline_error_started = False
+        self._pipeline_error_notified = False
         # 現在 Recorder が開いているデバイス (dict) を保持し、
         # reconfigure() で「同一デバイスかつ features 変化なし」なら no-op
         # にするために使う。
@@ -478,6 +483,62 @@ class _AudioDeviceSession:
     def device_error_event(self):
         return self._recorder.device_error_event if self._recorder is not None else None
 
+    def _make_pipeline_failure(
+        self,
+        error_code: ErrorCode,
+        stage: str,
+        error: Optional[Exception] = None,
+    ) -> AudioPipelineFailure:
+        if error is not None:
+            errorLogging()
+        return AudioPipelineFailure(
+            error_code=error_code,
+            stage=stage,
+            source=self._kind,
+            message=ERROR_METADATA[error_code]["message"],
+            exception_type=type(error).__name__ if error is not None else None,
+        )
+
+    def _notify_pipeline_error(self, failure: AudioPipelineFailure) -> None:
+        with self._pipeline_error_lock:
+            if self._pipeline_error_notified:
+                return
+            self._pipeline_error_notified = True
+        if callable(self.transcript_fnc):
+            try:
+                self.transcript_fnc(failure.to_notification())
+            except Exception:
+                errorLogging()
+
+    def _handle_pipeline_error(self, failure: AudioPipelineFailure) -> None:
+        """録音ワーカーからの異常を一度だけ停止・通知する。"""
+        with self._pipeline_error_lock:
+            if self._pipeline_error_started:
+                return
+            self._pipeline_error_started = True
+
+        # 自分自身を join できないため、現在の worker は先にループを
+        # 終了させ、停止・後始末・通知は別スレッドで行う。
+        worker = self._print_transcript
+        if worker is not None and worker is current_thread():
+            worker.stop()
+
+        def cleanup_and_notify() -> None:
+            cleanup_timed_out = self._stop()
+            if cleanup_timed_out:
+                failure_to_notify = self._make_pipeline_failure(
+                    ErrorCode.CLEANUP_TIMEOUT, "cleanup"
+                )
+            else:
+                failure_to_notify = failure
+            self._notify_pipeline_error(failure_to_notify)
+
+        Thread(
+            target=cleanup_and_notify,
+            daemon=True,
+            name=f"{self._kind}-transcription-error-cleanup",
+        ).start()
+
     # --- 内部実装 ---------------------------------------------------------
 
     def _start(self, *, device: Optional[dict]) -> None:
@@ -497,8 +558,21 @@ class _AudioDeviceSession:
         # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
         self._active_device = device
 
+        with self._pipeline_error_lock:
+            self._pipeline_error_started = False
+            self._pipeline_error_notified = False
+
+        start_failure: Optional[AudioPipelineFailure] = None
         try:
-            self._recorder = self._create_recorder(device)
+            try:
+                self._recorder = self._create_recorder(device)
+            except Exception as error:  # noqa: BLE001 - convert to safe UI error
+                start_failure = self._make_pipeline_failure(
+                    ErrorCode.AUDIO_OPEN_ERROR,
+                    "recording",
+                    error,
+                )
+                raise
 
             audio_queue = Queue(maxsize=_AUDIO_QUEUE_MAXSIZE) if "transcript" in self.features else _DiscardQueue()
             # energy_queue はメーター表示用で直近の値のみ意味を持つため、
@@ -507,45 +581,58 @@ class _AudioDeviceSession:
             energy_queue: Optional[Queue] = Queue(maxsize=1) if "energy" in self.features else None
             self._audio_queue = audio_queue
             self._recorder.recordIntoQueue(audio_queue, energy_queue)
+            if "transcript" in self.features:
+                try:
+                    self._transcriber = self._create_transcriber()
+                except Exception as error:  # noqa: BLE001 - initialization failure
+                    start_failure = self._make_pipeline_failure(
+                        ErrorCode.TRANSCRIBER_INIT_ERROR,
+                        "asr",
+                        error,
+                    )
+                    raise
         except Exception:
-            # デバイスが処理中に切断される (実機で OSError: device gone を
-            # 確認済み) 等で Recorder の生成/listener 起動が途中失敗すると、
-            # 以前は self._recorder が非 None のまま残り、reconfigure() の
-            # already_running 判定が「起動済み」と誤認してしまっていた
-            # (P0-2)。ユーザーが文字起こしを OFF→ON しても永久に復帰しない
-            # 原因だったため、自分が触った内部状態を全て「何も起動していない」
-            # 状態へ巻き戻してから再送出する。
-            #
-            # features も合わせてリセットする: reconfigure() は _start() を
-            # 呼ぶ前に self.features = new_features を代入済みだが、実際には
-            # 何も起動できていないため、ここでリセットしないと
-            # self._mic_session.features 等を直接参照する呼び出し元
-            # (例: startMicTranscript) が「起動できた」と誤認しうる。
-            self._recorder = None
-            self._transcriber = None
-            self._audio_queue = None
-            self._active_device = None
-            self.features = set()
+            # Recorder open/listener または Transcriber 初期化が失敗した場合も、
+            # 開始済みのリソースを同じ停止経路で回収してから UI へ通知する。
+            if start_failure is None:
+                start_failure = getattr(self._recorder, "device_error_info", None)
+            if start_failure is None:
+                start_failure = self._make_pipeline_failure(
+                    ErrorCode.AUDIO_READ_ERROR,
+                    "recording",
+                )
+            cleanup_timed_out = self._stop()
+            if cleanup_timed_out:
+                start_failure = self._make_pipeline_failure(ErrorCode.CLEANUP_TIMEOUT, "cleanup")
+            if start_failure is not None:
+                self._notify_pipeline_error(start_failure)
             raise
 
         if "transcript" in self.features:
-            self._transcriber = self._create_transcriber()
             transcriber = self._transcriber
             recorder = self._recorder
 
             def sendTranscript() -> None:
+                if recorder.device_error_event.is_set():
+                    failure = getattr(recorder, "device_error_info", None)
+                    recorder.device_error_event.clear()
+                    if failure is None:
+                        failure = self._make_pipeline_failure(
+                            ErrorCode.AUDIO_READ_ERROR,
+                            "recording",
+                        )
+                    self._handle_pipeline_error(failure)
+                    return
                 try:
-                    if recorder.device_error_event.is_set():
-                        recorder.device_error_event.clear()
-                        if callable(self.transcript_fnc):
-                            self.transcript_fnc({"text": False, "language": None})
-                        return
                     if self._transcribe(transcriber, audio_queue) and callable(self.transcript_fnc):
                         result = transcriber.getTranscript()
                         result["recognition_error"] = transcriber.last_recognition_error
                         self.transcript_fnc(result)
-                except Exception:
-                    errorLogging()
+                except AudioPipelineError as error:
+                    self._handle_pipeline_error(error.failure)
+                except Exception as error:  # noqa: BLE001 - fail closed at ASR boundary
+                    failure = self._make_pipeline_failure(ErrorCode.ASR_ERROR, "asr", error)
+                    self._handle_pipeline_error(failure)
 
             def endTranscript() -> None:
                 while not audio_queue.empty():
@@ -576,30 +663,71 @@ class _AudioDeviceSession:
             self._energy_progressbar.daemon = True
             self._energy_progressbar.start()
 
-    def _stop(self) -> None:
-        if isinstance(self._print_transcript, threadFnc):
-            self._print_transcript.stop()
-            self._print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
-            if self._print_transcript.is_alive():
-                printLog(f"{self._kind.capitalize()} transcription thread did not terminate within timeout")
-            self._print_transcript = None
-        if isinstance(self._energy_progressbar, threadFnc):
-            self._energy_progressbar.stop()
-            self._energy_progressbar.join()
-            self._energy_progressbar = None
-        if self._recorder is not None:
-            # _start() のロールバックにより通常はここに来ないはずだが、
-            # 万一 recordIntoQueue() が listener 起動前に失敗した Recorder
-            # (resume/stop がまだ None のまま) が渡ってきても TypeError で
-            # _stop() 自体を失敗させないよう callable() で防御する。
-            if callable(self._recorder.resume):
-                self._recorder.resume()
-            if callable(self._recorder.stop):
-                self._recorder.stop()
-            self._recorder = None
-        self._transcriber = None
-        self._audio_queue = None
-        self._active_device = None
+    def _stop(self) -> bool:
+        """停止とリソース解放を行い、完了できなければ True を返す。"""
+        cleanup_timed_out = False
+        with self._stop_lock:
+            transcript_thread = self._print_transcript
+            if isinstance(transcript_thread, threadFnc):
+                transcript_thread.stop()
+                if transcript_thread is not current_thread():
+                    transcript_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if transcript_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} transcription thread did not terminate within timeout"
+                        )
+                self._print_transcript = None
+
+            energy_thread = self._energy_progressbar
+            if isinstance(energy_thread, threadFnc):
+                energy_thread.stop()
+                if energy_thread is not current_thread():
+                    energy_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if energy_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} energy thread did not terminate within timeout"
+                        )
+                self._energy_progressbar = None
+
+            recorder = self._recorder
+            if recorder is not None:
+                # stop() 内部の listener join が予期せず長引いても、UI 操作や
+                # エラー通知を無期限にブロックしないよう別スレッドで待つ。
+                try:
+                    if callable(recorder.resume):
+                        recorder.resume()
+                except Exception:
+                    errorLogging()
+
+                if callable(recorder.stop):
+                    stop_thread = Thread(
+                        target=recorder.stop,
+                        kwargs={"wait_for_stop": True},
+                        daemon=True,
+                        name=f"{self._kind}-recorder-stop",
+                    )
+                    stop_thread.start()
+                    stop_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if stop_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} recorder did not stop within timeout"
+                        )
+                self._recorder = None
+
+            if isinstance(self._audio_queue, Queue):
+                while True:
+                    try:
+                        self._audio_queue.get_nowait()
+                    except Empty:
+                        break
+            self._transcriber = None
+            self._audio_queue = None
+            self._active_device = None
+            self.features = set()
+        return cleanup_timed_out
 
 
 class MicSession(_AudioDeviceSession):
@@ -648,6 +776,7 @@ class MicSession(_AudioDeviceSession):
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
             vad_segmented=config.MIC_ENABLE_VAD is True,
+            source_label="mic",
             **self._resolve_api_transcription_kwargs(),
         )
 
@@ -709,6 +838,7 @@ class SpeakerSession(_AudioDeviceSession):
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
             vad_segmented=config.SPEAKER_ENABLE_VAD is True,
+            source_label="speaker",
             **self._resolve_api_transcription_kwargs(),
         )
 
@@ -1786,12 +1916,14 @@ class Model:
             result = ["NoDevice"]
         return result
 
-    def startMicTranscript(self, fnc):
+    def startMicTranscript(self, fnc) -> bool:
         self.ensure_initialized()
         self._mic_session.transcript_fnc = fnc
         self._mic_session.reconfigure(transcript=True)
         if "transcript" in self._mic_session.features:
             self.changeMicTranscriptStatus()
+            return True
+        return False
 
     def resumeMicTranscript(self):
         self.ensure_initialized()
@@ -1840,10 +1972,11 @@ class Model:
         self.ensure_initialized()
         self._mic_session.reconfigure(energy=False)
 
-    def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> None:
+    def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> bool:
         self.ensure_initialized()
         self._speaker_session.transcript_fnc = fnc
         self._speaker_session.reconfigure(transcript=True)
+        return "transcript" in self._speaker_session.features
 
     def stopSpeakerTranscript(self):
         self.ensure_initialized()

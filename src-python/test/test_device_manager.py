@@ -85,6 +85,7 @@ class LifecycleLockAutoSelectRaceTests(unittest.TestCase):
         self.dm._stop_event.set()
         if self.dm.th_monitoring is not None:
             self.dm.th_monitoring.join(timeout=1)
+        self.dm._device_list_monitoring_active = False
         self.dm._mic_auto_active = False
         self.dm._speaker_auto_active = False
         self.dm._mic_endpoint_tracker = None
@@ -101,6 +102,7 @@ class LifecycleLockAutoSelectRaceTests(unittest.TestCase):
         self.dm._notify_event.set()
         if self.dm.th_monitoring is not None:
             self.dm.th_monitoring.join(timeout=2)
+        self.dm._device_list_monitoring_active = False
         self.dm._mic_auto_active = False
         self.dm._speaker_auto_active = False
         self.dm._mic_endpoint_tracker = None
@@ -204,6 +206,22 @@ class LifecycleLockAutoSelectRaceTests(unittest.TestCase):
                 "speaker がまだ active なのに monitoring が止まってしまった",
             )
             self.assertTrue(self.dm._speaker_auto_active)
+
+    def test_device_list_monitoring_stays_active_when_auto_select_is_off(self) -> None:
+        """Auto Select OFF でもデバイス一覧の再接続監視を維持する。"""
+        with patch.object(self.dm, "_startMonitoringLocked") as start_monitoring, \
+             patch.object(self.dm, "_stopMonitoringLocked") as stop_monitoring:
+            self.dm.setDeviceListMonitoringActive(True)
+            self.dm.setMicAutoActive(False)
+            self.dm.setSpeakerAutoActive(False)
+
+            self.assertGreaterEqual(start_monitoring.call_count, 1)
+            stop_monitoring.assert_not_called()
+            self.assertTrue(self.dm._device_list_monitoring_active)
+
+            self.dm.setDeviceListMonitoringActive(False)
+
+            stop_monitoring.assert_called_once_with()
 
 
 class MonitoringComRegistrationTests(unittest.TestCase):
