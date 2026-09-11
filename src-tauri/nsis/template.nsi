@@ -663,6 +663,10 @@ Section WebView2
     DetailPrint "$(installingWebview2)"
     ; $6 holds the path to the webview2 installer
     ExecWait "$6 ${WEBVIEW2INSTALLERARGS} /install" $1
+    ; The bootstrapper/offline installer is only needed for this invocation.
+    ; Remove it before handling the exit code so failure paths do not leave a
+    ; stale multi-megabyte installer in %TEMP% either.
+    Delete "$6"
     ${If} $1 == 0
       DetailPrint "$(webview2InstallSuccess)"
     ${Else}
