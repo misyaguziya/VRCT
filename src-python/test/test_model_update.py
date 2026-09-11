@@ -291,5 +291,60 @@ class TestModelUpdate(unittest.TestCase):
         os_exit.assert_called_once_with(0)
 
 
+class TestCheckSoftwareUpdatedBetaChannel(unittest.TestCase):
+    """Beta-channel latest-version detection must stay within beta releases.
+
+    GitHub's releases-list API is ordered by creation date, not by channel or
+    semver, so a stable release published after a beta one can otherwise sort
+    ahead of it and get reported to beta users as "an update is available".
+    """
+
+    def setUp(self) -> None:
+        channel_patcher = patch.object(type(config), "SELECTED_RELEASE_CHANNEL", "beta")
+        channel_patcher.start()
+        self.addCleanup(channel_patcher.stop)
+
+        version_patcher = patch.object(type(config), "VERSION", "3.5.1-beta.1")
+        version_patcher.start()
+        self.addCleanup(version_patcher.stop)
+
+    @patch("model.errorLogging")
+    @patch("model.requests_get")
+    def test_ignores_newer_stable_release_listed_before_beta(
+        self,
+        requests_get: Mock,
+        error_logging: Mock,
+    ) -> None:
+        # Creation-date order: stable 3.5.1 published after (and thus listed
+        # before) beta 3.5.1-beta.2.
+        requests_get.return_value = _make_json_response([
+            {"name": "3.5.1", "prerelease": False, "draft": False},
+            {"name": "3.5.1-beta.2", "prerelease": True, "draft": False},
+        ])
+
+        result = Model.checkSoftwareUpdated()
+
+        self.assertEqual(result["new_version"], "3.5.1-beta.2")
+        self.assertTrue(result["is_update_available"])
+        error_logging.assert_not_called()
+
+    @patch("model.errorLogging")
+    @patch("model.requests_get")
+    def test_no_update_when_only_newer_stable_exists(
+        self,
+        requests_get: Mock,
+        error_logging: Mock,
+    ) -> None:
+        requests_get.return_value = _make_json_response([
+            {"name": "3.5.1", "prerelease": False, "draft": False},
+        ])
+
+        result = Model.checkSoftwareUpdated()
+
+        self.assertFalse(result["is_update_available"])
+        self.assertIsNone(result["new_version"])
+        error_logging.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

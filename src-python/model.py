@@ -1481,9 +1481,14 @@ class Model:
         version = ""
         try:
             if config.SELECTED_RELEASE_CHANNEL == "beta":
+                # beta を使っている間は beta 同士でのみ最新判定する。
+                # ここで prerelease を絞らないと、GitHub の公開順(作成日時順)
+                # によっては後から出た stable 版が候補[0]に来てしまい、
+                # betaユーザーにstableへの「更新あり」通知が出てしまう。
                 candidates = [
                     r["name"] for r in Model._fetchGithubReleases()
                     if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                    and r.get("prerelease", False)
                 ]
                 version = candidates[0] if candidates else None
             else:
@@ -1548,9 +1553,11 @@ class Model:
                         return r
                 return None
             if config.SELECTED_RELEASE_CHANNEL == "beta":
+                # checkSoftwareUpdated() と同じ理由で prerelease のみに限定。
                 candidates = [
                     r for r in Model._fetchGithubReleases()
                     if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                    and r.get("prerelease", False)
                 ]
                 return candidates[0] if candidates else None
             response = requests_get(config.GITHUB_URL, timeout=_HTTP_TIMEOUT)
