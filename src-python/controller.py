@@ -2571,11 +2571,15 @@ class Controller:
                     spec.error_auth_invalid,
                     data=None
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
+            # SDK の例外内容には認証キーやリクエスト情報が含まれる
+            # 可能性があるため、そのまま UI へ返さない。詳細は
+            # errorLogging() で記録し、UI には認証失敗の安全な概要だけを
+            # 返す。
+            response = VRCTError.create_error_response(
+                spec.error_auth_failed,
+                data=None,
             )
         if response["status"] == 400:
             self._delTranslationEngineAuthKey(engine_key)
@@ -2620,11 +2624,13 @@ class Controller:
                     spec.error_model_invalid,
                     data=getattr(config, spec.selected_model_attr)
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=getattr(config, spec.selected_model_attr)
+            # モデル SDK の例外詳細は UI に露出させず、選択失敗として
+            # 現在値を返す。traceback は errorLogging() に残す。
+            response = VRCTError.create_error_response(
+                spec.error_model_invalid,
+                data=getattr(config, spec.selected_model_attr),
             )
         return response
 
@@ -2633,10 +2639,9 @@ class Controller:
         疎通確認処理。`connect_kwargs` は接続呼び出しに渡す追加引数
         (LMStudio: `{"base_url": config.LMSTUDIO_URL}`、Ollama: `{}`)。
 
-        NOTE: 接続には成功したがモデル一覧が空だった場合、既存実装を
-        そのまま踏襲して `raise Exception(...)` で下の except に処理させている
-        (専用のエラーコードではなく GENERAL_EXCEPTION 応答になる、既存の
-        LMStudio/Ollama の挙動と同じ)。
+        接続 SDK の例外や、接続後に利用可能なモデルが無い場合も、UI には
+        `error_connection_failed` を返す。例外の詳細は errorLogging() に
+        記録し、レスポンスには含めない。
         """
         spec = CONNECTION_PROVIDER_REGISTRY[engine_key]
         bindings = _ENGINE_MODEL_BINDINGS[engine_key]
@@ -2668,7 +2673,7 @@ class Controller:
                     spec.error_connection_failed,
                     data=False
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
             setattr(config, spec.selectable_model_list_attr, [])
@@ -2676,9 +2681,9 @@ class Controller:
             self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
             self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
             self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=False
+            response = VRCTError.create_error_response(
+                spec.error_connection_failed,
+                data=False,
             )
         return response
 
@@ -2856,7 +2861,7 @@ class Controller:
                     ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID,
                     data=config.LMSTUDIO_URL
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
             config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
@@ -2864,9 +2869,9 @@ class Controller:
             self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
             self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
             self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.LMSTUDIO_URL
+            response = VRCTError.create_error_response(
+                ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID,
+                data=config.LMSTUDIO_URL,
             )
         return response
 
@@ -3803,34 +3808,41 @@ class Controller:
         # 認証 (token) を導入済みとはいえ、同一 LAN 上の第三者からの
         # 到達性まで許してしまう。特定の LAN IP を明示的に選ぶのとは
         # リスクの性質が異なるため、他の IP 検証と分けて拒否する。
-        if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
-            response = VRCTError.create_error_response(
-                ErrorCode.VALIDATION_INVALID_IP,
-                data=config.WEBSOCKET_HOST
-            )
-        else:
-            if model.checkWebSocketServerAlive() is False:
-                config.WEBSOCKET_HOST = data
-                response = {"status":200, "result":config.WEBSOCKET_HOST}
+        try:
+            if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
+                response = VRCTError.create_error_response(
+                    ErrorCode.VALIDATION_INVALID_IP,
+                    data=config.WEBSOCKET_HOST
+                )
             else:
-                if data == config.WEBSOCKET_HOST:
-                    response = {"status":200, "result":config.WEBSOCKET_HOST}
-                elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
-                    model.stopWebSocketServer()
-                    model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                if model.checkWebSocketServerAlive() is False:
                     config.WEBSOCKET_HOST = data
-                    # The OBS overlay's HTTP server must stay bound to the
-                    # same host the WebSocket server now listens on, or the
-                    # overlay page it serves will point at a dead address.
-                    if config.OBS_BROWSER_SOURCE is True:
-                        model.stopObsBrowserSourceServer()
-                        model.startObsBrowserSourceServer(data, int(config.OBS_BROWSER_SOURCE_PORT))
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
                 else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.WEBSOCKET_HOST_INVALID,
-                        data=config.WEBSOCKET_HOST
-                    )
+                    if data == config.WEBSOCKET_HOST:
+                        response = {"status":200, "result":config.WEBSOCKET_HOST}
+                    elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
+                        model.stopWebSocketServer()
+                        model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                        config.WEBSOCKET_HOST = data
+                        # The OBS overlay's HTTP server must stay bound to the
+                        # same host the WebSocket server now listens on, or the
+                        # overlay page it serves will point at a dead address.
+                        if config.OBS_BROWSER_SOURCE is True:
+                            model.stopObsBrowserSourceServer()
+                            model.startObsBrowserSourceServer(data, int(config.OBS_BROWSER_SOURCE_PORT))
+                        response = {"status":200, "result":config.WEBSOCKET_HOST}
+                    else:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.WEBSOCKET_HOST_INVALID,
+                            data=config.WEBSOCKET_HOST
+                        )
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_HOST_INVALID,
+                data=config.WEBSOCKET_HOST,
+            )
 
         return response
 
@@ -3846,22 +3858,29 @@ class Controller:
                 custom_message="WebSocket port must be a number",
             )
 
-        if model.checkWebSocketServerAlive() is False:
-            config.WEBSOCKET_PORT = port
-            response = {"status":200, "result":config.WEBSOCKET_PORT}
-        else:
-            if port == config.WEBSOCKET_PORT:
-                return {"status":200, "result":config.WEBSOCKET_PORT}
-            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
-                model.stopWebSocketServer()
-                model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+        try:
+            if model.checkWebSocketServerAlive() is False:
                 config.WEBSOCKET_PORT = port
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
             else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
-                    data=config.WEBSOCKET_PORT
-                )
+                if port == config.WEBSOCKET_PORT:
+                    return {"status":200, "result":config.WEBSOCKET_PORT}
+                elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
+                    model.stopWebSocketServer()
+                    model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+                    config.WEBSOCKET_PORT = port
+                    response = {"status":200, "result":config.WEBSOCKET_PORT}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
+                        data=config.WEBSOCKET_PORT
+                    )
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
+                data=config.WEBSOCKET_PORT,
+            )
         return response
 
     @staticmethod
@@ -3879,18 +3898,25 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        if config.WEBSOCKET_SERVER is False:
-            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
-                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
-                config.WEBSOCKET_SERVER = True
-                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        try:
+            if config.WEBSOCKET_SERVER is False:
+                if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+                    model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+                    config.WEBSOCKET_SERVER = True
+                    response = {"status":200, "result":config.WEBSOCKET_SERVER}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+                        data=config.WEBSOCKET_SERVER
+                    )
             else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
-                    data=config.WEBSOCKET_SERVER
-                )
-        else:
-            response = {"status":200, "result":config.WEBSOCKET_SERVER}
+                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+                data=config.WEBSOCKET_SERVER,
+            )
         return response
 
     @staticmethod

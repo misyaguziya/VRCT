@@ -113,43 +113,47 @@ except Exception as e:
 
 ### 認証エラー
 - ✅ `setDeeplAuthKey` - `ErrorCode.AUTH_DEEPL_LENGTH`, `ErrorCode.AUTH_DEEPL_FAILED`
+- ✅ `setPlamoAuthKey` - `ErrorCode.AUTH_PLAMO_LENGTH`, `ErrorCode.AUTH_PLAMO_FAILED`
+- ✅ `setPlamoModel` - `ErrorCode.MODEL_PLAMO_INVALID`
+- ✅ `setGeminiAuthKey` - `ErrorCode.AUTH_GEMINI_LENGTH`, `ErrorCode.AUTH_GEMINI_FAILED`
+- ✅ `setGeminiModel` - `ErrorCode.MODEL_GEMINI_INVALID`
+- ✅ `setOpenAIAuthKey` - `ErrorCode.AUTH_OPENAI_INVALID`, `ErrorCode.AUTH_OPENAI_FAILED`
+- ✅ `setOpenAIModel` - `ErrorCode.MODEL_OPENAI_INVALID`
+- ✅ `setGroqAuthKey` - `ErrorCode.AUTH_GROQ_INVALID`, `ErrorCode.AUTH_GROQ_FAILED`
+- ✅ `setGroqModel` - `ErrorCode.MODEL_GROQ_INVALID`
+- ✅ `setOpenRouterAuthKey` - `ErrorCode.AUTH_OPENROUTER_INVALID`, `ErrorCode.AUTH_OPENROUTER_FAILED`
+- ✅ `setOpenRouterModel` - `ErrorCode.MODEL_OPENROUTER_INVALID`
+
+認証・モデル設定の SDK 例外は詳細をログへ記録し、UI には各エンジン固有の
+安全なエラーコードと概要だけを返す。
+
+### 接続エラー
+- ✅ `checkTranslatorLMStudioConnection` - `ErrorCode.CONNECTION_LMSTUDIO_FAILED`
+- ✅ `setTranslatorLMStudioURL` - `ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID`
+- ✅ `setTranslatorLMStudioModel` - `ErrorCode.MODEL_LMSTUDIO_INVALID`
+- ✅ `checkTranslatorOllamaConnection` - `ErrorCode.CONNECTION_OLLAMA_FAILED`
+- ✅ `setTranslatorOllamaModel` - `ErrorCode.MODEL_OLLAMA_INVALID`
+
+接続 SDK の例外やモデル一覧が空の場合も専用の接続エラーコードを返し、
+LMStudio URL の設定例外は URL 不正コードを返す。詳細はログにのみ記録する。
+
+### WebSocketエラー
+- ✅ `setWebSocketHost` - `ErrorCode.VALIDATION_INVALID_IP`, `ErrorCode.WEBSOCKET_HOST_INVALID`
+- ✅ `setWebSocketPort` - `ErrorCode.WEBSOCKET_PORT_INVALID`, `ErrorCode.WEBSOCKET_PORT_UNAVAILABLE`
+- ✅ `setEnableWebSocketServer` - `ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE`
+
+WebSocket の状態確認・再起動・有効化中に例外が発生した場合も、専用コードを返し、
+詳細はログにのみ記録する。
 
 ### 音声認識開始時の VRAM エラー
 - ✅ `startTranscriptionSendMessage` - `ErrorCode.TRANSCRIPTION_VRAM_MIC`
 - ✅ `startTranscriptionReceiveMessage` - `ErrorCode.TRANSCRIPTION_VRAM_SPEAKER`
 
-## 未移行の箇所（要対応）
-
-以下の箇所は同様のパターンで移行が必要です:
-
-### 認証関連
-- ⬜ `setPlamoAuthKey` - `ErrorCode.AUTH_PLAMO_LENGTH`, `ErrorCode.AUTH_PLAMO_FAILED`
-- ⬜ `setPlamoModel` - `ErrorCode.MODEL_PLAMO_INVALID`
-- ⬜ `setGeminiAuthKey` - `ErrorCode.AUTH_GEMINI_LENGTH`, `ErrorCode.AUTH_GEMINI_FAILED`
-- ⬜ `setGeminiModel` - `ErrorCode.MODEL_GEMINI_INVALID`
-- ⬜ `setOpenAIAuthKey` - `ErrorCode.AUTH_OPENAI_INVALID`, `ErrorCode.AUTH_OPENAI_FAILED`
-- ⬜ `setOpenAIModel` - `ErrorCode.MODEL_OPENAI_INVALID`
-- ⬜ `setGroqAuthKey` - `ErrorCode.AUTH_GROQ_INVALID`, `ErrorCode.AUTH_GROQ_FAILED`
-- ⬜ `setGroqModel` - `ErrorCode.MODEL_GROQ_INVALID`
-- ⬜ `setOpenRouterAuthKey` - `ErrorCode.AUTH_OPENROUTER_INVALID`, `ErrorCode.AUTH_OPENROUTER_FAILED`
-- ⬜ `setOpenRouterModel` - `ErrorCode.MODEL_OPENROUTER_INVALID`
-
-### 接続関連
-- ⬜ `checkTranslatorLMStudioConnection` - `ErrorCode.CONNECTION_LMSTUDIO_FAILED`
-- ⬜ `setTranslatorLMStudioURL` - `ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID`
-- ⬜ `setTranslatorLMStudioModel` - `ErrorCode.MODEL_LMSTUDIO_INVALID`
-- ⬜ `checkTranslatorOllamaConnection` - `ErrorCode.CONNECTION_OLLAMA_FAILED`
-- ⬜ `setTranslatorOllamaModel` - `ErrorCode.MODEL_OLLAMA_INVALID`
-
-### WebSocket関連
-- ⬜ `setWebSocketHost` - `ErrorCode.VALIDATION_INVALID_IP`, `ErrorCode.WEBSOCKET_HOST_INVALID`
-- ⬜ `setWebSocketPort` - `ErrorCode.WEBSOCKET_PORT_UNAVAILABLE`
-- ⬜ `setEnableWebSocketServer` - `ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE`
-
 ## エラーコードとエンドポイントの対応
 
-`errors.py`の`ENDPOINT_ERROR_MAPPING`に、すべてのエンドポイントとエラーコードの対応が定義されています。
-UI開発者はこのマッピングを参照して、各エンドポイントがどのようなエラーを返すか確認できます。
+エラーコードは `src-python/errors.py`、バックエンドのエンドポイントは
+`src-python/mainloop.py` / `src-python/controller.py`、UI側のエラー処理は
+`src-ui/logics/_useBackendErrorHandling.js` で確認できます。
 
 ## エラーレスポンスの構造
 
