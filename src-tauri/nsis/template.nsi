@@ -903,11 +903,16 @@ Section Install
       NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
       Pop $dl_transfer_id
       StrCpy $dl_tick 0
+      StrCpy $R4 0
       download_wait:
         Sleep 1000
         NScurl::query /ID $dl_transfer_id "@STATUS@"
         Pop $0
-        ${If} $0 != "Complete"
+        ${If} $0 == "Complete"
+          Goto single_download_done
+        ${ElseIf} $0 == "Waiting"
+        ${OrIf} $0 == "Running"
+          IntOp $R4 $R4 + 1
           IntOp $dl_tick $dl_tick + 1
           ${If} $dl_tick >= 5
             StrCpy $dl_tick 0
@@ -917,8 +922,16 @@ Section Install
             Pop $dl_xfersize
             DetailPrint "Downloading $file_name... $dl_xfersize ($dl_percent%)"
           ${EndIf}
+          ${If} $R4 >= 3600
+            DetailPrint "Download timed out"
+            Goto attempt_failed
+          ${EndIf}
           Goto download_wait
+        ${Else}
+          DetailPrint "Download stopped with status $0"
+          Goto attempt_failed
         ${EndIf}
+      single_download_done:
       NScurl::wait /ID $dl_transfer_id /END
       NScurl::query /ID $dl_transfer_id "@ERROR@"
       Pop $0
