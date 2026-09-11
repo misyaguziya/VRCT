@@ -49,6 +49,7 @@ export const ColorEntryWithSaveButton = (props) => {
     };
 
     const saveFunction = () => {
+        if (!is_valid_color) return;
         closePicker();
         props.saveFunction();
     };
