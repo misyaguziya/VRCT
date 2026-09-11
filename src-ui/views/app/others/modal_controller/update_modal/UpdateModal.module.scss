@@ -133,6 +133,9 @@
 .diff_arrow_svg_changed {
     color: var(--primary_300_color);
 }
+.diff_arrow_svg_warning {
+    color: var(--warning_color);
+}
 
 .diff_val_after {
     font-size: 1.4rem;
@@ -146,6 +149,10 @@
 .diff_val_changed {
     font-weight: 500;
     color: var(--primary_300_color);
+}
+.diff_val_warning {
+    font-weight: 500;
+    color: var(--warning_color);
 }
 
 /* Inline row warning */

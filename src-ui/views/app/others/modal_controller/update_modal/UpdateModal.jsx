@@ -277,20 +277,28 @@ const isSemverGreater = (a, b) => {
     return ap > bp;
 };
 
-const DiffRow = ({ label, before, after, is_changed, warning }) => (
+const DiffRow = ({ label, before, after, is_changed, warning, is_warning = false }) => (
     <div className={clsx(styles.diff_group, is_changed && styles.diff_group_changed)}>
         <div className={styles.diff_row}>
             <div className={styles.diff_item_label}>{label}</div>
             <div className={styles.diff_val_before}>{before}</div>
             <div className={styles.diff_arrow_container}>
                 <svg
-                    className={clsx(styles.diff_arrow_svg, is_changed && styles.diff_arrow_svg_changed)}
+                    className={clsx(
+                        styles.diff_arrow_svg,
+                        is_changed && (is_warning ? styles.diff_arrow_svg_warning : styles.diff_arrow_svg_changed)
+                    )}
                     viewBox="0 0 24 24"
                 >
                     <path fill="currentColor" d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4v-2z" />
                 </svg>
             </div>
-            <div className={clsx(styles.diff_val_after, is_changed && styles.diff_val_changed)}>
+            <div
+                className={clsx(
+                    styles.diff_val_after,
+                    is_changed && (is_warning ? styles.diff_val_warning : styles.diff_val_changed)
+                )}
+            >
                 {after}
             </div>
         </div>
@@ -391,6 +399,7 @@ const SummaryCustomDiff = ({
                 before={current_version}
                 after={target_version || "—"}
                 is_changed={is_version_changed}
+                is_warning={is_downgrade}
                 warning={warning_version}
             />
         </div>
