@@ -637,7 +637,12 @@ class _AudioDeviceSession:
             def endTranscript() -> None:
                 while not audio_queue.empty():
                     audio_queue.get()
-                self._transcriber = None
+                # A timed-out old worker may finish after reconfigure() has
+                # already installed a new transcriber. Only clear the object
+                # owned by this worker; otherwise the late cleanup can make
+                # the new transcription pipeline fail with None.
+                if self._transcriber is transcriber:
+                    self._transcriber = None
                 # 明示 gc.collect() は呼ばない: ActiveEndpointTracker が別スレッド
                 # (CoInitialize 済み apartment) で保持している comtypes の COM
                 # ポインタが、この _print_transcript スレッド (CoInitialize
