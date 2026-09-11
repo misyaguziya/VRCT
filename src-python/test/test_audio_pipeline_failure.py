@@ -24,6 +24,19 @@ class _FakeRecorder:
         self.audio_queue = audio_queue
 
 
+class _PartiallyInitializedRecorder:
+    """recordIntoQueue 失敗時の未初期化ハンドルを再現する。"""
+
+    def __init__(self) -> None:
+        self.device_error_event = threading.Event()
+        self.device_error_info = None
+        self.resume = None
+        self.stop = None
+
+    def recordIntoQueue(self, _audio_queue, _energy_queue=None) -> None:
+        raise OSError("audio listener failed")
+
+
 class _FakeTranscriber:
     last_recognition_error = False
 
@@ -45,6 +58,43 @@ class _FailingTranscriber(_FakeTranscriber):
 
 
 class TestAudioPipelineFailure(unittest.TestCase):
+    def test_recorder_creation_failure_rolls_back_and_notifies(self) -> None:
+        received = []
+        session = MicSession()
+        session.transcript_fnc = received.append
+
+        with patch.object(
+            session, "_create_recorder", side_effect=OSError("device open failed")
+        ):
+            with self.assertRaises(OSError):
+                session.reconfigure(transcript=True, device=DEVICE)
+
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]["error_code"], ErrorCode.AUDIO_OPEN_ERROR.value)
+        self.assertEqual(received[0]["stage"], "recording")
+        self.assertEqual(received[0]["source"], "mic")
+        self.assertEqual(session.features, set())
+        self.assertIsNone(session._active_device)
+        self.assertIsNone(session._recorder)
+
+    def test_record_into_queue_failure_rolls_back_partial_recorder(self) -> None:
+        recorder = _PartiallyInitializedRecorder()
+        received = []
+        session = MicSession()
+        session.transcript_fnc = received.append
+
+        with patch.object(session, "_create_recorder", return_value=recorder):
+            with self.assertRaises(OSError):
+                session.reconfigure(transcript=True, device=DEVICE)
+
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]["error_code"], ErrorCode.AUDIO_READ_ERROR.value)
+        self.assertEqual(received[0]["stage"], "recording")
+        self.assertEqual(received[0]["source"], "mic")
+        self.assertEqual(session.features, set())
+        self.assertIsNone(session._active_device)
+        self.assertIsNone(session._recorder)
+
     def test_transcriber_initialization_failure_rolls_back_and_notifies(self) -> None:
         recorder = _FakeRecorder()
         received = []
