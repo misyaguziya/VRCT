@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "마이크 디바이스를 찾지 못했습니다."
     no_device_speaker: "스피커 디바이스를 찾지 못했습니다."
+    copy_to_clipboard_failed: "클립보드에 복사하지 못했습니다."
     threshold_invalid_value: "{{min}}부터 {{max}}까지의 숫자로 설정할 수 있습니다."
     failed_download_weight_ctranslate2: "CTranslate2 모델 다운로드에 실패했습니다."
     failed_download_weight_whisper: "Whisper 모델 다운로드에 실패했습니다."

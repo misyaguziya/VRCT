@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "No mic device detected."
     no_device_speaker: "No speaker device detected."
+    copy_to_clipboard_failed: "Failed to copy to the clipboard."
     threshold_invalid_value: "You can set it with a value between {{min}} to {{max}}."
     failed_download_weight_ctranslate2: "CTranslate2 weight download error."
     failed_download_weight_whisper: "Whisper weight download error."

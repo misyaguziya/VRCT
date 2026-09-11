@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "マイクデバイスが検出されませんでした。"
     no_device_speaker: "スピーカーデバイスが検出されませんでした。"
+    copy_to_clipboard_failed: "クリップボードへのコピーに失敗しました。"
     threshold_invalid_value: "{{min}} から {{max}} までの数値で設定できます。"
     failed_download_weight_ctranslate2: "CTranslate2 モデルのダウンロードに失敗しました。"
     failed_download_weight_whisper: "Whisper モデルのダウンロードに失敗しました。"
