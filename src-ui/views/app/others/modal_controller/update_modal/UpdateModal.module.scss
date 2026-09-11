@@ -51,6 +51,32 @@
     text-align: center;
 }
 
+.install_button {
+    background-color: var(--primary_600_color);
+    color: var(--dark_basic_text_color);
+    border: none;
+    border-radius: 0.4rem;
+    padding: 1.2rem 3.2rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-top: 0.4rem;
+
+    &:hover {
+        background-color: var(--primary_500_color);
+    }
+    &:active {
+        background-color: var(--primary_700_color);
+    }
+    &:disabled {
+        background-color: var(--dark_800_color);
+        color: var(--dark_500_color);
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
 /* ===== Change preview (diff table) inside summary ===== */
 .diff_table {
     display: flex;
@@ -89,9 +115,9 @@
     &:last-child {
         border-bottom: none;
     }
-}
-.diff_group_changed {
-    background-color: rgba(255, 255, 255, 0.015);
+    &.diff_group_changed {
+        background-color: rgba(255, 255, 255, 0.015);
+    }
 }
 
 .diff_row {
@@ -129,12 +155,13 @@
     height: 2rem;
     color: var(--dark_600_color);
     flex-shrink: 0;
-}
-.diff_arrow_svg_changed {
-    color: var(--primary_300_color);
-}
-.diff_arrow_svg_warning {
-    color: var(--warning_color);
+
+    &.diff_arrow_svg_changed {
+        color: var(--primary_300_color);
+    }
+    &.diff_arrow_svg_warning {
+        color: var(--warning_color);
+    }
 }
 
 .diff_val_after {
@@ -145,14 +172,15 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.diff_val_changed {
-    font-weight: 500;
-    color: var(--primary_300_color);
-}
-.diff_val_warning {
-    font-weight: 500;
-    color: var(--warning_color);
+
+    &.diff_val_changed {
+        font-weight: 500;
+        color: var(--primary_300_color);
+    }
+    &.diff_val_warning {
+        font-weight: 500;
+        color: var(--warning_color);
+    }
 }
 
 /* Inline row warning */
@@ -176,40 +204,18 @@
     overflow-wrap: break-word;
 }
 
-/* ===== Warning list (matches LabelComponent .warning_item) ===== */
-.warnings_section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    padding: 0 0.4rem;
-}
-.warning_item {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-}
-.warning_svg {
-    width: 1.4rem;
-    color: var(--warning_color);
-    flex-shrink: 0;
-}
-.warning_text {
-    font-size: 1.2rem;
-    color: var(--warning_color);
-    overflow-wrap: break-word;
-}
-
 /* ===== Subsection head with inline refresh button ===== */
 .subsection_head {
     display: flex;
     align-items: center;
     gap: 1.2rem;
-    /* SectionLabelComponent brings its own padding-bottom: 2rem so no extra gap here */
+
+    > :first-child {
+        flex-grow: 1;
+        min-width: 0;
+    }
 }
-.subsection_head > :first-child {
-    flex-grow: 1;
-    min-width: 0;
-}
+
 .refresh_button {
     flex-shrink: 0;
     display: inline-flex;
@@ -223,10 +229,11 @@
     font-size: 1.2rem;
     cursor: pointer;
     margin-bottom: 2rem; /* align with SectionLabelComponent's padding-bottom */
-}
-.refresh_button:hover {
-    color: var(--dark_basic_text_color);
-    border-color: var(--dark_600_color);
+
+    &:hover {
+        color: var(--dark_basic_text_color);
+        border-color: var(--dark_600_color);
+    }
 }
 .refresh_svg {
     width: 1.4rem;
@@ -247,34 +254,8 @@
     padding: 2rem;
     gap: 2rem;
     border-bottom: 0.1rem solid var(--dark_800_color);
-}
-.row:last-child {
-    border-bottom: none;
-}
 
-/* ===== Buttons ===== */
-/* Primary */
-.install_button {
-    background-color: var(--primary_600_color);
-    color: var(--dark_basic_text_color);
-    border: none;
-    border-radius: 0.4rem;
-    padding: 1.2rem 3.2rem;
-    font-size: 1.6rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    margin-top: 0.4rem;
-}
-.install_button:hover {
-    background-color: var(--primary_500_color);
-}
-.install_button:active {
-    background-color: var(--primary_700_color);
-}
-.install_button:disabled {
-    background-color: var(--dark_800_color);
-    color: var(--dark_500_color);
-    opacity: 0.6;
-    cursor: not-allowed;
+    &:last-child {
+        border-bottom: none;
+    }
 }
