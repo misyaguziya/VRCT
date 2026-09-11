@@ -2972,7 +2972,10 @@ class Controller:
         try:
             data = str(data).strip()
             if len(data) == 0:
-                data = "https://api.openai.com/v1"
+                return VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID,
+                    data=config.OPENAI_COMPATIBLE_URL
+                )
 
             auth_key = config.AUTH_KEYS[translator_name]
 

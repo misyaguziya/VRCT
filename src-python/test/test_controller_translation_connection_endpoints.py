@@ -262,6 +262,39 @@ class LMStudioUrlEndpointTests(unittest.TestCase):
         mock_error_logging.assert_called_once()
 
 
+class OpenAICompatibleUrlEndpointTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._orig_url = config.OPENAI_COMPATIBLE_URL
+        self._orig_auth_keys = dict(config.AUTH_KEYS)
+        self.controller = Controller.__new__(Controller)
+
+    def tearDown(self) -> None:
+        config.OPENAI_COMPATIBLE_URL = self._orig_url
+        config.AUTH_KEYS = self._orig_auth_keys
+
+    @patch("controller.model")
+    def test_empty_url_returns_invalid_url_error_without_overwriting_current_url(
+        self, mock_model
+    ) -> None:
+        current_url = "http://localhost:8000/v1"
+        config.OPENAI_COMPATIBLE_URL = current_url
+        config.AUTH_KEYS = {
+            **config.AUTH_KEYS,
+            "OpenAI_Compatible": "test-auth-key",
+        }
+
+        response = self.controller.setOpenAICompatibleURL("   ")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID.value,
+        )
+        self.assertEqual(response["result"]["data"], current_url)
+        self.assertEqual(config.OPENAI_COMPATIBLE_URL, current_url)
+        mock_model.authenticationTranslatorOpenAICompatibleAuthKey.assert_not_called()
+
+
 class OllamaConnectionEndpointTests(_ConnectionEndpointTestMixin, unittest.TestCase):
     ENGINE_KEY = "Ollama"
     CHECK_METHOD = "checkTranslatorOllamaConnection"
