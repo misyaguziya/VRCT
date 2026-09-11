@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import time
 from collections import deque
-from ctypes import POINTER, cast
 from threading import Event, Lock, Thread
 from typing import Any, Callable, NamedTuple, Optional
 
@@ -58,6 +57,7 @@ except Exception:  # pragma: no cover - Windows/pycaw が無い環境
     comtypes = None  # type: ignore
     _PYCAW_AVAILABLE = False
 
+from errors import ErrorCode, report_error_code
 from utils import errorLogging, printLog
 
 
@@ -130,6 +130,12 @@ class ActiveEndpointTracker:
 
         self._stop_event: Event = Event()
         self._thread: Optional[Thread] = None
+        self._thread_lock: Lock = Lock()
+        # 初期状態 (未起動) は停止済みとして扱う。stop() がタイムアウト
+        # した場合、DeviceManager はこの Event で COM apartment の終了を
+        # 待ってから tracker を再起動する。
+        self._stopped_event: Event = Event()
+        self._stopped_event.set()
         self._on_change_cb: Optional[Callable[[Optional[str]], None]] = None
 
         # 「現在アクティブと判定されているエンドポイント」の FriendlyName
@@ -157,44 +163,79 @@ class ActiveEndpointTracker:
         with self._lock:
             return self._current_endpoint_name
 
+    def is_running(self) -> bool:
+        """tracker の監視スレッドがまだ生存しているかを返す。"""
+        with self._thread_lock:
+            return self._thread is not None and self._thread.is_alive()
+
+    def is_stop_requested(self) -> bool:
+        """停止要求済みかを返す。再起動延期のログ判定に使用する。"""
+        return self._stop_event.is_set()
+
+    def wait_until_stopped(self, timeout: Optional[float] = None) -> bool:
+        """監視スレッドと COM の後始末が完了するまで待つ。"""
+        return self._stopped_event.wait(timeout=timeout)
+
     def start(self) -> None:
         if not _PYCAW_AVAILABLE:
             return
-        if self._thread is not None and self._thread.is_alive():
-            return
-        self._stop_event.clear()
-        self._paused.set()  # 開始時は実行可状態
-        self._thread = Thread(target=self._run, daemon=True)
-        self._thread.start()
+        with self._thread_lock:
+            # stop() が join timeout で戻った場合も、旧スレッドが生きて
+            # いる間は同じ tracker の再起動を拒否する。これにより COM
+            # apartment が二重に稼働することを防ぐ。
+            if self._thread is not None and self._thread.is_alive():
+                return
+            self._stop_event.clear()
+            self._paused.set()  # 開始時は実行可状態
+            self._stopped_event.clear()
+            self._thread = Thread(target=self._run, daemon=True)
+            self._thread.start()
 
-    def stop(self) -> None:
-        self._stop_event.set()
-        self._paused.set()  # pause 中でも wait を解いて即抜けさせる
-        if self._thread is not None:
+    def stop(self) -> bool:
+        """tracker を停止し、COM の後始末まで完了したかを返す。"""
+        with self._thread_lock:
+            thread = self._thread
+            self._stop_event.set()
+            self._paused.set()  # pause 中でも wait を解いて即抜けさせる
+
+        if thread is None:
+            return True
+
+        try:
+            thread.join(timeout=self.STOP_JOIN_TIMEOUT_SEC)
+        except Exception:
+            # join 自体が失敗した場合も「停止完了」とは扱わない。
+            thread_is_alive = True
+        else:
             try:
-                self._thread.join(timeout=self.STOP_JOIN_TIMEOUT_SEC)
+                thread_is_alive = thread.is_alive()
             except Exception:
-                pass
-            if self._thread.is_alive():
-                # スレッドが時間内に終わらなかった場合、_run() の finally
-                # (CoUninitialize と _meter_cache.clear()) がいつ実行される
-                # か分からないまま呼び出し元に制御を返すことになる。COM
-                # ポインタを保持したまま参照が破棄されると、GC が別スレッド
-                # (かつ CoUninitialize 済み) で __del__ を実行し、
-                # access violation を起こしうる (実機で確認済みの経路)。
-                # 完全な防止は「tracker スレッドが終わるまで待つ」以外に
-                # 無いため、ここでは可視化のみ行う: 発生頻度が分かれば
-                # STOP_JOIN_TIMEOUT_SEC の再調整や設計変更の判断材料になる。
-                printLog(
-                    f"ActiveEndpointTracker({self._flow}): stop() timed out after "
-                    f"{self.STOP_JOIN_TIMEOUT_SEC}s; tracker thread is still running "
-                    "(likely blocked in a COM call). COM cleanup will happen "
-                    "whenever it eventually returns, if ever."
-                )
+                thread_is_alive = True
+
+        if thread_is_alive:
+            # スレッドが時間内に終わらなかった場合、_run() の finally
+            # (CoUninitialize と _meter_cache.clear()) がいつ実行される
+            # か分からないまま呼び出し元に制御を返すことになる。COM
+            # ポインタを保持したまま参照が破棄されると、GC が別スレッド
+            # (かつ CoUninitialize 済み) で __del__ を実行し、
+            # access violation を起こしうる (実機で確認済みの経路)。
+            # 完全な防止は「tracker スレッドが終わるまで待つ」以外に
+            # 無いため、ここでは可視化のみ行う: 発生頻度が分かれば
+            # STOP_JOIN_TIMEOUT_SEC の再調整や設計変更の判断材料になる。
+            printLog(
+                f"ActiveEndpointTracker({self._flow}): stop() timed out after "
+                f"{self.STOP_JOIN_TIMEOUT_SEC}s; tracker thread is still running "
+                "(likely blocked in a COM call). COM cleanup will happen "
+                "whenever it eventually returns, if ever."
+            )
+            report_error_code(ErrorCode.AUDIO_TRACKER_STOP_TIMEOUT.value)
+            return False
+
         # cache のクリアは tracker スレッド自身が _run() の finally で行う。
         # ここで外部スレッドから clear すると、join が timeout した (tracker
         # がまだ COM 呼び出しで滞留) 場合に dict の並行変更で RuntimeError
         # になり得る。ここではリファレンス解放は GC に任せる。
+        return True
 
     def pause(self) -> None:
         """polling を一時停止する。Recorder の open/close 中に呼び、
@@ -210,31 +251,35 @@ class ActiveEndpointTracker:
 
     def _run(self) -> None:
         try:
-            comtypes.CoInitialize()
-        except Exception:
-            errorLogging()
-            return
-        try:
-            while not self._stop_event.is_set():
-                # pause 中は _paused が set されるまで待つ (stop でも解ける)
-                self._paused.wait()
-                if self._stop_event.is_set():
-                    break
-                try:
-                    self._poll_once()
-                except Exception:
-                    errorLogging()
-                # stop_event でも即抜けできるよう wait を使う
-                if self._stop_event.wait(timeout=self.POLL_INTERVAL_SEC):
-                    break
-        finally:
-            # cache のクリアは tracker スレッド自身で行う (外部 stop() から
-            # は触らない。詳細は stop() のコメント参照)。
-            self._meter_cache.clear()
             try:
-                comtypes.CoUninitialize()
+                comtypes.CoInitialize()
             except Exception:
-                pass
+                errorLogging()
+            else:
+                try:
+                    while not self._stop_event.is_set():
+                        # pause 中は _paused が set されるまで待つ (stop でも解ける)
+                        self._paused.wait()
+                        if self._stop_event.is_set():
+                            break
+                        try:
+                            self._poll_once()
+                        except Exception:
+                            errorLogging()
+                        # stop_event でも即抜けできるよう wait を使う
+                        if self._stop_event.wait(timeout=self.POLL_INTERVAL_SEC):
+                            break
+                finally:
+                    # cache のクリアは tracker スレッド自身で行う (外部 stop() から
+                    # は触らない。詳細は stop() のコメント参照)。
+                    self._meter_cache.clear()
+                    try:
+                        comtypes.CoUninitialize()
+                    except Exception:
+                        pass
+        finally:
+            # CoUninitialize まで終わった後でのみ再起動待ちを解除する。
+            self._stopped_event.set()
 
     def _poll_once(self) -> None:
         now = time.monotonic()
@@ -290,7 +335,13 @@ class ActiveEndpointTracker:
                     activated = dev.Activate(
                         IAudioMeterInformation._iid_, CLSCTX_ALL, None
                     )
-                    meter = cast(activated, POINTER(IAudioMeterInformation))
+                    # Activate() は POINTER(IUnknown) を返す。ctypes.cast() で
+                    # IAudioMeterInformation に見せかけるだけだと、元の
+                    # activated がスコープを抜けた時点で所有していた COM
+                    # 参照が解放され、cache 内の meter が dangling pointer に
+                    # なる。QueryInterface() で独立した参照を取得し、
+                    # tracker スレッド内で同じ COM apartment に保持する。
+                    meter = activated.QueryInterface(IAudioMeterInformation)
                     audio_dev = AudioUtilities.CreateDevice(dev)
                     entry = _MeterEntry(name=audio_dev.FriendlyName, meter=meter)
                     self._meter_cache[endpoint_id] = entry
@@ -386,4 +437,3 @@ class ActiveEndpointTracker:
         # 差が閾値未満なら候補をリセット
         self._switch_candidate = None
         return selected
-

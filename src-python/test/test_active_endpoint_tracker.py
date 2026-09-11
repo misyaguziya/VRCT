@@ -94,7 +94,7 @@ class TestMeterCacheManagement(unittest.TestCase):
 
     def _install_stubs(self, tracker: ActiveEndpointTracker, devices: list) -> None:
         """`_enum_active_devices` を devices に、`_MeterEntry` 生成に必要な
-        Activate / CreateDevice.FriendlyName / cast をパッチする。"""
+        Activate / QueryInterface / CreateDevice.FriendlyName をパッチする。"""
         tracker._enum_active_devices = lambda: [(d.GetId(), d) for d in devices]
 
         def fake_activate(iid, ctx, params):
@@ -103,7 +103,10 @@ class TestMeterCacheManagement(unittest.TestCase):
             raise AssertionError("shouldn't reach top-level fake_activate")
 
         for d in devices:
-            d.Activate.side_effect = lambda iid, ctx, params, meter=d._meter_for_test: meter
+            activated = MagicMock(name=f"activated[{d.GetId()}]")
+            activated.QueryInterface.return_value = d._meter_for_test
+            d._activated_for_test = activated
+            d.Activate.side_effect = lambda iid, ctx, params, activated=activated: activated
 
     def test_second_poll_reuses_cached_meter(self) -> None:
         """同一 endpoint への 2 回目 poll では Activate 再発行されない。
@@ -116,9 +119,10 @@ class TestMeterCacheManagement(unittest.TestCase):
         with patch(
             "active_endpoint_tracker.AudioUtilities.CreateDevice",
             return_value=MagicMock(FriendlyName="Speaker A"),
-        ), patch("active_endpoint_tracker.cast", side_effect=lambda x, _t: x):
+        ):
             tracker._collect_peaks_locked()
             self.assertEqual(dev_a.Activate.call_count, 1)
+            dev_a._activated_for_test.QueryInterface.assert_called_once()
             self.assertIn("id_A", tracker._meter_cache)
 
             tracker._collect_peaks_locked()
@@ -133,7 +137,7 @@ class TestMeterCacheManagement(unittest.TestCase):
         with patch(
             "active_endpoint_tracker.AudioUtilities.CreateDevice",
             side_effect=lambda d: MagicMock(FriendlyName=d._friendly_name),
-        ), patch("active_endpoint_tracker.cast", side_effect=lambda x, _t: x):
+        ):
             self._install_stubs(tracker, [dev_a, dev_b])
             tracker._collect_peaks_locked()
             self.assertEqual(set(tracker._meter_cache.keys()), {"id_A", "id_B"})
@@ -152,7 +156,7 @@ class TestMeterCacheManagement(unittest.TestCase):
         with patch(
             "active_endpoint_tracker.AudioUtilities.CreateDevice",
             return_value=MagicMock(FriendlyName="Speaker A"),
-        ), patch("active_endpoint_tracker.cast", side_effect=lambda x, _t: x):
+        ):
             self._install_stubs(tracker, [dev_a])
             tracker._collect_peaks_locked()
             entry_first = tracker._meter_cache["id_A"]
@@ -170,7 +174,7 @@ class TestMeterCacheManagement(unittest.TestCase):
         with patch(
             "active_endpoint_tracker.AudioUtilities.CreateDevice",
             return_value=MagicMock(FriendlyName="Speaker A"),
-        ), patch("active_endpoint_tracker.cast", side_effect=lambda x, _t: x):
+        ):
             self._install_stubs(tracker, [dev_a])
             tracker._collect_peaks_locked()
             # 次の GetPeakValue で失敗するように差し替え
@@ -190,7 +194,8 @@ class TestStopTimeout(unittest.TestCase):
     printLog で警告することを保証する。
     """
 
-    def test_logs_warning_when_thread_does_not_stop_in_time(self) -> None:
+    @patch("active_endpoint_tracker.report_error_code")
+    def test_logs_warning_when_thread_does_not_stop_in_time(self, mock_report_error) -> None:
         tracker = ActiveEndpointTracker("capture")
         stuck_thread = MagicMock()
         stuck_thread.is_alive.return_value = True
@@ -198,11 +203,13 @@ class TestStopTimeout(unittest.TestCase):
 
         with patch.object(ActiveEndpointTracker, "STOP_JOIN_TIMEOUT_SEC", 0.01):
             with patch("active_endpoint_tracker.printLog") as mock_print_log:
-                tracker.stop()
+                stopped = tracker.stop()
 
         stuck_thread.join.assert_called_once_with(timeout=0.01)
         mock_print_log.assert_called_once()
         self.assertIn("timed out", mock_print_log.call_args.args[0])
+        mock_report_error.assert_called_once_with("AUDIO_TRACKER_STOP_TIMEOUT")
+        self.assertFalse(stopped)
 
     def test_no_warning_when_thread_stops_in_time(self) -> None:
         tracker = ActiveEndpointTracker("capture")
@@ -211,7 +218,7 @@ class TestStopTimeout(unittest.TestCase):
         tracker._thread = finished_thread
 
         with patch("active_endpoint_tracker.printLog") as mock_print_log:
-            tracker.stop()
+            self.assertTrue(tracker.stop())
 
         mock_print_log.assert_not_called()
 
