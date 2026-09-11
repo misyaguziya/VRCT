@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 
-import { useOpenFolder } from "@logics_common";
+import { useNotificationStatus, useOpenFolder } from "@logics_common";
 import {
     useAdvancedSettings,
     useSaveButtonLogic,
@@ -188,6 +188,7 @@ const WebsocketPortContainer = () => {
 
 const WebsocketUrlContainer = () => {
     const { t } = useI18n();
+    const { showNotification_Error } = useNotificationStatus();
     const { currentWebsocketHost, currentWebsocketPort, currentWebsocketAuthToken } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
@@ -208,6 +209,7 @@ const WebsocketUrlContainer = () => {
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
             onclickFunction={copyUrlToClipboard}
+            onError={() => showNotification_Error(t("common_error.copy_to_clipboard_failed"))}
         />
     );
 };
@@ -248,6 +250,7 @@ const EnableObsBrowserSourceContainer = () => {
 
 const ObsBrowserSourceUrlContainer = () => {
     const { t } = useI18n();
+    const { showNotification_Error } = useNotificationStatus();
     const { currentWebsocketHost, currentObsBrowserSourcePort } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
@@ -265,6 +268,7 @@ const ObsBrowserSourceUrlContainer = () => {
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
             onclickFunction={copyUrlToClipboard}
+            onError={() => showNotification_Error(t("common_error.copy_to_clipboard_failed"))}
         />
     );
 };

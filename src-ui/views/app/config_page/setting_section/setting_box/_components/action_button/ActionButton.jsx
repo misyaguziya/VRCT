@@ -7,6 +7,7 @@ export const ActionButton = ({
     ClickedIconComponent,
     clicked_duration,
     onclickFunction,
+    onError,
 }) => {
     const [is_clicked, setIsClicked] = useState(false);
     const timeout_id_ref = useRef(null);
@@ -21,7 +22,9 @@ export const ActionButton = ({
         if (is_clicked) return;
         try {
             await onclickFunction?.();
-        } catch {
+        } catch (error) {
+            console.error("[ActionButton] action failed", error);
+            onError?.(error);
             return;
         }
         if (!ClickedIconComponent || !clicked_duration) return;
