@@ -225,6 +225,9 @@ class DeviceManager:
         # 対称性のためフィールドは残す。
         self._mic_endpoint_tracker: Optional[ActiveEndpointTracker] = None
         self._speaker_endpoint_tracker: Optional[ActiveEndpointTracker] = None
+        # stop() が COM 呼び出しの滞留でタイムアウトした場合、旧 tracker の
+        # apartment 終了を待ってから再起動するための回収スレッド。
+        self._speaker_endpoint_tracker_reaper: Optional[Thread] = None
 
         self._initialized = True
 
@@ -589,7 +592,20 @@ class DeviceManager:
     def _startSpeakerEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。"""
         if self._speaker_endpoint_tracker is not None:
-            return
+            tracker = self._speaker_endpoint_tracker
+            is_running = getattr(tracker, "is_running", None)
+            # 古いテスト用スタブなどが is_running() を持たない場合は、
+            # 既存 tracker があること自体を起動済みとして扱う。
+            if not callable(is_running) or is_running():
+                is_stop_requested = getattr(tracker, "is_stop_requested", None)
+                if callable(is_stop_requested) and is_stop_requested():
+                    printLog(
+                        "DeviceManager: speaker endpoint tracker restart deferred "
+                        "until the previous tracker thread has stopped."
+                    )
+                return
+            # timeout 後に保持していた tracker の COM cleanup が完了済み。
+            self._speaker_endpoint_tracker = None
         tracker = ActiveEndpointTracker("render", com_lock=pyaudio_op_lock)
         tracker.set_on_change_callback(self._onActiveSpeakerEndpointChanged)
         tracker.start()
@@ -598,9 +614,45 @@ class DeviceManager:
     def _stopSpeakerEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。"""
         tracker = self._speaker_endpoint_tracker
-        self._speaker_endpoint_tracker = None
         if tracker is not None:
-            tracker.stop()
+            stopped = tracker.stop()
+            if stopped is False:
+                # 旧 tracker を参照し続けることで、stop timeout 後の再ONで
+                # 新しい COM tracker が並行起動することを防ぐ。旧スレッドの
+                # 終了後、Auto Select がまだ ON なら一度だけ再起動する。
+                self._scheduleSpeakerEndpointTrackerReaperLocked(tracker)
+            else:
+                self._speaker_endpoint_tracker = None
+
+    def _scheduleSpeakerEndpointTrackerReaperLocked(
+        self, tracker: ActiveEndpointTracker
+    ) -> None:
+        """_lifecycle_lock を保持したまま、tracker の終了待ちを予約する。"""
+        reaper = self._speaker_endpoint_tracker_reaper
+        if reaper is not None and reaper.is_alive():
+            return
+
+        def reap() -> None:
+            wait_until_stopped = getattr(tracker, "wait_until_stopped", None)
+            if not callable(wait_until_stopped):
+                # 実装済み tracker では必ず存在する。互換スタブで存在しない
+                # 場合は、再起動を許可せず旧参照を保持したまま安全側に倒す。
+                return
+            wait_until_stopped()
+            with self._lifecycle_lock:
+                if self._speaker_endpoint_tracker is not tracker:
+                    return
+                self._speaker_endpoint_tracker = None
+                self._speaker_endpoint_tracker_reaper = None
+                if self._speaker_auto_active:
+                    self._startSpeakerEndpointTrackerLocked()
+
+        self._speaker_endpoint_tracker_reaper = Thread(
+            target=reap,
+            daemon=True,
+            name="speaker_endpoint_tracker_reaper",
+        )
+        self._speaker_endpoint_tracker_reaper.start()
 
     def pauseMicEndpointTracker(self) -> None:
         """外部から tracker を一時停止し、進行中の COM 呼び出しが

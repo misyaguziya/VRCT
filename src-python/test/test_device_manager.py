@@ -51,11 +51,14 @@ class _BlockingTracker:
 
     instances = []
     start_delay_sec = 0.1
+    stop_timeout = False
 
     def __init__(self, flow, com_lock=None):
         self.flow = flow
         self.started = False
         self.stopped = False
+        self.running = False
+        self._stop_released = threading.Event()
         _BlockingTracker.instances.append(self)
 
     def set_on_change_callback(self, cb):
@@ -64,9 +67,27 @@ class _BlockingTracker:
     def start(self):
         time.sleep(self.start_delay_sec)
         self.started = True
+        self.running = True
 
     def stop(self):
         self.stopped = True
+        if self.stop_timeout:
+            return False
+        self.running = False
+        self._stop_released.set()
+        return True
+
+    def is_running(self):
+        return self.running
+
+    def is_stop_requested(self):
+        return self.stop_timeout and self.stopped
+
+    def wait_until_stopped(self, timeout=None):
+        if self.stop_timeout:
+            self._stop_released.wait(timeout=timeout)
+        self.running = False
+        return True
 
     def pause(self):
         pass
@@ -92,6 +113,8 @@ class LifecycleLockAutoSelectRaceTests(unittest.TestCase):
         self.dm._speaker_endpoint_tracker = None
         _BlockingTracker.instances.clear()
         _BlockingTracker.start_delay_sec = 0.1
+        _BlockingTracker.stop_timeout = False
+        self.dm._speaker_endpoint_tracker_reaper = None
 
         self._tracker_patch = patch.object(device_manager_module, "ActiveEndpointTracker", _BlockingTracker)
         self._tracker_patch.start()
@@ -107,6 +130,7 @@ class LifecycleLockAutoSelectRaceTests(unittest.TestCase):
         self.dm._speaker_auto_active = False
         self.dm._mic_endpoint_tracker = None
         self.dm._speaker_endpoint_tracker = None
+        self.dm._speaker_endpoint_tracker_reaper = None
 
     def test_concurrent_enable_does_not_start_two_monitoring_threads(self) -> None:
         # monitoring() 自体を、is_alive() が競合窓の間ずっと True であり
@@ -190,6 +214,35 @@ class LifecycleLockAutoSelectRaceTests(unittest.TestCase):
 
         started = [t for t in _BlockingTracker.instances if t.started]
         self.assertEqual(len(started), 1, f"speaker tracker が {len(started)} 個起動している (二重起動)")
+
+    def test_stop_timeout_blocks_parallel_tracker_and_restarts_after_cleanup(self) -> None:
+        """旧 tracker の COM cleanup 前に新 tracker を並行起動しない。"""
+        _BlockingTracker.stop_timeout = True
+        with patch.object(device_manager_module.DeviceManager, "monitoring", lambda self: None):
+            self.dm.setSpeakerAutoActive(True)
+            first = self.dm._speaker_endpoint_tracker
+            self.assertIsNotNone(first)
+
+            self.dm.setSpeakerAutoActive(False)
+            self.assertIs(self.dm._speaker_endpoint_tracker, first)
+
+            # 旧 tracker がまだ生きている間の再 ON は新規生成しない。
+            self.dm.setSpeakerAutoActive(True)
+            self.assertEqual(len(_BlockingTracker.instances), 1)
+
+            # COM cleanup 完了後は、ON 状態を維持していれば一度だけ再起動する。
+            first._stop_released.set()
+            deadline = time.monotonic() + 2
+            while len(_BlockingTracker.instances) < 2 and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertEqual(
+                len(_BlockingTracker.instances),
+                2,
+                "旧 tracker の終了後に新 tracker が再起動されなかった",
+            )
+
+        # 後始末用の新 tracker は通常停止に戻してリークさせない。
+        _BlockingTracker.stop_timeout = False
 
     def test_disable_one_side_while_other_stays_active_does_not_stop_monitoring(self) -> None:
         with patch.object(device_manager_module.DeviceManager, "monitoring", lambda self: None):

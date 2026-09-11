@@ -30,6 +30,17 @@ def _notify_error_hooks(error_code: str) -> None:
             pass
 
 
+def report_error_code(error_code: str) -> None:
+    """UI 応答を生成せず、登録済みのエラー報告フックだけを呼ぶ。
+
+    デバイス tracker の後始末タイムアウトのように、ユーザー操作を要求する
+    endpoint エラーではないが telemetry で発生頻度を把握したい内部状態に
+    使用する。フックが未登録でも安全に no-op になる。
+    """
+    if error_code:
+        _notify_error_hooks(str(error_code))
+
+
 class ErrorCode(str, Enum):
     """エラーコード定数
     
@@ -50,6 +61,7 @@ class ErrorCode(str, Enum):
     TRANSCRIBER_INIT_ERROR = "TRANSCRIBER_INIT_ERROR"
     ASR_ERROR = "ASR_ERROR"
     CLEANUP_TIMEOUT = "CLEANUP_TIMEOUT"
+    AUDIO_TRACKER_STOP_TIMEOUT = "AUDIO_TRACKER_STOP_TIMEOUT"
     
     # ============================================================================
     # 翻訳関連エラー (TRANSLATION_*)
@@ -278,6 +290,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "message": "Audio transcription cleanup timed out",
         "severity": "error",
         "user_action_required": True,
+    },
+    ErrorCode.AUDIO_TRACKER_STOP_TIMEOUT: {
+        "category": ErrorCategory.DEVICE,
+        "message": "Audio endpoint tracker cleanup timed out",
+        "severity": "warning",
+        "user_action_required": False,
     },
     
     # 翻訳エラー
