@@ -28,8 +28,8 @@
     border-radius: 0.8rem;
 }
 .summary_loader {
-    @include loader(2rem, 0.2rem, left, 50%);
     left: 50%;
+    @include loader(2rem, 0.2rem, left, 50%);
 }
 
 /* Up-to-date: left large checkmark + right version/desc */
