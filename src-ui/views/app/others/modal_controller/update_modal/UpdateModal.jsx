@@ -59,10 +59,10 @@ export const UpdateModal = () => {
         filtered_releases.forEach((release, index) => {
             const parts = [release.version];
             if (release.is_prerelease) {
-                parts.push(`(${t("update_modal.beta_suffix")})`);
+                parts.push(`(${t("update_modal.channel_beta")})`);
             }
             if (index === 0) {
-                parts.push(`- ${t("update_modal.latest_suffix")}`);
+                parts.push(`- ${t("update_modal.latest_label")}`);
             }
             result[release.version] = parts.join(" ");
         });
@@ -235,23 +235,22 @@ const UpdateSummary = ({ summary_mode, ...props }) => {
 const SummaryUpToDate = ({ current_version, current_channel }) => {
     const { t } = useI18n();
     return (
-        <>
-            <div className={styles.status_badge}>
-                <CheckMarkSvg className={styles.status_badge_svg} />
-                <span>{t("update_modal.summary_up_to_date")}</span>
+        <div className={styles.up_to_date_layout}>
+            <CheckMarkSvg className={styles.up_to_date_check_svg} />
+            <div className={styles.up_to_date_text}>
+                <div className={styles.up_to_date_version}>
+                    {current_version}
+                    <span className={styles.up_to_date_channel}>
+                        {current_channel === "beta"
+                            ? t("update_modal.channel_beta")
+                            : t("update_modal.channel_stable")}
+                    </span>
+                </div>
+                <div className={styles.up_to_date_desc}>
+                    {t("update_modal.summary_up_to_date_desc")}
+                </div>
             </div>
-            <div className={styles.summary_headline}>
-                {current_version}
-                <span className={styles.summary_headline_sub}>
-                    {current_channel === "beta"
-                        ? t("update_modal.channel_beta")
-                        : t("update_modal.channel_stable")}
-                </span>
-            </div>
-            <div className={styles.summary_current}>
-                {t("update_modal.summary_up_to_date_desc")}
-            </div>
-        </>
+        </div>
     );
 };
 
@@ -324,9 +323,12 @@ const SummaryCustomDiff = ({
             : null;
 
     const warning_channel = is_channel_changed
-        ? target_channel === "beta"
-            ? t("update_modal.warn_switch_to_beta")
-            : t("update_modal.warn_switch_to_stable")
+        ? t("update_modal.warn_switch_channel", {
+            channel:
+                target_channel === "beta"
+                    ? t("update_modal.channel_beta")
+                    : t("update_modal.channel_stable"),
+        })
         : null;
 
     const warning_version = is_downgrade
