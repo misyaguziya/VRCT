@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@useI18n";
 import clsx from "clsx";
-import styles from "./UpdateModal.module.scss";
+import styles from "./Updater.module.scss";
 
 import {
     useComputeMode,
@@ -17,13 +17,13 @@ import {
     LabelComponent,
     RadioButton,
     DropdownMenu,
-} from "../../../config_page/setting_section/setting_box/_components";
+} from "../_components";
 
 import WarningSvg from "@images/warning.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 import RefreshSvg from "@images/refresh.svg?react";
 
-export const UpdateModal = () => {
+export const Updater = () => {
     const { t } = useI18n();
 
     const { currentSoftwareVersion, currentLatestSoftwareVersionInfo } = useSoftwareVersion();
@@ -130,7 +130,7 @@ export const UpdateModal = () => {
     const onClickRefresh = () => getAvailableReleases();
 
     return (
-        <div className={styles.modal_body}>
+        <div className={styles.container}>
             <SectionLabelComponent label={t("update_modal.title")} />
 
             {/* Update Summary */}
