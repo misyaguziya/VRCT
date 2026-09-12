@@ -156,6 +156,7 @@ export const Updater = () => {
             <div className={styles.summary_container}>
                 <UpdateSummary
                     summary_mode={summary_mode}
+                    is_fetching={is_fetching_releases}
                     current_compute_mode={currentComputeMode.data}
                     target_compute_mode={target_compute_mode}
                     current_channel={currentReleaseChannel.data}
@@ -163,7 +164,7 @@ export const Updater = () => {
                     current_version={currentSoftwareVersion.data}
                     target_version={target_version}
                 />
-                {summary_mode !== "up_to_date" && (
+                {summary_mode !== "up_to_date" && !is_fetching_releases && (
                     <button
                         className={styles.install_button}
                         onClick={onClickInstall}
@@ -183,7 +184,7 @@ export const Updater = () => {
                     onClick={onClickRefresh}
                     disabled={is_fetching_releases}
                 >
-                    <RefreshSvg className={clsx(styles.refresh_svg, is_fetching_releases && styles.is_spinning)} />
+                    <RefreshSvg className={styles.refresh_svg} />
                     <span>{t("update_modal.refresh_button")}</span>
                 </button>
             </div>
@@ -239,7 +240,14 @@ export const Updater = () => {
 };
 
 /* ===== Subcomponents: UpdateSummary switcher ===== */
-const UpdateSummary = ({ summary_mode, ...props }) => {
+const UpdateSummary = ({ summary_mode, is_fetching, ...props }) => {
+    if (is_fetching) {
+        return (
+            <div className={styles.summary_loading_wrapper}>
+                <span className={styles.summary_loader} />
+            </div>
+        );
+    }
     switch (summary_mode) {
         case "update_available":
         case "custom":
