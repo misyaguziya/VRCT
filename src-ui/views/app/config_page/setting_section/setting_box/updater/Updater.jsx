@@ -19,9 +19,21 @@ import {
     DropdownMenu,
 } from "../_components";
 
+import { store } from "@store";
+
 import WarningSvg from "@images/warning.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 import RefreshSvg from "@images/refresh.svg?react";
+
+const isSemverGreater = (a, b) => {
+    if (!a || !b) return false;
+    const parse = (v) => v.replace(/^v/, "").split("-")[0].split(".").map((n) => parseInt(n, 10) || 0);
+    const [aM, am, ap] = parse(a);
+    const [bM, bm, bp] = parse(b);
+    if (aM !== bM) return aM > bM;
+    if (am !== bm) return am > bm;
+    return ap > bp;
+};
 
 export const Updater = () => {
     const { t } = useI18n();
@@ -38,6 +50,8 @@ export const Updater = () => {
     const [tmp_selected_version, setTmpSelectedVersion] = useState(null);
 
     useEffect(() => {
+        if (store.is_fetched_available_releases_already) return;
+        store.is_fetched_available_releases_already = true;
         getAvailableReleases();
     }, []);
 
@@ -101,8 +115,9 @@ export const Updater = () => {
 
     const is_custom = is_channel_changed || is_compute_mode_changed || is_version_customized;
 
+    const is_newer_version_available = Boolean(latest_release_version) && isSemverGreater(latest_release_version, currentSoftwareVersion.data);
     const is_update_available =
-        currentLatestSoftwareVersionInfo.data.is_update_available === true;
+        currentLatestSoftwareVersionInfo.data.is_update_available === true || is_newer_version_available;
 
     const is_latest_newer = Boolean(latest_release_version) && latest_release_version !== currentSoftwareVersion.data;
 
@@ -113,6 +128,7 @@ export const Updater = () => {
     }, [is_custom, is_update_available, is_latest_newer]);
 
     const is_ready_to_install = Boolean(target_version) && filtered_releases.length > 0;
+    const is_fetching_releases = currentAvailableReleases.state === "pending";
 
     const onClickInstall = () => {
         if (!is_ready_to_install) return;
@@ -127,7 +143,10 @@ export const Updater = () => {
         }
     };
 
-    const onClickRefresh = () => getAvailableReleases();
+    const onClickRefresh = () => {
+        if (is_fetching_releases) return;
+        getAvailableReleases();
+    };
 
     return (
         <div className={styles.container}>
@@ -162,9 +181,9 @@ export const Updater = () => {
                 <button
                     className={styles.refresh_button}
                     onClick={onClickRefresh}
-                    title={t("update_modal.refresh_button_title")}
+                    disabled={is_fetching_releases}
                 >
-                    <RefreshSvg className={styles.refresh_svg} />
+                    <RefreshSvg className={clsx(styles.refresh_svg, is_fetching_releases && styles.is_spinning)} />
                     <span>{t("update_modal.refresh_button")}</span>
                 </button>
             </div>
@@ -252,18 +271,6 @@ const SummaryUpToDate = ({ current_version, current_channel }) => {
             </div>
         </div>
     );
-};
-
-const isSemverGreater = (a, b) => {
-    // Fallback simple semver compare (major.minor.patch[-pre]) — used only for downgrade badge.
-    // The backend already validates supported versions, so this is UI-only sugar.
-    if (!a || !b) return false;
-    const parse = (v) => v.replace(/^v/, "").split("-")[0].split(".").map((n) => parseInt(n, 10) || 0);
-    const [aM, am, ap] = parse(a);
-    const [bM, bm, bp] = parse(b);
-    if (aM !== bM) return aM > bM;
-    if (am !== bm) return am > bm;
-    return ap > bp;
 };
 
 const DiffRow = ({ label, before, after, is_changed, warning, is_warning = false }) => (

@@ -20,6 +20,7 @@ export const store = {
     is_initialized_load_plugin: false,
     is_fetched_plugins_info_already: false,
     is_initialized_fetched_plugin_info: false,
+    is_fetched_available_releases_already: false,
     last_executed_time_startTyping: 0,
 };
 
