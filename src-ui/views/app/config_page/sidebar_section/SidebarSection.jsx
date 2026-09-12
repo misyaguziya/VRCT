@@ -75,7 +75,7 @@ const TabIcon = ({ tab_id, className }) => {
         case "hotkeys": return <KeyboardAltSvg className={clsx(className, styles.mui_icon)} />;
         case "plugins": return <ExtensionSvg className={clsx(className, styles.mui_icon)} />;
         case "advanced_settings": return <CodeBlocksSvg className={clsx(className, styles.mui_icon)} />;
-        case "updater": return <RefreshSvg className={className} />;
+        case "updater": return <RefreshSvg className={clsx(className, styles.updater_icon)} />;
         case "supporters": return <CrownSvg className={clsx(className, styles.mui_icon, styles.supporters_icon)} />;
         case "about_vrct": return <img src={chat_white_square} className={clsx(className, styles.about_vrct_icon)} />;
         default: return null;

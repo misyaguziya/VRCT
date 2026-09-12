@@ -1,3 +1,5 @@
+@import "@scss_mixins";
+
 .container {
     display: flex;
     flex-direction: column;
@@ -13,6 +15,21 @@
     gap: 2rem;
     width: 100%;
     margin-bottom: 3.2rem;
+}
+
+/* Summary loading state */
+.summary_loading_wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 52rem;
+    height: 7.2rem; /* matches up_to_date_layout min height */
+    background-color: var(--dark_875_color);
+    border: 0.1rem solid var(--dark_700_color);
+    border-radius: 0.8rem;
+}
+.summary_loader {
+    @include loader(2rem, 0.2rem, left, 50%);
+    left: 50%;
 }
 
 /* Up-to-date: left large checkmark + right version/desc */
@@ -251,19 +268,7 @@
     width: 1.4rem;
     color: currentColor;
     flex-shrink: 0;
-
-    &.is_spinning {
-        animation: spin 1s linear infinite;
-    }
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+    transform: rotate(-30deg);
 }
 
 /* ===== Rows (matches Templates.module.scss .container) ===== */
