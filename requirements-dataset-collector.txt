@@ -1,0 +1,11 @@
+# Dedicated build environment: CPython 3.11 x64 on Windows.
+numpy==1.26.4
+Pillow==10.0.0
+psutil==5.9.8
+openvr==1.26.701
+setuptools==80.8.0
+typing_extensions==4.16.0
+packaging==25.0
+altgraph==0.17.5
+pyinstaller==6.10.0
+pyinstaller-hooks-contrib==2026.7
