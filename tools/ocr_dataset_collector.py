@@ -1,144 +1,256 @@
-"""OCR吹き出し検出モデルの学習データ収集ツール(開発用、VRCTには同梱しない)。
+"""VRChat学習画像のローカル収集CLI。自動撮影は未分類で保存する。
 
-本番の `models/ocr/ocr_capture.OcrCapture` (HWND/OpenVRを自動切替する
-本番と同じキャプチャ経路) をそのまま使い、VRChatをプレイしながら任意の
-タイミングでスクリーンショットを撮って以下のいずれかに振り分ける:
-
-- positive/ : 実際のチャット吹き出しが写っている画像 (後でbboxアノテーション
-  が必要)
-- negative/ : 吹き出しは写っていないが、紛らわしいワールド側UI/看板等の
-  テキストが写っている画像 (bbox不要、そのままYOLOの「背景」学習に使える)
-
-使い方:
-    python tools/ocr_dataset_collector.py <session_name>
-
-    例: python tools/ocr_dataset_collector.py factory_world_desktop
-
-session_name はワールド名や条件(デスクトップ/VR、明るい/暗い等)を表す
-任意の文字列。同じワールドで複数回に分けて集める場合も、同じ
-session_name を指定すればファイルが追記されていく(上書きされない)。
-
-操作方法 (VRChatを操作しながら、このコンソールにフォーカスを移して入力):
-    Enter (何も入力せず)  -> 直前のキャプチャを「吹き出しあり」として保存
-    n + Enter             -> 直前のキャプチャを「吹き出しなし/紛らわしいUI」として保存
-    r + Enter             -> 保存せずに現在のプレビュー(最新フレームの状態)を再取得
-    q + Enter             -> 終了
-
-実際には「入力した瞬間」ではなく「直前に自動取得しておいた最新フレーム」を
-保存する(VRChat側にフォーカスがある間に良い瞬間を見て、コンソールに
-戻ってから確定するまでのタイムラグでシーンが変わってしまうのを防ぐため、
-背景スレッドが常に最新フレームを取得し続ける)。
+python tools/ocr_dataset_collector.py [session_name]
+既定: 自動選択(HWND/OpenVR D3D11)、左眼、2秒周期、10分で終了。
+コンソールで P=一時停止/再開、Q=終了、R=状態表示（Enter不要）。
+--manual: Enter=その場でpositive撮影、N=negative撮影、U=未分類撮影。
+撮影開始から保存・解放まで同じworkerが所有。VRCT本体へimportしない。
 """
 
 from __future__ import annotations
 
-import os
+import argparse
+from datetime import datetime, timezone
+import json
+import math
+from pathlib import Path
+import queue
 import sys
 import threading
 import time
-from datetime import datetime
+import uuid
 
-_SRC_PYTHON = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src-python")
-sys.path.insert(0, _SRC_PYTHON)
+from PIL import Image
 
-import cv2  # noqa: E402
-
-from models.ocr.ocr_capture import OcrCapture  # noqa: E402
-
-_CAPTURE_INTERVAL_SEC = 1.0
+if __package__:
+    from .ocr_capture_source import CaptureSource, CaptureUnavailable, Frame
+else:
+    from ocr_capture_source import CaptureSource, CaptureUnavailable, Frame
 
 
-class _LatestFrameGrabber:
-    """背景スレッドで常に最新フレームを取得し続ける。
+def session_name(value: str) -> str:
+    reserved = {"CON", "PRN", "AUX", "NUL"} | {
+        f"{prefix}{n}" for prefix in ("COM", "LPT") for n in range(1, 10)}
+    if (not value or len(value) > 80 or value in (".", "..")
+            or any(c in '<>:"/\\|?*' or ord(c) < 32 for c in value)
+            or value.endswith((".", " ")) or value.split(".")[0].upper() in reserved):
+        raise argparse.ArgumentTypeError("session_name must be a valid single folder name (1..80 characters)")
+    return value
 
-    コンソールでの操作(Enter押下等)にかかる時間ぶん古いフレームを保存する
-    事態を避けるための、単純なポーリングスレッド。
-    """
 
-    def __init__(self, capture: OcrCapture) -> None:
-        self._capture = capture
-        self._latest = None
-        self._lock = threading.Lock()
-        self._stop = threading.Event()
-        self._thread = threading.Thread(target=self._run, daemon=True)
+def next_deadline(previous: float, now: float, interval: float) -> float:
+    """Keep the requested cadence, skipping missed slots instead of bursting."""
+    return previous + max(1, math.floor((now - previous) / interval) + 1) * interval
+
+
+class ImageStore:
+    """Publish complete PNG/JSON pairs and count only successful saves."""
+
+    def __init__(self, root: Path, session: str) -> None:
+        self.directory = root.resolve() / session
+        self.session = session
+        self.run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ") + "_" + uuid.uuid4().hex[:8]
+        self.count = 0
+
+    def save(self, frame: Frame, label: str, max_age: float) -> Path:
+        if time.monotonic() - frame.captured_monotonic > max_age:
+            raise CaptureUnavailable("Frame took too long to acquire; not saved")
+        folder = self.directory / label
+        folder.mkdir(parents=True, exist_ok=True)
+        stem = f"{self.run_id}_{self.count:06d}"
+        png, metadata = folder / f"{stem}.png", folder / f"{stem}.json"
+        png_tmp, json_tmp = folder / f"{stem}.png.part", folder / f"{stem}.json.part"
+        record = {**frame.metadata, "session": self.session, "run_id": self.run_id,
+                  "label": label, "image": png.name, "width": frame.rgb.shape[1],
+                  "height": frame.rgb.shape[0], "png_compress_level": 1}
+        published = []
+        try:
+            with png_tmp.open("xb") as stream:
+                Image.fromarray(frame.rgb).save(stream, format="PNG", compress_level=1)
+            with json_tmp.open("x", encoding="utf-8") as stream:
+                json.dump(record, stream, ensure_ascii=False, indent=2)
+            # Windows rename refuses to overwrite an existing destination.
+            json_tmp.rename(metadata)
+            published.append(metadata)
+            png_tmp.rename(png)
+            published.append(png)
+        except BaseException:
+            for path in (png_tmp, json_tmp, *published):
+                path.unlink(missing_ok=True)
+            raise
+        self.count += 1
+        return png
+
+
+class Collector:
+    """Commands cross threads; capture objects and their cleanup never do."""
+
+    def __init__(self, source_factory, store: ImageStore, *, interval: float = 2,
+                 duration: float = 600, manual: bool = False, max_frames: int = 0,
+                 max_age: float = 2, emit=print) -> None:
+        self.source_factory, self.store = source_factory, store
+        self.interval, self.duration = interval, duration
+        self.manual, self.max_frames, self.max_age = manual, max_frames, max_age
+        self.emit = emit
+        self.commands = queue.Queue(maxsize=16)
+        self.stop_requested = threading.Event()
+        self.done = threading.Event()
+        self.thread = threading.Thread(target=self.run, name="dataset-capture", daemon=False)
+        self.paused = False
+        self.error = None
+        self._last_warning = None
 
     def start(self) -> None:
-        self._thread.start()
+        self.thread.start()
+
+    def command(self, name: str) -> None:
+        if name == "stop":
+            self.stop_requested.set()
+            return
+        try:
+            self.commands.put_nowait(name)
+        except queue.Full:
+            self.emit("[WARN] Command queue is full; wait for the current capture")
 
     def stop(self) -> None:
-        self._stop.set()
-        self._thread.join(timeout=2.0)
+        self.stop_requested.set()
+        self.thread.join()  # Never close a native resource while read() is active.
 
-    def _run(self) -> None:
-        while not self._stop.is_set():
-            frame = self._capture.get()
-            if frame is not None:
-                with self._lock:
-                    self._latest = frame
-            time.sleep(_CAPTURE_INTERVAL_SEC)
+    def _save(self, source, label: str, end: float) -> None:
+        if self.stop_requested.is_set() or time.monotonic() >= end:
+            return
+        try:
+            frame = source.capture()  # Fresh request, no previous-frame cache.
+            if self.stop_requested.is_set() or time.monotonic() >= end:
+                return
+            path = self.store.save(frame, label, self.max_age)
+            self._last_warning = None
+            self.emit(f"[saved {label}] {path} (this run: {self.store.count})")
+        except CaptureUnavailable as exc:
+            message = str(exc)
+            if message != self._last_warning:
+                self.emit(f"[waiting] {message}")
+                self._last_warning = message
 
-    def latest(self):
-        with self._lock:
-            return None if self._latest is None else self._latest.copy()
+    def run(self) -> None:
+        source = None
+        try:
+            source = self.source_factory()
+            now = time.monotonic()
+            end = now + self.duration if self.duration else math.inf
+            deadline = now
+            while not self.stop_requested.is_set():
+                now = time.monotonic()
+                if now >= end or (self.max_frames and self.store.count >= self.max_frames):
+                    break
+                timeout = min(0.1, max(0, end - now))
+                if not self.manual and not self.paused:
+                    timeout = min(timeout, max(0, deadline - now))
+                try:
+                    command = self.commands.get(timeout=timeout)
+                except queue.Empty:
+                    command = None
+                if command == "pause":
+                    self.paused = not self.paused
+                    deadline = time.monotonic() + self.interval
+                    self.emit("[paused] P to resume" if self.paused else "[resumed]")
+                elif command == "status":
+                    self.emit(f"[status] saved={self.store.count}, paused={self.paused}")
+                elif self.manual and not self.paused and command in ("positive", "negative", "unlabeled"):
+                    self._save(source, command, end)
+                if (not self.manual and not self.paused and not self.stop_requested.is_set()
+                        and time.monotonic() >= deadline and time.monotonic() < end):
+                    self._save(source, "unlabeled", end)
+                    deadline = next_deadline(deadline, time.monotonic(), self.interval)
+        except Exception as exc:
+            self.error = f"{type(exc).__name__}: {exc}"
+            self.emit(f"[ERROR] {self.error}")
+        finally:
+            try:
+                if source is not None:
+                    source.close()
+            except Exception as exc:
+                self.error = f"Cleanup failed: {type(exc).__name__}: {exc}"
+                self.emit(f"[ERROR] {self.error}")
+            finally:
+                self.done.set()
 
 
-def main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: python tools/ocr_dataset_collector.py <session_name> [--out DIR]")
-        sys.exit(1)
-    session_name = sys.argv[1]
-    out_root = "dataset_collected"
-    if "--out" in sys.argv:
-        out_root = sys.argv[sys.argv.index("--out") + 1]
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("session", nargs="?", type=session_name,
+                        default=datetime.now().strftime("session_%Y%m%d_%H%M%S"))
+    output_root = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path.cwd()
+    parser.add_argument("--out", type=Path, default=output_root / "dataset_collected",
+                        help="Output folder (exe: beside the executable; Python: current directory)")
+    parser.add_argument("--backend", choices=("auto", "openvr", "hwnd"), default="auto")
+    parser.add_argument("--eye", choices=("left", "right"), default="left")
+    parser.add_argument("--interval", type=float, default=2, help="Target capture interval in seconds")
+    parser.add_argument("--duration", type=float, default=600, help="Wall-clock seconds including pauses; 0=unlimited")
+    parser.add_argument("--max-frames", type=int, default=0, help="Stop after this many successful saves; 0=unlimited")
+    parser.add_argument("--max-age", type=float, default=2, help="Reject captures older than this many seconds")
+    parser.add_argument("--manual", action="store_true", help="Enter=positive, N=negative, U=unlabeled (fresh capture)")
+    args = parser.parse_args(argv)
+    if not math.isfinite(args.interval) or args.interval < 0.1:
+        parser.error("--interval must be finite and at least 0.1")
+    if not math.isfinite(args.duration) or args.duration < 0:
+        parser.error("--duration must be finite and nonnegative")
+    if not math.isfinite(args.max_age) or args.max_age <= 0 or args.max_frames < 0:
+        parser.error("--max-age must be finite and positive; --max-frames must be nonnegative")
+    return args
 
-    pos_dir = os.path.join(out_root, session_name, "positive")
-    neg_dir = os.path.join(out_root, session_name, "negative")
-    os.makedirs(pos_dir, exist_ok=True)
-    os.makedirs(neg_dir, exist_ok=True)
 
-    capture = OcrCapture(window_title="VRChat")
-    grabber = _LatestFrameGrabber(capture)
-    grabber.start()
-
-    pos_count = len(os.listdir(pos_dir))
-    neg_count = len(os.listdir(neg_dir))
-
-    print(f"[session={session_name}] backend selection is automatic (HWND / OpenVR mirror).")
-    print(f"positive so far: {pos_count}, negative so far: {neg_count}")
-    print("Enter=save as POSITIVE(bubble visible)  n+Enter=save as NEGATIVE  r+Enter=refresh  q+Enter=quit")
-
+def main(argv=None) -> int:
+    args = parse_args(argv)
+    if sys.platform != "win32":
+        print("[ERROR] This capture tool requires Windows", flush=True)
+        return 1
+    store = ImageStore(args.out, args.session)
+    collector = Collector(lambda: CaptureSource(args.backend, args.eye), store,
+                          interval=args.interval, duration=args.duration,
+                          manual=args.manual, max_frames=args.max_frames, max_age=args.max_age,
+                          emit=lambda message: print(message, flush=True))
+    print(f"session={args.session}, backend={args.backend}, interval={args.interval}s, duration={args.duration}s", flush=True)
+    print(f"output={store.directory}", flush=True)
+    print("P=pause/resume  Q=quit  R=status (console focused, no Enter required)", flush=True)
+    print("Enter=positive  N=negative  U=unlabeled" if args.manual else "Automatic capture -> unlabeled/", flush=True)
+    collector.start()
     try:
-        while True:
-            cmd = input("> ").strip().lower()
-            if cmd == "q":
-                break
-            if cmd == "r":
-                print("(refreshed - the grabber thread always keeps the latest frame anyway)")
-                continue
+        import msvcrt
 
-            frame = grabber.latest()
-            if frame is None:
-                print("[WARN] no frame captured yet (is VRChat running and visible?)")
+        while not collector.done.wait(0.05):
+            if not sys.stdin.isatty() or not msvcrt.kbhit():
                 continue
-
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            if cmd == "n":
-                path = os.path.join(neg_dir, f"{session_name}_{ts}.png")
-                cv2.imwrite(path, frame)
-                neg_count += 1
-                print(f"[saved NEGATIVE] {path}  (negative total: {neg_count})")
-            else:
-                path = os.path.join(pos_dir, f"{session_name}_{ts}.png")
-                cv2.imwrite(path, frame)
-                pos_count += 1
-                print(f"[saved POSITIVE] {path}  (positive total: {pos_count})")
-    except (KeyboardInterrupt, EOFError):
-        pass
+            key = msvcrt.getwch()
+            if key in ("\x00", "\xe0"):
+                msvcrt.getwch()
+                continue
+            commands = {"p": "pause", "q": "stop", "r": "status",
+                        "\r": "positive", "n": "negative", "u": "unlabeled"}
+            if key.lower() in commands:
+                collector.command(commands[key.lower()])
+    except KeyboardInterrupt:
+        print("Stopping after the current operation...", flush=True)
     finally:
-        grabber.stop()
-        capture.close()
-        print(f"done. positive={pos_count} negative={neg_count} under {os.path.join(out_root, session_name)}")
+        collector.stop()
+    print(f"{'ERROR' if collector.error else 'done'}: saved={store.count} in this run, output={store.directory}", flush=True)
+    return 1 if collector.error else 0
+
+
+def entrypoint() -> int:
+    """Keep the result visible on an interactive, argument-free exe launch."""
+    try:
+        return main()
+    except Exception as exc:
+        print(f"[ERROR] {type(exc).__name__}: {exc}", flush=True)
+        return 1
+    finally:
+        if getattr(sys, "frozen", False) and len(sys.argv) == 1 and sys.stdin.isatty():
+            try:
+                input("Press Enter to close...")
+            except (EOFError, KeyboardInterrupt):
+                pass
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(entrypoint())

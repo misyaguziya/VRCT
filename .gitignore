@@ -7,6 +7,7 @@ memo.txt
 logs/
 .venv/
 .venv_cuda/
+.venv-collector/
 weights/
 .vscode
 error.log
