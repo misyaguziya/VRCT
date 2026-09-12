@@ -64,25 +64,13 @@ main_page:
     updating: "更新中..."
 
 update_modal:
-    # Legacy keys (temporarily commented out as unused)
-    # cpu_desc: "仅使用 CPU 作为处理设备"
-    # cuda_desc: "可选择 CPU 和 NVIDIA GPU 作为处理设备"
-    # cuda_compare_cpu_desc: "选择 GPU 时，与 CPU 相比处理更快"
-    # cuda_disk_space_desc: "需要约 {{size}} 的磁盘空间"
-    # close_modal: "关闭"
-    # download_latest_and_restart: "将下载最新版本，\n应用程序将自动重启。"
-    # is_latest_version_already: "已在使用最新版本"
-    # is_current_compute_device: "当前使用的版本"
     title: "更新"
-    summary_up_to_date: "最新版本"
     summary_up_to_date_desc: "您正在使用最新版本，无需更新。"
-    current_prefix: "当前："
     channel_stable: "稳定版"
     channel_beta: "测试版"
     compute_mode_cpu: "CPU 版"
     compute_mode_cuda: "GPU 版 (CUDA)"
-    beta_suffix: "测试版"
-    latest_suffix: "最新"
+    latest_label: "最新"
     install_latest_button: "更新至最新版本"
     install_button: "按此设置重新安装"
     section_pick_variant: "选择其他版本或配置"
@@ -91,7 +79,7 @@ update_modal:
     channel_label: "发布渠道"
     channel_desc: "测试版可提前体验新功能，但可能不稳定。"
     compute_mode_label: "设备构建"
-    compute_mode_desc: "GPU 版可在 NVIDIA GPU 上高速运行，但下载体积约大 5GB。"
+    compute_mode_desc: "GPU 版可在 NVIDIA GPU 上高速运行，但需要约 5GB 的额外磁盘空间。"
     version_label: "要安装的版本"
     version_desc: "可从所选渠道公开发布的版本中选择。"
     no_versions_available: "所选渠道暂无可用版本。"
@@ -99,8 +87,7 @@ update_modal:
     change_col_after: "安装后"
     warn_downgrade: "这是从 {{from}} 到 {{to}} 的降级。配置文件的兼容性无法保证。"
     warn_cuda_extra_size: "GPU 版大约需要 5GB 的额外下载。"
-    warn_switch_to_beta: "将切换到测试版渠道，今后的更新通知也将以测试版为准。"
-    warn_switch_to_stable: "将切换到稳定版渠道，今后的更新通知也将以稳定版为准。"
+    warn_switch_channel: "将切换到{{channel}}渠道，今后的更新通知也将以{{channel}}为准。"
 
 config_page:
     common:
@@ -357,25 +344,6 @@ config_page:
             label:
             desc:
             aptabase_privacy_policy_label:
-
-    # updater:
-    #     install_panel:
-    #         section_label:
-    #         current_summary_label:
-    #         current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
-    #         channel_label:
-    #         channel_stable:
-    #         channel_beta:
-    #         compute_mode_label:
-    #         compute_mode_cpu: "CPU"
-    #         compute_mode_cuda: "GPU (CUDA)"
-    #         version_label: "要安装的版本"
-    #         version_desc:
-    #         no_versions_available:
-    #         beta_suffix: "测试版"
-    #         latest_suffix:
-    #         install_button:
-    #         reinstall_button:
 
     hotkeys:
         input_placeholder: "请输入按键组合"

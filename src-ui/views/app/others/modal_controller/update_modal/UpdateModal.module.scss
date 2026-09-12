@@ -16,39 +16,48 @@
     margin-bottom: 3.2rem;
 }
 
-.status_badge {
-    display: inline-flex;
+/* Up-to-date: left large checkmark + right version/desc */
+.up_to_date_layout {
+    display: flex;
     align-items: center;
+    gap: 2.4rem;
+    padding: 1.6rem 2.4rem;
+    background-color: var(--dark_875_color);
+    border: 0.1rem solid var(--dark_700_color);
+    border-radius: 0.8rem;
+    width: 100%;
+    max-width: 52rem;
+}
+.up_to_date_check_svg {
+    flex-shrink: 0;
+    width: 4rem;
+    height: 4rem;
+    color: var(--primary_400_color);
+}
+.up_to_date_text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+}
+.up_to_date_version {
+    display: flex;
+    align-items: baseline;
     gap: 0.6rem;
     font-size: 1.3rem;
     font-weight: 400;
-    color: var(--primary_300_color);
-}
-.status_badge_svg {
-    width: 1.6rem;
-    height: 1.6rem;
-    flex-shrink: 0;
-    color: currentColor;
-}
-
-.summary_headline {
-    font-size: 2rem;
-    font-weight: 400;
-    text-align: center;
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.8rem;
-}
-.summary_headline_sub {
-    font-size: 1.4rem;
-    font-weight: 300;
     color: var(--dark_500_color);
 }
-.summary_current {
-    font-size: 1.4rem;
+.up_to_date_channel {
+    font-size: 1.2rem;
     font-weight: 300;
-    color: var(--dark_500_color);
-    text-align: center;
+    color: var(--dark_600_color);
+}
+.up_to_date_desc {
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: var(--dark_basic_text_color);
+    line-height: 1.3;
 }
 
 .install_button {
@@ -96,8 +105,8 @@
     padding: 1rem 1.6rem 0.8rem 1.6rem;
     border-bottom: 0.1rem solid var(--dark_700_color);
     font-size: 1.2rem;
-    font-weight: 300;
-    color: var(--dark_500_color);
+    font-weight: 400;
+    color: var(--dark_400_color);
 }
 .diff_header_cell_before {
     text-align: right;
