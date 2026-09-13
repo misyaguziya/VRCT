@@ -101,15 +101,19 @@ npm run dev-ui
 
 ### 高速開発ビルド（推奨: 日常検証用）
 
-PyInstaller によるバックエンド再パッケージを毎回スキップし、`.venv` の
+PyInstaller によるバックエンド再パッケージを毎回スキップし、仮想環境の
 Python を直接 sidecar として起動する高速ループです。Python コードを
 修正した検証も、プロセス再起動だけで反映されます（数分 → 数秒）。
 
 ```bash
+# 標準環境: .venv/Scripts/python.exe
 npm run dev-fast
+
+# CUDA環境: .venv_cuda/Scripts/python.exe
+npm run dev-cuda-fast
 ```
 
-このコマンドは以下を実行します:
+どちらのコマンドも以下を実行します:
 
 1. 実行中のプロセスを終了 (`task-kill`)
 2. dev 用 sidecar ラッパー（`utils/dev_sidecar/`, Rust 製の薄いバイナリ）を
@@ -118,8 +122,14 @@ npm run dev-fast
 
 前提:
 
-- `npm run setup-python` 済みで `.venv/Scripts/python.exe` が存在すること
+- 選択した仮想環境と依存関係が準備済みであること
+  - `dev-fast`: `.venv/Scripts/python.exe`
+  - `dev-cuda-fast`: `.venv_cuda/Scripts/python.exe`（`.venv` は不要）
 - Rust ツールチェーン (`cargo`) が使えること（既に Tauri で必要）
+
+各コマンドが `VRCT_DEV_VENV` を設定し、Tauri 経由で dev 用 sidecar に
+使用する環境を渡します。選択した環境が存在しない場合はエラーで停止し、
+別の仮想環境への自動切り替えは行いません。環境の有効化（activate）は不要です。
 
 配布 EXE と同一挙動になる根拠:
 
