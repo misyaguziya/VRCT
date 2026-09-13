@@ -38,8 +38,14 @@ export default defineConfig(async () => {
                 }
                 : undefined,
             watch: {
-                // 3. tell vite to ignore watching `src-tauri`
-                ignored: ["**/src-tauri/**"],
+                // 3. keep backend files and large local datasets/environments out of the watcher.
+                // Vite does not use .gitignore for watch exclusions.
+                ignored: [
+                    "**/src-tauri/**",
+                    "**/tmp/**",
+                    "**/.venv/**",
+                    "**/.venv_cuda/**",
+                ],
             },
         },
 
