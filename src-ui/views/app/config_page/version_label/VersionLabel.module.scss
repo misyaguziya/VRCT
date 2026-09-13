@@ -1,12 +1,11 @@
 .container {
     width: 100%;
     flex-shrink: 0;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     padding: 0 0 0rem 1.2rem;
-    color: var(--dark_400_color);
+    color: var(--dark_500_color);
     font-size: 1rem;
     height: 4.2rem; // 開閉時および全モードで高さを固定し、上のメニューを一切ずらさない
 
@@ -20,7 +19,6 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    user-select: none;
     width: 100%;
 
     &.is_copied {
@@ -45,16 +43,11 @@
 
 .compact_version_label {
     font-size: 1.05rem;
-    line-height: 1.2;
-    color: var(--dark_400_color);
     white-space: nowrap;
 }
 
 .compact_badge {
     font-size: 0.85rem;
-    line-height: 1.2;
-    color: var(--dark_500_color);
-    user-select: none;
     white-space: nowrap;
 }
 
@@ -70,25 +63,20 @@
     flex-direction: column;
     justify-content: center;
     gap: 0.15rem;
+    color: var(--dark_500_color);
 }
 
 .version_label {
     font-size: 1.2rem;
-    line-height: 1.2;
-    color: var(--dark_400_color);
     white-space: nowrap;
 }
 
 .inline_cuda {
     font-size: 0.95rem;
-    color: var(--dark_500_color);
 }
 
 .second_line_cuda {
     font-size: 0.95rem;
-    line-height: 1.2;
-    color: var(--dark_500_color);
-    user-select: none;
     white-space: nowrap;
 }
 
