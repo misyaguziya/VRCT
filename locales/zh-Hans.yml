@@ -346,6 +346,9 @@ config_page:
 
     hotkeys:
         input_placeholder: "请输入按键组合"
+        disabled_notice: "※打开设置页面时，为防止误操作，快捷键功能会暂时禁用。"
+        error_in_use: "“{{action_name}}”的快捷键（{{hotkey}}）已在其他位置使用，无法注册。"
+        error_failed_to_register_at_launch: "“{{action_name}}”的快捷键（{{hotkey}}）正被其他应用程序使用，无法启用。"
         toggle_vrct_visibility:
             label: "切换 VRCT 最小化/激活"
         toggle_translation:

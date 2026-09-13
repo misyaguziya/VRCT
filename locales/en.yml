@@ -352,6 +352,9 @@ config_page:
 
     hotkeys:
         input_placeholder: "Press a key combination"
+        disabled_notice: "* Hotkeys are temporarily disabled while the settings page is open to prevent unintended actions."
+        error_in_use: "The hotkey ({{hotkey}}) for \"{{action_name}}\" cannot be registered because it is already in use elsewhere."
+        error_failed_to_register_at_launch: "The hotkey ({{hotkey}}) for \"{{action_name}}\" is unavailable because it is in use by another application."
         toggle_vrct_visibility:
             label: "Toggle VRCT visibility"
         toggle_translation:
