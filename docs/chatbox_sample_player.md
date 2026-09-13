@@ -30,6 +30,11 @@ UTF-16単位で144以下、明示改行で9行以下に制限し、本文を勝�
 配布ZIPにはexe、編集用JSON、一覧JSONL/TXT、README、ライセンス、BUILD-INFOを同梱する。
 ログは同梱しない。既存の収集ツールexeやVRCT本体は変更しない。
 
+出力は `tool-dist/VRCT-Chatbox-Sample-Player-windows-x64.zip`。
+同じ `tool-dist/` に展開済みフォルダと `.zip.sha256` も生成する。
+2026-09-13から、VRCT本体の画面ビルドやcleanで消去される `dist/` との共用をやめ、
+専用の `tool-dist/` に変更した。配布物はGit管理外なので、別PCにはZIP全体をコピーする。
+
 ## 検証
 
 ```powershell

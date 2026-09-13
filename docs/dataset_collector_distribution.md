@@ -1,6 +1,6 @@
 # 収集ツールのexe配布
 
-`dist/VRCT-Dataset-Collector-windows-x64.zip` が配布用。
+`tool-dist/VRCT-Dataset-Collector-windows-x64.zip` が配布用。
 展開後に `VRCT-Dataset-Collector.exe` をダブルクリックすると撮影を開始する。
 Python、VRCT本体、CUDAのインストールは不要。Windows 10/11 x64向け。
 VR取得にはSteamVRと、そこで動作中のVRChatが必要。
@@ -29,9 +29,12 @@ $env:VRCT_COLLECTOR_PYTHON = "$PWD\.venv-collector\Scripts\python.exe"
 
 出力:
 
-- `dist/VRCT-Dataset-Collector/`: 動作確認用の展開済みパッケージ
-- `dist/VRCT-Dataset-Collector-windows-x64.zip`: 配布するZIP
-- `dist/VRCT-Dataset-Collector-windows-x64.zip.sha256`: ZIPのSHA-256
+- `tool-dist/VRCT-Dataset-Collector/`: 動作確認用の展開済みパッケージ
+- `tool-dist/VRCT-Dataset-Collector-windows-x64.zip`: 配布するZIP
+- `tool-dist/VRCT-Dataset-Collector-windows-x64.zip.sha256`: ZIPのSHA-256
+
+2026-09-13から、VRCT本体の画面ビルドやcleanで消去される `dist/` との共用をやめ、
+専用の `tool-dist/` に変更した。配布物はGit管理外なので、別PCにはZIP全体をコピーする。
 
 ビルドは依存バージョンの確認、PyInstaller onefile生成、画像を撮影しないCLI起動検査、
 ライセンス・README・環境情報の同梱、ZIP化を行う。

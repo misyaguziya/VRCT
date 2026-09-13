@@ -35,7 +35,8 @@ def build():
     samples = load_samples(source)
     work = ROOT / "build/chatbox_sample_player"
     work.mkdir(parents=True, exist_ok=True)
-    dist = ROOT / "dist"
+    # Vite and the main app's clean script remove dist/.
+    dist = ROOT / "tool-dist"
     dist.mkdir(exist_ok=True)
     environment = os.environ.copy()
     windows = Path(os.environ["SystemRoot"])
