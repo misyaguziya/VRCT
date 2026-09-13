@@ -5,6 +5,7 @@
 すべてのエラーを一元管理し、エンドポイントとエラーコードの対応を明確にする。
 """
 
+from dataclasses import dataclass
 from typing import Any, Callable, Optional, Dict
 from enum import Enum
 
@@ -29,6 +30,17 @@ def _notify_error_hooks(error_code: str) -> None:
             pass
 
 
+def report_error_code(error_code: str) -> None:
+    """UI 応答を生成せず、登録済みのエラー報告フックだけを呼ぶ。
+
+    デバイス tracker の後始末タイムアウトのように、ユーザー操作を要求する
+    endpoint エラーではないが telemetry で発生頻度を把握したい内部状態に
+    使用する。フックが未登録でも安全に no-op になる。
+    """
+    if error_code:
+        _notify_error_hooks(str(error_code))
+
+
 class ErrorCode(str, Enum):
     """エラーコード定数
     
@@ -39,6 +51,17 @@ class ErrorCode(str, Enum):
     # ============================================================================
     DEVICE_NO_MIC = "DEVICE_NO_MIC"
     DEVICE_NO_SPEAKER = "DEVICE_NO_SPEAKER"
+
+    # 音声入力から文字起こしまでの実行時エラー。これらは通常の
+    # request/response エラーではなく、既存の
+    # /run/transcription_recognition_error 通知で UI に伝える。
+    AUDIO_OPEN_ERROR = "AUDIO_OPEN_ERROR"
+    AUDIO_READ_ERROR = "AUDIO_READ_ERROR"
+    VAD_INFERENCE_ERROR = "VAD_INFERENCE_ERROR"
+    TRANSCRIBER_INIT_ERROR = "TRANSCRIBER_INIT_ERROR"
+    ASR_ERROR = "ASR_ERROR"
+    CLEANUP_TIMEOUT = "CLEANUP_TIMEOUT"
+    AUDIO_TRACKER_STOP_TIMEOUT = "AUDIO_TRACKER_STOP_TIMEOUT"
     
     # ============================================================================
     # 翻訳関連エラー (TRANSLATION_*)
@@ -166,6 +189,41 @@ class ErrorCode(str, Enum):
     GENERAL_UNKNOWN = "GENERAL_UNKNOWN"
 
 
+@dataclass(frozen=True)
+class AudioPipelineFailure:
+    """音声パイプラインの UI 通知とログをつなぐ安全なエラー情報。
+
+    `message` は UI に表示してよい概要だけを保持する。元の例外文字列や
+    traceback は呼び出し側で errorLogging() に渡し、通知 payload には含めない。
+    """
+
+    error_code: ErrorCode
+    stage: str
+    source: str
+    message: str
+    exception_type: Optional[str] = None
+
+    def to_notification(self) -> Dict[str, Any]:
+        return {
+            "text": "",
+            "language": None,
+            "recognition_error": True,
+            "error_code": self.error_code.value,
+            "stage": self.stage,
+            "source": self.source,
+            "message": self.message,
+            "recoverable": False,
+        }
+
+
+class AudioPipelineError(RuntimeError):
+    """ASR/VAD など非同期処理からセッション停止を要求する例外。"""
+
+    def __init__(self, failure: AudioPipelineFailure) -> None:
+        super().__init__(failure.message)
+        self.failure = failure
+
+
 class ErrorCategory(str, Enum):
     """エラーカテゴリ"""
     DEVICE = "device"
@@ -196,6 +254,48 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "message": "No speaker device detected",
         "severity": "error",
         "user_action_required": True,
+    },
+    ErrorCode.AUDIO_OPEN_ERROR: {
+        "category": ErrorCategory.DEVICE,
+        "message": "Audio device could not be opened",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.AUDIO_READ_ERROR: {
+        "category": ErrorCategory.DEVICE,
+        "message": "Audio capture failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.VAD_INFERENCE_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Voice activity detection failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.TRANSCRIBER_INIT_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Speech recognizer initialization failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.ASR_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Speech recognition failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.CLEANUP_TIMEOUT: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Audio transcription cleanup timed out",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.AUDIO_TRACKER_STOP_TIMEOUT: {
+        "category": ErrorCategory.DEVICE,
+        "message": "Audio endpoint tracker cleanup timed out",
+        "severity": "warning",
+        "user_action_required": False,
     },
     
     # 翻訳エラー

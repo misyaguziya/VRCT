@@ -35,6 +35,9 @@ import unittest
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
+from config import config
+from controller import Controller
+from errors import ErrorCode
 from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import _build_overlay_html, ObsBrowserSourceServer
 from utils import isWildcardBindAddress
@@ -76,6 +79,10 @@ class SetWebSocketHostRejectsWildcardTests(unittest.TestCase):
         response = Controller.setWebSocketHost("0.0.0.0")
 
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.VALIDATION_INVALID_IP.value,
+        )
         self.assertNotEqual(self.config.WEBSOCKET_HOST, "0.0.0.0")
 
     @patch("controller.model")
@@ -86,6 +93,10 @@ class SetWebSocketHostRejectsWildcardTests(unittest.TestCase):
         response = Controller.setWebSocketHost("::")
 
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.VALIDATION_INVALID_IP.value,
+        )
         self.assertNotEqual(self.config.WEBSOCKET_HOST, "::")
 
     @patch("controller.model")
@@ -97,6 +108,103 @@ class SetWebSocketHostRejectsWildcardTests(unittest.TestCase):
 
         self.assertEqual(response["status"], 200)
         self.assertEqual(self.config.WEBSOCKET_HOST, "127.0.0.1")
+
+
+class WebSocketEndpointErrorResponseTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._original_host = config.WEBSOCKET_HOST
+        self._original_port = config.WEBSOCKET_PORT
+        self._original_server = config.WEBSOCKET_SERVER
+        config.WEBSOCKET_SERVER = False
+
+    def tearDown(self) -> None:
+        config.WEBSOCKET_HOST = self._original_host
+        config.WEBSOCKET_PORT = self._original_port
+        config.WEBSOCKET_SERVER = self._original_server
+
+    def test_non_numeric_port_returns_invalid_port_error(self) -> None:
+        response = Controller.setWebSocketPort("not-a-port")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.WEBSOCKET_PORT_INVALID.value,
+        )
+        self.assertEqual(config.WEBSOCKET_PORT, self._original_port)
+
+    @patch("controller.isAvailableWebSocketServer", return_value=False)
+    def test_enable_when_server_address_is_unavailable_returns_server_error(
+        self, _mock_is_available
+    ) -> None:
+        response = Controller.setEnableWebSocketServer()
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE.value,
+        )
+        self.assertFalse(config.WEBSOCKET_SERVER)
+
+    @patch("controller.errorLogging")
+    @patch("controller.model")
+    def test_host_exception_returns_safe_host_error(
+        self, mock_model, mock_error_logging
+    ) -> None:
+        mock_model.checkWebSocketServerAlive.side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = Controller.setWebSocketHost("127.0.0.2")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.WEBSOCKET_HOST_INVALID.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+        self.assertEqual(config.WEBSOCKET_HOST, self._original_host)
+
+    @patch("controller.errorLogging")
+    @patch("controller.model")
+    def test_port_exception_returns_safe_port_error(
+        self, mock_model, mock_error_logging
+    ) -> None:
+        mock_model.checkWebSocketServerAlive.side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = Controller.setWebSocketPort(self._original_port + 1)
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.WEBSOCKET_PORT_UNAVAILABLE.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+        self.assertEqual(config.WEBSOCKET_PORT, self._original_port)
+
+    @patch("controller.errorLogging")
+    @patch("controller.isAvailableWebSocketServer", return_value=True)
+    @patch("controller.model")
+    def test_enable_exception_returns_safe_server_error(
+        self, mock_model, _mock_is_available, mock_error_logging
+    ) -> None:
+        mock_model.startWebSocketServer.side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = Controller.setEnableWebSocketServer()
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+        self.assertFalse(config.WEBSOCKET_SERVER)
 
 
 class ConfigDescriptorRejectsWildcardTests(unittest.TestCase):

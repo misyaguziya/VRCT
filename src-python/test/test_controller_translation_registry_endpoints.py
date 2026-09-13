@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 from config import config
 from controller import Controller
+from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY
 
 _RUN_MAPPING = {
     "selectable_plamo_model_list": "/run/selectable_plamo_model_list",
@@ -94,6 +95,10 @@ class _RegistryEndpointTestMixin:
         response = self._auth_method()(self.INVALID_KEY)
 
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            TRANSLATION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_auth_invalid.value,
+        )
         getattr(mock_model, self.AUTHENTICATE_MOCK).assert_not_called()
         self.assertIsNone(config.AUTH_KEYS[self.ENGINE_KEY])
 
@@ -104,8 +109,30 @@ class _RegistryEndpointTestMixin:
         response = self._auth_method()(self.VALID_KEY)
 
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            TRANSLATION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_auth_failed.value,
+        )
         self.assertIsNone(config.AUTH_KEYS[self.ENGINE_KEY])
         self.assertFalse(config.SELECTABLE_TRANSLATION_ENGINE_STATUS[self.ENGINE_KEY])
+
+    @patch("controller.errorLogging")
+    @patch("controller.model")
+    def test_set_auth_key_exception_returns_safe_provider_error(self, mock_model, mock_error_logging) -> None:
+        getattr(mock_model, self.AUTHENTICATE_MOCK).side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = self._auth_method()(self.VALID_KEY)
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            TRANSLATION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_auth_failed.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+        self.assertIsNone(config.AUTH_KEYS[self.ENGINE_KEY])
 
     @patch("controller.model")
     def test_set_model_success_updates_config_and_calls_update_client(self, mock_model) -> None:
@@ -127,8 +154,32 @@ class _RegistryEndpointTestMixin:
         response = self._model_method()("unknown-model")
 
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            TRANSLATION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_model_invalid.value,
+        )
         self.assertEqual(getattr(config, self.MODEL_ATTR), "fake-model-a")
         getattr(mock_model, self.UPDATE_CLIENT_MOCK).assert_not_called()
+
+    @patch("controller.errorLogging")
+    @patch("controller.model")
+    def test_set_model_exception_returns_safe_provider_error(self, mock_model, mock_error_logging) -> None:
+        setattr(config, self.MODEL_LIST_ATTR, ["fake-model-a"])
+        setattr(config, self.MODEL_ATTR, "fake-model-a")
+        getattr(mock_model, self.SET_MODEL_MOCK).side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = self._model_method()("unknown-model")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            TRANSLATION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_model_invalid.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+        self.assertEqual(getattr(config, self.MODEL_ATTR), "fake-model-a")
 
 
 class PlamoEndpointTests(_RegistryEndpointTestMixin, unittest.TestCase):

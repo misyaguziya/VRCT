@@ -19,9 +19,10 @@ in tests.
 """
 
 import threading
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 from speech_recognition import AudioSource, Recognizer, Microphone
 from datetime import datetime
+from errors import AudioPipelineFailure, ERROR_METADATA, ErrorCode
 from utils import errorLogging, printLog, putDroppingOldestOnFull
 from device_manager import pyaudio_op_lock
 from models.transcription.audio_vad import FRAME_DURATION_MS, VadRecognizerAdapter, VadSegmenter
@@ -34,6 +35,49 @@ from models.transcription.audio_vad import FRAME_DURATION_MS, VadRecognizerAdapt
 # 全体が無応答になる。そのため open() は別スレッドで実行し、規定時間
 # 内に完了しなければタイムアウトとして扱う。
 _MIC_OPEN_TIMEOUT_SEC = 8.0
+
+
+class _ReadErrorReportingStream:
+    """MicrophoneStream の read 例外を Recorder へ返す薄いプロキシ。"""
+
+    def __init__(self, stream: Any, handler: Callable[[Exception], None]) -> None:
+        self._stream = stream
+        self._handler = handler
+
+    def read(self, *args: Any, **kwargs: Any) -> Any:
+        try:
+            return self._stream.read(*args, **kwargs)
+        except Exception as error:  # noqa: BLE001 - report and preserve original behavior
+            self._handler(error)
+            raise
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._stream, name)
+
+
+class _ErrorReportingSegmenter:
+    """VAD adapter の process/flush 例外を Recorder へ返すプロキシ。"""
+
+    def __init__(self, segmenter: Any, handler: Callable[[Exception], None]) -> None:
+        self._segmenter = segmenter
+        self._handler = handler
+
+    def process(self, pcm_bytes: bytes) -> Any:
+        try:
+            return self._segmenter.process(pcm_bytes)
+        except Exception as error:  # noqa: BLE001 - report and preserve original behavior
+            self._handler(error)
+            raise
+
+    def flush(self) -> Any:
+        try:
+            return self._segmenter.flush()
+        except Exception as error:  # noqa: BLE001 - report and preserve original behavior
+            self._handler(error)
+            raise
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._segmenter, name)
 
 
 def _validate_audio_source(source: Any) -> Any:
@@ -72,10 +116,21 @@ class _LockedAudioSource(AudioSource):
         # AudioSource.__init__ は "抽象クラスです" として
         # NotImplementedError を送出するガードなので、意図的に呼ばない。
         self._source = source
+        self._read_error_handler: Optional[Callable[[Exception], None]] = None
+
+    def set_read_error_handler(self, handler: Callable[[Exception], None]) -> None:
+        self._read_error_handler = handler
 
     def __enter__(self) -> Any:
         with pyaudio_op_lock:
             self._source.__enter__()
+            stream = getattr(self._source, "stream", None)
+            if (
+                stream is not None
+                and self._read_error_handler is not None
+                and not isinstance(stream, _ReadErrorReportingStream)
+            ):
+                self._source.stream = _ReadErrorReportingStream(stream, self._read_error_handler)
         return self._source
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> Any:
@@ -111,26 +166,55 @@ def _open_with_fallback(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -
 def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -> Any:
     result: dict[str, Any] = {}
     done = threading.Event()
+    cancelled = threading.Event()
+    state_lock = threading.Lock()
+
+    def _close_late_source(source: Any) -> None:
+        """Timeout後に open が完了した source を回収する。"""
+        try:
+            with pyaudio_op_lock:
+                stream = getattr(source, "stream", None)
+                if stream is not None:
+                    source.__exit__(None, None, None)
+                else:
+                    audio = getattr(source, "audio", None)
+                    if audio is not None:
+                        audio.terminate()
+        except Exception:
+            errorLogging()
 
     def _run() -> None:
         try:
-            result["source"] = _open_with_fallback(fallback_kwargs, **device_kwargs)
+            source = _open_with_fallback(fallback_kwargs, **device_kwargs)
+            with state_lock:
+                if cancelled.is_set():
+                    late_source = source
+                else:
+                    result["source"] = source
+                    late_source = None
+            if late_source is not None:
+                _close_late_source(late_source)
         except Exception as error:  # noqa: BLE001 - re-raised on the caller's thread below
-            result["error"] = error
+            with state_lock:
+                if not cancelled.is_set():
+                    result["error"] = error
         finally:
             done.set()
 
-    # daemon=True: タイムアウトした場合、このスレッドが実際に open() から
-    # 返ってくる保証はない (PyAudio に安全な中断手段が無い)。join せず
-    # 諦めて呼び出し元に制御を返す。稀にしか起きない想定なので、
-    # 中断されなかったスレッドは daemon のままリークさせておく。
+    # daemon=True: PyAudio.open() 自体を安全に中断できない場合でも、
+    # 呼び出し元はタイムアウトで復帰できるようにする。遅れて open が完了
+    # した source は _run() 側で cancelled を確認して回収する。
     threading.Thread(target=_run, daemon=True, name="mic-open").start()
 
     if not done.wait(timeout=_MIC_OPEN_TIMEOUT_SEC):
+        with state_lock:
+            cancelled.set()
+            late_source = result.pop("source", None)
+        if late_source is not None:
+            _close_late_source(late_source)
         printLog(
             f"Timed out after {_MIC_OPEN_TIMEOUT_SEC}s opening audio device "
-            f"(device_kwargs={device_kwargs}); the previous stream on this "
-            "device may still be releasing"
+            f"(device_kwargs={device_kwargs})"
         )
         raise OSError("Timed out opening audio device")
 
@@ -139,7 +223,11 @@ def _create_microphone(fallback_kwargs: dict[str, Any], **device_kwargs: Any) ->
     return _LockedAudioSource(result["source"])
 
 
-def _wrapStopperWithBlockingReadUnblock(source: Any, raw_stop: Callable[..., None]) -> Callable[..., None]:
+def _wrapStopperWithBlockingReadUnblock(
+    source: Any,
+    raw_stop: Callable[..., None],
+    before_stop: Optional[Callable[[], None]] = None,
+) -> Callable[..., None]:
     """`listen_energy_and_audio_in_background`/`listen_with_segmenter_in_background`
     が返す生の stopper を、ブロッキング中の `stream.read()` を強制的に
     解除してから呼ぶようにラップする。エネルギー閾値方式/VAD方式の
@@ -158,6 +246,8 @@ def _wrapStopperWithBlockingReadUnblock(source: Any, raw_stop: Callable[..., Non
     """
 
     def stopper(wait_for_stop: bool = True) -> None:
+        if before_stop is not None:
+            before_stop()
         try:
             with pyaudio_op_lock:
                 sr_stream = getattr(source, "stream", None)
@@ -200,6 +290,7 @@ class BaseEnergyAndAudioRecorder:
         dynamic_energy_threshold: bool,
         phrase_time_limit: int,
         record_timeout: int,
+        label: str = "mic",
     ) -> None:
         self.recorder = Recognizer()
         self.recorder.energy_threshold = energy_threshold
@@ -225,6 +316,10 @@ class BaseEnergyAndAudioRecorder:
             raise ValueError("audio source can't be None")
 
         self.source = source
+        self.label = label
+        self._stop_requested = threading.Event()
+        self._device_error_lock = threading.Lock()
+        self.device_error_info: Optional[AudioPipelineFailure] = None
         self.SAMPLE_RATE = source.SAMPLE_RATE
         self.SAMPLE_WIDTH = source.SAMPLE_WIDTH
         self.channels = getattr(source, "channels", 1)
@@ -233,6 +328,32 @@ class BaseEnergyAndAudioRecorder:
         # stop() call, so callers can surface a "device lost" notice instead
         # of silently going quiet.
         self.device_error_event = threading.Event()
+        set_read_error_handler = getattr(source, "set_read_error_handler", None)
+        if callable(set_read_error_handler):
+            set_read_error_handler(self._on_stream_read_error)
+
+    def _recording_error_code(self) -> ErrorCode:
+        return ErrorCode.AUDIO_READ_ERROR
+
+    def _set_device_error(self, error: Exception, error_code: Optional[ErrorCode] = None) -> None:
+        if self._stop_requested.is_set():
+            return
+        with self._device_error_lock:
+            if self.device_error_event.is_set():
+                return
+            code = error_code or self._recording_error_code()
+            self.device_error_info = AudioPipelineFailure(
+                error_code=code,
+                stage="recording",
+                source=self.label,
+                message=ERROR_METADATA[code]["message"],
+                exception_type=type(error).__name__,
+            )
+            errorLogging()
+            self.device_error_event.set()
+
+    def _on_stream_read_error(self, error: Exception) -> None:
+        self._set_device_error(error)
 
     def adjustForNoise(self) -> None:
         with self.source:
@@ -260,10 +381,8 @@ class BaseEnergyAndAudioRecorder:
                 # 常にFalseが返る (Fullが発生しないため)。
                 if putDroppingOldestOnFull(audio_queue, item):
                     printLog("audio_queue is full; dropped the oldest queued chunk to keep up")
-            except Exception:
-                # listener スレッドを絶対に殺さない (再入時に stream が
-                # 停止するのを避けるため)
-                errorLogging()
+            except Exception as error:  # noqa: BLE001 - report and preserve callback failure
+                self._set_device_error(error)
 
         def energy_callback(energy) -> None:
             try:
@@ -284,12 +403,13 @@ class BaseEnergyAndAudioRecorder:
                 phrase_timeout=1,
                 record_timeout=self.record_timeout,
             )
-        except Exception:
-            self.device_error_event.set()
-            errorLogging()
+        except Exception as error:  # noqa: BLE001 - report and preserve setup failure
+            self._set_device_error(error)
             raise
 
-        self.stop = _wrapStopperWithBlockingReadUnblock(self.source, stop)
+        self.stop = _wrapStopperWithBlockingReadUnblock(
+            self.source, stop, before_stop=self._stop_requested.set
+        )
         self.pause = pause
         self.resume = resume
 
@@ -318,7 +438,7 @@ class BaseVadAndAudioRecorder:
 
     def __init__(self, source: Any, record_timeout: int, label: str = "vad") -> None:
         self.recorder = Recognizer()
-        self.record_timeout = record_timeout
+        self.record_timeout = float("inf") if record_timeout <= 0 else record_timeout
         self.stop = None
         self.pause = None
         self.resume = None
@@ -327,7 +447,14 @@ class BaseVadAndAudioRecorder:
             raise ValueError("audio source can't be None")
 
         self.source = source
+        self.label = label
+        self._stop_requested = threading.Event()
+        self._device_error_lock = threading.Lock()
+        self.device_error_info: Optional[AudioPipelineFailure] = None
         self.device_error_event = threading.Event()
+        set_read_error_handler = getattr(source, "set_read_error_handler", None)
+        if callable(set_read_error_handler):
+            set_read_error_handler(self._on_stream_read_error)
         # max_speech_frames を record_timeout (既定3秒) に連動させていた
         # 時期があったが、実機検証で「長い連続発話ほど内容が丸ごと
         # 抜け落ちる」regressionを引き起こした (2026-09-06)。無音を挟まない
@@ -367,6 +494,9 @@ class BaseVadAndAudioRecorder:
                 diagnostic_label=label,
             ),
         )
+        self._error_reporting_segmenter = _ErrorReportingSegmenter(
+            self.vad_adapter, self._on_vad_error
+        )
         # AudioTranscriber は self.SAMPLE_RATE/SAMPLE_WIDTH/channels を、
         # audio_queue に積まれる生バイト列 (last_sample) の実際の形式として
         # そのまま AudioData の再構成に使う (processMicData/processSpeakerData)。
@@ -378,6 +508,39 @@ class BaseVadAndAudioRecorder:
         self.SAMPLE_RATE = self.vad_adapter.sample_rate
         self.SAMPLE_WIDTH = self.vad_adapter.sample_width
         self.channels = 1
+
+    def _on_stream_read_error(self, error: Exception) -> None:
+        if self._stop_requested.is_set():
+            return
+        with self._device_error_lock:
+            if self.device_error_event.is_set():
+                return
+            code = ErrorCode.AUDIO_READ_ERROR
+            self.device_error_info = AudioPipelineFailure(
+                error_code=code,
+                stage="recording",
+                source=self.label,
+                message=ERROR_METADATA[code]["message"],
+                exception_type=type(error).__name__,
+            )
+            errorLogging()
+            self.device_error_event.set()
+
+    def _on_vad_error(self, error: Exception) -> None:
+        if self._stop_requested.is_set():
+            return
+        with self._device_error_lock:
+            if self.device_error_event.is_set():
+                return
+            self.device_error_info = AudioPipelineFailure(
+                error_code=ErrorCode.VAD_INFERENCE_ERROR,
+                stage="vad",
+                source=self.label,
+                message=ERROR_METADATA[ErrorCode.VAD_INFERENCE_ERROR]["message"],
+                exception_type=type(error).__name__,
+            )
+            errorLogging()
+            self.device_error_event.set()
 
     def adjustForNoise(self) -> None:
         # VAD はエネルギー閾値のキャリブレーションを必要としないため no-op。
@@ -410,8 +573,8 @@ class BaseVadAndAudioRecorder:
                 # 追いつけない状況は起こり得るため同じ有界化を適用する。
                 if putDroppingOldestOnFull(audio_queue, item):
                     printLog("audio_queue is full; dropped the oldest queued chunk to keep up")
-            except Exception:
-                errorLogging()
+            except Exception as error:  # noqa: BLE001 - report callback failure
+                self._on_stream_read_error(error)
 
         def energy_callback(energy) -> None:
             try:
@@ -423,16 +586,17 @@ class BaseVadAndAudioRecorder:
             stop, pause, resume = self.recorder.listen_with_segmenter_in_background(
                 source=self.source,
                 callback=audio_callback,
-                segmenter=self.vad_adapter,
+                segmenter=self._error_reporting_segmenter,
                 callback_energy=energy_callback if energy_queue is not None else None,
                 record_timeout=self.record_timeout,
             )
-        except Exception:
-            self.device_error_event.set()
-            errorLogging()
+        except Exception as error:  # noqa: BLE001 - report setup failure
+            self._on_stream_read_error(error)
             raise
 
-        self.stop = _wrapStopperWithBlockingReadUnblock(self.source, stop)
+        self.stop = _wrapStopperWithBlockingReadUnblock(
+            self.source, stop, before_stop=self._stop_requested.set
+        )
         self.pause = pause
         self.resume = resume
 
@@ -457,6 +621,7 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             dynamic_energy_threshold=dynamic_energy_threshold,
             phrase_time_limit=phrase_time_limit,
             record_timeout=record_timeout,
+            label="mic",
         )
 
 
@@ -482,6 +647,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             dynamic_energy_threshold=dynamic_energy_threshold,
             phrase_time_limit=phrase_time_limit,
             record_timeout=record_timeout,
+            label="speaker",
         )
 
 

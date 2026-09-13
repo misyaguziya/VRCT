@@ -103,8 +103,7 @@ fn main() {
 
 fn find_project_root(start: &Path) -> Option<PathBuf> {
     let mut cursor = start.parent();
-    for _ in 0..10 {
-        let dir = cursor?;
+    while let Some(dir) = cursor {
         if dir.join(".venv").join("Scripts").join("python.exe").exists()
             && dir.join("src-python").join("mainloop.py").exists()
         {
@@ -119,6 +118,7 @@ fn find_project_root(start: &Path) -> Option<PathBuf> {
 unsafe fn install_kill_on_close_job() {
     use std::mem::{size_of, zeroed};
     use std::ptr::null;
+    use windows_sys::Win32::Foundation::{CloseHandle, GetLastError};
     use windows_sys::Win32::System::JobObjects::{
         AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
         SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
@@ -128,6 +128,10 @@ unsafe fn install_kill_on_close_job() {
 
     let job = CreateJobObjectW(null(), null());
     if job.is_null() {
+        eprintln!(
+            "dev-sidecar: CreateJobObjectW failed (error {})",
+            GetLastError()
+        );
         return;
     }
 
@@ -141,10 +145,22 @@ unsafe fn install_kill_on_close_job() {
         size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
     );
     if ok == 0 {
+        eprintln!(
+            "dev-sidecar: SetInformationJobObject failed (error {})",
+            GetLastError()
+        );
+        CloseHandle(job);
         return;
     }
 
-    AssignProcessToJobObject(job, GetCurrentProcess());
+    if AssignProcessToJobObject(job, GetCurrentProcess()) == 0 {
+        eprintln!(
+            "dev-sidecar: AssignProcessToJobObject failed (error {})",
+            GetLastError()
+        );
+        CloseHandle(job);
+        return;
+    }
     // Intentionally leak the job handle: the OS closes it on process exit,
     // which is exactly when we want the KILL_ON_JOB_CLOSE to fire.
 }

@@ -7,8 +7,8 @@ check*Connection, get/setXModel) のテスト。
 (Controller._checkTranslationEngineConnection) に載せた (フェーズ3・項目17)。
 
 model (SDK呼び出し境界) はモックし、こちら側の責務である「接続成功/失敗の
-分岐」「モデル一覧・選択モデルの config への反映」「モデル一覧が空だった
-場合の挙動 (既存実装通り GENERAL_EXCEPTION 応答になる)」のみを検証する。
+分岐」「モデル一覧・選択モデルの config への反映」「接続 SDK 例外時の
+専用エラーコードと安全なレスポンス」を検証する。
 """
 
 import unittest
@@ -16,6 +16,8 @@ from unittest.mock import patch
 
 from config import config
 from controller import Controller
+from errors import ErrorCode
+from models.translation.translation_providers import CONNECTION_PROVIDER_REGISTRY
 
 _RUN_MAPPING = {
     "selectable_lmstudio_model_list": "/run/selectable_lmstudio_model_list",
@@ -85,9 +87,11 @@ class _ConnectionEndpointTestMixin:
 
         response = self._check_method()()
 
-        # 既存実装通り、モデル一覧が空の場合は raise Exception 経由で
-        # GENERAL_EXCEPTION 応答になる (専用のエラーコードではない)。
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            CONNECTION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_connection_failed.value,
+        )
         self.assertFalse(config.SELECTABLE_TRANSLATION_ENGINE_STATUS[self.ENGINE_KEY])
         self.assertEqual(getattr(config, self.MODEL_LIST_ATTR), [])
         self.assertIsNone(getattr(config, self.MODEL_ATTR))
@@ -102,10 +106,34 @@ class _ConnectionEndpointTestMixin:
         response = self._check_method()()
 
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            CONNECTION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_connection_failed.value,
+        )
         self.assertFalse(config.SELECTABLE_TRANSLATION_ENGINE_STATUS[self.ENGINE_KEY])
         self.assertEqual(getattr(config, self.MODEL_LIST_ATTR), [])
         self.assertIsNone(getattr(config, self.MODEL_ATTR))
         getattr(mock_model, self.GET_MODEL_LIST_MOCK).assert_not_called()
+
+    @patch("controller.errorLogging")
+    @patch("controller.model")
+    def test_check_connection_exception_returns_safe_provider_error(
+        self, mock_model, mock_error_logging
+    ) -> None:
+        getattr(mock_model, self.AUTHENTICATE_MOCK).side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = self._check_method()()
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            CONNECTION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_connection_failed.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+        self.assertFalse(config.SELECTABLE_TRANSLATION_ENGINE_STATUS[self.ENGINE_KEY])
 
     def test_get_model_returns_config_value(self) -> None:
         setattr(config, self.MODEL_LIST_ATTR, ["fake-model-a"])
@@ -135,8 +163,32 @@ class _ConnectionEndpointTestMixin:
         response = self._model_method()("unknown-model")
 
         self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            CONNECTION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_model_invalid.value,
+        )
         self.assertEqual(getattr(config, self.MODEL_ATTR), "fake-model-a")
         getattr(mock_model, self.UPDATE_CLIENT_MOCK).assert_not_called()
+
+    @patch("controller.errorLogging")
+    @patch("controller.model")
+    def test_set_model_exception_returns_safe_provider_error(self, mock_model, mock_error_logging) -> None:
+        setattr(config, self.MODEL_LIST_ATTR, ["fake-model-a"])
+        setattr(config, self.MODEL_ATTR, "fake-model-a")
+        getattr(mock_model, self.SET_MODEL_MOCK).side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = self._model_method()("unknown-model")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            CONNECTION_PROVIDER_REGISTRY[self.ENGINE_KEY].error_model_invalid.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+        self.assertEqual(getattr(config, self.MODEL_ATTR), "fake-model-a")
 
 
 class LMStudioConnectionEndpointTests(_ConnectionEndpointTestMixin, unittest.TestCase):
@@ -159,6 +211,88 @@ class LMStudioConnectionEndpointTests(_ConnectionEndpointTestMixin, unittest.Tes
     def tearDown(self) -> None:
         config.LMSTUDIO_URL = self._orig_url
         super().tearDown()
+
+
+class LMStudioUrlEndpointTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._orig_url = config.LMSTUDIO_URL
+        self._orig_status = dict(config._SELECTABLE_TRANSLATION_ENGINE_STATUS)
+        self._orig_model_list = list(config._SELECTABLE_LMSTUDIO_MODEL_LIST)
+        self._orig_model = config._SELECTED_LMSTUDIO_MODEL
+        self.controller = Controller.__new__(Controller)
+        self.controller.run_mapping = _RUN_MAPPING
+        self.controller.run = lambda *a, **k: None
+        self.controller.updateTranslationEngineAndEngineList = lambda: None
+
+    def tearDown(self) -> None:
+        config.LMSTUDIO_URL = self._orig_url
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS = self._orig_status
+        config.SELECTABLE_LMSTUDIO_MODEL_LIST = self._orig_model_list
+        config._SELECTED_LMSTUDIO_MODEL = self._orig_model
+
+    @patch("controller.model")
+    def test_invalid_url_returns_dedicated_error_code(self, mock_model) -> None:
+        mock_model.authenticationTranslatorLMStudio.return_value = False
+
+        response = self.controller.setTranslatorLMStudioURL("http://invalid")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID.value,
+        )
+
+    @patch("controller.errorLogging")
+    @patch("controller.model")
+    def test_url_exception_returns_safe_dedicated_error_code(
+        self, mock_model, mock_error_logging
+    ) -> None:
+        mock_model.authenticationTranslatorLMStudio.side_effect = RuntimeError(
+            "provider response contains a secret"
+        )
+
+        response = self.controller.setTranslatorLMStudioURL("http://invalid")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID.value,
+        )
+        self.assertNotIn("provider response contains a secret", response["result"]["message"])
+        mock_error_logging.assert_called_once()
+
+
+class OpenAICompatibleUrlEndpointTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._orig_url = config.OPENAI_COMPATIBLE_URL
+        self._orig_auth_keys = dict(config.AUTH_KEYS)
+        self.controller = Controller.__new__(Controller)
+
+    def tearDown(self) -> None:
+        config.OPENAI_COMPATIBLE_URL = self._orig_url
+        config.AUTH_KEYS = self._orig_auth_keys
+
+    @patch("controller.model")
+    def test_empty_url_returns_invalid_url_error_without_overwriting_current_url(
+        self, mock_model
+    ) -> None:
+        current_url = "http://localhost:8000/v1"
+        config.OPENAI_COMPATIBLE_URL = current_url
+        config.AUTH_KEYS = {
+            **config.AUTH_KEYS,
+            "OpenAI_Compatible": "test-auth-key",
+        }
+
+        response = self.controller.setOpenAICompatibleURL("   ")
+
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(
+            response["result"]["error_code"],
+            ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID.value,
+        )
+        self.assertEqual(response["result"]["data"], current_url)
+        self.assertEqual(config.OPENAI_COMPATIBLE_URL, current_url)
+        mock_model.authenticationTranslatorOpenAICompatibleAuthKey.assert_not_called()
 
 
 class OllamaConnectionEndpointTests(_ConnectionEndpointTestMixin, unittest.TestCase):

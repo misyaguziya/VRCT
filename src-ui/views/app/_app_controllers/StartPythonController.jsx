@@ -14,23 +14,41 @@ import {
 export const StartPythonController = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
+    const watchdogIntervalIdRef = useRef(null);
     const { asyncFetchFonts } = useAsyncFetchFonts();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     useEffect(() => {
-        let watchdog_interval_id = null;
-        if (!hasRunRef.current) {
-            asyncStartPython().then(() => {
-                watchdog_interval_id = startFeedingToWatchDogController(asyncStdoutToPython);
-                asyncFetchFonts();
-            }).catch((err) => {
-                console.error(err);
-            });
+        if (hasRunRef.current) {
+            return () => {
+                if (watchdogIntervalIdRef.current !== null) {
+                    clearInterval(watchdogIntervalIdRef.current);
+                    watchdogIntervalIdRef.current = null;
+                }
+            };
         }
+
+        // StrictMode で effect が再実行されても sidecar 起動を二重化しない。
+        // 非同期処理の完了前に cleanup が走るため、interval ID は effect の
+        // ローカル変数ではなく ref で保持する。
+        hasRunRef.current = true;
+        const startPython = async () => {
+            try {
+                await asyncStartPython();
+                if (watchdogIntervalIdRef.current === null) {
+                    watchdogIntervalIdRef.current = startFeedingToWatchDogController(asyncStdoutToPython);
+                }
+                asyncFetchFonts();
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        startPython();
+
         return () => {
-            hasRunRef.current = true;
-            if (watchdog_interval_id !== null) {
-                clearInterval(watchdog_interval_id);
+            if (watchdogIntervalIdRef.current !== null) {
+                clearInterval(watchdogIntervalIdRef.current);
+                watchdogIntervalIdRef.current = null;
             }
         };
     }, []);

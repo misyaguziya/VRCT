@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "未检测到麦克风设备。"
     no_device_speaker: "未检测到扬声器设备。"
+    copy_to_clipboard_failed: "复制到剪贴板失败。"
     threshold_invalid_value: "可设置的数值范围为 {{min}} 到 {{max}}。"
     failed_download_weight_ctranslate2: "CTranslate2 模型下载失败。"
     failed_download_weight_whisper: "Whisper 模型下载失败。"

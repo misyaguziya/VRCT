@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "未偵測到麥克風裝置。"
     no_device_speaker: "未偵測到喇叭裝置。"
+    copy_to_clipboard_failed: "複製到剪貼簿失敗。"
     threshold_invalid_value: "可以設置 {{min}} 到 {{max}} 之間的值。"
     failed_download_weight_ctranslate2: "CTranslate2 模型下載失敗。"
     failed_download_weight_whisper: "Whisper 模型下載失敗。"
