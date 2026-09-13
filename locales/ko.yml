@@ -346,6 +346,9 @@ config_page:
 
     hotkeys:
         input_placeholder: "키 조합을 입력하세요"
+        disabled_notice: "※설정 화면이 열려 있는 동안에는 오작동을 방지하기 위해 단축키 기능이 일시적으로 비활성화됩니다."
+        error_in_use: "\"{{action_name}}\" 단축키({{hotkey}})가 이미 다른 곳에서 사용 중이므로 등록할 수 없습니다."
+        error_failed_to_register_at_launch: "\"{{action_name}}\" 단축키({{hotkey}})가 다른 애플리케이션에서 사용 중이므로 사용할 수 없습니다."
         toggle_vrct_visibility:
             label: "VRCT 최소화/활성화 전환"
         toggle_translation:

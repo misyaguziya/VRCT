@@ -352,6 +352,9 @@ config_page:
 
     hotkeys:
         input_placeholder: "キーの組み合わせを入力"
+        disabled_notice: "※設定画面を開いている間は、キーの誤作動を防ぐためホットキー機能が一時的に無効化されます。"
+        error_in_use: "「{{action_name}}」のホットキー（{{hotkey}}）は他で使用されているため登録できません。"
+        error_failed_to_register_at_launch: "「{{action_name}}」のホットキー（{{hotkey}}）は他のアプリケーションで使用されているため利用できません。"
         toggle_vrct_visibility:
             label: "VRCTの最小化/アクティブ化の切り替え"
         toggle_translation:

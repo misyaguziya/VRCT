@@ -3,3 +3,10 @@
     // gap: 6.4rem;
     flex-direction: column;
 }
+
+.disabled_notice {
+    font-size: 1.2rem;
+    font-weight: 300;
+    color: var(--dark_500_color);
+    margin-bottom: 0.8rem;
+}
