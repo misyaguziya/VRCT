@@ -31,6 +31,7 @@ import { useFetch, useSoftwareVersion, useNotificationStatus } from "@logics_com
 import * as logics_configs from "@logics_configs";
 import * as logics_main from "@logics_main";
 import * as logics_common from "@logics_common";
+import { getSafeZipEntryPath } from "./zip_entry_path";
 
 // PLUGIN_LIST_URL は中央リポジトリにある、各プラグインの plugin_info.json への URL の配列を保持する JSON の URL
 const PLUGIN_LIST_URL = getPluginsList();
@@ -162,24 +163,16 @@ export const usePlugins = () => {
             const filePromises = [];
             zip.forEach((relativePath, entry) => {
                 // .git 以下はスキップ
-                if (relativePath.startsWith('.git') || relativePath.includes('/.git/')) {
+                const normalizedPath = relativePath.replace(/\\/g, "/");
+                if (normalizedPath.startsWith('.git') || normalizedPath.includes('/.git/')) {
                     return;
                 }
-                // Zip Slip対策: 正規化後にtargetPath配下から外れるエントリは無視する
-                const normalizedSegments = relativePath.split('/').reduce((segments, part) => {
-                    if (part === '' || part === '.') return segments;
-                    if (part === '..') {
-                        segments.pop();
-                        return segments;
-                    }
-                    segments.push(part);
-                    return segments;
-                }, []);
-                if (normalizedSegments.length === 0 || relativePath.split('/').includes('..')) {
+                const safeRelativePath = getSafeZipEntryPath(relativePath);
+                if (safeRelativePath === null) {
                     console.error('Skipping unsafe zip entry:', relativePath);
                     return;
                 }
-                const filePath = `${targetPath}/${normalizedSegments.join('/')}`;
+                const filePath = `${targetPath}/${safeRelativePath}`;
                 if (entry.dir) {
                     // ディレクトリの場合は mkdir
                     filePromises.push(

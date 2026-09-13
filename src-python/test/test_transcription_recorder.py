@@ -20,6 +20,7 @@ from queue import Queue
 from unittest.mock import patch, MagicMock
 
 from speech_recognition import AudioSource
+from errors import ErrorCode
 
 from models.transcription.transcription_recorder import (
     BaseEnergyAndAudioRecorder,
@@ -118,6 +119,40 @@ class TestCreateMicrophone(unittest.TestCase):
 
         never_returns.set()  # リークしたバックグラウンドスレッドを解放する
 
+    def test_closes_source_that_finishes_after_timeout(self) -> None:
+        """タイムアウト後に遅れて成功した open のソースを解放する。"""
+        release_open = threading.Event()
+
+        class LateSource:
+            def __init__(self) -> None:
+                self.stream = object()
+                self.exit_called = threading.Event()
+
+            def __exit__(self, exc_type, exc_value, traceback) -> None:
+                self.stream = None
+                self.exit_called.set()
+
+        late_source = LateSource()
+
+        def delayed_open(*args, **kwargs):
+            release_open.wait(timeout=1)
+            return late_source
+
+        with patch(
+            "models.transcription.transcription_recorder._open_with_fallback",
+            side_effect=delayed_open,
+        ):
+            with patch(
+                "models.transcription.transcription_recorder._MIC_OPEN_TIMEOUT_SEC",
+                0.05,
+            ):
+                with self.assertRaisesRegex(OSError, "Timed out"):
+                    _create_microphone({}, device_index=10)
+
+        release_open.set()
+        self.assertTrue(late_source.exit_called.wait(timeout=1))
+        self.assertIsNone(late_source.stream)
+
 
 class TestLockedAudioSource(unittest.TestCase):
     """mic/speaker の listener スレッドが本番ストリームを open する瞬間
@@ -172,6 +207,30 @@ class TestLockedAudioSource(unittest.TestCase):
         self.assertEqual(wrapped.SAMPLE_RATE, 48000)
         with wrapped:
             self.assertIs(wrapped.stream, inner.stream)
+
+    def test_reports_stream_read_error_to_recorder(self) -> None:
+        class FailingStream:
+            def read(self, _size):
+                raise OSError("device gone")
+
+            def close(self):
+                pass
+
+        class ReadableSource(FakeAudioSource):
+            def __enter__(self):
+                self.stream = FailingStream()
+                return self
+
+        errors = []
+        wrapped = _LockedAudioSource(ReadableSource(opens=True))
+        wrapped.set_read_error_handler(errors.append)
+
+        with wrapped as source:
+            with self.assertRaises(OSError):
+                source.stream.read(1024)
+
+        self.assertEqual(len(errors), 1)
+        self.assertIsInstance(errors[0], OSError)
 
 
 class TestRecorderChunkSize(unittest.TestCase):
@@ -617,6 +676,25 @@ class TestVadRecorderPipeline(unittest.TestCase):
         self.assertEqual(recorder.vad_adapter._normalizer.sample_rate, 48000)
         self.assertEqual(recorder.vad_adapter._normalizer.channels, 2)
 
+    def test_vad_record_timeout_zero_is_treated_as_unlimited(self) -> None:
+        recorder = BaseVadAndAudioRecorder(RecorderAudioSource(), record_timeout=0)
+
+        self.assertEqual(recorder.record_timeout, float("inf"))
+
+    @patch("models.transcription.transcription_recorder.errorLogging")
+    def test_vad_error_is_reported_with_stage_and_source(self, mock_error_logging) -> None:
+        recorder = BaseVadAndAudioRecorder(RecorderAudioSource(), record_timeout=5, label="speaker")
+        recorder.vad_adapter.process = MagicMock(side_effect=RuntimeError("vad failed"))
+
+        with self.assertRaises(RuntimeError):
+            recorder._error_reporting_segmenter.process(b"\x00\x00")
+
+        self.assertTrue(recorder.device_error_event.is_set())
+        self.assertEqual(recorder.device_error_info.error_code, ErrorCode.VAD_INFERENCE_ERROR)
+        self.assertEqual(recorder.device_error_info.stage, "vad")
+        self.assertEqual(recorder.device_error_info.source, "speaker")
+        mock_error_logging.assert_called_once()
+
     def test_max_speech_frames_is_a_fixed_puripuly_referenced_value_not_record_timeout(
         self,
     ) -> None:
@@ -676,7 +754,7 @@ class TestVadRecorderPipeline(unittest.TestCase):
         self.assertIs(recorder.resume, resume)
         recorder.recorder.listen_with_segmenter_in_background.assert_called_once()
         _, kwargs = recorder.recorder.listen_with_segmenter_in_background.call_args
-        self.assertIs(kwargs.get("segmenter"), recorder.vad_adapter)
+        self.assertIs(kwargs.get("segmenter")._segmenter, recorder.vad_adapter)
         self.assertEqual(kwargs.get("record_timeout"), 5)
         self.assertIsNone(kwargs.get("callback_energy"))
 

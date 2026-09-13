@@ -48,7 +48,7 @@ from .transcription_openai_compatible import TRANSCRIPTION_API_ENGINES as _API_T
 _CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
 
 from pydub import AudioSegment
-from errors import ErrorCode
+from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
 from utils import errorLogging, printLog
 
 import warnings
@@ -106,8 +106,10 @@ class AudioTranscriber:
         api_model: Optional[str] = None,
         api_model_languages: Optional[List[str]] = None,
         vad_segmented: bool = False,
+        source_label: Optional[str] = None,
     ) -> None:
         self.speaker = speaker
+        self.source = source_label or ("speaker" if speaker else "mic")
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
         # True の場合、audio_queue に積まれる各アイテムは既に VAD
@@ -160,7 +162,7 @@ class AudioTranscriber:
                 )
             except Exception:
                 errorLogging()
-                self._api_provider = None
+                raise
         elif transcription_engine == "Deepgram":
             self.transcription_engine = transcription_engine
             try:
@@ -171,7 +173,7 @@ class AudioTranscriber:
                 )
             except Exception:
                 errorLogging()
-                self._api_provider = None
+                raise
 
     def _resolve_provider(self):
         """`self.transcription_engine`/`self.whisper_model` の"現在の"値を見て
@@ -424,10 +426,13 @@ class AudioTranscriber:
             self.last_api_error_code = None
 
         best: Dict[str, Any] = {"confidence": 0, "text": "", "language": None}
+        provider_error: Optional[Exception] = None
         try:
             audio_data = self.audio_sources["process_data_func"]()
             provider = self._resolve_provider()
-            if provider is not None:
+            if provider is None:
+                provider_error = RuntimeError("transcription provider is unavailable")
+            else:
                 force_language = len(languages) == 1
                 for language, country in zip(languages, countries):
                     try:
@@ -445,9 +450,12 @@ class AudioTranscriber:
                     except TranscriptionApiError as exc:
                         self.last_recognition_error = True
                         self.last_api_error_code = exc.error_code
+                        provider_error = provider_error or exc
+                        errorLogging()
                         continue
-                    except Exception:
+                    except Exception as exc:  # noqa: BLE001 - convert to pipeline failure
                         self.last_recognition_error = True
+                        provider_error = provider_error or exc
                         errorLogging()
                         continue
 
@@ -458,12 +466,29 @@ class AudioTranscriber:
 
         except UnknownValueError:
             pass
-        except Exception:
+        except AudioPipelineError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - convert to pipeline failure
             errorLogging()
+            provider_error = provider_error or exc
 
         self.asr_attempts += 1
         succeeded = best["text"] != ""
+        if provider_error is not None and not succeeded:
+            failure = AudioPipelineFailure(
+                error_code=ErrorCode.ASR_ERROR,
+                stage="asr",
+                source=self.source,
+                message=ERROR_METADATA[ErrorCode.ASR_ERROR]["message"],
+                exception_type=type(provider_error).__name__,
+            )
+            printLog(
+                f"[ASR-error][{self.source}][{self.transcription_engine}] "
+                f"error_type={type(provider_error).__name__}"
+            )
+            raise AudioPipelineError(failure) from provider_error
         if succeeded:
+            self.last_recognition_error = False
             self.asr_successes += 1
             self.updateTranscript(best)
         success_rate = (self.asr_successes / self.asr_attempts) * 100

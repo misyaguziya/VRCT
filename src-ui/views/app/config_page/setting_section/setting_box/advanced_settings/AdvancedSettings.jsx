@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 
-import { useOpenFolder } from "@logics_common";
+import { useNotificationStatus, useOpenFolder } from "@logics_common";
 import {
     useAdvancedSettings,
     useSaveButtonLogic,
@@ -188,6 +188,7 @@ const WebsocketPortContainer = () => {
 
 const WebsocketUrlContainer = () => {
     const { t } = useI18n();
+    const { showNotification_Error } = useNotificationStatus();
     const { currentWebsocketHost, currentWebsocketPort, currentWebsocketAuthToken } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
@@ -208,6 +209,7 @@ const WebsocketUrlContainer = () => {
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
             onclickFunction={copyUrlToClipboard}
+            onError={() => showNotification_Error(t("common_error.copy_to_clipboard_failed"))}
         />
     );
 };
@@ -248,6 +250,7 @@ const EnableObsBrowserSourceContainer = () => {
 
 const ObsBrowserSourceUrlContainer = () => {
     const { t } = useI18n();
+    const { showNotification_Error } = useNotificationStatus();
     const { currentWebsocketHost, currentObsBrowserSourcePort } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
@@ -265,6 +268,7 @@ const ObsBrowserSourceUrlContainer = () => {
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
             onclickFunction={copyUrlToClipboard}
+            onError={() => showNotification_Error(t("common_error.copy_to_clipboard_failed"))}
         />
     );
 };
@@ -286,7 +290,7 @@ const ObsBrowserSourcePortContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourcePort.state === "pending") return;
         setInputValue(`${currentObsBrowserSourcePort.data}`);
-    }, [currentObsBrowserSourcePort]);
+    }, [currentObsBrowserSourcePort.data, currentObsBrowserSourcePort.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -318,7 +322,7 @@ const ObsBrowserSourceMaxMessagesContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceMaxMessages.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceMaxMessages.data}`);
-    }, [currentObsBrowserSourceMaxMessages]);
+    }, [currentObsBrowserSourceMaxMessages.data, currentObsBrowserSourceMaxMessages.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -350,7 +354,7 @@ const ObsBrowserSourceDisplayDurationContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceDisplayDuration.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceDisplayDuration.data}`);
-    }, [currentObsBrowserSourceDisplayDuration]);
+    }, [currentObsBrowserSourceDisplayDuration.data, currentObsBrowserSourceDisplayDuration.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -382,7 +386,7 @@ const ObsBrowserSourceFadeoutDurationContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFadeoutDuration.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFadeoutDuration.data}`);
-    }, [currentObsBrowserSourceFadeoutDuration]);
+    }, [currentObsBrowserSourceFadeoutDuration.data, currentObsBrowserSourceFadeoutDuration.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -414,7 +418,7 @@ const ObsBrowserSourceFontSizeContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontSize.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontSize.data}`);
-    }, [currentObsBrowserSourceFontSize]);
+    }, [currentObsBrowserSourceFontSize.data, currentObsBrowserSourceFontSize.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -445,7 +449,7 @@ const ObsBrowserSourceFontColorContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontColor.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontColor.data}`);
-    }, [currentObsBrowserSourceFontColor]);
+    }, [currentObsBrowserSourceFontColor.data, currentObsBrowserSourceFontColor.state]);
 
     return (
         <ColorEntryWithSaveButtonContainer
@@ -476,7 +480,7 @@ const ObsBrowserSourceFontOutlineThicknessContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontOutlineThickness.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontOutlineThickness.data}`);
-    }, [currentObsBrowserSourceFontOutlineThickness]);
+    }, [currentObsBrowserSourceFontOutlineThickness.data, currentObsBrowserSourceFontOutlineThickness.state]);
 
     return (
         <EntryWithSaveButtonContainer
@@ -507,7 +511,7 @@ const ObsBrowserSourceFontOutlineColorContainer = () => {
     useEffect(() => {
         if (currentObsBrowserSourceFontOutlineColor.state === "pending") return;
         setInputValue(`${currentObsBrowserSourceFontOutlineColor.data}`);
-    }, [currentObsBrowserSourceFontOutlineColor]);
+    }, [currentObsBrowserSourceFontOutlineColor.data, currentObsBrowserSourceFontOutlineColor.state]);
 
     return (
         <ColorEntryWithSaveButtonContainer

@@ -404,6 +404,10 @@ class Controller:
         # _syncMonitoringLifecycleLocked() が「もう片方はまだ active」と見て
         # 監視スレッドを再起動してしまう。
         try:
+            device_manager.setDeviceListMonitoringActive(False)
+        except Exception:
+            errorLogging()
+        try:
             device_manager.setMicAutoActive(False)
         except Exception:
             errorLogging()
@@ -502,6 +506,7 @@ class Controller:
         )
 
     def updateMicDeviceList(self) -> None:
+        self._synchronizeMicSelectionAfterDeviceUpdate()
         self.run(
             200,
             self.run_mapping["selectable_mic_device_list"],
@@ -509,11 +514,236 @@ class Controller:
         )
 
     def updateSpeakerDeviceList(self) -> None:
+        self._synchronizeSpeakerSelectionAfterDeviceUpdate()
         self.run(
             200,
             self.run_mapping["selectable_speaker_device_list"],
             model.getListSpeakerDevice(),
         )
+
+    @staticmethod
+    def _isMicSelectionAvailable(host: str, device: str) -> bool:
+        if host == "NoHost" or device == "NoDevice":
+            return False
+        try:
+            return any(
+                item.get("name") == device
+                for item in device_manager.getMicDevices().get(host, [])
+            )
+        except Exception:
+            errorLogging()
+            return False
+
+    @staticmethod
+    def _getAvailableDefaultMicSelection() -> Optional[tuple[str, str]]:
+        try:
+            default = device_manager.getDefaultMicDevice()
+            host = default.get("host", {}).get("name", "NoHost")
+            device = default.get("device", {}).get("name", "NoDevice")
+            if Controller._isMicSelectionAvailable(host, device):
+                return host, device
+        except Exception:
+            errorLogging()
+        # デバイス抜去直後は、OS の既定デバイス情報だけが一時的に
+        # NoDevice になることがある。一覧に実デバイスが残っていれば、
+        # Auto Select ON ではその先頭を fallback として使う。
+        try:
+            for host, devices in device_manager.getMicDevices().items():
+                if host == "NoHost":
+                    continue
+                for item in devices:
+                    device = item.get("name")
+                    if device != "NoDevice" and isinstance(device, str):
+                        return host, device
+        except Exception:
+            errorLogging()
+        return None
+
+    @staticmethod
+    def _isSpeakerSelectionAvailable(device: str) -> bool:
+        if device == "NoDevice":
+            return False
+        try:
+            return any(
+                item.get("name") == device
+                for item in device_manager.getSpeakerDevices()
+            )
+        except Exception:
+            errorLogging()
+            return False
+
+    @staticmethod
+    def _getAvailableDefaultSpeakerSelection() -> Optional[str]:
+        try:
+            default = device_manager.getDefaultSpeakerDevice()
+            device = default.get("device", {}).get("name", "NoDevice")
+            if Controller._isSpeakerSelectionAvailable(device):
+                return device
+        except Exception:
+            errorLogging()
+        # Mic と同様、抜去直後に OS の既定値が NoDevice でも、検出済みの
+        # loopback デバイスが残っていれば Auto Select で継続できる。
+        try:
+            for item in device_manager.getSpeakerDevices():
+                device = item.get("name")
+                if device != "NoDevice" and isinstance(device, str):
+                    return device
+        except Exception:
+            errorLogging()
+        return None
+
+    def _setNoMicDeviceSelection(self) -> None:
+        config.SELECTED_MIC_HOST = "NoHost"
+        config.SELECTED_MIC_DEVICE = "NoDevice"
+        self.run(200, self.run_mapping["selected_mic_host"], config.SELECTED_MIC_HOST)
+        self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
+
+    def _setNoSpeakerDeviceSelection(self) -> None:
+        config.SELECTED_SPEAKER_DEVICE = "NoDevice"
+        self.run(
+            200,
+            self.run_mapping["selected_speaker_device"],
+            config.SELECTED_SPEAKER_DEVICE,
+        )
+
+    def _stopMicAudioAfterDeviceLoss(self) -> None:
+        """選択デバイス消失時に mic の Session を強制停止する。"""
+        with self.mic_lifecycle_lock:
+            for stop_fn in (model.stopMicTranscript, model.stopCheckMicEnergy):
+                try:
+                    stop_fn()
+                except Exception:
+                    errorLogging()
+
+    def _stopSpeakerAudioAfterDeviceLoss(self) -> None:
+        """選択デバイス消失時に speaker の Session を強制停止する。"""
+        with self.speaker_lifecycle_lock:
+            for stop_fn in (model.stopSpeakerTranscript, model.stopCheckSpeakerEnergy):
+                try:
+                    stop_fn()
+                except Exception:
+                    errorLogging()
+
+    def _reconfigureMicAfterDeviceFallback(self) -> None:
+        """fallback 先へ切り替えた稼働中の mic Session を再構成する。"""
+        if not (
+            config.ENABLE_TRANSCRIPTION_SEND is True
+            or config.ENABLE_CHECK_ENERGY_SEND is True
+        ):
+            return
+        worker = getattr(model, "mic_lifecycle_worker", None)
+        if worker is not None:
+            worker.enqueue(
+                self._reopenMicAudioOnDeviceChange,
+                coalesce_key="mic_device_fallback",
+            )
+        else:
+            self._reopenMicAudioOnDeviceChange()
+
+    def _reconfigureSpeakerAfterDeviceFallback(self) -> None:
+        """fallback 先へ切り替えた稼働中の speaker Session を再構成する。"""
+        if not (
+            config.ENABLE_TRANSCRIPTION_RECEIVE is True
+            or config.ENABLE_CHECK_ENERGY_RECEIVE is True
+        ):
+            return
+        worker = getattr(model, "speaker_lifecycle_worker", None)
+        if worker is not None:
+            worker.enqueue(
+                self._reopenSpeakerAudioOnDeviceChange,
+                coalesce_key="speaker_device_fallback",
+            )
+        else:
+            self._reopenSpeakerAudioOnDeviceChange()
+
+    def _disableAudioAfterDeviceLoss(self, source: str) -> None:
+        """選択デバイス消失時に録音機能と UI 状態を停止する。"""
+        if source == "mic":
+            transcription_was_enabled = config.ENABLE_TRANSCRIPTION_SEND is True
+            energy_was_enabled = config.ENABLE_CHECK_ENERGY_SEND is True
+            config.ENABLE_TRANSCRIPTION_SEND = False
+            config.ENABLE_CHECK_ENERGY_SEND = False
+            worker = getattr(model, "mic_lifecycle_worker", None)
+            stop_fn = self._stopMicAudioAfterDeviceLoss
+            transcription_endpoint = self.run_mapping.get(
+                "disable_transcription_send", "/set/disable/transcription_send"
+            )
+            energy_endpoint = self.run_mapping.get(
+                "disable_check_mic_threshold", "/set/disable/check_mic_threshold"
+            )
+        elif source == "speaker":
+            transcription_was_enabled = config.ENABLE_TRANSCRIPTION_RECEIVE is True
+            energy_was_enabled = config.ENABLE_CHECK_ENERGY_RECEIVE is True
+            config.ENABLE_TRANSCRIPTION_RECEIVE = False
+            config.ENABLE_CHECK_ENERGY_RECEIVE = False
+            worker = getattr(model, "speaker_lifecycle_worker", None)
+            stop_fn = self._stopSpeakerAudioAfterDeviceLoss
+            transcription_endpoint = self.run_mapping.get(
+                "disable_transcription_receive", "/set/disable/transcription_receive"
+            )
+            energy_endpoint = self.run_mapping.get(
+                "disable_check_speaker_threshold", "/set/disable/check_speaker_threshold"
+            )
+        else:
+            return
+
+        if transcription_was_enabled:
+            self.run(200, transcription_endpoint, False)
+        if energy_was_enabled:
+            self.run(200, energy_endpoint, False)
+        if transcription_was_enabled or energy_was_enabled:
+            if worker is not None:
+                worker.enqueue(stop_fn, coalesce_key=f"{source}_device_loss_stop")
+            else:
+                stop_fn()
+
+    def _synchronizeMicSelectionAfterDeviceUpdate(self) -> None:
+        """一覧更新後に、消失した mic 選択値を現在の状態へ同期する。"""
+        selected_host = config.SELECTED_MIC_HOST
+        selected_device = config.SELECTED_MIC_DEVICE
+        if self._isMicSelectionAvailable(selected_host, selected_device):
+            return
+
+        fallback = self._getAvailableDefaultMicSelection()
+        if fallback is not None:
+            self.updateSelectedMicDevice(*fallback)
+            # Auto ON は既存の Before/After callback が stop→restart を
+            # 担当する。Auto OFF ではここで選択だけ更新すると既存の
+            # Session が抜去済みデバイスを保持するため、worker 経由で
+            # 現在の features を維持したまま再構成する。
+            if config.AUTO_MIC_SELECT is False:
+                self._reconfigureMicAfterDeviceFallback()
+            return
+
+        # 検出済みデバイスが一台もない場合だけ NoDevice にする。
+        if selected_host != "NoHost" or selected_device != "NoDevice":
+            self._setNoMicDeviceSelection()
+        if (
+            config.ENABLE_TRANSCRIPTION_SEND is True
+            or config.ENABLE_CHECK_ENERGY_SEND is True
+        ):
+            self._disableAudioAfterDeviceLoss("mic")
+
+    def _synchronizeSpeakerSelectionAfterDeviceUpdate(self) -> None:
+        """一覧更新後に、消失した speaker 選択値を現在の状態へ同期する。"""
+        selected_device = config.SELECTED_SPEAKER_DEVICE
+        if self._isSpeakerSelectionAvailable(selected_device):
+            return
+
+        fallback = self._getAvailableDefaultSpeakerSelection()
+        if fallback is not None:
+            self.updateSelectedSpeakerDevice(fallback)
+            if config.AUTO_SPEAKER_SELECT is False:
+                self._reconfigureSpeakerAfterDeviceFallback()
+            return
+
+        if selected_device != "NoDevice":
+            self._setNoSpeakerDeviceSelection()
+        if (
+            config.ENABLE_TRANSCRIPTION_RECEIVE is True
+            or config.ENABLE_CHECK_ENERGY_RECEIVE is True
+        ):
+            self._disableAudioAfterDeviceLoss("speaker")
 
     def updateConfigSettings(self) -> None:
         settings = {}
@@ -921,15 +1151,39 @@ class Controller:
         return None
 
     def micMessage(self, result: dict) -> None:
-        if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
+        if (
+            result.get("recognition_error") is not True
+            and config.VRC_MIC_MUTE_SYNC is True
+            and model.mic_mute_status is True
+        ):
             return
 
         if result.get("recognition_error") is True:
+            is_pipeline_error = all(
+                key in result for key in ("error_code", "stage", "source", "message", "recoverable")
+            )
+            if is_pipeline_error:
+                self._disableTranscriptionAfterPipelineError("mic")
+                error_payload = {
+                    "error_code": result["error_code"],
+                    "stage": result["stage"],
+                    "source": result["source"],
+                    "message": result["message"],
+                    "recoverable": result["recoverable"],
+                }
+            else:
+                # 既存の recognition_error 通知を受ける呼び出し元との互換性を
+                # 保つ。新しい音声パイプラインエラーは上の構造化 payload を使う。
+                error_payload = {
+                    "message": "Mic speech recognition request failed. Check your network connection.",
+                    "data": None,
+                }
             self.run(
                 200,
                 self.run_mapping["transcription_recognition_error"],
-                {"message": "Mic speech recognition request failed. Check your network connection.", "data": None},
+                error_payload,
             )
+            return
 
         message = result["text"]
         language = result["language"]
@@ -947,11 +1201,29 @@ class Controller:
 
     def speakerMessage(self, result:dict) -> None:
         if result.get("recognition_error") is True:
+            is_pipeline_error = all(
+                key in result for key in ("error_code", "stage", "source", "message", "recoverable")
+            )
+            if is_pipeline_error:
+                self._disableTranscriptionAfterPipelineError("speaker")
+                error_payload = {
+                    "error_code": result["error_code"],
+                    "stage": result["stage"],
+                    "source": result["source"],
+                    "message": result["message"],
+                    "recoverable": result["recoverable"],
+                }
+            else:
+                error_payload = {
+                    "message": "Speaker speech recognition request failed. Check your network connection.",
+                    "data": None,
+                }
             self.run(
                 200,
                 self.run_mapping["transcription_recognition_error"],
-                {"message": "Speaker speech recognition request failed. Check your network connection.", "data": None},
+                error_payload,
             )
+            return
 
         message = result["text"]
         language = result["language"]
@@ -966,6 +1238,23 @@ class Controller:
             )
         elif isinstance(message, str) and len(message) > 0:
             self._processMessage(SPEAKER_MESSAGE_SPEC, message, language)
+
+    def _disableTranscriptionAfterPipelineError(self, source: str) -> None:
+        """エラー停止後の実状態を config と UI に同期する。"""
+        if source == "mic":
+            config.ENABLE_TRANSCRIPTION_SEND = False
+            endpoint = self.run_mapping.get(
+                "disable_transcription_send", "/set/disable/transcription_send"
+            )
+        elif source == "speaker":
+            config.ENABLE_TRANSCRIPTION_RECEIVE = False
+            endpoint = self.run_mapping.get(
+                "disable_transcription_receive", "/set/disable/transcription_receive"
+            )
+        else:
+            return
+        # UI は既存の disable endpoint の run 通知を状態更新として処理する。
+        self.run(200, endpoint, False)
 
     def chatMessage(self, data) -> dict:
         msg_id = data["id"]
@@ -2282,11 +2571,15 @@ class Controller:
                     spec.error_auth_invalid,
                     data=None
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
+            # SDK の例外内容には認証キーやリクエスト情報が含まれる
+            # 可能性があるため、そのまま UI へ返さない。詳細は
+            # errorLogging() で記録し、UI には認証失敗の安全な概要だけを
+            # 返す。
+            response = VRCTError.create_error_response(
+                spec.error_auth_failed,
+                data=None,
             )
         if response["status"] == 400:
             self._delTranslationEngineAuthKey(engine_key)
@@ -2331,11 +2624,13 @@ class Controller:
                     spec.error_model_invalid,
                     data=getattr(config, spec.selected_model_attr)
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=getattr(config, spec.selected_model_attr)
+            # モデル SDK の例外詳細は UI に露出させず、選択失敗として
+            # 現在値を返す。traceback は errorLogging() に残す。
+            response = VRCTError.create_error_response(
+                spec.error_model_invalid,
+                data=getattr(config, spec.selected_model_attr),
             )
         return response
 
@@ -2344,10 +2639,9 @@ class Controller:
         疎通確認処理。`connect_kwargs` は接続呼び出しに渡す追加引数
         (LMStudio: `{"base_url": config.LMSTUDIO_URL}`、Ollama: `{}`)。
 
-        NOTE: 接続には成功したがモデル一覧が空だった場合、既存実装を
-        そのまま踏襲して `raise Exception(...)` で下の except に処理させている
-        (専用のエラーコードではなく GENERAL_EXCEPTION 応答になる、既存の
-        LMStudio/Ollama の挙動と同じ)。
+        接続 SDK の例外や、接続後に利用可能なモデルが無い場合も、UI には
+        `error_connection_failed` を返す。例外の詳細は errorLogging() に
+        記録し、レスポンスには含めない。
         """
         spec = CONNECTION_PROVIDER_REGISTRY[engine_key]
         bindings = _ENGINE_MODEL_BINDINGS[engine_key]
@@ -2379,7 +2673,7 @@ class Controller:
                     spec.error_connection_failed,
                     data=False
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
             setattr(config, spec.selectable_model_list_attr, [])
@@ -2387,9 +2681,9 @@ class Controller:
             self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
             self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
             self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=False
+            response = VRCTError.create_error_response(
+                spec.error_connection_failed,
+                data=False,
             )
         return response
 
@@ -2567,7 +2861,7 @@ class Controller:
                     ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID,
                     data=config.LMSTUDIO_URL
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
             config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
@@ -2575,9 +2869,9 @@ class Controller:
             self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
             self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
             self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.LMSTUDIO_URL
+            response = VRCTError.create_error_response(
+                ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID,
+                data=config.LMSTUDIO_URL,
             )
         return response
 
@@ -2678,7 +2972,10 @@ class Controller:
         try:
             data = str(data).strip()
             if len(data) == 0:
-                data = "https://api.openai.com/v1"
+                return VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID,
+                    data=config.OPENAI_COMPATIBLE_URL
+                )
 
             auth_key = config.AUTH_KEYS[translator_name]
 
@@ -3010,8 +3307,7 @@ class Controller:
 
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_SEND is False:
-            self.startTranscriptionSendMessage()
-            config.ENABLE_TRANSCRIPTION_SEND = True
+            config.ENABLE_TRANSCRIPTION_SEND = self.startTranscriptionSendMessage()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
@@ -3022,8 +3318,7 @@ class Controller:
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is False:
-            self.startTranscriptionReceiveMessage()
-            config.ENABLE_TRANSCRIPTION_RECEIVE = True
+            config.ENABLE_TRANSCRIPTION_RECEIVE = self.startTranscriptionReceiveMessage()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def setDisableTranscriptionReceive(self, *args, **kwargs) -> dict:
@@ -3184,10 +3479,13 @@ class Controller:
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
-    def startTranscriptionSendMessage(self) -> None:
+    def startTranscriptionSendMessage(self) -> bool:
         with self.mic_lifecycle_lock:
             try:
-                model.startMicTranscript(self.micMessage)
+                started = model.startMicTranscript(self.micMessage)
+                if not started:
+                    config.ENABLE_TRANSCRIPTION_SEND = False
+                return started
             except Exception as e:
                 # VRAM不足エラーの検出
                 is_vram_error, error_message = model.detectVRAMError(e)
@@ -3205,18 +3503,26 @@ class Controller:
                     # 保持しているため、ロックを取り直す公開版
                     # (stopTranscriptionSendMessage) ではなく内部版を呼ぶ。
                     self._stopTranscriptionSendMessageLocked()
-                    disable_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
-                        data=False
-                    )
-                    self.run(
-                        disable_response["status"],
-                        self.run_mapping["enable_transcription_send"],
-                        disable_response["result"],
-                    )
+                    # UI の状態同期は enable 通知ではなく、状態更新用の
+                    # disable endpoint へ送る。_start() が先に構造化 pipeline
+                    # error を通知していた場合は、micMessage() が既に config
+                    # を False にしているため重複通知しない。
+                    if config.ENABLE_TRANSCRIPTION_SEND is True:
+                        self.run(
+                            200,
+                            self.run_mapping.get(
+                                "disable_transcription_send",
+                                "/set/disable/transcription_send",
+                            ),
+                            False,
+                        )
+                    config.ENABLE_TRANSCRIPTION_SEND = False
+                    return False
                 else:
                     # その他のエラーは通常通り処理
                     errorLogging()
+                    config.ENABLE_TRANSCRIPTION_SEND = False
+                    return False
 
     def _stopTranscriptionSendMessageLocked(self) -> None:
         """mic_lifecycle_lock を既に保持している呼び出し元専用。"""
@@ -3226,10 +3532,13 @@ class Controller:
         with self.mic_lifecycle_lock:
             self._stopTranscriptionSendMessageLocked()
 
-    def startTranscriptionReceiveMessage(self) -> None:
+    def startTranscriptionReceiveMessage(self) -> bool:
         with self.speaker_lifecycle_lock:
             try:
-                model.startSpeakerTranscript(self.speakerMessage)
+                started = model.startSpeakerTranscript(self.speakerMessage)
+                if not started:
+                    config.ENABLE_TRANSCRIPTION_RECEIVE = False
+                return started
             except Exception as e:
                 # VRAM不足エラーの検出
                 is_vram_error, error_message = model.detectVRAMError(e)
@@ -3246,18 +3555,24 @@ class Controller:
                     # ここでスピーカーの音声認識を停止 (内部版、詳細は
                     # startTranscriptionSendMessage 側のコメント参照)
                     self._stopTranscriptionReceiveMessageLocked()
-                    disable_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
-                        data=False
-                    )
-                    self.run(
-                        disable_response["status"],
-                        self.run_mapping["enable_transcription_receive"],
-                        disable_response["result"],
-                    )
+                    # Mic と同様、UI の状態同期は disable endpoint に送る。
+                    # pipeline error 経由で既に同期済みなら重複通知しない。
+                    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+                        self.run(
+                            200,
+                            self.run_mapping.get(
+                                "disable_transcription_receive",
+                                "/set/disable/transcription_receive",
+                            ),
+                            False,
+                        )
+                    config.ENABLE_TRANSCRIPTION_RECEIVE = False
+                    return False
                 else:
                     # その他のエラーは通常通り処理
                     errorLogging()
+                    config.ENABLE_TRANSCRIPTION_RECEIVE = False
+                    return False
 
     def _stopTranscriptionReceiveMessageLocked(self) -> None:
         """speaker_lifecycle_lock を既に保持している呼び出し元専用。"""
@@ -3496,34 +3811,41 @@ class Controller:
         # 認証 (token) を導入済みとはいえ、同一 LAN 上の第三者からの
         # 到達性まで許してしまう。特定の LAN IP を明示的に選ぶのとは
         # リスクの性質が異なるため、他の IP 検証と分けて拒否する。
-        if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
-            response = VRCTError.create_error_response(
-                ErrorCode.VALIDATION_INVALID_IP,
-                data=config.WEBSOCKET_HOST
-            )
-        else:
-            if model.checkWebSocketServerAlive() is False:
-                config.WEBSOCKET_HOST = data
-                response = {"status":200, "result":config.WEBSOCKET_HOST}
+        try:
+            if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
+                response = VRCTError.create_error_response(
+                    ErrorCode.VALIDATION_INVALID_IP,
+                    data=config.WEBSOCKET_HOST
+                )
             else:
-                if data == config.WEBSOCKET_HOST:
-                    response = {"status":200, "result":config.WEBSOCKET_HOST}
-                elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
-                    model.stopWebSocketServer()
-                    model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                if model.checkWebSocketServerAlive() is False:
                     config.WEBSOCKET_HOST = data
-                    # The OBS overlay's HTTP server must stay bound to the
-                    # same host the WebSocket server now listens on, or the
-                    # overlay page it serves will point at a dead address.
-                    if config.OBS_BROWSER_SOURCE is True:
-                        model.stopObsBrowserSourceServer()
-                        model.startObsBrowserSourceServer(data, int(config.OBS_BROWSER_SOURCE_PORT))
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
                 else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.WEBSOCKET_HOST_INVALID,
-                        data=config.WEBSOCKET_HOST
-                    )
+                    if data == config.WEBSOCKET_HOST:
+                        response = {"status":200, "result":config.WEBSOCKET_HOST}
+                    elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
+                        model.stopWebSocketServer()
+                        model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                        config.WEBSOCKET_HOST = data
+                        # The OBS overlay's HTTP server must stay bound to the
+                        # same host the WebSocket server now listens on, or the
+                        # overlay page it serves will point at a dead address.
+                        if config.OBS_BROWSER_SOURCE is True:
+                            model.stopObsBrowserSourceServer()
+                            model.startObsBrowserSourceServer(data, int(config.OBS_BROWSER_SOURCE_PORT))
+                        response = {"status":200, "result":config.WEBSOCKET_HOST}
+                    else:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.WEBSOCKET_HOST_INVALID,
+                            data=config.WEBSOCKET_HOST
+                        )
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_HOST_INVALID,
+                data=config.WEBSOCKET_HOST,
+            )
 
         return response
 
@@ -3539,22 +3861,29 @@ class Controller:
                 custom_message="WebSocket port must be a number",
             )
 
-        if model.checkWebSocketServerAlive() is False:
-            config.WEBSOCKET_PORT = port
-            response = {"status":200, "result":config.WEBSOCKET_PORT}
-        else:
-            if port == config.WEBSOCKET_PORT:
-                return {"status":200, "result":config.WEBSOCKET_PORT}
-            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
-                model.stopWebSocketServer()
-                model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+        try:
+            if model.checkWebSocketServerAlive() is False:
                 config.WEBSOCKET_PORT = port
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
             else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
-                    data=config.WEBSOCKET_PORT
-                )
+                if port == config.WEBSOCKET_PORT:
+                    return {"status":200, "result":config.WEBSOCKET_PORT}
+                elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
+                    model.stopWebSocketServer()
+                    model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+                    config.WEBSOCKET_PORT = port
+                    response = {"status":200, "result":config.WEBSOCKET_PORT}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
+                        data=config.WEBSOCKET_PORT
+                    )
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
+                data=config.WEBSOCKET_PORT,
+            )
         return response
 
     @staticmethod
@@ -3572,18 +3901,25 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        if config.WEBSOCKET_SERVER is False:
-            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
-                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
-                config.WEBSOCKET_SERVER = True
-                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        try:
+            if config.WEBSOCKET_SERVER is False:
+                if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+                    model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+                    config.WEBSOCKET_SERVER = True
+                    response = {"status":200, "result":config.WEBSOCKET_SERVER}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+                        data=config.WEBSOCKET_SERVER
+                    )
             else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
-                    data=config.WEBSOCKET_SERVER
-                )
-        else:
-            response = {"status":200, "result":config.WEBSOCKET_SERVER}
+                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+                data=config.WEBSOCKET_SERVER,
+            )
         return response
 
     @staticmethod
@@ -4483,6 +4819,9 @@ class Controller:
         device_manager.setCallbackHostList(self.updateMicHostList)
         device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
         device_manager.setCallbackSpeakerDeviceList(self.updateSpeakerDeviceList)
+        # 一覧更新は Auto Select とは独立させる。Auto Select が両方 OFF でも
+        # デバイス再接続を検出して UI の選択肢を更新できるようにする。
+        device_manager.setDeviceListMonitoringActive(True)
 
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:

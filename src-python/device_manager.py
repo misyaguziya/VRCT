@@ -131,8 +131,9 @@ class DeviceManager:
     def init(self) -> None:
         """Initialize internal state. This is intentionally separate from object
         creation so importing the module won't start threads or access OS
-        audio APIs. Call `device_manager.init()` and then
-        `device_manager.startMonitoring()` explicitly when ready.
+        audio APIs. Call `device_manager.init()` and then explicitly enable
+        monitoring with `startMonitoring()` or
+        `setDeviceListMonitoringActive()` when ready.
         """
         if getattr(self, "_initialized", False):
             return
@@ -199,6 +200,11 @@ class DeviceManager:
         # 循環待ちは生じない)。
         self._lifecycle_lock: Lock = Lock()
 
+        # デバイス一覧の監視は Auto Select 状態とは独立して管理する。
+        # Auto Select が両方 OFF でも、抜き差し後の一覧更新は継続する必要が
+        # あるため、一覧監視のライフサイクルを別フラグにする。
+        self._device_list_monitoring_active: bool = False
+
         # Auto Select 状態を mic/speaker で独立管理する。
         # 監視スレッド自体は 1 本 (update() が両方のリストを一括で refresh する
         # ため分けても大きな利点なし) だが、Before/After callback は各サイド
@@ -219,6 +225,9 @@ class DeviceManager:
         # 対称性のためフィールドは残す。
         self._mic_endpoint_tracker: Optional[ActiveEndpointTracker] = None
         self._speaker_endpoint_tracker: Optional[ActiveEndpointTracker] = None
+        # stop() が COM 呼び出しの滞留でタイムアウトした場合、旧 tracker の
+        # apartment 終了を待ってから再起動するための回収スレッド。
+        self._speaker_endpoint_tracker_reaper: Optional[Thread] = None
 
         self._initialized = True
 
@@ -555,6 +564,19 @@ class DeviceManager:
                 self._stopSpeakerEndpointTrackerLocked()
             self._syncMonitoringLifecycleLocked()
 
+    def setDeviceListMonitoringActive(self, active: bool) -> None:
+        """デバイス一覧監視の有効/無効を設定する。
+
+        デバイスの再接続を検出するための一覧更新は、Auto Select の設定とは
+        独立して動作させる。Auto Select が両方 OFF の場合でもこのフラグが
+        active なら monitoring スレッドを維持し、一覧 callback を発火する。
+        Auto Select の選択変更や endpoint tracker の起動は、従来どおり
+        setMicAutoActive/setSpeakerAutoActive 側のフラグで制御する。
+        """
+        with self._lifecycle_lock:
+            self._device_list_monitoring_active = active
+            self._syncMonitoringLifecycleLocked()
+
     def _stopMicEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。
 
@@ -570,7 +592,20 @@ class DeviceManager:
     def _startSpeakerEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。"""
         if self._speaker_endpoint_tracker is not None:
-            return
+            tracker = self._speaker_endpoint_tracker
+            is_running = getattr(tracker, "is_running", None)
+            # 古いテスト用スタブなどが is_running() を持たない場合は、
+            # 既存 tracker があること自体を起動済みとして扱う。
+            if not callable(is_running) or is_running():
+                is_stop_requested = getattr(tracker, "is_stop_requested", None)
+                if callable(is_stop_requested) and is_stop_requested():
+                    printLog(
+                        "DeviceManager: speaker endpoint tracker restart deferred "
+                        "until the previous tracker thread has stopped."
+                    )
+                return
+            # timeout 後に保持していた tracker の COM cleanup が完了済み。
+            self._speaker_endpoint_tracker = None
         tracker = ActiveEndpointTracker("render", com_lock=pyaudio_op_lock)
         tracker.set_on_change_callback(self._onActiveSpeakerEndpointChanged)
         tracker.start()
@@ -579,9 +614,45 @@ class DeviceManager:
     def _stopSpeakerEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。"""
         tracker = self._speaker_endpoint_tracker
-        self._speaker_endpoint_tracker = None
         if tracker is not None:
-            tracker.stop()
+            stopped = tracker.stop()
+            if stopped is False:
+                # 旧 tracker を参照し続けることで、stop timeout 後の再ONで
+                # 新しい COM tracker が並行起動することを防ぐ。旧スレッドの
+                # 終了後、Auto Select がまだ ON なら一度だけ再起動する。
+                self._scheduleSpeakerEndpointTrackerReaperLocked(tracker)
+            else:
+                self._speaker_endpoint_tracker = None
+
+    def _scheduleSpeakerEndpointTrackerReaperLocked(
+        self, tracker: ActiveEndpointTracker
+    ) -> None:
+        """_lifecycle_lock を保持したまま、tracker の終了待ちを予約する。"""
+        reaper = self._speaker_endpoint_tracker_reaper
+        if reaper is not None and reaper.is_alive():
+            return
+
+        def reap() -> None:
+            wait_until_stopped = getattr(tracker, "wait_until_stopped", None)
+            if not callable(wait_until_stopped):
+                # 実装済み tracker では必ず存在する。互換スタブで存在しない
+                # 場合は、再起動を許可せず旧参照を保持したまま安全側に倒す。
+                return
+            wait_until_stopped()
+            with self._lifecycle_lock:
+                if self._speaker_endpoint_tracker is not tracker:
+                    return
+                self._speaker_endpoint_tracker = None
+                self._speaker_endpoint_tracker_reaper = None
+                if self._speaker_auto_active:
+                    self._startSpeakerEndpointTrackerLocked()
+
+        self._speaker_endpoint_tracker_reaper = Thread(
+            target=reap,
+            daemon=True,
+            name="speaker_endpoint_tracker_reaper",
+        )
+        self._speaker_endpoint_tracker_reaper.start()
 
     def pauseMicEndpointTracker(self) -> None:
         """外部から tracker を一時停止し、進行中の COM 呼び出しが
@@ -691,13 +762,19 @@ class DeviceManager:
         return None
 
     def _syncMonitoringLifecycleLocked(self) -> None:
-        """mic/speaker の active フラグに応じて monitoring スレッドを起動/停止。
+        """一覧監視または Auto Select の active フラグに応じて monitoring を起動/停止。
 
-        少なくとも 1 サイドが active なら起動、両方 inactive なら停止。
-        個々の設定変更 (setMicAutoActive/setSpeakerAutoActive) の後に呼ぶ。
+        一覧監視または少なくとも 1 サイドの Auto Select が active なら起動し、
+        すべて inactive なら停止する。個々の設定変更
+        (setDeviceListMonitoringActive/setMicAutoActive/setSpeakerAutoActive) の
+        後に呼ぶ。
         _lifecycle_lock を既に保持している前提の内部実装。
         """
-        any_active = self._mic_auto_active or self._speaker_auto_active
+        any_active = (
+            self._device_list_monitoring_active
+            or self._mic_auto_active
+            or self._speaker_auto_active
+        )
         if any_active:
             self._startMonitoringLocked()
         else:
