@@ -1,6 +1,7 @@
 tmp/
 build/
 dist/
+/tool-dist/
 /config.json
 memo.txt
 *.pyc

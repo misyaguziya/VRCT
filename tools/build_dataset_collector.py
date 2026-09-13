@@ -54,7 +54,8 @@ def build() -> Path:
                 raise RuntimeError(f"Expected {line}; use requirements-dataset-collector.txt in a dedicated venv")
     work = ROOT / "build/dataset_collector"
     work.mkdir(parents=True, exist_ok=True)
-    dist = ROOT / "dist"
+    # Vite and the main app's clean script remove dist/.
+    dist = ROOT / "tool-dist"
     dist.mkdir(exist_ok=True)
     environment = os.environ.copy()
     windows = Path(os.environ["SystemRoot"])
