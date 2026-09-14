@@ -152,9 +152,9 @@ class StopServiceForShutdownTests(unittest.TestCase):
 
 
 class ShutdownStopsOscWebsocketObsOverlayTests(unittest.TestCase):
-    """shutdown() が OSC/WebSocket/OBS Browser Source/Overlay の停止を
-    _stopServiceForShutdown 経由で呼んでいることを確認する
-    (フェーズ4項目30)。"""
+    """shutdown() が OSC/WebSocket/OBS Browser Source/Overlay/watchdog の
+    停止を _stopServiceForShutdown 経由で呼んでいることを確認する
+    (フェーズ4項目30、および再評価 2026-09-14 P-4)。"""
 
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
@@ -169,7 +169,7 @@ class ShutdownStopsOscWebsocketObsOverlayTests(unittest.TestCase):
     @patch("controller.device_manager")
     @patch("controller.model")
     @patch("controller.config")
-    def test_shutdown_stops_all_four_services_in_dependency_order(
+    def test_shutdown_stops_all_services_in_dependency_order(
         self, mock_config, mock_model, mock_device_manager
     ) -> None:
         mock_model.telemetryShutdown.return_value = None
@@ -185,6 +185,7 @@ class ShutdownStopsOscWebsocketObsOverlayTests(unittest.TestCase):
                 mock_model.stopObsBrowserSourceServer,
                 mock_model.stopWebSocketServer,
                 mock_model.shutdownOverlay,
+                mock_model.stopWatchdog,
             ],
         )
         self.assertEqual(
@@ -194,7 +195,31 @@ class ShutdownStopsOscWebsocketObsOverlayTests(unittest.TestCase):
                 "OBS browser source server",
                 "WebSocket server",
                 "Overlay",
+                "watchdog",
             ],
+        )
+
+    @patch("controller.device_manager")
+    @patch("controller.model")
+    @patch("controller.config")
+    def test_shutdown_stops_the_watchdog(
+        self, mock_config, mock_model, mock_device_manager
+    ) -> None:
+        """再評価 2026-09-14 P-4。
+
+        init() は startWatchdog() で faulthandler.dump_traceback_later を
+        武装するが、shutdown() に対応する停止が無かった。フロントエンドは
+        終了操作と同時に feed を止めるため、プロセスが (interval + 15秒)
+        以上生き残ると「正常終了なのに freeze_trace.log へフリーズダンプが
+        出る」という偽陽性になり、フリーズ調査の一次情報源が汚れる。
+        """
+        mock_model.telemetryShutdown.return_value = None
+        self.controller.shutdown()
+
+        self.assertIn(
+            (mock_model.stopWatchdog, "watchdog"),
+            self.serviced_calls,
+            "shutdown() が watchdog を停止していない",
         )
 
 
