@@ -41,7 +41,7 @@
 
 | # | 項目 | 規模 | 状態 |
 |---|---|---|---|
-| M-1 | ホットパスの所要時間計測を追加 | +数十行 | ⬜ |
+| M-1 | ホットパスの所要時間計測を追加 | +数十行 | 🟢 `93eb9112` |
 | P-1 | `available_releases` を init_mapping から除外 + getter 失敗の隔離 | +10 行 / 2 ファイル | 🟢 `86a91ca0` |
 | P-2 | `Model.init()` の失敗後再試行を止める | +6 行 / 1 ファイル | 🟢 `d66d4d6c` |
 | P-3 | 翻訳フォールバックの最大 2 秒 sleep を廃止 | 数行 | 🟢 `5139ece3` |
@@ -58,7 +58,7 @@
 
 ## M. 計測
 
-### ⬜ M-1 [最優先] ホットパスに所要時間の計測が一切ない
+### 🟢 M-1 [最優先] ホットパスに所要時間の計測が一切ない（`93eb9112`）
 
 `perf_counter` / `time.time()` / `elapsed` / `duration_ms` を
 `transcription_transcriber.py` / `controller.py` / `translation_translator.py`
@@ -82,8 +82,25 @@ printLog(
 VAD 導入の 1 回目・2 回目が「体感が遅い」という主観だけで判断できずに終わった経緯は、この計測欠落が直接の原因である。
 以降の性能改善（P-3 / P-5 など）の効果測定も、現状では実施できない。
 
-**対応方針**: `speech_end` / ASR 前後 / 翻訳前後 / 表示 の 4 点にタイムスタンプを入れ、
-`[latency]` として `process.log` に 1 行出す。既存の `printLog` に載せるだけなので新規機構は不要。
+**対応方針（案A を採用）**: ASR 呼び出し以降を測り、`[latency]` として `process.log` に 1 行出す。
+既存の `printLog` に載せるだけなので新規機構は不要。
+
+```
+[latency][mic] asr=890ms translate=340ms output=25ms total=1255ms
+```
+
+- `asr=` … `AudioTranscriber._finalizeAndTranscribe` のプロバイダ呼び出し。成功時は `best` dict に
+  `asr_ms` として載せ、`getTranscript()` → `transcript_fnc` → `Controller._processMessage` まで運ばれる
+  （既存の `recognition_error` と同じ作法）。失敗時は `[ASR-error]` 行に付記。
+- `translate=` / `output=` … `Controller._processMessage` で計測。`output` は翻訳以外の全て
+  （transliteration / OSC / オーバーレイ生成 / クリップボード / UI 配信 / WebSocket / ロガー）。
+- `chat` には ASR 段が無いため `asr=` を省略する。早期 return（ワードフィルタ等）では出力自体が
+  無いので計測行を出さない。
+
+**案B（VAD の `speech_end` からの通し計測）は見送り**。`VadSegmenter` のタイムスタンプをキュー経由で
+`AudioTranscriber` まで運ぶ必要があり、パイプラインのデータ構造に手が入る。VAD の hangover は
+固定値（約 0.77 秒）なので、当面は上記 `total` への足し算で評価できる。案A の実測で内訳が
+足りないと分かった時点で改めて検討する。
 
 ---
 
