@@ -13,12 +13,21 @@ class _FakeAudioTranscriber:
     last_recognition_error = True
 
     def __init__(self, *args, **kwargs) -> None:
-        pass
+        # 実物と同じく「transcribeAudioQueue が積み、呼び出し元が
+        # hasTranscript/getTranscript で取り出す」形にする。呼び出し元は
+        # 溜まっている分を全て取り出すループになっているため、件数を
+        # 持たないスタブだと無限ループになる。
+        self._pending = 0
 
     def transcribeAudioQueue(self, *args, **kwargs) -> bool:
+        self._pending += 1
         return True
 
+    def hasTranscript(self) -> bool:
+        return self._pending > 0
+
     def getTranscript(self) -> dict:
+        self._pending -= 1
         return {"text": "", "language": None}
 
 
@@ -143,6 +152,34 @@ class TestTranscriptResultCarriesRecognitionError(unittest.TestCase):
 
         self.assertEqual(len(received), 1)
         self.assertTrue(received[0]["recognition_error"])
+
+    @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
+    @patch("model.AudioTranscriber", _FakeAudioTranscriber)
+    @patch("model.SelectedMicEnergyAndAudioRecorder", _FakeAudioRecorder)
+    @patch("model.device_manager")
+    def test_all_pending_transcripts_are_delivered_not_just_one(self, mock_device_manager) -> None:
+        """1回の呼び出しで複数件積まれた場合に全て配信されること。
+
+        Google の interim_send はキューから取り出したチャンクごとに走る
+        ため、1回の transcribeAudioQueue() が複数件を積むことがある。
+        以前はここで1件しか取り出しておらず、残りは「次に ASR が成功した
+        時」まで配信されなかった。発話が止まるとそのまま埋もれ、
+        max_phrases を超えると古い順に無言で捨てられていた
+        (実機ログで ASR 成功4件に対し配信1件を確認)。
+        """
+        mock_device_manager.getMicDevices.return_value = {"TestMicHost": [{"name": "TestMicDevice"}]}
+
+        received = []
+        with patch.object(model, "changeMicTranscriptStatus", lambda: None):
+            model.startMicTranscript(lambda result: received.append(result))
+
+        worker = _CapturingThreadFnc.instances[0]
+        # 3件積まれた状態を作る (transcribeAudioQueue が呼ばれるたびに +1)。
+        transcriber = model._mic_session._transcriber
+        transcriber._pending = 2
+        worker.fnc()
+
+        self.assertEqual(len(received), 3, "溜まっている分を全て配信していない")
 
     @patch.object(model_module, "threadFnc", _CapturingThreadFnc)
     @patch("model.AudioTranscriber", _FakeAudioTranscriber)
