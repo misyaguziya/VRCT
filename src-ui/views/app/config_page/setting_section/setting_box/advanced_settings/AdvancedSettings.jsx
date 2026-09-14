@@ -20,7 +20,7 @@ import {
 } from "../_components";
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
-import CopySvg from "@images/copy.svg?react";
+import CopyThinSvg from "@images/copy_thin.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 
 export const AdvancedSettings = () => {
@@ -201,7 +201,7 @@ const WebsocketUrlContainer = () => {
         <ActionButtonContainer
             label={t("config_page.advanced_settings.websocket_url.label")}
             desc={url}
-            IconComponent={CopySvg}
+            IconComponent={CopyThinSvg}
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
             onclickFunction={() => copyToClipboard(url)}
@@ -255,7 +255,7 @@ const ObsBrowserSourceUrlContainer = () => {
         <ActionButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_url.label")}
             desc={url}
-            IconComponent={CopySvg}
+            IconComponent={CopyThinSvg}
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
             onclickFunction={() => copyToClipboard(url)}
