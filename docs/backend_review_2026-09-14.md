@@ -44,8 +44,8 @@
 | M-1 | ホットパスの所要時間計測を追加 | +数十行 | ⬜ |
 | P-1 | `available_releases` を init_mapping から除外 + getter 失敗の隔離 | +10 行 / 2 ファイル | 🟢 `86a91ca0` |
 | P-2 | `Model.init()` の失敗後再試行を止める | +6 行 / 1 ファイル | 🟢 `d66d4d6c` |
-| P-3 | 翻訳フォールバックの最大 2 秒 sleep を廃止 | 数行 | ⬜ |
-| P-4 | `shutdown()` に `stopWatchdog` を追加 | 1 行 | ⬜ |
+| P-3 | 翻訳フォールバックの最大 2 秒 sleep を廃止 | 数行 | 🟢 `5139ece3` |
+| P-4 | `shutdown()` に `stopWatchdog` を追加 | 1 行 | 🟢 `28b836c3` |
 | S-1 | 文字起こしエンジンのレジストリ化 + `OpenAI_Compatible` 編入 | **−600 行** / 4 ファイル | ⬜ |
 | S-2 | UI 契約の整合テスト 1 本 | 新規 80 行 | ⬜ |
 | S-3 | トグル 23・数値 setter 12・委譲 35 のテーブル化 | −300 行 / 1 ファイル | ⬜ |
@@ -189,7 +189,7 @@ except Exception:
 
 ---
 
-### ⬜ P-3 翻訳フォールバックが最大 2 秒を純粋な sleep で捨てる
+### 🟢 P-3 翻訳フォールバックが最大 2 秒を純粋な sleep で捨てる（`5139ece3`）
 
 ```python
 # model.py:1368-1383
@@ -218,7 +218,7 @@ else:
 
 ---
 
-### ⬜ P-4 `shutdown()` が watchdog を止めない
+### 🟢 P-4 `shutdown()` が watchdog を止めない（`28b836c3`）
 
 `Controller.init()` は `controller.py:4255` で `self.startWatchdog()` を呼ぶが、
 `Controller.shutdown()`（`controller.py:383-469`）に対応する停止が無い。
