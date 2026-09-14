@@ -98,6 +98,9 @@
     &.supporters_icon {
         fill: var(--supporters_crown_color);
     }
+    &.updater_icon {
+        transform: rotate(-30deg);
+    }
 }
 
 .switch_indicator {
