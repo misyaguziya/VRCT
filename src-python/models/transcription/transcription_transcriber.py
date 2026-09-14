@@ -427,6 +427,11 @@ class AudioTranscriber:
 
         best: Dict[str, Any] = {"confidence": 0, "text": "", "language": None}
         provider_error: Optional[Exception] = None
+        # ASR 呼び出しの所要時間。「発話終了から画面表示まで」の内訳のうち
+        # ASR と翻訳のどちらが支配的かを実測で判断するための計装
+        # (再評価 2026-09-14 M-1)。best dict に載せることで getTranscript()
+        # → transcript_fnc → Controller._processMessage までそのまま運ばれる。
+        asr_started_at = time.perf_counter()
         try:
             audio_data = self.audio_sources["process_data_func"]()
             provider = self._resolve_provider()
@@ -472,6 +477,7 @@ class AudioTranscriber:
             errorLogging()
             provider_error = provider_error or exc
 
+        asr_elapsed_ms = round((time.perf_counter() - asr_started_at) * 1000)
         self.asr_attempts += 1
         succeeded = best["text"] != ""
         if provider_error is not None and not succeeded:
@@ -484,12 +490,13 @@ class AudioTranscriber:
             )
             printLog(
                 f"[ASR-error][{self.source}][{self.transcription_engine}] "
-                f"error_type={type(provider_error).__name__}"
+                f"error_type={type(provider_error).__name__} asr={asr_elapsed_ms}ms"
             )
             raise AudioPipelineError(failure) from provider_error
         if succeeded:
             self.last_recognition_error = False
             self.asr_successes += 1
+            best["asr_ms"] = asr_elapsed_ms
             self.updateTranscript(best)
         success_rate = (self.asr_successes / self.asr_attempts) * 100
         printLog(

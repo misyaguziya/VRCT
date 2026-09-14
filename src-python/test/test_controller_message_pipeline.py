@@ -602,5 +602,77 @@ class TestChatMessage(_MessagePipelineTestBase):
         self.assertIn("result", result)
 
 
+class TestLatencyInstrumentation(_MessagePipelineTestBase):
+    """ホットパスの所要時間計測 (再評価 2026-09-14 M-1)。
+
+    「発話終了から画面表示まで」の内訳のうち ASR と翻訳のどちらが支配的か
+    を数字で言えるようにするための計装。従来はホットパスに perf_counter 等が
+    一切なく (`[ASR-stats]` は成功率のみ)、VAD 導入の 1・2 回目が「体感が
+    遅い」という主観だけで判断できず終わった原因になっていた。
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        import controller as controller_module
+        self._saved_print_log = controller_module.printLog
+        self.logs: list = []
+        controller_module.printLog = lambda msg: self.logs.append(msg)
+
+    def tearDown(self) -> None:
+        import controller as controller_module
+        controller_module.printLog = self._saved_print_log
+        super().tearDown()
+
+    def _latencyLines(self) -> list:
+        return [line for line in self.logs if line.startswith("[latency]")]
+
+    def test_mic_latency_line_includes_asr_time_from_the_transcriber(self) -> None:
+        self._model.getInputTranslate.return_value = (["hola"], [True])
+        self.controller.micMessage({"text": "hello", "language": "English", "asr_ms": 890})
+
+        lines = self._latencyLines()
+        self.assertEqual(len(lines), 1, f"[latency] は1発話につき1行: {self.logs}")
+        line = lines[0]
+        self.assertIn("[latency][mic]", line)
+        self.assertIn("asr=890ms", line)
+        self.assertIn("translate=", line)
+        self.assertIn("output=", line)
+        self.assertIn("total=", line)
+
+    def test_speaker_latency_line_is_tagged_by_direction(self) -> None:
+        self._model.getOutputTranslate.return_value = (["hola"], [True])
+        self.controller.speakerMessage({"text": "hello", "language": "English", "asr_ms": 12})
+
+        lines = self._latencyLines()
+        self.assertEqual(len(lines), 1)
+        self.assertIn("[latency][speaker]", lines[0])
+        self.assertIn("asr=12ms", lines[0])
+
+    def test_chat_latency_line_omits_asr_because_there_is_no_asr_stage(self) -> None:
+        self._model.getInputTranslate.return_value = (["hola"], [True])
+        self.controller.chatMessage({"id": "1", "message": "hello"})
+
+        lines = self._latencyLines()
+        self.assertEqual(len(lines), 1)
+        self.assertIn("[latency][chat]", lines[0])
+        self.assertNotIn("asr=", lines[0])
+
+    def test_total_includes_the_asr_time(self) -> None:
+        """total は ASR を含む「文字起こし結果が出てから出力完了まで」。"""
+        self._model.getInputTranslate.return_value = (["hola"], [True])
+        self.controller.micMessage({"text": "hello", "language": "English", "asr_ms": 5000})
+
+        line = self._latencyLines()[0]
+        total = int(line.split("total=")[1].removesuffix("ms"))
+        self.assertGreaterEqual(total, 5000)
+
+    def test_word_filtered_message_is_not_measured(self) -> None:
+        """出力自体が発生しない早期 return では計測行を出さない。"""
+        self._model.checkKeywords.return_value = True
+        self.controller.micMessage({"text": "hello", "language": "English", "asr_ms": 100})
+
+        self.assertEqual(self._latencyLines(), [])
+
+
 if __name__ == "__main__":
     unittest.main()
