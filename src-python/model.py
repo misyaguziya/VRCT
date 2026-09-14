@@ -1395,6 +1395,19 @@ class Model:
                     break
                 if translation is None:
                     break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
+                if not self.translator.isLoadedCTranslate2Model():
+                    # 重みが未ロード (未ダウンロード・ロード失敗・切替直後など)。
+                    # translateCTranslate2() はこの場合ロックを取った上で即 False を
+                    # 返すだけなので、待っても状況は変わらない。ここで抜けないと
+                    # 1メッセージあたり 2 秒 (0.1s × 20) を純粋な sleep で捨てる。
+                    # getInputTranslate() はターゲット言語ごとにこれを呼ぶため
+                    # 3言語で最悪6秒になり、その間パイプラインは単一スレッド
+                    # 構造のため文字起こしも止まる。
+                    # なお「ロード中」は translateCTranslate2() 側が
+                    # _ctranslate2_lock で待たされ、ロード完了後の値を見るため
+                    # ここには到達しない (changeCTranslate2Model はロック内で
+                    # is_loaded_ctranslate2_model を True にしてから解放する)。
+                    break
                 sleep(0.1)
             if isinstance(translation, str):
                 success_flag = True
