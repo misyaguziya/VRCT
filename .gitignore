@@ -2,6 +2,9 @@ tmp/
 build/
 dist/
 /tool-dist/
+/annotation_jobs/
+.venv-label-studio/
+.venv-annotator/
 /config.json
 memo.txt
 *.pyc

@@ -1,205 +1,275 @@
-"""Gemini APIでVRChatチャット吹き出しのbbox座標を自動アノテーションする
-開発用ツール(YOLO学習データセット作成用、VRCTには同梱しない)。
+"""Collector images -> resumable Gemini predictions -> Label Studio review.
 
-`tools/ocr_dataset_collector.py` で集めた positive/ 配下の画像
-(吹き出しが写っていることは目視確認済み)に対してGeminiへ「吹き出しの
-bboxを返して」と問い合わせ、YOLO形式のラベルファイル(class x_center
-y_center width height、すべて0-1正規化)を書き出す。あわせて確認用に
-bboxを描画した画像も保存するので、Geminiの誤り(吹き出し以外を検出した/
-検出できなかった)を目視でざっと確認できる。
-
-使い方:
-    export GEMINI_API_KEY=xxxxx  (Windows: set GEMINI_API_KEY=xxxxx)
-    python tools/gemini_bbox_labeler.py <positive画像が入ったディレクトリ> [--out DIR]
-
-    例:
-    python tools/gemini_bbox_labeler.py dataset_collected/factory_world_desktop/positive
-
-出力構成 (--out省略時は <入力ディレクトリ>/../yolo_labels/):
-    yolo_labels/images/<元のファイル名>.png   (画像本体のコピー)
-    yolo_labels/labels/<元のファイル名>.txt   (YOLO形式、1行 "0 cx cy w h")
-    yolo_labels/preview/<元のファイル名>.png  (bbox描画済み、目視確認用)
-    yolo_labels/failed.txt                    (Geminiが検出できなかった/
-                                                 パース失敗した画像の一覧)
-
-Gemini APIキーは VRCT の config.json とは無関係に、この開発用ツール専用
-として環境変数 GEMINI_API_KEY (または --api-key) で渡す。
+No arguments: interactive wizard. CLI: prepare / annotate / export / status / check.
+Only annotate sends images to Gemini. API keys are never persisted.
 """
-
-from __future__ import annotations
 
 import argparse
+from collections import Counter
+from email.utils import parsedate_to_datetime
+from getpass import getpass
+import hashlib
 import json
+import math
 import os
-import re
-import shutil
+from pathlib import Path
+import random
 import sys
 import time
-from typing import Optional
 
-_SRC_PYTHON = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src-python")
-sys.path.insert(0, _SRC_PYTHON)
-
-import cv2  # noqa: E402
-from google import genai  # noqa: E402
-from google.genai import types  # noqa: E402
-
-_MODEL = "gemini-2.0-flash"
-
-_PROMPT = """This is a screenshot from the VRChat video game. Find the VRChat chat
-bubble (a floating speech-bubble UI element showing text that another
-player typed, rendered by VRChat itself above a player's avatar).
-
-The chat bubble has a flat, semi-transparent dark rounded-rectangle
-background with white text, usually appearing above an avatar's head.
-Do NOT select: nameplates, in-world signs, posters, or any UI panel
-that is part of the 3D world/game content rather than VRChat's own
-chat UI.
-
-If you find it, respond with ONLY a JSON array like this, with pixel
-coordinates normalized to a 0-1000 scale (Gemini's standard convention):
-[{"box_2d": [ymin, xmin, ymax, xmax], "label": "chat_bubble"}]
-
-If there is no such VRChat chat bubble in the image, respond with
-exactly: []
-"""
-
-_JSON_ARRAY_RE = re.compile(r"\[.*\]", re.DOTALL)
+if __package__:
+    from . import annotation_job as jobs
+else:
+    import annotation_job as jobs
 
 
-def _extract_json_array(text: str) -> Optional[list]:
-    text = text.strip()
-    # Gemini sometimes wraps the JSON in ```json ... ``` fences.
-    if text.startswith("```"):
-        text = text.strip("`")
-        text = text[4:] if text.lower().startswith("json") else text
-    match = _JSON_ARRAY_RE.search(text)
-    if not match:
-        return None
-    try:
-        return json.loads(match.group(0))
-    except json.JSONDecodeError:
-        return None
+class GeminiDetector:
+    """Lazy SDK client; automatic retries belong to the outer journal loop."""
+
+    def __init__(self, key: str, model: str):
+        from google import genai
+        from google.genai import types
+        self.types, self.model = types, model
+        self.client = genai.Client(api_key=key, vertexai=False, http_options=types.HttpOptions(
+            timeout=120_000, retry_options=types.HttpRetryOptions(attempts=1)))
+
+    def __call__(self, data: bytes) -> dict:
+        response = self.client.models.generate_content(
+            model=self.model,
+            contents=[self.types.Part.from_bytes(data=data, mime_type="image/png"), jobs.PROMPT],
+            config=self.types.GenerateContentConfig(
+                response_mime_type="application/json", response_json_schema=jobs.SCHEMA,
+                candidate_count=1, temperature=0, max_output_tokens=8192),
+        )
+        candidates = response.candidates or []
+        finish = candidates[0].finish_reason if candidates else None
+        return {"text": response.text or "", "finish_reason": getattr(finish, "value", finish),
+                "usage": response.usage_metadata.model_dump(mode="json", exclude_none=True)
+                if response.usage_metadata else {}, "model_version": response.model_version}
+
+    def close(self):
+        self.client.close()
 
 
-def _detect_bubble_box(client: "genai.Client", image_path: str) -> Optional[tuple]:
-    """Returns (ymin, xmin, ymax, xmax) in 0-1000 scale, or None."""
-    with open(image_path, "rb") as f:
-        image_bytes = f.read()
-    response = client.models.generate_content(
-        model=_MODEL,
-        contents=[
-            types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
-            _PROMPT,
-        ],
-    )
-    text = response.text or ""
-    parsed = _extract_json_array(text)
-    if not parsed:
-        return None
-    entry = parsed[0]
-    box = entry.get("box_2d")
-    if not box or len(box) != 4:
-        return None
-    return tuple(box)  # (ymin, xmin, ymax, xmax), 0-1000 scale
-
-
-def _to_yolo_line(box_0_1000: tuple, img_w: int, img_h: int, class_id: int = 0) -> str:
-    ymin, xmin, ymax, xmax = box_0_1000
-    xmin_px, xmax_px = xmin / 1000.0 * img_w, xmax / 1000.0 * img_w
-    ymin_px, ymax_px = ymin / 1000.0 * img_h, ymax / 1000.0 * img_h
-    cx = (xmin_px + xmax_px) / 2.0 / img_w
-    cy = (ymin_px + ymax_px) / 2.0 / img_h
-    w = (xmax_px - xmin_px) / img_w
-    h = (ymax_px - ymin_px) / img_h
-    return f"{class_id} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}"
-
-
-def _draw_preview(image_path: str, box_0_1000: tuple, out_path: str) -> None:
-    frame = cv2.imread(image_path)
-    if frame is None:
-        return
-    h, w = frame.shape[:2]
-    ymin, xmin, ymax, xmax = box_0_1000
-    x0, y0 = int(xmin / 1000.0 * w), int(ymin / 1000.0 * h)
-    x1, y1 = int(xmax / 1000.0 * w), int(ymax / 1000.0 * h)
-    cv2.rectangle(frame, (x0, y0), (x1, y1), (0, 255, 0), 2)
-    cv2.imwrite(out_path, frame)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("input_dir", help="positive/ 画像が入ったディレクトリ (複数セッション分をまとめて渡してもよい)")
-    parser.add_argument("--out", default=None)
-    parser.add_argument("--api-key", default=None)
-    args = parser.parse_args()
-
-    api_key = args.api_key or os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("[ERROR] Gemini APIキーが指定されていません。--api-key か環境変数 GEMINI_API_KEY を設定してください。")
-        sys.exit(1)
-
-    out_root = args.out or os.path.join(os.path.dirname(os.path.abspath(args.input_dir)), "yolo_labels")
-    images_out = os.path.join(out_root, "images")
-    labels_out = os.path.join(out_root, "labels")
-    preview_out = os.path.join(out_root, "preview")
-    for d in (images_out, labels_out, preview_out):
-        os.makedirs(d, exist_ok=True)
-
-    client = genai.Client(api_key=api_key)
-
-    files = sorted(
-        f for f in os.listdir(args.input_dir)
-        if f.lower().endswith((".png", ".jpg", ".jpeg"))
-    )
-    print(f"found {len(files)} images in {args.input_dir}")
-
-    failed: list[str] = []
-    ok_count = 0
-
-    for i, fname in enumerate(files):
-        src_path = os.path.join(args.input_dir, fname)
-        stem = os.path.splitext(fname)[0]
+def retry_delay(exc: Exception, attempt: int) -> float:
+    response = getattr(exc, "response", None)
+    value = getattr(response, "headers", {}).get("Retry-After") if response is not None else None
+    if value:
         try:
-            box = _detect_bubble_box(client, src_path)
-        except Exception as e:  # noqa: BLE001
-            print(f"[{i+1}/{len(files)}] {fname}: API error: {e}")
-            failed.append(f"{fname}\tapi_error: {e}")
-            time.sleep(1.0)
-            continue
+            delay = float(value)
+        except ValueError:
+            try:
+                delay = parsedate_to_datetime(value).timestamp() - time.time()
+            except (ValueError, TypeError, OverflowError):
+                delay = 0
+        if math.isfinite(delay) and delay > 0:
+            return delay
+    return min(60, 2 ** attempt) + random.random()
 
-        if box is None:
-            print(f"[{i+1}/{len(files)}] {fname}: no bubble detected / unparsable response")
-            failed.append(f"{fname}\tno_detection")
-            continue
 
-        frame = cv2.imread(src_path)
-        if frame is None:
-            failed.append(f"{fname}\tunreadable_image")
-            continue
-        h, w = frame.shape[:2]
+def annotate(job: Path, *, key: str | None = None, limit: int = 100, interval: float = 6,
+             retries: int = 2, retry_failed: bool = False, detector_factory=GeminiDetector,
+             sleep=time.sleep, emit=print) -> dict:
+    if limit < 0 or not math.isfinite(interval) or interval < 1 or not 0 <= retries <= 5:
+        raise ValueError("limit >= 0, interval >= 1 second, retries 0..5 required")
+    job = job.resolve()
+    with jobs.job_lock(job):
+        manifest = jobs.load_job(job)
+        jobs.verify_images(job, manifest)
+        pending = []
+        for entry in manifest["images"]:
+            previous = jobs.read_result(job, entry, manifest)
+            if previous["status"] == "pending" or (retry_failed and previous["status"] not in jobs.SUCCESS):
+                pending.append(entry)
+        if limit:
+            pending = pending[:limit]
+        emit(f"Gemini: model={manifest['model']}, selected={len(pending)}, interval={interval}s")
+        if not pending:
+            destination = jobs.export_tasks(job, manifest)
+            emit(f"Nothing to send. Label Studio: {destination}")
+            return status(job, manifest)
+        key = key or os.environ.get("GEMINI_API_KEY")
+        if not key:
+            raise ValueError("Set GEMINI_API_KEY or use the interactive wizard")
+        detector = detector_factory(key, manifest["model"])
+        calls = 0
+        try:
+            for index, entry in enumerate(pending, 1):
+                data = (job / entry["image"]).read_bytes()
+                if hashlib.sha256(data).hexdigest() != entry["sha256"]:
+                    raise ValueError("Image changed during processing")
+                for attempt in range(retries + 1):
+                    if calls:
+                        sleep(interval)
+                    record = {"id": entry["id"], "image_sha256": entry["sha256"],
+                              "policy_hash": manifest["policy_hash"], "model": manifest["model"],
+                              "started_at": jobs.utc_now(), "status": "unknown"}
+                    journal = job / "attempts" / entry["id"] / (jobs.unique_stamp() + ".json")
+                    latest = job / "results" / (entry["id"] + ".json")
+                    jobs.write_json(journal, record)
+                    jobs.write_json(latest, record)
+                    calls += 1
+                    retry = fatal = False
+                    try:
+                        raw = detector(data)
+                    except Exception as exc:
+                        code = getattr(exc, "code", None)
+                        # Exception text can contain credentials; retain only type/status.
+                        record.update(status="api_error" if isinstance(code, int) else "unknown",
+                                      error_type=type(exc).__name__,
+                                      http_code=code if isinstance(code, int) else None)
+                        retry = code in (429, 500, 502, 503, 504) and attempt < retries
+                        fatal = code in (400, 401, 403, 404) or (code == 429 and not retry)
+                        delay = retry_delay(exc, attempt + 1) if retry else 0
+                    else:
+                        record["response"] = raw
+                        try:
+                            if raw.get("finish_reason") != "STOP":
+                                raise ValueError("Response blocked, incomplete or missing STOP")
+                            boxes = jobs.validate_boxes(json.loads(raw["text"]))
+                            record.update(status="detected" if boxes else "no_detection", boxes=boxes)
+                        except (ValueError, TypeError, KeyError) as exc:
+                            record.update(status="invalid_response", error_type=type(exc).__name__)
+                    record["finished_at"] = jobs.utc_now()
+                    jobs.write_json(journal, record)
+                    jobs.write_json(latest, record)
+                    emit(f"[{index}/{len(pending)}] {entry['id']}: {record['status']}")
+                    if retry:
+                        emit(f"Temporary API error; retry in at least {delay:.1f}s")
+                        sleep(delay)
+                        continue
+                    break
+                if fatal:
+                    emit("Stopped on API configuration/quota error. Fix it before --retry-failed.")
+                    break
+        finally:
+            try:
+                detector.close()
+            finally:
+                destination = jobs.export_tasks(job, manifest)
+                emit(f"Label Studio: {destination}")
+        return status(job, manifest)
 
-        with open(os.path.join(labels_out, f"{stem}.txt"), "w", encoding="utf-8") as lf:
-            lf.write(_to_yolo_line(box, w, h) + "\n")
-        shutil.copy2(src_path, os.path.join(images_out, fname))
-        _draw_preview(src_path, box, os.path.join(preview_out, fname))
-        ok_count += 1
-        print(f"[{i+1}/{len(files)}] {fname}: OK box_2d(0-1000)={box}")
 
-        # Free-tier rate limiting headroom; adjust if you have a paid quota.
-        time.sleep(0.5)
+def status(job: Path, manifest: dict | None = None) -> dict:
+    manifest = manifest or jobs.load_job(job)
+    counts = Counter(jobs.read_result(job, e, manifest)["status"] for e in manifest["images"])
+    usage = Counter()
+    for path in (job / "attempts").glob("*/*.json"):
+        record = json.loads(path.read_text(encoding="utf-8"))
+        for field, value in record.get("response", {}).get("usage", {}).items():
+            if field.endswith("token_count") and type(value) is int:
+                usage[field] += value
+    return {"images": len(manifest["images"]), "model": manifest["model"],
+            "counts": dict(counts), "reported_usage": dict(usage)}
 
-    if failed:
-        with open(os.path.join(out_root, "failed.txt"), "w", encoding="utf-8") as ff:
-            ff.write("\n".join(failed) + "\n")
 
-    print()
-    print(f"done. labeled={ok_count}/{len(files)}  failed={len(failed)}")
-    print(f"labels: {labels_out}")
-    print(f"preview (目視確認用、bbox描画済み): {preview_out}")
-    if failed:
-        print(f"failed list: {os.path.join(out_root, 'failed.txt')}")
+def base_directory() -> Path:
+    return Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
+
+
+def wizard() -> int:
+    print("VRCT Gemini Annotator\n画像一式から作業フォルダを作り、Geminiで仮ラベルを作成します。")
+    print("再開する場合は、前回の作業フォルダ（manifest.jsonがある場所）を指定してください。")
+    print("中止はCtrl+C。APIキーは保存しません。")
+    entered = input("画像一式または作業フォルダのパス: ").strip().strip('"')
+    if not entered:
+        raise ValueError("画像または作業フォルダのパスを入力してください")
+    root = Path(entered).resolve()
+    if not (root / "manifest.json").is_file():
+        limit = int(input("抽出枚数 [100 / 0=全件]: ").strip() or "100")
+        job = base_directory() / "annotation_jobs" / jobs.unique_stamp()
+        manifest = jobs.prepare(root, job, limit=limit)
+        print(f"準備完了: {len(manifest['images'])}/{manifest['available_images']}枚\n{job}")
+    else:
+        job = root
+    with jobs.job_lock(job):
+        manifest = jobs.load_job(job)
+        destination = jobs.export_tasks(job, manifest)
+        summary = status(job, manifest)
+    print(json.dumps(summary, ensure_ascii=False))
+    print(f"Label Studio用出力: {destination}")
+    action = input("1=Gemini処理（未処理のみ） / 2=失敗・結果不明も再試行 / Enter=準備だけで終了: ").strip()
+    if action not in ("1", "2"):
+        return 0
+    print(f"これから対象画像をGemini APIへ送信します。モデル: {manifest['model']}")
+    key = os.environ.get("GEMINI_API_KEY") or getpass("Gemini APIキー（非表示）: ")
+    summary = annotate(job, key=key, limit=0, retry_failed=action == "2")
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 0 if set(summary["counts"]) <= jobs.SUCCESS else 2
+
+
+def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if not argv:
+        if not sys.stdin.isatty():
+            raise ValueError("Use prepare / annotate / export / status in a non-interactive terminal")
+        return wizard()
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("check", help="Offline: check packaged Gemini SDK without sending requests")
+    prepare = commands.add_parser("prepare", help="Offline: snapshot collector PNG/JSON pairs")
+    prepare.add_argument("input", type=Path)
+    prepare.add_argument("--out", type=Path, required=True)
+    prepare.add_argument("--limit", type=int, default=100, help="Sample size; 0=all")
+    prepare.add_argument("--seed", type=int, default=42)
+    prepare.add_argument("--model", default=jobs.DEFAULT_MODEL)
+    for name in ("annotate", "export", "status"):
+        command = commands.add_parser(name)
+        command.add_argument("job", type=Path)
+        if name == "annotate":
+            command.add_argument("--limit", type=int, default=100, help="Images this run; 0=all pending")
+            command.add_argument("--interval", type=float, default=6)
+            command.add_argument("--retries", type=int, default=2)
+            command.add_argument("--retry-failed", action="store_true")
+    args = parser.parse_args(argv)
+    if args.command == "check":
+        detector = GeminiDetector("offline-check-not-a-real-key", jobs.DEFAULT_MODEL)
+        try:
+            detector.types.GenerateContentConfig(response_mime_type="application/json",
+                                                  response_json_schema=jobs.SCHEMA)
+        finally:
+            detector.close()
+        print("Gemini SDK and schema: OK (no request sent)")
+        return 0
+    if args.command == "prepare":
+        manifest = jobs.prepare(args.input, args.out, limit=args.limit, seed=args.seed, model=args.model)
+        with jobs.job_lock(args.out):
+            destination = jobs.export_tasks(args.out, manifest)
+        print(f"Prepared {len(manifest['images'])}/{manifest['available_images']} images: {args.out.resolve()}")
+        print(f"Label Studio: {destination}")
+        return 0
+    if args.command == "annotate":
+        summary = annotate(args.job, limit=args.limit, interval=args.interval,
+                           retries=args.retries, retry_failed=args.retry_failed)
+    else:
+        with jobs.job_lock(args.job):
+            manifest = jobs.load_job(args.job)
+            if args.command == "export":
+                print(jobs.export_tasks(args.job, manifest))
+            summary = status(args.job, manifest)
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    return 2 if args.command == "annotate" and set(summary["counts"]) - jobs.SUCCESS else 0
+
+
+def entrypoint() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="backslashreplace")
+    try:
+        return main()
+    except KeyboardInterrupt:
+        print("中断しました。保存済みの結果は再開時に使用します。")
+        return 130
+    except Exception as exc:
+        print(f"[ERROR] {type(exc).__name__}: {exc}", flush=True)
+        return 1
+    finally:
+        if getattr(sys, "frozen", False) and len(sys.argv) == 1 and sys.stdin.isatty():
+            try:
+                input("Enterで閉じます...")
+            except (EOFError, KeyboardInterrupt):
+                pass
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(entrypoint())
