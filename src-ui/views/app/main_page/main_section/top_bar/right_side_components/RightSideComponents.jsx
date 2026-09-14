@@ -23,8 +23,6 @@ export const RightSideComponents = () => {
 
     return (
         <div className={styles.container}>
-
-            <PluginsQuickSetting />
             <OpenVrcMicMuteSyncQuickSetting />
             <OpenOverlayQuickSetting />
             <SoftwareUpdateAvailableButton />
@@ -58,21 +56,6 @@ const OpenOverlayQuickSetting = () => {
         <OpenQuickSettingButton
             label="Overlay(VR)"
             variable={is_enable}
-            onClickFunction={onClickFunction}
-        />
-    );
-};
-const PluginsQuickSetting = () => {
-    const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-
-    const onClickFunction = () => {
-        updateOpenedQuickSetting("plugins");
-    };
-
-    return (
-        <OpenQuickSettingButton
-            label={t("config_page.side_menu_labels.plugins")}
             onClickFunction={onClickFunction}
         />
     );

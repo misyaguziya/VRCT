@@ -9,7 +9,6 @@ import {
     AdvancedSettings,
     Vr,
     Hotkeys,
-    Plugins,
     Supporters,
     AboutVrct,
     Updater,
@@ -36,8 +35,6 @@ export const SettingBox = () => {
             return <AdvancedSettings />;
         case "updater":
             return <Updater />;
-        case "plugins":
-            return <Plugins />;
         case "supporters":
             return <Supporters />;
         case "about_vrct":

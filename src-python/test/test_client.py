@@ -415,7 +415,6 @@ class AutomatedEndpointTester:
             "/set/data/mic_phrase_timeout",
             "/set/data/mic_max_phrases",
             "/set/data/hotkeys",
-            "/set/data/plugins_status",
             "/set/data/mic_avg_logprob",
             "/set/data/mic_no_speech_prob",
             "/set/data/mic_word_filter",
@@ -612,10 +611,6 @@ class AutomatedEndpointTester:
             expected=[200] if val >= 0 else [400]
         elif endpoint == "/set/data/hotkeys":
             data = {'toggle_vrct_visibility': None,'toggle_translation': None,'toggle_transcription_send': None,'toggle_transcription_receive': None}
-        elif endpoint == "/set/data/plugins_status":
-            plugins = self._get("/get/data/plugins") or []
-            import random
-            data = {p: random.choice([True,False]) for p in plugins}
         elif endpoint == "/set/data/mic_avg_logprob":
             import random
             data = random.uniform(-5,0)

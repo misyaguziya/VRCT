@@ -17,9 +17,6 @@ export const store = {
     setting_box_scroll_container: null,
     log_box_ref: null,
     text_area_ref: null,
-    is_initialized_load_plugin: false,
-    is_fetched_plugins_info_already: false,
-    is_initialized_fetched_plugin_info: false,
     is_fetched_available_releases_already: false,
     last_executed_time_startTyping: 0,
 };
@@ -231,12 +228,6 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
     toggle_transcription_send: null,
     toggle_transcription_receive: null,
 }, "Hotkeys");
-
-// Plugins
-export const { atomInstance: Atom_FetchedPluginsInfo, useHook: useStore_FetchedPluginsInfo } = createAtomWithHook([], "FetchedPluginsInfo");
-export const { atomInstance: Atom_LoadedPlugins, useHook: useStore_LoadedPlugins } = createAtomWithHook([], "LoadedPlugins");
-export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([], "SavedPluginsStatus");
-export const { atomInstance: Atom_PluginsData, useHook: useStore_PluginsData } = createAtomWithHook([], "PluginsData");
 
 // Supporters
 export const { atomInstance: Atom_SupportersData, useHook: useStore_SupportersData } = createAtomWithHook(null, "SupportersData", {is_state_ok: true});

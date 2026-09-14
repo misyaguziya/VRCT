@@ -236,7 +236,6 @@ _debounce_time: int = 2  # デバウンス時間（秒）
 
 **その他設定**
 - `HOTKEYS`: ホットキー設定辞書（即座保存）
-- `PLUGINS_STATUS`: プラグイン状態リスト（即座保存）
 - `USE_EXCLUDE_WORDS`: 除外ワード機能使用フラグ
 - `AUTO_CLEAR_MESSAGE_BOX`: メッセージボックス自動クリア
 - `SEND_ONLY_TRANSLATED_MESSAGES`: 翻訳メッセージのみ送信

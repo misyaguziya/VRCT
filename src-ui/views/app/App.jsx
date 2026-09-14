@@ -10,7 +10,6 @@ import {
     FontFamilyController,
     TransparencyController,
     CornerRadiusController,
-    PluginsController,
 } from "./_app_controllers";
 
 import styles from "./App.module.scss";
@@ -64,7 +63,6 @@ const Contents = () => {
     return (
         <>
             <WindowGeometryController />
-            <PluginsController />
 
             <WindowTitleBar />
             {currentIsSoftwareUpdating.data === false
