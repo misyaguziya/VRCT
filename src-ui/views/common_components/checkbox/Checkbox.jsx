@@ -7,7 +7,7 @@ export const Checkbox = ({
     toggleFunction,
     size = "2.8rem",
     borderWidth = "0.2rem",
-    padding = "2rem",
+    padding = "1.8rem",
 }) => {
 
     const wrapper_class_names = clsx(styles.checkbox_wrapper, {
