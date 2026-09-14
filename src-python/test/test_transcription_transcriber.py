@@ -247,9 +247,17 @@ class TestConfirmedCompleteTranscription(unittest.TestCase):
         transcriber.whisper_model.transcribe.assert_not_called()
 
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
-    def test_multiple_completed_phrases_in_one_backlog_catch_up_each_transcribe_once(self, _) -> None:
-        """バックログ catch-up で1回の呼び出し中に複数の無音ギャップを
-        跨ぐ場合、それぞれ個別に確定・送信されるはず (取りこぼさない)。"""
+    def test_backlog_with_multiple_phrases_is_confirmed_one_per_call(self, _) -> None:
+        """バックログに複数の無音ギャップが溜まっていても取りこぼさないこと。
+
+        ただし**1回の呼び出しにつき1フレーズ**で返る。呼び出し元
+        (model.sendTranscript) が配信できるのはこの関数から戻った後なので、
+        1回の呼び出しで ASR を何度も回すと、その間ずっと何も表示されない
+        まま溜まり、最後にまとめてドッと出る (実機ログで「約14秒間に ASR が
+        6回成功、その間の配信はゼロ、直後に4件まとめて配信」を確認)。
+        呼び出し元はループで即座に呼び直すため、残りは次の呼び出しで処理
+        される。
+        """
         transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
         transcriber.transcription_engine = "Whisper"
         transcriber.whisper_model = MagicMock()
@@ -260,9 +268,16 @@ class TestConfirmedCompleteTranscription(unittest.TestCase):
         audio_queue.put((b"\x02\x00", now + timedelta(seconds=5)))  # 1つ目のギャップ
         audio_queue.put((b"\x03\x00", now + timedelta(seconds=10)))  # 2つ目のギャップ
 
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        self.assertEqual(
+            transcriber.whisper_model.transcribe.call_count, 1,
+            "1回の呼び出しで ASR を複数回まわしてはいけない",
+        )
+        self.assertFalse(audio_queue.empty(), "残りはキューに置いたままにする")
 
-        self.assertTrue(result)
+        # 呼び出し元のループ相当。残りも取りこぼさず確定される。
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
         self.assertEqual(transcriber.whisper_model.transcribe.call_count, 2)
         self.assertEqual(transcriber.audio_sources["last_sample"], b"\x03\x00")
 
