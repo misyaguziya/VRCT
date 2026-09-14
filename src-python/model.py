@@ -83,6 +83,11 @@ _HTTP_TIMEOUT = (10, 60)
 _freeze_trace_path = "freeze_trace.log"
 _freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
 _FREEZE_DUMP_MARGIN_SEC = 15
+# watchdog スレッドの join 上限。Watchdog.start() 末尾の
+# time.sleep(interval) (既定20秒) は中断できないため、ここを無期限にすると
+# shutdown() が最大 interval 秒待たされる。daemon thread なので待ちきれ
+# なくても実害はない (stopWatchdog のコメント参照)。
+_WATCHDOG_JOIN_TIMEOUT_SEC = 1.0
 
 
 def _cleanupFreezeTraceIfEmpty() -> None:
@@ -2249,14 +2254,24 @@ class Model:
 
     def stopWatchdog(self):
         self.ensure_initialized()
-        if isinstance(self.th_watchdog, threadFnc):
-            self.th_watchdog.stop()
-            self.th_watchdog.join()
-            self.th_watchdog = None
+        # ダンプタイマーの解除を必ず先に行う。Watchdog.start() は末尾で
+        # time.sleep(self.interval) する (既定20秒) 一方、threadFnc.stop() は
+        # loop フラグを降ろすだけでこの sleep を中断できないため、join は
+        # 最大 interval 秒ブロックする。以前はこの解除が join の後ろにあり、
+        # shutdown() 側の _stopServiceForShutdown が5秒で諦めた時点で
+        # 一度も実行されず、「正常終了なのに freeze_trace.log へダンプが出る」
+        # という当初直したかった現象がそのまま残っていた (実機ログで確認)。
+        # 解除自体はスレッドと独立した faulthandler の操作なので先に行える。
         try:
             faulthandler.cancel_dump_traceback_later()
         except Exception:
             errorLogging()
+        if isinstance(self.th_watchdog, threadFnc):
+            self.th_watchdog.stop()
+            # 上記のとおり sleep は中断できないので join は無期限にしない。
+            # daemon thread なので、起きそこねてもプロセス終了時に破棄される。
+            self.th_watchdog.join(timeout=_WATCHDOG_JOIN_TIMEOUT_SEC)
+            self.th_watchdog = None
 
     def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""
