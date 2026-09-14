@@ -747,8 +747,16 @@ class Controller:
     def updateConfigSettings(self) -> None:
         settings = {}
         for endpoint, dict_data in self.init_mapping.items():
-            response = dict_data["variable"](None)
-            result = response.get("result", None)
+            # 1つのgetterが例外を投げるとinit()がここで死に、
+            # /run/initialization_complete が永久に送られずUIがローディング
+            # 画面のまま固まる。値が取れなかった項目はNoneにして続行する。
+            try:
+                response = dict_data["variable"](None)
+                result = response.get("result", None)
+            except Exception:
+                errorLogging()
+                printLog(f"updateConfigSettings: failed to collect {endpoint}")
+                result = None
             settings[endpoint] = result
         self.run(
             200,
