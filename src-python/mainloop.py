@@ -560,7 +560,21 @@ mapping = {
     # "/run/stop_watchdog": {"status": True, "variable":controller.stopWatchdog},
 }
 
-init_mapping = {key:value for key, value in mapping.items() if key.startswith("/get/data/")}
+# 起動時の一括取得 (updateConfigSettings) から除外するエンドポイント。
+# init_mapping を舐め終えてから /run/initialization_complete を送る = UIの
+# ローディング解除がここの合計時間で決まるため、ネットワークI/Oを伴うものを
+# 入れてはいけない。available_releases は GitHub API への同期リクエスト
+# (timeout (10, 60)) で、起動を最大70秒遅らせうる。UI側は Updater.jsx の
+# マウント時に自分で /get/data/available_releases を叩くので、ここから
+# 外しても取得経路は失われない。
+_INIT_MAPPING_EXCLUDED_ENDPOINTS = frozenset({
+    "/get/data/available_releases",
+})
+
+init_mapping = {
+    key: value for key, value in mapping.items()
+    if key.startswith("/get/data/") and key not in _INIT_MAPPING_EXCLUDED_ENDPOINTS
+}
 controller.setInitMapping(init_mapping)
 
 DEFAULT_WORKER_COUNT = 3  # 必要なら増やす
