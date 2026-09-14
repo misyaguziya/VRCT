@@ -871,6 +871,7 @@ class Model:
             # Callers should call `model.init()` explicitly or rely on
             # `ensure_initialized()` which will lazy-initialize on demand.
             cls._instance._inited = False
+            cls._instance._init_failed = False
         return cls._instance
 
     def init(self):
@@ -880,8 +881,21 @@ class Model:
         and is intentionally not called at import time. Call explicitly
         or let `ensure_initialized()` call it lazily.
         """
-        if getattr(self, '_inited', False):
+        if getattr(self, '_inited', False) or getattr(self, '_init_failed', False):
             return
+
+        # 「成功が証明されるまで失敗扱い」にしておく。init() は途中で
+        # AudioLifecycleWorker (コンストラクタが即 daemon thread を起動する)
+        # や Clipboard / Telemetry を生成するため、後半で例外が出たときに
+        # 再実行を許すと、そのたびに新しいスレッドが生成され、前回分は
+        # 誰からも参照されないまま生き残る。ensure_initialized() は
+        # 例外を握りつぶして続行するので、public メソッドが呼ばれるたびに
+        # これが繰り返されスレッドが際限なく増える。shutdown() が停止
+        # できるのは最新の 1 組だけなので、終了時に古いワーカーが
+        # PyAudio 操作の途中でプロセス終了に巻き込まれる経路も残る。
+        # 壊れたインストールや SteamVR 異常で OverlayImage/Clipboard の
+        # 生成が失敗するケースは再試行しても直らないため、1 回で諦める。
+        self._init_failed = True
 
         self.logger = None
         self.th_check_device = None
@@ -942,6 +956,7 @@ class Model:
         self.telemetry = Telemetry()
 
         self._inited = True
+        self._init_failed = False
 
     def ensure_initialized(self) -> None:
         """Ensure the model has been initialized. This is safe to call from
