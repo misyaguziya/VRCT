@@ -50,8 +50,7 @@
             "bin/VRCT-sidecar"
         ],
         "resources": {
-            "bin/_internal": "_internal",
-            "plugins": "plugins"
+            "bin/_internal": "_internal"
         },
         "windows": {
             "nsis": {

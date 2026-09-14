@@ -14,7 +14,6 @@ import GraphicEqSvg from "@images/mui_graphic_eq.svg?react";
 import HMDSvg from "@images/mui_head_mounted_device.svg?react";
 import DiscoverTuneSvg from "@images/mui_discover_tune.svg?react";
 import KeyboardAltSvg from "@images/mui_keyboard_alt.svg?react";
-import ExtensionSvg from "@images/mui_extension.svg?react";
 import CodeBlocksSvg from "@images/mui_code_blocks.svg?react";
 import RefreshSvg from "@images/refresh.svg?react";
 import CrownSvg from "@images/mui_crown.svg?react";
@@ -49,7 +48,6 @@ export const SidebarSection = () => {
                         <Tab tab_id="vr" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="others" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="hotkeys" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
-                        <Tab tab_id="plugins" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="advanced_settings" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                         <Tab tab_id="updater" isSmall={currentIsBreakPoint.data} isHovered={isHovered} />
                     </div>
@@ -73,7 +71,6 @@ const TabIcon = ({ tab_id, className }) => {
         case "vr": return <HMDSvg className={clsx(className, styles.mui_icon)} />;
         case "others" : return <DiscoverTuneSvg className={clsx(className, styles.mui_icon)} />;
         case "hotkeys": return <KeyboardAltSvg className={clsx(className, styles.mui_icon)} />;
-        case "plugins": return <ExtensionSvg className={clsx(className, styles.mui_icon)} />;
         case "advanced_settings": return <CodeBlocksSvg className={clsx(className, styles.mui_icon)} />;
         case "updater": return <RefreshSvg className={clsx(className, styles.updater_icon)} />;
         case "supporters": return <CrownSvg className={clsx(className, styles.mui_icon, styles.supporters_icon)} />;
