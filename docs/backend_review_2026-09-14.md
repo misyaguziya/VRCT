@@ -43,7 +43,7 @@
 |---|---|---|---|
 | M-1 | ホットパスの所要時間計測を追加 | +数十行 | ⬜ |
 | P-1 | `available_releases` を init_mapping から除外 + getter 失敗の隔離 | +10 行 / 2 ファイル | 🟢 `86a91ca0` |
-| P-2 | `Model.init()` の失敗後再試行を止める | +6 行 / 1 ファイル | ⬜ |
+| P-2 | `Model.init()` の失敗後再試行を止める | +6 行 / 1 ファイル | 🟢 `d66d4d6c` |
 | P-3 | 翻訳フォールバックの最大 2 秒 sleep を廃止 | 数行 | ⬜ |
 | P-4 | `shutdown()` に `stopWatchdog` を追加 | 1 行 | ⬜ |
 | S-1 | 文字起こしエンジンのレジストリ化 + `OpenAI_Compatible` 編入 | **−600 行** / 4 ファイル | ⬜ |
@@ -137,7 +137,7 @@ response = requests_get(config.GITHUB_RELEASES_LIST_URL, timeout=_HTTP_TIMEOUT)
 
 ---
 
-### ⬜ P-2 `Model.init()` の部分失敗でワーカースレッドが無限リークする
+### 🟢 P-2 `Model.init()` の部分失敗でワーカースレッドが無限リークする（`d66d4d6c`）
 
 `Model.init()`（`model.py:876-944`）は `self._inited = True` を **最終行 `model.py:944` でのみ**立てる。
 一方 `model.py:897-898` で `AudioLifecycleWorker()` を 2 つ生成し、そのコンストラクタ（`model.py:240-246`）は
