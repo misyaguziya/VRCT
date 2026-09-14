@@ -1,7 +1,6 @@
 import styles from "./ModalController.module.scss";
 import { useStore_OpenedQuickSetting } from "@store";
-import { Vr, VrcMicMuteSyncContainer, Plugins } from "@setting_box";
-import { UpdateModal } from "./update_modal/UpdateModal";
+import { Vr, VrcMicMuteSyncContainer, Plugins, Updater } from "@setting_box";
 
 export const ModalController = () => {
     const { currentOpenedQuickSetting, updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
@@ -27,7 +26,7 @@ const QuickSettingsController = () => {
         case "overlay":
             return <Vr />;
         case "update_software":
-            return <UpdateModal />;
+            return <Updater />;
         default:
             return null;
     }

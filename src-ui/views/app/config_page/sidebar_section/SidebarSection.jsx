@@ -5,7 +5,6 @@ import { useI18n } from "@useI18n";
 import {
     useStore_SelectedConfigTabId,
     useStore_IsBreakPoint,
-    useStore_OpenedQuickSetting,
 } from "@store";
 
 import MicSvg from "@images/mic.svg?react";
@@ -76,7 +75,7 @@ const TabIcon = ({ tab_id, className }) => {
         case "hotkeys": return <KeyboardAltSvg className={clsx(className, styles.mui_icon)} />;
         case "plugins": return <ExtensionSvg className={clsx(className, styles.mui_icon)} />;
         case "advanced_settings": return <CodeBlocksSvg className={clsx(className, styles.mui_icon)} />;
-        case "updater": return <RefreshSvg className={className} />;
+        case "updater": return <RefreshSvg className={clsx(className, styles.updater_icon)} />;
         case "supporters": return <CrownSvg className={clsx(className, styles.mui_icon, styles.supporters_icon)} />;
         case "about_vrct": return <img src={chat_white_square} className={clsx(className, styles.about_vrct_icon)} />;
         default: return null;
@@ -86,17 +85,7 @@ const TabIcon = ({ tab_id, className }) => {
 const Tab = (props) => {
     const { t } = useI18n();
     const { updateSelectedConfigTabId, currentSelectedConfigTabId } = useStore_SelectedConfigTabId();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-
     const onclickFunction = () => {
-        // The Updater tab is a shortcut into the update modal — it does not
-        // navigate to a settings page, so clicking it opens the modal instead
-        // of switching tabs. Kept in the sidebar so users still have an
-        // obvious entry point when no update-available banner is showing.
-        if (props.tab_id === "updater") {
-            updateOpenedQuickSetting("update_software");
-            return;
-        }
         updateSelectedConfigTabId(props.tab_id);
     };
 

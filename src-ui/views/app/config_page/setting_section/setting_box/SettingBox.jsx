@@ -12,6 +12,7 @@ import {
     Plugins,
     Supporters,
     AboutVrct,
+    Updater,
 } from "@setting_box";
 
 export const SettingBox = () => {
@@ -33,6 +34,8 @@ export const SettingBox = () => {
             return <Hotkeys />;
         case "advanced_settings":
             return <AdvancedSettings />;
+        case "updater":
+            return <Updater />;
         case "plugins":
             return <Plugins />;
         case "supporters":
