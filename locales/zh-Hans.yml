@@ -120,7 +120,6 @@ config_page:
         transcription: "语音识别"
         others: "其他"
         hotkeys: "快捷键"
-        plugins: "插件"
         advanced_settings: "高级设置"
         updater: "更新"
 
@@ -359,18 +358,6 @@ config_page:
         toggle_transcription_receive:
             label: "切换「{{transcription_receive}}」开/关"
 
-    plugins:
-        downloaded_version: "已下载版本：{{downloaded_version}}"
-        latest_version: "最新版本：{{latest_version}}"
-        available_after_updating: "更新到最新版后可用"
-        unavailable_downloaded: "当前不可用 与使用中的 VRCT 版本不兼容"
-        no_latest_info: "无法获取最新信息"
-        using_latest_version: "正在使用最新版本"
-        available_latest_version: "最新版本可用"
-        unavailable_latest_version: "最新版本当前不可用"
-        available_in_latest_vrct_version: "可在 VRCT 最新版中使用"
-        unavailable_not_downloaded: "当前不可用"
-
     advanced_settings:
         osc_ip_address:
             label: "OSC IP 地址"
@@ -414,18 +401,3 @@ config_page:
     notifications:
         save_success: "设置已保存。"
         opened_folder: "已打开文件夹。"
-
-plugin_notifications:
-    downloading: "正在下载插件。"
-    downloaded_success: "插件下载完成。"
-    downloaded_error: "插件下载失败。"
-
-    updating: "正在更新插件。"
-    updated_success: "插件更新完成。"
-    updated_error: "插件更新失败。"
-
-    disabled_out_of_support: "与当前版本不兼容。已禁用插件。"
-    disabled_due_to_an_error: "插件运行时检测到错误。请向插件开发者报告。"
-
-    is_enabled: "插件已启用。"
-    is_disabled: "插件已禁用。"

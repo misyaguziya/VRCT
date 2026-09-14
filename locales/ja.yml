@@ -120,7 +120,6 @@ config_page:
         transcription: "音声認識"
         others: "その他"
         hotkeys: "ホットキー"
-        plugins: "プラグイン"
         advanced_settings: "高度な設定"
         updater: "アップデート"
 
@@ -365,18 +364,6 @@ config_page:
         toggle_transcription_receive:
             label: "「{{transcription_receive}}」 オン/オフの切り替え"
 
-    plugins:
-        downloaded_version: "ダウンロード済バージョン: {{downloaded_version}}"
-        latest_version: "最新バージョン: {{latest_version}}"
-        available_after_updating: "最新版にアップデート後 利用可能"
-        unavailable_downloaded: "現在利用不可 使用中VRCTバージョンとの互換性なし"
-        no_latest_info: "最新情報が取得できません"
-        using_latest_version: "最新版を使用中"
-        available_latest_version: "最新版を利用可能"
-        unavailable_latest_version: "最新版は現在利用不可"
-        available_in_latest_vrct_version: "VRCT最新版で利用可能"
-        unavailable_not_downloaded: "現在利用不可"
-
     advanced_settings:
         osc_ip_address:
             label: "OSC IP Address"
@@ -420,18 +407,3 @@ config_page:
     notifications:
         save_success: "設定を保存しました。"
         opened_folder: "フォルダを開きました。"
-
-plugin_notifications:
-    downloading: "プラグインをダウンロード中。"
-    downloaded_success: "プラグインのダウンロードが完了しました。"
-    downloaded_error: "プラグインのダウンロードに失敗しました。"
-
-    updating: "プラグインをアップデート中。"
-    updated_success: "プラグインのアップデートが完了しました。"
-    updated_error: "プラグインのアップデートに失敗しました。"
-
-    disabled_out_of_support: "現在のバージョンとの互換性がありません。プラグインを無効にしました。"
-    disabled_due_to_an_error: "プラグイン実行中にエラーを検知しました。プラグイン開発者に報告してください。"
-
-    is_enabled: "プラグインを有効にしました。"
-    is_disabled: "プラグインを無効にしました。"

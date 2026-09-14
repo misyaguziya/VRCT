@@ -349,8 +349,6 @@ class TestMainloop():
                     'toggle_transcription_send': None,
                     'toggle_transcription_receive': None
                 }
-            case "/set/data/plugins_status":
-                data = {plugin: random.choice([True, False]) for plugin in self.config_dict.get("plugins", [])}
             case "/set/data/mic_avg_logprob":
                 data = random.uniform(-5, 0)
             case "/set/data/mic_no_speech_prob":

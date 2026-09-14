@@ -120,7 +120,6 @@ config_page:
         transcription: "語音辨識"
         others: "其他"
         hotkeys: "快捷鍵"
-        plugins: "外掛程式"
         advanced_settings: "進階設定"
         updater: "更新"
 
@@ -359,18 +358,6 @@ config_page:
         toggle_transcription_receive:
             label: "切換「{{transcription_receive}}」開/關"
 
-    plugins:
-        downloaded_version: "已下載版本：{{downloaded_version}}"
-        latest_version: "最新版本：{{latest_version}}"
-        available_after_updating: "更新到最新版後可用"
-        unavailable_downloaded: "目前不可用 與使用中的 VRCT 版本不相容"
-        no_latest_info: "無法取得最新資訊"
-        using_latest_version: "正在使用最新版本"
-        available_latest_version: "最新版本可用"
-        unavailable_latest_version: "最新版本目前不可用"
-        available_in_latest_vrct_version: "可在 VRCT 最新版中使用"
-        unavailable_not_downloaded: "目前不可用"
-
     advanced_settings:
         osc_ip_address:
             label: "OSC IP 位址"
@@ -414,18 +401,3 @@ config_page:
     notifications:
         save_success: "設定已儲存。"
         opened_folder: "已開啟檔案夾。"
-
-plugin_notifications:
-    downloading: "正在下載外掛程式。"
-    downloaded_success: "外掛程式下載完成。"
-    downloaded_error: "外掛程式下載失敗。"
-
-    updating: "正在更新外掛程式。"
-    updated_success: "外掛程式更新完成。"
-    updated_error: "外掛程式更新失敗。"
-
-    disabled_out_of_support: "與目前版本不相容。已停用外掛程式。"
-    disabled_due_to_an_error: "外掛程式執行時偵測到錯誤。請向外掛程式開發者回報。"
-
-    is_enabled: "外掛程式已啟用。"
-    is_disabled: "外掛程式已停用。"

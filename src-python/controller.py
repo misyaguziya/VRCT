@@ -212,7 +212,6 @@ _SIMPLE_CONFIG_GETTERS = {
     "getSpeakerPhraseTimeout": "SPEAKER_PHRASE_TIMEOUT",
     "getSpeakerMaxPhrases": "SPEAKER_MAX_PHRASES",
     "getHotkeys": "HOTKEYS",
-    "getPluginsStatus": "PLUGINS_STATUS",
     "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
     "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
     "getOscIpAddress": "OSC_IP_ADDRESS",
@@ -2423,13 +2422,6 @@ class Controller:
     def setHotkeys(data, *args, **kwargs) -> dict:
         config.HOTKEYS = data
         return {"status":200, "result":config.HOTKEYS}
-
-
-    @staticmethod
-    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
-    def setPluginsStatus(data, *args, **kwargs) -> dict:
-        config.PLUGINS_STATUS = data
-        return {"status":200, "result":config.PLUGINS_STATUS}
 
 
     @staticmethod
