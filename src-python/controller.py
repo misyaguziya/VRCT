@@ -926,6 +926,7 @@ class Controller:
         message: str,
         language: Optional[str],
         msg_id: Optional[str] = None,
+        asr_ms: Optional[int] = None,
     ) -> Optional[dict]:
         """mic/speaker/chatMessage共通のパイプライン(バックエンドレビュー
         フェーズ3項目25、`MessageDirectionSpec`参照)。
@@ -952,10 +953,17 @@ class Controller:
         if spec.repeat_detector_attr is not None and getattr(model, spec.repeat_detector_attr)(message):
             return None
 
+        # 「発話終了から画面表示まで」の内訳を実測するための計装
+        # (再評価 2026-09-14 M-1)。ワードフィルタ/繰り返し検出で早期 return
+        # した場合は出力自体が無いので測らない。
+        pipeline_started_at = time.perf_counter()
+        translate_elapsed_ms = 0
+
         translation: list = []
         if config.ENABLE_TRANSLATION is False:
             pass
         else:
+            translate_started_at = time.perf_counter()
             try:
                 translate = getattr(model, spec.translate_attr)
                 translation, success = translate(message, source_language=language)
@@ -1007,6 +1015,8 @@ class Controller:
                         ],
                     }
                 return None
+            finally:
+                translate_elapsed_ms = round((time.perf_counter() - translate_started_at) * 1000)
 
         transliteration_message: List[Any] = []
         transliteration_translation: list = []
@@ -1159,6 +1169,20 @@ class Controller:
 
         model.addTranslationHistory(spec.kind, message)
 
+        pipeline_elapsed_ms = round((time.perf_counter() - pipeline_started_at) * 1000)
+        # asr= は mic/speaker のみ (chat には ASR 段が無い)。
+        # output= は翻訳以外の全て (transliteration/OSC/オーバーレイ生成/
+        # クリップボード/UI配信/WebSocket/ロガー)。
+        # total= は ASR を含む「文字起こし結果が出てから出力完了まで」。
+        asr_part = f"asr={asr_ms}ms " if asr_ms is not None else ""
+        total_ms = pipeline_elapsed_ms + (asr_ms or 0)
+        printLog(
+            f"[latency][{spec.kind}] {asr_part}"
+            f"translate={translate_elapsed_ms}ms "
+            f"output={pipeline_elapsed_ms - translate_elapsed_ms}ms "
+            f"total={total_ms}ms"
+        )
+
         if spec.delivery == "return":
             return {"id": msg_id, **payload}
         return None
@@ -1210,7 +1234,7 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) > 0:
-            self._processMessage(MIC_MESSAGE_SPEC, message, language)
+            self._processMessage(MIC_MESSAGE_SPEC, message, language, asr_ms=result.get("asr_ms"))
 
     def speakerMessage(self, result:dict) -> None:
         if result.get("recognition_error") is True:
@@ -1250,7 +1274,7 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) > 0:
-            self._processMessage(SPEAKER_MESSAGE_SPEC, message, language)
+            self._processMessage(SPEAKER_MESSAGE_SPEC, message, language, asr_ms=result.get("asr_ms"))
 
     def _disableTranscriptionAfterPipelineError(self, source: str) -> None:
         """エラー停止後の実状態を config と UI に同期する。"""
