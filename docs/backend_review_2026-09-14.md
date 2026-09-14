@@ -42,7 +42,7 @@
 | # | 項目 | 規模 | 状態 |
 |---|---|---|---|
 | M-1 | ホットパスの所要時間計測を追加 | +数十行 | ⬜ |
-| P-1 | `available_releases` を init_mapping から除外 + getter 失敗の隔離 | +10 行 / 2 ファイル | ⬜ |
+| P-1 | `available_releases` を init_mapping から除外 + getter 失敗の隔離 | +10 行 / 2 ファイル | 🟢 `86a91ca0` |
 | P-2 | `Model.init()` の失敗後再試行を止める | +6 行 / 1 ファイル | ⬜ |
 | P-3 | 翻訳フォールバックの最大 2 秒 sleep を廃止 | 数行 | ⬜ |
 | P-4 | `shutdown()` に `stopWatchdog` を追加 | 1 行 | ⬜ |
@@ -89,7 +89,7 @@ VAD 導入の 1 回目・2 回目が「体感が遅い」という主観だけ�
 
 ## P. 処理速度 / 実行時の実害
 
-### ⬜ P-1 起動完了通知が GitHub API の応答待ちで最大 70 秒ブロックしうる
+### 🟢 P-1 起動完了通知が GitHub API の応答待ちで最大 70 秒ブロックしうる（`86a91ca0`）
 
 `Controller.init()` の最終行 `controller.py:4868` が `updateConfigSettings()` を呼ぶ。
 
@@ -127,6 +127,13 @@ response = requests_get(config.GITHUB_RELEASES_LIST_URL, timeout=_HTTP_TIMEOUT)
 1. `init_mapping` から `/get/data/available_releases` を除外する（`mainloop.py:563` に除外集合を足す）。
    フロント側は `src-ui/logics/useReceiveRoutes.js:157` が `/run/initialization_complete` を受けているだけなので UI 変更不要。
 2. `controller.py:750` を try/except で包み、失敗した endpoint は `None` を入れて続行する。
+
+**除外が 1 件で足りることの確認**: `init_mapping` の 131 個の `/get/data/*` のうち、
+ネットワークに触れうるハンドラは 8 個。うち認証キー型 5 エンジンのモデル一覧は
+`_getTranslationEngineModelList`（`controller.py:2601-2603`）が `getattr(config, ...)` を
+返すだけで**ネットワークを叩かない**。LMStudio / Ollama の 2 つは実際に HTTP を叩くが、
+`timeout=0.2` で上限が固定されている（`translation_lmstudio.py:20,32`、`translation_ollama.py:19`）。
+**桁違いに突出しているのは `available_releases`（timeout (10, 60)）だけ**であり、除外対象はこれで過不足ない。
 
 ---
 
