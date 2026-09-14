@@ -454,6 +454,12 @@ class Controller:
         self._stopServiceForShutdown(model.stopObsBrowserSourceServer, "OBS browser source server")
         self._stopServiceForShutdown(model.stopWebSocketServer, "WebSocket server")
         self._stopServiceForShutdown(model.shutdownOverlay, "Overlay")
+        # watchdog も明示停止する。init() が startWatchdog() で武装する
+        # faulthandler.dump_traceback_later が残ったままだと、フロントエンドは
+        # 終了操作と同時に feed を止めるため、プロセスが (interval + 15秒)
+        # 以上生き残った場合に「正常終了なのに freeze_trace.log へフリーズ
+        # ダンプが出る」。この計装はフリーズ調査の一次情報源なので汚さない。
+        self._stopServiceForShutdown(model.stopWatchdog, "watchdog")
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a

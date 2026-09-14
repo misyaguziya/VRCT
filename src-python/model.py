@@ -899,6 +899,10 @@ class Model:
 
         self.logger = None
         self.th_check_device = None
+        # startWatchdog() より前に shutdown() が走る経路 (init 失敗時など) で
+        # stopWatchdog() の isinstance チェックが AttributeError にならないよう
+        # ここで宣言しておく。
+        self.th_watchdog = None
         # マイク/スピーカーそれぞれの文字起こし・エナジー計測は
         # _AudioDeviceSession (MicSession/SpeakerSession) に集約されている。
         # 1 物理デバイスにつき Recorder (= PyAudio Microphone) が常に
