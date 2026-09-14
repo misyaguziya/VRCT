@@ -629,10 +629,21 @@ class _AudioDeviceSession:
                     self._handle_pipeline_error(failure)
                     return
                 try:
-                    if self._transcribe(transcriber, audio_queue) and callable(self.transcript_fnc):
-                        result = transcriber.getTranscript()
-                        result["recognition_error"] = transcriber.last_recognition_error
-                        self.transcript_fnc(result)
+                    self._transcribe(transcriber, audio_queue)
+                    # 溜まっている分を全て配信する。1回の transcribeAudioQueue()
+                    # が複数件を積むことがある (Google の interim_send は
+                    # キューから取り出したチャンクごとに走る) のに対し、
+                    # 以前はここで1件しか取り出しておらず、残りは「次に ASR が
+                    # 成功した時」まで配信されなかった。発話が止まるとそのまま
+                    # 埋もれ、max_phrases を超えると古い順に無言で捨てられて
+                    # いた (実機ログで ASR 成功4件に対し配信1件を確認)。
+                    # _transcribe の戻り値で分岐しないのは、前回の呼び出しが
+                    # 残した分もここで確実に吐き出すため。
+                    if callable(self.transcript_fnc):
+                        while transcriber.hasTranscript():
+                            result = transcriber.getTranscript()
+                            result["recognition_error"] = transcriber.last_recognition_error
+                            self.transcript_fnc(result)
                 except AudioPipelineError as error:
                     self._handle_pipeline_error(error.failure)
                 except Exception as error:  # noqa: BLE001 - fail closed at ASR boundary
