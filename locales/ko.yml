@@ -120,7 +120,6 @@ config_page:
         transcription: "음성인식"
         others: "기타"
         hotkeys: "단축키"
-        plugins: "플러그인"
         advanced_settings: "고급 설정"
         updater: "업데이트"
 
@@ -359,18 +358,6 @@ config_page:
         toggle_transcription_receive:
             label: "'{{transcription_receive}}' 켜기/끄기 전환"
 
-    plugins:
-        downloaded_version: "다운로드된 버전: {{downloaded_version}}"
-        latest_version: "최신 버전: {{latest_version}}"
-        available_after_updating: "최신 버전으로 업데이트 후 이용 가능"
-        unavailable_downloaded: "현재 사용 중인 VRCT 버전과의 호환성 문제로 인해 이용 불가"
-        no_latest_info: "최신 정보를 가져올 수 없습니다"
-        using_latest_version: "최신 버전을 사용 중"
-        available_latest_version: "최신 버전을 이용 가능"
-        unavailable_latest_version: "최신 버전은 현재 이용 불가"
-        available_in_latest_vrct_version: "VRCT 최신 버전에서 이용 가능"
-        unavailable_not_downloaded: "현재 이용 불가"
-
     advanced_settings:
         osc_ip_address:
             label: "OSC IP 주소"
@@ -414,18 +401,3 @@ config_page:
     notifications:
         save_success: "설정을 저장했습니다."
         opened_folder: "폴더를 열었습니다."
-
-plugin_notifications:
-    downloading: "플러그인을 다운로드 중입니다."
-    downloaded_success: "플러그인 다운로드가 완료되었습니다."
-    downloaded_error: "플러그인 다운로드에 실패했습니다."
-
-    updating: "플러그인을 업데이트 중입니다."
-    updated_success: "플러그인 업데이트가 완료되었습니다."
-    updated_error: "플러그인 업데이트에 실패했습니다."
-
-    disabled_out_of_support: "현재 버전과 호환되지 않습니다. 플러그인을 비활성화했습니다."
-    disabled_due_to_an_error: "플러그인 실행 중 오류를 감지했습니다. 플러그인 개발자에게 보고해 주세요."
-
-    is_enabled: "플러그인을 활성화했습니다."
-    is_disabled: "플러그인을 비활성화했습니다."

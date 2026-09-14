@@ -211,17 +211,6 @@ class SetHotkeysTests(_SimpleConfigSetterTestMixin, unittest.TestCase):
         return "not-a-dict"  # キー集合の比較以前に dict ですらない -> 全体拒否
 
 
-class SetPluginsStatusTests(_SimpleConfigSetterTestMixin, unittest.TestCase):
-    METHOD_NAME = "setPluginsStatus"
-    ATTR_NAME = "PLUGINS_STATUS"
-
-    def get_valid_value(self, current):
-        return [{"name": "example", "enabled": True}]
-
-    def get_invalid_value(self, current):
-        return "not-a-list"
-
-
 class SetSendMessageFormatPartsTests(_SimpleConfigSetterTestMixin, unittest.TestCase):
     METHOD_NAME = "setSendMessageFormatParts"
     ATTR_NAME = "SEND_MESSAGE_FORMAT_PARTS"

@@ -120,7 +120,6 @@ config_page:
         transcription: "Transcription"
         others: "Other"
         hotkeys: "Hotkeys"
-        plugins: "Plugins"
         advanced_settings: "Advanced"
         updater: "Updater"
 
@@ -365,18 +364,6 @@ config_page:
         toggle_transcription_receive:
             label: "Toggle {{transcription_receive}}"
 
-    plugins:
-        downloaded_version: "Downloaded version: {{downloaded_version}}"
-        latest_version: "Latest version: {{latest_version}}"
-        available_after_updating: "Available after updating to the latest version"
-        unavailable_downloaded: "Currently Unavailable - Incompatible with the VRCT version in use"
-        no_latest_info: "Unable to retrieve the latest information"
-        using_latest_version: "Using the latest version"
-        available_latest_version: "Latest version available"
-        unavailable_latest_version: "Latest version currently unavailable"
-        available_in_latest_vrct_version: "Available in the latest VRCT version"
-        unavailable_not_downloaded: "Currently unavailable"
-
     advanced_settings:
         osc_ip_address:
             label: "OSC IP Address"
@@ -420,18 +407,3 @@ config_page:
     notifications:
         save_success: "Settings have been saved."
         opened_folder: "Opened the folder."
-
-plugin_notifications:
-    downloading: "Downloading the plugin."
-    downloaded_success: "Downloaded successfully."
-    downloaded_error: "Download failed."
-
-    updating: "Updating the plugin."
-    updated_success: "Updated successfully."
-    updated_error: "Update failed."
-
-    disabled_out_of_support: "The plugin has been disabled. It's not supported on this VRCT version."
-    disabled_due_to_an_error: "An error was detected while running the plugin. Please report this to the plugin developer."
-
-    is_enabled: "The plugin enabled."
-    is_disabled: "The plugin disabled."

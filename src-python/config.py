@@ -539,13 +539,6 @@ def _mic_word_filter_validator(val, inst):
             result.append(item)
     return result
 
-def _plugins_status_validator(val, inst):
-    if not isinstance(val, list):
-        return None
-    if not all(isinstance(item, dict) for item in val):
-        return None
-    return [dict(item) for item in val]
-
 def _selected_translation_engines_validator(val, inst):
     if not isinstance(val, dict):
         return None
@@ -989,7 +982,6 @@ class Config:
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
-    PLUGINS_STATUS = ValidatedProperty('PLUGINS_STATUS', _plugins_status_validator, immediate_save=True)
     SELECTED_TRANSLATION_ENGINES = ValidatedProperty('SELECTED_TRANSLATION_ENGINES', _selected_translation_engines_validator)
     SELECTED_YOUR_LANGUAGES = ValidatedProperty('SELECTED_YOUR_LANGUAGES', _selected_your_languages_validator)
     SELECTED_TARGET_LANGUAGES = ValidatedProperty('SELECTED_TARGET_LANGUAGES', _selected_target_languages_validator)
@@ -1155,7 +1147,6 @@ class Config:
             "toggle_transcription_send": None,
             "toggle_transcription_receive": None,
         }
-        self._PLUGINS_STATUS = []
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._MIC_NO_REPEAT_NGRAM_SIZE = 0
