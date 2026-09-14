@@ -16,3 +16,4 @@ export { useHandleOscQuery } from "./useHandleOscQuery";
 export { useIsOscAvailable } from "./useIsOscAvailable";
 export { useIsVrctAvailable } from "./useIsVrctAvailable";
 export { useLLMConnection } from "./useLLMConnection";
+export { useCopyToClipboard } from "./useCopyToClipboard";

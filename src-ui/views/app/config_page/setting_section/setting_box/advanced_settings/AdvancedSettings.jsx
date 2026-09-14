@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 
-import { useNotificationStatus, useOpenFolder } from "@logics_common";
+import { useCopyToClipboard, useOpenFolder } from "@logics_common";
 import {
     useAdvancedSettings,
     useSaveButtonLogic,
@@ -188,7 +188,7 @@ const WebsocketPortContainer = () => {
 
 const WebsocketUrlContainer = () => {
     const { t } = useI18n();
-    const { showNotification_Error } = useNotificationStatus();
+    const { copyToClipboard } = useCopyToClipboard();
     const { currentWebsocketHost, currentWebsocketPort, currentWebsocketAuthToken } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
@@ -197,10 +197,6 @@ const WebsocketUrlContainer = () => {
         ? `ws://${host}:${currentWebsocketPort.data}/?token=${encodeURIComponent(token)}`
         : `ws://${host}:${currentWebsocketPort.data}`;
 
-    const copyUrlToClipboard = async () => {
-        await navigator.clipboard.writeText(url);
-    };
-
     return (
         <ActionButtonContainer
             label={t("config_page.advanced_settings.websocket_url.label")}
@@ -208,8 +204,7 @@ const WebsocketUrlContainer = () => {
             IconComponent={CopySvg}
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
-            onclickFunction={copyUrlToClipboard}
-            onError={() => showNotification_Error(t("common_error.copy_to_clipboard_failed"))}
+            onclickFunction={() => copyToClipboard(url)}
         />
     );
 };
@@ -250,15 +245,11 @@ const EnableObsBrowserSourceContainer = () => {
 
 const ObsBrowserSourceUrlContainer = () => {
     const { t } = useI18n();
-    const { showNotification_Error } = useNotificationStatus();
+    const { copyToClipboard } = useCopyToClipboard();
     const { currentWebsocketHost, currentObsBrowserSourcePort } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
     const url = `http://${host}:${currentObsBrowserSourcePort.data}/obs`;
-
-    const copyUrlToClipboard = async () => {
-        await navigator.clipboard.writeText(url);
-    };
 
     return (
         <ActionButtonContainer
@@ -267,8 +258,7 @@ const ObsBrowserSourceUrlContainer = () => {
             IconComponent={CopySvg}
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
-            onclickFunction={copyUrlToClipboard}
-            onError={() => showNotification_Error(t("common_error.copy_to_clipboard_failed"))}
+            onclickFunction={() => copyToClipboard(url)}
         />
     );
 };
