@@ -6,10 +6,9 @@ UI 側の 1 エントリは `base_endpoint_name` と `logics_template_id` の組
 (UI は出るが値が取れない / 保存されない)。片側だけ足した・綴りを間違えた・
 別ブロックからコピペした、が原因で、どれも静的には誰も気付けない。
 
-実際にこのテストで `OllamaURL` の宣言が見つかった (2025-11-14 に LMStudio
-ブロックのコピペで入ったが、Ollama は接続時に URL を取らないため
-バックエンドには対応するエンドポイントも config プロパティも無く、
-この宣言以外から参照もされていなかった)。
+実際にこのテストで `ollama_url` の宣言が見つかった (下記
+`_KNOWN_FRONTEND_MISMATCHES` 参照)。これはフロントエンド側で直すものなので
+ここでは既知の不一致として扱い、バックエンドは変更しない。
 
 本番コードは変更しない。検出器だけを足す。
 """
@@ -24,6 +23,22 @@ _UI_CONFIG_SETTER = (
     Path(__file__).resolve().parents[2]
     / "src-ui" / "logics" / "configs" / "config_page_setter" / "ui_config_setter.js"
 )
+
+
+# フロントエンド側の宣言が余っている既知の不一致。
+# ここはバックエンドのテストなので src-ui は変更せず、除外して記録するに留める。
+# 解消されたら下の test_known_mismatches_are_still_mismatched が失敗して
+# 「このエントリを消せ」と教えるので、リストが黙って腐ることはない。
+_KNOWN_FRONTEND_MISMATCHES = {
+    # 2025-11-14 に LMStudio ブロックのコピペで入った宣言。Ollama は接続時に
+    # URL 引数を取らない (controller.py の CONNECTION_PROVIDER_REGISTRY で
+    # LMStudio は {"base_url": config.LMSTUDIO_URL} だが Ollama は {})。
+    # バックエンドに /get/data/ollama_url も /set/data/ollama_url も
+    # config.OLLAMA_URL も無く、src-ui 全体でもこの宣言以外から参照されて
+    # いない。UI に入力欄が出るのに入力しても何も起きない。
+    # -> src-ui 側で宣言を削除するのが正しい対応 (フロント担当タスク)。
+    "/get/data/ollama_url",
+}
 
 
 def _parseSettingsArray():
@@ -75,7 +90,9 @@ class TestUiEndpointContract(unittest.TestCase):
         missing = [
             prefix + name
             for template, name in self.entries
-            if template in templates and prefix + name not in mapping
+            if template in templates
+            and prefix + name not in mapping
+            and prefix + name not in _KNOWN_FRONTEND_MISMATCHES
         ]
         self.assertEqual(
             missing, [],
@@ -99,6 +116,18 @@ class TestUiEndpointContract(unittest.TestCase):
 
     def test_weight_download_settings_have_a_download_endpoint(self) -> None:
         self._assertEndpoints({"weight_download_status"}, "/run/download_")
+
+    def test_known_mismatches_are_still_mismatched(self) -> None:
+        """除外リストの自浄。解消済みのものが残っていたら失敗させる。
+
+        除外リストは放っておくと「もう直っているのに除外され続ける」形で
+        腐り、本物の不一致を隠すようになる。"""
+        resolved = [e for e in _KNOWN_FRONTEND_MISMATCHES if e in mapping]
+        self.assertEqual(
+            resolved, [],
+            "既知の不一致が解消されている。"
+            f"_KNOWN_FRONTEND_MISMATCHES から削除すること: {resolved}",
+        )
 
 
 if __name__ == "__main__":
