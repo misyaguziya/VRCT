@@ -344,7 +344,12 @@ class AudioTranscriber:
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
                     )
                     finalize()
-                elif is_google:
+                elif is_google and audio_queue.empty():
+                    # 非VAD経路と同じドレイン単位の畳み込み (下記ループの
+                    # 同じ判定を参照)。キューに次の segment が控えている
+                    # 状態で送っても、後でより完全なテキストに置き換わる
+                    # だけの中間結果に ASR 1回分と翻訳1回分を払うことに
+                    # なる。控えている間は下の else と同じく蓄積を続ける。
                     printLog(
                         f"[VAD-merge][{kind}] interim-send (Google) reason={reason!r} "
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
