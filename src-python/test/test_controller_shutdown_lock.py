@@ -186,6 +186,7 @@ class ShutdownStopsOscWebsocketObsOverlayTests(unittest.TestCase):
                 mock_model.stopWebSocketServer,
                 mock_model.shutdownOverlay,
                 mock_model.stopWatchdog,
+                mock_model.stopTranslationExecutor,
             ],
         )
         self.assertEqual(
@@ -196,6 +197,7 @@ class ShutdownStopsOscWebsocketObsOverlayTests(unittest.TestCase):
                 "WebSocket server",
                 "Overlay",
                 "watchdog",
+                "translation executor",
             ],
         )
 

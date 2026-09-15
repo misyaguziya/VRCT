@@ -497,9 +497,17 @@ class TestGoogleInterimSendVad(unittest.TestCase):
         audio_queue.put((b"\x01\x00", now, "max_duration"))
         audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "max_duration"))
 
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        # 1回の呼び出しにつき1フレーズで返る (呼び出し元に配信させるため)。
+        # 残りは次の呼び出しで処理され、取りこぼしはない。
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        self.assertEqual(
+            transcriber.audio_recognizer.recognize_google.call_count, 1,
+            "1回の呼び出しで ASR を複数回まわしてはいけない",
+        )
+        self.assertFalse(audio_queue.empty(), "残りはキューに置いたままにする")
 
-        self.assertTrue(result)
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
         self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 2)
         # 2回目の送信は1回目の音声を含む、常に先頭からの累積バッファ
         # (パディング込み)。
@@ -518,9 +526,13 @@ class TestGoogleInterimSendVad(unittest.TestCase):
         audio_queue.put((b"\x01\x00", now, "max_duration"))
         audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
 
-        result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        # 1回の呼び出しにつき1フレーズ。interim_send で1回返り、
+        # 次の呼び出しで silence による確定が走る。
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+        self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 1)
 
-        self.assertTrue(result)
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
         self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 2)
         # silence で確定したので、次のフレーズのためにリセットされている。
         self.assertEqual(transcriber.audio_sources["last_sample"], b"")
@@ -710,6 +722,9 @@ class TestAsrSuccessRateTracking(unittest.TestCase):
         audio_queue.put((b"\x01\x00", now, "max_duration"))
         audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
 
+        # 1回の呼び出しにつき1フレーズで返るので、呼び出し元のループ相当に
+        # 2回呼ぶ。集計がフレーズ単位ではなく呼び出し単位であることは変わらない。
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
         transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
         self.assertEqual(transcriber.asr_attempts, 2)

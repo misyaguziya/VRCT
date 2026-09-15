@@ -16,6 +16,7 @@ from datetime import datetime
 from time import sleep
 from queue import Queue, Empty
 from threading import Thread, Lock, current_thread
+from concurrent.futures import ThreadPoolExecutor
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -933,6 +934,15 @@ class Model:
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
+        # getInputTranslate() がターゲット言語ごとの翻訳を並列化するための
+        # 常設プール。使い捨てにすると、translators 側のスレッドローカルな
+        # セッションが毎回作り直され、ウォームアップ (ホストGET + 言語マップ
+        # 取得) のコストを毎回払うことになる。ワーカー数はターゲット言語の
+        # スロット数 (SELECTED_TAB_TARGET_LANGUAGES_NO_LIST) が上限。
+        self._translation_executor = ThreadPoolExecutor(
+            max_workers=len(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST),
+            thread_name_prefix="vrct-translate",
+        )
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.translation_history: list[dict] = []
@@ -1449,24 +1459,51 @@ class Model:
             source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
-        translations = []
-        success_flags = []
+        targets = []
         for value in target_languages.values():
             if value["enable"] is True:
                 target_language = value["language"]
                 target_country = value["country"]
                 if target_language is not None or target_country is not None:
-                    translation, success_flag = self.getTranslate(
-                        translator_name,
-                        source_language,
-                        target_language,
-                        target_country,
-                        message
-                        )
-                    translations.append(translation)
-                    success_flags.append(success_flag)
+                    targets.append((target_language, target_country))
 
-        return translations, success_flags
+        if not targets:
+            return [], []
+
+        if len(targets) == 1:
+            translation, success_flag = self.getTranslate(
+                translator_name, source_language, targets[0][0], targets[0][1], message
+            )
+            return [translation], [success_flag]
+
+        # ターゲット言語ごとの翻訳を常設スレッドプールで並列化する。
+        # 逐次ループだった頃は3言語有効時に実機で約3.9秒 (1言語あたり
+        # 約1.3秒 × 3) かかっていた。翻訳はクラウドエンジンなら
+        # ネットワークI/O待ちが支配的なので、概ね1言語分の時間で済む。
+        #
+        # 1度目の並列化 (73366d0a) は実機でフリーズを起こし取り消した。
+        # 原因は translators ライブラリが requests.Session をシングルトンで
+        # 使い回しており、スレッドセーフでなかったこと。フォーク側で
+        # Tse.session を threading.local() へ分離して解消した
+        # (misyaguziya/translators f3697bd)。requirements のpin も追従済み。
+        #
+        # 使い捨てではなく常設プールなのは、スレッドローカルのセッションを
+        # 再利用するため。呼び出しごとにスレッドを作り直すと、毎回
+        # ウォームアップ (ホストGET + 言語マップ取得) が走り逆に遅くなる。
+        #
+        # 添字はターゲット言語スロットに対応するので、完了順ではなく
+        # 投入順に結果を取る。例外は最初の1件をそのまま送出する
+        # (呼び出し元の _processMessage が VRAM不足エラーを検出する契約)。
+        futures = [
+            self._translation_executor.submit(
+                self.getTranslate,
+                translator_name, source_language, target_language, target_country, message,
+            )
+            for target_language, target_country in targets
+        ]
+        results = [future.result() for future in futures]
+
+        return [r[0] for r in results], [r[1] for r in results]
 
     def getOutputTranslate(self, message, source_language=None):
         self.ensure_initialized()
@@ -2262,6 +2299,20 @@ class Model:
     def setWatchdogCallback(self, callback):
         self.ensure_initialized()
         self.watchdog.setCallback(callback)
+
+    def stopTranslationExecutor(self):
+        """getInputTranslate() の並列化に使う常設プールを止める。
+
+        ThreadPoolExecutor のワーカーは非デーモンスレッドで、インタプリタ
+        終了時に atexit で join される。翻訳が詰まったままだと終了が
+        そこで止まるため、shutdown() から明示的に停止する。待たない
+        (wait=False) のは、詰まっている呼び出しに shutdown() を道連れに
+        させないため。実際のHTTP呼び出しには
+        _WEB_TRANSLATOR_TIMEOUT_SECONDS の上限がある。
+        """
+        executor = getattr(self, '_translation_executor', None)
+        if executor is not None:
+            executor.shutdown(wait=False, cancel_futures=True)
 
     def stopWatchdog(self):
         self.ensure_initialized()

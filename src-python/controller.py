@@ -460,6 +460,9 @@ class Controller:
         # 以上生き残った場合に「正常終了なのに freeze_trace.log へフリーズ
         # ダンプが出る」。この計装はフリーズ調査の一次情報源なので汚さない。
         self._stopServiceForShutdown(model.stopWatchdog, "watchdog")
+        # 翻訳の常設プール。非デーモンスレッドなので、止めないと
+        # インタプリタ終了時の atexit join で終了が止まりうる。
+        self._stopServiceForShutdown(model.stopTranslationExecutor, "translation executor")
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a
