@@ -111,10 +111,11 @@ class DeviceManager:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DeviceManager, cls).__new__(cls)
-            # do NOT auto-init monitoring-heavy resources on import; require explicit init
-            # Still perform a light-weight init so that callers observing the singleton
-            # do not see uninitialized internal structures (which caused NoDevice to
-            # be seen when import order differed).
+            # 監視スレッドは import では開始しない (startMonitoring を
+            # 明示的に呼ぶ必要がある)。ただし init() はここで呼ぶ:
+            # シングルトンを観測する側が初期化前の内部構造を見てしまい、
+            # import 順によって NoDevice になる問題があったため。
+            # この init() は PyAudio が使えればデバイス列挙まで行う。
             cls._instance._initialized = False
             try:
                 # Call init() to populate internal containers. This will NOT start
@@ -1008,9 +1009,16 @@ class DeviceManager:
         self.setSpeakerDeviceList()
         self.setSpeakerDefaultDevice()
 
-# Provide a module-level singleton. Call `device_manager.init()` explicitly to
-# initialize audio resources and `device_manager.startMonitoring()` to begin
-# background monitoring. This avoids side-effects during simple imports.
+# Provide a module-level singleton.
+#
+# 注意: import には副作用がある。`DeviceManager.__new__` が `init()` を
+# 呼び、`init()` は PyAudio が使えれば `update()` でデバイスを実際に
+# 列挙する。つまり `import device_manager` しただけで PyAudio の
+# デバイス列挙が走る (これは意図的。import 順によって初期化前の内部構造が
+# 観測され NoDevice になる問題があったため。__new__ のコメント参照)。
+#
+# import 時に走らないのは監視スレッドだけで、これは
+# `device_manager.startMonitoring()` を明示的に呼んだときに開始する。
 device_manager = DeviceManager()
 
 if __name__ == "__main__":

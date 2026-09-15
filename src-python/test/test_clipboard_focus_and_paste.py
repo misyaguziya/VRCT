@@ -99,7 +99,7 @@ class CopyAndPasteAlwaysCopiesTests(unittest.TestCase):
         instance.app_name = None
         return instance
 
-    @patch("models.clipboard.clipboard.paste_via_pyautogui")
+    @patch("models.clipboard.clipboard.paste_via_ctrl_v")
     @patch("models.clipboard.clipboard.copy_to_clipboard")
     @patch("models.clipboard.clipboard.find_windows_by_process_name", return_value=[])
     @patch("models.clipboard.clipboard.find_windows_by_title_substring", return_value=[])
@@ -108,7 +108,7 @@ class CopyAndPasteAlwaysCopiesTests(unittest.TestCase):
         find_by_title: MagicMock,
         find_by_process: MagicMock,
         copy_to_clipboard: MagicMock,
-        paste_via_pyautogui: MagicMock,
+        paste_via_ctrl_v: MagicMock,
     ) -> None:
         copy_to_clipboard.return_value = True
         instance = self._make_clipboard()
@@ -116,10 +116,10 @@ class CopyAndPasteAlwaysCopiesTests(unittest.TestCase):
         result = instance.copy_and_paste("hello world", window_name="VRChat")
 
         copy_to_clipboard.assert_called_once_with("hello world")
-        paste_via_pyautogui.assert_not_called()
+        paste_via_ctrl_v.assert_not_called()
         self.assertFalse(result)
 
-    @patch("models.clipboard.clipboard.paste_via_pyautogui")
+    @patch("models.clipboard.clipboard.paste_via_ctrl_v")
     @patch("models.clipboard.clipboard.copy_to_clipboard")
     @patch("models.clipboard.clipboard.focus_window")
     @patch("models.clipboard.clipboard.find_windows_by_title_substring")
@@ -128,19 +128,60 @@ class CopyAndPasteAlwaysCopiesTests(unittest.TestCase):
         find_by_title: MagicMock,
         focus_window: MagicMock,
         copy_to_clipboard: MagicMock,
-        paste_via_pyautogui: MagicMock,
+        paste_via_ctrl_v: MagicMock,
     ) -> None:
         find_by_title.return_value = [123]
         focus_window.return_value = True
         copy_to_clipboard.return_value = True
-        paste_via_pyautogui.return_value = True
+        paste_via_ctrl_v.return_value = True
         instance = self._make_clipboard()
 
         result = instance.copy_and_paste("hello world", window_name="VRChat")
 
         copy_to_clipboard.assert_called_once_with("hello world")
-        paste_via_pyautogui.assert_called_once()
+        paste_via_ctrl_v.assert_called_once()
         self.assertTrue(result)
+
+class PasteViaCtrlVTests(unittest.TestCase):
+    """PyAutoGUI (GPLv3+ の MouseInfo を引き込む) を ctypes 直呼びに
+    置き換えた際の回帰テスト。PyAutoGUI が内部で呼んでいたのと同じ
+    user32.keybd_event を、同じ順序で叩いていることを見る。"""
+
+    VK_CONTROL = 0x11
+    VK_V = 0x56
+    KEYEVENTF_KEYUP = 0x0002
+
+    @patch("models.clipboard.clipboard.sys.platform", "win32")
+    @patch("models.clipboard.clipboard.user32")
+    def test_sends_ctrl_v_and_releases_both_keys(self, user32: MagicMock) -> None:
+        self.assertTrue(clipboard.paste_via_ctrl_v())
+
+        self.assertEqual(
+            user32.keybd_event.call_args_list,
+            [
+                unittest.mock.call(self.VK_CONTROL, 0, 0, 0),
+                unittest.mock.call(self.VK_V, 0, 0, 0),
+                unittest.mock.call(self.VK_V, 0, self.KEYEVENTF_KEYUP, 0),
+                unittest.mock.call(self.VK_CONTROL, 0, self.KEYEVENTF_KEYUP, 0),
+            ],
+        )
+
+    @patch("models.clipboard.clipboard.sys.platform", "win32")
+    @patch("models.clipboard.clipboard.user32")
+    def test_ctrl_is_released_even_if_sending_v_fails(self, user32: MagicMock) -> None:
+        """Ctrl を押しっぱなしのまま抜けると、以後ユーザーの操作が全て
+        Ctrl 付きになり VRChat の操作不能を招く。"""
+        def _fail_on_v(vk, *_args):
+            if vk == self.VK_V:
+                raise OSError("boom")
+
+        user32.keybd_event.side_effect = _fail_on_v
+
+        self.assertFalse(clipboard.paste_via_ctrl_v())
+        self.assertIn(
+            unittest.mock.call(self.VK_CONTROL, 0, self.KEYEVENTF_KEYUP, 0),
+            user32.keybd_event.call_args_list,
+        )
 
 
 if __name__ == "__main__":
