@@ -661,6 +661,68 @@ class TestGoogleInterimSendNonVad(unittest.TestCase):
         self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00")
 
 
+class TestAsrLanguageCallBreakdown(unittest.TestCase):
+    """候補言語ごとの ASR 呼び出し内訳をログに出すこと (再評価 2026-09-15)。
+
+    `_finalizeAndTranscribe` 1回の中で provider.transcribe() が何回走ったかは
+    従来のログから見えず、`asr=..ms` だけでは「エンジンと設定によって中身の
+    回数が違う」ことが分からなかった。実際、speaker 側は
+    SELECTED_TARGET_LANGUAGES を候補に使うため、ターゲット言語を3つにすると
+    Google では1セグメントあたり3回叩く (Google は「検出された言語」の概念が
+    無く is_definitive が常に False のため)。一方 Whisper 系は自分で言語を
+    検出して一致すれば早期 break する。
+    """
+
+    def _capture_logs(self) -> list:
+        import models.transcription.transcription_transcriber as mod
+        logs: list = []
+        self._saved_print_log = mod.printLog
+        mod.printLog = lambda msg: logs.append(msg)
+        self.addCleanup(lambda: setattr(mod, "printLog", self._saved_print_log))
+        return logs
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_google_records_every_candidate_language(self, _) -> None:
+        """Google は早期 break しないので候補言語の数だけ記録される。"""
+        logs = self._capture_logs()
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        transcriber.audio_recognizer.recognize_google = MagicMock(return_value=("hello", 0.9))
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", _already_old_timestamp()))
+
+        transcriber.transcribeAudioQueue(
+            audio_queue, ["Japanese", "English", "Korean"], ["Japan", "United States", "South Korea"]
+        )
+
+        stats = [m for m in logs if m.startswith("[ASR-stats]")]
+        self.assertEqual(len(stats), 1, logs)
+        self.assertIn("calls=3/3", stats[0])
+        for language in ("Japanese", "English", "Korean"):
+            self.assertIn(f"{language}=", stats[0])
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_early_break_is_visible_in_the_breakdown(self, _) -> None:
+        """Whisper が検出言語の一致で早期 break したら calls=1/3 になる。"""
+        logs = self._capture_logs()
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber.whisper_model.transcribe.return_value = (
+            [MagicMock(text="hello", avg_logprob=-0.1, no_speech_prob=0.1)],
+            MagicMock(language="ja", language_probability=1.0),
+        )
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", _already_old_timestamp()))
+
+        transcriber.transcribeAudioQueue(
+            audio_queue, ["Japanese", "English", "Korean"], ["Japan", "United States", "South Korea"]
+        )
+
+        stats = [m for m in logs if m.startswith("[ASR-stats]")]
+        self.assertEqual(len(stats), 1, logs)
+        self.assertIn("calls=1/3", stats[0])
+
+
 class TestAsrSuccessRateTracking(unittest.TestCase):
     """2026-09-07: Google無料エンドポイントの信頼性対策 (無音パディング・
     interim_send) の効果を、ログの手動突き合わせではなく数値で継続的に
