@@ -715,8 +715,14 @@ $ diff <(sed -n '1520,1566p' controller.py) <(sed -n '1599,1645p' controller.py)
 Ollama は接続時に URL 引数を取らない（`CONNECTION_PROVIDER_REGISTRY` で LMStudio は
 `{"base_url": config.LMSTUDIO_URL}`、Ollama は `{}`）。バックエンドに
 `/get/data/ollama_url` も `/set/data/ollama_url` も `config.OLLAMA_URL` も存在せず、
-`src-ui` 全体でもこの宣言以外から参照されていなかったため削除した。
-**UI に「Ollama URL」の入力欄が出るのに、入力しても何も起きない**状態だった。
+`src-ui` 全体でもこの宣言以外から参照されていない。
+**UI に「Ollama URL」の入力欄が出るのに、入力しても何も起きない**状態である。
+
+**修正は src-ui 側（フロント担当タスク）**。本レビューはバックエンドのタスクなので
+`src-ui` は変更せず、テスト側の `_KNOWN_FRONTEND_MISMATCHES` に理由付きで記録するに留めた。
+除外リストが腐らないよう、**既知の不一致が解消されたら失敗する**テスト
+（`test_known_mismatches_are_still_mismatched`）を併設してある。
+フロント側で宣言が消えた時点で「除外リストから削除せよ」と失敗して教える。
 
 ---
 
