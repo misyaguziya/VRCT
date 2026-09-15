@@ -436,14 +436,13 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "selected_openai_compatible_model",
     },
     // Ollama
-    {
-        Category: "Translation",
-        Base_Name: "OllamaURL",
-        default_value: "",
-        ui_template_id: "input",
-        logics_template_id: "get_set",
-        base_endpoint_name: "ollama_url",
-    },
+    // OllamaURL は無い: Ollama は接続時に URL 引数を取らない
+    // (controller.py の CONNECTION_PROVIDER_REGISTRY: LMStudio は
+    // {"base_url": config.LMSTUDIO_URL} だが Ollama は {})。
+    // 2025-11-14 に LMStudio ブロックのコピペで OllamaURL 宣言が入って
+    // いたが、バックエンドに /get/data/ollama_url も /set/data/ollama_url
+    // も config.OLLAMA_URL も存在せず、この宣言以外から参照もされて
+    // いなかったため削除した。
     {
         Category: "Translation",
         Base_Name: "SelectableOllamaModelList",
