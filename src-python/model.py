@@ -16,7 +16,6 @@ from datetime import datetime
 from time import sleep
 from queue import Queue, Empty
 from threading import Thread, Lock, current_thread
-from concurrent.futures import ThreadPoolExecutor
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -1450,42 +1449,24 @@ class Model:
             source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
-        targets = [
-            (value["language"], value["country"])
-            for value in target_languages.values()
-            if value["enable"] is True
-            and (value["language"] is not None or value["country"] is not None)
-        ]
-        if not targets:
-            return [], []
+        translations = []
+        success_flags = []
+        for value in target_languages.values():
+            if value["enable"] is True:
+                target_language = value["language"]
+                target_country = value["country"]
+                if target_language is not None or target_country is not None:
+                    translation, success_flag = self.getTranslate(
+                        translator_name,
+                        source_language,
+                        target_language,
+                        target_country,
+                        message
+                        )
+                    translations.append(translation)
+                    success_flags.append(success_flag)
 
-        if len(targets) == 1:
-            translation, success_flag = self.getTranslate(
-                translator_name, source_language, targets[0][0], targets[0][1], message
-            )
-            return [translation], [success_flag]
-
-        # ターゲット言語ごとの翻訳を並列化する。以前はここを逐次ループで
-        # 回しており、3言語有効時は実機で translate に約3.9秒 (1言語あたり
-        # 約1.3秒 × 3) かかっていた。翻訳はクラウドエンジンならネットワーク
-        # I/O待ちが支配的なので、並列化すれば概ね1言語分の時間で済む。
-        # CTranslate2 は _ctranslate2_lock (共有トークナイザの src_lang を
-        # 書き換えるため必須) で結局直列化されるので短縮はされないが、
-        # 正しさは保たれる。
-        # 例外は最初の1件をそのまま送出する (呼び出し元の _processMessage が
-        # VRAM不足エラーを検出するため、この契約を変えない)。
-        with ThreadPoolExecutor(max_workers=len(targets)) as executor:
-            futures = [
-                executor.submit(
-                    self.getTranslate,
-                    translator_name, source_language, target_language, target_country, message,
-                )
-                for target_language, target_country in targets
-            ]
-            # 添字はターゲット言語スロットに対応するので順序を保つ。
-            results = [future.result() for future in futures]
-
-        return [r[0] for r in results], [r[1] for r in results]
+        return translations, success_flags
 
     def getOutputTranslate(self, message, source_language=None):
         self.ensure_initialized()
