@@ -357,6 +357,16 @@ class AudioTranscriber:
                         f"[VAD-merge][{kind}] accumulate reason={reason!r} "
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
                     )
+
+                if transcribed:
+                    # 非VAD経路と同じ理由 (下記ループの同じ判定を参照)。
+                    # 呼び出し元が配信できるのはこの関数から戻った後なので、
+                    # 1回の呼び出しで ASR を何度も回すと、その間ずっと何も
+                    # 表示されないまま溜まり、最後にまとめて出る。
+                    # 実機ログ (VAD有効) で、2件が同一ミリ秒で配信された
+                    # 直後に translate=30秒 が観測された。
+                    return True
+
             if not transcribed:
                 time.sleep(0.01)
             return transcribed
