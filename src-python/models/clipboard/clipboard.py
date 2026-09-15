@@ -175,7 +175,9 @@ def paste_via_ctrl_v(countdown: int = 0) -> bool:
         return False
 
     for i in range(countdown, 0, -1):
-        print(i, end=' ', flush=True)
+        # 素の print は使わない。VRCT の stdout はフロントエンドとの IPC
+        # チャネルなので、JSON 以外を書くとプロトコルが壊れる。
+        printLog(f"paste: countdown {i}")
         time.sleep(1)
 
     VK_CONTROL = 0x11
