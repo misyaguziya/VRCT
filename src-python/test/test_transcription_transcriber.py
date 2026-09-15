@@ -494,18 +494,14 @@ class TestGoogleInterimSendVad(unittest.TestCase):
         transcriber.audio_recognizer.recognize_google = MagicMock(side_effect=_record_and_recognize)
         audio_queue = Queue()
         now = datetime.now()
+        # 遅れていない通常時 = segment が1個ずつ届く。get 直後にキューが
+        # 空なので、その都度 interim-send される。
         audio_queue.put((b"\x01\x00", now, "max_duration"))
-        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "max_duration"))
 
-        # 1回の呼び出しにつき1フレーズで返る (呼び出し元に配信させるため)。
-        # 残りは次の呼び出しで処理され、取りこぼしはない。
         self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
-        self.assertEqual(
-            transcriber.audio_recognizer.recognize_google.call_count, 1,
-            "1回の呼び出しで ASR を複数回まわしてはいけない",
-        )
-        self.assertFalse(audio_queue.empty(), "残りはキューに置いたままにする")
+        self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 1)
 
+        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "max_duration"))
         self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
 
         self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 2)
@@ -518,19 +514,47 @@ class TestGoogleInterimSendVad(unittest.TestCase):
         self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00\x02\x00")
 
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_queued_up_segments_collapse_into_a_single_send(self, _) -> None:
+        """遅れていて複数 segment が溜まっている時は、最終形だけを1回送る。
+
+        非VAD経路の同名テストと同じ契約。VAD経路にだけ畳み込みが入って
+        いないと、バックログした segment の数だけ中間 ASR と翻訳が走り、
+        遅延が雪だるま式に悪化する。"""
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Google", vad_segmented=True)
+        seen_buffers = []
+
+        def _record_and_recognize(audio_data, **_kwargs):
+            seen_buffers.append(transcriber.audio_sources["last_sample"])
+            return ("hello", 0.9)
+
+        transcriber.audio_recognizer.recognize_google = MagicMock(side_effect=_record_and_recognize)
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put((b"\x01\x00", now, "max_duration"))
+        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "max_duration"))
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
+        self.assertEqual(
+            transcriber.audio_recognizer.recognize_google.call_count, 1,
+            "中間結果の分まで ASR を呼んではいけない",
+        )
+        # 送られたのは畳んだ後の最終形 (VAD経路はパディングが付くので assertIn)。
+        self.assertIn(b"\x01\x00\x02\x00", seen_buffers[0])
+        self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00\x02\x00")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
     def test_finalizes_and_resets_on_a_natural_reason_after_interim_sends(self, _) -> None:
         transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Google", vad_segmented=True)
         transcriber.audio_recognizer.recognize_google = MagicMock(return_value=("hello", 0.9))
         audio_queue = Queue()
         now = datetime.now()
+        # 遅れていない通常時なので、それぞれ別の呼び出しで届く。
         audio_queue.put((b"\x01\x00", now, "max_duration"))
-        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
-
-        # 1回の呼び出しにつき1フレーズ。interim_send で1回返り、
-        # 次の呼び出しで silence による確定が走る。
         self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
         self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 1)
 
+        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
         self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
 
         self.assertEqual(transcriber.audio_recognizer.recognize_google.call_count, 2)
@@ -781,12 +805,12 @@ class TestAsrSuccessRateTracking(unittest.TestCase):
         transcriber.audio_recognizer.recognize_google = MagicMock(return_value=("hello", 0.9))
         audio_queue = Queue()
         now = datetime.now()
+        # 遅れていない通常時 = 1呼び出しにつき1 segment。interim_send と
+        # finalize がそれぞれ独立した試行として数えられることを見る
+        # (まとめて積むと畳み込みで interim_send 自体が起きないため)。
         audio_queue.put((b"\x01\x00", now, "max_duration"))
-        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
-
-        # 1回の呼び出しにつき1フレーズで返るので、呼び出し元のループ相当に
-        # 2回呼ぶ。集計がフレーズ単位ではなく呼び出し単位であることは変わらない。
         transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+        audio_queue.put((b"\x02\x00", now + timedelta(milliseconds=100), "silence"))
         transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
         self.assertEqual(transcriber.asr_attempts, 2)
