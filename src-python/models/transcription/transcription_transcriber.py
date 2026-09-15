@@ -357,6 +357,16 @@ class AudioTranscriber:
                         f"[VAD-merge][{kind}] accumulate reason={reason!r} "
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
                     )
+
+                if transcribed:
+                    # 非VAD経路と同じ理由 (下記ループの同じ判定を参照)。
+                    # 呼び出し元が配信できるのはこの関数から戻った後なので、
+                    # 1回の呼び出しで ASR を何度も回すと、その間ずっと何も
+                    # 表示されないまま溜まり、最後にまとめて出る。
+                    # 実機ログ (VAD有効) で、2件が同一ミリ秒で配信された
+                    # 直後に translate=30秒 が観測された。
+                    return True
+
             if not transcribed:
                 time.sleep(0.01)
             return transcribed
@@ -474,6 +484,16 @@ class AudioTranscriber:
         # (再評価 2026-09-14 M-1)。best dict に載せることで getTranscript()
         # → transcript_fnc → Controller._processMessage までそのまま運ばれる。
         asr_started_at = time.perf_counter()
+        # 候補言語ごとの呼び出し内訳。`_finalizeAndTranscribe` 1回の中で
+        # provider.transcribe() が何回走ったかは、従来ログから見えなかった。
+        # Google は「検出された言語」の概念が無く is_definitive が常に False
+        # なので必ず候補言語の数だけ叩く一方、Whisper系は自分で言語を検出し
+        # 一致すれば早期 break、Deepgram は常に1回で済む。つまり同じ
+        # `asr=..ms` でも中身の回数がエンジンと設定で変わる。
+        # speaker 側は SELECTED_TARGET_LANGUAGES を候補に使うため、
+        # ターゲット言語を増やすとここが増える (mic 側は SELECTED_YOUR_LANGUAGES
+        # なので通常1つ)。
+        language_calls: List[str] = []
         try:
             audio_data = self.audio_sources["process_data_func"]()
             provider = self._resolve_provider()
@@ -482,6 +502,7 @@ class AudioTranscriber:
             else:
                 force_language = len(languages) == 1
                 for language, country in zip(languages, countries):
+                    call_started_at = time.perf_counter()
                     try:
                         text, confidence, is_definitive = provider.transcribe(
                             audio_data,
@@ -493,19 +514,25 @@ class AudioTranscriber:
                             force_language=force_language,
                         )
                     except UnknownValueError:
+                        language_calls.append(f"{language}=nomatch")
                         continue
                     except TranscriptionApiError as exc:
                         self.last_recognition_error = True
                         self.last_api_error_code = exc.error_code
                         provider_error = provider_error or exc
+                        language_calls.append(f"{language}=error")
                         errorLogging()
                         continue
                     except Exception as exc:  # noqa: BLE001 - convert to pipeline failure
                         self.last_recognition_error = True
                         provider_error = provider_error or exc
+                        language_calls.append(f"{language}=error")
                         errorLogging()
                         continue
 
+                    language_calls.append(
+                        f"{language}={round((time.perf_counter() - call_started_at) * 1000)}ms"
+                    )
                     if confidence > best["confidence"]:
                         best = {"confidence": confidence, "text": text, "language": language}
                     if is_definitive:
@@ -532,7 +559,8 @@ class AudioTranscriber:
             )
             printLog(
                 f"[ASR-error][{self.source}][{self.transcription_engine}] "
-                f"error_type={type(provider_error).__name__} asr={asr_elapsed_ms}ms"
+                f"error_type={type(provider_error).__name__} asr={asr_elapsed_ms}ms "
+                f"calls={len(language_calls)}/{len(languages)} [{' '.join(language_calls)}]"
             )
             raise AudioPipelineError(failure) from provider_error
         if succeeded:
@@ -544,7 +572,9 @@ class AudioTranscriber:
         printLog(
             f"[ASR-stats][{'speaker' if self.speaker else 'mic'}][{self.transcription_engine}] "
             f"this_call={'success' if succeeded else 'failure'} "
-            f"attempts={self.asr_attempts} successes={self.asr_successes} rate={success_rate:.1f}%"
+            f"attempts={self.asr_attempts} successes={self.asr_successes} rate={success_rate:.1f}% "
+            f"asr={asr_elapsed_ms}ms calls={len(language_calls)}/{len(languages)} "
+            f"[{' '.join(language_calls)}]"
         )
         return True
 
