@@ -334,18 +334,12 @@ export const useSaveButtonLogic = ({
     deleteFunction
 }) => {
     const [input_value, setInputValue] = useState(variable);
-    const is_dirty_ref = useRef(false);
 
     const onChangeFunction = (value) => {
-        // Backend/device updates can arrive while the user is editing. Keep
-        // the local draft until it is explicitly saved instead of replacing
-        // text that has not been committed yet.
-        is_dirty_ref.current = true;
         setInputValue(value);
     };
 
     const saveFunction = () => {
-        is_dirty_ref.current = false;
         if (input_value === "" || input_value === null) {
             if (typeof deleteFunction === "function") {
                 return deleteFunction();
@@ -357,7 +351,6 @@ export const useSaveButtonLogic = ({
 
     useEffect(() => {
         if (state === "pending") return;
-        if (is_dirty_ref.current) return;
         setInputValue(variable);
 
     }, [variable, state]);
