@@ -13,6 +13,7 @@ import {
     useIsSoftwareUpdating,
     useSoftwareVersion,
     useComputeMode,
+    useCopyToClipboard,
 } from "@logics_common";
 import { CloseButton } from "@common_components";
 
@@ -38,7 +39,7 @@ export const AppErrorBoundary = ({children}) => {
 const ErrorContainer = ({error, errorInfo}) => {
     const { asyncCloseApp } = useWindow();
     const { currentSoftwareVersion } = useSoftwareVersion();
-    const [is_copied, setIsCopied] = useState(false);
+    const { is_copied, copyToClipboard } = useCopyToClipboard({ show_error_notification: false });
 
     const formatted_stack = error ? formatStackTrace(error.stack) : "Unknown error";
     const app_version = currentSoftwareVersion?.data || "Unknown";
@@ -54,15 +55,8 @@ const ErrorContainer = ({error, errorInfo}) => {
         errorInfo?.componentStack ? formatStackTrace(errorInfo.componentStack) : "Not available",
     ].join("\n");
 
-    const copyToClipboard = async () => {
-        if (is_copied) return;
-
-        await navigator.clipboard.writeText(error_log_text);
-        setIsCopied(true);
-
-        setTimeout(() => {
-            setIsCopied(false);
-        }, 1000);
+    const onCopyErrorLog = () => {
+        copyToClipboard(error_log_text);
     };
 
     return (
@@ -79,7 +73,7 @@ const ErrorContainer = ({error, errorInfo}) => {
                                 {error_log_text}
                             </p>
                         </div>
-                        <button className={styles.copy_error_message_button} onClick={copyToClipboard}>
+                        <button className={styles.copy_error_message_button} onClick={onCopyErrorLog}>
                             <p className={styles.copy_text}>Copy</p>
                             {is_copied
                                 ? <CheckMarkSvg className={styles.check_mark_svg}/>

@@ -1,16 +1,14 @@
-import { useState } from "react";
 import clsx from "clsx";
 import styles from "./VersionLabel.module.scss";
 
-import { useSoftwareVersion, useComputeMode } from "@logics_common";
+import { useSoftwareVersion, useComputeMode, useCopyToClipboard } from "@logics_common";
 import CopySvg from "@images/copy.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 
 export const VersionLabel = ({ isCompact = false }) => {
-    const [is_copied, setIsCopied] = useState(false);
-
     const { currentSoftwareVersion } = useSoftwareVersion();
     const { currentComputeMode } = useComputeMode();
+    const { is_copied, copyToClipboard } = useCopyToClipboard();
 
     const is_cuda = currentComputeMode.data === "cuda";
     const software_version_number = currentSoftwareVersion.data || "";
@@ -18,15 +16,10 @@ export const VersionLabel = ({ isCompact = false }) => {
     const is_beta = software_version_number.toLowerCase().includes("beta");
     const base_version = software_version_number.split("-")[0];
 
-    const copyToClipboard = async () => {
-        if (is_copied || isCompact) return;
+    const onCopy = () => {
+        if (isCompact) return;
         const copy_text = is_cuda ? `${software_version_number} CUDA` : `${software_version_number}`;
-        await navigator.clipboard.writeText(copy_text);
-        setIsCopied(true);
-
-        setTimeout(() => {
-            setIsCopied(false);
-        }, 1000);
+        copyToClipboard(copy_text);
     };
 
     const is_two_line_expanded = !isCompact && is_beta && is_cuda;
@@ -44,7 +37,7 @@ export const VersionLabel = ({ isCompact = false }) => {
                     [styles.is_copied]: is_copied,
                     [styles.is_compact]: isCompact,
                 })}
-                onClick={copyToClipboard}
+                onClick={onCopy}
             >
                 {isCompact ? (
                     <div className={styles.compact_content}>
