@@ -26,6 +26,8 @@ common_error:
     invalid_value_speaker_phrase_timeout: "It cannot be set lower than '{{speaker_record_timeout_label}}' with a value of 0 or more."
     invalid_value_speaker_max_phrase: "You can set a number equal to or greater than 0."
 
+    invalid_hex_color: "Please enter a valid HEX color code (e.g., {{brand_color_hex}})."
+
 common_warning:
     unable_to_use_osc_query: "The following functions have been automatically disabled due to the OSC IP Address settings preventing OSC data from being received."
 

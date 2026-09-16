@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
 import styles from "./ColorEntryWithSaveButton.module.scss";
@@ -22,12 +22,8 @@ export const ColorEntryWithSaveButton = (props) => {
     const popover_ref = useRef(null);
     const swatch_ref = useRef(null);
 
-    const current_color = useMemo(() => {
-        if (typeof props.variable !== "string") return "";
-        return props.variable.trim();
-    }, [props.variable]);
-
-    const is_valid_color = useMemo(() => HEX_COLOR_RE.test(current_color), [current_color]);
+    const current_color = typeof props.variable === "string" ? props.variable.trim() : "";
+    const is_valid_color = HEX_COLOR_RE.test(current_color);
     const swatch_color = is_valid_color ? current_color : "transparent";
     const picker_color = is_valid_color ? current_color : "#FFFFFF";
 
@@ -49,7 +45,6 @@ export const ColorEntryWithSaveButton = (props) => {
     };
 
     const saveFunction = () => {
-        if (!is_valid_color) return;
         closePicker();
         props.saveFunction();
     };
@@ -107,12 +102,11 @@ export const ColorEntryWithSaveButton = (props) => {
         [styles.is_disabled]: is_disabled,
     });
 
-    const popover_paper_class_names = clsx(styles.popover_paper, {
-        [styles.open_above]: placement.open_above,
-        [styles.open_below]: !placement.open_above,
-        [styles.align_end]: placement.align_end,
-        [styles.align_start]: !placement.align_end,
-    });
+    const popover_paper_class_names = clsx(
+        styles.popover_paper,
+        placement.open_above ? styles.open_above : styles.open_below,
+        placement.align_end ? styles.align_end : styles.align_start,
+    );
 
     const handleEnterPressed = (e) => {
         if (is_disabled) return;

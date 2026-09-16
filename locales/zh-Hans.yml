@@ -26,6 +26,8 @@ common_error:
     invalid_value_speaker_phrase_timeout: "转录间隔时间大于0秒且不能小于「{{speaker_record_timeout_label}}」"
     invalid_value_speaker_max_phrase: "数值应为 0 以上"
 
+    invalid_hex_color: "请输入有效的 HEX 颜色代码（例：{{brand_color_hex}}）格式。"
+
 common_warning:
     unable_to_use_osc_query: "由于 OSC IP Address 的设置无法接收 OSC 数据，以下功能已自动禁用。"
 

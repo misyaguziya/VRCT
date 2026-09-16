@@ -26,6 +26,8 @@ common_error:
     invalid_value_speaker_phrase_timeout: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
     invalid_value_speaker_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
 
+    invalid_hex_color: "유효한 HEX 색상 코드(예: {{brand_color_hex}}) 형식으로 입력해 주세요."
+
 common_warning:
     unable_to_use_osc_query: "OSC IP 주소 설정으로 인해 OSC 데이터 수신이 불가능하므로, 아래 기능이 자동으로 비활성화되었습니다."
 
