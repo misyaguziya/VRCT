@@ -65,6 +65,7 @@
 | S-5 | `device_manager.py` のコメントを実態に合わせる | 3 行 | 🟢 `09cfe48a` |
 | P-6 | `Clipboard.stop()` を追加し shutdown から呼ぶ | 8 行 / 2 ファイル | ⛔ **着手しない**（P-4 と同じ失敗の形。下記） |
 | P-8 | （VAD 経路への適用漏れ） | 1 行 + テスト | 🟢 `475e3634` |
+| P-10 | VAD の 15 秒安全弁が約 22 秒まで発火しない | 1 行 + ヘルパ | 🟢 `344d7655` |
 | L-1 | PyAutoGUI 依存（GPLv3+ の MouseInfo を引き込む）を排除 | −1 依存 / +15 行 | 🟢 `1eb8e3ef`（**実機ペースト検証が必要**） |
 | L-2 | `translators`（GPLv3）の排除 | — | ⛔ リファクタではなく製品判断（下記） |
 
@@ -441,6 +442,48 @@ VAD 版は `call_count == 2` を正としていた。テストが両方あって
 **モードで分かれる実装は、両方の経路を必ず確認する**こと。
 さらに、**両経路にテストがあることは同値であることを意味しない**。
 モード違いのテストは期待値そのものを突き合わせること。
+
+### 🟢 P-10 VAD の 15 秒安全弁が約 22 秒まで発火しない（`344d7655`）
+
+**M-1 / M-2 の計測を入れたことで見えるようになった既存バグ**（`develop` にも同じ形で存在、
+`4a6375ed` の VAD 再導入時から）。今回の一連の修正が持ち込んだものではない。
+
+2026-09-16 の実機ログ（VAD 有効 + mic + Google）で、4 件すべてが次の形だった:
+
+```
+[VAD-merge][mic] interim-send (Google) reason='max_duration' accumulated=0.00s bytes=227328
+```
+
+`bytes=227328` は 16kHz / 16bit / mono で **約 7.1 秒**。`accumulated=0.00s` と食い違う。
+
+原因は `transcription_transcriber.py:324-328`（修正前）:
+
+```python
+if source_info["phrase_started_at"] is None:
+    source_info["phrase_started_at"] = time_spoken
+...
+accumulated_sec = (time_spoken - source_info["phrase_started_at"]).total_seconds()
+```
+
+フレーズ最初のセグメントでは `phrase_started_at` に `time_spoken` 自身を入れるので、
+差は必ず 0 になる。`accumulated_sec` が測っているのは
+**「セグメント到着時刻の経過」であって、バッファに入っている音声の長さではない**。
+
+**実害**: `MAX_PHRASE_DURATION_SECONDS`（15 秒）の安全弁がセグメント 1 本分
+（実機で約 7 秒）を必ず取りこぼし、**約 22 秒まで発火しない**。
+Google は `interim_send` が毎回走るので結果は出続けるが、Whisper など他エンジンでは
+ノンストップ発話時の蓄積が想定より長引く。
+
+**対応**: 蓄積バッファのバイト長から音声秒数を出す `_bufferedSeconds()` に変更。
+非 VAD 経路は変更しない（チャンクが細かく到着するので時刻差との誤差が無視でき、
+v3.5.0 から問題が出ていないため）。
+
+**教訓**: 「時間」を測っているつもりの変数が、実際には別のものを測っていた。
+`accumulated=0.00s bytes=227328` という**自己矛盾したログ行が無ければ気付けなかった**。
+M-1 / M-2 は「性能改善の判断基盤」として入れたが、
+**内部状態の整合性チェックとしても機能した**。
+
+---
 
 ### `translate=30482ms` はロック待ちであって推論時間ではない
 
