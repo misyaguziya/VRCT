@@ -1134,6 +1134,62 @@ Google の無料・非公式エンドポイントへ投げており、絞り込�
 
 ---
 
+## レイテンシ追加最適化レビュー（2026-09-16、レビュアー 2 名）
+
+「これ以上レイテンシを縮める実装改善があるか」を、ASR 前後で分担して実コードから判定した。
+
+### 結論: **レイテンシ目的のコード改善は着手不要**
+
+見つかった改善を全部足しても **約 50〜100ms**。実測 `total` 4000〜8000ms に対し **1〜2%**。
+
+| 提案 | 見込み | 判定 |
+|---|---|---|
+| `overlay_image.py:363,502` が既存の `_get_font` キャッシュを迂回 | 10〜26ms/回（実測: cold 11.9〜26.0ms → warm 0.1〜0.3ms） | `output` は普段 0〜1ms。外れ値（65ms / 669ms）の説明にはなる |
+| `overlay_image.py:573-586` が未変化の過去 4 件を毎回再描画 | 数十ms（`draw.text` 実測 2.11ms/回） | 大ログ有効時のみ |
+| Google の FLAC 再エンコードが言語ごとに走る | 約 40ms（実測 19.9〜23.7ms × 3） | vendor の `recognize_google` を自前再実装する必要があり割に合わない |
+| `processSpeakerData` の wave/AudioFile 往復（VAD 時は常に無駄） | 0.1〜1ms（実測） | 効果ほぼゼロ |
+
+### 効果が大きい 2 つは、どちらもコードではない
+
+1. **候補言語を減らす（設定）** — 3 → 1 で **2300〜4500ms**。
+   `GoogleProvider` は `is_definitive` が常に `False`（`transcription_providers.py:128`）で
+   早期 break が効かず、**言語数と ASR 時間がほぼ線形**。コード改善の全合計の 30〜50 倍。
+2. **VAD の hangover = 768ms**（`audio_vad.py:167` `hangover_frames=24` × 32.0ms）—
+   無音を実際に録り続けて待つ**正味の壁時計遅延**。確定は ASR 呼び出しの「前」なので
+   **`asr=` の計測区間に入らず、ログに出ないまま体感に乗っている**。
+   ただし ADR-0003 / ADR-0004 で退行済み、VAD は 3 回目でようやく実機検証を通った経緯があり、
+   **コードリーディングだけで動かせる値ではない**。変更しない。
+
+### タイムアウト説は実ログで否定
+
+`GOOGLE_RECOGNIZE_TIMEOUT_SECONDS = 10` の短縮を検討したが、失敗行の各言語は
+**826〜2095ms** で 10 秒に近い値は 1 件も無い。タイムアウトではないので短縮しても得るものは無い。
+
+### 🟢 その過程で見つかった計測の穴（`M-3`）
+
+`GoogleProvider.transcribe` は `UnknownValueError` を**内部で握って** `("", 0.0, False)` を返す
+（`transcription_providers.py:126-127`）。そのため `_finalizeAndTranscribe` 側の
+`except UnknownValueError → nomatch` は **Google では一度も発火しない**。
+
+結果、**認識ゼロだった呼び出しが成功したかのように所要時間だけログに出ていた**。
+実機ログでも成功率 40% の裏で `nomatch` は 0 件。失敗の内訳を実ログから追えなかった。
+
+空文字が返ったら `{language}=nomatch({ms}ms)` として記録するよう修正。挙動は変えない。
+
+### 既存記述の訂正 2 件
+
+- **PL-2 head-of-line blocking は実在しない。** `_print_transcript` は `_AudioDeviceSession` の
+  インスタンス属性（`model.py:335`）で、mic と speaker は**別インスタンス = 別スレッド**。
+  `_translation_executor` も mic/chat の `getInputTranslate` のみが使い、
+  speaker の `getOutputTranslate` は `multi_target=False` で通らない（`model.py:1508-1523`）。
+  **mic/speaker が互いを待たせる実害はコード上見つからなかった。**
+- **`_ctranslate2_lock` は今回の計測経路と無関係。** Google は `other_web_Translator`（HTTP）を
+  通るだけでロックに触れない（`translation_translator.py:635-643`）。
+  ロック自体は実在の直列化ポイントで、トークナイザを言語ごとに持てば外せる見込みはあるが、
+  **CTranslate2 使用時にしか意味がない**。
+
+---
+
 ## 確認したが問題なしと判断した領域
 
 - モジュール間の**循環依存は存在しない**（全 import 文を走査）
