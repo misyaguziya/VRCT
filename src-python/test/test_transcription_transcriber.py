@@ -415,11 +415,16 @@ class TestVadSegmentedTranscription(unittest.TestCase):
         transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
         audio_queue = Queue()
         now = datetime.now()
-        audio_queue.put((b"\x01\x00", now, "max_duration"))
         self.assertLess(MAX_PHRASE_DURATION_SECONDS, 20)
-        audio_queue.put(
-            (b"\x02\x00", now + timedelta(seconds=MAX_PHRASE_DURATION_SECONDS + 1), "max_duration")
+        # 判定は到着時刻の差ではなく蓄積バッファの音声長で行うので、
+        # 到着間隔は意図的に短くし、音声長だけで上限を超えさせる。
+        # 1本あたり上限の6割 -> 2本で超過。bytes(n) は n バイトの無音。
+        bytes_per_second = (
+            FakeAudioSource.SAMPLE_RATE * FakeAudioSource.SAMPLE_WIDTH * FakeAudioSource.channels
         )
+        segment = bytes(int(bytes_per_second * MAX_PHRASE_DURATION_SECONDS * 0.6))
+        audio_queue.put((segment, now, "max_duration"))
+        audio_queue.put((segment, now + timedelta(milliseconds=100), "max_duration"))
 
         result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
@@ -580,6 +585,67 @@ class TestGoogleInterimSendVad(unittest.TestCase):
         self.assertFalse(result)
         transcriber.whisper_model.transcribe.assert_not_called()
         self.assertEqual(transcriber.audio_sources["last_sample"], b"\x01\x00\x02\x00")
+
+
+class TestVadSafetyNetMeasuresBufferedAudio(unittest.TestCase):
+    """MAX_PHRASE_DURATION_SECONDS の安全弁が「蓄積された音声の長さ」で
+    発火すること。
+
+    以前はセグメントの到着時刻の差 (time_spoken - phrase_started_at) で
+    測っていた。フレーズ最初のセグメントでは phrase_started_at に
+    time_spoken 自身を入れるため差が必ず 0 になり、そのセグメントが含む
+    音声を丸ごと取りこぼしていた。実機ログでは1セグメントが約7秒
+    (bytes=227328) だったため、15秒の安全弁が約22秒まで発火しなかった。
+    """
+
+    _BYTES_PER_SECOND = (
+        FakeAudioSource.SAMPLE_RATE * FakeAudioSource.SAMPLE_WIDTH * FakeAudioSource.channels
+    )
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_a_single_oversized_segment_trips_the_safety_net(self, _) -> None:
+        """1本目のセグメントだけで上限を超えていたら、その場で確定する。
+
+        到着時刻の差で測っていた頃は、1本目は必ず 0 秒とみなされたので
+        ここで確定できず、次のセグメントを待っていた。"""
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Whisper", vad_segmented=True)
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber._finalizeAndTranscribe = MagicMock(return_value=True)
+
+        oversized = b"\x00" * int(self._BYTES_PER_SECOND * (MAX_PHRASE_DURATION_SECONDS + 1))
+        audio_queue = Queue()
+        now = datetime.now()
+        # 到着時刻は1点しかないので、時刻差で測っている限り 0 秒のまま。
+        audio_queue.put((oversized, now, "max_duration"))
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
+        transcriber._finalizeAndTranscribe.assert_called_once()
+        # 確定したのでリセットされている。
+        self.assertEqual(transcriber.audio_sources["last_sample"], b"")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_a_short_segment_does_not_trip_the_safety_net(self, _) -> None:
+        """上限未満なら、到着時刻がいくら離れていても確定しない。
+
+        時刻差で測っていた頃は、音声が短くても到着間隔が開くだけで
+        発火しえた (実時間と音声長が一致しない VAD では起こりうる)。"""
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Whisper", vad_segmented=True)
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber._finalizeAndTranscribe = MagicMock(return_value=True)
+
+        short = b"\x00" * int(self._BYTES_PER_SECOND * 1)
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put((short, now, "max_duration"))
+        audio_queue.put((short, now + timedelta(seconds=60), "max_duration"))
+
+        self.assertFalse(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
+        transcriber._finalizeAndTranscribe.assert_not_called()
+        self.assertEqual(len(transcriber.audio_sources["last_sample"]), len(short) * 2)
 
 
 class TestGoogleInterimSendNonVad(unittest.TestCase):
