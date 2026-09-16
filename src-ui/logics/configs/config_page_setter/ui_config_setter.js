@@ -805,15 +805,11 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "websocket_port",
     },
     {
-        // ユーザーが値を変更することはない (バックエンドが生成・永続化する
-        // 接続トークン) が、ObsBrowserSourceUrlContainer と同じ「URL を
-        // 組み立ててコピーする」UI から読み取れるよう get_set テンプレート
-        // に乗せる (set は呼ばれない)。
         Category: "AdvancedSettings",
         Base_Name: "WebsocketAuthToken",
         default_value: "",
         ui_template_id: "input",
-        logics_template_id: "get_set",
+        logics_template_id: "get_only",
         base_endpoint_name: "websocket_auth_token",
     },
     {

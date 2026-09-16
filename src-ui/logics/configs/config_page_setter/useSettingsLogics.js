@@ -127,6 +127,11 @@ export const useSettingsLogics = (settingsArray, Category) => {
             continue;
         }
 
+        if (s.logics_template_id === "get_only") {
+            result[getExportName] = buildGet();
+            continue;
+        }
+
         if (s.logics_template_id === "get_set") {
             result[getExportName] = buildGet();
             result[setExportName] = buildSet();
