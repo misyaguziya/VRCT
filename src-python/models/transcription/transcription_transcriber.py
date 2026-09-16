@@ -80,6 +80,21 @@ VAD_PRE_PAD_MS = 300
 VAD_POST_PAD_MS = 500
 
 
+def _bufferedSeconds(source_info: Dict[str, Any]) -> float:
+    """蓄積バッファ (last_sample) が表す音声の秒数。
+
+    PCM の生バイト列なので、バイト数を「1秒あたりのバイト数」で割るだけ。
+    sample_width / channels が 0 や未設定でも落ちないようにしておく
+    (音声デバイスの切り替え中に一時的に不正な値が入りうる)。
+    """
+    bytes_per_second = (
+        source_info["sample_rate"] * source_info["sample_width"] * source_info["channels"]
+    )
+    if not bytes_per_second:
+        return 0.0
+    return len(source_info["last_sample"]) / bytes_per_second
+
+
 class AudioTranscriber:
     """Convert queued audio buffers into transcripts.
 
@@ -325,7 +340,13 @@ class AudioTranscriber:
                     source_info["phrase_started_at"] = time_spoken
                 source_info["last_sample"] += data
                 source_info["last_spoken"] = time_spoken
-                accumulated_sec = (time_spoken - source_info["phrase_started_at"]).total_seconds()
+                # 蓄積されている音声そのものの長さを使う。
+                # セグメント到着時刻の差 (time_spoken - phrase_started_at) では
+                # フレーズ最初のセグメントが必ず 0 になり、そのセグメントが
+                # 含む音声 (VAD の max_speech_frames 上限まで育つので実機では
+                # 約7秒) を丸ごと取りこぼす。結果、下の 15 秒の安全弁が
+                # 実際には約 22 秒まで発火しなかった。
+                accumulated_sec = _bufferedSeconds(source_info)
 
                 if reason != "max_duration":
                     # 自然な区切り (silence/flush) → ここまでの蓄積分を
