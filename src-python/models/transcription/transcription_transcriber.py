@@ -556,9 +556,19 @@ class AudioTranscriber:
                         errorLogging()
                         continue
 
-                    language_calls.append(
-                        f"{language}={round((time.perf_counter() - call_started_at) * 1000)}ms"
-                    )
+                    elapsed_ms = round((time.perf_counter() - call_started_at) * 1000)
+                    if text:
+                        language_calls.append(f"{language}={elapsed_ms}ms")
+                    else:
+                        # 「認識結果0件」を例外ではなく空文字で返すプロバイダが
+                        # ある。GoogleProvider は UnknownValueError を内部で
+                        # 握って ("", 0.0, False) を返すため、上の
+                        # except UnknownValueError は Google では一度も発火
+                        # しない。ここで拾わないと、何も認識できなかった
+                        # 呼び出しが成功したかのように所要時間だけログに出て、
+                        # 失敗率の内訳 (nomatch なのか timeout なのか) を
+                        # 実ログから追えない。
+                        language_calls.append(f"{language}=nomatch({elapsed_ms}ms)")
                     if confidence > best["confidence"]:
                         best = {"confidence": confidence, "text": text, "language": language}
                     if is_definitive:

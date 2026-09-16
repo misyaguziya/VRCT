@@ -791,6 +791,29 @@ class TestAsrLanguageCallBreakdown(unittest.TestCase):
             self.assertIn(f"{language}=", stats[0])
 
     @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_a_call_that_recognized_nothing_is_marked_nomatch(self, _) -> None:
+        """認識結果0件の呼び出しを、成功したかのような所要時間だけで
+        記録してはいけない。
+
+        GoogleProvider は UnknownValueError を内部で握って ("", 0.0, False)
+        を返すため、_finalizeAndTranscribe の except UnknownValueError は
+        Google では発火しない。実機ログでも成功率 40% の裏で nomatch が
+        0 件しか出ておらず、失敗の内訳 (nomatch なのか timeout なのか) を
+        追えなかった。"""
+        logs = self._capture_logs()
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 3, 10, "Google")
+        # 認識結果0件。例外ではなく空文字で返る (実際の Google 経路と同じ形)。
+        transcriber.audio_recognizer.recognize_google = MagicMock(return_value=("", 0.0))
+        audio_queue = Queue()
+        audio_queue.put((b"\x01\x00", _already_old_timestamp()))
+
+        transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
+
+        stats = [m for m in logs if m.startswith("[ASR-stats]") or m.startswith("[ASR-error]")]
+        self.assertEqual(len(stats), 1, logs)
+        self.assertIn("Japanese=nomatch(", stats[0])
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
     def test_early_break_is_visible_in_the_breakdown(self, _) -> None:
         """Whisper が検出言語の一致で早期 break したら calls=1/3 になる。"""
         logs = self._capture_logs()
