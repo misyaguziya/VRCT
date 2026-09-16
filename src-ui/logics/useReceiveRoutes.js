@@ -250,7 +250,7 @@ const buildRouteMetaList = () => {
             });
         }
 
-        if (s.logics_template_id !== "get_list") {
+        if (s.logics_template_id !== "get_list" && s.logics_template_id !== "get_only") {
             generated.push({
                 endpoint: `/set/data/${ep}`,
                 ns: namespace_module,
