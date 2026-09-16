@@ -26,6 +26,8 @@ common_error:
     invalid_value_speaker_phrase_timeout: "不能小於「{{speaker_record_timeout_label}}」，應為 0 或更高。"
     invalid_value_speaker_max_phrase: "可以設置 0 或更高的數值。"
 
+    invalid_hex_color: "請輸入有效的 HEX 顏色代碼（例：{{brand_color_hex}}）格式。"
+
 common_warning:
     unable_to_use_osc_query: "由於 OSC IP Address 的設定無法接收 OSC 資料，以下功能已自動停用。"
 
