@@ -15,18 +15,21 @@ except Exception:
 from utils import errorLogging, getBestComputeType
 
 try:
-    # Bing の認証情報パース (parse_bing_credentials) は monkey-patch を
-    # やめ、フォーク本体の Bing.get_tk へ取り込んだ。
-    from translators import translate_text as other_web_Translator
+    # GPL の translators から、MIT 互換の自前実装に置き換えた
+    # (translator_engines)。Bing の認証情報パースはそちらに内蔵済み。
+    # translators と違い import 時に通信しないので、オフライン起動でも
+    # ENABLE_TRANSLATORS が False に落ちない。
+    from translator_engines import translate_text as other_web_Translator
     ENABLE_TRANSLATORS = True
 except Exception:
     other_web_Translator = None  # type: ignore
     ENABLE_TRANSLATORS = False
 
-# translators 経由 (Google/Bing/Papago) の HTTP タイムアウト。
-# ライブラリ既定は timeout=None = 無制限で、応答が返らないと呼び出し元の
-# スレッドが永久に止まる。VRCT のパイプラインは単一スレッドなので、
-# 翻訳のハングは文字起こしごと停止させ、最終的に watchdog が発火する。
+# Google/Bing/Papago の HTTP タイムアウト。応答が返らないと呼び出し元の
+# スレッドが止まる。VRCT のパイプラインは単一スレッドなので、翻訳のハングは
+# 文字起こしごと停止させ、最終的に watchdog が発火する。
+# NOTE: これは 1 リクエストあたりの値。Bing は認証ページの取得と翻訳、
+# さらにトークン失効時の 1 回のリトライで最大 4 リクエストを発行しうる。
 _WEB_TRANSLATOR_TIMEOUT_SECONDS = 10
 
 import warnings
