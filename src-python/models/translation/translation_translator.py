@@ -571,7 +571,14 @@ class Translator:
             if source_language == target_language:
                 return message
 
-            result: Any = ""
+            # False, not "": every `case` below is guarded (engine disabled,
+            # client not authenticated, library missing), and an unknown
+            # translator_name matches no case at all. Any of those leaves this
+            # initial value untouched, and the caller decides success with
+            # `isinstance(translation, str)` - so "" would report an empty
+            # translation as a success, skipping the CTranslate2 fallback and
+            # the error log. False routes it through the fallback instead.
+            result: Any = False
             source_language, target_language = self.getLanguageCode(translator_name, weight_type, target_country, source_language, target_language)
             match translator_name:
                 case "DeepL_API":
