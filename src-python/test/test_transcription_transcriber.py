@@ -199,12 +199,18 @@ class TestConfirmedCompleteTranscription(unittest.TestCase):
         transcriber.whisper_model.transcribe.return_value = ([], MagicMock(language_probability=1.0))
         audio_queue = Queue()
         now = datetime.now()
-        audio_queue.put((b"\x01\x00", now))
-        # 無音ギャップ (phrase_timeout=30s) は超えていないが、
-        # MAX_PHRASE_DURATION_SECONDS (15秒) を超えて継続しているので
-        # 強制的に確定されるはず。
+        # 無音ギャップ (phrase_timeout=30s) は超えていないが、蓄積された
+        # 音声が MAX_PHRASE_DURATION_SECONDS (15秒) を超えるので強制的に
+        # 確定されるはず。判定は到着時刻の差ではなく蓄積バッファの音声長
+        # なので、到着間隔は意図的に短くしてある
+        # (TestVadSafetyNetMeasuresBufferedAudio と同じ契約)。
         self.assertLess(MAX_PHRASE_DURATION_SECONDS, 30)
-        audio_queue.put((b"\x02\x00", now + timedelta(seconds=MAX_PHRASE_DURATION_SECONDS + 1)))
+        bytes_per_second = (
+            FakeAudioSource.SAMPLE_RATE * FakeAudioSource.SAMPLE_WIDTH * FakeAudioSource.channels
+        )
+        chunk = bytes(int(bytes_per_second * MAX_PHRASE_DURATION_SECONDS * 0.6))
+        audio_queue.put((chunk, now))
+        audio_queue.put((chunk, now + timedelta(milliseconds=100)))
 
         result = transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"])
 
@@ -641,6 +647,58 @@ class TestVadSafetyNetMeasuresBufferedAudio(unittest.TestCase):
         now = datetime.now()
         audio_queue.put((short, now, "max_duration"))
         audio_queue.put((short, now + timedelta(seconds=60), "max_duration"))
+
+        self.assertFalse(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
+        transcriber._finalizeAndTranscribe.assert_not_called()
+        self.assertEqual(len(transcriber.audio_sources["last_sample"]), len(short) * 2)
+
+
+class TestNonVadSafetyNetMeasuresBufferedAudio(unittest.TestCase):
+    """非VAD経路の安全弁も、蓄積された音声の長さで発火すること。
+
+    TestVadSafetyNetMeasuresBufferedAudio と対になる契約。当初 VAD 側だけを
+    直し「非VADはチャンクが細かく到着するので誤差が無視できる」と書いたが、
+    これは誤りだった。`listen_energy_and_audio_in_background` は
+    **フレーズ単位**でコールバックし (record_timeout 既定3秒まで育つ)、
+    最初のチャンクが含む音声が丸ごと欠落して 15 秒の安全弁が約 18 秒まで
+    発火しなかった。"""
+
+    _BYTES_PER_SECOND = (
+        FakeAudioSource.SAMPLE_RATE * FakeAudioSource.SAMPLE_WIDTH * FakeAudioSource.channels
+    )
+
+    def _makeTranscriber(self):
+        transcriber = AudioTranscriber(False, FakeAudioSource(), 999, 10, "Whisper")
+        transcriber.transcription_engine = "Whisper"
+        transcriber.whisper_model = MagicMock()
+        transcriber._finalizeAndTranscribe = MagicMock(return_value=True)
+        return transcriber
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_a_single_oversized_chunk_trips_the_safety_net(self, _) -> None:
+        transcriber = self._makeTranscriber()
+        oversized = bytes(int(self._BYTES_PER_SECOND * (MAX_PHRASE_DURATION_SECONDS + 1)))
+        audio_queue = Queue()
+        audio_queue.put((oversized, datetime.now()))
+
+        self.assertTrue(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
+
+        transcriber._finalizeAndTranscribe.assert_called_once()
+        self.assertEqual(transcriber.audio_sources["last_sample"], b"")
+
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_a_short_chunk_does_not_trip_the_safety_net(self, _) -> None:
+        """上限未満なら、到着時刻がいくら離れていても確定しない。
+
+        phrase_timeout (無音ギャップ) の判定は時刻のままで正しいので、
+        それに引っかからない範囲で間隔を空けて確認する。"""
+        transcriber = self._makeTranscriber()
+        short = bytes(int(self._BYTES_PER_SECOND * 1))
+        audio_queue = Queue()
+        now = datetime.now()
+        audio_queue.put((short, now))
+        audio_queue.put((short, now + timedelta(seconds=60)))
 
         self.assertFalse(transcriber.transcribeAudioQueue(audio_queue, ["Japanese"], ["Japan"]))
 
