@@ -2304,11 +2304,33 @@ class Model:
         """getInputTranslate() の並列化に使う常設プールを止める。
 
         ThreadPoolExecutor のワーカーは非デーモンスレッドで、インタプリタ
-        終了時に atexit で join される。翻訳が詰まったままだと終了が
-        そこで止まるため、shutdown() から明示的に停止する。待たない
-        (wait=False) のは、詰まっている呼び出しに shutdown() を道連れに
-        させないため。実際のHTTP呼び出しには
-        _WEB_TRANSLATOR_TIMEOUT_SECONDS の上限がある。
+        終了時に atexit (concurrent.futures.thread._python_exit) で join
+        される。翻訳が詰まったままだと終了がそこで止まるため、shutdown()
+        から明示的に停止する。待たない (wait=False) のは、詰まっている
+        呼び出しに shutdown() を道連れにさせないため。
+
+        注意: shutdown(wait=False) が捨てるのは**まだ開始していない**
+        タスクだけで、既に実行中のワーカーは止まらない。つまりこの関数は
+        すぐ返るが、**プロセスが消えるのは実行中の呼び出しが返るまで
+        遅れうる**。その上限はエンジンによって違う:
+
+        - Google / Bing / Papago: _WEB_TRANSLATOR_TIMEOUT_SECONDS (10秒)
+        - LMStudio / Ollama / OpenRouter: 各プロバイダで timeout 指定あり
+        - OpenAI / OpenAI互換 / Groq / Gemini / Plamo: **明示指定なし**。
+          SDK の既定に従う (openai は read=600秒 × max_retries=2) ので
+          分単位になりうる
+
+        実機では終了遅延を観測していない。executor を使うのは
+        getInputTranslate (mic/chat のみ。speaker は getOutputTranslate の
+        同期呼び出しで通らない) で、shutdown() は先に文字起こしを止めて
+        いるため、停止の瞬間に翻訳が飛んでいる必要があるから。
+        なお watchdog エスカレーション経由の終了 (mainloop.py の
+        os._exit) は atexit を飛ばすのでこの経路に当たらない。
+
+        ここで安易に wait=True + タイムアウト付き join を足すと、
+        P-4 の初回修正と同じ「新たな終了遅延を作り込む」形になる。
+        実機で終了遅延が実際に出てから、上限の無いエンジン側に timeout を
+        入れる方向で直すこと。
         """
         executor = getattr(self, '_translation_executor', None)
         if executor is not None:
