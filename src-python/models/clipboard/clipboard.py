@@ -34,11 +34,6 @@ try:
 except Exception:
     tk = None  # type: ignore
 
-try:
-    import pyautogui  # noqa: F401
-except Exception:
-    pyautogui = None  # type: ignore
-
 def checkSteamvrRunning() -> bool:
     _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
     return _proc_name in (p.name() for p in process_iter())
@@ -166,21 +161,40 @@ def copy_to_clipboard(text: str) -> bool:
         return True
     return False
 
-def paste_via_pyautogui(countdown: int = 0) -> bool:
-    if pyautogui is None:
-        printLog('pyautogui not installed. Install with: pip install pyautogui')
+def paste_via_ctrl_v(countdown: int = 0) -> bool:
+    """フォーカス中のウィンドウに Ctrl+V を送る。
+
+    以前は pyautogui.hotkey('ctrl', 'v') を使っていたが、pyautogui は
+    依存として MouseInfo (GPLv3+) と PyMsgBox を引き込み、どちらも
+    pyautogui の import 時にロードされる。VRCT は MIT なので、
+    この1箇所のために GPLv3 を配布物に含めたくない。
+    pyautogui の Windows 実装が呼んでいるのも同じ user32.keybd_event
+    なので、挙動は変わらない。"""
+    if sys.platform != 'win32':
+        printLog('paste: Ctrl+V の送出は Windows でのみ対応している')
         return False
 
     for i in range(countdown, 0, -1):
-        print(i, end=' ', flush=True)
+        # 素の print は使わない。VRCT の stdout はフロントエンドとの IPC
+        # チャネルなので、JSON 以外を書くとプロトコルが壊れる。
+        printLog(f"paste: countdown {i}")
         time.sleep(1)
 
+    VK_CONTROL = 0x11
+    VK_V = 0x56
+    KEYEVENTF_KEYUP = 0x0002
     try:
-        # pyautogui.hotkey is a safe cross-platform way to send keys
-        pyautogui.hotkey('ctrl', 'v')
+        # 押した順と逆順に離す (押しっぱなしの Ctrl を残さないため、
+        # 離す側は例外が出ても必ず通す)。
+        user32.keybd_event(VK_CONTROL, 0, 0, 0)
+        try:
+            user32.keybd_event(VK_V, 0, 0, 0)
+            user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
+        finally:
+            user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
         return True
     except Exception as e:
-        printLog(f'pyautogui failed to send hotkey: {e}')
+        printLog(f'paste: Ctrl+V の送出に失敗した: {e}')
         return False
 
 
@@ -300,7 +314,7 @@ class Clipboard:
         if not focused:
             return False
 
-        pasted = paste_via_pyautogui(countdown)
+        pasted = paste_via_ctrl_v(countdown)
         return bool(pasted)
 
 if __name__ == '__main__':

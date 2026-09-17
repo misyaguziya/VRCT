@@ -55,7 +55,12 @@ class TestGetTranslateSuccessFlagSemantics(unittest.TestCase):
             calls["n"] += 1
             return False  # CTranslate2 fallback also down for this test
 
-        self.model.translator = type("T", (), {"translate": staticmethod(fake_translate)})()
+        # 重みはロード済み = リトライに意味がある状態。この状態で
+        # CTranslate2 が繰り返し False を返すのが「実障害」のケース。
+        self.model.translator = type("T", (), {
+            "translate": staticmethod(fake_translate),
+            "isLoadedCTranslate2Model": staticmethod(lambda: True),
+        })()
 
         with patch("model.errorLogging"), patch("model.sleep"):
             translation, success_flag = self.model.getTranslate(
@@ -95,9 +100,13 @@ class TestGetTranslateSuccessFlagSemantics(unittest.TestCase):
         # (False) - success_flag must reflect that real failure, not the
         # primary engine's unrelated "unsupported" result.
         self.model.translator = type(
-            "T", (), {"translate": staticmethod(lambda **kwargs: (
-                None if kwargs["translator_name"] == "Bing" else False
-            ))}
+            "T", (), {
+                "translate": staticmethod(lambda **kwargs: (
+                    None if kwargs["translator_name"] == "Bing" else False
+                )),
+                # 重みはロード済み。CTranslate2 側の実障害を再現する。
+                "isLoadedCTranslate2Model": staticmethod(lambda: True),
+            }
         )()
 
         with patch("model.errorLogging") as mock_error_logging, patch("model.sleep"):

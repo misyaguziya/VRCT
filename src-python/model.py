@@ -16,6 +16,7 @@ from datetime import datetime
 from time import sleep
 from queue import Queue, Empty
 from threading import Thread, Lock, current_thread
+from concurrent.futures import ThreadPoolExecutor
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -83,6 +84,11 @@ _HTTP_TIMEOUT = (10, 60)
 _freeze_trace_path = "freeze_trace.log"
 _freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
 _FREEZE_DUMP_MARGIN_SEC = 15
+# watchdog スレッドの join 上限。Watchdog.start() 末尾の
+# time.sleep(interval) (既定20秒) は中断できないため、ここを無期限にすると
+# shutdown() が最大 interval 秒待たされる。daemon thread なので待ちきれ
+# なくても実害はない (stopWatchdog のコメント参照)。
+_WATCHDOG_JOIN_TIMEOUT_SEC = 1.0
 
 
 def _cleanupFreezeTraceIfEmpty() -> None:
@@ -624,10 +630,21 @@ class _AudioDeviceSession:
                     self._handle_pipeline_error(failure)
                     return
                 try:
-                    if self._transcribe(transcriber, audio_queue) and callable(self.transcript_fnc):
-                        result = transcriber.getTranscript()
-                        result["recognition_error"] = transcriber.last_recognition_error
-                        self.transcript_fnc(result)
+                    self._transcribe(transcriber, audio_queue)
+                    # 溜まっている分を全て配信する。1回の transcribeAudioQueue()
+                    # が複数件を積むことがある (Google の interim_send は
+                    # キューから取り出したチャンクごとに走る) のに対し、
+                    # 以前はここで1件しか取り出しておらず、残りは「次に ASR が
+                    # 成功した時」まで配信されなかった。発話が止まるとそのまま
+                    # 埋もれ、max_phrases を超えると古い順に無言で捨てられて
+                    # いた (実機ログで ASR 成功4件に対し配信1件を確認)。
+                    # _transcribe の戻り値で分岐しないのは、前回の呼び出しが
+                    # 残した分もここで確実に吐き出すため。
+                    if callable(self.transcript_fnc):
+                        while transcriber.hasTranscript():
+                            result = transcriber.getTranscript()
+                            result["recognition_error"] = transcriber.last_recognition_error
+                            self.transcript_fnc(result)
                 except AudioPipelineError as error:
                     self._handle_pipeline_error(error.failure)
                 except Exception as error:  # noqa: BLE001 - fail closed at ASR boundary
@@ -871,6 +888,7 @@ class Model:
             # Callers should call `model.init()` explicitly or rely on
             # `ensure_initialized()` which will lazy-initialize on demand.
             cls._instance._inited = False
+            cls._instance._init_failed = False
         return cls._instance
 
     def init(self):
@@ -880,11 +898,28 @@ class Model:
         and is intentionally not called at import time. Call explicitly
         or let `ensure_initialized()` call it lazily.
         """
-        if getattr(self, '_inited', False):
+        if getattr(self, '_inited', False) or getattr(self, '_init_failed', False):
             return
+
+        # 「成功が証明されるまで失敗扱い」にしておく。init() は途中で
+        # AudioLifecycleWorker (コンストラクタが即 daemon thread を起動する)
+        # や Clipboard / Telemetry を生成するため、後半で例外が出たときに
+        # 再実行を許すと、そのたびに新しいスレッドが生成され、前回分は
+        # 誰からも参照されないまま生き残る。ensure_initialized() は
+        # 例外を握りつぶして続行するので、public メソッドが呼ばれるたびに
+        # これが繰り返されスレッドが際限なく増える。shutdown() が停止
+        # できるのは最新の 1 組だけなので、終了時に古いワーカーが
+        # PyAudio 操作の途中でプロセス終了に巻き込まれる経路も残る。
+        # 壊れたインストールや SteamVR 異常で OverlayImage/Clipboard の
+        # 生成が失敗するケースは再試行しても直らないため、1 回で諦める。
+        self._init_failed = True
 
         self.logger = None
         self.th_check_device = None
+        # startWatchdog() より前に shutdown() が走る経路 (init 失敗時など) で
+        # stopWatchdog() の isinstance チェックが AttributeError にならないよう
+        # ここで宣言しておく。
+        self.th_watchdog = None
         # マイク/スピーカーそれぞれの文字起こし・エナジー計測は
         # _AudioDeviceSession (MicSession/SpeakerSession) に集約されている。
         # 1 物理デバイスにつき Recorder (= PyAudio Microphone) が常に
@@ -899,6 +934,15 @@ class Model:
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
+        # getInputTranslate() がターゲット言語ごとの翻訳を並列化するための
+        # 常設プール。使い捨てにすると、translators 側のスレッドローカルな
+        # セッションが毎回作り直され、ウォームアップ (ホストGET + 言語マップ
+        # 取得) のコストを毎回払うことになる。ワーカー数はターゲット言語の
+        # スロット数 (SELECTED_TAB_TARGET_LANGUAGES_NO_LIST) が上限。
+        self._translation_executor = ThreadPoolExecutor(
+            max_workers=len(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST),
+            thread_name_prefix="vrct-translate",
+        )
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.translation_history: list[dict] = []
@@ -942,6 +986,7 @@ class Model:
         self.telemetry = Telemetry()
 
         self._inited = True
+        self._init_failed = False
 
     def ensure_initialized(self) -> None:
         """Ensure the model has been initialized. This is safe to call from
@@ -1380,6 +1425,19 @@ class Model:
                     break
                 if translation is None:
                     break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
+                if not self.translator.isLoadedCTranslate2Model():
+                    # 重みが未ロード (未ダウンロード・ロード失敗・切替直後など)。
+                    # translateCTranslate2() はこの場合ロックを取った上で即 False を
+                    # 返すだけなので、待っても状況は変わらない。ここで抜けないと
+                    # 1メッセージあたり 2 秒 (0.1s × 20) を純粋な sleep で捨てる。
+                    # getInputTranslate() はターゲット言語ごとにこれを呼ぶため
+                    # 3言語で最悪6秒になり、その間パイプラインは単一スレッド
+                    # 構造のため文字起こしも止まる。
+                    # なお「ロード中」は translateCTranslate2() 側が
+                    # _ctranslate2_lock で待たされ、ロード完了後の値を見るため
+                    # ここには到達しない (changeCTranslate2Model はロック内で
+                    # is_loaded_ctranslate2_model を True にしてから解放する)。
+                    break
                 sleep(0.1)
             if isinstance(translation, str):
                 success_flag = True
@@ -1401,24 +1459,51 @@ class Model:
             source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
-        translations = []
-        success_flags = []
+        targets = []
         for value in target_languages.values():
             if value["enable"] is True:
                 target_language = value["language"]
                 target_country = value["country"]
                 if target_language is not None or target_country is not None:
-                    translation, success_flag = self.getTranslate(
-                        translator_name,
-                        source_language,
-                        target_language,
-                        target_country,
-                        message
-                        )
-                    translations.append(translation)
-                    success_flags.append(success_flag)
+                    targets.append((target_language, target_country))
 
-        return translations, success_flags
+        if not targets:
+            return [], []
+
+        if len(targets) == 1:
+            translation, success_flag = self.getTranslate(
+                translator_name, source_language, targets[0][0], targets[0][1], message
+            )
+            return [translation], [success_flag]
+
+        # ターゲット言語ごとの翻訳を常設スレッドプールで並列化する。
+        # 逐次ループだった頃は3言語有効時に実機で約3.9秒 (1言語あたり
+        # 約1.3秒 × 3) かかっていた。翻訳はクラウドエンジンなら
+        # ネットワークI/O待ちが支配的なので、概ね1言語分の時間で済む。
+        #
+        # 1度目の並列化 (73366d0a) は実機でフリーズを起こし取り消した。
+        # 原因は translators ライブラリが requests.Session をシングルトンで
+        # 使い回しており、スレッドセーフでなかったこと。フォーク側で
+        # Tse.session を threading.local() へ分離して解消した
+        # (misyaguziya/translators f3697bd)。requirements のpin も追従済み。
+        #
+        # 使い捨てではなく常設プールなのは、スレッドローカルのセッションを
+        # 再利用するため。呼び出しごとにスレッドを作り直すと、毎回
+        # ウォームアップ (ホストGET + 言語マップ取得) が走り逆に遅くなる。
+        #
+        # 添字はターゲット言語スロットに対応するので、完了順ではなく
+        # 投入順に結果を取る。例外は最初の1件をそのまま送出する
+        # (呼び出し元の _processMessage が VRAM不足エラーを検出する契約)。
+        futures = [
+            self._translation_executor.submit(
+                self.getTranslate,
+                translator_name, source_language, target_language, target_country, message,
+            )
+            for target_language, target_country in targets
+        ]
+        results = [future.result() for future in futures]
+
+        return [r[0] for r in results], [r[1] for r in results]
 
     def getOutputTranslate(self, message, source_language=None):
         self.ensure_initialized()
@@ -2215,16 +2300,62 @@ class Model:
         self.ensure_initialized()
         self.watchdog.setCallback(callback)
 
+    def stopTranslationExecutor(self):
+        """getInputTranslate() の並列化に使う常設プールを止める。
+
+        ThreadPoolExecutor のワーカーは非デーモンスレッドで、インタプリタ
+        終了時に atexit (concurrent.futures.thread._python_exit) で join
+        される。翻訳が詰まったままだと終了がそこで止まるため、shutdown()
+        から明示的に停止する。待たない (wait=False) のは、詰まっている
+        呼び出しに shutdown() を道連れにさせないため。
+
+        注意: shutdown(wait=False) が捨てるのは**まだ開始していない**
+        タスクだけで、既に実行中のワーカーは止まらない。つまりこの関数は
+        すぐ返るが、**プロセスが消えるのは実行中の呼び出しが返るまで
+        遅れうる**。その上限はエンジンによって違う:
+
+        - Google / Bing / Papago: _WEB_TRANSLATOR_TIMEOUT_SECONDS (10秒)
+        - LMStudio / Ollama / OpenRouter: 各プロバイダで timeout 指定あり
+        - OpenAI / OpenAI互換 / Groq / Gemini / Plamo: **明示指定なし**。
+          SDK の既定に従う (openai は read=600秒 × max_retries=2) ので
+          分単位になりうる
+
+        実機では終了遅延を観測していない。executor を使うのは
+        getInputTranslate (mic/chat のみ。speaker は getOutputTranslate の
+        同期呼び出しで通らない) で、shutdown() は先に文字起こしを止めて
+        いるため、停止の瞬間に翻訳が飛んでいる必要があるから。
+        なお watchdog エスカレーション経由の終了 (mainloop.py の
+        os._exit) は atexit を飛ばすのでこの経路に当たらない。
+
+        ここで安易に wait=True + タイムアウト付き join を足すと、
+        P-4 の初回修正と同じ「新たな終了遅延を作り込む」形になる。
+        実機で終了遅延が実際に出てから、上限の無いエンジン側に timeout を
+        入れる方向で直すこと。
+        """
+        executor = getattr(self, '_translation_executor', None)
+        if executor is not None:
+            executor.shutdown(wait=False, cancel_futures=True)
+
     def stopWatchdog(self):
         self.ensure_initialized()
-        if isinstance(self.th_watchdog, threadFnc):
-            self.th_watchdog.stop()
-            self.th_watchdog.join()
-            self.th_watchdog = None
+        # ダンプタイマーの解除を必ず先に行う。Watchdog.start() は末尾で
+        # time.sleep(self.interval) する (既定20秒) 一方、threadFnc.stop() は
+        # loop フラグを降ろすだけでこの sleep を中断できないため、join は
+        # 最大 interval 秒ブロックする。以前はこの解除が join の後ろにあり、
+        # shutdown() 側の _stopServiceForShutdown が5秒で諦めた時点で
+        # 一度も実行されず、「正常終了なのに freeze_trace.log へダンプが出る」
+        # という当初直したかった現象がそのまま残っていた (実機ログで確認)。
+        # 解除自体はスレッドと独立した faulthandler の操作なので先に行える。
         try:
             faulthandler.cancel_dump_traceback_later()
         except Exception:
             errorLogging()
+        if isinstance(self.th_watchdog, threadFnc):
+            self.th_watchdog.stop()
+            # 上記のとおり sleep は中断できないので join は無期限にしない。
+            # daemon thread なので、起きそこねてもプロセス終了時に破棄される。
+            self.th_watchdog.join(timeout=_WATCHDOG_JOIN_TIMEOUT_SEC)
+            self.th_watchdog = None
 
     def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""
