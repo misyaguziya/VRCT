@@ -425,7 +425,14 @@ class AudioTranscriber:
             source_info["last_spoken"] = time_spoken
             unsent = True
 
-            if time_spoken - source_info["phrase_started_at"] >= timedelta(seconds=MAX_PHRASE_DURATION_SECONDS):
+            # VAD 経路と同じく、蓄積されている音声そのものの長さで測る。
+            # チャンクの到着時刻の差では、フレーズ最初のチャンクが含む音声
+            # (listen_energy_and_audio_in_background はフレーズ単位で
+            # コールバックするので、record_timeout = 既定3秒まで育つ) が
+            # 丸ごと欠落し、15秒の安全弁が約18秒まで発火しない。
+            # 上の phrase_timeout 判定は「到着の間隔 = 無音ギャップ」を
+            # 見るものなので、そちらは時刻のままで正しい。
+            if _bufferedSeconds(source_info) >= MAX_PHRASE_DURATION_SECONDS:
                 finalize()
             elif is_google and audio_queue.empty():
                 # ドレイン単位で1回に畳む。interim_send() は「育っていく

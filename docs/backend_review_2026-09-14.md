@@ -4,7 +4,7 @@
 - 実施日: 2026-09-14
 - 前回レビュー: [`backend_review_2026-08-27.md`](./backend_review_2026-08-27.md)
 - 観点: **構造面 / 処理速度面 / 処理のパイプライン**
-- ベースライン: バックエンドテスト **709 件全パス**（39 秒） / 現在 **740 件全パス**（22 秒、2026-09-15）
+- ベースライン: バックエンドテスト **709 件全パス**（39 秒） / 現在 **744 件全パス**（21 秒、2026-09-16）
 
 ## ステータス記号
 
@@ -14,6 +14,12 @@
 | 🟡 | 着手中 |
 | 🟢 | 修正済み（コミット SHA を併記） |
 | ⛔ | 対応不要と判断（理由を併記） |
+
+> **行番号の引用について**: 本書の `file.py:NNN` は**書いた時点の行番号**であり、
+> その後の修正で後ろにズレているものがある（本ブランチの 36 コミットで
+> `model.py` / `controller.py` / `transcription_transcriber.py` は繰り返し編集された）。
+> 2026-09-16 のレビューで指摘を受け、**実際に `grep -n` で検算できたものだけ**再同期した。
+> 未検算のものが残っているので、**行番号ではなく併記してある関数名・シンボル名で探すこと**。
 
 ---
 
@@ -123,7 +129,7 @@ VAD 導入の 1 回目・2 回目が「体感が遅い」という主観だけ�
 
 ### 🟢 P-1 起動完了通知が GitHub API の応答待ちで最大 70 秒ブロックしうる（`86a91ca0`）
 
-`Controller.init()` の最終行 `controller.py:4868` が `updateConfigSettings()` を呼ぶ。
+`Controller.init()` の最終行 `controller.py:4909` が `updateConfigSettings()` を呼ぶ。
 
 ```python
 # controller.py:747-757
@@ -136,10 +142,10 @@ def updateConfigSettings(self) -> None:
     self.run(200, self.run_mapping["initialization_complete"], settings)
 ```
 
-`init_mapping` は `mainloop.py:563` で `/get/data/` 前方一致の全エンドポイント。
+`init_mapping` は `mainloop.py:574` で `/get/data/` 前方一致の全エンドポイント。
 ここに `/get/data/available_releases`（`mainloop.py:224`）が含まれており、その実体は
-`Controller.listAvailableReleases` → `Model.listAvailableReleases`（`model.py:1645`）
-→ `Model._fetchGithubReleases`（`model.py:1600-1610`）で、**GitHub API への同期 HTTP リクエスト**である。
+`Controller.listAvailableReleases` → `Model.listAvailableReleases`（`model.py:1731`）
+→ `Model._fetchGithubReleases`（`model.py:1685-1695`）で、**GitHub API への同期 HTTP リクエスト**である。
 
 ```python
 # model.py:1605   _HTTP_TIMEOUT = (10, 60)  (model.py:69)
@@ -156,7 +162,7 @@ response = requests_get(config.GITHUB_RELEASES_LIST_URL, timeout=_HTTP_TIMEOUT)
 直ちには発火しないが、**getter を 1 つ追加するだけで踏める構造**である。
 
 **対応方針**:
-1. `init_mapping` から `/get/data/available_releases` を除外する（`mainloop.py:563` に除外集合を足す）。
+1. `init_mapping` から `/get/data/available_releases` を除外する（`mainloop.py:574` に除外集合を足す）。
    フロント側は `src-ui/logics/useReceiveRoutes.js:157` が `/run/initialization_complete` を受けているだけなので UI 変更不要。
 2. `controller.py:750` を try/except で包み、失敗した endpoint は `None` を入れて続行する。
 
@@ -171,8 +177,8 @@ response = requests_get(config.GITHUB_RELEASES_LIST_URL, timeout=_HTTP_TIMEOUT)
 
 ### 🟢 P-2 `Model.init()` の部分失敗でワーカースレッドが無限リークする（`d66d4d6c`）
 
-`Model.init()`（`model.py:876-944`）は `self._inited = True` を **最終行 `model.py:944` でのみ**立てる。
-一方 `model.py:897-898` で `AudioLifecycleWorker()` を 2 つ生成し、そのコンストラクタ（`model.py:240-246`）は
+`Model.init()`（`model.py:894-988`）は `self._inited = True` を **最終行 `model.py:988` でのみ**立てる。
+一方 `model.py:932-933` で `AudioLifecycleWorker()` を 2 つ生成し、そのコンストラクタ（`model.py:240-246`）は
 **daemon スレッドを即 start する**。
 
 ```python
@@ -180,11 +186,11 @@ response = requests_get(config.GITHUB_RELEASES_LIST_URL, timeout=_HTTP_TIMEOUT)
 if getattr(self, '_inited', False):
     return
 ...
-# model.py:897-898   ← ここで daemon thread が 2 本起動する
+# model.py:932-933   ← ここで daemon thread が 2 本起動する
 self.mic_lifecycle_worker = AudioLifecycleWorker()
 self.speaker_lifecycle_worker = AudioLifecycleWorker()
 ...
-# model.py:941-944   ← ここまで到達して初めてフラグが立つ
+# model.py:985-988   ← ここまで到達して初めてフラグが立つ
 self.clipboard = Clipboard()
 self.telemetry = Telemetry()
 self._inited = True
@@ -195,7 +201,7 @@ self._inited = True
 
 1. `_inited` は False のまま
 2. `_bootstrapModel()` は例外を握りつぶして続行（`controller.py:4228-4230`）
-3. 以降**すべての `ensure_initialized()` 呼び出し**（`model.py:946-955`、public メソッドのほぼ全てが冒頭で呼ぶ）が `init()` を先頭から再実行
+3. 以降**すべての `ensure_initialized()` 呼び出し**（`model.py:991-1000`、public メソッドのほぼ全てが冒頭で呼ぶ）が `init()` を先頭から再実行
 4. そのたびに `AudioLifecycleWorker` が 2 つ新規生成され、**前回のスレッドは誰からも参照されず永久に生き残る**
 5. `Controller.shutdown()`（`controller.py:429-435`）が停止できるのは最新の 1 組だけ
 
@@ -475,8 +481,29 @@ Google は `interim_send` が毎回走るので結果は出続けるが、Whispe
 ノンストップ発話時の蓄積が想定より長引く。
 
 **対応**: 蓄積バッファのバイト長から音声秒数を出す `_bufferedSeconds()` に変更。
-非 VAD 経路は変更しない（チャンクが細かく到着するので時刻差との誤差が無視でき、
-v3.5.0 から問題が出ていないため）。
+
+> **訂正（2026-09-16、マージ前レビュー）**: 当初ここに
+> 「非 VAD 経路は変更しない（チャンクが細かく到着するので時刻差との誤差が
+> 無視でき、v3.5.0 から問題が出ていないため）」と書いたが、**この根拠は誤りだった**。
+> `transcription_recorder.py` が呼ぶ `listen_energy_and_audio_in_background` は
+> **フレーズ単位**でコールバックし（`phrase_time_limit` / `record_timeout`、
+> 既定 3 秒、`config.py:1140,1165`）、「細かいチャンク」ではない。
+> つまり非 VAD 側も最初のチャンクが含む音声（最大 3 秒）が丸ごと欠落し、
+> **15 秒の安全弁が約 18 秒まで発火しなかった**。VAD と同じ根本原因である。
+>
+> 「意図的な非対称」として残したつもりが、**根拠が崩れた以上ただの直し漏れ**だった。
+> 非 VAD ループにも `_bufferedSeconds()` を適用し、両ループを揃えた。
+> 対になるテスト（`TestNonVadSafetyNetMeasuresBufferedAudio`）も追加してある。
+>
+> なお上の `phrase_timeout` 判定（`time_spoken - last_spoken`）は
+> 「到着の間隔 = 無音ギャップ」を見るものなので、**そちらは時刻のままで正しい**。
+> 時刻で測るべきものと音声長で測るべきものが同じループに同居している。
+
+**教訓その 2**: 「片方の経路だけ直す」を、今回もまたやった。しかも今回は
+「意図的な非対称である」と**理由まで書いて**残していた。その理由が実コードの確認を
+伴っておらず誤りだった（`listen_energy_and_audio_in_background` の粒度を確かめていなかった）。
+**非対称を正当化する記述を書くときこそ、その根拠を実コードで確認すること。**
+書いてしまうと、次に読む人はそこを「検討済み」として飛ばす。
 
 **教訓**: 「時間」を測っているつもりの変数が、実際には別のものを測っていた。
 `accumulated=0.00s bytes=227328` という**自己矛盾したログ行が無ければ気付けなかった**。
@@ -956,7 +983,7 @@ PyAudio import 失敗時のみ成立しうるが、その場合はどのみち�
 
 **良い点（確認済み）**:
 - キュー/スレッド境界は **1 回だけ**。それ以降は全部関数呼び出しで、冗長な中継段・不要な同期点は無い。
-- 音声データのコピーは必要最小限。`last_sample` の逐次連結（`transcription_transcriber.py:316,372`）は
+- 音声データのコピーは必要最小限。`last_sample` の逐次連結（`transcription_transcriber.py:341,424`）は
   bytes 連結のため理論上 O(n²) だが、VAD 方式では `_MAX_SPEECH_DURATION_MS = 7000`
   （`transcription_recorder.py:481`）、エネルギー閾値方式では `MAX_PHRASE_DURATION_SECONDS = 15`
   （`transcription_transcriber.py:66`）で上限が効くため実害は限定的。
@@ -984,7 +1011,7 @@ P-3 / P-5 は同じ問題に対するはるかに安価な緩和策であり、�
 | `transcription_recorder.py:481` `_MAX_SPEECH_DURATION_MS` | 7000 ms | VAD 方式の強制分割上限 |
 | `transcription_transcriber.py:66` `MAX_PHRASE_DURATION_SECONDS` | 15 s | エネルギー閾値方式の強制確定。最悪ケースで 15 秒間 ASR が呼ばれない |
 | `transcription_transcriber.py:59` `GOOGLE_RECOGNIZE_TIMEOUT_SECONDS` | 10 s | Google 認識失敗時のブロック上限 |
-| `transcription_transcriber.py:351,391` `time.sleep(0.01)` | 10 ms | アイドル時のポーリング間隔。オーバーヘッドは無視できる |
+| `transcription_transcriber.py:397,469` `time.sleep(0.01)` | 10 ms | アイドル時のポーリング間隔。オーバーヘッドは無視できる |
 | ASR 呼び出し | **未計測** | 最大の変動要因 |
 | 翻訳呼び出し | **未計測** | LLM 系なら数百 ms〜数秒 |
 | オーバーレイ画像生成 | **未計測** | フォントは `overlay_image.py:76-81` でキャッシュ済み |
