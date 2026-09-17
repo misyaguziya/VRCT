@@ -454,6 +454,15 @@ class Controller:
         self._stopServiceForShutdown(model.stopObsBrowserSourceServer, "OBS browser source server")
         self._stopServiceForShutdown(model.stopWebSocketServer, "WebSocket server")
         self._stopServiceForShutdown(model.shutdownOverlay, "Overlay")
+        # watchdog も明示停止する。init() が startWatchdog() で武装する
+        # faulthandler.dump_traceback_later が残ったままだと、フロントエンドは
+        # 終了操作と同時に feed を止めるため、プロセスが (interval + 15秒)
+        # 以上生き残った場合に「正常終了なのに freeze_trace.log へフリーズ
+        # ダンプが出る」。この計装はフリーズ調査の一次情報源なので汚さない。
+        self._stopServiceForShutdown(model.stopWatchdog, "watchdog")
+        # 翻訳の常設プール。非デーモンスレッドなので、止めないと
+        # インタプリタ終了時の atexit join で終了が止まりうる。
+        self._stopServiceForShutdown(model.stopTranslationExecutor, "translation executor")
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a
@@ -747,8 +756,16 @@ class Controller:
     def updateConfigSettings(self) -> None:
         settings = {}
         for endpoint, dict_data in self.init_mapping.items():
-            response = dict_data["variable"](None)
-            result = response.get("result", None)
+            # 1つのgetterが例外を投げるとinit()がここで死に、
+            # /run/initialization_complete が永久に送られずUIがローディング
+            # 画面のまま固まる。値が取れなかった項目はNoneにして続行する。
+            try:
+                response = dict_data["variable"](None)
+                result = response.get("result", None)
+            except Exception:
+                errorLogging()
+                printLog(f"updateConfigSettings: failed to collect {endpoint}")
+                result = None
             settings[endpoint] = result
         self.run(
             200,
@@ -912,6 +929,7 @@ class Controller:
         message: str,
         language: Optional[str],
         msg_id: Optional[str] = None,
+        asr_ms: Optional[int] = None,
     ) -> Optional[dict]:
         """mic/speaker/chatMessage共通のパイプライン(バックエンドレビュー
         フェーズ3項目25、`MessageDirectionSpec`参照)。
@@ -938,10 +956,17 @@ class Controller:
         if spec.repeat_detector_attr is not None and getattr(model, spec.repeat_detector_attr)(message):
             return None
 
+        # 「発話終了から画面表示まで」の内訳を実測するための計装
+        # (再評価 2026-09-14 M-1)。ワードフィルタ/繰り返し検出で早期 return
+        # した場合は出力自体が無いので測らない。
+        pipeline_started_at = time.perf_counter()
+        translate_elapsed_ms = 0
+
         translation: list = []
         if config.ENABLE_TRANSLATION is False:
             pass
         else:
+            translate_started_at = time.perf_counter()
             try:
                 translate = getattr(model, spec.translate_attr)
                 translation, success = translate(message, source_language=language)
@@ -993,6 +1018,8 @@ class Controller:
                         ],
                     }
                 return None
+            finally:
+                translate_elapsed_ms = round((time.perf_counter() - translate_started_at) * 1000)
 
         transliteration_message: List[Any] = []
         transliteration_translation: list = []
@@ -1145,6 +1172,20 @@ class Controller:
 
         model.addTranslationHistory(spec.kind, message)
 
+        pipeline_elapsed_ms = round((time.perf_counter() - pipeline_started_at) * 1000)
+        # asr= は mic/speaker のみ (chat には ASR 段が無い)。
+        # output= は翻訳以外の全て (transliteration/OSC/オーバーレイ生成/
+        # クリップボード/UI配信/WebSocket/ロガー)。
+        # total= は ASR を含む「文字起こし結果が出てから出力完了まで」。
+        asr_part = f"asr={asr_ms}ms " if asr_ms is not None else ""
+        total_ms = pipeline_elapsed_ms + (asr_ms or 0)
+        printLog(
+            f"[latency][{spec.kind}] {asr_part}"
+            f"translate={translate_elapsed_ms}ms "
+            f"output={pipeline_elapsed_ms - translate_elapsed_ms}ms "
+            f"total={total_ms}ms"
+        )
+
         if spec.delivery == "return":
             return {"id": msg_id, **payload}
         return None
@@ -1196,7 +1237,7 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) > 0:
-            self._processMessage(MIC_MESSAGE_SPEC, message, language)
+            self._processMessage(MIC_MESSAGE_SPEC, message, language, asr_ms=result.get("asr_ms"))
 
     def speakerMessage(self, result:dict) -> None:
         if result.get("recognition_error") is True:
@@ -1236,7 +1277,7 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) > 0:
-            self._processMessage(SPEAKER_MESSAGE_SPEC, message, language)
+            self._processMessage(SPEAKER_MESSAGE_SPEC, message, language, asr_ms=result.get("asr_ms"))
 
     def _disableTranscriptionAfterPipelineError(self, source: str) -> None:
         """エラー停止後の実状態を config と UI に同期する。"""
