@@ -178,6 +178,8 @@ class OcrCapture:
 
 ## 重複抑制（dedup）
 
+クールダウンは **tick間隔の2倍を下限**にする。1tickはOCR1件あたり約0.8秒かかるため、設定値の方が短いと画面に出続けている吹き出しでも毎回「久しぶりに見た」と判定され、同じ文が繰り返し配送される (実機で cooldown=1秒 / tick 1〜2.6秒のときに再現)。
+
 VRChat の吹き出しは数秒〜数十秒画面に残るため、tick 毎に再翻訳しないよう抑制する必要があります。
 
 - テキストを `casefold()` → `blake2b` 8 バイトハッシュ化
@@ -213,7 +215,6 @@ OCR系の設定は**実行中でも次のtickから反映される**。`Controll
 | `OCR_SOURCE_LANGUAGE` | 使うモデルが変わる場合だけ推論器を作り直す (キャッシュ済みなら即座)。重複抑制のキャッシュも捨てる |
 | `OCR_WINDOW_TITLE` | キャプチャを開き直す |
 | `OCR_POLL_INTERVAL_MS` / `OCR_MIN_CONFIDENCE` / `OCR_BUBBLE_MIN_TEXT_LENGTH` / `OCR_DEDUP_COOLDOWN_SEC` | 値を差し替えるだけ |
-| `OCR_ENGINE` | 起動時のみ (RapidOCR以外は未対応) |
 
 ReaderとキャプチャはOSリソース・スレッドに紐づくので、値を書き換えたスレッドではなく
 **使っているワーカースレッドの側で**作り直す。これが `applyConfig` が値を預かるだけで、
@@ -226,11 +227,10 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 | キー | 型 | 既定値 | 説明 |
 |---|---|---|---|
 | `ENABLE_OCR_CAPTURE` | bool | False | OCR パイプラインの有効化（serialize=False, 起動毎にオフ） |
-| `OCR_ENGINE` | str | "RapidOCR" | 使用エンジン（将来の切替のため） |
 | `OCR_SOURCE_LANGUAGE` | str | "auto" | 読み取る言語。`auto` は日英中＋ラテン文字系を1モデルで読む。別モデルが要る文字体系のみ明示選択する（選択肢は `ocr_languages.SELECTABLE_LANGUAGES`） |
 | `OCR_WINDOW_TITLE` | str | "VRChat" | キャプチャ対象ウィンドウのタイトル部分一致文字列（大文字小文字を区別しない） |
 | `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
-| `OCR_MIN_CONFIDENCE` | float | 0.55 | OCR 信頼度の下限（0.1〜0.99） |
+| `OCR_MIN_CONFIDENCE` | float | 0.85 | OCR 信頼度の下限（0.1〜0.99）。PP-OCRは誤読時もスコアが高く、実測では 0.55 で誤りを1件も落とせず、0.85 なら正解を失わずに誤りの34%を落とせた |
 | `OCR_BUBBLE_MIN_TEXT_LENGTH` | int | 2 | 最小テキスト長（1〜50） |
 | `OCR_DEDUP_COOLDOWN_SEC` | int | 8 | 重複抑制クールダウン秒数（1〜120） |
 
@@ -240,6 +240,7 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 
 - `/set/enable/ocr_capture`, `/set/disable/ocr_capture` — 開始・停止
 - `/get/data/ocr_*`, `/set/data/ocr_*` — 各設定キー（setterは実行中のパイプラインへ即時反映する）
+  - エンジンを選ぶ設定は持たない。実装が1つしか無いのに保存値と判定値がずれてOCRが起動しなくなる事故を起こしたため (2026-09-18)
 - `/get/data/selectable_ocr_source_languages` — OCRで選べる言語の一覧（UIのドロップダウンの中身）
 - `/run/transcription_ocr_message` — OCR 結果を UI ログに配送（`useReceiveRoutes.js`）
 

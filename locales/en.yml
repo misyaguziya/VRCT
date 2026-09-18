@@ -389,7 +389,7 @@ config_page:
             desc: "How often the OCR loop grabs a new frame. Lower = more responsive, higher CPU/GPU. Default: 750."
         min_confidence:
             label: "Minimum OCR confidence"
-            desc: "Words below this OCR confidence score are discarded. Raise to reduce false positives; lower to catch faint bubbles. Default: 0.55."
+            desc: "Words below this OCR confidence score are discarded. Raise to reduce false positives; lower to catch faint bubbles. Default: 0.85. PP-OCR reports high scores even when it misreads, so the old EasyOCR-era 0.55 filtered nothing."
         bubble_min_text_length:
             label: "Minimum text length"
             desc: "Bubbles with fewer characters than this are ignored. Default: 2."

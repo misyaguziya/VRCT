@@ -1793,10 +1793,6 @@ class Model:
             # Already running.
             return True
 
-        if config.OCR_ENGINE != "RapidOCR":
-            printLog(f"OCR: unsupported engine {config.OCR_ENGINE!r}, refusing to start")
-            return False
-
         # 読み取る言語の扱いは models/ocr/ocr_languages.py を参照。
         # "auto" は PP-OCRv6 small (日英中+ラテン文字系を1モデル) を使い、
         # ハングル・キリル・タイ・アラビア・デーヴァナーガリーだけ明示選択で

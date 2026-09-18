@@ -166,6 +166,7 @@ class OcrPipeline:
         self._pending_lock = Lock()
         self._counts = {"tick": 0, "frame": 0, "candidate": 0, "ocr": 0, "text": 0, "emit": 0}
         self._counts_since = 0.0
+        self._last_tick_at = 0.0
 
     def isEngineAvailable(self) -> bool:
         return ocr_engine.isAvailable() and self._detector.isAvailable()
@@ -348,6 +349,14 @@ class OcrPipeline:
         candidates = candidates[:MAX_CANDIDATES_PER_TICK]
 
         now = time.monotonic()
+        # 1tickはOCR1件あたり約0.8秒かかるので、設定したクールダウンより
+        # tickの間隔の方が長くなることがある。そのままだと画面に出続けている
+        # 吹き出しでも毎回「久しぶりに見た」と判定されて同じ文が何度も送られる
+        # (実機で cooldown=1秒、tick 1〜2.6秒の状態で再現)。
+        # 最低でもtick間隔の2倍は抑制する。
+        interval = (now - self._last_tick_at) if self._last_tick_at else 0.0
+        self._last_tick_at = now
+        cooldown = max(self._dedup_cooldown, interval * 2.0)
         self._dedup.evictStale(now)
         deadline = now + self._tick_budget
 
@@ -365,7 +374,7 @@ class OcrPipeline:
             if len(merged) < self._min_text_length:
                 continue
             h = _textHash(merged)
-            if self._dedup.seenRecently(h, merged, self._dedup_cooldown, now):
+            if self._dedup.seenRecently(h, merged, cooldown, now):
                 continue
             cx = int(bbox[0] + bbox[2] / 2)
             cy = int(bbox[1] + bbox[3] / 2)

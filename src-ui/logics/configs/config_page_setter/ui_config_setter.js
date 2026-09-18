@@ -808,7 +808,7 @@ export const SETTINGS_ARRAY = [
     {
         Category: "Ocr",
         Base_Name: "OcrMinConfidence",
-        default_value: 0.55,
+        default_value: 0.85,
         ui_template_id: "slider",
         logics_template_id: "get_set",
         base_endpoint_name: "ocr_min_confidence",
