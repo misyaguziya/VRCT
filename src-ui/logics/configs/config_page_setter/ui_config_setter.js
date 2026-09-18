@@ -824,7 +824,7 @@ export const SETTINGS_ARRAY = [
     {
         Category: "Ocr",
         Base_Name: "OcrDedupCooldownSec",
-        default_value: 8,
+        default_value: 30,
         ui_template_id: "slider",
         logics_template_id: "get_set",
         base_endpoint_name: "ocr_dedup_cooldown_sec",
