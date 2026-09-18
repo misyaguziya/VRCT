@@ -792,7 +792,7 @@ export const SETTINGS_ARRAY = [
     {
         Category: "Ocr",
         Base_Name: "OcrSourceLanguage",
-        default_value: "",
+        default_value: "auto",
         ui_template_id: "select",
         logics_template_id: "get_set",
         base_endpoint_name: "ocr_source_language",
