@@ -15,7 +15,8 @@ from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
 from queue import Queue, Empty
-from threading import Thread, Lock
+from threading import Thread, Lock, current_thread
+from concurrent.futures import ThreadPoolExecutor
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -57,6 +58,7 @@ from models.ocr import OcrPipeline
 from models.ocr.ocr_languages import SELECTABLE_LANGUAGES as OCR_SELECTABLE_LANGUAGES, isSupported as isSupportedOcrLanguage
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
+from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 
@@ -84,6 +86,11 @@ _HTTP_TIMEOUT = (10, 60)
 _freeze_trace_path = "freeze_trace.log"
 _freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
 _FREEZE_DUMP_MARGIN_SEC = 15
+# watchdog スレッドの join 上限。Watchdog.start() 末尾の
+# time.sleep(interval) (既定20秒) は中断できないため、ここを無期限にすると
+# shutdown() が最大 interval 秒待たされる。daemon thread なので待ちきれ
+# なくても実害はない (stopWatchdog のコメント参照)。
+_WATCHDOG_JOIN_TIMEOUT_SEC = 1.0
 
 
 def _cleanupFreezeTraceIfEmpty() -> None:
@@ -107,6 +114,18 @@ class ReleaseInfo:
     version: str
     is_prerelease: bool
     published_at: str
+
+
+class SetupSha256Unavailable(Exception):
+    """setup.exe の ".sha256" サイドカーアセットが GitHub Release に存在する
+    のに、その中身をリトライしても取得/パースできなかったことを表す。
+
+    ".sha256" アセットがそもそも無い古い Release (この検証より前に公開された
+    もの) は「検証対象が無い」だけなのでサイズチェックのみへフォールバック
+    してよい。一方こちらは「チェックサムが公開されているのに入手できな
+    かった」状態であり、配布物がすり替えられている可能性を排除できない。
+    呼び出し側はサイズチェックへ格下げせず、更新自体を中止する。
+    """
 
 
 # audio_queue の有界化 (フェーズ3項目20)。文字起こしが実時間に追いつけ
@@ -159,18 +178,11 @@ class threadFnc(Thread):
         self.fnc = fnc
         self.end_fnc = end_fnc
         self.loop = True
-        self._pause = False
         self._args = args
         self._kwargs = kwargs
 
     def stop(self) -> None:
         self.loop = False
-
-    def pause(self) -> None:
-        self._pause = True
-
-    def resume(self) -> None:
-        self._pause = False
 
     def run(self) -> None:
         try:
@@ -180,8 +192,6 @@ class threadFnc(Thread):
                 except Exception:
                     # Protect the thread from terminating on user exceptions
                     errorLogging()
-                while self._pause:
-                    sleep(0.1)
         finally:
             if callable(self.end_fnc):
                 try:
@@ -328,6 +338,10 @@ class _AudioDeviceSession:
         self._energy_progressbar: Optional[threadFnc] = None
         self.transcript_fnc: Optional[Callable[[dict], None]] = None
         self.energy_fnc: Callable[[float], None] = lambda v: None
+        self._stop_lock = Lock()
+        self._pipeline_error_lock = Lock()
+        self._pipeline_error_started = False
+        self._pipeline_error_notified = False
         # 現在 Recorder が開いているデバイス (dict) を保持し、
         # reconfigure() で「同一デバイスかつ features 変化なし」なら no-op
         # にするために使う。
@@ -477,6 +491,62 @@ class _AudioDeviceSession:
     def device_error_event(self):
         return self._recorder.device_error_event if self._recorder is not None else None
 
+    def _make_pipeline_failure(
+        self,
+        error_code: ErrorCode,
+        stage: str,
+        error: Optional[Exception] = None,
+    ) -> AudioPipelineFailure:
+        if error is not None:
+            errorLogging()
+        return AudioPipelineFailure(
+            error_code=error_code,
+            stage=stage,
+            source=self._kind,
+            message=ERROR_METADATA[error_code]["message"],
+            exception_type=type(error).__name__ if error is not None else None,
+        )
+
+    def _notify_pipeline_error(self, failure: AudioPipelineFailure) -> None:
+        with self._pipeline_error_lock:
+            if self._pipeline_error_notified:
+                return
+            self._pipeline_error_notified = True
+        if callable(self.transcript_fnc):
+            try:
+                self.transcript_fnc(failure.to_notification())
+            except Exception:
+                errorLogging()
+
+    def _handle_pipeline_error(self, failure: AudioPipelineFailure) -> None:
+        """録音ワーカーからの異常を一度だけ停止・通知する。"""
+        with self._pipeline_error_lock:
+            if self._pipeline_error_started:
+                return
+            self._pipeline_error_started = True
+
+        # 自分自身を join できないため、現在の worker は先にループを
+        # 終了させ、停止・後始末・通知は別スレッドで行う。
+        worker = self._print_transcript
+        if worker is not None and worker is current_thread():
+            worker.stop()
+
+        def cleanup_and_notify() -> None:
+            cleanup_timed_out = self._stop()
+            if cleanup_timed_out:
+                failure_to_notify = self._make_pipeline_failure(
+                    ErrorCode.CLEANUP_TIMEOUT, "cleanup"
+                )
+            else:
+                failure_to_notify = failure
+            self._notify_pipeline_error(failure_to_notify)
+
+        Thread(
+            target=cleanup_and_notify,
+            daemon=True,
+            name=f"{self._kind}-transcription-error-cleanup",
+        ).start()
+
     # --- 内部実装 ---------------------------------------------------------
 
     def _start(self, *, device: Optional[dict]) -> None:
@@ -496,8 +566,21 @@ class _AudioDeviceSession:
         # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
         self._active_device = device
 
+        with self._pipeline_error_lock:
+            self._pipeline_error_started = False
+            self._pipeline_error_notified = False
+
+        start_failure: Optional[AudioPipelineFailure] = None
         try:
-            self._recorder = self._create_recorder(device)
+            try:
+                self._recorder = self._create_recorder(device)
+            except Exception as error:  # noqa: BLE001 - convert to safe UI error
+                start_failure = self._make_pipeline_failure(
+                    ErrorCode.AUDIO_OPEN_ERROR,
+                    "recording",
+                    error,
+                )
+                raise
 
             audio_queue = Queue(maxsize=_AUDIO_QUEUE_MAXSIZE) if "transcript" in self.features else _DiscardQueue()
             # energy_queue はメーター表示用で直近の値のみ意味を持つため、
@@ -506,50 +589,79 @@ class _AudioDeviceSession:
             energy_queue: Optional[Queue] = Queue(maxsize=1) if "energy" in self.features else None
             self._audio_queue = audio_queue
             self._recorder.recordIntoQueue(audio_queue, energy_queue)
+            if "transcript" in self.features:
+                try:
+                    self._transcriber = self._create_transcriber()
+                except Exception as error:  # noqa: BLE001 - initialization failure
+                    start_failure = self._make_pipeline_failure(
+                        ErrorCode.TRANSCRIBER_INIT_ERROR,
+                        "asr",
+                        error,
+                    )
+                    raise
         except Exception:
-            # デバイスが処理中に切断される (実機で OSError: device gone を
-            # 確認済み) 等で Recorder の生成/listener 起動が途中失敗すると、
-            # 以前は self._recorder が非 None のまま残り、reconfigure() の
-            # already_running 判定が「起動済み」と誤認してしまっていた
-            # (P0-2)。ユーザーが文字起こしを OFF→ON しても永久に復帰しない
-            # 原因だったため、自分が触った内部状態を全て「何も起動していない」
-            # 状態へ巻き戻してから再送出する。
-            #
-            # features も合わせてリセットする: reconfigure() は _start() を
-            # 呼ぶ前に self.features = new_features を代入済みだが、実際には
-            # 何も起動できていないため、ここでリセットしないと
-            # self._mic_session.features 等を直接参照する呼び出し元
-            # (例: startMicTranscript) が「起動できた」と誤認しうる。
-            self._recorder = None
-            self._transcriber = None
-            self._audio_queue = None
-            self._active_device = None
-            self.features = set()
+            # Recorder open/listener または Transcriber 初期化が失敗した場合も、
+            # 開始済みのリソースを同じ停止経路で回収してから UI へ通知する。
+            if start_failure is None:
+                start_failure = getattr(self._recorder, "device_error_info", None)
+            if start_failure is None:
+                start_failure = self._make_pipeline_failure(
+                    ErrorCode.AUDIO_READ_ERROR,
+                    "recording",
+                )
+            cleanup_timed_out = self._stop()
+            if cleanup_timed_out:
+                start_failure = self._make_pipeline_failure(ErrorCode.CLEANUP_TIMEOUT, "cleanup")
+            if start_failure is not None:
+                self._notify_pipeline_error(start_failure)
             raise
 
         if "transcript" in self.features:
-            self._transcriber = self._create_transcriber()
             transcriber = self._transcriber
             recorder = self._recorder
 
             def sendTranscript() -> None:
+                if recorder.device_error_event.is_set():
+                    failure = getattr(recorder, "device_error_info", None)
+                    recorder.device_error_event.clear()
+                    if failure is None:
+                        failure = self._make_pipeline_failure(
+                            ErrorCode.AUDIO_READ_ERROR,
+                            "recording",
+                        )
+                    self._handle_pipeline_error(failure)
+                    return
                 try:
-                    if recorder.device_error_event.is_set():
-                        recorder.device_error_event.clear()
-                        if callable(self.transcript_fnc):
-                            self.transcript_fnc({"text": False, "language": None})
-                        return
-                    if self._transcribe(transcriber, audio_queue) and callable(self.transcript_fnc):
-                        result = transcriber.getTranscript()
-                        result["recognition_error"] = transcriber.last_recognition_error
-                        self.transcript_fnc(result)
-                except Exception:
-                    errorLogging()
+                    self._transcribe(transcriber, audio_queue)
+                    # 溜まっている分を全て配信する。1回の transcribeAudioQueue()
+                    # が複数件を積むことがある (Google の interim_send は
+                    # キューから取り出したチャンクごとに走る) のに対し、
+                    # 以前はここで1件しか取り出しておらず、残りは「次に ASR が
+                    # 成功した時」まで配信されなかった。発話が止まるとそのまま
+                    # 埋もれ、max_phrases を超えると古い順に無言で捨てられて
+                    # いた (実機ログで ASR 成功4件に対し配信1件を確認)。
+                    # _transcribe の戻り値で分岐しないのは、前回の呼び出しが
+                    # 残した分もここで確実に吐き出すため。
+                    if callable(self.transcript_fnc):
+                        while transcriber.hasTranscript():
+                            result = transcriber.getTranscript()
+                            result["recognition_error"] = transcriber.last_recognition_error
+                            self.transcript_fnc(result)
+                except AudioPipelineError as error:
+                    self._handle_pipeline_error(error.failure)
+                except Exception as error:  # noqa: BLE001 - fail closed at ASR boundary
+                    failure = self._make_pipeline_failure(ErrorCode.ASR_ERROR, "asr", error)
+                    self._handle_pipeline_error(failure)
 
             def endTranscript() -> None:
                 while not audio_queue.empty():
                     audio_queue.get()
-                self._transcriber = None
+                # A timed-out old worker may finish after reconfigure() has
+                # already installed a new transcriber. Only clear the object
+                # owned by this worker; otherwise the late cleanup can make
+                # the new transcription pipeline fail with None.
+                if self._transcriber is transcriber:
+                    self._transcriber = None
                 # 明示 gc.collect() は呼ばない: ActiveEndpointTracker が別スレッド
                 # (CoInitialize 済み apartment) で保持している comtypes の COM
                 # ポインタが、この _print_transcript スレッド (CoInitialize
@@ -575,30 +687,71 @@ class _AudioDeviceSession:
             self._energy_progressbar.daemon = True
             self._energy_progressbar.start()
 
-    def _stop(self) -> None:
-        if isinstance(self._print_transcript, threadFnc):
-            self._print_transcript.stop()
-            self._print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
-            if self._print_transcript.is_alive():
-                printLog(f"{self._kind.capitalize()} transcription thread did not terminate within timeout")
-            self._print_transcript = None
-        if isinstance(self._energy_progressbar, threadFnc):
-            self._energy_progressbar.stop()
-            self._energy_progressbar.join()
-            self._energy_progressbar = None
-        if self._recorder is not None:
-            # _start() のロールバックにより通常はここに来ないはずだが、
-            # 万一 recordIntoQueue() が listener 起動前に失敗した Recorder
-            # (resume/stop がまだ None のまま) が渡ってきても TypeError で
-            # _stop() 自体を失敗させないよう callable() で防御する。
-            if callable(self._recorder.resume):
-                self._recorder.resume()
-            if callable(self._recorder.stop):
-                self._recorder.stop()
-            self._recorder = None
-        self._transcriber = None
-        self._audio_queue = None
-        self._active_device = None
+    def _stop(self) -> bool:
+        """停止とリソース解放を行い、完了できなければ True を返す。"""
+        cleanup_timed_out = False
+        with self._stop_lock:
+            transcript_thread = self._print_transcript
+            if isinstance(transcript_thread, threadFnc):
+                transcript_thread.stop()
+                if transcript_thread is not current_thread():
+                    transcript_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if transcript_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} transcription thread did not terminate within timeout"
+                        )
+                self._print_transcript = None
+
+            energy_thread = self._energy_progressbar
+            if isinstance(energy_thread, threadFnc):
+                energy_thread.stop()
+                if energy_thread is not current_thread():
+                    energy_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if energy_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} energy thread did not terminate within timeout"
+                        )
+                self._energy_progressbar = None
+
+            recorder = self._recorder
+            if recorder is not None:
+                # stop() 内部の listener join が予期せず長引いても、UI 操作や
+                # エラー通知を無期限にブロックしないよう別スレッドで待つ。
+                try:
+                    if callable(recorder.resume):
+                        recorder.resume()
+                except Exception:
+                    errorLogging()
+
+                if callable(recorder.stop):
+                    stop_thread = Thread(
+                        target=recorder.stop,
+                        kwargs={"wait_for_stop": True},
+                        daemon=True,
+                        name=f"{self._kind}-recorder-stop",
+                    )
+                    stop_thread.start()
+                    stop_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if stop_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} recorder did not stop within timeout"
+                        )
+                self._recorder = None
+
+            if isinstance(self._audio_queue, Queue):
+                while True:
+                    try:
+                        self._audio_queue.get_nowait()
+                    except Empty:
+                        break
+            self._transcriber = None
+            self._audio_queue = None
+            self._active_device = None
+            self.features = set()
+        return cleanup_timed_out
 
 
 class MicSession(_AudioDeviceSession):
@@ -647,6 +800,7 @@ class MicSession(_AudioDeviceSession):
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
             vad_segmented=config.MIC_ENABLE_VAD is True,
+            source_label="mic",
             **self._resolve_api_transcription_kwargs(),
         )
 
@@ -708,6 +862,7 @@ class SpeakerSession(_AudioDeviceSession):
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
             vad_segmented=config.SPEAKER_ENABLE_VAD is True,
+            source_label="speaker",
             **self._resolve_api_transcription_kwargs(),
         )
 
@@ -735,6 +890,7 @@ class Model:
             # Callers should call `model.init()` explicitly or rely on
             # `ensure_initialized()` which will lazy-initialize on demand.
             cls._instance._inited = False
+            cls._instance._init_failed = False
         return cls._instance
 
     def init(self):
@@ -744,11 +900,28 @@ class Model:
         and is intentionally not called at import time. Call explicitly
         or let `ensure_initialized()` call it lazily.
         """
-        if getattr(self, '_inited', False):
+        if getattr(self, '_inited', False) or getattr(self, '_init_failed', False):
             return
+
+        # 「成功が証明されるまで失敗扱い」にしておく。init() は途中で
+        # AudioLifecycleWorker (コンストラクタが即 daemon thread を起動する)
+        # や Clipboard / Telemetry を生成するため、後半で例外が出たときに
+        # 再実行を許すと、そのたびに新しいスレッドが生成され、前回分は
+        # 誰からも参照されないまま生き残る。ensure_initialized() は
+        # 例外を握りつぶして続行するので、public メソッドが呼ばれるたびに
+        # これが繰り返されスレッドが際限なく増える。shutdown() が停止
+        # できるのは最新の 1 組だけなので、終了時に古いワーカーが
+        # PyAudio 操作の途中でプロセス終了に巻き込まれる経路も残る。
+        # 壊れたインストールや SteamVR 異常で OverlayImage/Clipboard の
+        # 生成が失敗するケースは再試行しても直らないため、1 回で諦める。
+        self._init_failed = True
 
         self.logger = None
         self.th_check_device = None
+        # startWatchdog() より前に shutdown() が走る経路 (init 失敗時など) で
+        # stopWatchdog() の isinstance チェックが AttributeError にならないよう
+        # ここで宣言しておく。
+        self.th_watchdog = None
         # マイク/スピーカーそれぞれの文字起こし・エナジー計測は
         # _AudioDeviceSession (MicSession/SpeakerSession) に集約されている。
         # 1 物理デバイスにつき Recorder (= PyAudio Microphone) が常に
@@ -763,6 +936,15 @@ class Model:
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
+        # getInputTranslate() がターゲット言語ごとの翻訳を並列化するための
+        # 常設プール。使い捨てにすると、translators 側のスレッドローカルな
+        # セッションが毎回作り直され、ウォームアップ (ホストGET + 言語マップ
+        # 取得) のコストを毎回払うことになる。ワーカー数はターゲット言語の
+        # スロット数 (SELECTED_TAB_TARGET_LANGUAGES_NO_LIST) が上限。
+        self._translation_executor = ThreadPoolExecutor(
+            max_workers=len(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST),
+            thread_name_prefix="vrct-translate",
+        )
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.translation_history: list[dict] = []
@@ -792,12 +974,22 @@ class Model:
         self.websocket_server_loop = False
         self.websocket_server_alive = False
         self.th_websocket_server = None
+        # start/stopWebSocketServer()のcheck-then-set(TOCTOU)を防ぐ。
+        # 以前は無ロックだったため、2本の別エンドポイント
+        # (/set/enable/websocket_server と /set/enable/obs_browser_source、
+        # 両方ともstartWebSocketServer()を呼びうる)がほぼ同時に呼ばれると
+        # 両方とも「未起動」を観測して同じポートへの2本目のbindを試み、
+        # 後勝ちのth_websocket_server代入で先に起動した方のスレッド参照が
+        # 失われ二度と停止できなくなり得た(バックエンドレビュー
+        # フェーズ4項目32)。
+        self._websocket_lifecycle_lock = Lock()
         self.obs_browser_source_server = None
         self.clipboard = Clipboard()
         self.ocr_pipeline: Optional[OcrPipeline] = None
         self.telemetry = Telemetry()
 
         self._inited = True
+        self._init_failed = False
 
     def ensure_initialized(self) -> None:
         """Ensure the model has been initialized. This is safe to call from
@@ -1236,6 +1428,19 @@ class Model:
                     break
                 if translation is None:
                     break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
+                if not self.translator.isLoadedCTranslate2Model():
+                    # 重みが未ロード (未ダウンロード・ロード失敗・切替直後など)。
+                    # translateCTranslate2() はこの場合ロックを取った上で即 False を
+                    # 返すだけなので、待っても状況は変わらない。ここで抜けないと
+                    # 1メッセージあたり 2 秒 (0.1s × 20) を純粋な sleep で捨てる。
+                    # getInputTranslate() はターゲット言語ごとにこれを呼ぶため
+                    # 3言語で最悪6秒になり、その間パイプラインは単一スレッド
+                    # 構造のため文字起こしも止まる。
+                    # なお「ロード中」は translateCTranslate2() 側が
+                    # _ctranslate2_lock で待たされ、ロード完了後の値を見るため
+                    # ここには到達しない (changeCTranslate2Model はロック内で
+                    # is_loaded_ctranslate2_model を True にしてから解放する)。
+                    break
                 sleep(0.1)
             if isinstance(translation, str):
                 success_flag = True
@@ -1257,24 +1462,51 @@ class Model:
             source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
-        translations = []
-        success_flags = []
+        targets = []
         for value in target_languages.values():
             if value["enable"] is True:
                 target_language = value["language"]
                 target_country = value["country"]
                 if target_language is not None or target_country is not None:
-                    translation, success_flag = self.getTranslate(
-                        translator_name,
-                        source_language,
-                        target_language,
-                        target_country,
-                        message
-                        )
-                    translations.append(translation)
-                    success_flags.append(success_flag)
+                    targets.append((target_language, target_country))
 
-        return translations, success_flags
+        if not targets:
+            return [], []
+
+        if len(targets) == 1:
+            translation, success_flag = self.getTranslate(
+                translator_name, source_language, targets[0][0], targets[0][1], message
+            )
+            return [translation], [success_flag]
+
+        # ターゲット言語ごとの翻訳を常設スレッドプールで並列化する。
+        # 逐次ループだった頃は3言語有効時に実機で約3.9秒 (1言語あたり
+        # 約1.3秒 × 3) かかっていた。翻訳はクラウドエンジンなら
+        # ネットワークI/O待ちが支配的なので、概ね1言語分の時間で済む。
+        #
+        # 1度目の並列化 (73366d0a) は実機でフリーズを起こし取り消した。
+        # 原因は translators ライブラリが requests.Session をシングルトンで
+        # 使い回しており、スレッドセーフでなかったこと。フォーク側で
+        # Tse.session を threading.local() へ分離して解消した
+        # (misyaguziya/translators f3697bd)。requirements のpin も追従済み。
+        #
+        # 使い捨てではなく常設プールなのは、スレッドローカルのセッションを
+        # 再利用するため。呼び出しごとにスレッドを作り直すと、毎回
+        # ウォームアップ (ホストGET + 言語マップ取得) が走り逆に遅くなる。
+        #
+        # 添字はターゲット言語スロットに対応するので、完了順ではなく
+        # 投入順に結果を取る。例外は最初の1件をそのまま送出する
+        # (呼び出し元の _processMessage が VRAM不足エラーを検出する契約)。
+        futures = [
+            self._translation_executor.submit(
+                self.getTranslate,
+                translator_name, source_language, target_language, target_country, message,
+            )
+            for target_language, target_country in targets
+        ]
+        results = [future.result() for future in futures]
+
+        return [r[0] for r in results], [r[1] for r in results]
 
     def getOutputTranslate(self, message, source_language=None):
         self.ensure_initialized()
@@ -1424,6 +1656,21 @@ class Model:
         self.osc_handler.setDictFilterAndTarget(dict_filter_and_target)
         self.osc_handler.receiveOscParameters()
 
+    def stopReceiveOSC(self):
+        """OSC受信サーバ(UDP + OSCQuery HTTP + zeroconf監視)を停止する。
+
+        アプリ終了時(Controller.shutdown())専用の呼び出し口。
+        setOscIpAddress()/setOscPort()は再起動のため内部で直接
+        osc_handler.oscServerStop()を呼んでおり、このメソッドは経由しない。
+        以前はアプリ終了時にこれらを止める経路が無く(フェーズ3項目21で一度
+        「未使用」と判断され削除された`stopReceiveOSC`とは別の、実際に
+        呼ばれる経路として再設置)、OSCQueryのzeroconfサービス広告が
+        `close()`されないままプロセスが終了していた(バックエンドレビュー
+        フェーズ4項目30)。
+        """
+        self.ensure_initialized()
+        self.osc_handler.oscServerStop()
+
     def getIsOscQueryEnabled(self):
         self.ensure_initialized()
         return self.osc_handler.getIsOscQueryEnabled()
@@ -1457,9 +1704,14 @@ class Model:
         version = ""
         try:
             if config.SELECTED_RELEASE_CHANNEL == "beta":
+                # beta を使っている間は beta 同士でのみ最新判定する。
+                # ここで prerelease を絞らないと、GitHub の公開順(作成日時順)
+                # によっては後から出た stable 版が候補[0]に来てしまい、
+                # betaユーザーにstableへの「更新あり」通知が出てしまう。
                 candidates = [
                     r["name"] for r in Model._fetchGithubReleases()
                     if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                    and r.get("prerelease", False)
                 ]
                 version = candidates[0] if candidates else None
             else:
@@ -1505,6 +1757,10 @@ class Model:
     # サフィックス。release.yml 側で <installer名>.sha256 という名前で
     # 追加アップロードしている前提。
     _SHA256_ASSET_SUFFIX = ".sha256"
+    # ".sha256" サイドカー (数十バイトの小さなファイル) の取得リトライ回数。
+    # これ1つの一時的な通信失敗で更新全体を止めてしまわないための保険。
+    # setup.exe 本体の _downloadSetup (5回) より軽い処理なので控えめに3回。
+    _SHA256_SIDECAR_ATTEMPTS = 3
 
     @staticmethod
     def _resolveReleaseForVersion(target_version: Optional[str] = None) -> Optional[dict]:
@@ -1520,9 +1776,11 @@ class Model:
                         return r
                 return None
             if config.SELECTED_RELEASE_CHANNEL == "beta":
+                # checkSoftwareUpdated() と同じ理由で prerelease のみに限定。
                 candidates = [
                     r for r in Model._fetchGithubReleases()
                     if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                    and r.get("prerelease", False)
                 ]
                 return candidates[0] if candidates else None
             response = requests_get(config.GITHUB_URL, timeout=_HTTP_TIMEOUT)
@@ -1537,25 +1795,50 @@ class Model:
     def _fetchExpectedSha256(release: Optional[dict]) -> Optional[str]:
         # release の assets から "<setup.exe名>.sha256" というサイドカー
         # アセットを探し、中身 (16進ダイジェスト文字列) を取得して返す。
-        # release.yml が SHA-256 を公開するようになる前の古いリリースには
-        # このアセットが存在しないため、その場合は None を返す。呼び出し側
-        # はこれを「検証不能」として扱い、サイズチェックのみへフォール
-        # バックする (古いバージョンの再インストール/ダウングレードが
-        # 完全にできなくなるのを避けるため)。
+        #
+        # 戻り値の意味:
+        #   - digest 文字列 : 期待する SHA-256 が取れた
+        #   - None          : この release には ".sha256" アセットが存在しない
+        #                     (この検証より前に公開された古い release)。呼び出し
+        #                     側はサイズチェックのみへフォールバックしてよい。
+        #                     古いバージョンの再インストール/ダウングレードを
+        #                     壊さないための措置。
+        # 例外 SetupSha256Unavailable:
+        #   ".sha256" アセットは存在するのに、リトライしても有効なダイジェスト
+        #   を取得できなかった。「検証対象が無い」のとは異なり、すり替えの
+        #   可能性を排除できないため、呼び出し側は更新を中止する。
         if not isinstance(release, dict):
             return None
         assets = release.get("assets")
         if not isinstance(assets, list):
             return None
-        for asset in assets:
-            if not isinstance(asset, dict):
-                continue
-            name = asset.get("name")
-            if not isinstance(name, str) or not name.endswith(Model._SHA256_ASSET_SUFFIX):
-                continue
-            url = asset.get("browser_download_url")
-            if not isinstance(url, str):
-                continue
+        sidecar_urls = [
+            asset["browser_download_url"]
+            for asset in assets
+            if isinstance(asset, dict)
+            and isinstance(asset.get("name"), str)
+            and asset["name"].endswith(Model._SHA256_ASSET_SUFFIX)
+            and isinstance(asset.get("browser_download_url"), str)
+        ]
+        if not sidecar_urls:
+            return None
+        for url in sidecar_urls:
+            digest = Model._fetchSha256Digest(url)
+            if digest is not None:
+                return digest
+        raise SetupSha256Unavailable(
+            f"{len(sidecar_urls)} '.sha256' sidecar asset(s) present on the "
+            "release but none yielded a valid SHA-256 digest after retrying"
+        )
+
+    @staticmethod
+    def _fetchSha256Digest(url: str) -> Optional[str]:
+        # ".sha256" は数十バイトの小さなファイルだが、これ1つの一時的な
+        # 取得失敗で更新全体を止めてしまわないよう _SHA256_SIDECAR_ATTEMPTS
+        # 回リトライする。有効な16進ダイジェスト (64桁) が取れなければ None。
+        # レスポンスは得られたが中身がチェックサムでない (空 / 途中で切れた /
+        # HTML エラーページ等) 場合も失敗扱いでリトライする。
+        for _ in range(Model._SHA256_SIDECAR_ATTEMPTS):
             try:
                 res = requests_get(url, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
@@ -1616,17 +1899,39 @@ class Model:
         return False
 
     @staticmethod
-    def updateSoftware(target_version: Optional[str] = None):
-        if target_version is not None and not Model._isVersionSupported(target_version):
-            return
+    def _downloadVerifiedSetup(target_version: Optional[str]) -> bool:
+        # GitHub Release を解決して期待する SHA-256 を求め、setup.exe を
+        # ダウンロード & 検証する。updateSoftware()/updateCudaSoftware() の
+        # 共通前処理。
+        #
+        # 戻り値 True  : VRCT_setup.exe がディスク上にあり起動して問題ない
+        # 戻り値 False : 呼び出し側は何も起動せず中止すること。内訳は
+        #   - ダウンロード or ハッシュ検証に失敗した (_downloadSetup が False)
+        #   - ".sha256" が公開されているのに取得できなかった
+        #     (SetupSha256Unavailable)。サイズチェックのみへは格下げしない。
         release = Model._resolveReleaseForVersion(target_version)
-        expected_sha256 = Model._fetchExpectedSha256(release)
+        try:
+            expected_sha256 = Model._fetchExpectedSha256(release)
+        except SetupSha256Unavailable:
+            printLog(
+                "Setup file SHA-256 sidecar was published for "
+                f"{target_version or 'the latest release'} but could not be "
+                "retrieved; aborting update (not falling back to size-only "
+                "validation)"
+            )
+            return False
         if expected_sha256 is None:
             printLog(
                 "Setup file SHA-256 could not be verified (no .sha256 asset found for "
                 f"{target_version or 'the latest release'}); falling back to size-only validation"
             )
-        if Model._downloadSetup(expected_sha256) is False:
+        return Model._downloadSetup(expected_sha256)
+
+    @staticmethod
+    def updateSoftware(target_version: Optional[str] = None):
+        if target_version is not None and not Model._isVersionSupported(target_version):
+            return
+        if not Model._downloadVerifiedSetup(target_version):
             return
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1644,14 +1949,7 @@ class Model:
     def updateCudaSoftware(target_version: Optional[str] = None):
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
-        release = Model._resolveReleaseForVersion(target_version)
-        expected_sha256 = Model._fetchExpectedSha256(release)
-        if expected_sha256 is None:
-            printLog(
-                "Setup file SHA-256 could not be verified (no .sha256 asset found for "
-                f"{target_version or 'the latest release'}); falling back to size-only validation"
-            )
-        if Model._downloadSetup(expected_sha256) is False:
+        if not Model._downloadVerifiedSetup(target_version):
             return
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1718,12 +2016,14 @@ class Model:
             result = ["NoDevice"]
         return result
 
-    def startMicTranscript(self, fnc):
+    def startMicTranscript(self, fnc) -> bool:
         self.ensure_initialized()
         self._mic_session.transcript_fnc = fnc
         self._mic_session.reconfigure(transcript=True)
         if "transcript" in self._mic_session.features:
             self.changeMicTranscriptStatus()
+            return True
+        return False
 
     def resumeMicTranscript(self):
         self.ensure_initialized()
@@ -1772,10 +2072,11 @@ class Model:
         self.ensure_initialized()
         self._mic_session.reconfigure(energy=False)
 
-    def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> None:
+    def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> bool:
         self.ensure_initialized()
         self._speaker_session.transcript_fnc = fnc
         self._speaker_session.reconfigure(transcript=True)
+        return "transcript" in self._speaker_session.features
 
     def stopSpeakerTranscript(self):
         self.ensure_initialized()
@@ -2084,16 +2385,62 @@ class Model:
         self.ensure_initialized()
         self.watchdog.setCallback(callback)
 
+    def stopTranslationExecutor(self):
+        """getInputTranslate() の並列化に使う常設プールを止める。
+
+        ThreadPoolExecutor のワーカーは非デーモンスレッドで、インタプリタ
+        終了時に atexit (concurrent.futures.thread._python_exit) で join
+        される。翻訳が詰まったままだと終了がそこで止まるため、shutdown()
+        から明示的に停止する。待たない (wait=False) のは、詰まっている
+        呼び出しに shutdown() を道連れにさせないため。
+
+        注意: shutdown(wait=False) が捨てるのは**まだ開始していない**
+        タスクだけで、既に実行中のワーカーは止まらない。つまりこの関数は
+        すぐ返るが、**プロセスが消えるのは実行中の呼び出しが返るまで
+        遅れうる**。その上限はエンジンによって違う:
+
+        - Google / Bing / Papago: _WEB_TRANSLATOR_TIMEOUT_SECONDS (10秒)
+        - LMStudio / Ollama / OpenRouter: 各プロバイダで timeout 指定あり
+        - OpenAI / OpenAI互換 / Groq / Gemini / Plamo: **明示指定なし**。
+          SDK の既定に従う (openai は read=600秒 × max_retries=2) ので
+          分単位になりうる
+
+        実機では終了遅延を観測していない。executor を使うのは
+        getInputTranslate (mic/chat のみ。speaker は getOutputTranslate の
+        同期呼び出しで通らない) で、shutdown() は先に文字起こしを止めて
+        いるため、停止の瞬間に翻訳が飛んでいる必要があるから。
+        なお watchdog エスカレーション経由の終了 (mainloop.py の
+        os._exit) は atexit を飛ばすのでこの経路に当たらない。
+
+        ここで安易に wait=True + タイムアウト付き join を足すと、
+        P-4 の初回修正と同じ「新たな終了遅延を作り込む」形になる。
+        実機で終了遅延が実際に出てから、上限の無いエンジン側に timeout を
+        入れる方向で直すこと。
+        """
+        executor = getattr(self, '_translation_executor', None)
+        if executor is not None:
+            executor.shutdown(wait=False, cancel_futures=True)
+
     def stopWatchdog(self):
         self.ensure_initialized()
-        if isinstance(self.th_watchdog, threadFnc):
-            self.th_watchdog.stop()
-            self.th_watchdog.join()
-            self.th_watchdog = None
+        # ダンプタイマーの解除を必ず先に行う。Watchdog.start() は末尾で
+        # time.sleep(self.interval) する (既定20秒) 一方、threadFnc.stop() は
+        # loop フラグを降ろすだけでこの sleep を中断できないため、join は
+        # 最大 interval 秒ブロックする。以前はこの解除が join の後ろにあり、
+        # shutdown() 側の _stopServiceForShutdown が5秒で諦めた時点で
+        # 一度も実行されず、「正常終了なのに freeze_trace.log へダンプが出る」
+        # という当初直したかった現象がそのまま残っていた (実機ログで確認)。
+        # 解除自体はスレッドと独立した faulthandler の操作なので先に行える。
         try:
             faulthandler.cancel_dump_traceback_later()
         except Exception:
             errorLogging()
+        if isinstance(self.th_watchdog, threadFnc):
+            self.th_watchdog.stop()
+            # 上記のとおり sleep は中断できないので join は無期限にしない。
+            # daemon thread なので、起きそこねてもプロセス終了時に破棄される。
+            self.th_watchdog.join(timeout=_WATCHDOG_JOIN_TIMEOUT_SEC)
+            self.th_watchdog = None
 
     def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""
@@ -2102,64 +2449,71 @@ class Model:
     def startWebSocketServer(self, host, port):
         """WebSocketサーバーを起動し、別スレッドで実行する"""
         self.ensure_initialized()
-        if self.websocket_server_alive is True:
-            # サーバーが既に起動している場合は何もしない
-            return
+        with self._websocket_lifecycle_lock:
+            if self.websocket_server_alive is True:
+                # サーバーが既に起動している場合は何もしない
+                return
 
-        self.websocket_server_loop = True
-        self.websocket_server_alive = False  # 初期状態を明示
+            self.websocket_server_loop = True
+            self.websocket_server_alive = False  # 初期状態を明示
 
-        async def WebSocketServerMain():
-            try:
-                self.websocket_server = WebSocketServer(
-                    host=host,
-                    port=port,
-                    token=config.WEBSOCKET_AUTH_TOKEN,
-                )
-                self.websocket_server.set_message_handler(self.message_handler)
-                self.websocket_server.start()
-                self.websocket_server_alive = True
+            async def WebSocketServerMain():
+                try:
+                    self.websocket_server = WebSocketServer(
+                        host=host,
+                        port=port,
+                        token=config.WEBSOCKET_AUTH_TOKEN,
+                    )
+                    self.websocket_server.set_message_handler(self.message_handler)
+                    self.websocket_server.start()
+                    self.websocket_server_alive = True
 
-                # イベントループが終了するまで待機
-                while self.websocket_server_loop:
-                    # self.websocket_server.send("Server is running...")
-                    await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
+                    # イベントループが終了するまで待機
+                    while self.websocket_server_loop:
+                        # self.websocket_server.send("Server is running...")
+                        await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
 
-            except Exception:
-                errorLogging()
-                # 具体的なエラー内容をログに残す場合
-                # self.logger.error(f"WebSocket server error: {str(e)}")
-            finally:
-                # 確実にサーバーを停止
-                if hasattr(self, 'websocket_server') and self.websocket_server:
-                    self.websocket_server.stop()
-                self.websocket_server_alive = False
+                except Exception:
+                    errorLogging()
+                    # 具体的なエラー内容をログに残す場合
+                    # self.logger.error(f"WebSocket server error: {str(e)}")
+                finally:
+                    # 確実にサーバーを停止
+                    if hasattr(self, 'websocket_server') and self.websocket_server:
+                        self.websocket_server.stop()
+                    self.websocket_server_alive = False
 
-        self.th_websocket_server = Thread(target=lambda: asyncio.run(WebSocketServerMain()))
-        self.th_websocket_server.daemon = True
-        self.th_websocket_server.start()
+            self.th_websocket_server = Thread(target=lambda: asyncio.run(WebSocketServerMain()))
+            self.th_websocket_server.daemon = True
+            self.th_websocket_server.start()
 
     def stopWebSocketServer(self):
         """WebSocketサーバーを停止する"""
         self.ensure_initialized()
-        if not hasattr(self, 'th_websocket_server') or self.th_websocket_server is None:
-            return
+        with self._websocket_lifecycle_lock:
+            if not hasattr(self, 'th_websocket_server') or self.th_websocket_server is None:
+                return
 
-        self.websocket_server_loop = False
+            self.websocket_server_loop = False
 
-        try:
-            # 一定時間待機してからタイムアウト
-            self.th_websocket_server.join(timeout=2.0)
+            try:
+                # 一定時間待機してからタイムアウト
+                self.th_websocket_server.join(timeout=2.0)
 
-            if self.th_websocket_server.is_alive():
-                # タイムアウト後もスレッドが生きている場合の処理
-                self.logger.warning("WebSocket server thread did not terminate properly")
-        except Exception:
-            errorLogging()
-        finally:
-            self.th_websocket_server = None
-            self.websocket_server = None
-            self.websocket_server_alive = False
+                if self.th_websocket_server.is_alive():
+                    # タイムアウト後もスレッドが生きている場合の処理。
+                    # 以前はself.logger.warning(...)だったが、self.loggerは
+                    # LOGGER_FEATURE無効時(既定)はNoneのため、この警告経路
+                    # 自体がAttributeErrorになり本来のメッセージが記録され
+                    # ずに失われていた(バックエンドレビュー フェーズ4
+                    # 項目32)。self.loggerに依存しないprintLogに変更。
+                    printLog("WebSocket server thread did not terminate properly")
+            except Exception:
+                errorLogging()
+            finally:
+                self.th_websocket_server = None
+                self.websocket_server = None
+                self.websocket_server_alive = False
 
     def checkWebSocketServerAlive(self):
         """WebSocketサーバーの稼働状態を確認する"""

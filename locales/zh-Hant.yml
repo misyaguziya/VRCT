@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "未偵測到麥克風裝置。"
     no_device_speaker: "未偵測到喇叭裝置。"
+    copy_to_clipboard_failed: "複製到剪貼簿失敗。"
     threshold_invalid_value: "可以設置 {{min}} 到 {{max}} 之間的值。"
     failed_download_weight_ctranslate2: "CTranslate2 模型下載失敗。"
     failed_download_weight_whisper: "Whisper 模型下載失敗。"
@@ -24,6 +25,8 @@ common_error:
     invalid_value_speaker_record_timeout: "不能大於「{{speaker_phrase_timeout_label}}」，應為 0 或更高。"
     invalid_value_speaker_phrase_timeout: "不能小於「{{speaker_record_timeout_label}}」，應為 0 或更高。"
     invalid_value_speaker_max_phrase: "可以設置 0 或更高的數值。"
+
+    invalid_hex_color: "請輸入有效的 HEX 顏色代碼（例：{{brand_color_hex}}）格式。"
 
 common_warning:
     unable_to_use_osc_query: "由於 OSC IP Address 的設定無法接收 OSC 資料，以下功能已自動停用。"
@@ -65,45 +68,29 @@ main_page:
     updating: "正在更新..."
 
 update_modal:
-    cpu_desc: "僅使用 CPU 作為處理裝置"
-    cuda_desc: "可選擇 CPU 和 NVIDIA GPU 作為處理裝置"
-    cuda_compare_cpu_desc: "選擇 GPU 時，與 CPU 相比處理更快"
-    cuda_disk_space_desc: "需要約 {{size}} 的磁碟空間"
-    close_modal: "關閉"
-    download_latest_and_restart: "將下載最新版本，\n應用程式將自動重新啟動。"
-    is_latest_version_already: "已在使用最新版本"
-    is_current_compute_device: "目前使用的版本"
     title: "更新"
-    hero_update_available: "有可用更新"
-    hero_up_to_date: "最新版本"
-    hero_up_to_date_desc: "您正在使用最新版本，無需更新。"
-    hero_custom_pending: "以此設定安裝"
-    current_prefix: "目前："
+    summary_up_to_date_desc: "您正在使用最新版本，無需更新。"
     channel_stable: "穩定版"
     channel_beta: "測試版"
     compute_mode_cpu: "CPU 版"
-    compute_mode_gpu: "GPU 版 (CUDA)"
-    beta_suffix: "測試版"
-    latest_suffix: "最新"
-    install_latest_button: "立即更新"
-    install_button: "以此設定更新"
-    close_button: "關閉"
+    compute_mode_cuda: "GPU 版 (CUDA)"
+    latest_label: "最新"
+    install_latest_button: "更新至最新版本"
+    install_button: "以此設定重新安裝"
     section_pick_variant: "選擇其他版本或組建"
-    refresh_button: "重新整理"
-    refresh_button_title: "取得最新的版本清單"
+    refresh_button: "檢查更新"
     channel_label: "發布頻道"
     channel_desc: "測試版可搶先體驗新功能，但可能不穩定。"
     compute_mode_label: "裝置組建"
-    compute_mode_desc: "GPU 版可在 NVIDIA GPU 上高速運行，但下載體積約大 5GB。"
+    compute_mode_desc: "GPU 版可在 NVIDIA GPU 上高速運行，但需要約 5GB 的額外磁碟空間。"
     version_label: "要安裝的版本"
     version_desc: "可從所選頻道公開發布的版本中選擇。"
     no_versions_available: "所選頻道暫無可用版本。"
     change_col_current: "目前"
     change_col_after: "安裝後"
     warn_downgrade: "這是從 {{from}} 到 {{to}} 的降級。設定檔的相容性無法保證。"
-    warn_gpu_extra_size: "GPU 版大約需要 5GB 的額外下載。"
-    warn_switch_to_beta: "將切換至測試版頻道，之後的更新通知也將以測試版為主。"
-    warn_switch_to_stable: "將切換至穩定版頻道，之後的更新通知也將以穩定版為主。"
+    warn_cuda_extra_size: "GPU 版大約需要 5GB 的額外下載。"
+    warn_switch_channel: "將切換至{{channel}}頻道，之後的更新通知也將以{{channel}}為主。"
 
 config_page:
     common:
@@ -136,7 +123,6 @@ config_page:
         transcription: "語音辨識"
         others: "其他"
         hotkeys: "快捷鍵"
-        plugins: "外掛程式"
         advanced_settings: "進階設定"
         updater: "更新"
 
@@ -407,6 +393,9 @@ config_page:
 
     hotkeys:
         input_placeholder: "請輸入按鍵組合"
+        disabled_notice: "※開啟設定頁面時，為防止誤操作，快捷鍵功能會暫時停用。"
+        error_in_use: "「{{action_name}}」的快捷鍵（{{hotkey}}）已在其他位置使用，無法註冊。"
+        error_failed_to_register_at_launch: "「{{action_name}}」的快捷鍵（{{hotkey}}）正被其他應用程式使用，無法啟用。"
         toggle_vrct_visibility:
             label: "切換 VRCT 最小化/啟動"
         toggle_translation:
@@ -415,18 +404,6 @@ config_page:
             label: "切換「{{transcription_send}}」開/關"
         toggle_transcription_receive:
             label: "切換「{{transcription_receive}}」開/關"
-
-    plugins:
-        downloaded_version: "已下載版本：{{downloaded_version}}"
-        latest_version: "最新版本：{{latest_version}}"
-        available_after_updating: "更新到最新版後可用"
-        unavailable_downloaded: "目前不可用 與使用中的 VRCT 版本不相容"
-        no_latest_info: "無法取得最新資訊"
-        using_latest_version: "正在使用最新版本"
-        available_latest_version: "最新版本可用"
-        unavailable_latest_version: "最新版本目前不可用"
-        available_in_latest_vrct_version: "可在 VRCT 最新版中使用"
-        unavailable_not_downloaded: "目前不可用"
 
     advanced_settings:
         osc_ip_address:
@@ -471,18 +448,3 @@ config_page:
     notifications:
         save_success: "設定已儲存。"
         opened_folder: "已開啟檔案夾。"
-
-plugin_notifications:
-    downloading: "正在下載外掛程式。"
-    downloaded_success: "外掛程式下載完成。"
-    downloaded_error: "外掛程式下載失敗。"
-
-    updating: "正在更新外掛程式。"
-    updated_success: "外掛程式更新完成。"
-    updated_error: "外掛程式更新失敗。"
-
-    disabled_out_of_support: "與目前版本不相容。已停用外掛程式。"
-    disabled_due_to_an_error: "外掛程式執行時偵測到錯誤。請向外掛程式開發者回報。"
-
-    is_enabled: "外掛程式已啟用。"
-    is_disabled: "外掛程式已停用。"

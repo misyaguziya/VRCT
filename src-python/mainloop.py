@@ -8,6 +8,21 @@ from typing import Any, Tuple
 from threading import Thread, Event, Lock, Timer
 from queue import Queue, Empty
 import logging
+import warnings
+
+# google-auth 2.42.0 以降は google/auth/transport/grpc.py の import 時に
+# 「grpcio < 1.83.0 は Post-Quantum Cryptography 非対応」という FutureWarning を
+# 出す。requirements では grpcio>=1.83.0 に更新済みなので通常は発火しないが、
+# 古い grpcio が残った開発環境向けのフォールバックとして残す。warnings.warn は
+# 既定で stderr に書かれ、フロントの StartPythonController が sidecar の stderr
+# 出力を致命的エラー通知に昇格させるため、良性の警告が「An error occurred」
+# ダイアログに化けてしまう。どの google import よりも前にフィルタを設定する。
+warnings.filterwarnings(
+    "ignore",
+    message=r"grpcio < 1\.83\.0 does not support Post-Quantum Cryptography.*",
+    category=FutureWarning,
+)
+
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
 
@@ -46,6 +61,10 @@ run_mapping = {
     "enable_translation":"/run/enable_translation",
     "enable_transcription_send":"/run/enable_transcription_send",
     "enable_transcription_receive":"/run/enable_transcription_receive",
+    "disable_transcription_send":"/set/disable/transcription_send",
+    "disable_transcription_receive":"/set/disable/transcription_receive",
+    "disable_check_mic_threshold":"/set/disable/check_mic_threshold",
+    "disable_check_speaker_threshold":"/set/disable/check_speaker_threshold",
 
     "connected_network":"/run/connected_network",
     "enable_ai_models":"/run/enable_ai_models",
@@ -382,9 +401,6 @@ mapping = {
     "/get/data/hotkeys": {"status": True, "variable":controller.getHotkeys},
     "/set/data/hotkeys": {"status": True, "variable":controller.setHotkeys},
 
-    "/get/data/plugins_status": {"status": True, "variable":controller.getPluginsStatus},
-    "/set/data/plugins_status": {"status": True, "variable":controller.setPluginsStatus},
-
     "/get/data/mic_avg_logprob": {"status": True, "variable":controller.getMicAvgLogprob},
     "/set/data/mic_avg_logprob": {"status": True, "variable":controller.setMicAvgLogprob},
 
@@ -565,7 +581,21 @@ mapping = {
     # "/run/stop_watchdog": {"status": True, "variable":controller.stopWatchdog},
 }
 
-init_mapping = {key:value for key, value in mapping.items() if key.startswith("/get/data/")}
+# 起動時の一括取得 (updateConfigSettings) から除外するエンドポイント。
+# init_mapping を舐め終えてから /run/initialization_complete を送る = UIの
+# ローディング解除がここの合計時間で決まるため、ネットワークI/Oを伴うものを
+# 入れてはいけない。available_releases は GitHub API への同期リクエスト
+# (timeout (10, 60)) で、起動を最大70秒遅らせうる。UI側は Updater.jsx の
+# マウント時に自分で /get/data/available_releases を叩くので、ここから
+# 外しても取得経路は失われない。
+_INIT_MAPPING_EXCLUDED_ENDPOINTS = frozenset({
+    "/get/data/available_releases",
+})
+
+init_mapping = {
+    key: value for key, value in mapping.items()
+    if key.startswith("/get/data/") and key not in _INIT_MAPPING_EXCLUDED_ENDPOINTS
+}
 controller.setInitMapping(init_mapping)
 
 DEFAULT_WORKER_COUNT = 3  # 必要なら増やす
@@ -661,6 +691,18 @@ class Main:
         self._threads.append(th_receiver)
 
     def _call_handler(self, endpoint: str, data: Any = None) -> tuple:
+        # 2026-08-27のバックエンドレビュー(フェーズ4項目29)で撤去した
+        # `time.sleep(0.2)`がここにあった。エンドポイントロックを保持した
+        # ままの待機で、ワーカー3本×5req/s=最大15req/sにスループットを
+        # 固定していた(起動時の`updateConfigSettings()`が近い100個の
+        # `/get/data/*`を舐めるため無視できない遅延だった)。コメントは
+        # 「処理の安定化のために少し待機」とあるだけで具体的な根拠は
+        # 無く、レビューア2名から「本来直すべき競合を隠している疑いが
+        # 強い」と指摘されていた。実際、当時無ロックだったOSCミュート同期
+        # (フェーズ1項目6)・Auto Select(項目7)・CTranslate2
+        # translator/tokenizer(項目10)はいずれもこの待機がたまたま時間差
+        # で競合を回避していた可能性があったが、フェーズ1〜3で全て専用の
+        # ロックが入ったため、この待機は撤去して問題ないと判断した。
         result = None
         status = 500
         handler = self.mapping.get(endpoint)
@@ -675,7 +717,6 @@ class Main:
                 response = handler["variable"](data)
                 status = response.get("status", 500)
                 result = response.get("result", None)
-                time.sleep(0.2)
             except Exception:
                 errorLogging()
                 result = "Internal error"

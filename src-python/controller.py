@@ -14,6 +14,7 @@ from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValid
 from errors import ErrorCode, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
+from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -32,6 +33,17 @@ _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
 # (8s) など、ロック保持中に自然完了しうる最長の単発処理より余裕を持たせつつ、
 # 万一ロックが本当に返ってこない場合でも終了処理自体を無期限に止めない。
 _SHUTDOWN_LIFECYCLE_LOCK_TIMEOUT_SEC = 20.0
+
+# shutdown() が OSC/WebSocket/OBS Browser Source/Overlay の各停止関数を
+# 待つ上限(フェーズ4項目30)。いずれも自前でタイムアウト付きjoinを持つ設計
+# (OSCは serve_forever(0.5) 化により概ね0.5秒以内、WebSocket/OBSは
+# join(timeout=2.0)) だが、唯一 Overlay.shutdownOverlay() の
+# thread_overlay.join() だけは現状無タイムアウトのまま(フェーズ4項目31で
+# 対応予定)。ここで一律に境界を設けることで、万一そのいずれかが想定外に
+# 詰まっても shutdown() 自体は無期限にハングしない(_stopLockedForShutdownと
+# 同じ考え方)。タイムアウトした場合、対象スレッドはdaemonのまま走らせて
+# 諦める(=リソースはプロセス終了が最終的に片付ける)。
+_SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC = 5.0
 
 # TRANSLATION_PROVIDER_REGISTRY (フェーズ3項目17) 登録エンジンの
 # 「認証/モデル一覧取得/モデル変更/クライアント更新」を model.py の
@@ -200,7 +212,6 @@ _SIMPLE_CONFIG_GETTERS = {
     "getSpeakerPhraseTimeout": "SPEAKER_PHRASE_TIMEOUT",
     "getSpeakerMaxPhrases": "SPEAKER_MAX_PHRASES",
     "getHotkeys": "HOTKEYS",
-    "getPluginsStatus": "PLUGINS_STATUS",
     "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
     "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
     "getOscIpAddress": "OSC_IP_ADDRESS",
@@ -347,6 +358,28 @@ class Controller:
         except Exception:
             errorLogging()
 
+    @staticmethod
+    def _stopServiceForShutdown(stop_fn: Callable[[], None], label: str) -> None:
+        """shutdown() 専用: stop_fn() を最大 _SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC
+        秒の別スレッドで実行する。OSC/WebSocket/OBS Browser Source/Overlayの
+        各停止処理を、詰まっても shutdown() 自体を道連れにしない形で呼ぶための
+        共通ヘルパー(フェーズ4項目30)。
+        """
+        def _run() -> None:
+            try:
+                stop_fn()
+            except Exception:
+                errorLogging()
+
+        thread = Thread(target=_run, daemon=True)
+        thread.start()
+        thread.join(timeout=_SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC)
+        if thread.is_alive():
+            printLog(
+                f"shutdown: {label} の停止が {_SHUTDOWN_SERVICE_STOP_TIMEOUT_SEC}s "
+                "でタイムアウトしました(プロセス終了時に破棄されます)"
+            )
+
     def shutdown(self, *args, **kwargs) -> dict:
         """Shutdown controller and model (including telemetry).
 
@@ -369,6 +402,10 @@ class Controller:
         # 残る。stopMonitoring() より前に呼ぶ: 後で呼ぶと
         # _syncMonitoringLifecycleLocked() が「もう片方はまだ active」と見て
         # 監視スレッドを再起動してしまう。
+        try:
+            device_manager.setDeviceListMonitoringActive(False)
+        except Exception:
+            errorLogging()
         try:
             device_manager.setMicAutoActive(False)
         except Exception:
@@ -407,6 +444,25 @@ class Controller:
         self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopSpeakerTranscript, "speaker transcript")
         self._stopLockedForShutdown(self.mic_lifecycle_lock, model.stopCheckMicEnergy, "mic energy")
         self._stopLockedForShutdown(self.speaker_lifecycle_lock, model.stopCheckSpeakerEnergy, "speaker energy")
+        # OSC / WebSocket / OBS Browser Source / Overlay も明示的に停止する
+        # (フェーズ4項目30)。以前はここが抜けており daemon thread としての
+        # プロセス終了任せになっていた: OSCQueryはzeroconfでサービス広告を
+        # 出しているため、close()無しの終了は他アプリ側に無効なレコードを
+        # 残す。呼び出し順は「依存する側を先に」— OBS Browser SourceはWebSocket
+        # サーバ経由でメッセージを受け取るため、OBSを先に止める。
+        self._stopServiceForShutdown(model.stopReceiveOSC, "OSC receive server")
+        self._stopServiceForShutdown(model.stopObsBrowserSourceServer, "OBS browser source server")
+        self._stopServiceForShutdown(model.stopWebSocketServer, "WebSocket server")
+        self._stopServiceForShutdown(model.shutdownOverlay, "Overlay")
+        # watchdog も明示停止する。init() が startWatchdog() で武装する
+        # faulthandler.dump_traceback_later が残ったままだと、フロントエンドは
+        # 終了操作と同時に feed を止めるため、プロセスが (interval + 15秒)
+        # 以上生き残った場合に「正常終了なのに freeze_trace.log へフリーズ
+        # ダンプが出る」。この計装はフリーズ調査の一次情報源なので汚さない。
+        self._stopServiceForShutdown(model.stopWatchdog, "watchdog")
+        # 翻訳の常設プール。非デーモンスレッドなので、止めないと
+        # インタプリタ終了時の atexit join で終了が止まりうる。
+        self._stopServiceForShutdown(model.stopTranslationExecutor, "translation executor")
         try:
             # A setting changed in the last few seconds may still be sitting
             # in the debounce timer rather than on disk; flush it now so a
@@ -458,6 +514,7 @@ class Controller:
         )
 
     def updateMicDeviceList(self) -> None:
+        self._synchronizeMicSelectionAfterDeviceUpdate()
         self.run(
             200,
             self.run_mapping["selectable_mic_device_list"],
@@ -465,17 +522,250 @@ class Controller:
         )
 
     def updateSpeakerDeviceList(self) -> None:
+        self._synchronizeSpeakerSelectionAfterDeviceUpdate()
         self.run(
             200,
             self.run_mapping["selectable_speaker_device_list"],
             model.getListSpeakerDevice(),
         )
 
+    @staticmethod
+    def _isMicSelectionAvailable(host: str, device: str) -> bool:
+        if host == "NoHost" or device == "NoDevice":
+            return False
+        try:
+            return any(
+                item.get("name") == device
+                for item in device_manager.getMicDevices().get(host, [])
+            )
+        except Exception:
+            errorLogging()
+            return False
+
+    @staticmethod
+    def _getAvailableDefaultMicSelection() -> Optional[tuple[str, str]]:
+        try:
+            default = device_manager.getDefaultMicDevice()
+            host = default.get("host", {}).get("name", "NoHost")
+            device = default.get("device", {}).get("name", "NoDevice")
+            if Controller._isMicSelectionAvailable(host, device):
+                return host, device
+        except Exception:
+            errorLogging()
+        # デバイス抜去直後は、OS の既定デバイス情報だけが一時的に
+        # NoDevice になることがある。一覧に実デバイスが残っていれば、
+        # Auto Select ON ではその先頭を fallback として使う。
+        try:
+            for host, devices in device_manager.getMicDevices().items():
+                if host == "NoHost":
+                    continue
+                for item in devices:
+                    device = item.get("name")
+                    if device != "NoDevice" and isinstance(device, str):
+                        return host, device
+        except Exception:
+            errorLogging()
+        return None
+
+    @staticmethod
+    def _isSpeakerSelectionAvailable(device: str) -> bool:
+        if device == "NoDevice":
+            return False
+        try:
+            return any(
+                item.get("name") == device
+                for item in device_manager.getSpeakerDevices()
+            )
+        except Exception:
+            errorLogging()
+            return False
+
+    @staticmethod
+    def _getAvailableDefaultSpeakerSelection() -> Optional[str]:
+        try:
+            default = device_manager.getDefaultSpeakerDevice()
+            device = default.get("device", {}).get("name", "NoDevice")
+            if Controller._isSpeakerSelectionAvailable(device):
+                return device
+        except Exception:
+            errorLogging()
+        # Mic と同様、抜去直後に OS の既定値が NoDevice でも、検出済みの
+        # loopback デバイスが残っていれば Auto Select で継続できる。
+        try:
+            for item in device_manager.getSpeakerDevices():
+                device = item.get("name")
+                if device != "NoDevice" and isinstance(device, str):
+                    return device
+        except Exception:
+            errorLogging()
+        return None
+
+    def _setNoMicDeviceSelection(self) -> None:
+        config.SELECTED_MIC_HOST = "NoHost"
+        config.SELECTED_MIC_DEVICE = "NoDevice"
+        self.run(200, self.run_mapping["selected_mic_host"], config.SELECTED_MIC_HOST)
+        self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
+
+    def _setNoSpeakerDeviceSelection(self) -> None:
+        config.SELECTED_SPEAKER_DEVICE = "NoDevice"
+        self.run(
+            200,
+            self.run_mapping["selected_speaker_device"],
+            config.SELECTED_SPEAKER_DEVICE,
+        )
+
+    def _stopMicAudioAfterDeviceLoss(self) -> None:
+        """選択デバイス消失時に mic の Session を強制停止する。"""
+        with self.mic_lifecycle_lock:
+            for stop_fn in (model.stopMicTranscript, model.stopCheckMicEnergy):
+                try:
+                    stop_fn()
+                except Exception:
+                    errorLogging()
+
+    def _stopSpeakerAudioAfterDeviceLoss(self) -> None:
+        """選択デバイス消失時に speaker の Session を強制停止する。"""
+        with self.speaker_lifecycle_lock:
+            for stop_fn in (model.stopSpeakerTranscript, model.stopCheckSpeakerEnergy):
+                try:
+                    stop_fn()
+                except Exception:
+                    errorLogging()
+
+    def _reconfigureMicAfterDeviceFallback(self) -> None:
+        """fallback 先へ切り替えた稼働中の mic Session を再構成する。"""
+        if not (
+            config.ENABLE_TRANSCRIPTION_SEND is True
+            or config.ENABLE_CHECK_ENERGY_SEND is True
+        ):
+            return
+        worker = getattr(model, "mic_lifecycle_worker", None)
+        if worker is not None:
+            worker.enqueue(
+                self._reopenMicAudioOnDeviceChange,
+                coalesce_key="mic_device_fallback",
+            )
+        else:
+            self._reopenMicAudioOnDeviceChange()
+
+    def _reconfigureSpeakerAfterDeviceFallback(self) -> None:
+        """fallback 先へ切り替えた稼働中の speaker Session を再構成する。"""
+        if not (
+            config.ENABLE_TRANSCRIPTION_RECEIVE is True
+            or config.ENABLE_CHECK_ENERGY_RECEIVE is True
+        ):
+            return
+        worker = getattr(model, "speaker_lifecycle_worker", None)
+        if worker is not None:
+            worker.enqueue(
+                self._reopenSpeakerAudioOnDeviceChange,
+                coalesce_key="speaker_device_fallback",
+            )
+        else:
+            self._reopenSpeakerAudioOnDeviceChange()
+
+    def _disableAudioAfterDeviceLoss(self, source: str) -> None:
+        """選択デバイス消失時に録音機能と UI 状態を停止する。"""
+        if source == "mic":
+            transcription_was_enabled = config.ENABLE_TRANSCRIPTION_SEND is True
+            energy_was_enabled = config.ENABLE_CHECK_ENERGY_SEND is True
+            config.ENABLE_TRANSCRIPTION_SEND = False
+            config.ENABLE_CHECK_ENERGY_SEND = False
+            worker = getattr(model, "mic_lifecycle_worker", None)
+            stop_fn = self._stopMicAudioAfterDeviceLoss
+            transcription_endpoint = self.run_mapping.get(
+                "disable_transcription_send", "/set/disable/transcription_send"
+            )
+            energy_endpoint = self.run_mapping.get(
+                "disable_check_mic_threshold", "/set/disable/check_mic_threshold"
+            )
+        elif source == "speaker":
+            transcription_was_enabled = config.ENABLE_TRANSCRIPTION_RECEIVE is True
+            energy_was_enabled = config.ENABLE_CHECK_ENERGY_RECEIVE is True
+            config.ENABLE_TRANSCRIPTION_RECEIVE = False
+            config.ENABLE_CHECK_ENERGY_RECEIVE = False
+            worker = getattr(model, "speaker_lifecycle_worker", None)
+            stop_fn = self._stopSpeakerAudioAfterDeviceLoss
+            transcription_endpoint = self.run_mapping.get(
+                "disable_transcription_receive", "/set/disable/transcription_receive"
+            )
+            energy_endpoint = self.run_mapping.get(
+                "disable_check_speaker_threshold", "/set/disable/check_speaker_threshold"
+            )
+        else:
+            return
+
+        if transcription_was_enabled:
+            self.run(200, transcription_endpoint, False)
+        if energy_was_enabled:
+            self.run(200, energy_endpoint, False)
+        if transcription_was_enabled or energy_was_enabled:
+            if worker is not None:
+                worker.enqueue(stop_fn, coalesce_key=f"{source}_device_loss_stop")
+            else:
+                stop_fn()
+
+    def _synchronizeMicSelectionAfterDeviceUpdate(self) -> None:
+        """一覧更新後に、消失した mic 選択値を現在の状態へ同期する。"""
+        selected_host = config.SELECTED_MIC_HOST
+        selected_device = config.SELECTED_MIC_DEVICE
+        if self._isMicSelectionAvailable(selected_host, selected_device):
+            return
+
+        fallback = self._getAvailableDefaultMicSelection()
+        if fallback is not None:
+            self.updateSelectedMicDevice(*fallback)
+            # Auto ON は既存の Before/After callback が stop→restart を
+            # 担当する。Auto OFF ではここで選択だけ更新すると既存の
+            # Session が抜去済みデバイスを保持するため、worker 経由で
+            # 現在の features を維持したまま再構成する。
+            if config.AUTO_MIC_SELECT is False:
+                self._reconfigureMicAfterDeviceFallback()
+            return
+
+        # 検出済みデバイスが一台もない場合だけ NoDevice にする。
+        if selected_host != "NoHost" or selected_device != "NoDevice":
+            self._setNoMicDeviceSelection()
+        if (
+            config.ENABLE_TRANSCRIPTION_SEND is True
+            or config.ENABLE_CHECK_ENERGY_SEND is True
+        ):
+            self._disableAudioAfterDeviceLoss("mic")
+
+    def _synchronizeSpeakerSelectionAfterDeviceUpdate(self) -> None:
+        """一覧更新後に、消失した speaker 選択値を現在の状態へ同期する。"""
+        selected_device = config.SELECTED_SPEAKER_DEVICE
+        if self._isSpeakerSelectionAvailable(selected_device):
+            return
+
+        fallback = self._getAvailableDefaultSpeakerSelection()
+        if fallback is not None:
+            self.updateSelectedSpeakerDevice(fallback)
+            if config.AUTO_SPEAKER_SELECT is False:
+                self._reconfigureSpeakerAfterDeviceFallback()
+            return
+
+        if selected_device != "NoDevice":
+            self._setNoSpeakerDeviceSelection()
+        if (
+            config.ENABLE_TRANSCRIPTION_RECEIVE is True
+            or config.ENABLE_CHECK_ENERGY_RECEIVE is True
+        ):
+            self._disableAudioAfterDeviceLoss("speaker")
+
     def updateConfigSettings(self) -> None:
         settings = {}
         for endpoint, dict_data in self.init_mapping.items():
-            response = dict_data["variable"](None)
-            result = response.get("result", None)
+            # 1つのgetterが例外を投げるとinit()がここで死に、
+            # /run/initialization_complete が永久に送られずUIがローディング
+            # 画面のまま固まる。値が取れなかった項目はNoneにして続行する。
+            try:
+                response = dict_data["variable"](None)
+                result = response.get("result", None)
+            except Exception:
+                errorLogging()
+                printLog(f"updateConfigSettings: failed to collect {endpoint}")
+                result = None
             settings[endpoint] = result
         self.run(
             200,
@@ -633,100 +923,119 @@ class Controller:
                     error_response["result"],
                 )
 
-    def micMessage(self, result: dict) -> None:
-        if config.VRC_MIC_MUTE_SYNC is True and model.mic_mute_status is True:
-            return
+    def _processMessage(
+        self,
+        spec: MessageDirectionSpec,
+        message: str,
+        language: Optional[str],
+        msg_id: Optional[str] = None,
+        asr_ms: Optional[int] = None,
+    ) -> Optional[dict]:
+        """mic/speaker/chatMessage共通のパイプライン(バックエンドレビュー
+        フェーズ3項目25、`MessageDirectionSpec`参照)。
 
-        if result.get("recognition_error") is True:
+        「ワードフィルタ→繰り返し検出→翻訳→transliteration→OSC送信→
+        オーバーレイ更新→(mic限定)クリップボード→UI配信→WebSocket送信→
+        ロガー→履歴記録」を`spec`の差分だけで吸収する。呼び出し元は
+        非空メッセージであることを保証してから呼ぶこと。
+
+        `spec.delivery=="push"`の場合は内部で`self.run()`を呼び`None`を
+        返す。`"return"`(chat)の場合は`{"id", "original", "translations"}`
+        を返す(呼び出し元が`{"status":200,"result":...}`に包む)。
+        ワードフィルタ・繰り返し検出・VRAMエラーで早期returnした場合は
+        `model.addTranslationHistory`を呼ばない(旧実装の挙動を踏襲)。
+        """
+        if spec.has_word_filter and model.checkKeywords(message):
             self.run(
                 200,
-                self.run_mapping["transcription_recognition_error"],
-                {"message": "Mic speech recognition request failed. Check your network connection.", "data": None},
+                self.run_mapping["word_filter"],
+                {"message": f"Detected by word filter: {message}"},
             )
+            return None
 
-        message = result["text"]
-        language = result["language"]
-        if isinstance(message, bool) and message is False:
-            self.run(
-                400,
-                self.run_mapping["error_device"],
-                {
-                    "message":"No mic device detected",
-                    "data": None
-                },
-            )
+        if spec.repeat_detector_attr is not None and getattr(model, spec.repeat_detector_attr)(message):
+            return None
 
-        elif isinstance(message, str) and len(message) == 0:
+        # 「発話終了から画面表示まで」の内訳を実測するための計装
+        # (再評価 2026-09-14 M-1)。ワードフィルタ/繰り返し検出で早期 return
+        # した場合は出力自体が無いので測らない。
+        pipeline_started_at = time.perf_counter()
+        translate_elapsed_ms = 0
+
+        translation: list = []
+        if config.ENABLE_TRANSLATION is False:
             pass
-
-        elif isinstance(message, str) and len(message) > 0:
-            translation = []
-            transliteration_message = []
-            transliteration_translation = []
-            if model.checkKeywords(message):
-                self.run(
-                    200,
-                    self.run_mapping["word_filter"],
-                    {"message":f"Detected by word filter: {message}"},
-                )
-                return
-            elif model.detectRepeatSendMessage(message):
-                return
-            elif config.ENABLE_TRANSLATION is False:
-                pass
-            else:
-                try:
-                    translation, success = model.getInputTranslate(message, source_language=language)
-                    if all(success) is not True:
-                        self.changeToCTranslate2Process()
-                        error_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_ENGINE_LIMIT,
-                            data=None
-                        )
-                        self.run(
-                            error_response["status"],
-                            self.run_mapping["error_translation_engine"],
-                            error_response["result"],
-                        )
-                    else:
-                        pass
-                except Exception as e:
-                    # VRAM不足エラーの検出
-                    is_vram_error, error_message = model.detectVRAMError(e)
-                    if is_vram_error:
-                        error_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_VRAM_MIC,
-                            data=error_message
-                        )
-                        self.run(
-                            error_response["status"],
-                            self.run_mapping["error_translation_mic_vram_overflow"],
-                            error_response["result"],
-                        )
-                        # 翻訳機能をOFFにする
-                        self.setDisableTranslation()
-                        disable_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_DISABLED_VRAM,
-                            data=False
-                        )
-                        self.run(
-                            disable_response["status"],
-                            self.run_mapping["enable_translation"],
-                            disable_response["result"],
-                        )
-                        return
-                    else:
-                        # その他のエラーは通常通り処理
-                        raise
-
-            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
-                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                    transliteration_message = model.convertMessageToTransliteration(
-                        message,
-                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+        else:
+            translate_started_at = time.perf_counter()
+            try:
+                translate = getattr(model, spec.translate_attr)
+                translation, success = translate(message, source_language=language)
+                if all(success) is not True:
+                    self.changeToCTranslate2Process()
+                    error_response = VRCTError.create_error_response(
+                        ErrorCode.TRANSLATION_ENGINE_LIMIT,
+                        data=None
                     )
+                    self.run(
+                        error_response["status"],
+                        self.run_mapping["error_translation_engine"],
+                        error_response["result"],
+                    )
+            except Exception as e:
+                # VRAM不足エラーの検出
+                is_vram_error, error_message = model.detectVRAMError(e)
+                if not is_vram_error:
+                    # その他のエラーは通常通り処理
+                    raise
+                error_response = VRCTError.create_error_response(
+                    spec.vram_error_code,
+                    data=error_message
+                )
+                self.run(
+                    error_response["status"],
+                    self.run_mapping[spec.vram_run_mapping_key],
+                    error_response["result"],
+                )
+                # 翻訳機能をOFFにする
+                self.setDisableTranslation()
+                disable_response = VRCTError.create_error_response(
+                    ErrorCode.TRANSLATION_DISABLED_VRAM,
+                    data=False
+                )
+                self.run(
+                    disable_response["status"],
+                    self.run_mapping["enable_translation"],
+                    disable_response["result"],
+                )
+                if spec.delivery == "return":
+                    # エラー時は翻訳なしで返す
+                    return {
+                        "id": msg_id,
+                        "original": {"message": message, "transliteration": []},
+                        "translations": [
+                            {"message": "", "transliteration": []}
+                            for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
+                        ],
+                    }
+                return None
+            finally:
+                translate_elapsed_ms = round((time.perf_counter() - translate_started_at) * 1000)
 
+        transliteration_message: List[Any] = []
+        transliteration_translation: list = []
+        if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+            if spec.own_transliteration_source == "your_language":
+                own_message_is_japanese = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese"
+            else:
+                own_message_is_japanese = language == "Japanese"
+            if own_message_is_japanese:
+                transliteration_message = model.convertMessageToTransliteration(
+                    message,
+                    hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                    romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                )
+
+            if spec.multi_target:
                 for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
                     if (config.ENABLE_TRANSLATION is True and
                         config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
@@ -742,171 +1051,6 @@ class Controller:
                     else:
                         transliteration_translation.append([])
             else:
-                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
-
-            if config.ENABLE_TRANSCRIPTION_SEND is True:
-                if config.SEND_MESSAGE_TO_VRC is True:
-                    if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
-                        if config.ENABLE_TRANSLATION is False:
-                            osc_message = self.messageFormatter("SEND", [], message)
-                        else:
-                            osc_message = self.messageFormatter("SEND", translation, "")
-                    else:
-                        osc_message = self.messageFormatter("SEND", translation, message)
-                    model.oscSendMessage(osc_message)
-
-                self.run(
-                    200,
-                    self.run_mapping["transcription_mic"],
-                    {
-                        "original": {
-                            "message": message,
-                            "transliteration": transliteration_message
-                        },
-                        "translations": [
-                            {
-                                "message": translation_message,
-                                "transliteration": transliteration
-                            } for translation_message, transliteration in zip(translation, transliteration_translation)
-                        ]
-                    })
-
-                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
-                        if len(translation) > 0:
-                            overlay_image = model.createOverlayImageLargeLog(
-                                "send",
-                                None,
-                                None,
-                                translation,
-                                config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                                transliteration_message,
-                                transliteration_translation
-                            )
-                            model.updateOverlayLargeLog(overlay_image)
-                    else:
-                        overlay_image = model.createOverlayImageLargeLog(
-                            "send",
-                            message,
-                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
-                            translation,
-                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                            transliteration_message,
-                            transliteration_translation
-                        )
-                        model.updateOverlayLargeLog(overlay_image)
-
-                if config.ENABLE_CLIPBOARD is True:
-                    clipboard_message = self.messageFormatter("SEND", translation, message)
-                    model.setCopyToClipboardAndPasteFromClipboard(clipboard_message)
-
-                if model.checkWebSocketServerAlive() is True:
-                    model.websocketSendMessage(
-                        {
-                            "type":"SENT",
-                            "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                            "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                            "message":message,
-                            "translation":translation,
-                            "transliteration":transliteration_translation
-                        }
-                    )
-
-                if config.LOGGER_FEATURE is True:
-                    translation_text = f" ({'/'.join(translation)})" if translation else ""
-                    model.logger.info(f"[SENT] {message}{translation_text}")
-
-            model.addTranslationHistory("mic", message)
-
-    def speakerMessage(self, result:dict) -> None:
-        if result.get("recognition_error") is True:
-            self.run(
-                200,
-                self.run_mapping["transcription_recognition_error"],
-                {"message": "Speaker speech recognition request failed. Check your network connection.", "data": None},
-            )
-
-        message = result["text"]
-        language = result["language"]
-        if isinstance(message, bool) and message is False:
-            self.run(
-                400,
-                self.run_mapping["error_device"],
-                {
-                    "message":"No speaker device detected",
-                    "data": None
-                },
-            )
-        elif isinstance(message, str) and len(message) == 0:
-            pass
-        elif isinstance(message, str) and len(message) > 0:
-            translation = []
-            transliteration_message = []
-            transliteration_translation = []
-            if model.checkKeywords(message):
-                self.run(
-                    200,
-                    self.run_mapping["word_filter"],
-                    {"message":f"Detected by word filter: {message}"},
-                )
-                return
-            elif model.detectRepeatReceiveMessage(message):
-                return
-            elif config.ENABLE_TRANSLATION is False:
-                pass
-            else:
-                try:
-                    translation, success = model.getOutputTranslate(message, source_language=language)
-                    if all(success) is not True:
-                        self.changeToCTranslate2Process()
-                        error_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_ENGINE_LIMIT,
-                            data=None
-                        )
-                        self.run(
-                            error_response["status"],
-                            self.run_mapping["error_translation_engine"],
-                            error_response["result"],
-                        )
-                    else:
-                        pass
-                except Exception as e:
-                    # VRAM不足エラーの検出
-                    is_vram_error, error_message = model.detectVRAMError(e)
-                    if is_vram_error:
-                        error_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_VRAM_SPEAKER,
-                            data=error_message
-                        )
-                        self.run(
-                            error_response["status"],
-                            self.run_mapping["error_translation_speaker_vram_overflow"],
-                            error_response["result"],
-                        )
-                        # 翻訳機能をOFFにする
-                        self.setDisableTranslation()
-                        disable_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_DISABLED_VRAM,
-                            data=False
-                        )
-                        self.run(
-                            disable_response["status"],
-                            self.run_mapping["enable_translation"],
-                            disable_response["result"],
-                        )
-                        return
-                    else:
-                        # その他のエラーは通常通り処理
-                        raise
-
-            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
-                if language == "Japanese":
-                    transliteration_message = model.convertMessageToTransliteration(
-                        message,
-                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
-                    )
-
                 if (config.ENABLE_TRANSLATION is True and
                     config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese"
                     ):
@@ -919,103 +1063,226 @@ class Controller:
                     )
                 else:
                     transliteration_translation.append([])
+        else:
+            if spec.multi_target:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
             else:
                 transliteration_translation = [[]]
 
-            if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.OVERLAY_SMALL_LOG is True and self._is_overlay_available():
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
-                        if len(translation) > 0:
-                            overlay_image = model.createOverlayImageSmallLog(
-                                None,
-                                None,
-                                translation,
-                                config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                                transliteration_message,
-                                transliteration_translation
-                            )
-                            model.updateOverlaySmallLog(overlay_image)
+        payload = {
+            "original": {
+                "message": message,
+                "transliteration": transliteration_message
+            },
+            "translations": [
+                {
+                    "message": translation_message,
+                    "transliteration": transliteration
+                } for translation_message, transliteration in zip(translation, transliteration_translation)
+            ]
+        }
+
+        if spec.feature_gate_attr is None or getattr(config, spec.feature_gate_attr) is True:
+            if getattr(config, spec.osc_send_gate_attr) is True:
+                if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
+                    if config.ENABLE_TRANSLATION is False:
+                        osc_message = self.messageFormatter(spec.osc_format_type, [], message)
                     else:
+                        osc_message = self.messageFormatter(spec.osc_format_type, translation, "")
+                else:
+                    osc_message = self.messageFormatter(spec.osc_format_type, translation, message)
+                model.oscSendMessage(osc_message)
+
+            if spec.overlay_small_log and config.OVERLAY_SMALL_LOG is True and self._is_overlay_available():
+                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                    if len(translation) > 0:
                         overlay_image = model.createOverlayImageSmallLog(
-                            message,
-                            language,
+                            None,
+                            None,
                             translation,
                             config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
                             transliteration_message,
                             transliteration_translation
                         )
                         model.updateOverlaySmallLog(overlay_image)
+                else:
+                    overlay_image = model.createOverlayImageSmallLog(
+                        message,
+                        language,
+                        translation,
+                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        transliteration_message,
+                        transliteration_translation
+                    )
+                    model.updateOverlaySmallLog(overlay_image)
 
-                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
-                        if len(translation) > 0:
-                            overlay_image = model.createOverlayImageLargeLog(
-                                "receive",
-                                None,
-                                None,
-                                translation,
-                                config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                                transliteration_message,
-                                transliteration_translation
-                            )
-                            model.updateOverlayLargeLog(overlay_image)
-                    else:
+            if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
+                if spec.overlay_direction == "send":
+                    overlay_own_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+                    overlay_language_list = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                else:
+                    overlay_own_language = language
+                    overlay_language_list = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                    if len(translation) > 0:
                         overlay_image = model.createOverlayImageLargeLog(
-                            "receive",
-                            message,
-                            language,
+                            spec.overlay_direction,
+                            None,
+                            None,
                             translation,
-                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            overlay_language_list,
                             transliteration_message,
                             transliteration_translation
                         )
                         model.updateOverlayLargeLog(overlay_image)
-
-                if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
-                    if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
-                        if config.ENABLE_TRANSLATION is False:
-                            osc_message = self.messageFormatter("RECEIVED", [], message)
-                        else:
-                            osc_message = self.messageFormatter("RECEIVED", translation, "")
-                    else:
-                        osc_message = self.messageFormatter("RECEIVED", translation, message)
-                    model.oscSendMessage(osc_message)
-
-                # update textbox message log (Received)
-                self.run(
-                    200,
-                    self.run_mapping["transcription_speaker"],
-                    {
-                        "original": {
-                            "message": message,
-                            "transliteration": transliteration_message
-                        },
-                        "translations": [
-                            {
-                                "message": translation_message,
-                                "transliteration": transliteration
-                            } for translation_message, transliteration in zip(translation, transliteration_translation)
-                        ]
-                    })
-
-                if model.checkWebSocketServerAlive() is True:
-                    model.websocketSendMessage(
-                        {
-                            "type":"RECEIVED",
-                            "src_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                            "dst_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                            "message":message,
-                            "translation":translation,
-                            "transliteration":transliteration_translation
-                        }
+                else:
+                    overlay_image = model.createOverlayImageLargeLog(
+                        spec.overlay_direction,
+                        message,
+                        overlay_own_language,
+                        translation,
+                        overlay_language_list,
+                        transliteration_message,
+                        transliteration_translation
                     )
+                    model.updateOverlayLargeLog(overlay_image)
 
-                if config.LOGGER_FEATURE is True:
-                    translation_text = f" ({'/'.join(translation)})" if translation else ""
-                    model.logger.info(f"[RECEIVED] {message}{translation_text}")
+            if spec.clipboard and config.ENABLE_CLIPBOARD is True:
+                clipboard_message = self.messageFormatter(spec.osc_format_type, translation, message)
+                model.setCopyToClipboardAndPasteFromClipboard(clipboard_message)
 
-            model.addTranslationHistory("speaker", message)
+            if spec.delivery == "push":
+                self.run(200, self.run_mapping[spec.run_mapping_key], payload)
 
+            if model.checkWebSocketServerAlive() is True:
+                model.websocketSendMessage(
+                    {
+                        "type": spec.ws_type,
+                        "src_languages": getattr(config, spec.ws_src_languages_attr)[config.SELECTED_TAB_NO],
+                        "dst_languages": getattr(config, spec.ws_dst_languages_attr)[config.SELECTED_TAB_NO],
+                        "message": message,
+                        "translation": translation,
+                        "transliteration": transliteration_translation
+                    }
+                )
+
+            if config.LOGGER_FEATURE is True:
+                translation_text = f" ({'/'.join(translation)})" if translation else ""
+                model.logger.info(f"{spec.logger_prefix} {message}{translation_text}")
+
+        model.addTranslationHistory(spec.kind, message)
+
+        pipeline_elapsed_ms = round((time.perf_counter() - pipeline_started_at) * 1000)
+        # asr= は mic/speaker のみ (chat には ASR 段が無い)。
+        # output= は翻訳以外の全て (transliteration/OSC/オーバーレイ生成/
+        # クリップボード/UI配信/WebSocket/ロガー)。
+        # total= は ASR を含む「文字起こし結果が出てから出力完了まで」。
+        asr_part = f"asr={asr_ms}ms " if asr_ms is not None else ""
+        total_ms = pipeline_elapsed_ms + (asr_ms or 0)
+        printLog(
+            f"[latency][{spec.kind}] {asr_part}"
+            f"translate={translate_elapsed_ms}ms "
+            f"output={pipeline_elapsed_ms - translate_elapsed_ms}ms "
+            f"total={total_ms}ms"
+        )
+
+        if spec.delivery == "return":
+            return {"id": msg_id, **payload}
+        return None
+
+    def micMessage(self, result: dict) -> None:
+        if (
+            result.get("recognition_error") is not True
+            and config.VRC_MIC_MUTE_SYNC is True
+            and model.mic_mute_status is True
+        ):
+            return
+
+        if result.get("recognition_error") is True:
+            is_pipeline_error = all(
+                key in result for key in ("error_code", "stage", "source", "message", "recoverable")
+            )
+            if is_pipeline_error:
+                self._disableTranscriptionAfterPipelineError("mic")
+                error_payload = {
+                    "error_code": result["error_code"],
+                    "stage": result["stage"],
+                    "source": result["source"],
+                    "message": result["message"],
+                    "recoverable": result["recoverable"],
+                }
+            else:
+                # 既存の recognition_error 通知を受ける呼び出し元との互換性を
+                # 保つ。新しい音声パイプラインエラーは上の構造化 payload を使う。
+                error_payload = {
+                    "message": "Mic speech recognition request failed. Check your network connection.",
+                    "data": None,
+                }
+            self.run(
+                200,
+                self.run_mapping["transcription_recognition_error"],
+                error_payload,
+            )
+            return
+
+        message = result["text"]
+        language = result["language"]
+        if isinstance(message, bool) and message is False:
+            self.run(
+                400,
+                self.run_mapping["error_device"],
+                {
+                    "message":"No mic device detected",
+                    "data": None
+                },
+            )
+        elif isinstance(message, str) and len(message) > 0:
+            self._processMessage(MIC_MESSAGE_SPEC, message, language, asr_ms=result.get("asr_ms"))
+
+    def speakerMessage(self, result:dict) -> None:
+        if result.get("recognition_error") is True:
+            is_pipeline_error = all(
+                key in result for key in ("error_code", "stage", "source", "message", "recoverable")
+            )
+            if is_pipeline_error:
+                self._disableTranscriptionAfterPipelineError("speaker")
+                error_payload = {
+                    "error_code": result["error_code"],
+                    "stage": result["stage"],
+                    "source": result["source"],
+                    "message": result["message"],
+                    "recoverable": result["recoverable"],
+                }
+            else:
+                error_payload = {
+                    "message": "Speaker speech recognition request failed. Check your network connection.",
+                    "data": None,
+                }
+            self.run(
+                200,
+                self.run_mapping["transcription_recognition_error"],
+                error_payload,
+            )
+            return
+
+        message = result["text"]
+        language = result["language"]
+        if isinstance(message, bool) and message is False:
+            self.run(
+                400,
+                self.run_mapping["error_device"],
+                {
+                    "message":"No speaker device detected",
+                    "data": None
+                },
+            )
+        elif isinstance(message, str) and len(message) > 0:
+            self._processMessage(SPEAKER_MESSAGE_SPEC, message, language, asr_ms=result.get("asr_ms"))
+
+    # NOTE: mic/speaker/chat は MessageDirectionSpec (models/message_pipeline.py) へ
+    # 統合済みだが、OCR はこのマージ時点では旧来の個別実装のまま。OCRはOSCへ
+    # 送らない・小さいオーバーレイを使わない等の差分があり、統合には spec 側の
+    # 拡張が要るため、マージとは分けて対応する。
     def ocrMessage(self, result: dict) -> None:
         """Handle a chat-bubble OCR result and route it through translation.
 
@@ -1163,178 +1430,40 @@ class Controller:
             except Exception:
                 pass
 
+    def _disableTranscriptionAfterPipelineError(self, source: str) -> None:
+        """エラー停止後の実状態を config と UI に同期する。"""
+        if source == "mic":
+            config.ENABLE_TRANSCRIPTION_SEND = False
+            endpoint = self.run_mapping.get(
+                "disable_transcription_send", "/set/disable/transcription_send"
+            )
+        elif source == "speaker":
+            config.ENABLE_TRANSCRIPTION_RECEIVE = False
+            endpoint = self.run_mapping.get(
+                "disable_transcription_receive", "/set/disable/transcription_receive"
+            )
+        else:
+            return
+        # UI は既存の disable endpoint の run 通知を状態更新として処理する。
+        self.run(200, endpoint, False)
+
     def chatMessage(self, data) -> dict:
-        id = data["id"]
+        msg_id = data["id"]
         message = data["message"]
-        if len(message) > 0:
-            translation = []
-            transliteration_message: List[Any] = []
-            transliteration_translation = []
-            if config.ENABLE_TRANSLATION is False:
-                pass
-            else:
-                try:
-                    if config.USE_EXCLUDE_WORDS is True:
-                        replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
-                        translation, success = model.getInputTranslate(replacement_message)
-
-                        message = self.removeExclamations(message)
-                        for i in range(len(translation)):
-                            translation[i] = self.restoreText(translation[i], replacement_dict)
-                    else:
-                        translation, success = model.getInputTranslate(message)
-
-                    if all(success) is not True:
-                        self.changeToCTranslate2Process()
-                        error_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_ENGINE_LIMIT,
-                            data=None
-                        )
-                        self.run(
-                            error_response["status"],
-                            self.run_mapping["error_translation_engine"],
-                            error_response["result"],
-                        )
-                    else:
-                        pass
-                except Exception as e:
-                    # VRAM不足エラーの検出
-                    is_vram_error, error_message = model.detectVRAMError(e)
-                    if is_vram_error:
-                        error_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_VRAM_CHAT,
-                            data=error_message
-                        )
-                        self.run(
-                            error_response["status"],
-                            self.run_mapping["error_translation_chat_vram_overflow"],
-                            error_response["result"],
-                        )
-                        # 翻訳機能をOFFにする
-                        self.setDisableTranslation()
-                        disable_response = VRCTError.create_error_response(
-                            ErrorCode.TRANSLATION_DISABLED_VRAM,
-                            data=False
-                        )
-                        self.run(
-                            disable_response["status"],
-                            self.run_mapping["enable_translation"],
-                            disable_response["result"],
-                        )
-                        # エラー時は翻訳なしで返す
-                        return {"status":200,
-                                "result":
-                                {
-                                    "id":id,
-                                    "original": {
-                                        "message":message,
-                                        "transliteration":[]
-                                    },
-                                    "translations": [
-                                        {
-                                            "message": "",
-                                            "transliteration": []
-                                        } for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
-                                    ]
-                                },
-                            }
-                    else:
-                        # その他のエラーは通常通り処理
-                        raise
-
-            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
-                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                    transliteration_message = model.convertMessageToTransliteration(
-                        message,
-                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
-                    )
-                for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
-                    if (config.ENABLE_TRANSLATION is True and
-                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
-                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True
-                        ):
-                        transliteration_translation.append(
-                            model.convertMessageToTransliteration(
-                                translation[i],
-                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
-                            )
-                        )
-                    else:
-                        transliteration_translation.append([])
-            else:
-                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
-
-            # send OSC message
-            if config.SEND_MESSAGE_TO_VRC is True:
-                if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
-                    if config.ENABLE_TRANSLATION is False:
-                        osc_message = self.messageFormatter("SEND", [], message)
-                    else:
-                        osc_message = self.messageFormatter("SEND", translation, "")
-                else:
-                    osc_message = self.messageFormatter("SEND", translation, message)
-                model.oscSendMessage(osc_message)
-
-            if config.OVERLAY_LARGE_LOG is True:
-                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
-                    if len(translation) > 0:
-                        overlay_image = model.createOverlayImageLargeLog(
-                            "send",
-                            None,
-                            None,
-                            translation,
-                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                            transliteration_message,
-                            transliteration_translation
-                        )
-                        model.updateOverlayLargeLog(overlay_image)
-                else:
-                    overlay_image = model.createOverlayImageLargeLog(
-                        "send",
-                        message,
-                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
-                        translation,
-                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                        transliteration_message,
-                        transliteration_translation
-                    )
-                    model.updateOverlayLargeLog(overlay_image)
-
-            if model.checkWebSocketServerAlive() is True:
-                model.websocketSendMessage(
-                    {
-                        "type":"CHAT",
-                        "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                        "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                        "message":message,
-                        "translation":translation,
-                        "transliteration":transliteration_translation
-                    }
-                )
-
-            if config.LOGGER_FEATURE is True:
-                translation_text = f" ({'/'.join(translation)})" if translation else ""
-                model.logger.info(f"[CHAT] {message}{translation_text}")
-
-        model.addTranslationHistory("chat", message)
-
-        return {
-                "status":200,
-                "result":{
-                    "id":id,
-                    "original": {
-                        "message":message,
-                        "transliteration":transliteration_message
-                    },
-                    "translations": [
-                        {
-                            "message": translation_message,
-                            "transliteration": transliteration
-                        } for translation_message, transliteration in zip(translation, transliteration_translation)
-                    ]
-                }}
+        if len(message) == 0:
+            # 既知のバグ修正: 以前はここで translation/transliteration_* が
+            # 未初期化のまま戻り値の構築に使われ UnboundLocalError になっていた。
+            model.addTranslationHistory("chat", message)
+            return {
+                "status": 200,
+                "result": {
+                    "id": msg_id,
+                    "original": {"message": message, "transliteration": []},
+                    "translations": []
+                },
+            }
+        result = self._processMessage(CHAT_MESSAGE_SPEC, message, None, msg_id=msg_id)
+        return {"status": 200, "result": result}
 
 
     def checkSoftwareUpdated(self) -> dict:
@@ -2488,13 +2617,6 @@ class Controller:
 
 
     @staticmethod
-    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
-    def setPluginsStatus(data, *args, **kwargs) -> dict:
-        config.PLUGINS_STATUS = data
-        return {"status":200, "result":config.PLUGINS_STATUS}
-
-
-    @staticmethod
     def setSpeakerAvgLogprob(data, *args, **kwargs) -> dict:
         try:
             value = float(data)
@@ -2633,11 +2755,15 @@ class Controller:
                     spec.error_auth_invalid,
                     data=None
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=None
+            # SDK の例外内容には認証キーやリクエスト情報が含まれる
+            # 可能性があるため、そのまま UI へ返さない。詳細は
+            # errorLogging() で記録し、UI には認証失敗の安全な概要だけを
+            # 返す。
+            response = VRCTError.create_error_response(
+                spec.error_auth_failed,
+                data=None,
             )
         if response["status"] == 400:
             self._delTranslationEngineAuthKey(engine_key)
@@ -2682,11 +2808,13 @@ class Controller:
                     spec.error_model_invalid,
                     data=getattr(config, spec.selected_model_attr)
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=getattr(config, spec.selected_model_attr)
+            # モデル SDK の例外詳細は UI に露出させず、選択失敗として
+            # 現在値を返す。traceback は errorLogging() に残す。
+            response = VRCTError.create_error_response(
+                spec.error_model_invalid,
+                data=getattr(config, spec.selected_model_attr),
             )
         return response
 
@@ -2695,10 +2823,9 @@ class Controller:
         疎通確認処理。`connect_kwargs` は接続呼び出しに渡す追加引数
         (LMStudio: `{"base_url": config.LMSTUDIO_URL}`、Ollama: `{}`)。
 
-        NOTE: 接続には成功したがモデル一覧が空だった場合、既存実装を
-        そのまま踏襲して `raise Exception(...)` で下の except に処理させている
-        (専用のエラーコードではなく GENERAL_EXCEPTION 応答になる、既存の
-        LMStudio/Ollama の挙動と同じ)。
+        接続 SDK の例外や、接続後に利用可能なモデルが無い場合も、UI には
+        `error_connection_failed` を返す。例外の詳細は errorLogging() に
+        記録し、レスポンスには含めない。
         """
         spec = CONNECTION_PROVIDER_REGISTRY[engine_key]
         bindings = _ENGINE_MODEL_BINDINGS[engine_key]
@@ -2730,7 +2857,7 @@ class Controller:
                     spec.error_connection_failed,
                     data=False
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine_key] = False
             setattr(config, spec.selectable_model_list_attr, [])
@@ -2738,9 +2865,9 @@ class Controller:
             self.run(200, self.run_mapping[spec.run_mapping_selectable_key], getattr(config, spec.selectable_model_list_attr))
             self.run(200, self.run_mapping[spec.run_mapping_selected_key], getattr(config, spec.selected_model_attr))
             self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=False
+            response = VRCTError.create_error_response(
+                spec.error_connection_failed,
+                data=False,
             )
         return response
 
@@ -2918,7 +3045,7 @@ class Controller:
                     ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID,
                     data=config.LMSTUDIO_URL
                 )
-        except Exception as e:
+        except Exception:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
             config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
@@ -2926,9 +3053,9 @@ class Controller:
             self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
             self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
             self.updateTranslationEngineAndEngineList()
-            response = VRCTError.create_exception_error_response(
-                e,
-                data=config.LMSTUDIO_URL
+            response = VRCTError.create_error_response(
+                ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID,
+                data=config.LMSTUDIO_URL,
             )
         return response
 
@@ -3029,7 +3156,10 @@ class Controller:
         try:
             data = str(data).strip()
             if len(data) == 0:
-                data = "https://api.openai.com/v1"
+                return VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_OPENAI_COMPATIBLE_URL_INVALID,
+                    data=config.OPENAI_COMPATIBLE_URL
+                )
 
             auth_key = config.AUTH_KEYS[translator_name]
 
@@ -3361,8 +3491,7 @@ class Controller:
 
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_SEND is False:
-            self.startTranscriptionSendMessage()
-            config.ENABLE_TRANSCRIPTION_SEND = True
+            config.ENABLE_TRANSCRIPTION_SEND = self.startTranscriptionSendMessage()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
@@ -3373,8 +3502,7 @@ class Controller:
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSCRIPTION_RECEIVE is False:
-            self.startTranscriptionReceiveMessage()
-            config.ENABLE_TRANSCRIPTION_RECEIVE = True
+            config.ENABLE_TRANSCRIPTION_RECEIVE = self.startTranscriptionReceiveMessage()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def setDisableTranscriptionReceive(self, *args, **kwargs) -> dict:
@@ -3535,10 +3663,13 @@ class Controller:
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
-    def startTranscriptionSendMessage(self) -> None:
+    def startTranscriptionSendMessage(self) -> bool:
         with self.mic_lifecycle_lock:
             try:
-                model.startMicTranscript(self.micMessage)
+                started = model.startMicTranscript(self.micMessage)
+                if not started:
+                    config.ENABLE_TRANSCRIPTION_SEND = False
+                return started
             except Exception as e:
                 # VRAM不足エラーの検出
                 is_vram_error, error_message = model.detectVRAMError(e)
@@ -3556,18 +3687,26 @@ class Controller:
                     # 保持しているため、ロックを取り直す公開版
                     # (stopTranscriptionSendMessage) ではなく内部版を呼ぶ。
                     self._stopTranscriptionSendMessageLocked()
-                    disable_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
-                        data=False
-                    )
-                    self.run(
-                        disable_response["status"],
-                        self.run_mapping["enable_transcription_send"],
-                        disable_response["result"],
-                    )
+                    # UI の状態同期は enable 通知ではなく、状態更新用の
+                    # disable endpoint へ送る。_start() が先に構造化 pipeline
+                    # error を通知していた場合は、micMessage() が既に config
+                    # を False にしているため重複通知しない。
+                    if config.ENABLE_TRANSCRIPTION_SEND is True:
+                        self.run(
+                            200,
+                            self.run_mapping.get(
+                                "disable_transcription_send",
+                                "/set/disable/transcription_send",
+                            ),
+                            False,
+                        )
+                    config.ENABLE_TRANSCRIPTION_SEND = False
+                    return False
                 else:
                     # その他のエラーは通常通り処理
                     errorLogging()
+                    config.ENABLE_TRANSCRIPTION_SEND = False
+                    return False
 
     def _stopTranscriptionSendMessageLocked(self) -> None:
         """mic_lifecycle_lock を既に保持している呼び出し元専用。"""
@@ -3577,10 +3716,13 @@ class Controller:
         with self.mic_lifecycle_lock:
             self._stopTranscriptionSendMessageLocked()
 
-    def startTranscriptionReceiveMessage(self) -> None:
+    def startTranscriptionReceiveMessage(self) -> bool:
         with self.speaker_lifecycle_lock:
             try:
-                model.startSpeakerTranscript(self.speakerMessage)
+                started = model.startSpeakerTranscript(self.speakerMessage)
+                if not started:
+                    config.ENABLE_TRANSCRIPTION_RECEIVE = False
+                return started
             except Exception as e:
                 # VRAM不足エラーの検出
                 is_vram_error, error_message = model.detectVRAMError(e)
@@ -3597,18 +3739,24 @@ class Controller:
                     # ここでスピーカーの音声認識を停止 (内部版、詳細は
                     # startTranscriptionSendMessage 側のコメント参照)
                     self._stopTranscriptionReceiveMessageLocked()
-                    disable_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
-                        data=False
-                    )
-                    self.run(
-                        disable_response["status"],
-                        self.run_mapping["enable_transcription_receive"],
-                        disable_response["result"],
-                    )
+                    # Mic と同様、UI の状態同期は disable endpoint に送る。
+                    # pipeline error 経由で既に同期済みなら重複通知しない。
+                    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+                        self.run(
+                            200,
+                            self.run_mapping.get(
+                                "disable_transcription_receive",
+                                "/set/disable/transcription_receive",
+                            ),
+                            False,
+                        )
+                    config.ENABLE_TRANSCRIPTION_RECEIVE = False
+                    return False
                 else:
                     # その他のエラーは通常通り処理
                     errorLogging()
+                    config.ENABLE_TRANSCRIPTION_RECEIVE = False
+                    return False
 
     def _stopTranscriptionReceiveMessageLocked(self) -> None:
         """speaker_lifecycle_lock を既に保持している呼び出し元専用。"""
@@ -3926,34 +4074,41 @@ class Controller:
         # 認証 (token) を導入済みとはいえ、同一 LAN 上の第三者からの
         # 到達性まで許してしまう。特定の LAN IP を明示的に選ぶのとは
         # リスクの性質が異なるため、他の IP 検証と分けて拒否する。
-        if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
-            response = VRCTError.create_error_response(
-                ErrorCode.VALIDATION_INVALID_IP,
-                data=config.WEBSOCKET_HOST
-            )
-        else:
-            if model.checkWebSocketServerAlive() is False:
-                config.WEBSOCKET_HOST = data
-                response = {"status":200, "result":config.WEBSOCKET_HOST}
+        try:
+            if isValidIpAddress(data) is False or isWildcardBindAddress(data) is True:
+                response = VRCTError.create_error_response(
+                    ErrorCode.VALIDATION_INVALID_IP,
+                    data=config.WEBSOCKET_HOST
+                )
             else:
-                if data == config.WEBSOCKET_HOST:
-                    response = {"status":200, "result":config.WEBSOCKET_HOST}
-                elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
-                    model.stopWebSocketServer()
-                    model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                if model.checkWebSocketServerAlive() is False:
                     config.WEBSOCKET_HOST = data
-                    # The OBS overlay's HTTP server must stay bound to the
-                    # same host the WebSocket server now listens on, or the
-                    # overlay page it serves will point at a dead address.
-                    if config.OBS_BROWSER_SOURCE is True:
-                        model.stopObsBrowserSourceServer()
-                        model.startObsBrowserSourceServer(data, int(config.OBS_BROWSER_SOURCE_PORT))
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
                 else:
-                    response = VRCTError.create_error_response(
-                        ErrorCode.WEBSOCKET_HOST_INVALID,
-                        data=config.WEBSOCKET_HOST
-                    )
+                    if data == config.WEBSOCKET_HOST:
+                        response = {"status":200, "result":config.WEBSOCKET_HOST}
+                    elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
+                        model.stopWebSocketServer()
+                        model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                        config.WEBSOCKET_HOST = data
+                        # The OBS overlay's HTTP server must stay bound to the
+                        # same host the WebSocket server now listens on, or the
+                        # overlay page it serves will point at a dead address.
+                        if config.OBS_BROWSER_SOURCE is True:
+                            model.stopObsBrowserSourceServer()
+                            model.startObsBrowserSourceServer(data, int(config.OBS_BROWSER_SOURCE_PORT))
+                        response = {"status":200, "result":config.WEBSOCKET_HOST}
+                    else:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.WEBSOCKET_HOST_INVALID,
+                            data=config.WEBSOCKET_HOST
+                        )
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_HOST_INVALID,
+                data=config.WEBSOCKET_HOST,
+            )
 
         return response
 
@@ -3969,22 +4124,29 @@ class Controller:
                 custom_message="WebSocket port must be a number",
             )
 
-        if model.checkWebSocketServerAlive() is False:
-            config.WEBSOCKET_PORT = port
-            response = {"status":200, "result":config.WEBSOCKET_PORT}
-        else:
-            if port == config.WEBSOCKET_PORT:
-                return {"status":200, "result":config.WEBSOCKET_PORT}
-            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
-                model.stopWebSocketServer()
-                model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+        try:
+            if model.checkWebSocketServerAlive() is False:
                 config.WEBSOCKET_PORT = port
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
             else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
-                    data=config.WEBSOCKET_PORT
-                )
+                if port == config.WEBSOCKET_PORT:
+                    return {"status":200, "result":config.WEBSOCKET_PORT}
+                elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is True:
+                    model.stopWebSocketServer()
+                    model.startWebSocketServer(config.WEBSOCKET_HOST, port)
+                    config.WEBSOCKET_PORT = port
+                    response = {"status":200, "result":config.WEBSOCKET_PORT}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
+                        data=config.WEBSOCKET_PORT
+                    )
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
+                data=config.WEBSOCKET_PORT,
+            )
         return response
 
     @staticmethod
@@ -4002,18 +4164,25 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        if config.WEBSOCKET_SERVER is False:
-            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
-                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
-                config.WEBSOCKET_SERVER = True
-                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        try:
+            if config.WEBSOCKET_SERVER is False:
+                if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+                    model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+                    config.WEBSOCKET_SERVER = True
+                    response = {"status":200, "result":config.WEBSOCKET_SERVER}
+                else:
+                    response = VRCTError.create_error_response(
+                        ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+                        data=config.WEBSOCKET_SERVER
+                    )
             else:
-                response = VRCTError.create_error_response(
-                    ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
-                    data=config.WEBSOCKET_SERVER
-                )
-        else:
-            response = {"status":200, "result":config.WEBSOCKET_SERVER}
+                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        except Exception:
+            errorLogging()
+            response = VRCTError.create_error_response(
+                ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+                data=config.WEBSOCKET_SERVER,
+            )
         return response
 
     @staticmethod
@@ -5009,6 +5178,9 @@ class Controller:
         device_manager.setCallbackHostList(self.updateMicHostList)
         device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
         device_manager.setCallbackSpeakerDeviceList(self.updateSpeakerDeviceList)
+        # 一覧更新は Auto Select とは独立させる。Auto Select が両方 OFF でも
+        # デバイス再接続を検出して UI の選択肢を更新できるようにする。
+        device_manager.setDeviceListMonitoringActive(True)
 
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:

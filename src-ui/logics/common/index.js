@@ -15,5 +15,5 @@ export { useHandleNetworkConnection } from "./useHandleNetworkConnection";
 export { useHandleOscQuery } from "./useHandleOscQuery";
 export { useIsOscAvailable } from "./useIsOscAvailable";
 export { useIsVrctAvailable } from "./useIsVrctAvailable";
-export { useFetch } from "./useFetch";
 export { useLLMConnection } from "./useLLMConnection";
+export { useCopyToClipboard } from "./useCopyToClipboard";

@@ -599,7 +599,6 @@ const OpenAICompatibleURL_Box = () => {
         variable: currentOpenAICompatibleURL.data,
         state: currentOpenAICompatibleURL.state,
         setFunction: setOpenAICompatibleURL,
-        deleteFunction: () => setOpenAICompatibleURL("https://api.openai.com/v1"),
     });
 
     return (
@@ -675,4 +674,3 @@ const OpenAICompatibleModelContainer = () => {
         />
     );
 };
-

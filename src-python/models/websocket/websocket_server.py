@@ -3,7 +3,7 @@ import threading
 from http import HTTPStatus
 from urllib.parse import urlparse, parse_qs
 import websockets
-from websockets.legacy.server import WebSocketServerProtocol
+from websockets.asyncio.server import ServerConnection
 from typing import Callable, Set, Optional
 from utils import errorLogging
 
@@ -35,33 +35,39 @@ class WebSocketServer:
         self.host = host
         self.port = port
         self.token = token
-        self.clients: Set[WebSocketServerProtocol] = set()  # 接続クライアント集合
-        self._message_handler: Optional[Callable[['WebSocketServer', WebSocketServerProtocol, str], None]] = None
+        self.clients: Set[ServerConnection] = set()  # 接続クライアント集合
+        self._message_handler: Optional[Callable[['WebSocketServer', ServerConnection, str], None]] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._server: Optional[websockets.serve] = None
         self._thread: Optional[threading.Thread] = None
         self._send_queue: Optional[asyncio.Queue] = None  # 外部スレッド向け非同期キュー
         self.is_running: bool = False  # サーバーの起動状態を示すフラグ
 
-    async def _process_request(self, path: str, request_headers):
-        """websockets の legacy serve() が接続確立前に呼ぶフック。
+    async def _process_request(self, connection: ServerConnection, request):
+        """websockets の asyncio serve() が接続確立前に呼ぶフック。
 
         token が設定されている場合、クエリパラメータ ?token=... が一致
         しなければ WebSocket ハンドシェイクへ進める前に 403 で拒否する。
         None を返すと通常どおりハンドシェイクを継続する。
+
+        新しい asyncio 実装の process_request は (connection, request) を
+        受け取り、拒否する場合は connection.respond() で生成した Response を
+        返す必要がある (legacy の (status, headers, body) タプルは不可)。
         """
         if self.token is None:
             return None
         try:
-            query = parse_qs(urlparse(path).query)
+            query = parse_qs(urlparse(request.path).query)
         except Exception:
             query = {}
         supplied = query.get("token", [None])[0]
         if supplied != self.token:
-            return HTTPStatus.FORBIDDEN, [], b"Forbidden: invalid or missing token\n"
+            return connection.respond(
+                HTTPStatus.FORBIDDEN, "Forbidden: invalid or missing token\n"
+            )
         return None
 
-    def set_message_handler(self, handler: Callable[['WebSocketServer', WebSocketServerProtocol, str], None]):
+    def set_message_handler(self, handler: Callable[['WebSocketServer', ServerConnection, str], None]):
         """
         クライアントからメッセージ受信時に呼び出すコールバックを設定します。
         コールバックのシグネチャ: (server, websocket, message) -> None
@@ -220,7 +226,7 @@ class WebSocketServer:
 
 if __name__ == "__main__":
     # テスト用の簡単なメッセージハンドラ
-    def message_handler(server: WebSocketServer, websocket: WebSocketServerProtocol, message: str):
+    def message_handler(server: WebSocketServer, websocket: ServerConnection, message: str):
         print(f"Received message from {websocket.remote_address}: {message}")
         server.send(f"Echo: {message}")
 
