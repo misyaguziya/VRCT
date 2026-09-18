@@ -383,7 +383,7 @@ config_page:
             desc: "Substring match (case-insensitive) against visible window titles. Change this if you run a client whose window isn't titled 'VRChat' (e.g. a modified launcher)."
         source_language:
             label: "OCR source language"
-            desc: "Language the captured bubbles are written in. 'auto' loads Japanese + English readers. Set a VRCT language name (e.g. 'Japanese') to load only that reader. Applied on the next OCR start."
+            desc: "Language the captured bubbles are written in. Only languages the OCR engine supports are listed (not every VRCT language). Picking a non-English language loads that language plus English. Changing it while OCR is running switches over without a restart."
         use_gpu:
             label: "Use GPU for OCR"
             desc: "Runs EasyOCR on CUDA when available. Falls back to CPU automatically if GPU init fails (e.g. VRAM tight after Whisper)."

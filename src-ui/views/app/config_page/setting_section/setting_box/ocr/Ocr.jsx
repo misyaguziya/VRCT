@@ -6,6 +6,7 @@ import { useOcr, useSaveButtonLogic } from "@logics_configs";
 import {
     CheckboxContainer,
     SliderContainer,
+    DropdownMenuContainer,
     EntryWithSaveButtonContainer,
 } from "../_templates/Templates";
 
@@ -86,26 +87,27 @@ const OcrWindowTitleContainer = () => {
 
 const OcrSourceLanguageContainer = () => {
     const { t } = useI18n();
-    const { currentOcrSourceLanguage, setOcrSourceLanguage } = useOcr();
+    const {
+        currentSelectableOcrSourceLanguageList,
+        currentOcrSourceLanguage,
+        setOcrSourceLanguage,
+    } = useOcr();
 
-    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
-        variable: currentOcrSourceLanguage.data,
-        state: currentOcrSourceLanguage.state,
-        setFunction: setOcrSourceLanguage,
-        // useSaveButtonLogic calls deleteFunction() on an empty field; this
-        // setting has no delete endpoint, so clearing it means "back to auto".
-        deleteFunction: () => setOcrSourceLanguage("auto"),
-    });
+    // OCRエンジンが読める言語だけを選ばせる。VRCTが翻訳できる言語の全てを
+    // OCRできるわけではないため、自由入力ではなく一覧から選ぶ。
+    const selectFunction = (selected_data) => {
+        setOcrSourceLanguage(selected_data.selected_id);
+    };
 
     return (
-        <EntryWithSaveButtonContainer
+        <DropdownMenuContainer
+            dropdown_id="ocr_source_language"
             label={t("config_page.ocr.source_language.label")}
             desc={t("config_page.ocr.source_language.desc")}
-            variable={variable}
-            saveFunction={saveFunction}
-            onChangeFunction={onChangeFunction}
+            selected_id={currentOcrSourceLanguage.data}
+            list={currentSelectableOcrSourceLanguageList.data}
+            selectFunction={selectFunction}
             state={currentOcrSourceLanguage.state}
-            width="14rem"
         />
     );
 };

@@ -4272,12 +4272,23 @@ class Controller:
         return {"status": 200, "result": config.OCR_ENGINE}
 
     @staticmethod
+    def getSelectableOcrSourceLanguages(*args, **kwargs) -> dict:
+        return {"status": 200, "result": model.getSelectableOCRSourceLanguages()}
+
+    @staticmethod
     def getOcrSourceLanguage(*args, **kwargs) -> dict:
         return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
 
     @staticmethod
     def setOcrSourceLanguage(data, *args, **kwargs) -> dict:
-        config.OCR_SOURCE_LANGUAGE = str(data)
+        # OCRエンジンが読める言語だけを受け付ける。VRCTが翻訳できる言語の
+        # 全てをOCRできるわけではないので、ここで弾かないと「設定できたのに
+        # 何も読めない」状態になる。
+        language = str(data)
+        if language not in model.getSelectableOCRSourceLanguages():
+            return {"status": 400, "result": config.OCR_SOURCE_LANGUAGE}
+        config.OCR_SOURCE_LANGUAGE = language
+        model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
 
     @staticmethod
@@ -4290,6 +4301,7 @@ class Controller:
         if not title:
             return {"status": 400, "result": config.OCR_WINDOW_TITLE}
         config.OCR_WINDOW_TITLE = title
+        model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_WINDOW_TITLE}
 
     @staticmethod
@@ -4304,6 +4316,7 @@ class Controller:
             return {"status": 400, "result": config.OCR_POLL_INTERVAL_MS}
         value = max(100, min(5000, value))
         config.OCR_POLL_INTERVAL_MS = value
+        model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_POLL_INTERVAL_MS}
 
     @staticmethod
@@ -4318,6 +4331,7 @@ class Controller:
             return {"status": 400, "result": config.OCR_MIN_CONFIDENCE}
         value = max(0.1, min(0.99, value))
         config.OCR_MIN_CONFIDENCE = value
+        model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
 
     @staticmethod
@@ -4328,12 +4342,14 @@ class Controller:
     def setEnableOcrUseGpu(*args, **kwargs) -> dict:
         if config.OCR_USE_GPU is False:
             config.OCR_USE_GPU = True
+            model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_USE_GPU}
 
     @staticmethod
     def setDisableOcrUseGpu(*args, **kwargs) -> dict:
         if config.OCR_USE_GPU is True:
             config.OCR_USE_GPU = False
+            model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_USE_GPU}
 
     @staticmethod
@@ -4348,6 +4364,7 @@ class Controller:
             return {"status": 400, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
         value = max(1, min(50, value))
         config.OCR_BUBBLE_MIN_TEXT_LENGTH = value
+        model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
 
     @staticmethod
@@ -4362,6 +4379,7 @@ class Controller:
             return {"status": 400, "result": config.OCR_DEDUP_COOLDOWN_SEC}
         value = max(1, min(120, value))
         config.OCR_DEDUP_COOLDOWN_SEC = value
+        model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_DEDUP_COOLDOWN_SEC}
 
     def initializationProgress(self, progress):

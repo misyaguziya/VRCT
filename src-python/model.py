@@ -54,6 +54,7 @@ from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
 from models.ocr import OcrPipeline
+from models.ocr.ocr_languages import SUPPORTED_LANGUAGES as OCR_SUPPORTED_LANGUAGES, isSupported as isSupportedOcrLanguage
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 
@@ -1796,19 +1797,16 @@ class Model:
             printLog(f"OCR: unsupported engine {config.OCR_ENGINE!r}, refusing to start")
             return False
 
-        # Resolve source language. OCR reads *other people's* chat bubbles, so
-        # "auto" resolves against SELECTED_TARGET_LANGUAGES (the languages the
-        # other party speaks) — the same side getOutputTranslate treats as its
-        # source. Resolving against SELECTED_YOUR_LANGUAGES here would ask the
-        # translator to go from your own language into your own language.
+        # 読み取る言語は明示指定のみ。EasyOCRのReaderは1つのスクリプトグループ
+        # しか同時にロードできず (ja/ko/中国語などは英語としか併用できない)、
+        # 「autoで全言語」は作れないため。未選択・未対応なら起動しない。
+        # 以前は auto を SELECTED_TARGET_LANGUAGES から解決していたが、
+        # 日本語話者が英語へ翻訳する設定だと英語しか読めないReaderになり、
+        # 日本語の吹き出しが原理的に読めなかった。
         source_language = config.OCR_SOURCE_LANGUAGE
-        if not isinstance(source_language, str) or source_language.lower() == "auto":
-            try:
-                langs_cfg = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-                enabled = [d["language"] for d in langs_cfg.values() if d.get("enable") is True]
-                source_language = enabled[0] if enabled else "auto"
-            except Exception:
-                source_language = "auto"
+        if not isSupportedOcrLanguage(source_language):
+            printLog(f"OCR: source language {source_language!r} is not selected or not supported, refusing to start")
+            return False
 
         try:
             self.ocr_pipeline = OcrPipeline(
@@ -1830,6 +1828,32 @@ class Model:
         if not started:
             self.ocr_pipeline = None
         return started
+
+    def updateOCRCaptureSettings(self) -> None:
+        """設定変更を実行中のOCRパイプラインへ渡す。停止中なら何もしない。
+
+        OFF→ONを挟まずに言語やしきい値を切り替えられるようにするための経路。
+        """
+        pipeline = self.ocr_pipeline
+        if not isinstance(pipeline, OcrPipeline):
+            return
+        try:
+            pipeline.applyConfig({
+                "source_language": config.OCR_SOURCE_LANGUAGE,
+                "window_title": config.OCR_WINDOW_TITLE,
+                "poll_interval_ms": config.OCR_POLL_INTERVAL_MS,
+                "min_confidence": config.OCR_MIN_CONFIDENCE,
+                "use_gpu": config.OCR_USE_GPU,
+                "min_text_length": config.OCR_BUBBLE_MIN_TEXT_LENGTH,
+                "dedup_cooldown_sec": config.OCR_DEDUP_COOLDOWN_SEC,
+            })
+        except Exception:
+            errorLogging()
+
+    @staticmethod
+    def getSelectableOCRSourceLanguages() -> list:
+        """OCRで選べる言語 (VRCTの言語名)。VRCTが翻訳できる言語の全てではない。"""
+        return list(OCR_SUPPORTED_LANGUAGES)
 
     def stopOCRCapture(self) -> None:
         self.ensure_initialized()
