@@ -184,6 +184,43 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class TestDedupWithSlowTicks(unittest.TestCase):
+    """OCRが遅くてtick間隔がクールダウンを超えても、同じ文を再送しないこと。
+
+    実機で cooldown=1秒 / tick 1〜2.6秒のとき、画面に出続けている吹き出しの
+    同じ文が繰り返し配送された (2026-09-18)。クールダウンはtick間隔の2倍を
+    下限にしている。
+    """
+
+    def _pipeline(self, **kwargs):
+        return OcrPipeline(callback=lambda payload: None, source_language="auto", **kwargs)
+
+    def test_cooldown_is_at_least_twice_the_tick_interval(self) -> None:
+        pipeline = self._pipeline(dedup_cooldown_sec=1)
+        pipeline._dedup = _DedupCache()
+        seen = []
+
+        def record(text_hash, text, cooldown, now):
+            seen.append(cooldown)
+            return False
+
+        pipeline._dedup.seenRecently = record  # type: ignore[assignment]
+        pipeline._capture = Mock()
+        pipeline._capture.get.return_value = "frame"
+        pipeline._reader = object()
+        pipeline._detector = Mock()
+        pipeline._detector.detect.return_value = [((0, 0, 10, 10), "crop")]
+
+        with patch("models.ocr.ocr_pipeline.ocr_engine.readtext_bgr",
+                   return_value=[{"text": "こんにちは", "confidence": 0.9}]),                 patch("models.ocr.ocr_pipeline.time.monotonic", side_effect=[100.0, 100.0, 100.0,
+                                                                            103.0, 103.0, 103.0]):
+            pipeline._tick()   # 1回目: 間隔が測れないので設定値のまま
+            pipeline._tick()   # 2回目: 間隔3秒 -> 6秒まで引き上げ
+
+        self.assertEqual(seen[0], 1)
+        self.assertEqual(seen[1], 6.0)
+
+
 class TestApplyConfig(unittest.TestCase):
     """設定変更がOFF→ONを挟まずに効くこと。
 

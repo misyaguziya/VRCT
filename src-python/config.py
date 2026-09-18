@@ -303,12 +303,6 @@ class ConfigValidationError(Exception):
 # Descriptor for simple managed config properties to reduce repetitive getters/setters.
 # It performs optional type validation, optional allowed-values check, and calls
 # instance.saveConfig(...) on successful set.
-# OCRエンジンの対応値。models/ocr/ocr_engine_rapidocr.py が実体。
-# ここに載っていない値が保存されていたら読み込み時に既定へ戻す (下の load_config を参照)。
-SUPPORTED_OCR_ENGINES = ("RapidOCR",)
-DEFAULT_OCR_ENGINE = SUPPORTED_OCR_ENGINES[0]
-
-
 class ManagedProperty:
     def __init__(self, name: str, type_: type = None, allowed=None, immediate_save: bool = False, serialize: bool = True, readonly: bool = False, mutable_tracking: bool = False):
         self.name = name
@@ -989,7 +983,6 @@ class Config:
 
     # --- VRChat chat-bubble OCR ---
     ENABLE_OCR_CAPTURE = ManagedProperty('ENABLE_OCR_CAPTURE', type_=bool, serialize=False)
-    OCR_ENGINE = ManagedProperty('OCR_ENGINE', type_=str)
     # Target language is intentionally absent: OCR reads other players' chat,
     # so it always translates into your own language via getOutputTranslate.
     OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str)
@@ -1294,7 +1287,6 @@ class Config:
 
         # OCR defaults (VRChat chat-bubble text capture)
         self._ENABLE_OCR_CAPTURE = False
-        self._OCR_ENGINE = DEFAULT_OCR_ENGINE
         # PP-OCRv6 small が日英中＋ラテン文字系を1モデルで読むので "auto" が既定。
         # ハングル・キリル・タイ・アラビア・デーヴァナーガリーは別モデルが要るため
         # 明示選択する (選択肢は models/ocr/ocr_languages.py)。
@@ -1302,7 +1294,10 @@ class Config:
         # Substring match against visible window titles (case-insensitive).
         self._OCR_WINDOW_TITLE = "VRChat"
         self._OCR_POLL_INTERVAL_MS = 750
-        self._OCR_MIN_CONFIDENCE = 0.55
+        # PP-OCRは読めていないときでもスコアが高い (実測: 正解の最小0.87に対し
+        # 誤りの中央値0.91)。0.55では何も落とせず、0.85なら正解を1件も失わずに
+        # 誤りの34%を落とせたのでこの値にしている。
+        self._OCR_MIN_CONFIDENCE = 0.85
         self._OCR_BUBBLE_MIN_TEXT_LENGTH = 2
         self._OCR_DEDUP_COOLDOWN_SEC = 8
 
@@ -1340,13 +1335,6 @@ class Config:
         # ファイルを置く。存在すれば検証の上 UI_LANGUAGE に反映し、
         # 一度使ったら削除する (以後のアプリ内言語変更をこのファイルが
         # 上書きし続けないようにするため)。
-        # 旧バージョンが保存したOCRエンジン名 ("EasyOCR" 等) が残っていると、
-        # 対応エンジンの判定に落ちてOCRが起動しない。UIから設定する項目でもないので、
-        # 知らない値は既定へ戻す (2026-09-18: EasyOCR -> RapidOCR の移行で実際に踏んだ)。
-        if self._OCR_ENGINE not in SUPPORTED_OCR_ENGINES:
-            printLog(f"config: OCR engine {self._OCR_ENGINE!r} is no longer supported, falling back to {DEFAULT_OCR_ENGINE!r}")
-            self.OCR_ENGINE = DEFAULT_OCR_ENGINE
-
         installer_language_marker = os_path.join(self._PATH_LOCAL, "installer_language.txt")
         if os_path.isfile(installer_language_marker):
             try:

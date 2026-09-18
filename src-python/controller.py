@@ -8,7 +8,7 @@ import functools
 import re
 import time
 from device_manager import device_manager
-from config import config, SUPPORTED_OCR_ENGINES, ConfigValidationError
+from config import config, ConfigValidationError
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
@@ -4261,18 +4261,6 @@ class Controller:
             config.ENABLE_OCR_CAPTURE = False
             self.stopThreadingOcrCapture()
         return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
-
-    @staticmethod
-    def getOcrEngine(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_ENGINE}
-
-    @staticmethod
-    def setOcrEngine(data, *args, **kwargs) -> dict:
-        engine = str(data)
-        if engine not in SUPPORTED_OCR_ENGINES:
-            return {"status": 400, "result": config.OCR_ENGINE}
-        config.OCR_ENGINE = engine
-        return {"status": 200, "result": config.OCR_ENGINE}
 
     @staticmethod
     def getSelectableOcrSourceLanguages(*args, **kwargs) -> dict:

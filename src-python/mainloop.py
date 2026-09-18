@@ -535,8 +535,6 @@ mapping = {
     "/get/data/ocr_capture": {"status": True, "variable":controller.getEnableOcrCapture},
     "/set/enable/ocr_capture": {"status": True, "variable":controller.setEnableOcrCapture},
     "/set/disable/ocr_capture": {"status": True, "variable":controller.setDisableOcrCapture},
-    "/get/data/ocr_engine": {"status": True, "variable":controller.getOcrEngine},
-    "/set/data/ocr_engine": {"status": True, "variable":controller.setOcrEngine},
     "/get/data/selectable_ocr_source_languages": {"status": True, "variable":controller.getSelectableOcrSourceLanguages},
     "/get/data/ocr_source_language": {"status": True, "variable":controller.getOcrSourceLanguage},
     "/set/data/ocr_source_language": {"status": True, "variable":controller.setOcrSourceLanguage},

@@ -12,7 +12,6 @@
 import unittest
 from unittest.mock import Mock, patch
 
-import config as config_module
 from config import config
 from controller import Controller
 from models.ocr.ocr_languages import SELECTABLE_LANGUAGES
@@ -73,35 +72,6 @@ class TestOtherOcrSettersReachTheRunningPipeline(unittest.TestCase):
                 response = setter(value)
             self.assertEqual(response["status"], 200, setter.__name__)
             update.assert_called_once_with()
-
-
-class TestOcrEngineValue(unittest.TestCase):
-    """保存済みの古いエンジン名でOCRが起動しなくなる事故の回帰テスト。
-
-    EasyOCR -> RapidOCR の置き換えで判定値だけ変え、config.json に残った
-    "EasyOCR" の移行を忘れたため、実機でOCRが無言で起動しなくなった
-    (2026-09-18, ログ: OCR: unsupported engine 'EasyOCR', refusing to start)。
-    """
-
-    def setUp(self) -> None:
-        self.controller = Controller.__new__(Controller)
-        self.addCleanup(setattr, config, "OCR_ENGINE", config.OCR_ENGINE)
-
-    def test_stale_engine_name_is_migrated_on_load(self) -> None:
-        config.OCR_ENGINE = "EasyOCR"
-        with patch.object(config, "saveConfig"):
-            config.load_config()
-        self.assertEqual(config.OCR_ENGINE, config_module.DEFAULT_OCR_ENGINE)
-
-    def test_setter_rejects_an_unsupported_engine(self) -> None:
-        config.OCR_ENGINE = config_module.DEFAULT_OCR_ENGINE
-        response = self.controller.setOcrEngine("EasyOCR")
-        self.assertEqual(response["status"], 400)
-        self.assertEqual(config.OCR_ENGINE, config_module.DEFAULT_OCR_ENGINE)
-
-    def test_setter_accepts_the_supported_engine(self) -> None:
-        response = self.controller.setOcrEngine(config_module.DEFAULT_OCR_ENGINE)
-        self.assertEqual(response["status"], 200)
 
 
 if __name__ == "__main__":
