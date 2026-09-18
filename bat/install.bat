@@ -10,8 +10,9 @@ REM install packages for .venv
 call .venv/Scripts/activate
 python.exe -m pip install --upgrade pip
 pip install --no-cache-dir --force-reinstall -r requirements.txt
-REM rapidocr は opencv-python を要求するが、本体は opencv-python-headless を使う。
-REM 両者は同じ cv2 を提供して衝突するため、依存なしで入れ直す (依存は requirements に明示済み)。
+REM rapidocr requires opencv-python, but this app uses opencv-python-headless.
+REM Both provide the same cv2 and collide, so reinstall it without its
+REM dependencies (the dependencies are listed explicitly in requirements).
 pip install --no-cache-dir --force-reinstall --no-deps rapidocr==3.9.2
 python -X utf8 tools\fetch_ocr_models.py
 
@@ -27,7 +28,8 @@ REM install packages for .venv_cuda
 call .venv_cuda/Scripts/activate
 python.exe -m pip install --upgrade pip
 pip install --no-cache-dir --force-reinstall -r requirements_cuda.txt
-REM rapidocr は opencv-python を要求するが、本体は opencv-python-headless を使う。
-REM 両者は同じ cv2 を提供して衝突するため、依存なしで入れ直す (依存は requirements に明示済み)。
+REM rapidocr requires opencv-python, but this app uses opencv-python-headless.
+REM Both provide the same cv2 and collide, so reinstall it without its
+REM dependencies (the dependencies are listed explicitly in requirements).
 pip install --no-cache-dir --force-reinstall --no-deps rapidocr==3.9.2
 python -X utf8 tools\fetch_ocr_models.py
