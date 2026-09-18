@@ -60,6 +60,16 @@ STATUS_INTERVAL_SEC = 30.0
 DEDUP_RETENTION_SEC = 30.0
 
 
+# 行末がこれらで終わっていれば、折り返しではなく送信者が入れた改行とみなす。
+SENTENCE_END_CHARS = ("。", "．", ".", "！", "!", "？", "?", "…", "」", "』", ")", "）")
+NEWLINE = chr(10)
+
+
+def _isLatin(char: str) -> bool:
+    """ラテン文字・数字なら True。行を繋ぐときにスペースを入れるかの判断に使う。"""
+    return bool(char) and (char.isascii() and (char.isalnum() or char in "\"'"))
+
+
 def _textHash(text: str) -> str:
     return hashlib.blake2b(text.casefold().encode("utf-8"), digest_size=8).hexdigest()
 
@@ -379,7 +389,38 @@ class OcrPipeline:
 
     @staticmethod
     def _mergeWords(words: List[dict]) -> str:
-        parts = [w["text"] for w in words if isinstance(w.get("text"), str)]
-        # Join with spaces; VRChat bubbles tend to be single-line, so this
-        # matches typical human reading order well enough for translation.
-        return " ".join(p.strip() for p in parts if p.strip()).strip()
+        """OCRが返した行を1つの文にまとめる。
+
+        VRChatは「送信者が入れた改行」と「幅による折り返し」を同じように描画し、
+        吹き出しの幅も内容に合わせて決まるため、行の位置だけでは区別できない
+        (実データで確認: 改行4行のリストも折り返された1文も、どの行も右端まで
+        到達していた)。そこで次の順で判断する。
+
+        1. 前の行が文末の記号 (。.!? 等) で終わっていれば改行とみなす
+        2. それ以外は折り返しとみなして繋ぐ。ラテン文字が絡む境目はスペース、
+           日本語や中国語だけの境目は詰める (「少 しずつ」のような余計な
+           スペースを入れないため)
+
+        右端の余白で判定する案も試したが、吹き出しに複数の文字列 (他人の吹き出しと
+        ワールドの文字など) が写ると基準がずれて折り返しを改行と誤判定したのでやめた。
+        文末記号だけの方が実データでは正確だった。
+        """
+        lines = [w for w in words if isinstance(w.get("text"), str) and w["text"].strip()]
+        if not lines:
+            return ""
+        if any("top" in w for w in lines):
+            lines.sort(key=lambda w: w.get("top", 0.0))
+        merged = lines[0]["text"].strip()
+        for previous, current in zip(lines, lines[1:]):
+            text = current["text"].strip()
+            merged += OcrPipeline._lineJoiner(previous, text) + text
+        return merged.strip()
+
+    @staticmethod
+    def _lineJoiner(previous: dict, next_text: str) -> str:
+        previous_text = previous["text"].strip()
+        if previous_text.endswith(SENTENCE_END_CHARS):
+            return NEWLINE
+        if _isLatin(previous_text[-1]) or _isLatin(next_text[:1]):
+            return " "
+        return ""

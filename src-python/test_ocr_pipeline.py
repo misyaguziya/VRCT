@@ -8,7 +8,7 @@ capture/EasyOCR/cv2 本体のスレッドループ(_run/_tick)は実機依存が
 import unittest
 from unittest.mock import Mock, patch
 
-from models.ocr.ocr_pipeline import OcrPipeline, _DedupCache, _similar, _textHash
+from models.ocr.ocr_pipeline import NEWLINE, OcrPipeline, _DedupCache, _similar, _textHash
 
 _mergeWords = OcrPipeline._mergeWords
 
@@ -47,17 +47,46 @@ class TestSimilar(unittest.TestCase):
 
 
 class TestMergeWords(unittest.TestCase):
-    def test_joins_word_dicts_with_spaces(self) -> None:
-        words = [{"text": "hello", "confidence": 0.9}, {"text": "world", "confidence": 0.8}]
-        self.assertEqual(_mergeWords(words), "hello world")
+    """OCRが返した行をどう繋ぐか。
 
-    def test_strips_and_skips_blank_entries(self) -> None:
-        words = [{"text": "  hello  "}, {"text": ""}, {"text": "world"}]
-        self.assertEqual(_mergeWords(words), "hello world")
+    VRChatは送信者の改行も幅による折り返しも同じように描画するので、画像からは
+    区別できない (実データで確認: 改行4行の箇条書きも折り返された1文も、どの行も
+    右端まで到達していた)。そのため文末記号を手がかりにしている。
+    以前は全部スペースで繋いでいて、改行が消えるうえ日本語に余計なスペースが
+    入っていた (「少 しずつ」)。
+    """
 
-    def test_skips_entries_with_non_string_text(self) -> None:
-        words = [{"text": "hello"}, {"text": None}, {"confidence": 0.5}, {"text": "world"}]
-        self.assertEqual(_mergeWords(words), "hello world")
+    def line(self, text, top=0.0):
+        return {"text": text, "confidence": 0.9, "top": top, "left": 0.0, "right": 100.0}
+
+    def test_wrapped_japanese_lines_are_joined_without_a_space(self) -> None:
+        words = [self.line("窓の外に見える山が、夕焼けで少", 0), self.line("しずつ赤くなっている", 10)]
+        self.assertEqual(_mergeWords(words), "窓の外に見える山が、夕焼けで少しずつ赤くなっている")
+
+    def test_wrapped_latin_lines_are_joined_with_a_space(self) -> None:
+        words = [self.line("La luce tra questi alberi sembra", 0), self.line("uscita da un sogno", 10)]
+        self.assertEqual(_mergeWords(words), "La luce tra questi alberi sembra uscita da un sogno")
+
+    def test_a_line_ending_with_sentence_punctuation_starts_a_new_line(self) -> None:
+        words = [self.line("1. Gather at the bridge.", 0), self.line("2. Take a group photo.", 10)]
+        self.assertEqual(_mergeWords(words),
+                         "1. Gather at the bridge." + NEWLINE + "2. Take a group photo.")
+
+    def test_japanese_sentence_end_also_starts_a_new_line(self) -> None:
+        words = [self.line("行きましょう。", 0), self.line("そのあとで写真を撮ります", 10)]
+        self.assertEqual(_mergeWords(words), "行きましょう。" + NEWLINE + "そのあとで写真を撮ります")
+
+    def test_lines_are_ordered_top_to_bottom(self) -> None:
+        words = [self.line("しずつ", 20), self.line("窓の外に", 0)]
+        self.assertEqual(_mergeWords(words), "窓の外にしずつ")
+
+    def test_lines_without_position_keep_their_order(self) -> None:
+        words = [{"text": "abc", "confidence": 0.9}, {"text": "def", "confidence": 0.9}]
+        self.assertEqual(_mergeWords(words), "abc def")
+
+    def test_blank_and_non_string_entries_are_skipped(self) -> None:
+        words = [self.line("  ", 0), {"text": None, "confidence": 0.9}, self.line("hello", 10)]
+        self.assertEqual(_mergeWords(words), "hello")
 
     def test_empty_list_returns_empty_string(self) -> None:
         self.assertEqual(_mergeWords([]), "")
