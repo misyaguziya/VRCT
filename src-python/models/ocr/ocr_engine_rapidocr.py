@@ -91,8 +91,11 @@ def readtext_bgr(reader: object, crop_bgr: np.ndarray, min_confidence: float = 0
         errorLogging()
         return []
 
+    # boxes は ndarray なので or でのフォールバックは使えない (真偽判定が曖昧になる)。
     texts = list(getattr(result, "txts", None) or [])
     scores = list(getattr(result, "scores", None) or [])
+    raw_boxes = getattr(result, "boxes", None)
+    boxes = [] if raw_boxes is None else list(raw_boxes)
     out: List[dict] = []
     for index, text in enumerate(texts):
         if not isinstance(text, str):
@@ -106,5 +109,15 @@ def readtext_bgr(reader: object, crop_bgr: np.ndarray, min_confidence: float = 0
             confidence = 0.0
         if confidence < min_confidence:
             continue
-        out.append({"text": text, "confidence": confidence})
+        # 行の位置は、行同士をどう繋ぐか (改行か、スペースか、詰めるか) の判断に使う。
+        item = {"text": text, "confidence": confidence}
+        if index < len(boxes):
+            try:
+                points = [(float(x), float(y)) for x, y in boxes[index]]
+                item["left"] = min(p[0] for p in points)
+                item["right"] = max(p[0] for p in points)
+                item["top"] = min(p[1] for p in points)
+            except (TypeError, ValueError):
+                pass
+        out.append(item)
     return out
