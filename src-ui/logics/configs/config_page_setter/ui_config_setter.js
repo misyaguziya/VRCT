@@ -821,14 +821,6 @@ export const SETTINGS_ARRAY = [
         logics_template_id: "get_set",
         base_endpoint_name: "ocr_bubble_min_text_length",
     },
-    {
-        Category: "Ocr",
-        Base_Name: "OcrDedupCooldownSec",
-        default_value: 30,
-        ui_template_id: "slider",
-        logics_template_id: "get_set",
-        base_endpoint_name: "ocr_dedup_cooldown_sec",
-    },
 
     // AdvancedSettings
     {

@@ -56,7 +56,7 @@ class TestOtherOcrSettersReachTheRunningPipeline(unittest.TestCase):
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
         for name in ("OCR_WINDOW_TITLE", "OCR_POLL_INTERVAL_MS", "OCR_MIN_CONFIDENCE",
-                     "OCR_BUBBLE_MIN_TEXT_LENGTH", "OCR_DEDUP_COOLDOWN_SEC"):
+                     "OCR_BUBBLE_MIN_TEXT_LENGTH"):
             self.addCleanup(setattr, config, name, getattr(config, name))
 
     def test_each_setter_pushes_the_new_value(self) -> None:
@@ -65,7 +65,6 @@ class TestOtherOcrSettersReachTheRunningPipeline(unittest.TestCase):
             (self.controller.setOcrPollIntervalMs, 300),
             (self.controller.setOcrMinConfidence, 0.4),
             (self.controller.setOcrBubbleMinTextLength, 3),
-            (self.controller.setOcrDedupCooldownSec, 2),
         ]
         for setter, value in cases:
             with patch("controller.model.updateOCRCaptureSettings") as update:

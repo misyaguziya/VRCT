@@ -39,7 +39,6 @@ export const Ocr = () => {
                 <OcrPollIntervalMsContainer />
                 <OcrMinConfidenceContainer />
                 <OcrBubbleMinTextLengthContainer />
-                <OcrDedupCooldownSecContainer />
             </div>
         </div>
     );
@@ -159,18 +158,3 @@ const OcrBubbleMinTextLengthContainer = () => {
     );
 };
 
-const OcrDedupCooldownSecContainer = () => {
-    const { t } = useI18n();
-    const { currentOcrDedupCooldownSec, setOcrDedupCooldownSec } = useOcr();
-    return (
-        <SliderContainer
-            label={t("config_page.ocr.dedup_cooldown_sec.label")}
-            desc={t("config_page.ocr.dedup_cooldown_sec.desc")}
-            variable={currentOcrDedupCooldownSec.data}
-            setterFunction={setOcrDedupCooldownSec}
-            min={1}
-            max={60}
-            step={1}
-        />
-    );
-};

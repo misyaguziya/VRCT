@@ -4340,21 +4340,6 @@ class Controller:
         model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
 
-    @staticmethod
-    def getOcrDedupCooldownSec(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_DEDUP_COOLDOWN_SEC}
-
-    @staticmethod
-    def setOcrDedupCooldownSec(data, *args, **kwargs) -> dict:
-        try:
-            value = int(data)
-        except (TypeError, ValueError):
-            return {"status": 400, "result": config.OCR_DEDUP_COOLDOWN_SEC}
-        value = max(1, min(120, value))
-        config.OCR_DEDUP_COOLDOWN_SEC = value
-        model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_DEDUP_COOLDOWN_SEC}
-
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)
 

@@ -52,6 +52,13 @@ TICK_OCR_BUDGET_RATIO = 0.8
 # 実機で「OCRは起動しているのに無言」という状態を3回踏んでいる (2026-09-18)。
 STATUS_INTERVAL_SEC = 30.0
 
+# 配送済みの文を覚えておく時間。画面から消えてからこの秒数で忘れる。
+# 記憶だけ (時間の上限なし) にすると「はい」「Wow!」のような短い定型文が
+# LRUから押し出されるまで二度と表示されなくなる。静かなインスタンスでは
+# 何時間もかかるので、時間の上限は要る。一方でユーザーが決める材料は無く、
+# 実際に1秒に設定されて同じ文が繰り返し流れたので、設定には出さない。
+DEDUP_RETENTION_SEC = 30.0
+
 
 def _textHash(text: str) -> str:
     return hashlib.blake2b(text.casefold().encode("utf-8"), digest_size=8).hexdigest()
@@ -137,7 +144,6 @@ class OcrPipeline:
         poll_interval_ms: int = 750,
         min_confidence: float = 0.55,
         min_text_length: int = 2,
-        dedup_cooldown_sec: int = 30,
     ) -> None:
         self._callback = callback
         self._source_language = source_language or "auto"
@@ -148,8 +154,6 @@ class OcrPipeline:
         self._tick_budget = self._poll_interval * TICK_OCR_BUDGET_RATIO
         self._min_confidence = float(min_confidence)
         self._min_text_length = max(1, int(min_text_length))
-        # 同じ文を覚えておく時間。画面から消えてからこの秒数で忘れる。
-        self._dedup_cooldown = max(1, int(dedup_cooldown_sec))
 
         self._stop_event = Event()
         self._thread: Optional[Thread] = None
@@ -235,11 +239,6 @@ class OcrPipeline:
         if "min_text_length" in pending:
             try:
                 self._min_text_length = max(1, int(pending["min_text_length"]))
-            except (TypeError, ValueError):
-                errorLogging()
-        if "dedup_cooldown_sec" in pending:
-            try:
-                self._dedup_cooldown = max(1, int(pending["dedup_cooldown_sec"]))
             except (TypeError, ValueError):
                 errorLogging()
 
@@ -347,12 +346,12 @@ class OcrPipeline:
         candidates = candidates[:MAX_CANDIDATES_PER_TICK]
 
         now = time.monotonic()
-        # 保持時間の下限をtick間隔の2倍にする。1tickはOCR1件あたり約0.8秒かかるので、
-        # 設定値の方が短いと、画面に出続けている吹き出しでも見るたびに忘れられて
-        # しまい、同じ文が繰り返し配送される (実機で 1秒設定 / tick 1〜2.6秒で再現)。
+        # 保持時間の下限はtick間隔の2倍。1tickはOCR1件あたり約0.8秒かかるので、
+        # 保持時間の方が短いと、画面に出続けている吹き出しでも見るたびに忘れられて
+        # しまい、同じ文が繰り返し配送される。
         interval = (now - self._last_tick_at) if self._last_tick_at else 0.0
         self._last_tick_at = now
-        retention = max(self._dedup_cooldown, interval * 2.0)
+        retention = max(DEDUP_RETENTION_SEC, interval * 2.0)
         self._dedup.evictStale(now, retention)
         deadline = now + self._tick_budget
 

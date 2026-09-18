@@ -1812,7 +1812,6 @@ class Model:
                 poll_interval_ms=config.OCR_POLL_INTERVAL_MS,
                 min_confidence=config.OCR_MIN_CONFIDENCE,
                 min_text_length=config.OCR_BUBBLE_MIN_TEXT_LENGTH,
-                dedup_cooldown_sec=config.OCR_DEDUP_COOLDOWN_SEC,
             )
         except Exception:
             errorLogging()
@@ -1839,7 +1838,6 @@ class Model:
                 "poll_interval_ms": config.OCR_POLL_INTERVAL_MS,
                 "min_confidence": config.OCR_MIN_CONFIDENCE,
                 "min_text_length": config.OCR_BUBBLE_MIN_TEXT_LENGTH,
-                "dedup_cooldown_sec": config.OCR_DEDUP_COOLDOWN_SEC,
             })
         except Exception:
             errorLogging()

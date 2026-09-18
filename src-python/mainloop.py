@@ -546,8 +546,6 @@ mapping = {
     "/set/data/ocr_min_confidence": {"status": True, "variable":controller.setOcrMinConfidence},
     "/get/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.getOcrBubbleMinTextLength},
     "/set/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.setOcrBubbleMinTextLength},
-    "/get/data/ocr_dedup_cooldown_sec": {"status": True, "variable":controller.getOcrDedupCooldownSec},
-    "/set/data/ocr_dedup_cooldown_sec": {"status": True, "variable":controller.setOcrDedupCooldownSec},
 
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},

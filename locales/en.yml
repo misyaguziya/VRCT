@@ -393,9 +393,6 @@ config_page:
         bubble_min_text_length:
             label: "Minimum text length"
             desc: "Bubbles with fewer characters than this are ignored. Default: 2."
-        dedup_cooldown_sec:
-            label: "Dedup cooldown (seconds)"
-            desc: "How long a delivered text is remembered. While remembered, the same text (including 1-2 character differences) is not delivered again. The entry is forgotten this many seconds after the bubble leaves the screen, so a later repeat counts as a new message. Default: 30."
 
     updater:
         install_panel:

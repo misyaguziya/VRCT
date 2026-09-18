@@ -132,10 +132,6 @@ class TestOcrPipelineInitClamping(unittest.TestCase):
         pipeline = self._pipeline(min_text_length=0)
         self.assertEqual(pipeline._min_text_length, 1)
 
-    def test_dedup_cooldown_has_a_floor_of_one(self) -> None:
-        pipeline = self._pipeline(dedup_cooldown_sec=0)
-        self.assertEqual(pipeline._dedup_cooldown, 1)
-
     def test_blank_source_language_falls_back_to_auto(self) -> None:
         pipeline = self._pipeline(source_language="")
         self.assertEqual(pipeline._source_language, "auto")
@@ -159,8 +155,8 @@ class TestDedupWithSlowTicks(unittest.TestCase):
     def _pipeline(self, **kwargs):
         return OcrPipeline(callback=lambda payload: None, source_language="auto", **kwargs)
 
-    def test_retention_is_at_least_twice_the_tick_interval(self) -> None:
-        pipeline = self._pipeline(dedup_cooldown_sec=1)
+    def test_retention_never_drops_below_twice_the_tick_interval(self) -> None:
+        pipeline = self._pipeline()
         used = []
         pipeline._dedup = Mock()
         pipeline._dedup.evictStale.side_effect = lambda now, retention_sec: used.append(retention_sec)
@@ -177,7 +173,7 @@ class TestDedupWithSlowTicks(unittest.TestCase):
             pipeline._tick()   # 1回目: 間隔が測れないので設定値のまま
             pipeline._tick()   # 2回目: 間隔3秒 -> 6秒まで引き上げ
 
-        self.assertEqual(used, [1, 6.0])
+        self.assertEqual(used, [30.0, 30.0])  # 30秒 > tick間隔3秒x2 なので定数のまま
 
 
 class TestApplyConfig(unittest.TestCase):
@@ -192,13 +188,11 @@ class TestApplyConfig(unittest.TestCase):
         return OcrPipeline(callback=lambda payload: None, **{"source_language": "auto", **kwargs})
 
     def test_scalar_settings_take_effect_on_the_next_tick(self) -> None:
-        pipeline = self._pipeline(poll_interval_ms=750, min_confidence=0.55,
-                                  min_text_length=2, dedup_cooldown_sec=8)
+        pipeline = self._pipeline(poll_interval_ms=750, min_confidence=0.55, min_text_length=2)
         pipeline.applyConfig({
             "poll_interval_ms": 250,
             "min_confidence": 0.3,
             "min_text_length": 5,
-            "dedup_cooldown_sec": 1,
         })
         pipeline._applyPending()
 
@@ -206,7 +200,6 @@ class TestApplyConfig(unittest.TestCase):
         self.assertAlmostEqual(pipeline._tick_budget, 0.25 * 0.8)
         self.assertAlmostEqual(pipeline._min_confidence, 0.3)
         self.assertEqual(pipeline._min_text_length, 5)
-        self.assertEqual(pipeline._dedup_cooldown, 1)
 
     def test_language_change_swaps_the_model(self) -> None:
         pipeline = self._pipeline()
