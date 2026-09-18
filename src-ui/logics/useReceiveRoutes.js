@@ -11,6 +11,9 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/enable_ai_models", ns: common, hook_name: "useIsVrctAvailable", method_name: "handleAiModelsAvailability" },
     { endpoint: "/get/data/compute_mode", ns: common, hook_name: "useComputeMode", method_name: "updateComputeMode" },
 
+    // OCR start-failure rollback push (backend flips the flag back off if the pipeline fails to start)
+    { endpoint: "/run/enable_ocr_capture", ns: configs, hook_name: "useOcr", method_name: "updateFromBackendEnableOcrCapture" },
+
     { endpoint: "/run/update_software", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
 
@@ -42,6 +45,7 @@ export const STATIC_ROUTE_META_LIST = [
     // Message Transcription
     { endpoint: "/run/transcription_send_mic_message", ns: common, hook_name: "useMessage", method_name: "addSentMessageLog" },
     { endpoint: "/run/transcription_receive_speaker_message", ns: common, hook_name: "useMessage", method_name: "addReceivedMessageLog" },
+    { endpoint: "/run/transcription_ocr_message", ns: common, hook_name: "useMessage", method_name: "addReceivedMessageLog" },
 
     // System Messages
     { endpoint: "/run/word_filter", ns: common, hook_name: "useMessage", method_name: "addSystemMessageLog_FromBackend" },

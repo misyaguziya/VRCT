@@ -36,7 +36,7 @@ try:
 except Exception:  # pragma: no cover - optional runtime
     whisper_models = {}  # type: ignore
 
-from utils import errorLogging, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
+from utils import errorLogging, printLog, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
 
 # NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
 # 対応する migration ヘルパは ADR-0004 でストリーミング/VAD 独自実装を撤退した際に
@@ -999,6 +999,16 @@ class Config:
     # -- Clipboard control ---
     ENABLE_CLIPBOARD = ManagedProperty('ENABLE_CLIPBOARD', type_=bool)
 
+    # --- VRChat chat-bubble OCR ---
+    ENABLE_OCR_CAPTURE = ManagedProperty('ENABLE_OCR_CAPTURE', type_=bool, serialize=False)
+    # Target language is intentionally absent: OCR reads other players' chat,
+    # so it always translates into your own language via getOutputTranslate.
+    OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str)
+    OCR_WINDOW_TITLE = ManagedProperty('OCR_WINDOW_TITLE', type_=str)
+    OCR_POLL_INTERVAL_MS = ManagedProperty('OCR_POLL_INTERVAL_MS', type_=int)
+    OCR_MIN_CONFIDENCE = ManagedProperty('OCR_MIN_CONFIDENCE', type_=(int, float))
+    OCR_BUBBLE_MIN_TEXT_LENGTH = ManagedProperty('OCR_BUBBLE_MIN_TEXT_LENGTH', type_=int)
+
     def init_config(self):
         # Read Only
         self._VERSION = "3.5.1-beta.1"
@@ -1289,6 +1299,21 @@ class Config:
         self._OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = "#000000"
         self._ENABLE_CLIPBOARD = False
         self._ENABLE_TELEMETRY = True
+
+        # OCR defaults (VRChat chat-bubble text capture)
+        self._ENABLE_OCR_CAPTURE = False
+        # PP-OCRv6 small が日英中＋ラテン文字系を1モデルで読むので "auto" が既定。
+        # ハングル・キリル・タイ・アラビア・デーヴァナーガリーは別モデルが要るため
+        # 明示選択する (選択肢は models/ocr/ocr_languages.py)。
+        self._OCR_SOURCE_LANGUAGE = "auto"
+        # Substring match against visible window titles (case-insensitive).
+        self._OCR_WINDOW_TITLE = "VRChat"
+        self._OCR_POLL_INTERVAL_MS = 750
+        # PP-OCRは読めていないときでもスコアが高い (実測: 正解の最小0.87に対し
+        # 誤りの中央値0.91)。0.55では何も落とせず、0.85なら正解を1件も失わずに
+        # 誤りの34%を落とせたのでこの値にしている。
+        self._OCR_MIN_CONFIDENCE = 0.85
+        self._OCR_BUBBLE_MIN_TEXT_LENGTH = 2
 
     def load_config(self):
         self._config_data = {}

@@ -1,0 +1,6 @@
+# チャットボックス検出モデル(YOLOv8n)の学習環境。開発マシン専用でVRCT本体には同梱しない。
+# CUDA 12.8 wheel (RTX 2080 Ti / sm_75 対応)。本体の requirements_cuda.txt と同じtorch系列。
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.7.0
+torchvision==0.22.0
+ultralytics==8.3.203

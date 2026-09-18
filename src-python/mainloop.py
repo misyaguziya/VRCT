@@ -71,6 +71,8 @@ run_mapping = {
 
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
+    "transcription_ocr":"/run/transcription_ocr_message",
+    "enable_ocr_capture":"/run/enable_ocr_capture",
 
     "check_mic_volume":"/run/check_mic_volume",
     "check_speaker_volume":"/run/check_speaker_volume",
@@ -541,6 +543,25 @@ mapping = {
     "/get/data/clipboard": {"status": True, "variable":controller.getClipboard},
     "/set/enable/clipboard": {"status": True, "variable":controller.setEnableClipboard},
     "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
+
+    # VRChat chat-bubble OCR
+    # Endpoint names must stay in sync with base_endpoint_name in
+    # src-ui/logics/configs/config_page_setter/ui_config_setter.js, which
+    # derives /get/data/<base>, /set/enable/<base> and /set/disable/<base>.
+    "/get/data/ocr_capture": {"status": True, "variable":controller.getEnableOcrCapture},
+    "/set/enable/ocr_capture": {"status": True, "variable":controller.setEnableOcrCapture},
+    "/set/disable/ocr_capture": {"status": True, "variable":controller.setDisableOcrCapture},
+    "/get/data/selectable_ocr_source_languages": {"status": True, "variable":controller.getSelectableOcrSourceLanguages},
+    "/get/data/ocr_source_language": {"status": True, "variable":controller.getOcrSourceLanguage},
+    "/set/data/ocr_source_language": {"status": True, "variable":controller.setOcrSourceLanguage},
+    "/get/data/ocr_window_title": {"status": True, "variable":controller.getOcrWindowTitle},
+    "/set/data/ocr_window_title": {"status": True, "variable":controller.setOcrWindowTitle},
+    "/get/data/ocr_poll_interval_ms": {"status": True, "variable":controller.getOcrPollIntervalMs},
+    "/set/data/ocr_poll_interval_ms": {"status": True, "variable":controller.setOcrPollIntervalMs},
+    "/get/data/ocr_min_confidence": {"status": True, "variable":controller.getOcrMinConfidence},
+    "/set/data/ocr_min_confidence": {"status": True, "variable":controller.setOcrMinConfidence},
+    "/get/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.getOcrBubbleMinTextLength},
+    "/set/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.setOcrBubbleMinTextLength},
 
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},

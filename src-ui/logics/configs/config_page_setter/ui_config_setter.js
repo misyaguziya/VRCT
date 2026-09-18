@@ -763,6 +763,65 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "release_channel",
     },
 
+    // OCR (VRChat chat-bubble capture)
+    {
+        Category: "Ocr",
+        Base_Name: "EnableOcrCapture",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "ocr_capture",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrWindowTitle",
+        default_value: "VRChat",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_window_title",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "SelectableOcrSourceLanguageList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        base_endpoint_name: "selectable_ocr_source_languages",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrSourceLanguage",
+        default_value: "auto",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_source_language",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrPollIntervalMs",
+        default_value: 750,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_poll_interval_ms",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrMinConfidence",
+        default_value: 0.85,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_min_confidence",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrBubbleMinTextLength",
+        default_value: 2,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_bubble_min_text_length",
+    },
+
     // AdvancedSettings
     {
         Category: "AdvancedSettings",
