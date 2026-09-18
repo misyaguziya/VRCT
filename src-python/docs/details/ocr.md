@@ -115,11 +115,10 @@ class OcrPipeline:
         self,
         callback: Callable[[dict], None],
         source_language: str = "auto",
+        window_title: str = "VRChat",
         poll_interval_ms: int = 750,
-        min_confidence: float = 0.55,
-        use_gpu: bool = True,
+        min_confidence: float = 0.85,
         min_text_length: int = 2,
-        dedup_cooldown_sec: int = 8,
     ) -> None:
         self._callback = callback
         self._stop_event = Event()
@@ -181,8 +180,10 @@ class OcrCapture:
 **覚えている間は同じ文を配送しない。** 時間で解禁する方式ではない。
 
 - 配送した文を `_DedupCache` (最大128件) に持ち、見るたびに「最後に見た時刻」を更新する
-- 保持時間は画面から**消えてから**測る。`OCR_DEDUP_COOLDOWN_SEC` 秒あいだ現れなければ忘れ、
-  以降に同じ文が出たら新しい発言として配送する
+- 保持時間は画面から**消えてから**測る。`DEDUP_RETENTION_SEC` (30秒、定数) のあいだ現れなければ
+  忘れ、以降に同じ文が出たら新しい発言として配送する。設定にはしていない。記憶だけで時間の上限を
+  持たないと「はい」「Wow!」のような短文がLRUから押し出されるまで二度と表示されず、静かな
+  インスタンスでは何時間もかかるため。一方でユーザーが決める材料も無い
 - 保持時間の下限は **tick間隔の2倍**。1tickはOCR1件あたり約0.8秒かかるので、設定値の方が
   短いと出続けている吹き出しでも見るたびに忘れられ、同じ文が繰り返し配送される
   (実機で 1秒設定 / tick 1〜2.6秒のときに再現、2026-09-18)
@@ -215,7 +216,7 @@ OCR系の設定は**実行中でも次のtickから反映される**。`Controll
 |---|---|
 | `OCR_SOURCE_LANGUAGE` | 使うモデルが変わる場合だけ推論器を作り直す (キャッシュ済みなら即座)。重複抑制のキャッシュも捨てる |
 | `OCR_WINDOW_TITLE` | キャプチャを開き直す |
-| `OCR_POLL_INTERVAL_MS` / `OCR_MIN_CONFIDENCE` / `OCR_BUBBLE_MIN_TEXT_LENGTH` / `OCR_DEDUP_COOLDOWN_SEC` | 値を差し替えるだけ |
+| `OCR_POLL_INTERVAL_MS` / `OCR_MIN_CONFIDENCE` / `OCR_BUBBLE_MIN_TEXT_LENGTH` | 値を差し替えるだけ |
 
 ReaderとキャプチャはOSリソース・スレッドに紐づくので、値を書き換えたスレッドではなく
 **使っているワーカースレッドの側で**作り直す。これが `applyConfig` が値を預かるだけで、
@@ -233,7 +234,6 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 | `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
 | `OCR_MIN_CONFIDENCE` | float | 0.85 | OCR 信頼度の下限（0.1〜0.99）。PP-OCRは誤読時もスコアが高く、実測では 0.55 で誤りを1件も落とせず、0.85 なら正解を失わずに誤りの34%を落とせた |
 | `OCR_BUBBLE_MIN_TEXT_LENGTH` | int | 2 | 最小テキスト長（1〜50） |
-| `OCR_DEDUP_COOLDOWN_SEC` | int | 30 | 配送済みの文を覚えておく秒数（1〜120）。覚えている間は同じ文を配送しない |
 
 ## エンドポイント
 

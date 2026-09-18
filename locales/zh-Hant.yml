@@ -385,9 +385,6 @@ config_page:
         bubble_min_text_length:
             label: "最小文字長度"
             desc: "字元數低於此值的氣泡將被忽略。預設值：2。"
-        dedup_cooldown_sec:
-            label: "去重冷卻時間 (秒)"
-            desc: "已投遞文字的記憶時間（秒）。在記憶期間不會再次投遞相同文字（含 1~2 個字元的差異）。氣泡從畫面消失後經過此時間即遺忘，之後出現相同文字會視為新發言投遞。預設值：30。"
 
     updater:
         install_panel:
