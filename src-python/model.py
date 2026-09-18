@@ -1354,7 +1354,7 @@ class Model:
         """Add a message to translation context history.
         
         Args:
-            source: "chat" | "mic" | "speaker"
+            source: "chat" | "mic" | "speaker" | "ocr"
             text: message content
         """
         self.ensure_initialized()
