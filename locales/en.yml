@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "No mic device detected."
     no_device_speaker: "No speaker device detected."
+    copy_to_clipboard_failed: "Failed to copy to the clipboard."
     threshold_invalid_value: "You can set it with a value between {{min}} to {{max}}."
     failed_download_weight_ctranslate2: "CTranslate2 weight download error."
     failed_download_weight_whisper: "Whisper weight download error."
@@ -24,6 +25,8 @@ common_error:
     invalid_value_speaker_record_timeout: "It cannot be greater than '{{speaker_phrase_timeout_label}}' with a value of 0 or more."
     invalid_value_speaker_phrase_timeout: "It cannot be set lower than '{{speaker_record_timeout_label}}' with a value of 0 or more."
     invalid_value_speaker_max_phrase: "You can set a number equal to or greater than 0."
+
+    invalid_hex_color: "Please enter a valid HEX color code (e.g., {{brand_color_hex}})."
 
 common_warning:
     unable_to_use_osc_query: "The following functions have been automatically disabled due to the OSC IP Address settings preventing OSC data from being received."
@@ -65,47 +68,29 @@ main_page:
     updating: "Now updating..."
 
 update_modal:
-    # Legacy keys (still used by other surfaces)
-    cpu_desc: "Use CPU only as the compute device."
-    cuda_desc: "Selectable between CPU and NVIDIA GPUs as compute devices."
-    cuda_compare_cpu_desc: "GPUs offer faster processing than CPUs."
-    cuda_disk_space_desc: "Requires approximately {{size}} of disk space."
-    close_modal: "Close"
-    download_latest_and_restart: "The latest version will be downloaded,\nand the app will automatically restart."
-    is_latest_version_already: "Already using the latest version"
-    is_current_compute_device: "The version currently in use"
-    # New UpdateModal (unified with the former Updater tab)
     title: "Update"
-    hero_update_available: "UPDATE AVAILABLE"
-    hero_up_to_date: "LATEST"
-    hero_up_to_date_desc: "You are on the latest version — no update needed."
-    hero_custom_pending: "REVIEW YOUR CHANGES"
-    current_prefix: "Current: "
+    summary_up_to_date_desc: "You are on the latest version — no update needed."
     channel_stable: "Stable"
     channel_beta: "Beta"
     compute_mode_cpu: "CPU"
-    compute_mode_gpu: "GPU (CUDA)"
-    beta_suffix: "Beta"
-    latest_suffix: "Latest"
-    install_latest_button: "Install Now"
-    install_button: "Install with These Choices"
-    close_button: "Close"
+    compute_mode_cuda: "GPU (CUDA)"
+    latest_label: "Latest"
+    install_latest_button: "Update to Latest Version"
+    install_button: "Reinstall with These Settings"
     section_pick_variant: "Pick a different version or build"
-    refresh_button: "Refresh"
-    refresh_button_title: "Fetch the latest release list"
+    refresh_button: "Check for Updates"
     channel_label: "Release channel"
     channel_desc: "Beta gives you early access but may be less stable."
     compute_mode_label: "Device build"
-    compute_mode_desc: "GPU (CUDA) runs faster on NVIDIA GPUs but adds ~5 GB to the download."
+    compute_mode_desc: "GPU (CUDA) runs faster on NVIDIA GPUs but requires ~5 GB of additional disk space."
     version_label: "Version to install"
     version_desc: "Pick from releases published on the selected channel."
     no_versions_available: "No releases are available on the selected channel yet."
     change_col_current: "Current"
     change_col_after: "After install"
     warn_downgrade: "This is a downgrade from {{from}} to {{to}}. Config file compatibility is not guaranteed."
-    warn_gpu_extra_size: "The GPU build requires roughly 5 GB of additional download."
-    warn_switch_to_beta: "You are switching to the Beta channel. Future update notifications will follow Beta releases."
-    warn_switch_to_stable: "You are switching to the Stable channel. Future update notifications will follow Stable releases."
+    warn_cuda_extra_size: "The GPU build requires roughly 5 GB of additional download."
+    warn_switch_channel: "You are switching to the {{channel}} channel. Future update notifications will follow {{channel}} releases."
 
 config_page:
     common:
@@ -138,7 +123,6 @@ config_page:
         transcription: "Transcription"
         others: "Other"
         hotkeys: "Hotkeys"
-        plugins: "Plugins"
         advanced_settings: "Advanced"
         updater: "Updater"
 
@@ -415,6 +399,9 @@ config_page:
 
     hotkeys:
         input_placeholder: "Press a key combination"
+        disabled_notice: "* Hotkeys are temporarily disabled while the settings page is open to prevent unintended actions."
+        error_in_use: "The hotkey ({{hotkey}}) for \"{{action_name}}\" cannot be registered because it is already in use elsewhere."
+        error_failed_to_register_at_launch: "The hotkey ({{hotkey}}) for \"{{action_name}}\" is unavailable because it is in use by another application."
         toggle_vrct_visibility:
             label: "Toggle VRCT visibility"
         toggle_translation:
@@ -423,18 +410,6 @@ config_page:
             label: "Toggle {{transcription_send}}"
         toggle_transcription_receive:
             label: "Toggle {{transcription_receive}}"
-
-    plugins:
-        downloaded_version: "Downloaded version: {{downloaded_version}}"
-        latest_version: "Latest version: {{latest_version}}"
-        available_after_updating: "Available after updating to the latest version"
-        unavailable_downloaded: "Currently Unavailable - Incompatible with the VRCT version in use"
-        no_latest_info: "Unable to retrieve the latest information"
-        using_latest_version: "Using the latest version"
-        available_latest_version: "Latest version available"
-        unavailable_latest_version: "Latest version currently unavailable"
-        available_in_latest_vrct_version: "Available in the latest VRCT version"
-        unavailable_not_downloaded: "Currently unavailable"
 
     advanced_settings:
         osc_ip_address:
@@ -479,18 +454,3 @@ config_page:
     notifications:
         save_success: "Settings have been saved."
         opened_folder: "Opened the folder."
-
-plugin_notifications:
-    downloading: "Downloading the plugin."
-    downloaded_success: "Downloaded successfully."
-    downloaded_error: "Download failed."
-
-    updating: "Updating the plugin."
-    updated_success: "Updated successfully."
-    updated_error: "Update failed."
-
-    disabled_out_of_support: "The plugin has been disabled. It's not supported on this VRCT version."
-    disabled_due_to_an_error: "An error was detected while running the plugin. Please report this to the plugin developer."
-
-    is_enabled: "The plugin enabled."
-    is_disabled: "The plugin disabled."

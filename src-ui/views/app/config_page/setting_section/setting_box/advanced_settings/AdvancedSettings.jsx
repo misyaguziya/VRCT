@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 
-import { useOpenFolder } from "@logics_common";
+import { useCopyToClipboard, useOpenFolder } from "@logics_common";
 import {
     useAdvancedSettings,
     useSaveButtonLogic,
@@ -20,7 +19,7 @@ import {
 } from "../_components";
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
-import CopySvg from "@images/copy.svg?react";
+import CopyThinSvg from "@images/copy_thin.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 
 export const AdvancedSettings = () => {
@@ -188,6 +187,7 @@ const WebsocketPortContainer = () => {
 
 const WebsocketUrlContainer = () => {
     const { t } = useI18n();
+    const { copyToClipboard } = useCopyToClipboard();
     const { currentWebsocketHost, currentWebsocketPort, currentWebsocketAuthToken } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
@@ -196,18 +196,14 @@ const WebsocketUrlContainer = () => {
         ? `ws://${host}:${currentWebsocketPort.data}/?token=${encodeURIComponent(token)}`
         : `ws://${host}:${currentWebsocketPort.data}`;
 
-    const copyUrlToClipboard = async () => {
-        await navigator.clipboard.writeText(url);
-    };
-
     return (
         <ActionButtonContainer
             label={t("config_page.advanced_settings.websocket_url.label")}
             desc={url}
-            IconComponent={CopySvg}
+            IconComponent={CopyThinSvg}
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
-            onclickFunction={copyUrlToClipboard}
+            onclickFunction={() => copyToClipboard(url)}
         />
     );
 };
@@ -248,23 +244,20 @@ const EnableObsBrowserSourceContainer = () => {
 
 const ObsBrowserSourceUrlContainer = () => {
     const { t } = useI18n();
+    const { copyToClipboard } = useCopyToClipboard();
     const { currentWebsocketHost, currentObsBrowserSourcePort } = useAdvancedSettings();
 
     const host = currentWebsocketHost.data === "0.0.0.0" ? "127.0.0.1" : currentWebsocketHost.data;
     const url = `http://${host}:${currentObsBrowserSourcePort.data}/obs`;
 
-    const copyUrlToClipboard = async () => {
-        await navigator.clipboard.writeText(url);
-    };
-
     return (
         <ActionButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_url.label")}
             desc={url}
-            IconComponent={CopySvg}
+            IconComponent={CopyThinSvg}
             ClickedIconComponent={CheckMarkSvg}
             clicked_duration={1000}
-            onclickFunction={copyUrlToClipboard}
+            onclickFunction={() => copyToClipboard(url)}
         />
     );
 };
@@ -272,26 +265,21 @@ const ObsBrowserSourceUrlContainer = () => {
 const ObsBrowserSourcePortContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourcePort, setObsBrowserSourcePort } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourcePort.data}`);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourcePort.data,
+        state: currentObsBrowserSourcePort.state,
+        setFunction: setObsBrowserSourcePort,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setObsBrowserSourcePort(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourcePort.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourcePort.data}`);
-    }, [currentObsBrowserSourcePort]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_port.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourcePort.state}
@@ -304,26 +292,21 @@ const ObsBrowserSourcePortContainer = () => {
 const ObsBrowserSourceMaxMessagesContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourceMaxMessages, setObsBrowserSourceMaxMessages } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourceMaxMessages.data}`);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourceMaxMessages.data,
+        state: currentObsBrowserSourceMaxMessages.state,
+        setFunction: setObsBrowserSourceMaxMessages,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setObsBrowserSourceMaxMessages(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourceMaxMessages.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourceMaxMessages.data}`);
-    }, [currentObsBrowserSourceMaxMessages]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_max_messages.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceMaxMessages.state}
@@ -336,26 +319,21 @@ const ObsBrowserSourceMaxMessagesContainer = () => {
 const ObsBrowserSourceDisplayDurationContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourceDisplayDuration, setObsBrowserSourceDisplayDuration } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourceDisplayDuration.data}`);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourceDisplayDuration.data,
+        state: currentObsBrowserSourceDisplayDuration.state,
+        setFunction: setObsBrowserSourceDisplayDuration,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setObsBrowserSourceDisplayDuration(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourceDisplayDuration.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourceDisplayDuration.data}`);
-    }, [currentObsBrowserSourceDisplayDuration]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_display_duration.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceDisplayDuration.state}
@@ -368,26 +346,21 @@ const ObsBrowserSourceDisplayDurationContainer = () => {
 const ObsBrowserSourceFadeoutDurationContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourceFadeoutDuration, setObsBrowserSourceFadeoutDuration } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourceFadeoutDuration.data}`);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourceFadeoutDuration.data,
+        state: currentObsBrowserSourceFadeoutDuration.state,
+        setFunction: setObsBrowserSourceFadeoutDuration,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setObsBrowserSourceFadeoutDuration(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourceFadeoutDuration.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourceFadeoutDuration.data}`);
-    }, [currentObsBrowserSourceFadeoutDuration]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_fadeout_duration.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFadeoutDuration.state}
@@ -400,26 +373,21 @@ const ObsBrowserSourceFadeoutDurationContainer = () => {
 const ObsBrowserSourceFontSizeContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourceFontSize, setObsBrowserSourceFontSize } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourceFontSize.data}`);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourceFontSize.data,
+        state: currentObsBrowserSourceFontSize.state,
+        setFunction: setObsBrowserSourceFontSize,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setObsBrowserSourceFontSize(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourceFontSize.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourceFontSize.data}`);
-    }, [currentObsBrowserSourceFontSize]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_font_size.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFontSize.state}
@@ -432,25 +400,17 @@ const ObsBrowserSourceFontSizeContainer = () => {
 const ObsBrowserSourceFontColorContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourceFontColor, setObsBrowserSourceFontColor } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourceFontColor.data}`);
 
-    const onChangeFunction = (value) => {
-        setInputValue(value);
-    };
-
-    const saveFunction = () => {
-        setObsBrowserSourceFontColor(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourceFontColor.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourceFontColor.data}`);
-    }, [currentObsBrowserSourceFontColor]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourceFontColor.data,
+        state: currentObsBrowserSourceFontColor.state,
+        setFunction: setObsBrowserSourceFontColor,
+    });
 
     return (
         <ColorEntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_font_color.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFontColor.state}
@@ -462,26 +422,21 @@ const ObsBrowserSourceFontColorContainer = () => {
 const ObsBrowserSourceFontOutlineThicknessContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourceFontOutlineThickness, setObsBrowserSourceFontOutlineThickness } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourceFontOutlineThickness.data}`);
+
+    const { variable, onChangeFunction: rawOnChange, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourceFontOutlineThickness.data,
+        state: currentObsBrowserSourceFontOutlineThickness.state,
+        setFunction: setObsBrowserSourceFontOutlineThickness,
+    });
 
     const onChangeFunction = (value) => {
-        value = value.replace(/[^0-9]/g, "");
-        setInputValue(value);
+        rawOnChange(value.replace(/[^0-9]/g, ""));
     };
-
-    const saveFunction = () => {
-        setObsBrowserSourceFontOutlineThickness(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourceFontOutlineThickness.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourceFontOutlineThickness.data}`);
-    }, [currentObsBrowserSourceFontOutlineThickness]);
 
     return (
         <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_font_outline_thickness.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFontOutlineThickness.state}
@@ -494,25 +449,17 @@ const ObsBrowserSourceFontOutlineThicknessContainer = () => {
 const ObsBrowserSourceFontOutlineColorContainer = () => {
     const { t } = useI18n();
     const { currentObsBrowserSourceFontOutlineColor, setObsBrowserSourceFontOutlineColor } = useAdvancedSettings();
-    const [input_value, setInputValue] = useState(`${currentObsBrowserSourceFontOutlineColor.data}`);
 
-    const onChangeFunction = (value) => {
-        setInputValue(value);
-    };
-
-    const saveFunction = () => {
-        setObsBrowserSourceFontOutlineColor(input_value);
-    };
-
-    useEffect(() => {
-        if (currentObsBrowserSourceFontOutlineColor.state === "pending") return;
-        setInputValue(`${currentObsBrowserSourceFontOutlineColor.data}`);
-    }, [currentObsBrowserSourceFontOutlineColor]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentObsBrowserSourceFontOutlineColor.data,
+        state: currentObsBrowserSourceFontOutlineColor.state,
+        setFunction: setObsBrowserSourceFontOutlineColor,
+    });
 
     return (
         <ColorEntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.obs_browser_source_font_outline_color.label")}
-            variable={input_value}
+            variable={variable}
             saveFunction={saveFunction}
             onChangeFunction={onChangeFunction}
             state={currentObsBrowserSourceFontOutlineColor.state}

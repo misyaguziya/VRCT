@@ -10,6 +10,7 @@ common:
 common_error:
     no_device_mic: "마이크 디바이스를 찾지 못했습니다."
     no_device_speaker: "스피커 디바이스를 찾지 못했습니다."
+    copy_to_clipboard_failed: "클립보드에 복사하지 못했습니다."
     threshold_invalid_value: "{{min}}부터 {{max}}까지의 숫자로 설정할 수 있습니다."
     failed_download_weight_ctranslate2: "CTranslate2 모델 다운로드에 실패했습니다."
     failed_download_weight_whisper: "Whisper 모델 다운로드에 실패했습니다."
@@ -24,6 +25,8 @@ common_error:
     invalid_value_speaker_record_timeout: "0 이상에서 '{{speaker_phrase_timeout_label}}'보다 클 수 없습니다."
     invalid_value_speaker_phrase_timeout: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
     invalid_value_speaker_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
+
+    invalid_hex_color: "유효한 HEX 색상 코드(예: {{brand_color_hex}}) 형식으로 입력해 주세요."
 
 common_warning:
     unable_to_use_osc_query: "OSC IP 주소 설정으로 인해 OSC 데이터 수신이 불가능하므로, 아래 기능이 자동으로 비활성화되었습니다."
@@ -65,45 +68,29 @@ main_page:
     updating: "업데이트 중..."
 
 update_modal:
-    cpu_desc: "처리 장치로 CPU만을 사용합니다."
-    cuda_desc: "처리 장치로 CPU와 NVIDIA GPU를 선택할 수 있습니다."
-    cuda_compare_cpu_desc: "GPU 선택 시, CPU에 비해 처리가 빠릅니다."
-    cuda_disk_space_desc: "약 {{size}}의 디스크 용량이 필요합니다."
-    close_modal: "닫기"
-    download_latest_and_restart: "최신 버전이 다운로드되면 앱이 자동으로 재시작됩니다."
-    is_latest_version_already: "이미 최신 버전을 사용 중입니다."
-    is_current_compute_device: "현재 사용 중인 버전"
     title: "업데이트"
-    hero_update_available: "업데이트 있음"
-    hero_up_to_date: "최신 버전"
-    hero_up_to_date_desc: "최신 버전을 사용 중입니다. 업데이트가 필요하지 않습니다."
-    hero_custom_pending: "이 설정으로 설치"
-    current_prefix: "현재: "
+    summary_up_to_date_desc: "최신 버전을 사용 중입니다. 업데이트가 필요하지 않습니다."
     channel_stable: "정식판"
     channel_beta: "베타판"
     compute_mode_cpu: "CPU 버전"
-    compute_mode_gpu: "GPU 버전 (CUDA)"
-    beta_suffix: "베타"
-    latest_suffix: "최신"
-    install_latest_button: "지금 업데이트"
-    install_button: "이 설정으로 업데이트"
-    close_button: "닫기"
+    compute_mode_cuda: "GPU 버전 (CUDA)"
+    latest_label: "최신"
+    install_latest_button: "최신 버전으로 업데이트"
+    install_button: "이 설정으로 재설치"
     section_pick_variant: "다른 버전 또는 구성 선택"
-    refresh_button: "새로 고침"
-    refresh_button_title: "최신 목록 가져오기"
+    refresh_button: "업데이트 확인"
     channel_label: "릴리스 채널"
     channel_desc: "베타판은 새로운 기능을 먼저 사용할 수 있지만 불안정할 수 있습니다."
     compute_mode_label: "장치 구성"
-    compute_mode_desc: "GPU 버전은 NVIDIA GPU에서 빠르게 동작하지만 약 5GB 더 커집니다."
+    compute_mode_desc: "GPU 버전은 NVIDIA GPU에서 빠르게 동작하지만 약 5GB의 디스크 공간이 필요합니다."
     version_label: "설치할 버전"
     version_desc: "선택한 채널에 공개된 릴리스 중에서 선택할 수 있습니다."
     no_versions_available: "선택한 채널에서 사용할 수 있는 버전이 없습니다."
     change_col_current: "현재"
     change_col_after: "설치 후"
     warn_downgrade: "{{from}}에서 {{to}}로의 다운그레이드입니다. 설정 파일의 호환성은 보장되지 않습니다."
-    warn_gpu_extra_size: "GPU 버전은 약 5GB의 추가 다운로드가 필요합니다."
-    warn_switch_to_beta: "베타 채널로 전환됩니다. 이후 업데이트 알림도 베타판을 기준으로 합니다."
-    warn_switch_to_stable: "정식 채널로 전환됩니다. 이후 업데이트 알림도 정식판을 기준으로 합니다."
+    warn_cuda_extra_size: "GPU 버전은 약 5GB의 추가 다운로드가 필요합니다."
+    warn_switch_channel: "{{channel}} 채널로 전환됩니다. 이후 업데이트 알림도 {{channel}}을 기준으로 합니다."
 
 config_page:
     common:
@@ -136,7 +123,6 @@ config_page:
         transcription: "음성인식"
         others: "기타"
         hotkeys: "단축키"
-        plugins: "플러그인"
         advanced_settings: "고급 설정"
         updater: "업데이트"
 
@@ -407,6 +393,9 @@ config_page:
 
     hotkeys:
         input_placeholder: "키 조합을 입력하세요"
+        disabled_notice: "※설정 화면이 열려 있는 동안에는 오작동을 방지하기 위해 단축키 기능이 일시적으로 비활성화됩니다."
+        error_in_use: "\"{{action_name}}\" 단축키({{hotkey}})가 이미 다른 곳에서 사용 중이므로 등록할 수 없습니다."
+        error_failed_to_register_at_launch: "\"{{action_name}}\" 단축키({{hotkey}})가 다른 애플리케이션에서 사용 중이므로 사용할 수 없습니다."
         toggle_vrct_visibility:
             label: "VRCT 최소화/활성화 전환"
         toggle_translation:
@@ -415,18 +404,6 @@ config_page:
             label: "'{{transcription_send}}' 켜기/끄기 전환"
         toggle_transcription_receive:
             label: "'{{transcription_receive}}' 켜기/끄기 전환"
-
-    plugins:
-        downloaded_version: "다운로드된 버전: {{downloaded_version}}"
-        latest_version: "최신 버전: {{latest_version}}"
-        available_after_updating: "최신 버전으로 업데이트 후 이용 가능"
-        unavailable_downloaded: "현재 사용 중인 VRCT 버전과의 호환성 문제로 인해 이용 불가"
-        no_latest_info: "최신 정보를 가져올 수 없습니다"
-        using_latest_version: "최신 버전을 사용 중"
-        available_latest_version: "최신 버전을 이용 가능"
-        unavailable_latest_version: "최신 버전은 현재 이용 불가"
-        available_in_latest_vrct_version: "VRCT 최신 버전에서 이용 가능"
-        unavailable_not_downloaded: "현재 이용 불가"
 
     advanced_settings:
         osc_ip_address:
@@ -471,18 +448,3 @@ config_page:
     notifications:
         save_success: "설정을 저장했습니다."
         opened_folder: "폴더를 열었습니다."
-
-plugin_notifications:
-    downloading: "플러그인을 다운로드 중입니다."
-    downloaded_success: "플러그인 다운로드가 완료되었습니다."
-    downloaded_error: "플러그인 다운로드에 실패했습니다."
-
-    updating: "플러그인을 업데이트 중입니다."
-    updated_success: "플러그인 업데이트가 완료되었습니다."
-    updated_error: "플러그인 업데이트에 실패했습니다."
-
-    disabled_out_of_support: "현재 버전과 호환되지 않습니다. 플러그인을 비활성화했습니다."
-    disabled_due_to_an_error: "플러그인 실행 중 오류를 감지했습니다. 플러그인 개발자에게 보고해 주세요."
-
-    is_enabled: "플러그인을 활성화했습니다."
-    is_disabled: "플러그인을 비활성화했습니다."

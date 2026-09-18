@@ -1,1 +1,0 @@
-// This is for preserving plugins folder. It will be detected and created 'plugins' folder to target/debug/ by tauri build. do not delete it.

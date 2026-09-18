@@ -4,27 +4,30 @@ from deepl import DeepLClient
 try:
     from .translation_languages import translation_lang
     from .translation_utils import ctranslate2_weights
-    from .translation_bing import parse_bing_credentials
     from .translation_providers import TRANSLATION_PROVIDER_REGISTRY
 except Exception:
     import sys
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang
     from translation_utils import ctranslate2_weights
-    from translation_bing import parse_bing_credentials
     from translation_providers import TRANSLATION_PROVIDER_REGISTRY
 
 from utils import errorLogging, getBestComputeType
 
 try:
+    # Bing の認証情報パース (parse_bing_credentials) は monkey-patch を
+    # やめ、フォーク本体の Bing.get_tk へ取り込んだ。
     from translators import translate_text as other_web_Translator
-    from translators.server import _bing as bing_translator
-    bing_translator.get_tk = parse_bing_credentials
     ENABLE_TRANSLATORS = True
 except Exception:
     other_web_Translator = None  # type: ignore
-    bing_translator = None
     ENABLE_TRANSLATORS = False
+
+# translators 経由 (Google/Bing/Papago) の HTTP タイムアウト。
+# ライブラリ既定は timeout=None = 無制限で、応答が返らないと呼び出し元の
+# スレッドが永久に止まる。VRCT のパイプラインは単一スレッドなので、
+# 翻訳のハングは文字起こしごと停止させ、最終的に watchdog が発火する。
+_WEB_TRANSLATOR_TIMEOUT_SECONDS = 10
 
 import warnings
 from threading import RLock
@@ -636,6 +639,7 @@ class Translator:
                             translator="google",
                             from_language=source_language,
                             to_language=target_language,
+                            timeout=_WEB_TRANSLATOR_TIMEOUT_SECONDS,
                         )
                 case "Bing":
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
@@ -644,6 +648,7 @@ class Translator:
                             translator="bing",
                             from_language=source_language,
                             to_language=target_language,
+                            timeout=_WEB_TRANSLATOR_TIMEOUT_SECONDS,
                         )
                 case "Papago":
                     if ENABLE_TRANSLATORS is True and other_web_Translator is not None:
@@ -652,6 +657,7 @@ class Translator:
                             translator="papago",
                             from_language=source_language,
                             to_language=target_language,
+                            timeout=_WEB_TRANSLATOR_TIMEOUT_SECONDS,
                         )
                 case "CTranslate2":
                     result = self.translateCTranslate2(

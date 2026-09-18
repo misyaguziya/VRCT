@@ -48,7 +48,7 @@ from .transcription_openai_compatible import TRANSCRIPTION_API_ENGINES as _API_T
 _CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
 
 from pydub import AudioSegment
-from errors import ErrorCode
+from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
 from utils import errorLogging, printLog
 
 import warnings
@@ -80,6 +80,21 @@ VAD_PRE_PAD_MS = 300
 VAD_POST_PAD_MS = 500
 
 
+def _bufferedSeconds(source_info: Dict[str, Any]) -> float:
+    """蓄積バッファ (last_sample) が表す音声の秒数。
+
+    PCM の生バイト列なので、バイト数を「1秒あたりのバイト数」で割るだけ。
+    sample_width / channels が 0 や未設定でも落ちないようにしておく
+    (音声デバイスの切り替え中に一時的に不正な値が入りうる)。
+    """
+    bytes_per_second = (
+        source_info["sample_rate"] * source_info["sample_width"] * source_info["channels"]
+    )
+    if not bytes_per_second:
+        return 0.0
+    return len(source_info["last_sample"]) / bytes_per_second
+
+
 class AudioTranscriber:
     """Convert queued audio buffers into transcripts.
 
@@ -106,8 +121,10 @@ class AudioTranscriber:
         api_model: Optional[str] = None,
         api_model_languages: Optional[List[str]] = None,
         vad_segmented: bool = False,
+        source_label: Optional[str] = None,
     ) -> None:
         self.speaker = speaker
+        self.source = source_label or ("speaker" if speaker else "mic")
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
         # True の場合、audio_queue に積まれる各アイテムは既に VAD
@@ -160,7 +177,7 @@ class AudioTranscriber:
                 )
             except Exception:
                 errorLogging()
-                self._api_provider = None
+                raise
         elif transcription_engine == "Deepgram":
             self.transcription_engine = transcription_engine
             try:
@@ -171,7 +188,7 @@ class AudioTranscriber:
                 )
             except Exception:
                 errorLogging()
-                self._api_provider = None
+                raise
 
     def _resolve_provider(self):
         """`self.transcription_engine`/`self.whisper_model` の"現在の"値を見て
@@ -260,6 +277,12 @@ class AudioTranscriber:
         """
         source_info = self.audio_sources
         transcribed = False
+        # last_sample に「まだ一度も送信していない追記」があるか。
+        # Google の interim_send をキューのドレイン単位で1回に畳む
+        # (下記参照) にあたり、reset_only() が前提にしている
+        # 「この last_sample は直前に送信済み」が崩れるため、それを
+        # 明示的に追跡して取りこぼしを防ぐ。
+        unsent = False
         is_google = self.transcription_engine == "Google"
         kind = "speaker" if self.speaker else "mic"
 
@@ -281,26 +304,30 @@ class AudioTranscriber:
                 source_info["last_sample"] = original
 
         def finalize() -> None:
-            nonlocal transcribed
+            nonlocal transcribed, unsent
             if send_current_buffer():
                 transcribed = True
             source_info["last_sample"] = bytes()
             source_info["phrase_started_at"] = None
+            unsent = False
 
         def interim_send() -> None:
             # Google 専用: finalize と異なり last_sample/phrase_started_at を
             # リセットしない。次のチャンクが来たら、今回よりさらに育った
             # 同じ発話の累積バッファを再送信することになる (v3.5.0 と同じ)。
-            nonlocal transcribed
+            nonlocal transcribed, unsent
             if send_current_buffer():
                 transcribed = True
+            unsent = False
 
         def reset_only() -> None:
             # Google 専用: interim_send() で直前に送信済みの内容を
             # もう一度 _finalizeAndTranscribe に通すと無駄な二重送信に
             # なるため、次のフレーズのための状態リセットだけ行う。
+            nonlocal unsent
             source_info["last_sample"] = bytes()
             source_info["phrase_started_at"] = None
+            unsent = False
 
         if self.vad_segmented:
             while True:
@@ -313,7 +340,13 @@ class AudioTranscriber:
                     source_info["phrase_started_at"] = time_spoken
                 source_info["last_sample"] += data
                 source_info["last_spoken"] = time_spoken
-                accumulated_sec = (time_spoken - source_info["phrase_started_at"]).total_seconds()
+                # 蓄積されている音声そのものの長さを使う。
+                # セグメント到着時刻の差 (time_spoken - phrase_started_at) では
+                # フレーズ最初のセグメントが必ず 0 になり、そのセグメントが
+                # 含む音声 (VAD の max_speech_frames 上限まで育つので実機では
+                # 約7秒) を丸ごと取りこぼす。結果、下の 15 秒の安全弁が
+                # 実際には約 22 秒まで発火しなかった。
+                accumulated_sec = _bufferedSeconds(source_info)
 
                 if reason != "max_duration":
                     # 自然な区切り (silence/flush) → ここまでの蓄積分を
@@ -332,7 +365,12 @@ class AudioTranscriber:
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
                     )
                     finalize()
-                elif is_google:
+                elif is_google and audio_queue.empty():
+                    # 非VAD経路と同じドレイン単位の畳み込み (下記ループの
+                    # 同じ判定を参照)。キューに次の segment が控えている
+                    # 状態で送っても、後でより完全なテキストに置き換わる
+                    # だけの中間結果に ASR 1回分と翻訳1回分を払うことに
+                    # なる。控えている間は下の else と同じく蓄積を続ける。
                     printLog(
                         f"[VAD-merge][{kind}] interim-send (Google) reason={reason!r} "
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
@@ -345,6 +383,16 @@ class AudioTranscriber:
                         f"[VAD-merge][{kind}] accumulate reason={reason!r} "
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
                     )
+
+                if transcribed:
+                    # 非VAD経路と同じ理由 (下記ループの同じ判定を参照)。
+                    # 呼び出し元が配信できるのはこの関数から戻った後なので、
+                    # 1回の呼び出しで ASR を何度も回すと、その間ずっと何も
+                    # 表示されないまま溜まり、最後にまとめて出る。
+                    # 実機ログ (VAD有効) で、2件が同一ミリ秒で配信された
+                    # 直後に translate=30秒 が観測された。
+                    return True
+
             if not transcribed:
                 time.sleep(0.01)
             return transcribed
@@ -359,21 +407,56 @@ class AudioTranscriber:
                 source_info["last_spoken"] is not None
                 and time_spoken - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout)
             ):
-                # Google の場合、ここに残っている last_sample は直前の
-                # ループで既に interim_send() 済みなので、再送信せず
-                # リセットだけする (無駄な二重送信を避ける)。
-                reset_only() if is_google else finalize()
+                # Google の場合、ここに残っている last_sample は通常
+                # 直前のループで既に interim_send() 済みなので、再送信せず
+                # リセットだけする (無駄な二重送信を避ける)。ただし
+                # ドレイン畳み込み (下記) で送信を飛ばしていた場合は
+                # 未送信のまま捨てることになるので、その時は送ってから
+                # リセットする。
+                if is_google and not unsent:
+                    reset_only()
+                else:
+                    finalize()
 
             if source_info["phrase_started_at"] is None:
                 source_info["phrase_started_at"] = time_spoken
 
             source_info["last_sample"] += data
             source_info["last_spoken"] = time_spoken
+            unsent = True
 
-            if time_spoken - source_info["phrase_started_at"] >= timedelta(seconds=MAX_PHRASE_DURATION_SECONDS):
+            # VAD 経路と同じく、蓄積されている音声そのものの長さで測る。
+            # チャンクの到着時刻の差では、フレーズ最初のチャンクが含む音声
+            # (listen_energy_and_audio_in_background はフレーズ単位で
+            # コールバックするので、record_timeout = 既定3秒まで育つ) が
+            # 丸ごと欠落し、15秒の安全弁が約18秒まで発火しない。
+            # 上の phrase_timeout 判定は「到着の間隔 = 無音ギャップ」を
+            # 見るものなので、そちらは時刻のままで正しい。
+            if _bufferedSeconds(source_info) >= MAX_PHRASE_DURATION_SECONDS:
                 finalize()
-            elif is_google:
+            elif is_google and audio_queue.empty():
+                # ドレイン単位で1回に畳む。interim_send() は「育っていく
+                # 累積バッファ」を毎回まるごと ASR に投げるため、キューに
+                # 既に次のチャンクが控えている状態で送るのは、後でより
+                # 完全なテキストに置き換わるだけの中間結果に ASR 1回分の
+                # コストを払うことになる。さらにその中間結果は配信側で
+                # 翻訳まで通るため、遅延が雪だるま式に悪化する。
+                # チャンクが1個ずつ届く通常時は get 直後にキューが空なので
+                # 従来と同じ挙動になり、遅れている時だけ無駄が畳まれる。
                 interim_send()
+
+            if transcribed:
+                # 1フレーズ確定したら、残りのチャンクを処理せずに即座に返す。
+                # 呼び出し元 (model.sendTranscript) が配信できるのはこの
+                # 関数から戻った後なので、1回の呼び出しで ASR を何度も
+                # 回すと、その間ずっと何も表示されないまま溜まり続け、
+                # 最後にまとめてドッと出る。実機ログで「約14秒間に ASR が
+                # 6回成功、その間の配信はゼロ、直後に4件まとめて配信」を
+                # 確認した (1件あたりの ASR 呼び出しが2〜3秒かかるため、
+                # 溜まっているほど1回の呼び出しが長くなる)。
+                # 残ったチャンクはキューに置いたままにする。呼び出し元は
+                # ループで即座に呼び直すため取りこぼしにはならない。
+                return True
 
         if (
             source_info["last_sample"]
@@ -381,9 +464,13 @@ class AudioTranscriber:
             and datetime.now() - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout)
         ):
             # Google はループ内の interim_send() でこの時点の last_sample を
-            # 直前に既に送信済み (末尾のチャンクが来た回のループで送られて
-            # いる) なので、再送信せずリセットだけする。
-            reset_only() if is_google else finalize()
+            # 通常は既に送信済み (末尾のチャンクが来た回のループで送られて
+            # いる) なので、再送信せずリセットだけする。未送信で残って
+            # いる場合だけ送ってからリセットする。
+            if is_google and not unsent:
+                reset_only()
+            else:
+                finalize()
 
         if not transcribed:
             time.sleep(0.01)
@@ -424,12 +511,31 @@ class AudioTranscriber:
             self.last_api_error_code = None
 
         best: Dict[str, Any] = {"confidence": 0, "text": "", "language": None}
+        provider_error: Optional[Exception] = None
+        # ASR 呼び出しの所要時間。「発話終了から画面表示まで」の内訳のうち
+        # ASR と翻訳のどちらが支配的かを実測で判断するための計装
+        # (再評価 2026-09-14 M-1)。best dict に載せることで getTranscript()
+        # → transcript_fnc → Controller._processMessage までそのまま運ばれる。
+        asr_started_at = time.perf_counter()
+        # 候補言語ごとの呼び出し内訳。`_finalizeAndTranscribe` 1回の中で
+        # provider.transcribe() が何回走ったかは、従来ログから見えなかった。
+        # Google は「検出された言語」の概念が無く is_definitive が常に False
+        # なので必ず候補言語の数だけ叩く一方、Whisper系は自分で言語を検出し
+        # 一致すれば早期 break、Deepgram は常に1回で済む。つまり同じ
+        # `asr=..ms` でも中身の回数がエンジンと設定で変わる。
+        # speaker 側は SELECTED_TARGET_LANGUAGES を候補に使うため、
+        # ターゲット言語を増やすとここが増える (mic 側は SELECTED_YOUR_LANGUAGES
+        # なので通常1つ)。
+        language_calls: List[str] = []
         try:
             audio_data = self.audio_sources["process_data_func"]()
             provider = self._resolve_provider()
-            if provider is not None:
+            if provider is None:
+                provider_error = RuntimeError("transcription provider is unavailable")
+            else:
                 force_language = len(languages) == 1
                 for language, country in zip(languages, countries):
+                    call_started_at = time.perf_counter()
                     try:
                         text, confidence, is_definitive = provider.transcribe(
                             audio_data,
@@ -441,16 +547,35 @@ class AudioTranscriber:
                             force_language=force_language,
                         )
                     except UnknownValueError:
+                        language_calls.append(f"{language}=nomatch")
                         continue
                     except TranscriptionApiError as exc:
                         self.last_recognition_error = True
                         self.last_api_error_code = exc.error_code
+                        provider_error = provider_error or exc
+                        language_calls.append(f"{language}=error")
+                        errorLogging()
                         continue
-                    except Exception:
+                    except Exception as exc:  # noqa: BLE001 - convert to pipeline failure
                         self.last_recognition_error = True
+                        provider_error = provider_error or exc
+                        language_calls.append(f"{language}=error")
                         errorLogging()
                         continue
 
+                    elapsed_ms = round((time.perf_counter() - call_started_at) * 1000)
+                    if text:
+                        language_calls.append(f"{language}={elapsed_ms}ms")
+                    else:
+                        # 「認識結果0件」を例外ではなく空文字で返すプロバイダが
+                        # ある。GoogleProvider は UnknownValueError を内部で
+                        # 握って ("", 0.0, False) を返すため、上の
+                        # except UnknownValueError は Google では一度も発火
+                        # しない。ここで拾わないと、何も認識できなかった
+                        # 呼び出しが成功したかのように所要時間だけログに出て、
+                        # 失敗率の内訳 (nomatch なのか timeout なのか) を
+                        # 実ログから追えない。
+                        language_calls.append(f"{language}=nomatch({elapsed_ms}ms)")
                     if confidence > best["confidence"]:
                         best = {"confidence": confidence, "text": text, "language": language}
                     if is_definitive:
@@ -458,19 +583,41 @@ class AudioTranscriber:
 
         except UnknownValueError:
             pass
-        except Exception:
+        except AudioPipelineError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - convert to pipeline failure
             errorLogging()
+            provider_error = provider_error or exc
 
+        asr_elapsed_ms = round((time.perf_counter() - asr_started_at) * 1000)
         self.asr_attempts += 1
         succeeded = best["text"] != ""
+        if provider_error is not None and not succeeded:
+            failure = AudioPipelineFailure(
+                error_code=ErrorCode.ASR_ERROR,
+                stage="asr",
+                source=self.source,
+                message=ERROR_METADATA[ErrorCode.ASR_ERROR]["message"],
+                exception_type=type(provider_error).__name__,
+            )
+            printLog(
+                f"[ASR-error][{self.source}][{self.transcription_engine}] "
+                f"error_type={type(provider_error).__name__} asr={asr_elapsed_ms}ms "
+                f"calls={len(language_calls)}/{len(languages)} [{' '.join(language_calls)}]"
+            )
+            raise AudioPipelineError(failure) from provider_error
         if succeeded:
+            self.last_recognition_error = False
             self.asr_successes += 1
+            best["asr_ms"] = asr_elapsed_ms
             self.updateTranscript(best)
         success_rate = (self.asr_successes / self.asr_attempts) * 100
         printLog(
             f"[ASR-stats][{'speaker' if self.speaker else 'mic'}][{self.transcription_engine}] "
             f"this_call={'success' if succeeded else 'failure'} "
-            f"attempts={self.asr_attempts} successes={self.asr_successes} rate={success_rate:.1f}%"
+            f"attempts={self.asr_attempts} successes={self.asr_successes} rate={success_rate:.1f}% "
+            f"asr={asr_elapsed_ms}ms calls={len(language_calls)}/{len(languages)} "
+            f"[{' '.join(language_calls)}]"
         )
         return True
 
@@ -510,6 +657,18 @@ class AudioTranscriber:
         if len(transcript) > self.max_phrases:
             transcript.pop(-1)
         transcript.insert(0, result)
+
+    def hasTranscript(self) -> bool:
+        """未配信の文字起こし結果が残っているか。
+
+        1回の transcribeAudioQueue() 呼び出しが複数件を積むことがある
+        (Google の interim_send はキューから取り出したチャンクごとに走る)
+        一方、呼び出し元は従来 1 件しか取り出していなかったため、残りが
+        次の ASR 成功まで配信されず、発話が止まると「いちばん完全な
+        テキスト」が出ないまま埋もれていた。呼び出し元が溜まっている分を
+        全て取り出せるようにする。
+        """
+        return len(self.transcript_data) > 0
 
     def getTranscript(self) -> dict:
         if len(self.transcript_data) > 0:

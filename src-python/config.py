@@ -539,13 +539,6 @@ def _mic_word_filter_validator(val, inst):
             result.append(item)
     return result
 
-def _plugins_status_validator(val, inst):
-    if not isinstance(val, list):
-        return None
-    if not all(isinstance(item, dict) for item in val):
-        return None
-    return [dict(item) for item in val]
-
 def _selected_translation_engines_validator(val, inst):
     if not isinstance(val, dict):
         return None
@@ -609,6 +602,11 @@ def _mic_host_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    # デバイスが一時的に存在しない状態を表す永続化用 sentinel。
+    # 実デバイス一覧に含まれない場合でも、抜去後の選択状態を安全に
+    # `NoHost` へ戻せる必要がある。
+    if val == "NoHost":
+        return val
     hosts = list(device_manager.getMicDevices().keys())
     return val if val in hosts else None
 
@@ -617,6 +615,10 @@ def _mic_device_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    # `NoDevice` は「選択中のデバイスなし」を表す sentinel。実デバイス
+    # が残っている一覧にも安全に設定できるよう、一覧検証より先に許可する。
+    if val == "NoDevice":
+        return val
     try:
         devices = device_manager.getMicDevices().get(inst.SELECTED_MIC_HOST, [])
         names = [d.get('name') for d in devices]
@@ -629,6 +631,8 @@ def _speaker_device_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    if val == "NoDevice":
+        return val
     try:
         names = [d.get('name') for d in device_manager.getSpeakerDevices()]
         return val if val in names else None
@@ -678,6 +682,22 @@ class Config:
     # docs/readme_build.md "β版リリース" and .github/workflows/release.yml.
     _HF_REPO_STABLE = "ms-software/VRCT"
     _HF_REPO_BETA = "ms-software/VRCT-beta"
+
+    # VERSION に含まれていれば beta チャンネル扱いとする接尾辞。NSIS
+    # インストーラの .onInit (template.nsi) が ${VERSION} に対して行って
+    # いる "-beta"/"-rc" 判定と同じルール。load_config() が起動のたびに
+    # SELECTED_RELEASE_CHANNEL をこの基準へ再同期する際に使う。
+    _RELEASE_CHANNEL_BETA_MARKERS = ("-beta", "-rc")
+
+    @staticmethod
+    def _channelForVersion(version: str) -> str:
+        """バージョン文字列(例: "3.5.1-beta.1")からリリースチャンネルを
+        機械的に判定する。NSISインストーラの.onInit(template.nsi)が
+        ${VERSION}に対して行う判定と同じルール。"""
+        return (
+            "beta" if any(marker in version for marker in Config._RELEASE_CHANNEL_BETA_MARKERS)
+            else "stable"
+        )
 
     # Groq/OpenAI 公式の音声書き起こしAPIのエンドポイントは固定 (ユーザー
     # 編集不可)。カスタムサーバーのみ TRANSCRIPTION_CUSTOM_URL で
@@ -945,7 +965,6 @@ class Config:
     SELECTED_TAB_NO = ManagedProperty('SELECTED_TAB_NO', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TAB_NO_LIST)
     SELECTED_TRANSCRIPTION_ENGINE = ManagedProperty('SELECTED_TRANSCRIPTION_ENGINE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TRANSCRIPTION_ENGINE_LIST)
     SELECTED_RELEASE_CHANNEL = ManagedProperty('SELECTED_RELEASE_CHANNEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_RELEASE_CHANNEL_LIST)
-    USE_EXCLUDE_WORDS = ManagedProperty('USE_EXCLUDE_WORDS', type_=bool)
     CTRANSLATE2_WEIGHT_TYPE = ManagedProperty('CTRANSLATE2_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST)
     WHISPER_WEIGHT_TYPE = ManagedProperty('WHISPER_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST)
     SELECTED_PLAMO_MODEL = ManagedProperty('SELECTED_PLAMO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_PLAMO_MODEL_LIST'))
@@ -963,7 +982,6 @@ class Config:
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
-    PLUGINS_STATUS = ValidatedProperty('PLUGINS_STATUS', _plugins_status_validator, immediate_save=True)
     SELECTED_TRANSLATION_ENGINES = ValidatedProperty('SELECTED_TRANSLATION_ENGINES', _selected_translation_engines_validator)
     SELECTED_YOUR_LANGUAGES = ValidatedProperty('SELECTED_YOUR_LANGUAGES', _selected_your_languages_validator)
     SELECTED_TARGET_LANGUAGES = ValidatedProperty('SELECTED_TARGET_LANGUAGES', _selected_target_languages_validator)
@@ -1139,7 +1157,6 @@ class Config:
             "toggle_transcription_send": None,
             "toggle_transcription_receive": None,
         }
-        self._PLUGINS_STATUS = []
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._MIC_NO_REPEAT_NGRAM_SIZE = 0
@@ -1181,7 +1198,6 @@ class Config:
             "Deepgram": None,
         }
         self._TRANSCRIPTION_CUSTOM_URL = ""
-        self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "nllb-200-distilled-600M-ct2-int8"
@@ -1325,6 +1341,21 @@ class Config:
                                 continue
                         except Exception:
                             errorLogging()
+
+        # config.json から読み込んだ SELECTED_RELEASE_CHANNEL は、前回起動時に
+        # UI でチャンネルを切り替えた「つもり」の値をそのまま引き継いでいる
+        # 可能性がある。model.updateSoftware()/updateCudaSoftware() は
+        # インストーラ (NSIS) を起動した直後に VRCT を即終了する設計のため、
+        # ユーザーがインストーラをキャンセルしても config.json には新
+        # チャンネルが書き込まれたまま残ってしまう(実際にインストール
+        # されているのは元のバージョンのまま)。起動のたびに、実際に
+        # 動いている VERSION から機械的に再判定して上書きすることで、この
+        # 不整合を自己修復する(NSIS 側の .onInit が ${VERSION} の
+        # "-beta"/"-rc" サフィックスから同じ判定をしているのと同じ
+        # ルール)。UI 経由の明示的な変更 (setSelectedReleaseChannel) 自体は
+        # 今まで通り可能で、これは「起動時だけは実態を優先する」上書きに
+        # すぎない。
+        self.SELECTED_RELEASE_CHANNEL = self._channelForVersion(self.VERSION)
 
         # インストーラ (NSIS) が選択した UI 言語の反映。NSIS 側は config.json
         # を直接 JSON パースせず (UTF-8/非ASCII文字を含む既存ファイルで

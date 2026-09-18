@@ -24,9 +24,9 @@ export const HotkeysEntry = (props) => {
     }, [props.value, props.hotkey_id, isAcceptingInput]);
 
 
-    const updateHotkeys = (keys) => {
+    const updateHotkeys = async (keys) => {
         entryRef.current.blur();
-        const result = props.setHotkeys({ [props.hotkey_id]: keys });
+        const result = await props.setHotkeys({ [props.hotkey_id]: keys });
         if (result === false) setDisplayValue("");
     };
 
