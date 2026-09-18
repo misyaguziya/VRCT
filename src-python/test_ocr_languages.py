@@ -1,68 +1,75 @@
 """Tests for models.ocr.ocr_languages.
 
-VRCT言語名 <-> EasyOCR言語コードの変換は純粋な辞書引きなので、
-実際のEasyOCR/画像処理系の依存が無くても直接検証できる。
+設定値 -> 使用モデルの対応表は純粋な辞書引きなので、OCRエンジン本体が無くても検証できる。
 
-EasyOCRのReaderは1つのスクリプトグループしか同時にロードできないため
-「autoで全言語」は作れない。ここでは「autoを含む未対応の値が黙って
-英語にフォールバックせず、空リストとして扱われる」ことを担保する
-(黙ってフォールバックしていた頃、日本語の吹き出しが英語モデルで読まれて
-ローマ字のような文字列になる不具合が実機で出た)。
+ここで守りたいのは2点。
+1. "auto" を含む選択肢が、実際に読めるモデルへ解決されること
+2. 未対応の値が黙って別のモデルへフォールバックしないこと
+   (EasyOCR時代、未対応言語が黙って英語モデルになり、日本語の吹き出しが
+   ローマ字のような文字列で認識される不具合が実機で出た)
 """
 
 import unittest
 
 from models.ocr.ocr_languages import (
-    SUPPORTED_LANGUAGES,
+    AUTO,
+    SELECTABLE_LANGUAGES,
+    OcrModelSpec,
     isSupported,
-    resolveEasyocrLangs,
-    vrctToEasyocr,
+    resolveModelSpec,
 )
 
 
-class TestVrctToEasyocr(unittest.TestCase):
-    def test_known_language_maps_to_its_code(self) -> None:
-        self.assertEqual(vrctToEasyocr("Japanese"), "ja")
-        self.assertEqual(vrctToEasyocr("Korean"), "ko")
-        self.assertEqual(vrctToEasyocr("Chinese Simplified"), "ch_sim")
+class TestSelectableLanguages(unittest.TestCase):
+    def test_auto_comes_first(self) -> None:
+        self.assertEqual(SELECTABLE_LANGUAGES[0], AUTO)
 
-    def test_unknown_language_has_no_code(self) -> None:
-        for value in ("Klingon", "", "auto", None):
-            self.assertIsNone(vrctToEasyocr(value))  # type: ignore[arg-type]
+    def test_every_choice_resolves_to_a_model(self) -> None:
+        for language in SELECTABLE_LANGUAGES:
+            self.assertIsInstance(resolveModelSpec(language), OcrModelSpec, language)
+            self.assertTrue(isSupported(language), language)
 
-
-class TestSupportedLanguages(unittest.TestCase):
-    def test_every_listed_language_resolves(self) -> None:
-        self.assertTrue(SUPPORTED_LANGUAGES)
-        for language in SUPPORTED_LANGUAGES:
-            self.assertTrue(isSupported(language))
-            self.assertTrue(resolveEasyocrLangs(language))
-
-    def test_list_is_sorted_and_unique(self) -> None:
-        self.assertEqual(list(SUPPORTED_LANGUAGES), sorted(set(SUPPORTED_LANGUAGES)))
-
-    def test_auto_is_not_selectable(self) -> None:
-        self.assertNotIn("auto", SUPPORTED_LANGUAGES)
-        self.assertFalse(isSupported("auto"))
+    def test_only_scripts_needing_their_own_model_are_listed(self) -> None:
+        # 日英中+ラテン文字系は auto と同じモデルなので選択肢に出さない。
+        for language in ("Japanese", "English", "French", "Chinese Simplified"):
+            self.assertNotIn(language, SELECTABLE_LANGUAGES)
+        for language in ("Korean", "Russian", "Ukrainian", "Thai", "Arabic", "Hindi"):
+            self.assertIn(language, SELECTABLE_LANGUAGES)
 
 
-class TestResolveEasyocrLangs(unittest.TestCase):
-    def test_non_english_language_gets_english_as_a_companion(self) -> None:
-        # 同じ吹き出しにラテン文字が混ざることがあるため。
-        self.assertEqual(resolveEasyocrLangs("Japanese"), ["ja", "en"])
-        self.assertEqual(resolveEasyocrLangs("Korean"), ["ko", "en"])
+class TestResolveModelSpec(unittest.TestCase):
+    def test_auto_uses_the_multilingual_model(self) -> None:
+        spec = resolveModelSpec(AUTO)
+        self.assertEqual((spec.ocr_version, spec.model_type, spec.lang_rec),
+                         ("PP-OCRv6", "small", None))
 
-    def test_english_alone_does_not_duplicate_english(self) -> None:
-        self.assertEqual(resolveEasyocrLangs("English"), ["en"])
+    def test_languages_covered_by_the_multilingual_model_map_to_it(self) -> None:
+        # 旧バージョンが保存した言語名の設定を、そのまま使えるようにするため。
+        for language in ("Japanese", "English", "Chinese Traditional", "Vietnamese"):
+            self.assertEqual(resolveModelSpec(language), resolveModelSpec(AUTO), language)
 
-    def test_unsupported_values_return_nothing_instead_of_english(self) -> None:
-        for value in ("auto", "Auto", "AUTO", "Klingon", "", None):
-            self.assertEqual(resolveEasyocrLangs(value), [])  # type: ignore[arg-type]
+    def test_scripts_outside_the_multilingual_model_get_their_own(self) -> None:
+        cases = {
+            "Korean": "korean",
+            "Russian": "cyrillic",
+            "Ukrainian": "cyrillic",
+            "Thai": "th",
+            "Arabic": "arabic",
+            "Hindi": "devanagari",
+        }
+        for language, lang_rec in cases.items():
+            spec = resolveModelSpec(language)
+            self.assertEqual(spec.ocr_version, "PP-OCRv5", language)
+            self.assertEqual(spec.lang_rec, lang_rec, language)
 
-    def test_returned_list_is_a_fresh_copy_each_time(self) -> None:
-        first = resolveEasyocrLangs("Japanese")
-        first.append("ko")
-        self.assertEqual(resolveEasyocrLangs("Japanese"), ["ja", "en"])
+    def test_unsupported_values_resolve_to_nothing(self) -> None:
+        for value in ("Klingon", "", None, "Japanese (Japan)"):
+            self.assertIsNone(resolveModelSpec(value))  # type: ignore[arg-type]
+            self.assertFalse(isSupported(value))  # type: ignore[arg-type]
+
+    def test_spec_is_hashable_so_it_can_key_the_engine_cache(self) -> None:
+        self.assertEqual(len({resolveModelSpec("Russian"), resolveModelSpec("Ukrainian")}), 1)
+        self.assertEqual(len({resolveModelSpec("Korean"), resolveModelSpec("Thai")}), 2)
 
 
 if __name__ == "__main__":

@@ -36,7 +36,6 @@ export const Ocr = () => {
 
             <div className={styles.section}>
                 <SectionLabelComponent label={t("config_page.ocr.performance")} />
-                <OcrUseGpuContainer />
                 <OcrPollIntervalMsContainer />
                 <OcrMinConfidenceContainer />
                 <OcrBubbleMinTextLengthContainer />
@@ -108,19 +107,6 @@ const OcrSourceLanguageContainer = () => {
             list={currentSelectableOcrSourceLanguageList.data}
             selectFunction={selectFunction}
             state={currentOcrSourceLanguage.state}
-        />
-    );
-};
-
-const OcrUseGpuContainer = () => {
-    const { t } = useI18n();
-    const { currentOcrUseGpu, toggleOcrUseGpu } = useOcr();
-    return (
-        <CheckboxContainer
-            label={t("config_page.ocr.use_gpu.label")}
-            desc={t("config_page.ocr.use_gpu.desc")}
-            variable={currentOcrUseGpu}
-            toggleFunction={toggleOcrUseGpu}
         />
     );
 };

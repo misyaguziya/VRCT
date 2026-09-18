@@ -193,7 +193,7 @@ class TestApplyConfig(unittest.TestCase):
     """
 
     def _pipeline(self, **kwargs) -> OcrPipeline:
-        return OcrPipeline(callback=lambda payload: None, source_language="Japanese", **kwargs)
+        return OcrPipeline(callback=lambda payload: None, **{"source_language": "auto", **kwargs})
 
     def test_scalar_settings_take_effect_on_the_next_tick(self) -> None:
         pipeline = self._pipeline(poll_interval_ms=750, min_confidence=0.55,
@@ -212,43 +212,57 @@ class TestApplyConfig(unittest.TestCase):
         self.assertEqual(pipeline._min_text_length, 5)
         self.assertEqual(pipeline._dedup_cooldown, 1)
 
-    def test_language_change_swaps_the_reader(self) -> None:
+    def test_language_change_swaps_the_model(self) -> None:
         pipeline = self._pipeline()
-        pipeline._reader = "reader-for-ja"
-        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader",
+        pipeline._reader = "reader-for-auto"
+        with patch("models.ocr.ocr_pipeline.ocr_engine.getReader",
                    return_value="reader-for-ko") as get_reader:
             pipeline.applyConfig({"source_language": "Korean"})
             pipeline._applyPending()
 
-        get_reader.assert_called_once_with(["ko", "en"], True)  # use_gpu の既定値
+        spec = get_reader.call_args[0][0]
+        self.assertEqual((spec.ocr_version, spec.lang_rec), ("PP-OCRv5", "korean"))
         self.assertEqual(pipeline._reader, "reader-for-ko")
         self.assertEqual(pipeline._source_language, "Korean")
 
+    def test_switching_to_a_language_the_multilingual_model_covers_keeps_one_model(self) -> None:
+        # Japanese も auto も PP-OCRv6 small なので、同じ推論器が使い回される。
+        pipeline = self._pipeline(source_language="auto")
+        pipeline._reader = "reader-for-auto"
+        with patch("models.ocr.ocr_pipeline.ocr_engine.getReader",
+                   return_value="reader-for-auto") as get_reader:
+            pipeline.applyConfig({"source_language": "Japanese"})
+            pipeline._applyPending()
+
+        spec = get_reader.call_args[0][0]
+        self.assertEqual((spec.ocr_version, spec.lang_rec), ("PP-OCRv6", None))
+        self.assertEqual(pipeline._source_language, "Japanese")
+
     def test_unsupported_language_keeps_the_current_reader(self) -> None:
         pipeline = self._pipeline()
-        pipeline._reader = "reader-for-ja"
-        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader") as get_reader:
+        pipeline._reader = "reader-for-auto"
+        with patch("models.ocr.ocr_pipeline.ocr_engine.getReader") as get_reader:
             pipeline.applyConfig({"source_language": "Klingon"})
             pipeline._applyPending()
 
         get_reader.assert_not_called()
-        self.assertEqual(pipeline._reader, "reader-for-ja")
-        self.assertEqual(pipeline._source_language, "Japanese")
+        self.assertEqual(pipeline._reader, "reader-for-auto")
+        self.assertEqual(pipeline._source_language, "auto")
 
     def test_reader_failure_keeps_the_current_reader(self) -> None:
         pipeline = self._pipeline()
-        pipeline._reader = "reader-for-ja"
-        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader", return_value=None):
+        pipeline._reader = "reader-for-auto"
+        with patch("models.ocr.ocr_pipeline.ocr_engine.getReader", return_value=None):
             pipeline.applyConfig({"source_language": "Korean"})
             pipeline._applyPending()
 
-        self.assertEqual(pipeline._reader, "reader-for-ja")
-        self.assertEqual(pipeline._source_language, "Japanese")
+        self.assertEqual(pipeline._reader, "reader-for-auto")
+        self.assertEqual(pipeline._source_language, "auto")
 
     def test_language_change_clears_the_dedup_cache(self) -> None:
         pipeline = self._pipeline()
         pipeline._dedup.record("hash", "こんにちは", (0, 0), 100.0)
-        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader", return_value="reader"):
+        with patch("models.ocr.ocr_pipeline.ocr_engine.getReader", return_value="reader"):
             pipeline.applyConfig({"source_language": "Korean"})
             pipeline._applyPending()
 
@@ -269,9 +283,9 @@ class TestApplyConfig(unittest.TestCase):
     def test_unchanged_values_touch_nothing(self) -> None:
         pipeline = self._pipeline()
         pipeline._capture = Mock()
-        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader") as get_reader, \
+        with patch("models.ocr.ocr_pipeline.ocr_engine.getReader") as get_reader, \
                 patch("models.ocr.ocr_pipeline.OcrCapture") as capture_cls:
-            pipeline.applyConfig({"source_language": "Japanese", "window_title": "VRChat"})
+            pipeline.applyConfig({"source_language": "auto", "window_title": "VRChat"})
             pipeline._applyPending()
 
         get_reader.assert_not_called()

@@ -43,7 +43,7 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 - 結果は信頼度の降順。`MAX_CANDIDATES_PER_TICK` で上位数件のみOCRに回す
 - 実行時の閾値は `BubbleDetector(confidence=...)`（既定0.15）。val20枚での実測は
   0.15で20/20・余分な候補5、0.25で19/20・余分2、0.5で18/20・余分0。取りこぼしは
-  翻訳されない文が出ることを意味するのに対し、余分な候補は EasyOCR 側の
+  翻訳されない文が出ることを意味するのに対し、余分な候補はOCR側の
   `OCR_MIN_CONFIDENCE` で文字が読めずに落ちるだけなので、取りこぼしを優先している
 - 速度は約300ms/枚（CPU、imgsz=1280、RTX 2080 Ti機のCPUでの実測）
 - 学習・再学習とモデルの差し替え手順は [docs/ocr_yolo_training.md](../../../docs/ocr_yolo_training.md)
@@ -57,21 +57,49 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 学習ベースの検出器に置き換えたことでこの一連のヒューリスティックは不要になり、
 パラメータ（`collar_width` / `max_collar_std` / `center_bias_weight` 等）も含めて削除済み。
 
-### ocr_engine_easyocr.py — EasyOCR ラッパー
-- `easyocr.Reader` を `(langs, gpu)` キーの遅延シングルトンで管理
-- GPU 初期化失敗時（CUDA なし・VRAM 圧迫）は自動的に CPU にフォールバック
-- 戻り値は `[{"text": str, "confidence": float}]` に正規化
+### ocr_engine_rapidocr.py — OCRエンジン (RapidOCR / ONNX PP-OCR)
+- モデル指定ごとに推論器を遅延生成してキャッシュする。`readtext_bgr(crop)` は
+  `[{"text", "confidence"}, ...]` を返し、例外は投げない (失敗時は空リスト)
+- **onnxruntimeのみで動く**。faster-whisper が Silero VAD 用に既に依存しているので、
+  実行時依存は増えない。PaddlePaddle も torch も要らない
+- `Det.limit_side_len=320`。RapidOCRの既定は短辺を736pxまで**拡大**する設定
+  (`limit_type="min"`) で、吹き出しの切り出しは小さい(短辺100px前後のこともある)ため
+  7倍に引き伸ばされ1枚2秒近くかかっていた。320で実測1778ms→790msになり精度は落ちなかった
 
-### ocr_languages.py — 言語コード変換
+#### 経緯: EasyOCRからの置き換え (2026-09-18)
+学習用データセットの吹き出し95枚をCPUで読み比べた結果。CERは低いほど良い。
 
-- VRCTの言語名 <-> EasyOCRの言語コードの対応表。`SUPPORTED_LANGUAGES` がUIの選択肢になる
-- **autoは無い**。EasyOCRのReaderは1つのスクリプトグループしか同時にロードできず
-  (ja / ko / ch_sim / ch_tra / th / ta / te / kn はそれぞれ英語としか併用できない)、
-  「全言語を自動で読む」が原理的に作れないため、読み取る言語は明示選択のみにしている
-- 英語以外を選ぶと `[その言語, 'en']` を読み込む。吹き出しにラテン文字が混ざるため
-- 未対応・未選択は空リストを返し、呼び出し側が起動を拒否する。黙って英語へ
-  フォールバックしていた頃、日本語の吹き出しが英語モデルで読まれてローマ字のような
-  文字列になる不具合が実機で出た (2026-09-18)
+| エンジン | CER | ほぼ正解(CER≤0.2) | 中央値 |
+|---|---|---|---|
+| EasyOCR (ja+en) | 0.69 | 34% | 643 ms/枚 |
+| **PP-OCRv6 small** | **0.27** | **66%** | 790 ms/枚 |
+| PP-OCRv5 ch | 0.62 | 54% | 918 ms/枚 |
+
+速度はEasyOCRと同程度(中央値はむしろEasyOCRが速い)で、**速くなったから替えたのではない**。
+決め手は精度と依存の重さ。EasyOCRは縦書き(あいうえお/かきくけ)を全く読めず、句読点が落ち、
+単語間のスペースが潰れていた。またEasyOCRはtorchを必須依存に持ち、torch(1.2GB)・
+scipy(119MB)・scikit-image(30MB)を配布物へ連れてきていた。
+
+### ocr_languages.py — 設定値からモデルを決める
+- PP-OCRv6 small は1モデルに**日本語・英語・中国語(簡繁)＋ラテン文字系40言語**が入るので、
+  この範囲は `auto` のまま言語を選ばせずに読める
+- ハングル・キリル文字・タイ文字・アラビア文字・デーヴァナーガリーは v6 small に含まれず、
+  PP-OCRv5 のスクリプト別モデルへ切り替える。選択肢はこの5系統 (6言語) と `auto` だけ
+- 旧バージョンが保存した言語名 (Japanese / English など) は auto と同じモデルへ解決する
+- 未対応の値は None を返し、呼び出し側が起動を拒否する。黙って別モデルへ
+  フォールバックしない
+
+| 設定値 | 使うモデル |
+|---|---|
+| `auto` (既定) と日英中・ラテン系の言語名 | PP-OCRv6 small |
+| Korean | PP-OCRv5 mobile / korean |
+| Russian, Ukrainian | PP-OCRv5 mobile / cyrillic |
+| Thai | PP-OCRv5 mobile / th |
+| Arabic | PP-OCRv5 mobile / arabic (精度は低め) |
+| Hindi | PP-OCRv5 mobile / devanagari |
+
+モデルは配布物へ同梱する (計78MB)。実行時にネットワークへ出ないよう、ビルド前に
+`tools/fetch_ocr_models.py` で rapidocr パッケージ内へ取得し、spec の datas でまとめて含める。
 
 ### ocr_pipeline.py — オーケストレーター
 - 独立スレッドで poll ループを回し、capture → detect → OCR → dedup → callback
@@ -126,7 +154,7 @@ class OcrCapture:
                                       │ [(bbox, crop), ...]
                                       ▼
                              ┌──────────────────┐
-                             │ EasyOCR Reader   │
+                             │ RapidOCR (ONNX)  │
                              │ (crop→words+conf)│
                              └────────┬─────────┘
                                       │ merged text
@@ -182,10 +210,10 @@ OCR系の設定は**実行中でも次のtickから反映される**。`Controll
 
 | 設定 | 反映のされ方 |
 |---|---|
-| `OCR_SOURCE_LANGUAGE` / `OCR_USE_GPU` | EasyOCR Readerを作り直す (同じ組み合わせはキャッシュ済みなので即座)。重複抑制のキャッシュも捨てる |
+| `OCR_SOURCE_LANGUAGE` | 使うモデルが変わる場合だけ推論器を作り直す (キャッシュ済みなら即座)。重複抑制のキャッシュも捨てる |
 | `OCR_WINDOW_TITLE` | キャプチャを開き直す |
 | `OCR_POLL_INTERVAL_MS` / `OCR_MIN_CONFIDENCE` / `OCR_BUBBLE_MIN_TEXT_LENGTH` / `OCR_DEDUP_COOLDOWN_SEC` | 値を差し替えるだけ |
-| `OCR_ENGINE` | 起動時のみ (EasyOCR以外は未対応) |
+| `OCR_ENGINE` | 起動時のみ (RapidOCR以外は未対応) |
 
 ReaderとキャプチャはOSリソース・スレッドに紐づくので、値を書き換えたスレッドではなく
 **使っているワーカースレッドの側で**作り直す。これが `applyConfig` が値を預かるだけで、
@@ -198,12 +226,11 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 | キー | 型 | 既定値 | 説明 |
 |---|---|---|---|
 | `ENABLE_OCR_CAPTURE` | bool | False | OCR パイプラインの有効化（serialize=False, 起動毎にオフ） |
-| `OCR_ENGINE` | str | "EasyOCR" | 使用エンジン（将来の切替のため） |
-| `OCR_SOURCE_LANGUAGE` | str | "" | 読み取る言語（VRCTの言語名）。**明示選択のみ、autoは無い**。"" は未選択で、この状態ではOCRは起動しない。選べるのは `ocr_languages.SUPPORTED_LANGUAGES` に載っている言語だけ |
+| `OCR_ENGINE` | str | "RapidOCR" | 使用エンジン（将来の切替のため） |
+| `OCR_SOURCE_LANGUAGE` | str | "auto" | 読み取る言語。`auto` は日英中＋ラテン文字系を1モデルで読む。別モデルが要る文字体系のみ明示選択する（選択肢は `ocr_languages.SELECTABLE_LANGUAGES`） |
 | `OCR_WINDOW_TITLE` | str | "VRChat" | キャプチャ対象ウィンドウのタイトル部分一致文字列（大文字小文字を区別しない） |
 | `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
 | `OCR_MIN_CONFIDENCE` | float | 0.55 | OCR 信頼度の下限（0.1〜0.99） |
-| `OCR_USE_GPU` | bool | True | GPU 使用（失敗時 CPU 自動フォールバック） |
 | `OCR_BUBBLE_MIN_TEXT_LENGTH` | int | 2 | 最小テキスト長（1〜50） |
 | `OCR_DEDUP_COOLDOWN_SEC` | int | 8 | 重複抑制クールダウン秒数（1〜120） |
 
@@ -248,7 +275,6 @@ Windows + VRCT ビルド前提。詳細は「VR モードでのデスクトッ�
   `BubbleDetector(confidence=...)` を下げ、その場面の画像を集めて再学習する
 - **ワールド由来のテキスト**（看板・ワールド内の案内文）は検出対象外として学習している。
   アバターのチャット吹き出し（角丸の暗いパネル＋しっぽ）だけを拾う
-- **EasyOCR 初回モデル DL**（`~/.EasyOCR/`）中はしばらく無反応に見える。UI 側の進捗表示は未実装（今後の改善候補）
 - **VRChat Desktop モード起動 + SteamVR も起動中** というレアケースでは、OpenVR ミラー側に VRChat の映像が来ないため OCR 対象なしになる（誤翻訳より無害）
 - **設定変更は次回 OCR 開始時に反映**されます（`OCR_SOURCE_LANGUAGE` 等はパイプライン起動時に読み込まれるため、実行中の変更を反映するには一度 OFF→ON が必要）
 - **GLFW の初期化を OCR スレッドから行っている**点は Windows では実用上問題ありませんが、GLFW の公式なスレッド要件（多くの API はメインスレッド呼び出しを想定）からは外れています。将来的にキャプチャ用 GL コンテキストを専用スレッドに集約する余地があります
