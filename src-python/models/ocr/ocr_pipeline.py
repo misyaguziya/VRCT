@@ -28,8 +28,8 @@ import numpy as np
 
 from .ocr_bubble_detector import BubbleDetector
 from .ocr_capture import OcrCapture
-from . import ocr_engine_easyocr as easyocr_engine
-from .ocr_languages import resolveEasyocrLangs
+from . import ocr_engine_rapidocr as ocr_engine
+from .ocr_languages import resolveModelSpec
 
 try:
     from utils import errorLogging, printLog
@@ -46,6 +46,11 @@ except Exception:  # pragma: no cover
 # and how long that OCR work may take before the tick yields.
 MAX_CANDIDATES_PER_TICK = 6
 TICK_OCR_BUDGET_RATIO = 0.8
+
+# 何も出ないときの原因が「フレームが来ない」「吹き出しが検出されない」
+# 「文字が読めない」のどれなのか、ログから区別できなかったので定期的に内訳を出す。
+# 実機で「OCRは起動しているのに無言」という状態を3回踏んでいる (2026-09-18)。
+STATUS_INTERVAL_SEC = 30.0
 
 
 def _textHash(text: str) -> str:
@@ -134,7 +139,6 @@ class OcrPipeline:
         window_title: str = "VRChat",
         poll_interval_ms: int = 750,
         min_confidence: float = 0.55,
-        use_gpu: bool = True,
         min_text_length: int = 2,
         dedup_cooldown_sec: int = 8,
     ) -> None:
@@ -146,7 +150,6 @@ class OcrPipeline:
         # stays responsive to stop() and does not run back-to-back.
         self._tick_budget = self._poll_interval * TICK_OCR_BUDGET_RATIO
         self._min_confidence = float(min_confidence)
-        self._use_gpu = bool(use_gpu)
         self._min_text_length = max(1, int(min_text_length))
         self._dedup_cooldown = max(1, int(dedup_cooldown_sec))
 
@@ -157,13 +160,15 @@ class OcrPipeline:
         self._dedup = _DedupCache()
         self._reader = None
         # 設定変更はここに積んでおき、ワーカースレッドが次のtickの頭で取り込む。
-        # EasyOCRのReaderとキャプチャはスレッドに紐づくので、値を書き換える
+        # 推論器とキャプチャはスレッドに紐づくので、値を書き換える
         # スレッドではなく、使っているスレッドの側で作り直す。
         self._pending: dict = {}
         self._pending_lock = Lock()
+        self._counts = {"tick": 0, "frame": 0, "candidate": 0, "ocr": 0, "text": 0, "emit": 0}
+        self._counts_since = 0.0
 
     def isEngineAvailable(self) -> bool:
-        return easyocr_engine.isAvailable() and self._detector.isAvailable()
+        return ocr_engine.isAvailable() and self._detector.isAvailable()
 
     def start(self) -> bool:
         if not self.isEngineAvailable():
@@ -172,13 +177,13 @@ class OcrPipeline:
         if self._thread is not None and self._thread.is_alive():
             return True
         self._stop_event.clear()
-        langs = resolveEasyocrLangs(self._source_language)
-        if not langs:
+        spec = resolveModelSpec(self._source_language)
+        if spec is None:
             printLog(f"OCR pipeline: language {self._source_language!r} is not supported by the OCR engine")
             return False
-        self._reader = easyocr_engine.getReader(langs, self._use_gpu)
+        self._reader = ocr_engine.getReader(spec)
         if self._reader is None:
-            printLog("OCR pipeline: EasyOCR reader init failed")
+            printLog(f"OCR pipeline: OCR engine init failed for {spec.label}")
             self.stop()
             return False
         self._thread = Thread(target=self._run, name="ocr_pipeline", daemon=True)
@@ -239,22 +244,21 @@ class OcrPipeline:
             except (TypeError, ValueError):
                 errorLogging()
 
-        # 言語とGPUはReaderの作り直しが要る。同じ組み合わせは
-        # easyocr側でキャッシュされているので、戻すときは即座に切り替わる。
+        # 言語を変えると使うモデルが変わることがある (auto/日英中+ラテンは同じモデル、
+        # ハングル・キリル・タイ等はPP-OCRv5の別モデル)。同じモデルはキャッシュ
+        # されているので、一度使った組み合わせへ戻すときは即座に切り替わる。
         language = pending.get("source_language", self._source_language)
-        use_gpu = bool(pending.get("use_gpu", self._use_gpu))
-        if language != self._source_language or use_gpu != self._use_gpu:
-            langs = resolveEasyocrLangs(language)
-            if not langs:
+        if language != self._source_language:
+            spec = resolveModelSpec(language)
+            if spec is None:
                 printLog(f"OCR pipeline: language {language!r} is not supported, keeping {self._source_language!r}")
             else:
-                reader = easyocr_engine.getReader(langs, use_gpu)
+                reader = ocr_engine.getReader(spec)
                 if reader is None:
-                    printLog(f"OCR pipeline: could not load the reader for {language!r}, keeping {self._source_language!r}")
+                    printLog(f"OCR pipeline: could not load {spec.label}, keeping {self._source_language!r}")
                 else:
                     self._reader = reader
                     self._source_language = language
-                    self._use_gpu = use_gpu
                     # 言語が変われば同じ吹き出しでも読める内容が変わるので、
                     # 抑制済みの文言を引きずらないようにキャッシュを捨てる。
                     self._dedup = _DedupCache()
@@ -305,15 +309,36 @@ class OcrPipeline:
             except Exception:
                 pass
 
+    def _logStatus(self, now: float) -> None:
+        """tickの内訳を定期的に出す。無言のときにどこで止まっているかを見るため。"""
+        if self._counts_since == 0.0:
+            self._counts_since = now
+            return
+        if (now - self._counts_since) < STATUS_INTERVAL_SEC:
+            return
+        counts = self._counts
+        printLog(
+            f"OCR status ({now - self._counts_since:.0f}s): "
+            f"tick={counts['tick']} frame={counts['frame']} candidate={counts['candidate']} "
+            f"ocr={counts['ocr']} text={counts['text']} emit={counts['emit']} "
+            f"lang={self._source_language!r}")
+        for key in counts:
+            counts[key] = 0
+        self._counts_since = now
+
     def _tick(self) -> None:
+        self._counts["tick"] += 1
+        self._logStatus(time.monotonic())
         if self._capture is None or self._reader is None:
             return
         frame = self._capture.get()
         if frame is None:
             return
+        self._counts["frame"] += 1
         candidates = self._detector.detect(frame)
         if not candidates:
             return
+        self._counts["candidate"] += len(candidates)
 
         # A frame can hold several bubbles at once (and the detector is run
         # recall-first, so a few non-bubbles come through too). Running OCR on
@@ -331,9 +356,11 @@ class OcrPipeline:
                 return
             if time.monotonic() > deadline:
                 break
-            words = easyocr_engine.readtext_bgr(self._reader, crop, self._min_confidence)
+            self._counts["ocr"] += 1
+            words = ocr_engine.readtext_bgr(self._reader, crop, self._min_confidence)
             if not words:
                 continue
+            self._counts["text"] += 1
             merged = self._mergeWords(words)
             if len(merged) < self._min_text_length:
                 continue
@@ -343,6 +370,7 @@ class OcrPipeline:
             cx = int(bbox[0] + bbox[2] / 2)
             cy = int(bbox[1] + bbox[3] / 2)
             self._dedup.record(h, merged, (cx, cy), now)
+            self._counts["emit"] += 1
             self._emit(merged)
 
     @staticmethod

@@ -8,7 +8,7 @@ import functools
 import re
 import time
 from device_manager import device_manager
-from config import config, ConfigValidationError
+from config import config, SUPPORTED_OCR_ENGINES, ConfigValidationError
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
@@ -4268,7 +4268,10 @@ class Controller:
 
     @staticmethod
     def setOcrEngine(data, *args, **kwargs) -> dict:
-        config.OCR_ENGINE = str(data)
+        engine = str(data)
+        if engine not in SUPPORTED_OCR_ENGINES:
+            return {"status": 400, "result": config.OCR_ENGINE}
+        config.OCR_ENGINE = engine
         return {"status": 200, "result": config.OCR_ENGINE}
 
     @staticmethod
@@ -4333,24 +4336,6 @@ class Controller:
         config.OCR_MIN_CONFIDENCE = value
         model.updateOCRCaptureSettings()
         return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
-
-    @staticmethod
-    def getOcrUseGpu(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_USE_GPU}
-
-    @staticmethod
-    def setEnableOcrUseGpu(*args, **kwargs) -> dict:
-        if config.OCR_USE_GPU is False:
-            config.OCR_USE_GPU = True
-            model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_USE_GPU}
-
-    @staticmethod
-    def setDisableOcrUseGpu(*args, **kwargs) -> dict:
-        if config.OCR_USE_GPU is True:
-            config.OCR_USE_GPU = False
-            model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_USE_GPU}
 
     @staticmethod
     def getOcrBubbleMinTextLength(*args, **kwargs) -> dict:

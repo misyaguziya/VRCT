@@ -10,11 +10,12 @@
 """
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+import config as config_module
 from config import config
 from controller import Controller
-from models.ocr.ocr_languages import SUPPORTED_LANGUAGES
+from models.ocr.ocr_languages import SELECTABLE_LANGUAGES
 
 
 class TestOcrSourceLanguageEndpoint(unittest.TestCase):
@@ -26,26 +27,27 @@ class TestOcrSourceLanguageEndpoint(unittest.TestCase):
     def test_selectable_list_is_the_engine_supported_set(self) -> None:
         response = self.controller.getSelectableOcrSourceLanguages()
         self.assertEqual(response["status"], 200)
-        self.assertEqual(response["result"], list(SUPPORTED_LANGUAGES))
-        self.assertNotIn("auto", response["result"])
+        self.assertEqual(response["result"], list(SELECTABLE_LANGUAGES))
+        # autoはPP-OCRv6 smallが日英中+ラテンを1モデルで読むので正式な選択肢。
+        self.assertIn("auto", response["result"])
 
     def test_supported_language_is_stored_and_pushed_to_the_pipeline(self) -> None:
-        config.OCR_SOURCE_LANGUAGE = "English"
+        config.OCR_SOURCE_LANGUAGE = "auto"
         with patch("controller.model.updateOCRCaptureSettings") as update:
-            response = self.controller.setOcrSourceLanguage("Japanese")
+            response = self.controller.setOcrSourceLanguage("Korean")
 
         self.assertEqual(response["status"], 200)
-        self.assertEqual(config.OCR_SOURCE_LANGUAGE, "Japanese")
+        self.assertEqual(config.OCR_SOURCE_LANGUAGE, "Korean")
         update.assert_called_once()
 
     def test_unsupported_language_is_rejected_and_changes_nothing(self) -> None:
-        config.OCR_SOURCE_LANGUAGE = "Japanese"
-        for value in ("auto", "Klingon", ""):
+        config.OCR_SOURCE_LANGUAGE = "auto"
+        for value in ("Klingon", "", "Japanese (Japan)"):
             with patch("controller.model.updateOCRCaptureSettings") as update:
                 response = self.controller.setOcrSourceLanguage(value)
 
             self.assertEqual(response["status"], 400, value)
-            self.assertEqual(config.OCR_SOURCE_LANGUAGE, "Japanese")
+            self.assertEqual(config.OCR_SOURCE_LANGUAGE, "auto")
             update.assert_not_called()
 
 
@@ -55,7 +57,7 @@ class TestOtherOcrSettersReachTheRunningPipeline(unittest.TestCase):
     def setUp(self) -> None:
         self.controller = Controller.__new__(Controller)
         for name in ("OCR_WINDOW_TITLE", "OCR_POLL_INTERVAL_MS", "OCR_MIN_CONFIDENCE",
-                     "OCR_BUBBLE_MIN_TEXT_LENGTH", "OCR_DEDUP_COOLDOWN_SEC", "OCR_USE_GPU"):
+                     "OCR_BUBBLE_MIN_TEXT_LENGTH", "OCR_DEDUP_COOLDOWN_SEC"):
             self.addCleanup(setattr, config, name, getattr(config, name))
 
     def test_each_setter_pushes_the_new_value(self) -> None:
@@ -72,16 +74,34 @@ class TestOtherOcrSettersReachTheRunningPipeline(unittest.TestCase):
             self.assertEqual(response["status"], 200, setter.__name__)
             update.assert_called_once_with()
 
-    def test_gpu_toggle_pushes_only_when_the_value_actually_changes(self) -> None:
-        config.OCR_USE_GPU = True
-        with patch("controller.model.updateOCRCaptureSettings") as update:
-            self.controller.setEnableOcrUseGpu()
-        update.assert_not_called()
 
-        with patch("controller.model.updateOCRCaptureSettings") as update:
-            self.controller.setDisableOcrUseGpu()
-        update.assert_called_once()
-        self.assertFalse(config.OCR_USE_GPU)
+class TestOcrEngineValue(unittest.TestCase):
+    """保存済みの古いエンジン名でOCRが起動しなくなる事故の回帰テスト。
+
+    EasyOCR -> RapidOCR の置き換えで判定値だけ変え、config.json に残った
+    "EasyOCR" の移行を忘れたため、実機でOCRが無言で起動しなくなった
+    (2026-09-18, ログ: OCR: unsupported engine 'EasyOCR', refusing to start)。
+    """
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+        self.addCleanup(setattr, config, "OCR_ENGINE", config.OCR_ENGINE)
+
+    def test_stale_engine_name_is_migrated_on_load(self) -> None:
+        config.OCR_ENGINE = "EasyOCR"
+        with patch.object(config, "saveConfig"):
+            config.load_config()
+        self.assertEqual(config.OCR_ENGINE, config_module.DEFAULT_OCR_ENGINE)
+
+    def test_setter_rejects_an_unsupported_engine(self) -> None:
+        config.OCR_ENGINE = config_module.DEFAULT_OCR_ENGINE
+        response = self.controller.setOcrEngine("EasyOCR")
+        self.assertEqual(response["status"], 400)
+        self.assertEqual(config.OCR_ENGINE, config_module.DEFAULT_OCR_ENGINE)
+
+    def test_setter_accepts_the_supported_engine(self) -> None:
+        response = self.controller.setOcrEngine(config_module.DEFAULT_OCR_ENGINE)
+        self.assertEqual(response["status"], 200)
 
 
 if __name__ == "__main__":

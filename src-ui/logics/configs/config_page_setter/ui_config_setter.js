@@ -815,14 +815,6 @@ export const SETTINGS_ARRAY = [
     },
     {
         Category: "Ocr",
-        Base_Name: "OcrUseGpu",
-        default_value: true,
-        ui_template_id: "toggle",
-        logics_template_id: "toggle_enable_disable",
-        base_endpoint_name: "ocr_use_gpu",
-    },
-    {
-        Category: "Ocr",
         Base_Name: "OcrBubbleMinTextLength",
         default_value: 2,
         ui_template_id: "slider",
