@@ -112,3 +112,42 @@ ultralyticsがファイルごとcorrupt扱いで黙って捨てる(初回は80�
   「小さいChat表示を取りこぼしていないか」の2点。
 - 取りこぼす条件(距離・背景・文字量)を控えて次の収集に反映する。
   暗い背景や岩・木目で誤検出が出たら、その場面のネガティブ画像を足して学習し直す。
+
+## 6. VRCTへの組み込みと配布
+
+推論は onnxruntime だけで動かす。faster-whisper が Silero VAD 用にすでに依存しているので、
+配布物に増えるのはモデルファイル1つだけ。ultralytics も torch も推論には要らない。
+
+```powershell
+.\.venv-yolo\Scripts\yolo.exe export model=runs\chatbox\weightsest.pt format=onnx imgsz=1280 nms=True simplify=True opset=17 conf=0.05 iou=0.7
+```
+
+`conf=0.05` は必ず付ける。エクスポート時の値がNMSに焼き込まれるので、既定(0.25)のままだと
+実行時に閾値を下げても候補が増えない。実行時の閾値は `BubbleDetector(confidence=...)` で決める。
+
+出力を `src-python/models/ocr/onnx/chatbox_yolov8n.onnx` に置き換える。
+`spec/backend.spec` と `spec/backend_cuda.spec` の datas が `ocr_onnx/` として同梱し、
+`findModelPath()` が凍結時は `_internal/ocr_onnx/`、ソース実行時はパッケージ内を見る。
+モデルは12MB程度。Whisperの重みのような実行時ダウンロードにはしない(容量が理由の仕組みなので)。
+
+リリースに載せるモデルだけをリポジトリに上書きコミットする。実験のたびにコミットしない。
+
+### 学習済みモデルの履歴
+
+| 日付 | データ | val成績 (mAP50 / mAP50-95) | 実測 (CPU, imgsz=1280) | 備考 |
+|---|---|---|---|---|
+| 2026-09-17 | 100枚 / 1セッション / 1ワールド | 0.986 / 0.719 | 約300 ms/枚 | 初版。ラベル修正(空ラベル6枚追加・枠ズレ5枚修正)後 |
+
+### 実行時の閾値
+
+`BubbleDetector` の既定は `confidence=0.15`。val20枚での実測:
+
+| conf | 検出 | 余分な候補 |
+|---|---|---|
+| 0.15 | 20/20 | 5 |
+| 0.25 | 19/20 | 2 |
+| 0.5 | 18/20 | 0 |
+
+取りこぼしは翻訳されない文が出ることを意味するのに対し、余分な候補はOCR側の
+`OCR_MIN_CONFIDENCE` で文字が読めずに落ちるだけなので、取りこぼしを優先して0.15にしている。
+ただし候補が増えるとtickのOCR予算を食うので、実機で遅いと感じたら上げる。

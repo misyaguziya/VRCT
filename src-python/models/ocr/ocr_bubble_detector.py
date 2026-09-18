@@ -1,24 +1,20 @@
-"""Detect candidate VRChat chat-bubble regions in a captured frame.
+"""Detect VRChat chat-bubble regions with a fine-tuned YOLOv8n (ONNX).
 
-VRChat chat bubbles are semi-transparent rounded panels floating above
-avatars. This detector uses a color/contour heuristic to enumerate
-candidate ROIs before we spend cycles on OCR:
+色/輪郭のヒューリスティックは実機で反証された(ワールドのUIパネル文字や
+岩・木目を吹き出しと誤認する)ため、収集したVRChatのスクリーンショットで
+学習した検出モデルに置き換えた。学習手順は docs/ocr_yolo_training.md。
 
-1. Convert to grayscale, blur, then threshold to isolate bright-on-dark
-   text-ish areas plus the darker bubble backing plate.
-2. Morphologically close text lines together so a paragraph forms one
-   contiguous blob.
-3. Take contour bounding rects and filter by aspect ratio, size, and
-   position (exclude far edges where HUD/nameplate strips live).
-4. Return a list of (bbox, crop_bgr) tuples for the OCR engine.
-
-The thresholds are intentionally lenient — false positives are cheaper
-than false negatives here because the OCR engine + min-confidence knob
-filters out noise crops that contain no readable text.
+推論は onnxruntime だけで動く。faster-whisper が Silero VAD 用にすでに
+依存しているので、配布物に追加される依存はモデルファイル1つだけ。
+NMS込みでエクスポートしてあるので、ここでやるのは前処理(letterbox)と
+元画像座標への戻しだけになる。
 """
 
 from __future__ import annotations
 
+from os import path as os_path
+import sys
+from threading import Lock
 from typing import List, Optional, Tuple
 
 import numpy as np
@@ -36,164 +32,123 @@ except Exception:  # pragma: no cover
     cv2 = None  # type: ignore
     errorLogging()
 
+try:
+    import onnxruntime as ort  # type: ignore
+except Exception:  # pragma: no cover
+    ort = None  # type: ignore
+    errorLogging()
+
 
 BBox = Tuple[int, int, int, int]  # (x, y, w, h)
+
+MODEL_FILE_NAME = "chatbox_yolov8n.onnx"
+# 学習時と同じ入力サイズ。吹き出しは画面の1%程度しかないことがあり、640まで
+# 落とすと取りこぼす(実測: val20枚で1280が19/20、640は16/20)。
+DEFAULT_IMAGE_SIZE = 1280
+DEFAULT_CONFIDENCE = 0.15
+# ultralyticsのletterboxと同じ余白色。学習時の前処理に合わせる。
+PAD_COLOR = (114, 114, 114)
+
+
+def findModelPath() -> Optional[str]:
+    """同梱されたONNXモデルのパス。見つからなければ None。"""
+    candidates = []
+    if getattr(sys, "frozen", False):
+        # PyInstallerのdatasは実行ファイルの隣の _internal/ 配下に展開される。
+        candidates.append(os_path.join(os_path.dirname(sys.executable), "_internal", "ocr_onnx", MODEL_FILE_NAME))
+    candidates.append(os_path.join(os_path.dirname(__file__), "onnx", MODEL_FILE_NAME))
+    for candidate in candidates:
+        if os_path.isfile(candidate):
+            return candidate
+    return None
 
 
 class BubbleDetector:
     def __init__(
         self,
-        min_area_ratio: float = 0.0008,
-        max_area_ratio: float = 0.20,
-        min_aspect: float = 1.2,
-        max_aspect: float = 20.0,
-        edge_margin_ratio: float = 0.03,
-        exclude_bottom_ratio: float = 0.15,
-        collar_width: int = 3,
-        max_collar_std: float = 5.0,
-        center_bias_weight: float = 0.5,
-        upper_bias_weight: float = 0.35,
+        model_path: Optional[str] = None,
+        image_size: int = DEFAULT_IMAGE_SIZE,
+        confidence: float = DEFAULT_CONFIDENCE,
+        crop_padding: int = 4,
     ) -> None:
-        self.min_area_ratio = min_area_ratio
-        self.max_area_ratio = max_area_ratio
-        self.min_aspect = min_aspect
-        self.max_aspect = max_aspect
-        self.edge_margin_ratio = edge_margin_ratio
-        self.exclude_bottom_ratio = exclude_bottom_ratio
-        # VRChatのチャット吹き出しは、ワールド制作者が作る看板/UIパネルとは
-        # 描画のされ方(アバター頭上に浮かぶワールド内3D要素)自体は同じだが、
-        # 見た目の背景がVRChatクライアント自身が描く単色でフラットな半透明
-        # パネルである点が違う(ワールド側のテキストは木目・紙・金属等の
-        # テクスチャの上に直接乗っていることが多い)。bboxのすぐ外側、幅
-        # collar_width pxだけの細い縁の色ばらつきを見ることでこれを判別する
-        # (2026-09-07、実機で「工場ゲームのUIパネル文字を吹き出しと誤認する」
-        # regressionを受けて追加。ユーザー提供の実データ80枚
-        # (メッセージ送信→スクリーンショットのペア) で校正: 本物の吹き出しは
-        # 縁のstdの中央値2.0、他の候補は中央値9.8で、閾値5.0で本物の91%を
-        # 保持しつつ他候補の78%を弾けることを確認した)。
-        self.collar_width = collar_width
-        self.max_collar_std = max_collar_std
-        # 吹き出しはアバター頭上、つまり画面中央〜上寄りに現れやすい。
-        # ハード排除はせず、複数候補が競合したときのOCR予算(tick_budget)の
-        # 優先順位付けとして使う「ソート補正」に留める(ユーザー指示: 画面端に
-        # 出る吹き出しも取りこぼしたくないため)。
-        self.center_bias_weight = center_bias_weight
-        self.upper_bias_weight = upper_bias_weight
+        self.model_path = model_path or findModelPath()
+        self.image_size = int(image_size)
+        # 実機のワールドや距離によって当たり方が変わるので調整できるようにしておく。
+        # 既定0.15は取りこぼしを優先した値(val20枚の実測: 0.15で20/20・余分5、
+        # 0.25で19/20・余分2、0.5で18/20・余分0)。余分な候補はOCR側の
+        # min_confidenceで文字が読めずに落ちるだけだが、下げすぎるとtickの
+        # OCR予算を無駄な切り出しに使う。
+        self.confidence = float(confidence)
+        self.crop_padding = max(0, int(crop_padding))
+        self._session = None
+        self._input_name = ""
+        self._lock = Lock()
 
     def isAvailable(self) -> bool:
-        return cv2 is not None
+        # パスの有無だけでなく実体も見る。同梱漏れ(spec の datas 忘れ)に、最初の
+        # detect() まで気づけないと「OCRは動いているのに何も出ない」状態になる。
+        return (cv2 is not None and ort is not None
+                and bool(self.model_path) and os_path.isfile(self.model_path))
+
+    def _ensureSession(self):
+        """最初のdetect()でだけモデルを読む。OCRを使わない起動では読み込まない。"""
+        if self._session is not None:
+            return self._session
+        with self._lock:
+            if self._session is None:
+                options = ort.SessionOptions()
+                options.log_severity_level = 3
+                session = ort.InferenceSession(
+                    self.model_path, options, providers=["CPUExecutionProvider"])
+                self._input_name = session.get_inputs()[0].name
+                self._session = session
+        return self._session
+
+    def _letterbox(self, frame: np.ndarray) -> Tuple[np.ndarray, float, int, int]:
+        h, w = frame.shape[:2]
+        scale = min(self.image_size / w, self.image_size / h)
+        nw, nh = max(1, round(w * scale)), max(1, round(h * scale))
+        resized = cv2.resize(frame, (nw, nh), interpolation=cv2.INTER_LINEAR)
+        canvas = np.full((self.image_size, self.image_size, 3), PAD_COLOR, dtype=np.uint8)
+        dx, dy = (self.image_size - nw) // 2, (self.image_size - nh) // 2
+        canvas[dy:dy + nh, dx:dx + nw] = resized
+        rgb = cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)
+        tensor = np.ascontiguousarray(rgb.transpose(2, 0, 1)[None], dtype=np.float32) / 255.0
+        return tensor, scale, dx, dy
 
     def detect(self, frame: np.ndarray) -> List[Tuple[BBox, np.ndarray]]:
+        """信頼度の高い順に [(bbox(x,y,w,h), 切り出したBGR画像), ...] を返す。"""
         if not self.isAvailable() or frame is None or frame.size == 0:
             return []
         h, w = frame.shape[:2]
-        frame_area = float(h * w)
-        if frame_area <= 0:
+        if h <= 0 or w <= 0:
             return []
-
         try:
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            gray = cv2.GaussianBlur(gray, (3, 3), 0)
-            # Adaptive threshold catches both light-on-dark and dark-on-light
-            # panel-vs-text combinations without hard-coding VRChat's palette.
-            binary = cv2.adaptiveThreshold(
-                gray,
-                255,
-                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                cv2.THRESH_BINARY_INV,
-                31,
-                7,
-            )
-            # Close text into paragraph-sized blobs.
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 5))
-            closed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
+            session = self._ensureSession()
+            tensor, scale, dx, dy = self._letterbox(frame)
+            outputs = session.run(None, {self._input_name: tensor})[0]
         except Exception:
+            errorLogging()
             return []
 
-        try:
-            contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        except Exception:
-            return []
-
-        margin_x = int(w * self.edge_margin_ratio)
-        margin_y = int(h * self.edge_margin_ratio)
-        bottom_hud_y = int(h * (1.0 - self.exclude_bottom_ratio))
-
-        results: List[Tuple[BBox, np.ndarray]] = []
-        for cnt in contours:
-            x, y, cw, ch = cv2.boundingRect(cnt)
-            if cw <= 0 or ch <= 0:
+        results: List[Tuple[float, BBox, np.ndarray]] = []
+        for detection in np.asarray(outputs).reshape(-1, 6):
+            score = float(detection[4])
+            if score < self.confidence:
                 continue
-            area = float(cw * ch)
-            area_ratio = area / frame_area
-            if area_ratio < self.min_area_ratio or area_ratio > self.max_area_ratio:
+            pad = self.crop_padding
+            x0 = int(round((detection[0] - dx) / scale)) - pad
+            y0 = int(round((detection[1] - dy) / scale)) - pad
+            x1 = int(round((detection[2] - dx) / scale)) + pad
+            y1 = int(round((detection[3] - dy) / scale)) + pad
+            x0, y0 = max(0, x0), max(0, y0)
+            x1, y1 = min(w, x1), min(h, y1)
+            if x1 - x0 < 2 or y1 - y0 < 2:
                 continue
-            aspect = cw / float(ch)
-            if aspect < self.min_aspect or aspect > self.max_aspect:
-                continue
-            # Reject anything hugging the frame borders (world sign / HUD).
-            if x < margin_x or y < margin_y:
-                continue
-            if (x + cw) > (w - margin_x):
-                continue
-            # Reject bottom HUD strip (nameplate, notifications, VRChat menu).
-            if y > bottom_hud_y:
-                continue
-
-            # Pad the crop slightly so OCR sees full glyph boundaries.
-            pad = 4
-            x0 = max(0, x - pad)
-            y0 = max(0, y - pad)
-            x1 = min(w, x + cw + pad)
-            y1 = min(h, y + ch + pad)
             crop = frame[y0:y1, x0:x1]
             if crop.size == 0:
                 continue
+            results.append((score, (x0, y0, x1 - x0, y1 - y0), crop))
 
-            collar_std = self._collarStd(frame, x0, y0, x1, y1)
-            if collar_std is not None and collar_std > self.max_collar_std:
-                continue
-
-            results.append(((x0, y0, x1 - x0, y1 - y0), crop))
-
-        # 面積優先を基本としつつ、画面中央/上寄りの候補を軽く優先する
-        # (アバター頭上に出る吹き出しの典型的な位置)。ハード排除はしない
-        # ので、画面端の吹き出しも面積が大きければ上位に残る。
-        results.sort(key=lambda item: self._score(item[0], w, h), reverse=True)
-        return results
-
-    def _collarStd(self, frame: np.ndarray, x0: int, y0: int, x1: int, y1: int) -> Optional[float]:
-        """bbox (x0,y0,x1,y1) のすぐ外側、幅 collar_width px だけの細い縁の
-        色ばらつき(RGB各chの標準偏差の平均)を返す。ワールドの3Dシーン本体に
-        入り込まないよう意図的に薄く取る(厚いパディングだとVRChatの吹き出し
-        パネル自体の外側の背景まで拾ってしまい判別に使えなくなる)。
-        測定できるピクセル数が少なすぎる場合は None (判定不能、フィルタしない)。
-        """
-        h, w = frame.shape[:2]
-        collar = self.collar_width
-        ox0, oy0 = max(0, x0 - collar), max(0, y0 - collar)
-        ox1, oy1 = min(w, x1 + collar), min(h, y1 + collar)
-        outer = frame[oy0:oy1, ox0:ox1]
-        if outer.size == 0:
-            return None
-        mask = np.ones(outer.shape[:2], dtype=bool)
-        iy0, ix0 = y0 - oy0, x0 - ox0
-        iy1, ix1 = iy0 + (y1 - y0), ix0 + (x1 - x0)
-        mask[max(0, iy0):max(0, iy1), max(0, ix0):max(0, ix1)] = False
-        if mask.sum() < 8:
-            return None
-        collar_pixels = outer[mask].astype(np.float32)
-        return float(collar_pixels.std(axis=0).mean())
-
-    def _score(self, bbox: BBox, frame_w: int, frame_h: int) -> float:
-        x, y, bw, bh = bbox
-        area = float(bw * bh)
-        cx = x + bw / 2.0
-        cy = y + bh / 2.0
-        horiz_ratio = abs(cx - frame_w / 2.0) / (frame_w / 2.0)  # 0=中央, ~1=画面端
-        vert_ratio = cy / frame_h  # 0=最上部, 1=最下部
-        position_score = max(
-            0.15,
-            1.0 - self.center_bias_weight * horiz_ratio - self.upper_bias_weight * vert_ratio,
-        )
-        return area * position_score
+        results.sort(key=lambda item: item[0], reverse=True)
+        return [(bbox, crop) for _, bbox, crop in results]
