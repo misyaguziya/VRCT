@@ -1290,8 +1290,10 @@ class Config:
         # OCR defaults (VRChat chat-bubble text capture)
         self._ENABLE_OCR_CAPTURE = False
         self._OCR_ENGINE = "EasyOCR"
-        # "auto" means "follow the current tab's target (other party) language"
-        self._OCR_SOURCE_LANGUAGE = "auto"
+        # OCRで読む言語は明示選択のみ (autoは廃止)。EasyOCRのReaderは
+        # 1つのスクリプトグループしか同時にロードできず、全言語を自動で
+        # 読むことができないため。空 = 未選択で、この状態ではOCRは起動しない。
+        self._OCR_SOURCE_LANGUAGE = ""
         # Substring match against visible window titles (case-insensitive).
         self._OCR_WINDOW_TITLE = "VRChat"
         self._OCR_POLL_INTERVAL_MS = 750

@@ -32,33 +32,30 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
   - **SteamVR 非起動** → HWND キャプチャ
 - 切り替えの理由: VR プレイヤーは負荷軽減のため VRChat のデスクトップミラーウィンドウを最小化することが多く、その場合 HWND では黒フレームしか取れないため
 
-### ocr_bubble_detector.py — 吹き出し候補 ROI 抽出
-- OpenCV で画面から吹き出しらしい矩形を絞り込む前処理
-- 手順: グレースケール → GaussianBlur → adaptiveThreshold → morphologyClose → findContours
-- 幾何フィルタ: 面積比 / アスペクト比 / 画面端マージン / 下部 HUD 除外
-- **色フィルタ（2026-09-07 追加）**: VRChat のチャット吹き出しは、ワールド制作者が
-  作る看板・UIパネル等と同じ「アバター頭上に浮かぶワールド内3D要素」として描画
-  されるため、輪郭の形状だけでは区別できない（実機で工場ゲームのUIパネル文字を
-  吹き出しと誤認する regression を確認、下記スクリーンショット参照）。ただし
-  VRChat 自身の吹き出しパネルは単色でフラットな半透明背景を持つのに対し、
-  ワールド側のテキストは木目・紙・金属等のテクスチャに直接乗っていることが多い。
-  そこで各候補 bbox のすぐ外側、幅 `collar_width`(既定3px) だけの細い縁の色
-  ばらつき（RGB各chの標準偏差の平均）を測り、`max_collar_std`(既定5.0) を
-  超えるものは弾く。厚いパディングだと VRChat 吹き出しパネル自体の外側の
-  背景まで拾って判別に使えなくなるため、意図的に薄く取っている。
-  ユーザー提供の実データ（OSC 経由で既知メッセージを自分のチャットボックスへ
-  送信→スクリーンショットのペア、80枚）で較正: 本物の吹き出しの縁stdの中央値
-  2.0、他の検出候補の縁stdの中央値9.8。この閾値で実データ全体（100枚）の
-  検出候補数が平均2.7件/画像→0.8件/画像まで減少し、実際の吹き出しの検出率は
-  ほぼ維持されることを確認済み。
-- **位置スコアリング（2026-09-07 追加）**: 吹き出しはアバター頭上、つまり
-  画面中央〜上寄りに現れやすいため、面積だけでなく画面中心からの水平距離・
-  上下位置も加味したスコアでソートする（`center_bias_weight`/
-  `upper_bias_weight`）。ハード排除ではなくソート順のみへの影響に留めており、
-  画面端に出る吹き出しでも面積が十分大きければ上位に残る
-  （`MAX_CANDIDATES_PER_TICK` で上位数件のみOCRするため、複数候補が
-  競合する場面での優先度付けとして働く）。
-- OCR は候補矩形の crop に対してのみ走らせるので、画面全体走査に比べ大幅に効率的かつ誤検出（名札・ワールドサインなど）を減らせる
+### ocr_bubble_detector.py — 吹き出し検出（YOLOv8n / ONNX）
+- 収集したVRChatのスクリーンショットで学習した検出モデルで、吹き出しの矩形を直接得る
+- 推論は onnxruntime のみ（faster-whisper が Silero VAD 用に既に依存しているので追加依存なし）。
+  ultralytics も torch も推論には不要。NMS はエクスポート時にグラフへ焼き込んであるので、
+  このモジュールがやるのは letterbox と、元画像の画素座標への戻しだけ
+- モデルは `src-python/models/ocr/onnx/chatbox_yolov8n.onnx`（約12MB）を同梱。
+  `findModelPath()` が凍結時は `_internal/ocr_onnx/`、ソース実行時はパッケージ内を見る。
+  最初の `detect()` まで読み込まないので、OCRを使わない起動ではメモリも時間も使わない
+- 結果は信頼度の降順。`MAX_CANDIDATES_PER_TICK` で上位数件のみOCRに回す
+- 実行時の閾値は `BubbleDetector(confidence=...)`（既定0.15）。val20枚での実測は
+  0.15で20/20・余分な候補5、0.25で19/20・余分2、0.5で18/20・余分0。取りこぼしは
+  翻訳されない文が出ることを意味するのに対し、余分な候補は EasyOCR 側の
+  `OCR_MIN_CONFIDENCE` で文字が読めずに落ちるだけなので、取りこぼしを優先している
+- 速度は約300ms/枚（CPU、imgsz=1280、RTX 2080 Ti機のCPUでの実測）
+- 学習・再学習とモデルの差し替え手順は [docs/ocr_yolo_training.md](../../../docs/ocr_yolo_training.md)
+
+#### 経緯: 色/輪郭ヒューリスティックからの置き換え（2026-09-17）
+初版は OpenCV の adaptiveThreshold → 輪郭抽出 → 幾何フィルタ（面積比・アスペクト比・
+画面端マージン・下部HUD除外）に、吹き出しパネルの「縁の色ばらつき」フィルタと位置
+スコアリングを足した実装だった。VRChatのチャット吹き出しは、ワールド制作者が作る
+看板・UIパネルと同じ「ワールド内3D要素」として描画されるため形状だけでは区別できず、
+色ばらつきでの判別も実機で反証された（工場ゲームのUIパネル文字を誤検出）。
+学習ベースの検出器に置き換えたことでこの一連のヒューリスティックは不要になり、
+パラメータ（`collar_width` / `max_collar_std` / `center_bias_weight` 等）も含めて削除済み。
 
 ### ocr_engine_easyocr.py — EasyOCR ラッパー
 - `easyocr.Reader` を `(langs, gpu)` キーの遅延シングルトンで管理
@@ -66,8 +63,15 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 - 戻り値は `[{"text": str, "confidence": float}]` に正規化
 
 ### ocr_languages.py — 言語コード変換
-- VRCT の言語名（"Japanese" 等）を EasyOCR のコード（"ja" 等）にマップ
-- `"auto"` は JP + EN の 2 言語リーダーをロード（VRChat での実用範囲をカバー）
+
+- VRCTの言語名 <-> EasyOCRの言語コードの対応表。`SUPPORTED_LANGUAGES` がUIの選択肢になる
+- **autoは無い**。EasyOCRのReaderは1つのスクリプトグループしか同時にロードできず
+  (ja / ko / ch_sim / ch_tra / th / ta / te / kn はそれぞれ英語としか併用できない)、
+  「全言語を自動で読む」が原理的に作れないため、読み取る言語は明示選択のみにしている
+- 英語以外を選ぶと `[その言語, 'en']` を読み込む。吹き出しにラテン文字が混ざるため
+- 未対応・未選択は空リストを返し、呼び出し側が起動を拒否する。黙って英語へ
+  フォールバックしていた頃、日本語の吹き出しが英語モデルで読まれてローマ字のような
+  文字列になる不具合が実機で出た (2026-09-18)
 
 ### ocr_pipeline.py — オーケストレーター
 - 独立スレッドで poll ループを回し、capture → detect → OCR → dedup → callback
@@ -117,7 +121,7 @@ class OcrCapture:
 ```
 ┌───────────────────┐        ┌──────────────────┐
 │  OcrCapture       │        │ BubbleDetector   │
-│  (HWND / OpenVR)  │──BGR──►│ (OpenCV ROI 抽出)│
+│  (HWND / OpenVR)  │──BGR──►│ (YOLOv8n / ONNX) │
 └───────────────────┘        └────────┬─────────┘
                                       │ [(bbox, crop), ...]
                                       ▼
@@ -170,6 +174,23 @@ OpenVR の初期化は**プロセス単位**で、`models/overlay/overlay.py` �
 - ミラーテクスチャは**初回に 1 度だけ取得**し、以降フレーム毎に `lockGLSharedTextureForAccess` / `unlockGLSharedTextureForAccess` で囲んで読み出し
 - 失敗時はテクスチャのみ解放して `_initialized` を落とし、次 tick で再取得（SteamVR 再起動やオーバーレイ側 shutdown からの自動復帰）
 
+## 設定の反映タイミング
+
+OCR系の設定は**実行中でも次のtickから反映される**。`Controller` の各setterが
+`model.updateOCRCaptureSettings()` を呼び、`OcrPipeline.applyConfig()` が値を預かって、
+ワーカースレッドが次のtickの頭で `_applyPending()` で取り込む。
+
+| 設定 | 反映のされ方 |
+|---|---|
+| `OCR_SOURCE_LANGUAGE` / `OCR_USE_GPU` | EasyOCR Readerを作り直す (同じ組み合わせはキャッシュ済みなので即座)。重複抑制のキャッシュも捨てる |
+| `OCR_WINDOW_TITLE` | キャプチャを開き直す |
+| `OCR_POLL_INTERVAL_MS` / `OCR_MIN_CONFIDENCE` / `OCR_BUBBLE_MIN_TEXT_LENGTH` / `OCR_DEDUP_COOLDOWN_SEC` | 値を差し替えるだけ |
+| `OCR_ENGINE` | 起動時のみ (EasyOCR以外は未対応) |
+
+ReaderとキャプチャはOSリソース・スレッドに紐づくので、値を書き換えたスレッドではなく
+**使っているワーカースレッドの側で**作り直す。これが `applyConfig` が値を預かるだけで、
+実際の切り替えを `_applyPending()` に任せている理由。
+
 ## 設定キー
 
 `src-python/config.py` に `ManagedProperty` として追加されています。
@@ -178,7 +199,7 @@ OpenVR の初期化は**プロセス単位**で、`models/overlay/overlay.py` �
 |---|---|---|---|
 | `ENABLE_OCR_CAPTURE` | bool | False | OCR パイプラインの有効化（serialize=False, 起動毎にオフ） |
 | `OCR_ENGINE` | str | "EasyOCR" | 使用エンジン（将来の切替のため） |
-| `OCR_SOURCE_LANGUAGE` | str | "auto" | 読み取り対象の言語（"auto" = 現在タブの target language に追従、リーダーは JP+EN） |
+| `OCR_SOURCE_LANGUAGE` | str | "" | 読み取る言語（VRCTの言語名）。**明示選択のみ、autoは無い**。"" は未選択で、この状態ではOCRは起動しない。選べるのは `ocr_languages.SUPPORTED_LANGUAGES` に載っている言語だけ |
 | `OCR_WINDOW_TITLE` | str | "VRChat" | キャプチャ対象ウィンドウのタイトル部分一致文字列（大文字小文字を区別しない） |
 | `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
 | `OCR_MIN_CONFIDENCE` | float | 0.55 | OCR 信頼度の下限（0.1〜0.99） |
@@ -191,12 +212,14 @@ OpenVR の初期化は**プロセス単位**で、`models/overlay/overlay.py` �
 `mainloop.py` に登録済み。Frontend からは `useOcr()` フック経由で自動的に叩かれます。
 
 - `/set/enable/ocr_capture`, `/set/disable/ocr_capture` — 開始・停止
-- `/get/data/ocr_*`, `/set/data/ocr_*` — 各設定キー
+- `/get/data/ocr_*`, `/set/data/ocr_*` — 各設定キー（setterは実行中のパイプラインへ即時反映する）
+- `/get/data/selectable_ocr_source_languages` — OCRで選べる言語の一覧（UIのドロップダウンの中身）
 - `/run/transcription_ocr_message` — OCR 結果を UI ログに配送（`useReceiveRoutes.js`）
 
 ## Controller 連携
 
 - `Controller.startOcrCapture()` / `stopOcrCapture()` — スレッド起動・停止
+- `model.updateOCRCaptureSettings()` — 設定変更を実行中のパイプラインへ渡す（各setterから呼ばれる）
 - `Controller.ocrMessage(result)` — OCR 結果を翻訳し UI ログ + Overlay に配送
   - `micMessage` / `speakerMessage` と同じ VRAM エラー・word filter 分岐
   - **OSC 送信は行わない**（コード内コメントで明示）
@@ -220,8 +243,11 @@ Windows + VRCT ビルド前提。詳細は「VR モードでのデスクトッ�
 
 ## 既知の制約
 
-- **明るい背景に重なった吹き出し**は輪郭が壊れて取りこぼす可能性あり。`OCR_MIN_CONFIDENCE` を下げるか、将来的には detector を学習ベースに置き換える計画
-- **ワールドサインや看板テキスト**を吹き出しと誤検出することがある。位置フィルタ（画面端・下部 HUD 除外）で軽減済みだが完全には防げない
+- **学習データが1ワールド・1セッションの100枚**しかない。別のワールドや距離・
+  明るさが大きく違う場面では取りこぼしや誤検出が出る可能性が高い。取りこぼすなら
+  `BubbleDetector(confidence=...)` を下げ、その場面の画像を集めて再学習する
+- **ワールド由来のテキスト**（看板・ワールド内の案内文）は検出対象外として学習している。
+  アバターのチャット吹き出し（角丸の暗いパネル＋しっぽ）だけを拾う
 - **EasyOCR 初回モデル DL**（`~/.EasyOCR/`）中はしばらく無反応に見える。UI 側の進捗表示は未実装（今後の改善候補）
 - **VRChat Desktop モード起動 + SteamVR も起動中** というレアケースでは、OpenVR ミラー側に VRChat の映像が来ないため OCR 対象なしになる（誤翻訳より無害）
 - **設定変更は次回 OCR 開始時に反映**されます（`OCR_SOURCE_LANGUAGE` 等はパイプライン起動時に読み込まれるため、実行中の変更を反映するには一度 OFF→ON が必要）

@@ -6,6 +6,7 @@ capture/EasyOCR/cv2 本体のスレッドループ(_run/_tick)は実機依存が
 """
 
 import unittest
+from unittest.mock import Mock, patch
 
 from models.ocr.ocr_pipeline import OcrPipeline, _DedupCache, _similar, _textHash
 
@@ -181,3 +182,113 @@ class TestOcrPipelineInitClamping(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestApplyConfig(unittest.TestCase):
+    """設定変更がOFF→ONを挟まずに効くこと。
+
+    実機で「OCRをONにした後に言語をJapaneseへ変えても英語モデルのまま」
+    という不具合が出たための回帰テスト。_applyPending はワーカースレッドが
+    呼ぶ想定なので、ここではスレッドを起こさず直接呼んで確認する。
+    """
+
+    def _pipeline(self, **kwargs) -> OcrPipeline:
+        return OcrPipeline(callback=lambda payload: None, source_language="Japanese", **kwargs)
+
+    def test_scalar_settings_take_effect_on_the_next_tick(self) -> None:
+        pipeline = self._pipeline(poll_interval_ms=750, min_confidence=0.55,
+                                  min_text_length=2, dedup_cooldown_sec=8)
+        pipeline.applyConfig({
+            "poll_interval_ms": 250,
+            "min_confidence": 0.3,
+            "min_text_length": 5,
+            "dedup_cooldown_sec": 1,
+        })
+        pipeline._applyPending()
+
+        self.assertAlmostEqual(pipeline._poll_interval, 0.25)
+        self.assertAlmostEqual(pipeline._tick_budget, 0.25 * 0.8)
+        self.assertAlmostEqual(pipeline._min_confidence, 0.3)
+        self.assertEqual(pipeline._min_text_length, 5)
+        self.assertEqual(pipeline._dedup_cooldown, 1)
+
+    def test_language_change_swaps_the_reader(self) -> None:
+        pipeline = self._pipeline()
+        pipeline._reader = "reader-for-ja"
+        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader",
+                   return_value="reader-for-ko") as get_reader:
+            pipeline.applyConfig({"source_language": "Korean"})
+            pipeline._applyPending()
+
+        get_reader.assert_called_once_with(["ko", "en"], True)  # use_gpu の既定値
+        self.assertEqual(pipeline._reader, "reader-for-ko")
+        self.assertEqual(pipeline._source_language, "Korean")
+
+    def test_unsupported_language_keeps_the_current_reader(self) -> None:
+        pipeline = self._pipeline()
+        pipeline._reader = "reader-for-ja"
+        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader") as get_reader:
+            pipeline.applyConfig({"source_language": "Klingon"})
+            pipeline._applyPending()
+
+        get_reader.assert_not_called()
+        self.assertEqual(pipeline._reader, "reader-for-ja")
+        self.assertEqual(pipeline._source_language, "Japanese")
+
+    def test_reader_failure_keeps_the_current_reader(self) -> None:
+        pipeline = self._pipeline()
+        pipeline._reader = "reader-for-ja"
+        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader", return_value=None):
+            pipeline.applyConfig({"source_language": "Korean"})
+            pipeline._applyPending()
+
+        self.assertEqual(pipeline._reader, "reader-for-ja")
+        self.assertEqual(pipeline._source_language, "Japanese")
+
+    def test_language_change_clears_the_dedup_cache(self) -> None:
+        pipeline = self._pipeline()
+        pipeline._dedup.record("hash", "こんにちは", (0, 0), 100.0)
+        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader", return_value="reader"):
+            pipeline.applyConfig({"source_language": "Korean"})
+            pipeline._applyPending()
+
+        self.assertFalse(pipeline._dedup.seenRecently("hash", "こんにちは", 8, 101.0))
+
+    def test_window_title_change_reopens_the_capture(self) -> None:
+        pipeline = self._pipeline()
+        old_capture = Mock()
+        pipeline._capture = old_capture
+        with patch("models.ocr.ocr_pipeline.OcrCapture", return_value="new-capture") as capture_cls:
+            pipeline.applyConfig({"window_title": "VRChat (Other)"})
+            pipeline._applyPending()
+
+        old_capture.close.assert_called_once()
+        capture_cls.assert_called_once_with(window_title="VRChat (Other)")
+        self.assertEqual(pipeline._capture, "new-capture")
+
+    def test_unchanged_values_touch_nothing(self) -> None:
+        pipeline = self._pipeline()
+        pipeline._capture = Mock()
+        with patch("models.ocr.ocr_pipeline.easyocr_engine.getReader") as get_reader, \
+                patch("models.ocr.ocr_pipeline.OcrCapture") as capture_cls:
+            pipeline.applyConfig({"source_language": "Japanese", "window_title": "VRChat"})
+            pipeline._applyPending()
+
+        get_reader.assert_not_called()
+        capture_cls.assert_not_called()
+
+    def test_pending_is_consumed_once(self) -> None:
+        pipeline = self._pipeline(poll_interval_ms=750)
+        pipeline.applyConfig({"poll_interval_ms": 250})
+        pipeline._applyPending()
+        pipeline._poll_interval = 9.9
+        pipeline._applyPending()
+
+        self.assertAlmostEqual(pipeline._poll_interval, 9.9)
+
+    def test_garbage_values_are_ignored_without_breaking_the_loop(self) -> None:
+        pipeline = self._pipeline(poll_interval_ms=750)
+        pipeline.applyConfig({"poll_interval_ms": "fast", "min_confidence": None})
+        pipeline._applyPending()
+
+        self.assertAlmostEqual(pipeline._poll_interval, 0.75)

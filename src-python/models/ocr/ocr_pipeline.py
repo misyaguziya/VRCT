@@ -21,7 +21,7 @@ import hashlib
 import time
 import uuid
 from collections import OrderedDict
-from threading import Event, Thread
+from threading import Event, Lock, Thread
 from typing import Callable, List, Optional
 
 import numpy as np
@@ -156,6 +156,11 @@ class OcrPipeline:
         self._detector = BubbleDetector()
         self._dedup = _DedupCache()
         self._reader = None
+        # 設定変更はここに積んでおき、ワーカースレッドが次のtickの頭で取り込む。
+        # EasyOCRのReaderとキャプチャはスレッドに紐づくので、値を書き換える
+        # スレッドではなく、使っているスレッドの側で作り直す。
+        self._pending: dict = {}
+        self._pending_lock = Lock()
 
     def isEngineAvailable(self) -> bool:
         return easyocr_engine.isAvailable() and self._detector.isAvailable()
@@ -168,6 +173,9 @@ class OcrPipeline:
             return True
         self._stop_event.clear()
         langs = resolveEasyocrLangs(self._source_language)
+        if not langs:
+            printLog(f"OCR pipeline: language {self._source_language!r} is not supported by the OCR engine")
+            return False
         self._reader = easyocr_engine.getReader(langs, self._use_gpu)
         if self._reader is None:
             printLog("OCR pipeline: EasyOCR reader init failed")
@@ -191,6 +199,77 @@ class OcrPipeline:
         # thread that created them, so tearing down from here is unsafe.
         self._capture = None
 
+    def applyConfig(self, settings: dict) -> None:
+        """実行中のパイプラインへ設定変更を反映する (OFF→ONを挟まない)。
+
+        呼び出し元(Controller)はUIスレッド側なので、ここでは値を預かるだけ。
+        実際の切り替えはワーカースレッドが次のtickの頭で行う。
+        """
+        if not isinstance(settings, dict) or not settings:
+            return
+        with self._pending_lock:
+            self._pending.update(settings)
+
+    def _applyPending(self) -> None:
+        """預かった設定を取り込む。ワーカースレッドからのみ呼ぶこと。"""
+        with self._pending_lock:
+            if not self._pending:
+                return
+            pending, self._pending = self._pending, {}
+
+        if "poll_interval_ms" in pending:
+            try:
+                self._poll_interval = max(0.1, int(pending["poll_interval_ms"]) / 1000.0)
+                self._tick_budget = self._poll_interval * TICK_OCR_BUDGET_RATIO
+            except (TypeError, ValueError):
+                errorLogging()
+        if "min_confidence" in pending:
+            try:
+                self._min_confidence = float(pending["min_confidence"])
+            except (TypeError, ValueError):
+                errorLogging()
+        if "min_text_length" in pending:
+            try:
+                self._min_text_length = max(1, int(pending["min_text_length"]))
+            except (TypeError, ValueError):
+                errorLogging()
+        if "dedup_cooldown_sec" in pending:
+            try:
+                self._dedup_cooldown = max(1, int(pending["dedup_cooldown_sec"]))
+            except (TypeError, ValueError):
+                errorLogging()
+
+        # 言語とGPUはReaderの作り直しが要る。同じ組み合わせは
+        # easyocr側でキャッシュされているので、戻すときは即座に切り替わる。
+        language = pending.get("source_language", self._source_language)
+        use_gpu = bool(pending.get("use_gpu", self._use_gpu))
+        if language != self._source_language or use_gpu != self._use_gpu:
+            langs = resolveEasyocrLangs(language)
+            if not langs:
+                printLog(f"OCR pipeline: language {language!r} is not supported, keeping {self._source_language!r}")
+            else:
+                reader = easyocr_engine.getReader(langs, use_gpu)
+                if reader is None:
+                    printLog(f"OCR pipeline: could not load the reader for {language!r}, keeping {self._source_language!r}")
+                else:
+                    self._reader = reader
+                    self._source_language = language
+                    self._use_gpu = use_gpu
+                    # 言語が変われば同じ吹き出しでも読める内容が変わるので、
+                    # 抑制済みの文言を引きずらないようにキャッシュを捨てる。
+                    self._dedup = _DedupCache()
+
+        # キャプチャはOSリソースをこのスレッドで掴んでいるので、ここで開き直す。
+        window_title = pending.get("window_title")
+        if isinstance(window_title, str) and window_title and window_title != self._window_title:
+            self._window_title = window_title
+            try:
+                if self._capture is not None:
+                    self._capture.close()
+            except Exception:
+                errorLogging()
+            self._capture = OcrCapture(window_title=self._window_title)
+
     def _emit(self, text: str) -> None:
         try:
             self._callback({
@@ -212,6 +291,7 @@ class OcrPipeline:
             while not self._stop_event.is_set():
                 start_t = time.monotonic()
                 try:
+                    self._applyPending()
                     self._tick()
                 except Exception:
                     errorLogging()
@@ -235,11 +315,11 @@ class OcrPipeline:
         if not candidates:
             return
 
-        # A noisy frame (busy world, text-heavy UI) can yield dozens of
-        # candidate rectangles. Running OCR on all of them would stall the
-        # loop for seconds and starve the GPU that whisper is sharing, so
-        # only the largest few — which the detector already sorted first —
-        # get an OCR budget on any single tick.
+        # A frame can hold several bubbles at once (and the detector is run
+        # recall-first, so a few non-bubbles come through too). Running OCR on
+        # all of them would stall the loop for seconds and starve the GPU that
+        # whisper is sharing, so only the most confident few — which the
+        # detector already sorted first — get an OCR budget on any single tick.
         candidates = candidates[:MAX_CANDIDATES_PER_TICK]
 
         now = time.monotonic()

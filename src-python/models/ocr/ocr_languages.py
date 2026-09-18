@@ -1,6 +1,13 @@
-"""Mapping between VRCT language names and EasyOCR language codes."""
+"""Mapping between VRCT language names and EasyOCR language codes.
 
-from typing import List
+EasyOCRのReaderは1つのスクリプトグループしか同時にロードできない。
+ja / ko / ch_sim / ch_tra / th / ta / te / kn はそれぞれ英語としか併用できず
+(easyocr側が 'X is only compatible with English' で弾く)、ラテン文字系の
+言語同士は併用できる。つまり「1つのReaderでどの言語でも読む」は作れないため、
+読み取る言語はユーザーに明示的に選ばせる (autoは廃止)。
+"""
+
+from typing import List, Optional, Tuple
 
 # VRCT language name -> EasyOCR ISO code
 _VRCT_TO_EASYOCR = {
@@ -26,28 +33,32 @@ _VRCT_TO_EASYOCR = {
     "Ukrainian": "uk",
 }
 
-# Default fallback set (JP + EN covers most VRChat traffic).
-_DEFAULT_LANGS = ["ja", "en"]
+# UIの選択肢。VRCTが扱う言語の全てをOCRできるわけではないので、
+# ここに載っているものだけを選ばせる。
+SUPPORTED_LANGUAGES: Tuple[str, ...] = tuple(sorted(_VRCT_TO_EASYOCR))
 
 
-def vrctToEasyocr(vrct_language: str) -> str:
-    """Return the EasyOCR code for a VRCT language name, or 'en' if unknown."""
-    return _VRCT_TO_EASYOCR.get(vrct_language, "en")
+def isSupported(vrct_language: str) -> bool:
+    return isinstance(vrct_language, str) and vrct_language in _VRCT_TO_EASYOCR
+
+
+def vrctToEasyocr(vrct_language: str) -> Optional[str]:
+    """Return the EasyOCR code for a VRCT language name, or None if unsupported."""
+    if not isinstance(vrct_language, str):
+        return None
+    return _VRCT_TO_EASYOCR.get(vrct_language)
 
 
 def resolveEasyocrLangs(source_language: str) -> List[str]:
-    """Return the list of EasyOCR language codes to load for a given source.
+    """Return the EasyOCR language codes to load, or [] if the language is unusable.
 
-    'auto' loads a JP+EN combo which covers the common VRChat use case.
-    Any known VRCT language name returns [that_code, 'en'] so Latin fallback
-    is available for mixed-language bubbles. Any unknown value falls back
-    to the JP+EN default set.
+    英語以外は 'en' を足して、同じ吹き出しに混ざるラテン文字も読めるようにする
+    (EasyOCRはどのグループでも英語との併用は許している)。
+    未対応・未選択は空リストを返し、呼び出し側が起動を拒否する。
     """
-    if not isinstance(source_language, str) or source_language.lower() == "auto":
-        return list(_DEFAULT_LANGS)
-    code = _VRCT_TO_EASYOCR.get(source_language)
+    code = vrctToEasyocr(source_language)
     if code is None:
-        return list(_DEFAULT_LANGS)
+        return []
     if code == "en":
         return ["en"]
     return [code, "en"]
