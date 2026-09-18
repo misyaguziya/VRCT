@@ -1,7 +1,7 @@
-"""mic/speaker/chatメッセージパイプラインをプラガブルにするための
+"""mic/speaker/chat/OCRメッセージパイプラインをプラガブルにするための
 スペック抽象化(バックエンドレビュー フェーズ3項目25)。
 
-`controller.py`の`micMessage`/`speakerMessage`/`chatMessage`は「翻訳→
+`controller.py`の`micMessage`/`speakerMessage`/`chatMessage`/`ocrMessage`は「翻訳→
 transliteration→OSC送信→オーバーレイ更新→(mic限定)クリップボード→
 UI配信→WebSocket送信→ロガー→履歴記録」という同一パイプラインを
 ほぼ同じ形で3回書き下していた。このモジュールは「方向ごとに何が
@@ -58,7 +58,9 @@ class MessageDirectionSpec:
 
     # --- 出力 ---
     feature_gate_attr: Optional[str]  # ENABLE_TRANSCRIPTION_SEND/RECEIVE (chatはNone=常時)
-    osc_send_gate_attr: str  # SEND_MESSAGE_TO_VRC | SEND_RECEIVED_MESSAGE_TO_VRC
+    # OSC送信の可否を決めるconfig属性。None は「送らない」(OCR)。他人の発言を
+    # 自分のチャットボックスへ流し返すのはスパムに当たるため、設定ではなく仕様で封じる。
+    osc_send_gate_attr: Optional[str]
     osc_format_type: str  # "SEND" | "RECEIVED" (messageFormatterへ渡す)
     overlay_direction: str  # "send" | "receive" (createOverlayImageLargeLogへ渡す)
     overlay_small_log: bool  # speakerのみTrue (受信専用の簡易オーバーレイ)
@@ -71,6 +73,9 @@ class MessageDirectionSpec:
     # --- 配信方式 ---
     delivery: str  # "push" (self.run() で配信、mic/speaker) | "return" (戻り値で返す、chat)
     run_mapping_key: Optional[str]  # delivery="push" のみ使用
+    # 配信ペイロードに載せる source。UIはこれでOCR由来のメッセージにバッジを出す
+    # (src-ui の MessageContainer.jsx)。mic/speaker/chat は付けない (None)。
+    payload_source: Optional[str] = None
 
 
 MIC_MESSAGE_SPEC = MessageDirectionSpec(
@@ -117,6 +122,35 @@ SPEAKER_MESSAGE_SPEC = MessageDirectionSpec(
     logger_prefix="[RECEIVED]",
     delivery="push",
     run_mapping_key="transcription_speaker",
+)
+
+OCR_MESSAGE_SPEC = MessageDirectionSpec(
+    kind="ocr",
+    has_word_filter=True,
+    # 同じ吹き出しの繰り返しは OcrPipeline 側の _DedupCache で抑えているので、
+    # ここでの繰り返し検出は不要。
+    repeat_detector_attr=None,
+    # 読んでいるのは相手の発言なので speaker と同じ方向。
+    translate_attr="getOutputTranslate",
+    multi_target=False,
+    own_transliteration_source="detected_language",
+    vram_error_code=ErrorCode.TRANSLATION_VRAM_SPEAKER,
+    vram_run_mapping_key="error_translation_speaker_vram_overflow",
+    feature_gate_attr="ENABLE_OCR_CAPTURE",
+    # OCRはOSCへ送らない。他人の発言を自分のチャットボックスへ流し返すことになるため。
+    osc_send_gate_attr=None,
+    osc_format_type="RECEIVED",
+    overlay_direction="receive",
+    # 小さいオーバーレイは音声の受信専用。OCRは大きいログにのみ出す。
+    overlay_small_log=False,
+    clipboard=False,
+    ws_type="RECEIVED",
+    ws_src_languages_attr="SELECTED_TARGET_LANGUAGES",
+    ws_dst_languages_attr="SELECTED_YOUR_LANGUAGES",
+    logger_prefix="[OCR]",
+    delivery="push",
+    run_mapping_key="transcription_ocr",
+    payload_source="ocr",
 )
 
 CHAT_MESSAGE_SPEC = MessageDirectionSpec(

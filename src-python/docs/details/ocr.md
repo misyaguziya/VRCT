@@ -270,8 +270,10 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 
 - `Controller.startOcrCapture()` / `stopOcrCapture()` — スレッド起動・停止
 - `model.updateOCRCaptureSettings()` — 設定変更を実行中のパイプラインへ渡す（各setterから呼ばれる）
-- `Controller.ocrMessage(result)` — OCR 結果を翻訳し UI ログ + Overlay に配送
-  - `micMessage` / `speakerMessage` と同じ VRAM エラー・word filter 分岐
+- `Controller.ocrMessage(result)` — `OCR_MESSAGE_SPEC` を渡して `_processMessage` に委ねる
+  (mic/speaker/chat と同じ共通パイプライン。差分は spec 側に持たせている)
+  - OCR固有の差分: OSCへ送らない (`osc_send_gate_attr=None`)、小さいオーバーレイを使わない、
+    payload に `source: "ocr"` を載せる (UIがバッジ表示に使う)
   - **OSC 送信は行わない**（コード内コメントで明示）
 
 ## UI

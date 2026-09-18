@@ -1,4 +1,4 @@
-"""特性テスト(characterization tests): `micMessage`/`speakerMessage`/`chatMessage`。
+"""特性テスト(characterization tests): `micMessage`/`speakerMessage`/`chatMessage`/`ocrMessage`。
 
 バックエンドレビュー(`docs/backend_review_2026-08-27.md`)フェーズ3項目25
 「`MessagePipeline`への3メソッド統合」に着手する前に、現状の挙動
@@ -24,6 +24,7 @@ _CONFIG_KEYS = [
     "ENABLE_TRANSLATION",
     "ENABLE_TRANSCRIPTION_SEND",
     "ENABLE_TRANSCRIPTION_RECEIVE",
+    "ENABLE_OCR_CAPTURE",
     "VRC_MIC_MUTE_SYNC",
     "SEND_MESSAGE_TO_VRC",
     "SEND_RECEIVED_MESSAGE_TO_VRC",
@@ -45,6 +46,7 @@ _CONFIG_KEYS = [
 _RUN_MAPPING = {
     "transcription_mic": "/run/transcription_send_mic_message",
     "transcription_speaker": "/run/transcription_receive_speaker_message",
+    "transcription_ocr": "/run/transcription_ocr_message",
     "error_device": "/run/error_device",
     "error_translation_engine": "/run/error_translation_engine",
     "error_translation_chat_vram_overflow": "/run/error_translation_chat_vram_overflow",
@@ -83,6 +85,7 @@ class _MessagePipelineTestBase(unittest.TestCase):
         config.ENABLE_TRANSLATION = True
         config.ENABLE_TRANSCRIPTION_SEND = True
         config.ENABLE_TRANSCRIPTION_RECEIVE = True
+        config.ENABLE_OCR_CAPTURE = True
         config.VRC_MIC_MUTE_SYNC = False
         config.SEND_MESSAGE_TO_VRC = True
         config.SEND_RECEIVED_MESSAGE_TO_VRC = True
@@ -676,3 +679,80 @@ class TestLatencyInstrumentation(_MessagePipelineTestBase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestOcrMessage(_MessagePipelineTestBase):
+    """OCR も MessagePipeline 経由。speaker との差分だけを見る。
+
+    OCRを個別実装のまま残すと、mic/speaker/chat を統合した意味が薄れるため
+    2026-09-18 に OCR_MESSAGE_SPEC として合流させた。
+    """
+
+    def test_disabled_capture_is_a_noop(self) -> None:
+        config.ENABLE_OCR_CAPTURE = False
+        self.controller.ocrMessage({"text": "hello", "language": "English"})
+        self.assertEqual(self.run_calls, [])
+        self._model.getOutputTranslate.assert_not_called()
+
+    def test_empty_message_is_a_noop(self) -> None:
+        self.controller.ocrMessage({"text": "", "language": "English"})
+        self.assertEqual(self.run_calls, [])
+        self._model.getOutputTranslate.assert_not_called()
+
+    def test_word_filter_short_circuits(self) -> None:
+        self._model.checkKeywords.return_value = True
+        self.controller.ocrMessage({"text": "banned", "language": "English"})
+        status, endpoint, _ = self.run_calls[0]
+        self.assertEqual((status, endpoint), (200, "/run/word_filter"))
+        self._model.getOutputTranslate.assert_not_called()
+
+    def test_payload_carries_the_ocr_source_and_id(self) -> None:
+        # UIは source でOCR由来のメッセージにバッジを出す (MessageContainer.jsx)。
+        self._model.getOutputTranslate.return_value = (["hello"], [True])
+        self.controller.ocrMessage({"text": "こんにちは", "language": "Japanese",
+                                    "segment_id": "abc123"})
+        status, endpoint, result = self.run_calls[0]
+        self.assertEqual((status, endpoint), (200, "/run/transcription_ocr_message"))
+        self.assertEqual(result["source"], "ocr")
+        self.assertEqual(result["id"], "transcription-ocr-abc123")
+        self.assertEqual(result["original"]["message"], "こんにちは")
+        self.assertEqual([t["message"] for t in result["translations"]], ["hello"])
+
+    def test_payload_without_segment_id_has_no_id(self) -> None:
+        self.controller.ocrMessage({"text": "こんにちは", "language": "Japanese"})
+        _, _, result = self.run_calls[0]
+        self.assertNotIn("id", result)
+        self.assertEqual(result["source"], "ocr")
+
+    def test_never_sends_to_osc(self) -> None:
+        # 他人の発言を自分のチャットボックスへ流し返すのはスパムに当たるため、
+        # 設定ではなく仕様で封じている。送信がONでも送らないこと。
+        config.SEND_RECEIVED_MESSAGE_TO_VRC = True
+        config.SEND_MESSAGE_TO_VRC = True
+        self.controller.ocrMessage({"text": "こんにちは", "language": "Japanese"})
+        self._model.oscSendMessage.assert_not_called()
+
+    def test_uses_the_other_party_translation_direction(self) -> None:
+        self.controller.ocrMessage({"text": "こんにちは", "language": "Japanese"})
+        self._model.getOutputTranslate.assert_called_once()
+        self.assertEqual(self._model.getOutputTranslate.call_args.kwargs["source_language"], "Japanese")
+        self._model.getInputTranslate.assert_not_called()
+
+    def test_blank_language_falls_back_to_the_target_language(self) -> None:
+        # 空文字を自分の言語へフォールバックさせてはいけない (自分の言語から
+        # 自分の言語への翻訳を頼むことになる)。None を渡して getOutputTranslate に任せる。
+        self.controller.ocrMessage({"text": "hello", "language": ""})
+        self.assertIsNone(self._model.getOutputTranslate.call_args.kwargs["source_language"])
+
+    def test_does_not_use_the_small_overlay(self) -> None:
+        # 小さいオーバーレイは音声の受信専用。
+        config.OVERLAY_SMALL_LOG = True
+        config.OVERLAY_LARGE_LOG = True
+        self.controller._is_overlay_available = lambda: True
+        self.controller.ocrMessage({"text": "こんにちは", "language": "Japanese"})
+        self._model.updateOverlaySmallLog.assert_not_called()
+        self._model.updateOverlayLargeLog.assert_called_once()
+
+    def test_history_is_recorded_as_ocr(self) -> None:
+        self.controller.ocrMessage({"text": "こんにちは", "language": "Japanese"})
+        self._model.addTranslationHistory.assert_called_once_with("ocr", "こんにちは")

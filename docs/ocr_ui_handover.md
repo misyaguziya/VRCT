@@ -70,7 +70,8 @@ OCR結果のペイロード:
 }
 ```
 
-- `transliteration` はOCR経路では**常に空配列**。マイク/スピーカー経路と形を揃えるためだけに存在する
+- `transliteration` は読み取った言語が日本語のとき入る（スピーカー受信と同じ扱い）。
+  それ以外は空配列
 - `translations` は翻訳が無効なら空配列
 - `source: "ocr"` でマイク/スピーカー由来と区別できる（`MessageContainer.jsx` はこれでバッジを出している）
 

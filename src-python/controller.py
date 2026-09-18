@@ -14,7 +14,7 @@ from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValid
 from errors import ErrorCode, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
-from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC
+from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC, OCR_MESSAGE_SPEC
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -1081,9 +1081,16 @@ class Controller:
                 } for translation_message, transliteration in zip(translation, transliteration_translation)
             ]
         }
+        # UIは source でメッセージの出自を見分ける (OCR由来にバッジを出す)。
+        # id は UI 側で未指定ならUUIDが振られるが、ログとの突き合わせのため
+        # 呼び出し元が持っていれば載せる。
+        if spec.payload_source is not None:
+            payload["source"] = spec.payload_source
+        if msg_id is not None:
+            payload = {"id": msg_id, **payload}
 
         if spec.feature_gate_attr is None or getattr(config, spec.feature_gate_attr) is True:
-            if getattr(config, spec.osc_send_gate_attr) is True:
+            if spec.osc_send_gate_attr is not None and getattr(config, spec.osc_send_gate_attr) is True:
                 if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
                     if config.ENABLE_TRANSLATION is False:
                         osc_message = self.messageFormatter(spec.osc_format_type, [], message)
@@ -1279,156 +1286,33 @@ class Controller:
         elif isinstance(message, str) and len(message) > 0:
             self._processMessage(SPEAKER_MESSAGE_SPEC, message, language, asr_ms=result.get("asr_ms"))
 
-    # NOTE: mic/speaker/chat は MessageDirectionSpec (models/message_pipeline.py) へ
-    # 統合済みだが、OCR はこのマージ時点では旧来の個別実装のまま。OCRはOSCへ
-    # 送らない・小さいオーバーレイを使わない等の差分があり、統合には spec 側の
-    # 拡張が要るため、マージとは分けて対応する。
     def ocrMessage(self, result: dict) -> None:
-        """Handle a chat-bubble OCR result and route it through translation.
+        """OCRで読んだチャット吹き出しを、受信メッセージと同じ経路へ流す。
 
-        Mirrors speakerMessage: translate, mirror to UI log and VR
-        overlay, but never sends to VRChat's OSC chatbox — echoing another
-        player's message back into VRChat would be spam / ToS-adjacent.
+        speakerMessage と同じく `_processMessage` に委ねる。OCR固有の差分
+        (OSCへ送らない、小さいオーバーレイを使わない、payloadに source="ocr" を
+        載せる) は `OCR_MESSAGE_SPEC` 側に持たせている。
+
+        OSCチャットボックスへは送らない。他人の発言を自分のチャットボックスへ
+        流し返すことになり、スパムに当たるため (設定ではなく仕様で封じている)。
         """
         if config.ENABLE_OCR_CAPTURE is not True:
             return
 
         message = result.get("text")
-        language = result.get("language")
         if not isinstance(message, str) or len(message) == 0:
             return
 
-        # Language of the captured bubble. Leaving this None lets
-        # getOutputTranslate fall back to SELECTED_TARGET_LANGUAGES, i.e. the
-        # language the *other* party speaks — which is what we are reading.
-        # Never fall back to SELECTED_YOUR_LANGUAGES here: that would ask the
-        # translator to translate your own language into your own language.
+        # 読んでいるのは相手の発言なので、翻訳の原文言語もそちら側。空なら
+        # getOutputTranslate が SELECTED_TARGET_LANGUAGES へフォールバックする。
+        # 自分の言語へフォールバックさせてはいけない (自分の言語から自分の言語への
+        # 翻訳を頼むことになる)。
+        language = result.get("language")
         source_language = language if isinstance(language, str) and len(language) > 0 else None
 
-        translation: list = []
-        if model.checkKeywords(message):
-            self.run(
-                200,
-                self.run_mapping["word_filter"],
-                {"message": f"Detected by word filter: {message}"},
-            )
-            return
-        if config.ENABLE_TRANSLATION is True:
-            try:
-                translation, success = model.getOutputTranslate(message, source_language=source_language)
-                if all(success) is not True:
-                    self.changeToCTranslate2Process()
-                    error_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSLATION_ENGINE_LIMIT,
-                        data=None,
-                    )
-                    self.run(
-                        error_response["status"],
-                        self.run_mapping["error_translation_engine"],
-                        error_response["result"],
-                    )
-            except Exception as e:
-                is_vram_error, error_message = model.detectVRAMError(e)
-                if is_vram_error:
-                    error_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSLATION_VRAM_SPEAKER,
-                        data=error_message,
-                    )
-                    self.run(
-                        error_response["status"],
-                        self.run_mapping["error_translation_speaker_vram_overflow"],
-                        error_response["result"],
-                    )
-                    self.setDisableTranslation()
-                    disable_response = VRCTError.create_error_response(
-                        ErrorCode.TRANSLATION_DISABLED_VRAM,
-                        data=False,
-                    )
-                    self.run(
-                        disable_response["status"],
-                        self.run_mapping["enable_translation"],
-                        disable_response["result"],
-                    )
-                    return
-                else:
-                    errorLogging()
-                    return
-
-        transliteration_message: list = []
-        transliteration_translation: list = [[]]
         segment_id = result.get("segment_id")
-        transcript_id = f"transcription-ocr-{segment_id}" if segment_id is not None else None
-
-        endpoint = self.run_mapping.get("transcription_ocr")
-        if endpoint is not None:
-            self.run(
-                200,
-                endpoint,
-                {
-                    "id": transcript_id,
-                    "source": "ocr",
-                    "original": {
-                        "message": message,
-                        "transliteration": transliteration_message,
-                    },
-                    "translations": [
-                        {
-                            "message": t,
-                            "transliteration": [],
-                        } for t in translation
-                    ],
-                },
-            )
-
-        # Mirror onto VR overlay (large log). Never send to OSC chatbox.
-        if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
-            try:
-                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                    overlay_image = model.createOverlayImageLargeLog(
-                        "receive",
-                        None,
-                        None,
-                        translation,
-                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                        transliteration_message,
-                        transliteration_translation,
-                    )
-                    model.updateOverlayLargeLog(overlay_image)
-                else:
-                    overlay_image = model.createOverlayImageLargeLog(
-                        "receive",
-                        message,
-                        source_language,
-                        translation,
-                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                        transliteration_message,
-                        transliteration_translation,
-                    )
-                    model.updateOverlayLargeLog(overlay_image)
-            except Exception:
-                errorLogging()
-
-        if model.checkWebSocketServerAlive() is True:
-            try:
-                model.websocketSendMessage(
-                    {
-                        "type": "OCR",
-                        "src_languages": config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                        "dst_languages": config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                        "message": message,
-                        "translation": translation,
-                        "transliteration": transliteration_translation,
-                    }
-                )
-            except Exception:
-                errorLogging()
-
-        if config.LOGGER_FEATURE is True:
-            translation_text = f" ({'/'.join(translation)})" if translation else ""
-            try:
-                model.logger.info(f"[OCR] {message}{translation_text}")
-            except Exception:
-                pass
+        msg_id = f"transcription-ocr-{segment_id}" if segment_id is not None else None
+        self._processMessage(OCR_MESSAGE_SPEC, message, source_language, msg_id=msg_id)
 
     def _disableTranscriptionAfterPipelineError(self, source: str) -> None:
         """エラー停止後の実状態を config と UI に同期する。"""
