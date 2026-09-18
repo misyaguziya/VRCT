@@ -25,7 +25,7 @@
 └─────────────────┘
          │
 ┌────────▼────────┐
-│ External Deps   │ (torch, ctranslate2, requests, ipaddress)
+│ External Deps   │ (ctranslate2, CUDA Driver API, requests, ipaddress)
 └─────────────────┘
 ```
 
@@ -45,8 +45,9 @@ from typing import Any, List, Dict, Optional
 
 ### サードパーティライブラリ（オプション依存）
 ```python
-import torch  # GPU検出用（インポート失敗時はNoneにフォールバック）
+from ctranslate2 import get_cuda_device_count  # GPU台数の取得用
 from ctranslate2 import get_supported_compute_types  # 計算タイプ取得用
+import ctypes  # CUDA Driver API (nvcuda.dll) からGPU名を取得する用
 import requests  # ネットワーク接続確認用
 import ipaddress  # IPアドレス検証用
 import socket  # WebSocketサーバー可用性チェック用
@@ -55,9 +56,10 @@ import socket  # WebSocketサーバー可用性チェック用
 **セーフガードインポート:**
 ```python
 try:
-    import torch
+    from ctranslate2 import get_cuda_device_count
 except Exception:
-    torch = None  # type: ignore
+    def get_cuda_device_count() -> int:  # type: ignore
+        return 0
 
 try:
     from ctranslate2 import get_supported_compute_types
@@ -249,8 +251,10 @@ assert isValidIpAddress("invalid") is False
 
 **処理フロー:**
 1. CPU デバイスを常に追加（最低限の計算環境を保証）
-2. PyTorch と CUDA が利用可能な場合:
-   - 全GPUデバイスを列挙
+2. GPU実行が可能な場合（`get_cuda_device_count() > 0` かつ、ctranslate2 が
+   実行時にロードする cuBLAS をDLL検索パスから引ける場合。後者はCUDA版
+   ビルドでのみ成立し、CPU版ビルドでGPUを誤って選ばせないための判定）:
+   - 全GPUデバイスを列挙（デバイス名は CUDA Driver API から取得）
    - 各GPUの計算タイプを `get_supported_compute_types()` で取得
    - GPU アーキテクチャに応じて計算タイプを制限:
      - **GTX シリーズ**: `int8_bfloat16`, `bfloat16`, `float16`, `int8` を除外

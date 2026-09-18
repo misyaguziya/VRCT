@@ -1045,9 +1045,10 @@ class Config:
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
-        from utils import torch as _torch  # type: ignore
-        self._COMPUTE_MODE = "cuda" if (_torch is not None and _torch.cuda.is_available()) else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
+        self._COMPUTE_MODE = "cuda" if any(
+            device.get("device") == "cuda" for device in self._SELECTABLE_COMPUTE_DEVICE_LIST
+        ) else "cpu"
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
 
         # Read Write

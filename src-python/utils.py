@@ -1,5 +1,8 @@
 import base64
-from typing import Any, Callable, List, Dict, Optional
+from functools import lru_cache
+from typing import Any, Callable, List, Dict, Optional, Tuple
+import ctypes
+import glob
 import json
 import os
 import queue
@@ -13,6 +16,61 @@ import requests
 import ipaddress
 import socket
 
+def _registerBundledCudaLibraries() -> None:
+    """nvidia-*-cu12 wheel が置いたCUDAライブラリをDLL検索パスへ登録する。
+
+    CUDA版ビルドは ctranslate2 が必要とする cuBLAS / cuDNN を
+    nvidia-cublas-cu12 / nvidia-cudnn-cu12 から取る。これらは
+    site-packages/nvidia/<lib>/bin に展開されるだけで検索パスには載らない。
+    torch を入れていた頃は torch が自前の lib/ を登録するついでに
+    同梱の cuBLAS を拾えていたので、torch を落とした今は自分で登録する
+    (2026-09-18)。
+
+    PATH にも足すのは、cudnn64_9.dll が中で cudnn_ops64_9.dll 等を素の
+    LoadLibrary で開き、add_dll_directory の登録が効かないため
+    (実測: PATH 無しだと "Could not locate cudnn_ops64_9.dll" で落ちる)。
+
+    凍結ビルドでも同じ処理で動く。PyInstaller は同じDLL群を
+    _internal/nvidia/<lib>/bin/ へ収集するので (spec/backend_cuda.spec の
+    hiddenimports 参照)、`nvidia.__path__` からそのまま辿れる。
+    CPU版ビルドには `nvidia` が無いので、その場合は何もせず返る。
+    """
+    if os.name != "nt":
+        return
+    try:
+        import nvidia  # type: ignore
+    except ImportError:
+        return
+
+    library_dirs = sorted(
+        {
+            library_dir
+            for search_path in nvidia.__path__
+            for library_dir in glob.glob(os.path.join(search_path, "*", "bin"))
+            if os.path.isdir(library_dir)
+        }
+    )
+    if not library_dirs:
+        return
+    for library_dir in library_dirs:
+        os.add_dll_directory(library_dir)
+    os.environ["PATH"] = os.pathsep.join(library_dirs) + os.pathsep + os.environ.get("PATH", "")
+
+_registerBundledCudaLibraries()
+
+# ctranslate2 は import 時に ctranslate2.converters.transformers 経由で
+# transformers を読み込む。transformers は torch が無いと
+# "Models won't be available" という advice 警告を stderr へ出すが、
+# VRCT が transformers に使っているのは AutoTokenizer だけなので
+# 実害はなく紛らわしいだけ (torch 撤去後に発生, 2026-09-18)。
+# advice 警告だけを黙らせる。通常の警告・エラーはそのまま出る。
+# フロントの StartPythonController は sidecar の stderr 出力を致命的エラー
+# 通知に昇格させるため、放置すると良性の警告が「An error occurred」
+# ダイアログに化ける (mainloop.py の grpcio FutureWarning と同じ理由)。
+# ここに置いているのは、ctranslate2 を最初に import するのがこのファイルで、
+# 警告は import 時に出てしまうため。
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
 # Optional runtime dependencies. `None` fallback lets non-GPU / no-ctranslate2
 # environments keep the app running with reduced feature set.
 try:
@@ -22,9 +80,10 @@ except Exception:
         return []
 
 try:
-    import torch  # noqa: F401
+    from ctranslate2 import get_cuda_device_count as _ct2_get_cuda_device_count  # noqa: F401
 except Exception:
-    torch = None  # type: ignore
+    def _ct2_get_cuda_device_count() -> int:  # type: ignore
+        return 0
 
 _WEIGHT_VERIFIED_MARKER_NAME = ".weight_verified.json"
 
@@ -342,6 +401,67 @@ def isWildcardBindAddress(ip_address: str) -> bool:
     except ValueError:
         return False
 
+# ctranslate2.dll は GPU 実行時に cuBLAS を LoadLibrary で遅延ロードする
+# (ctranslate2.dll 内の文字列テーブルに "cublas64_12.dll" が入っている)。
+# cuDNN は ctranslate2 の wheel に同梱されているが cuBLAS は入っておらず、
+# CUDA版ビルドだけが nvidia-cublas-cu12 でこれを持つ。つまり
+# 「cuBLASを引けるか」がそのままこのビルドでGPU実行できるかの判定になる。
+# torch を使っていた頃は torch.cuda.is_available() が偶然この役目を
+# 果たしていた (CPU版には CPU 版 torch が入るので常に False だった)。
+_CUBLAS_LIBRARY_NAME = "cublas64_12.dll" if os.name == "nt" else "libcublas.so.12"
+
+@lru_cache(maxsize=1)
+def _getCudaDeviceNames() -> Tuple[str, ...]:
+    """GPU実行に使えるCUDAデバイスの名前を返す。使えなければ空タプル。
+
+    torch を落とした代替 (2026-09-18)。デバイスの有無と数は ctranslate2 が
+    答えられるが、名前を返すAPIを持っていないのでそこだけ CUDA Driver API
+    (nvcuda.dll / libcuda.so.1) を直接叩く。どちらもNVIDIAドライバに
+    同梱されていて、CUDA Toolkit のインストールは要らない。
+
+    名前が取れなくても致命傷ではないので空文字にフォールバックする。
+    用途は UI 表示と compute_type 選択のキーワード一致 (GTX/RTX/...) だけで、
+    どれにも一致しなければ "default" の優先順位が使われる。
+
+    デバイス構成はプロセス実行中に変わらないので結果をキャッシュする。
+    """
+    try:
+        device_count = _ct2_get_cuda_device_count()
+    except Exception:
+        return ()
+    if device_count <= 0:
+        return ()
+
+    try:
+        ctypes.CDLL(_CUBLAS_LIBRARY_NAME)
+    except OSError:
+        # GPUはあるが、このビルドは ctranslate2 が必要とするCUDAライブラリを
+        # 同梱していない (CPU版)。選ばせると必ずモデル読み込みで失敗するので
+        # デバイス一覧に出さない。
+        return ()
+
+    device_names = [""] * device_count
+    try:
+        cuda = ctypes.CDLL("nvcuda.dll" if os.name == "nt" else "libcuda.so.1")
+    except OSError:
+        # ドライバ不在。ctranslate2 が 0 を返していれば通常ここには来ない。
+        return tuple(device_names)
+
+    try:
+        if cuda.cuInit(0) != 0:
+            return tuple(device_names)
+        name_buffer = ctypes.create_string_buffer(256)
+        for device_index in range(device_count):
+            device = ctypes.c_int()
+            if cuda.cuDeviceGet(ctypes.byref(device), device_index) != 0:
+                continue
+            if cuda.cuDeviceGetName(name_buffer, len(name_buffer), device) != 0:
+                continue
+            device_names[device_index] = name_buffer.value.decode("utf-8", "replace")
+    except Exception:
+        errorLogging()
+    return tuple(device_names)
+
 def getComputeDeviceList() -> List[Dict[str, Any]]:
     """Return a list of available compute devices and supported compute types.
 
@@ -360,26 +480,24 @@ def getComputeDeviceList() -> List[Dict[str, Any]]:
     ]
 
     try:
-        if torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available():
-            for device_index in range(torch.cuda.device_count()):
-                gpu_device_name = torch.cuda.get_device_name(device_index)
-                gpu_compute_types = ["auto"] + sorted(list(get_supported_compute_types("cuda", device_index)))
+        for device_index, gpu_device_name in enumerate(_getCudaDeviceNames()):
+            gpu_compute_types = ["auto"] + sorted(list(get_supported_compute_types("cuda", device_index)))
 
-                # デバイスごとの計算タイプの制限
-                if "GTX" in gpu_device_name:
-                    unsupported_types = {"int8_bfloat16", "bfloat16", "float16", "int8"}
-                    gpu_compute_types = [t for t in gpu_compute_types if t not in unsupported_types]
-                elif not any(keyword in gpu_device_name for keyword in ["RTX", "Tesla", "A100", "Quadro"]):
-                    gpu_compute_types = ["float32"]
+            # デバイスごとの計算タイプの制限
+            if "GTX" in gpu_device_name:
+                unsupported_types = {"int8_bfloat16", "bfloat16", "float16", "int8"}
+                gpu_compute_types = [t for t in gpu_compute_types if t not in unsupported_types]
+            elif not any(keyword in gpu_device_name for keyword in ["RTX", "Tesla", "A100", "Quadro"]):
+                gpu_compute_types = ["float32"]
 
-                compute_types.append(
-                    {
-                        "device": "cuda",
-                        "device_index": device_index,
-                        "device_name": gpu_device_name,
-                        "compute_types": gpu_compute_types,
-                    }
-                )
+            compute_types.append(
+                {
+                    "device": "cuda",
+                    "device_index": device_index,
+                    "device_name": gpu_device_name,
+                    "compute_types": gpu_compute_types,
+                }
+            )
     except Exception:
         # If querying GPU devices fails, return at least the CPU entry
         errorLogging()
@@ -396,10 +514,11 @@ def getBestComputeType(device: str, device_index: int) -> str:
     except Exception:
         compute_types = set()
 
-    try:
-        device_name = "cpu" if device == "cpu" else (torch.cuda.get_device_name(device_index) if torch is not None else "")
-    except Exception:
-        device_name = ""
+    if device == "cpu":
+        device_name = "cpu"
+    else:
+        cuda_device_names = _getCudaDeviceNames()
+        device_name = cuda_device_names[device_index] if device_index < len(cuda_device_names) else ""
 
     # デバイスごとの優先計算タイプ
     preferred_types = {

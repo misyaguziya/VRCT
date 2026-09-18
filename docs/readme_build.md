@@ -54,7 +54,9 @@ npm run setup-python
 - `.venv` (CPU版) の作成と依存関係のインストール
 - `.venv_cuda` (CUDA版) の作成と依存関係のインストール
 
-> **注意**: CUDA版を使用する場合は、NVIDIAのGPUとCUDA Toolkit 12.8が必要です。
+> **注意**: CUDA版を使用する場合は、CUDA 12.8対応のNVIDIA GPUドライバーが必要です。
+> CUDA Toolkit のインストールは不要です。ctranslate2 が使う cuBLAS / cuDNN は
+> `requirements_cuda.txt` の `nvidia-*-cu12` wheel で入り、ビルド時に同梱されます。
 
 ## ビルドの種類
 
@@ -413,7 +415,7 @@ VRCT/
 │   └── zip.py           # ZIPパッケージング
 ├── package.json          # Node.js設定とバージョン管理
 ├── requirements.txt      # Python依存関係（CPU版）
-└── requirements_cuda.txt # Python依存関係（CUDA版）
+└── requirements_cuda.txt # Python依存関係（CUDA版。requirements.txt + CUDAライブラリ）
 ```
 
 ## トラブルシューティング
@@ -445,9 +447,11 @@ npm run build
 
 ### CUDA版が動作しない
 
-- CUDA Toolkit 12.8がインストールされているか確認
-- NVIDIA GPUドライバーが最新か確認
+- NVIDIA GPUドライバーが最新か確認（CUDA Toolkit のインストールは不要）
 - `requirements_cuda.txt` の依存関係が正しくインストールされているか確認
+- `.venv_cuda/Lib/site-packages/nvidia/{cublas,cudnn}/bin/` にDLLがあるか確認。
+  ctranslate2 はGPU実行時にここの `cublas64_12.dll` / `cudnn64_9.dll` を
+  実行時ロードする。無ければGPUは計算デバイス一覧に出ない
 
 ### プロセスが残っている
 
