@@ -337,7 +337,7 @@ def safe_transcription(transcriber, audio_queue, languages, countries):
 - `pydub`: 音声処理
 
 ### オプション依存関係
-- `torch`: CUDA計算
+- `nvidia-cublas-cu12` / `nvidia-cudnn-cu12`: CUDA計算（ctranslate2 が実行時にロードする）
 - `utils`: エラーログ機能
 
 ## 注意事項

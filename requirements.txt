@@ -1,4 +1,8 @@
-torch==2.7.0
+# NOTE: torch was dropped on 2026-09-18. It was pulled in by EasyOCR (now
+# replaced by RapidOCR) and used only to enumerate CUDA devices, which
+# ctranslate2 and the CUDA driver API can do by themselves (see
+# src-python/utils.py). The GPU build gets its cuBLAS/cuDNN from the
+# nvidia-*-cu12 wheels listed in requirements_cuda.txt instead.
 faster-whisper==1.1.1
 ctranslate2==4.6.0
 transformers==4.40.2
