@@ -23,7 +23,7 @@ setuptools==80.8.0
 langchain-openai==0.3.32
 langchain-google-genai==2.1.10
 google-genai==1.45.0
-grpcio==1.83.1  # >=1.83.0: google-auth PQC 対応(2026年10月に最低要件化)
+grpcio==1.83.1  # >=1.83.0: google-auth PQC support (min requirement from 2026-10)
 langchain-ollama==0.3.10
 SudachiPy==0.6.10
 SudachiDict-core==20250825
@@ -36,7 +36,7 @@ translators @ git+https://github.com/misyaguziya/translators@f3697bd0b5ff5d877e6
 SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4.5
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3
 aptabase==0.1.0
-# OCR: RapidOCR (ONNX版PP-OCR)。--no-deps で入れる (bat/install.bat を参照)。
+# OCR: RapidOCR (PP-OCR on ONNX). Installed with --no-deps (see bat/install.bat).
 rapidocr==3.9.2
 opencv-python-headless==4.10.0.84
 omegaconf==2.3.1
