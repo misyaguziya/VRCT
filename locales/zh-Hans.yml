@@ -52,6 +52,7 @@ main_page:
         all: "全部"
         sent: "发送"
         received: "接受"
+        received_ocr: "接受 (OCR)"
         system: "系统"
 
         resend_button_on_hover_desc: "长按发送"
@@ -345,6 +346,50 @@ config_page:
             label:
             desc:
             aptabase_privacy_policy_label:
+
+    ocr:
+        section_title: "VRChat 聊天 OCR"
+        section_desc: "识别屏幕上显示的 VRChat 聊天气泡文字，并通过现有的翻译流程处理。结果会显示在主消息日志和 SteamVR 悬浮窗中，不会发送到 VRChat 的 OSC 聊天框。"
+        capture_target: "捕获对象"
+        language: "语言"
+        performance: "性能"
+        enable_ocr_capture:
+            label: "启用 VRChat 聊天 OCR"
+            desc: "开始后台任务，捕获 VRChat 窗口(SteamVR 运行时为头显镜像画面)并翻译检测到的聊天气泡。"
+        window_title:
+            label: "窗口名称"
+            desc: "与可见窗口标题的部分匹配(不区分大小写)。如果你使用的客户端窗口标题不是 'VRChat'(例如修改版启动器)，请更改此项。"
+        source_language:
+            label: "OCR 识别语言"
+            desc: "捕获气泡所使用的语言。'auto' 用单一模型自动识别日语、英语、中文以及拉丁字母系语言。谚文、西里尔字母、泰文、阿拉伯文、天城文需要另外的模型，请选择对应的文字体系。在 OCR 运行中更改也会立即切换。阿拉伯文目前精度较低。"
+        poll_interval_ms:
+            label: "捕获间隔 (毫秒)"
+            desc: "OCR 循环获取新帧的频率。数值越低响应越快，但 CPU/GPU 负载越高。默认值：750。"
+        min_confidence:
+            label: "最低 OCR 置信度"
+            desc: "低于此 OCR 置信度分数的文字会被丢弃。调高可减少误检测，调低可捕捉较模糊的气泡。默认值：0.85。PP-OCR 即使识别错误也会给出较高分数，因此 EasyOCR 时代的 0.55 实际上起不到过滤作用。"
+        bubble_min_text_length:
+            label: "最小文字长度"
+            desc: "字符数低于此值的气泡将被忽略。默认值：2。"
+
+    updater:
+        install_panel:
+            section_label:
+            current_summary_label:
+            current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
+            channel_label:
+            channel_stable:
+            channel_beta:
+            compute_mode_label:
+            compute_mode_cpu: "CPU"
+            compute_mode_gpu: "GPU (CUDA)"
+            version_label: "要安装的版本"
+            version_desc:
+            no_versions_available:
+            beta_suffix: "测试版"
+            latest_suffix:
+            install_button:
+            reinstall_button:
 
     hotkeys:
         input_placeholder: "请输入按键组合"

@@ -52,6 +52,7 @@ main_page:
         all: "All"
         sent: "Sent"
         received: "Received"
+        received_ocr: "Received (OCR)"
         system: "System"
 
         resend_button_on_hover_desc: "Press And Hold To Send"
@@ -351,6 +352,50 @@ config_page:
             label: "Support Our Development"
             desc: "Sends usage data so our developers can grin and say 'Thanks for using it!' while improving the app.\n* No personal info or conversation content is ever sent."
             aptabase_privacy_policy_label: "Aptabase Privacy Policy"
+
+    ocr:
+        section_title: "VRChat chat OCR"
+        section_desc: "Capture VRChat chat bubbles on screen, run OCR, and route the recognized text through the existing translation pipeline. Output is mirrored to the main message log and the SteamVR overlay; it is never sent to VRChat's OSC chatbox."
+        capture_target: "Capture target"
+        language: "Language"
+        performance: "Performance"
+        enable_ocr_capture:
+            label: "Enable VRChat chat OCR"
+            desc: "Starts a background loop that captures the VRChat window (or the HMD mirror when SteamVR is running) and translates detected chat bubbles."
+        window_title:
+            label: "Window name"
+            desc: "Substring match (case-insensitive) against visible window titles. Change this if you run a client whose window isn't titled 'VRChat' (e.g. a modified launcher)."
+        source_language:
+            label: "OCR source language"
+            desc: "Language of the captured bubbles. 'auto' reads Japanese, English, Chinese and Latin-script languages with a single model. Hangul, Cyrillic, Thai, Arabic and Devanagari need a separate model, so pick that script. Changing it while OCR is running switches over without a restart. Arabic accuracy is currently low."
+        poll_interval_ms:
+            label: "Capture interval (ms)"
+            desc: "How often the OCR loop grabs a new frame. Lower = more responsive, higher CPU/GPU. Default: 750."
+        min_confidence:
+            label: "Minimum OCR confidence"
+            desc: "Words below this OCR confidence score are discarded. Raise to reduce false positives; lower to catch faint bubbles. Default: 0.85. PP-OCR reports high scores even when it misreads, so the old EasyOCR-era 0.55 filtered nothing."
+        bubble_min_text_length:
+            label: "Minimum text length"
+            desc: "Bubbles with fewer characters than this are ignored. Default: 2."
+
+    updater:
+        install_panel:
+            section_label: "Choose Version and Build"
+            current_summary_label: "Current"
+            current_summary_value: "{{version}} / {{compute_mode}} / {{channel}}"
+            channel_label: "Release Channel"
+            channel_stable: "Stable"
+            channel_beta: "Beta"
+            compute_mode_label: "Device"
+            compute_mode_cpu: "CPU"
+            compute_mode_gpu: "GPU (CUDA)"
+            version_label: "Version to Install"
+            version_desc: "Pick a past release to downgrade. The list is filtered by the channel you selected above."
+            no_versions_available: "No releases are available on the selected channel yet."
+            beta_suffix: "Beta"
+            latest_suffix: "Latest"
+            install_button: "Install with This Setup"
+            reinstall_button: "Reinstall with This Setup"
 
     hotkeys:
         input_placeholder: "Press a key combination"

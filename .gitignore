@@ -1,12 +1,17 @@
 tmp/
 build/
 dist/
+/tool-dist/
+/annotation_jobs/
+.venv-label-studio/
+.venv-annotator/
 /config.json
 memo.txt
 *.pyc
 logs/
 .venv/
 .venv_cuda/
+.venv-collector/
 weights/
 # Local evaluation dataset archives (never commit downloaded speech data)
 common-voice-scripted-speech-*.tar.gz
@@ -63,3 +68,8 @@ CLAUDE.md
 docs/adr/
 src-python/docs/ref/
 src-python/telemetry_state.json
+
+# OCR bubble-detector training data collected via tools/ocr_dataset_collector.py
+# and tools/gemini_bbox_labeler.py (large binary screenshots, dev-machine only).
+/dataset_collected/
+/yolo_labels/

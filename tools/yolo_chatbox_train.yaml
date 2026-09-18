@@ -1,0 +1,33 @@
+# チャットボックス検出(YOLOv8n)の学習設定。
+# .\.venv-yolo\Scripts\yolo.exe cfg=tools/yolo_chatbox_train.yaml
+# 個別に上書きしたい値はコマンドラインで後ろに付ける (例: epochs=200 batch=4)。
+task: detect
+mode: train
+model: weights/yolov8n.pt
+data: dataset_annotated/data.yaml
+project: runs
+name: chatbox
+
+epochs: 150
+patience: 50
+batch: 8
+device: 0
+seed: 0
+
+# 吹き出しが小さい。640だと潰れるので1280。元画像のアスペクト比はultralyticsがletterboxで維持する。
+imgsz: 1280
+
+# 小さい吹き出しを壊さないための控えめなaugmentation。
+mosaic: 0.3          # 既定1.0は縮小が強すぎる
+close_mosaic: 20     # 終盤はmosaicなしで素の見え方に合わせる
+scale: 0.2           # 既定0.5だと小さい対象がさらに縮む
+translate: 0.05
+degrees: 0.0         # Chat表示は回らない
+shear: 0.0
+perspective: 0.0
+fliplr: 0.5          # 水平反転は有効
+flipud: 0.0
+hsv_h: 0.0           # 色相はずらさない(吹き出しの色で判別する余地を残す)
+hsv_s: 0.4
+hsv_v: 0.4           # 明るさ・コントラストの変動は有効
+erasing: 0.0

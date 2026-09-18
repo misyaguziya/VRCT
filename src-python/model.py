@@ -54,6 +54,8 @@ from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
+from models.ocr import OcrPipeline
+from models.ocr.ocr_languages import SELECTABLE_LANGUAGES as OCR_SELECTABLE_LANGUAGES, isSupported as isSupportedOcrLanguage
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
@@ -983,6 +985,7 @@ class Model:
         self._websocket_lifecycle_lock = Lock()
         self.obs_browser_source_server = None
         self.clipboard = Clipboard()
+        self.ocr_pipeline: Optional[OcrPipeline] = None
         self.telemetry = Telemetry()
 
         self._inited = True
@@ -2078,6 +2081,88 @@ class Model:
     def stopSpeakerTranscript(self):
         self.ensure_initialized()
         self._speaker_session.reconfigure(transcript=False)
+
+    def startOCRCapture(self, fnc: Callable[[dict], None]) -> bool:
+        """Start the VRChat chat-bubble OCR pipeline.
+
+        The callback receives dicts shaped like mic/speaker transcripts so
+        Controller.ocrMessage can share the mic/speaker translation path.
+        Returns True if the pipeline started, False otherwise.
+        """
+        self.ensure_initialized()
+        if isinstance(self.ocr_pipeline, OcrPipeline):
+            # Already running.
+            return True
+
+        # 読み取る言語の扱いは models/ocr/ocr_languages.py を参照。
+        # "auto" は PP-OCRv6 small (日英中+ラテン文字系を1モデル) を使い、
+        # ハングル・キリル・タイ・アラビア・デーヴァナーガリーだけ明示選択で
+        # PP-OCRv5 のスクリプト別モデルへ切り替える。未対応なら起動しない。
+        # 以前 auto を SELECTED_TARGET_LANGUAGES から解決していた頃は、
+        # 日本語話者が英語へ翻訳する設定だと日本語の吹き出しが読めなかった。
+        source_language = config.OCR_SOURCE_LANGUAGE
+        if not isSupportedOcrLanguage(source_language):
+            printLog(f"OCR: source language {source_language!r} is not selected or not supported, refusing to start")
+            return False
+
+        try:
+            self.ocr_pipeline = OcrPipeline(
+                callback=fnc,
+                source_language=source_language,
+                window_title=config.OCR_WINDOW_TITLE,
+                poll_interval_ms=config.OCR_POLL_INTERVAL_MS,
+                min_confidence=config.OCR_MIN_CONFIDENCE,
+                min_text_length=config.OCR_BUBBLE_MIN_TEXT_LENGTH,
+            )
+        except Exception:
+            errorLogging()
+            self.ocr_pipeline = None
+            return False
+
+        started = self.ocr_pipeline.start()
+        if not started:
+            self.ocr_pipeline = None
+        return started
+
+    def updateOCRCaptureSettings(self) -> None:
+        """設定変更を実行中のOCRパイプラインへ渡す。停止中なら何もしない。
+
+        OFF→ONを挟まずに言語やしきい値を切り替えられるようにするための経路。
+        """
+        pipeline = self.ocr_pipeline
+        if not isinstance(pipeline, OcrPipeline):
+            return
+        try:
+            pipeline.applyConfig({
+                "source_language": config.OCR_SOURCE_LANGUAGE,
+                "window_title": config.OCR_WINDOW_TITLE,
+                "poll_interval_ms": config.OCR_POLL_INTERVAL_MS,
+                "min_confidence": config.OCR_MIN_CONFIDENCE,
+                "min_text_length": config.OCR_BUBBLE_MIN_TEXT_LENGTH,
+            })
+        except Exception:
+            errorLogging()
+
+    @staticmethod
+    def getSelectableOCRSourceLanguages() -> list:
+        """OCRで選べる言語 (VRCTの言語名)。VRCTが翻訳できる言語の全てではない。"""
+        return list(OCR_SELECTABLE_LANGUAGES)
+
+    def stopOCRCapture(self) -> None:
+        self.ensure_initialized()
+        pipeline = self.ocr_pipeline
+        if isinstance(pipeline, OcrPipeline):
+            try:
+                pipeline.stop()
+            except Exception:
+                errorLogging()
+        self.ocr_pipeline = None
+        # 明示 gc.collect() は呼ばない: この関数は Controller から別スレッドで
+        # 呼ばれる。同じ理由 (comtypes の COM ポインタが CoInitialize していない
+        # スレッドで Release され access violation になる、_print_transcript の
+        # コメント参照) で禁止している。gc は import されておらず、ここは
+        # NameError になって stopOcrCapture スレッドが毎回落ちていた
+        # (2026-09-18 実機のstderrで発覚)。
 
     def startCheckSpeakerEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
         self.ensure_initialized()
