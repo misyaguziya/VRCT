@@ -64,89 +64,54 @@ class TestMergeWords(unittest.TestCase):
 
 
 class TestDedupCache(unittest.TestCase):
-    def test_first_sighting_is_not_on_cooldown(self) -> None:
-        cache = _DedupCache()
-        h = _textHash("hello")
-        self.assertFalse(cache.seenRecently(h, "hello", cooldown_sec=8, now=0.0))
+    """覚えている間は同じ文を配送しないこと。
 
-    def test_recorded_entry_is_on_cooldown_until_it_elapses(self) -> None:
-        cache = _DedupCache()
-        h = _textHash("hello")
-        cache.record(h, "hello", (0, 0), now=0.0)
-        self.assertTrue(cache.seenRecently(h, "hello", cooldown_sec=8, now=3.0))
-        self.assertFalse(cache.seenRecently(h, "hello", cooldown_sec=8, now=20.0))
+    以前は「最後に見てから一定時間で解禁」する方式で、画面に出続けている
+    吹き出しでも解禁のたびに同じ文が流れていた (実機で再現、2026-09-18)。
+    """
 
-    def test_seen_recently_refreshes_timestamp_so_lingering_bubbles_stay_suppressed(self) -> None:
-        # 吹き出しが画面に残り続ける限り(=毎tick seenRecentlyが呼ばれ続ける限り)、
-        # クールダウン秒数ごとに再送されるのではなく、抑制され続けるべき。
-        # 注意: seenRecently自体が「見かけた」タイムスタンプを更新するので、
-        # このチェックの呼び出し自体も次の基準点になる。
+    def test_unknown_text_is_not_suppressed(self) -> None:
         cache = _DedupCache()
-        h = _textHash("hello")
-        cache.record(h, "hello", (0, 0), now=0.0)
-        last_seen = 0.0
-        for t in (3.0, 6.0, 9.0, 12.0):
-            self.assertTrue(cache.seenRecently(h, "hello", cooldown_sec=8, now=t))
-            last_seen = t
-        # 吹き出しが消え、以後 seenRecently が呼ばれなくなったとする。最後に
-        # 見かけた時刻(last_seen=12.0)からクールダウン秒数未満ならまだ抑制。
-        self.assertTrue(cache.seenRecently(h, "hello", cooldown_sec=8, now=last_seen + 7.0))
+        self.assertFalse(cache.seen("h1", "こんにちは", 100.0))
 
-    def test_seen_recently_expires_after_the_bubble_truly_disappears(self) -> None:
-        # 上のテストと異なり、ここでは「最後に見かけた後、二度と seenRecently が
-        # 呼ばれない(=吹き出しが消えた)」状態を1回だけ離れた時刻でチェックする。
-        # seenRecently 自体がタイムスタンプを更新してしまうため、経過確認は
-        # 一度きりの呼び出しで行う必要がある。
+    def test_remembered_text_is_suppressed_no_matter_how_much_time_passes(self) -> None:
         cache = _DedupCache()
-        h = _textHash("hello")
-        cache.record(h, "hello", (0, 0), now=0.0)  # last seen at t=0.0
-        self.assertFalse(cache.seenRecently(h, "hello", cooldown_sec=8, now=8.5))
+        cache.record("h1", "こんにちは", (0, 0), 100.0)
+        self.assertTrue(cache.seen("h1", "こんにちは", 100.5))
+        self.assertTrue(cache.seen("h1", "こんにちは", 10_000.0))
+
+    def test_sighting_refreshes_the_entry_so_a_lingering_bubble_is_never_forgotten(self) -> None:
+        cache = _DedupCache()
+        cache.record("h1", "こんにちは", (0, 0), 100.0)
+        for t in range(101, 200, 5):  # 5秒おきに見え続ける
+            self.assertTrue(cache.seen("h1", "こんにちは", float(t)))
+            cache.evictStale(float(t), retention_sec=10.0)
+        self.assertTrue(cache.seen("h1", "こんにちは", 200.0))
+
+    def test_text_is_forgotten_after_it_disappears_for_the_retention_window(self) -> None:
+        cache = _DedupCache()
+        cache.record("h1", "こんにちは", (0, 0), 100.0)
+        cache.evictStale(131.0, retention_sec=30.0)
+        self.assertFalse(cache.seen("h1", "こんにちは", 131.0))
 
     def test_near_duplicate_text_is_treated_as_the_same_entry(self) -> None:
+        # OCRのゆらぎで1〜2文字違うだけの同じ吹き出しを別物として配送しないため。
         cache = _DedupCache()
-        cache.record(_textHash("hello world"), "hello world", (0, 0), now=0.0)
-        # OCRのブレで1文字違うテキスト(別ハッシュ)でも、編集距離2以内なら
-        # 既存エントリのクールダウンにヒットする。
-        self.assertTrue(
-            cache.seenRecently(_textHash("hallo world"), "hallo world", cooldown_sec=8, now=1.0)
-        )
+        cache.record("h1", "hello world", (0, 0), 100.0)
+        self.assertTrue(cache.seen("h2", "hallo world", 101.0))
 
-    def test_unrelated_text_is_not_suppressed(self) -> None:
+    def test_different_text_is_not_suppressed(self) -> None:
         cache = _DedupCache()
-        cache.record(_textHash("hello world"), "hello world", (0, 0), now=0.0)
-        self.assertFalse(
-            cache.seenRecently(_textHash("completely different"), "completely different", cooldown_sec=8, now=1.0)
-        )
+        cache.record("h1", "こんにちは", (0, 0), 100.0)
+        self.assertFalse(cache.seen("h2", "ありがとうございます", 101.0))
 
-    def test_evict_stale_removes_old_entries(self) -> None:
-        cache = _DedupCache(evict_after_sec=30.0)
-        cache.record(_textHash("old"), "old", (0, 0), now=0.0)
-        cache.evictStale(now=31.0)
-        self.assertFalse(cache.seenRecently(_textHash("old"), "old", cooldown_sec=8, now=31.0))
-
-    def test_evict_stale_keeps_fresh_entries(self) -> None:
-        cache = _DedupCache(evict_after_sec=30.0)
-        cache.record(_textHash("fresh"), "fresh", (0, 0), now=0.0)
-        cache.evictStale(now=10.0)
-        # evictStale(30秒しきい値)では消されていないこと。cooldown_sec(8)自体は
-        # 別の話なので、ここでは cooldown_sec を elapsed 以上にして確認する。
-        self.assertTrue(cache.seenRecently(_textHash("fresh"), "fresh", cooldown_sec=20, now=10.0))
-
-    def test_max_items_bound_evicts_oldest_first(self) -> None:
-        # 短い1文字テキストだと _similar() の編集距離2判定で別テキスト同士でも
-        # 「近似重複」とみなされてしまうため、ここでは明確に非類似な文字列を使う。
-        cache = _DedupCache(max_items=2, evict_after_sec=9999.0)
-        cache.record(_textHash("alpha bravo"), "alpha bravo", (0, 0), now=0.0)
-        cache.record(_textHash("charlie delta"), "charlie delta", (0, 0), now=1.0)
-        cache.record(_textHash("echo foxtrot"), "echo foxtrot", (0, 0), now=2.0)
-        cache.evictStale(now=2.0)
-        # "alpha bravo" is oldest and should have been evicted to keep max_items=2.
-        self.assertFalse(
-            cache.seenRecently(_textHash("alpha bravo"), "alpha bravo", cooldown_sec=8, now=2.0)
-        )
-        self.assertTrue(
-            cache.seenRecently(_textHash("echo foxtrot"), "echo foxtrot", cooldown_sec=8, now=2.0)
-        )
+    def test_oldest_entries_are_dropped_when_the_cache_is_full(self) -> None:
+        cache = _DedupCache(max_items=2)
+        for i, text in enumerate(("aaaaaaaa", "bbbbbbbb", "cccccccc")):
+            cache.record(f"h{i}", text, (0, 0), 100.0 + i)
+        cache.evictStale(102.0, retention_sec=30.0)
+        self.assertFalse(cache.seen("h0", "aaaaaaaa", 102.0))
+        self.assertTrue(cache.seen("h2", "cccccccc", 102.0))
 
 
 class TestOcrPipelineInitClamping(unittest.TestCase):
@@ -185,26 +150,21 @@ if __name__ == "__main__":
 
 
 class TestDedupWithSlowTicks(unittest.TestCase):
-    """OCRが遅くてtick間隔がクールダウンを超えても、同じ文を再送しないこと。
+    """OCRが遅くてtick間隔が保持時間を超えても、覚えた文を忘れないこと。
 
-    実機で cooldown=1秒 / tick 1〜2.6秒のとき、画面に出続けている吹き出しの
-    同じ文が繰り返し配送された (2026-09-18)。クールダウンはtick間隔の2倍を
-    下限にしている。
+    実機で保持1秒 / tick 1〜2.6秒のとき、画面に出続けている吹き出しの同じ文が
+    繰り返し配送された (2026-09-18)。保持時間はtick間隔の2倍を下限にしている。
     """
 
     def _pipeline(self, **kwargs):
         return OcrPipeline(callback=lambda payload: None, source_language="auto", **kwargs)
 
-    def test_cooldown_is_at_least_twice_the_tick_interval(self) -> None:
+    def test_retention_is_at_least_twice_the_tick_interval(self) -> None:
         pipeline = self._pipeline(dedup_cooldown_sec=1)
-        pipeline._dedup = _DedupCache()
-        seen = []
-
-        def record(text_hash, text, cooldown, now):
-            seen.append(cooldown)
-            return False
-
-        pipeline._dedup.seenRecently = record  # type: ignore[assignment]
+        used = []
+        pipeline._dedup = Mock()
+        pipeline._dedup.evictStale.side_effect = lambda now, retention_sec: used.append(retention_sec)
+        pipeline._dedup.seen.return_value = True
         pipeline._capture = Mock()
         pipeline._capture.get.return_value = "frame"
         pipeline._reader = object()
@@ -217,8 +177,7 @@ class TestDedupWithSlowTicks(unittest.TestCase):
             pipeline._tick()   # 1回目: 間隔が測れないので設定値のまま
             pipeline._tick()   # 2回目: 間隔3秒 -> 6秒まで引き上げ
 
-        self.assertEqual(seen[0], 1)
-        self.assertEqual(seen[1], 6.0)
+        self.assertEqual(used, [1, 6.0])
 
 
 class TestApplyConfig(unittest.TestCase):
@@ -303,7 +262,7 @@ class TestApplyConfig(unittest.TestCase):
             pipeline.applyConfig({"source_language": "Korean"})
             pipeline._applyPending()
 
-        self.assertFalse(pipeline._dedup.seenRecently("hash", "こんにちは", 8, 101.0))
+        self.assertFalse(pipeline._dedup.seen("hash", "こんにちは", 101.0))
 
     def test_window_title_change_reopens_the_capture(self) -> None:
         pipeline = self._pipeline()

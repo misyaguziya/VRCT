@@ -85,45 +85,42 @@ def _similar(a: str, b: str, max_distance: int = 2) -> bool:
 
 
 class _DedupCache:
-    """Recently-seen bubble texts, keyed by hash.
+    """一度配送した吹き出しの文を覚えておき、同じ文は配送しない。
 
-    Entries store the text itself so near-duplicates can be compared, plus
-    the last time the text was *seen* (not the last time it was emitted).
-    Refreshing on every sighting means the cooldown is measured from when a
-    bubble leaves the screen, so a bubble that lingers is translated once
-    rather than re-translated every `cooldown_sec`.
+    覚えている間は時間に関係なく抑制する。時間で解禁する方式だと、画面に出続けて
+    いる吹き出しでも解禁のたびに同じ文が流れてしまうため (実機で再現、2026-09-18)。
+
+    エントリは「最後に見た時刻」で持ち、見るたびに更新する。つまり保持時間は
+    「画面から消えてから」測る。消えて `retention_sec` 経っても現れなければ忘れ、
+    その後で同じ文が出たら新しい発言として配送する。
+    近い文 (編集距離2以内) も同じ扱いにする。OCRのゆらぎで1〜2文字違うだけの
+    同じ吹き出しを別物として配送しないため。
     """
 
-    def __init__(self, max_items: int = 128, evict_after_sec: float = 30.0) -> None:
+    def __init__(self, max_items: int = 128) -> None:
         self._items: "OrderedDict[str, tuple[float, str, tuple[int, int]]]" = OrderedDict()
         self._max_items = max_items
-        self._evict_after = evict_after_sec
 
-    def evictStale(self, now: float) -> None:
-        stale = [k for k, (ts, _, _) in self._items.items() if (now - ts) > self._evict_after]
+    def evictStale(self, now: float, retention_sec: float) -> None:
+        stale = [k for k, (ts, _, _) in self._items.items() if (now - ts) > retention_sec]
         for k in stale:
             self._items.pop(k, None)
         while len(self._items) > self._max_items:
             self._items.popitem(last=False)
 
-    def seenRecently(self, text_hash: str, text: str, cooldown_sec: float, now: float) -> bool:
-        """Return True if this text (or a near-duplicate) is still on cooldown.
-
-        Also refreshes the timestamp of whichever entry matched, so a bubble
-        that stays on screen keeps its cooldown alive instead of re-firing.
-        """
+    def seen(self, text_hash: str, text: str, now: float) -> bool:
+        """覚えていれば True。見た時刻を更新するので、出続けている間は忘れない。"""
         entry = self._items.get(text_hash)
         if entry is not None:
-            last_ts, _, center = entry
-            self._items[text_hash] = (now, text, center)
+            self._items[text_hash] = (now, text, entry[2])
             self._items.move_to_end(text_hash)
-            return (now - last_ts) < cooldown_sec
+            return True
 
-        for key, (last_ts, prev_text, center) in list(self._items.items()):
+        for key, (_, prev_text, center) in list(self._items.items()):
             if _similar(text, prev_text):
                 self._items[key] = (now, prev_text, center)
                 self._items.move_to_end(key)
-                return (now - last_ts) < cooldown_sec
+                return True
         return False
 
     def record(self, text_hash: str, text: str, bbox_center: tuple, now: float) -> None:
@@ -140,7 +137,7 @@ class OcrPipeline:
         poll_interval_ms: int = 750,
         min_confidence: float = 0.55,
         min_text_length: int = 2,
-        dedup_cooldown_sec: int = 8,
+        dedup_cooldown_sec: int = 30,
     ) -> None:
         self._callback = callback
         self._source_language = source_language or "auto"
@@ -151,6 +148,7 @@ class OcrPipeline:
         self._tick_budget = self._poll_interval * TICK_OCR_BUDGET_RATIO
         self._min_confidence = float(min_confidence)
         self._min_text_length = max(1, int(min_text_length))
+        # 同じ文を覚えておく時間。画面から消えてからこの秒数で忘れる。
         self._dedup_cooldown = max(1, int(dedup_cooldown_sec))
 
         self._stop_event = Event()
@@ -349,15 +347,13 @@ class OcrPipeline:
         candidates = candidates[:MAX_CANDIDATES_PER_TICK]
 
         now = time.monotonic()
-        # 1tickはOCR1件あたり約0.8秒かかるので、設定したクールダウンより
-        # tickの間隔の方が長くなることがある。そのままだと画面に出続けている
-        # 吹き出しでも毎回「久しぶりに見た」と判定されて同じ文が何度も送られる
-        # (実機で cooldown=1秒、tick 1〜2.6秒の状態で再現)。
-        # 最低でもtick間隔の2倍は抑制する。
+        # 保持時間の下限をtick間隔の2倍にする。1tickはOCR1件あたり約0.8秒かかるので、
+        # 設定値の方が短いと、画面に出続けている吹き出しでも見るたびに忘れられて
+        # しまい、同じ文が繰り返し配送される (実機で 1秒設定 / tick 1〜2.6秒で再現)。
         interval = (now - self._last_tick_at) if self._last_tick_at else 0.0
         self._last_tick_at = now
-        cooldown = max(self._dedup_cooldown, interval * 2.0)
-        self._dedup.evictStale(now)
+        retention = max(self._dedup_cooldown, interval * 2.0)
+        self._dedup.evictStale(now, retention)
         deadline = now + self._tick_budget
 
         for bbox, crop in candidates:
@@ -374,7 +370,7 @@ class OcrPipeline:
             if len(merged) < self._min_text_length:
                 continue
             h = _textHash(merged)
-            if self._dedup.seenRecently(h, merged, cooldown, now):
+            if self._dedup.seen(h, merged, now):
                 continue
             cx = int(bbox[0] + bbox[2] / 2)
             cy = int(bbox[1] + bbox[3] / 2)

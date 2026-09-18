@@ -395,7 +395,7 @@ config_page:
             desc: "Bubbles with fewer characters than this are ignored. Default: 2."
         dedup_cooldown_sec:
             label: "Dedup cooldown (seconds)"
-            desc: "How long the same text stays suppressed after being translated once. VRChat bubbles linger ~7 s so 8 s is a good default."
+            desc: "How long a delivered text is remembered. While remembered, the same text (including 1-2 character differences) is not delivered again. The entry is forgotten this many seconds after the bubble leaves the screen, so a later repeat counts as a new message. Default: 30."
 
     updater:
         install_panel:

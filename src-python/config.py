@@ -1299,7 +1299,10 @@ class Config:
         # 誤りの34%を落とせたのでこの値にしている。
         self._OCR_MIN_CONFIDENCE = 0.85
         self._OCR_BUBBLE_MIN_TEXT_LENGTH = 2
-        self._OCR_DEDUP_COOLDOWN_SEC = 8
+        # 一度配送した文を覚えておく時間。画面から消えてからこの秒数で忘れ、
+        # 以降に同じ文が出たら新しい発言として配送する。VRChatの吹き出しは
+        # 10秒以上出続けるので、短いと同じ文が繰り返し流れる。
+        self._OCR_DEDUP_COOLDOWN_SEC = 30
 
     def load_config(self):
         self._config_data = {}
