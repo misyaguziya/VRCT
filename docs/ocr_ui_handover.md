@@ -30,38 +30,88 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
 
 ロケールの文言は現状の仕様に合わせて書いてあるので、そのまま使っても書き直してもよい。
 
-## 3. エンドポイント
+## 3. バックエンドとフロントの受け渡し
 
-すべて `mainloop.py` に登録済み。`useOcr()` から `current*` / `set*` で叩ける。
+### 3-1. 起動時に一括で届く（7件）
 
-### 開始・停止
+他の設定とまとめて `/run/initialization_complete` に同梱される。個別に取りに行く必要はない。
 
-| エンドポイント | 内容 |
+| キー | 型 | 既定値 |
+|---|---|---|
+| `/get/data/ocr_capture` | bool | 常に `false`（保存されない。後述） |
+| `/get/data/selectable_ocr_source_languages` | string[] | 読み取り言語の選択肢。3-5を参照 |
+| `/get/data/ocr_source_language` | string | `"auto"` |
+| `/get/data/ocr_window_title` | string | `"VRChat"` |
+| `/get/data/ocr_poll_interval_ms` | int | `750` |
+| `/get/data/ocr_min_confidence` | float | `0.85` |
+| `/get/data/ocr_bubble_min_text_length` | int | `2` |
+
+`ocr_capture` は `serialize=False` で保存されないため、**起動時は必ず `false`**。
+OCRが勝手に始まることはなく、毎回ユーザーがONにする。
+
+### 3-2. バックエンドから随時pushされる（2件）
+
+| エンドポイント | 中身 | 現在の受け手 |
+|---|---|---|
+| `/run/enable_ocr_capture` | bool | `useOcr.updateFromBackendEnableOcrCapture` |
+| `/run/transcription_ocr_message` | 下記 | `useMessage.addReceivedMessageLog` |
+
+`/run/enable_ocr_capture` は**開始に失敗したときに `false` が飛んでくる**。UI側はこれを受けて
+トグルを戻す（現在の実装もそうなっている）。成功時には飛ばない。
+
+OCR結果のペイロード:
+
+```json
+{
+  "id": "transcription-ocr-<segment_id>",
+  "source": "ocr",
+  "original":     { "message": "読み取った文", "transliteration": [] },
+  "translations": [ { "message": "翻訳文", "transliteration": [] } ]
+}
+```
+
+- `transliteration` はOCR経路では**常に空配列**。マイク/スピーカー経路と形を揃えるためだけに存在する
+- `translations` は翻訳が無効なら空配列
+- `source: "ocr"` でマイク/スピーカー由来と区別できる（`MessageContainer.jsx` はこれでバッジを出している）
+
+### 3-3. OCR経由で発火しうる共通のpush
+
+OCR専用ではなく、マイク/スピーカーと共通の経路。OCRで読んだ文が引き金になることがある。
+
+| エンドポイント | いつ |
 |---|---|
-| `/get/data/ocr_capture` | 現在ON/OFFか（bool） |
-| `/set/enable/ocr_capture` | 開始 |
-| `/set/disable/ocr_capture` | 停止 |
+| `word_filter` | ワードフィルタに引っかかった（この文はログに出ない） |
+| `error_translation_engine` | 翻訳エンジンの制限に到達 |
+| `error_translation_speaker_vram_overflow` ＋ `enable_translation(false)` | VRAM不足で翻訳を自動停止 |
 
-**開始は失敗することがある**（言語が未対応、キャプチャ不可、モデル読み込み失敗など）。
-失敗するとバックエンドが `/run/enable_ocr_capture` に `false` を送り返してトグルが自動で戻る。
-理由はログに出るが**UIには出ない**。ここは改善の余地がある（下の「6. 改善したい点」参照）。
+### 3-4. フロントから叩けるもの
 
-### 設定
+`useOcr()` が `SETTINGS_ARRAY` から自動生成する。項目名の付き方は次のとおり。
 
-| エンドポイント | 型 | 既定 | 値域 | 備考 |
-|---|---|---|---|---|
-| `ocr_source_language` | str | `"auto"` | 下記の一覧のみ | 一覧外は **400** を返して変更しない |
-| `ocr_window_title` | str | `"VRChat"` | 空文字は400 | ウィンドウタイトルの部分一致（大文字小文字は区別しない） |
-| `ocr_poll_interval_ms` | int | 750 | 100〜5000にクランプ | 画面を取りに行く間隔 |
-| `ocr_min_confidence` | float | 0.85 | 0.1〜0.99にクランプ | これ未満のOCR結果は捨てる |
-| `ocr_bubble_min_text_length` | int | 2 | 1〜50にクランプ | これ未満の文字数は捨てる |
+```
+currentOcrSourceLanguage       状態（初期値は起動時のペイロード）
+getOcrSourceLanguage()         /get/data/ocr_source_language を再取得
+setOcrSourceLanguage(value)    /set/data/ocr_source_language
+toggleEnableOcrCapture()       /set/enable/ocr_capture または /set/disable/ocr_capture
+```
 
-数値は**クランプされて返る**（例: 10000を送ると5000が返る）。UI側は返却値で表示を更新すること。
+設定の値域と、範囲外を送ったときの挙動:
 
-### 読み取り言語の選択肢
+| エンドポイント | 型 | 値域 | 範囲外を送ると |
+|---|---|---|---|
+| `/set/data/ocr_source_language` | str | 3-5の選択肢のみ | **400** と現在値が返る（変更しない） |
+| `/set/data/ocr_window_title` | str | 空文字は不可 | **400** と現在値が返る |
+| `/set/data/ocr_poll_interval_ms` | int | 100〜5000 | クランプした値が返る |
+| `/set/data/ocr_min_confidence` | float | 0.1〜0.99 | クランプした値が返る |
+| `/set/data/ocr_bubble_min_text_length` | int | 1〜50 | クランプした値が返る |
 
-`/get/data/selectable_ocr_source_languages` が配列で返す。**ハードコードしないこと**（対応言語は
-モデル次第で変わる）。現在の内容:
+**setの返却値で表示を更新すること。** 送った値がそのまま採用されるとは限らない
+（例: `ocr_poll_interval_ms` に10000を送ると5000が返る）。
+
+### 3-5. 読み取り言語の選択肢
+
+`/get/data/selectable_ocr_source_languages` が配列で返す。**ハードコードしないこと**
+（対応言語はモデル次第で変わる）。現在の内容:
 
 ```
 ["auto", "Arabic", "Hindi", "Korean", "Russian", "Thai", "Ukrainian"]
@@ -74,11 +124,6 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
   設定として保存されている古い言語名（`Japanese` など）は `auto` と同じ扱いになる
 - **アラビア語は現状精度が低い**（他言語より明確に劣る）。UIで期待値を下げる表現があるとよい
 
-### 結果の受信
-
-`/run/transcription_ocr_message` で届く。中身はマイク/スピーカーの文字起こしと同じ形式で、
-`source: "ocr"` が入る。既存の `MessageContainer.jsx` はこれでOCRバッジを出している。
-
 ## 4. 設定変更のタイミング
 
 **すべての設定はOCRを実行したまま変更でき、次の処理周期から反映される。** OFF→ONは不要。
@@ -89,8 +134,8 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
 
 ## 5. UIで必要な要素
 
-1. **OCRのON/OFF**（トグル）。失敗時は自動でOFFに戻る
-2. **読み取り言語**（選択肢はバックエンドから取得）。既定は `auto`
+1. **OCRのON/OFF**（トグル）。開始失敗時は `/run/enable_ocr_capture` で `false` が飛んでくる
+2. **読み取り言語**（選択肢は 3-5 のとおりバックエンドから取得）。既定は `auto`
 3. **対象ウィンドウ**（テキスト入力）。通常は変更不要
 4. **取得間隔 / 信頼度のしきい値 / 最小文字数**（スライダー）。上級者向けにまとめてよい
 
