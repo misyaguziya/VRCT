@@ -373,6 +373,73 @@ CUDA ユーザーの挙動も変える**ため、**独立した小 PR に切り�
 
 ---
 
+## 10.5. 実環境で確定した事実 (2026-09-20、PR-5 の検証)
+
+`.venv_amd` を実際に作り `tools/fetch_ct2_rocm_wheel.py` を通して確認した。
+**AMD GPU は不要**な範囲の検証だが、設計の前提が2つ変わる。
+
+### ROCm 版 ctranslate2 は HIP ランタイムを「静的に」要求する
+
+`ctranslate2.dll` の PE インポート表 (実測):
+
+| ビルド | インポートする GPU 関連 DLL | wheel 同梱 |
+|---|---|---|
+| CPU / CUDA (PyPI 4.6.0) | `cudnn64_9.dll` | `cudnn64_9.dll` を同梱。cuBLAS は**遅延ロード**でインポート表に出ない |
+| **ROCm (4.8.2)** | **`hipblas.dll`, `amdhip64_7.dll`** | **同梱なし** |
+
+**帰結1: ROCm ランタイムが無いと `import ctranslate2` 自体が FileNotFoundError で失敗する。**
+CUDA 版は cuBLAS が無くても import は成功し「GPU が無い」と振る舞うだけだったが、
+AMD 版は挙動が違う。
+
+**帰結2: AMD エディションには CPU フォールバックが無い。**
+ctranslate2 は1つしか入らないので、ROCm DLL の同梱に失敗すると
+GPU だけでなく **CPU 推論も含めて推論機能が全部死ぬ**。§8 の
+「GPU で失敗したら CPU に落ちて動き続ける」は CUDA 版では成り立つが、
+AMD 版では**同梱が失敗した時点で詰む**。配布 (Phase 3) では同梱の正しさが
+CUDA 版より重い意味を持つ。
+
+なお `utils.py` 側は正しく劣化することを実機確認済み
+(ROCm ランタイム不在の `.venv_amd` で `import utils` が成功し、
+GPU を一覧に出さず `['cpu']` のみを返す)。アプリは起動する。
+
+**帰結3: #2016 は確実に踏む。**
+wheel は `hipblas.dll` という名前を**静的に**要求する。AMD の Windows HIP SDK
+7.1.1 が置くのは `libhipblas.dll` なので、ローダが名前解決に失敗する。
+`utils.py` の `_GPU_RUNTIMES` が候補に `libhipblas.dll` を持っているのは
+**検出のためのヘッジであって、これだけでは動かない**。
+実機では `libhipblas.dll` を `hipblas.dll` としてコピーするか、
+ROCm 7.1 で CT2 を自前ビルドする必要がある (spike 3)。
+
+### 同梱サイズの見積もりを上方修正する
+
+`ctranslate2.dll` の実サイズ:
+
+| ビルド | ctranslate2.dll |
+|---|---|
+| CPU / CUDA | 60,924,928 bytes (58MB) |
+| **ROCm** | **290,648,064 bytes (277MB)** |
+
+wheel が圧縮 21.6MB なのは device code がよく圧縮されるためで、
+**gfx カーネルは ctranslate2.dll の中に入っている**。外部から必要なのは
+HIP ランタイムと BLAS だけ、という切り分けになる。
+
+調査レポート (`amd-gpu-support-feasibility-2026-09-19.md` §5) で
+「約 280〜300MB」としていた追加分は、この 219MB 差を数えていなかった。
+**改訂後の見積もり: CPU 版 + 約 500〜530MB**
+(ctranslate2.dll の差 219MB + ROCm ランタイム約 181MB + Tensile 約 100〜120MB)。
+VRCT の CUDA 版が約 3.4GB であることを思えば依然許容範囲だが、
+「CPU 版に近い軽さ」ではない。
+
+### install.bat の順序は正しい
+
+`requirements.txt` は `ctranslate2==4.6.0` を**完全一致で固定**しているので、
+ROCm wheel を先に入れてから requirements を流すと CPU 版に戻される。
+現行の「requirements → fetch スクリプト」の順序で正しい。
+なお fetch 後に `faster-whisper==1.1.1` を入れても ROCm 版は保持された
+(faster-whisper の要求が範囲指定で 4.8.2 を満たすため)。
+
+---
+
 ## 11. リスクと未決事項
 
 | # | 未決事項 | 影響 | ブロック箇所 |

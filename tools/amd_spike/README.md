@@ -117,7 +117,7 @@ the script stops when that happens.
 | Check | Why we care |
 |---|---|
 | Can `amdhip64*.dll` be loaded, and from where? | If it comes from your driver rather than the HIP SDK, VRCT can ship AMD support without asking users to install anything extra. This decides roughly 130 MB of installer size. |
-| Is it `hipblas.dll` or `libhipblas.dll`? | [CTranslate2 #2016](https://github.com/OpenNMT/CTranslate2/issues/2016) — the published wheel is built against ROCm 7.2, which renamed this file. Knowing which name your machine has tells us whether that bug will bite. |
+| Is it `hipblas.dll` or `libhipblas.dll`? | [CTranslate2 #2016](https://github.com/OpenNMT/CTranslate2/issues/2016). We confirmed on 2026-09-20 that the published wheel links `hipblas.dll` **statically** — so if your SDK only provides `libhipblas.dll`, `import ctranslate2` will fail outright and Stage B cannot pass. This check predicts that before you download anything. |
 | Do `hipInit` / `hipDeviceGetName` / `hipDeviceComputeCapability` exist, and what do they return? | VRCT needs these to list your GPU in its settings and to pick a precision. The reported "compute capability" also tells us your GPU generation. |
 
 **Stage B — CTranslate2** (seconds)
@@ -150,6 +150,13 @@ just as good.
 
 ## If something goes wrong
 
+- **`import ctranslate2` fails with "Could not find module ... ctranslate2.dll
+  (or one of its dependencies)"** — this is expected when the ROCm runtime is
+  not reachable. The ROCm build links `hipblas.dll` and `amdhip64_7.dll`
+  statically, so unlike the CPU/CUDA builds it cannot even be imported without
+  them. Check what Stage A said about `hipblas.dll`: if only
+  `libhipblas.dll` was found, copying it to `hipblas.dll` next to it is the
+  workaround we most want tested (that is CTranslate2 #2016).
 - **"No HIP runtime found"** — update your Adrenalin driver and try again. If
   it still fails, that is itself a finding worth reporting.
 - **"this looks like the NVIDIA/CUDA build"** — step 3 did not take effect.
