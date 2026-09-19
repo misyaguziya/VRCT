@@ -36,11 +36,6 @@ from models.transcription.transcription_deepgram import resolveDeepgramLanguageC
 from models.transcription.transcription_languages import transcription_lang
 from utils import errorLogging
 
-try:
-    import torch
-except Exception:
-    torch = None
-
 # setup.exe ダウンロード等の HTTP 呼び出しで使っている (10, 60) と同じ
 # (connect, read) タイムアウト。実機検証の結果次第で調整する。
 _HTTP_TIMEOUT = (10, 60)
@@ -148,8 +143,6 @@ class LocalWhisperProvider:
         raw = np.frombuffer(
             audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16
         ).flatten().astype(np.float32) / 32768.0
-        if torch is not None and isinstance(raw, torch.Tensor):
-            raw = raw.detach().numpy()
 
         source_language = transcription_lang[language][country]["Whisper"] if force_language else None
         segments, info = self._whisper_model.transcribe(

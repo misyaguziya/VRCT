@@ -1,48 +1,15 @@
-torch==2.7.0
---extra-index-url https://download.pytorch.org/whl/cu128
-faster-whisper==1.1.1
-ctranslate2==4.6.0
-transformers==4.40.2
-pillow == 10.0.0
-PyAudioWPatch == 0.2.12.6
-python-osc == 1.9.0
-PyYAML==6.0.2
-deepl == 1.22.0
-flashtext ==2.7
-pyinstaller==6.10.0
-numpy==1.26.4
-sentencepiece==0.2.0
-openvr==1.26.701
-pydub==0.25.1
-psutil==5.9.8
-pycaw==20240210
-websockets==15.0.1
-huggingface_hub==0.32.2
-hf-xet==1.1.2
-setuptools==80.8.0
-langchain-openai==0.3.32
-langchain-google-genai==2.1.10
-google-genai==1.45.0
-grpcio==1.83.1  # >=1.83.0: google-auth PQC 対応(2026年10月に最低要件化)
-langchain-ollama==0.3.10
-SudachiPy==0.6.10
-SudachiDict-core==20250825
-SudachiDict-full==20250825
-niquests==3.21.0
-exejs==1.0.1
-cloudscraper==1.2.71
-aiohttp==3.14.3
-translators @ git+https://github.com/misyaguziya/translators@f3697bd0b5ff5d877e61870682ea0fa9479664e0  # tag: 6.0.4.2.6
-SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4.5
-tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3
-aptabase==0.1.0
-# OCR: RapidOCR (ONNX版PP-OCR)。--no-deps で入れる (bat/install.bat を参照)。
-rapidocr==3.9.2
-opencv-python-headless==4.10.0.84
-omegaconf==2.3.1
-colorlog==6.12.0
-pyclipper==1.4.0
-shapely==2.1.2
-python-bidi==0.6.11
-PyOpenGL==3.1.7
-glfw==2.7.0
+# CUDA (GPU) build requirements.
+#
+# Everything the CPU build needs, plus the CUDA math libraries that
+# ctranslate2 loads at runtime (cublas64_12.dll / cudnn64_9.dll). Until
+# 2026-09-18 those came in as a side effect of torch's CUDA wheel; torch
+# itself was never used for inference, so it was dropped and the libraries
+# are now installed directly. Versions match what torch 2.7.0+cu128 used to
+# bundle (CUDA 12.8 / cuDNN 9.7).
+#
+# Keeping this file as an include of requirements.txt is deliberate: the two
+# used to be hand-maintained copies and had silently drifted apart (the GPU
+# build was still pinning a vulnerable sentencepiece and mutable git tags).
+-r requirements.txt
+nvidia-cublas-cu12==12.8.4.1
+nvidia-cudnn-cu12==9.7.1.26
