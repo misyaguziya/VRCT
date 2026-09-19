@@ -32,7 +32,7 @@ setuptools==80.8.0
 langchain-openai==0.3.32
 langchain-google-genai==2.1.10
 google-genai==1.45.0
-grpcio==1.83.1  # >=1.83.0: google-auth PQC 対応(2026年10月に最低要件化)
+grpcio==1.83.1  # >=1.83.0: google-auth PQC support (min requirement from 2026-10)
 langchain-ollama==0.3.10
 SudachiPy==0.6.10
 SudachiDict-core==20250825
@@ -60,11 +60,12 @@ translators @ git+https://github.com/misyaguziya/translators@f3697bd0b5ff5d877e6
 SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@afae7ff78cd5da36e864122f16972d2b0044e03f  # tag: 3.10.4.5
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@5765a85b0d83da41b8266f75dfd3c99f0dec4411  # tag: 0.1.3
 aptabase==0.1.0
-# OCR: RapidOCR (ONNX版PP-OCR)。EasyOCRから置き換えた (2026-09-18)。
-# 精度 (学習用データ95枚, CER): EasyOCR 0.69 -> PP-OCRv6 small 0.27。
-# EasyOCRはtorchを必須依存に持ち、torch(1.2GB)+scipy+scikit-imageを引き込んでいた。
-# NOTE: rapidocr は opencv-python を要求するが、本体は opencv-python-headless を
-# 使っているので --no-deps で入れる (bat/install.bat を参照)。依存は下に明示する。
+# OCR: RapidOCR (PP-OCR on ONNX). Replaced EasyOCR on 2026-09-18.
+# Accuracy (95 training images, CER): EasyOCR 0.69 -> PP-OCRv6 small 0.27.
+# EasyOCR required torch and pulled in torch(1.2GB)+scipy+scikit-image.
+# NOTE: rapidocr requires opencv-python, but this app uses
+# opencv-python-headless, so it is installed with --no-deps (see
+# bat/install.bat). Its dependencies are listed explicitly below.
 rapidocr==3.9.2
 opencv-python-headless==4.10.0.84
 omegaconf==2.3.1
