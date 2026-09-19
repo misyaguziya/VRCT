@@ -73,3 +73,8 @@ src-python/telemetry_state.json
 # and tools/gemini_bbox_labeler.py (large binary screenshots, dev-machine only).
 /dataset_collected/
 /yolo_labels/
+
+# Output of tools/amd_spike/check_amd.py (issue #88 の実機検証).
+# 検証者のマシン構成が入るので、誤ってコミットしないように無視する。
+/amd_spike_report.txt
+/amd_spike_test_audio.wav
