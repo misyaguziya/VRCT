@@ -7,6 +7,7 @@
     "setup-python": "bat\\install.bat",
     "build-python": "bat\\build.bat",
     "build-python-cuda": "bat\\build_cuda.bat",
+    "build-python-amd": "bat\\build_amd.bat",
     "sidecar-dev": "bat\\sidecar_dev.bat",
     "vite": "vite",
     "vite-build": "vite build",
@@ -21,12 +22,15 @@
     "dev-cuda": "npm run task-kill && npm run clean && npm run update-version && npm run build-python-cuda && npm run dev-ui",
     "dev-fast": "set \"VRCT_DEV_VENV=.venv\" && npm run task-kill && npm run sidecar-dev && npm run dev-ui",
     "dev-cuda-fast": "set \"VRCT_DEV_VENV=.venv_cuda\" && npm run task-kill && npm run sidecar-dev && npm run dev-ui",
+    "dev-amd-fast": "set \"VRCT_DEV_VENV=.venv_amd\" && npm run task-kill && npm run sidecar-dev && npm run dev-ui",
     "dev-ui": "npm run task-kill && npm-run-all --parallel vite tauri-dev",
     "analyze-error": "node utils/analyze_ui_error.js",
     "build": "npm run task-kill && npm run clean && npm run update-version && npm run build-python && npm run vite-build && npm run tauri build",
     "build-cuda": "npm run task-kill && npm run clean && npm run update-version && npm run build-python-cuda && npm run vite-build && npm run tauri build",
+    "build-amd": "npm run task-kill && npm run clean && npm run update-version && npm run build-python-amd && npm run vite-build && npm run tauri build",
     "release": "npm run update-version && npm run build && python utils\\zip.py --zip_name VRCT.zip",
     "release-cuda": "npm run update-version && npm run build-cuda && python utils\\zip.py --zip_name VRCT_cuda.zip",
+    "release-amd": "npm run update-version && npm run build-amd && python utils\\zip.py --zip_name VRCT_amd.zip",
     "release-all": "npm run update-version && npm run release && npm run release-cuda"
   },
   "dependencies": {

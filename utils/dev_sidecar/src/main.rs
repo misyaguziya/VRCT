@@ -31,8 +31,9 @@ fn main() {
     let venv = match env::var("VRCT_DEV_VENV").as_deref() {
         Ok(".venv") | Err(env::VarError::NotPresent) => ".venv",
         Ok(".venv_cuda") => ".venv_cuda",
+        Ok(".venv_amd") => ".venv_amd",
         _ => {
-            eprintln!("dev-sidecar: VRCT_DEV_VENV must be .venv or .venv_cuda");
+            eprintln!("dev-sidecar: VRCT_DEV_VENV must be .venv, .venv_cuda or .venv_amd");
             std::process::exit(127);
         }
     };

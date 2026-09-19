@@ -53,6 +53,10 @@ npm run setup-python
 このコマンドは以下の処理を実行します:
 - `.venv` (CPU版) の作成と依存関係のインストール
 - `.venv_cuda` (CUDA版) の作成と依存関係のインストール
+- `.venv_amd` (AMD版。開発・実機検証用) の作成と依存関係のインストール。
+  ROCm 版 CTranslate2 は PyPI に無いため `tools/fetch_ct2_rocm_wheel.py` が
+  GitHub Releases から取得する (SHA-256 検証あり)。AMD GPU を持っていなければ
+  この環境は使わなくてよい
 
 > **注意**: CUDA版を使用する場合は、CUDA 12.8対応のNVIDIA GPUドライバーが必要です。
 > CUDA Toolkit のインストールは不要です。ctranslate2 が使う cuBLAS / cuDNN は
@@ -237,6 +241,27 @@ npm run build-python-cuda
 - PyInstallerで `spec/backend.spec` を使用してビルド (`VRCT_BUILD_EDITION=cuda`)
 - 出力先: `src-tauri/bin/`
 
+#### AMD版 (開発・実機検証用。配布はしていない)
+
+```bash
+npm run build-python-amd
+```
+
+実行内容:
+
+- `.venv_amd` 環境をアクティベート
+- PyInstallerで `spec/backend.spec` を使用してビルド (`VRCT_BUILD_EDITION=amd`)
+- ROCm ランタイム (`amdhip64` / `hipblas` / `rocblas` と rocBLAS の Tensile
+  カーネル) を `%HIP_PATH%` の HIP SDK から収集して同梱する。
+  ROCm 版 CTranslate2 の wheel にはこれらが入っていないため
+- 出力先: `src-tauri/bin/`
+
+> **注意**: この系統は issue #88 (AMD GPU 対応) の**実機検証用**で、
+> リリースビルド (`release.yml`) もインストーラも対象にしていない。
+> `HIP_PATH` (AMD HIP SDK for Windows) が必要。
+> 設計と未確認事項は `src-python/docs/amd-gpu-support-design-2026-09-19.md`、
+> 実機検証の手順は `tools/amd_spike/README.md` を参照。
+
 ### フロントエンドのビルド
 
 ```bash
@@ -397,10 +422,11 @@ VRCT/
 ├── bat/                    # バッチスクリプト
 │   ├── build.bat          # CPU版Pythonビルド
 │   ├── build_cuda.bat     # CUDA版Pythonビルド
+│   ├── build_amd.bat      # AMD版Pythonビルド (開発・検証用)
 │   ├── install.bat        # Python環境セットアップ
 │   └── sidecar_dev.bat    # dev-fast用sidecarラッパービルド
 ├── spec/                   # PyInstallerスペックファイル
-│   └── backend.spec       # CPU版/CUDA版共通 (VRCT_BUILD_EDITION で切替)
+│   └── backend.spec       # 全エディション共通 (VRCT_BUILD_EDITION で切替)
 ├── src-python/            # Pythonバックエンドソースコード
 ├── src-tauri/             # Tauriアプリケーション設定
 │   ├── bin/              # ビルド済みPythonバイナリ（生成）
@@ -414,7 +440,9 @@ VRCT/
 │   └── zip.py           # ZIPパッケージング
 ├── package.json          # Node.js設定とバージョン管理
 ├── requirements.txt      # Python依存関係（CPU版）
-└── requirements_cuda.txt # Python依存関係（CUDA版。requirements.txt + CUDAライブラリ）
+├── requirements_cuda.txt # Python依存関係（CUDA版。requirements.txt + CUDAライブラリ）
+└── requirements_amd.txt  # Python依存関係（AMD版。開発・検証用。
+                          #   ROCm版CTranslate2は tools/fetch_ct2_rocm_wheel.py が入れる）
 ```
 
 ## トラブルシューティング

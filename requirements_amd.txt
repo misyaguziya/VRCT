@@ -1,0 +1,30 @@
+# AMD (ROCm) build requirements. DEVELOPER / VERIFICATION ONLY for now --
+# nothing ships from this lineage yet (see issue #88 and
+# src-python/docs/amd-gpu-support-design-2026-09-19.md).
+#
+# Everything the CPU build needs, plus the ROCm build of ctranslate2 in place
+# of the PyPI one. The ROCm wheels are NOT on PyPI: they are attached to the
+# CTranslate2 GitHub releases as rocm-python-wheels-Windows.zip, which holds
+# one wheel per Python version. A requirements file cannot point at a zip, so
+# bat/install.bat runs tools/fetch_ct2_rocm_wheel.py after this file, which
+# downloads that archive (SHA-256 pinned), picks the wheel for the running
+# interpreter, and force-reinstalls it over the ctranslate2 pinned below.
+#
+# That means the ctranslate2 line below is deliberately overwritten. It is
+# kept so that pip resolves the rest of the tree exactly like the CPU build,
+# and so pip-audit still sees a pinned version.
+#
+# NOTE: the ROCm wheels only exist from 4.7.0 onward, so the AMD lineage ends
+# up on a newer ctranslate2 (4.8.2) than the CPU/CUDA builds (4.6.0). That is
+# accepted for now because nothing is distributed from here; align the
+# versions before shipping an AMD edition.
+#
+# Unlike requirements_cuda.txt there are no nvidia-* wheels here. The ROCm
+# runtime (amdhip64 / hipblas / rocblas and the rocBLAS Tensile kernels) is
+# not part of the wheel -- it comes from the AMD HIP SDK during development,
+# and would be bundled by the PyInstaller spec for a real release.
+#
+# NOTE: keep comments in this file ASCII-only - pip-audit's requirements
+# parser decodes the file using the OS locale codepage rather than UTF-8, and
+# non-ASCII text can make parsing fail depending on the machine's locale.
+-r requirements.txt
