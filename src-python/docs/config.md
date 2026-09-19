@@ -73,7 +73,7 @@ config.MESSAGE_BOX_RATIO = 15  # 即座にファイル書き込み
 
 ### 必須依存
 - Python 3.10以上（match-case 構文使用）
-- `torch`: CUDA利用可否の判定に使用
+- `utils.getComputeDeviceList`: CUDA利用可否の判定に使用
 - `threading`: デバウンスタイマー用
 
 ### オプション依存（セーフガード付き）
