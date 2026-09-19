@@ -57,7 +57,7 @@ from models.clipboard.clipboard import Clipboard
 from models.ocr import OcrPipeline
 from models.ocr.ocr_languages import SELECTABLE_LANGUAGES as OCR_SELECTABLE_LANGUAGES, isSupported as isSupportedOcrLanguage
 from models.telemetry import Telemetry
-from utils import errorLogging, setupLogger, printLog
+from utils import errorLogging, isOutOfMemoryMessage, setupLogger, printLog
 from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
@@ -2038,7 +2038,11 @@ class Model:
         error_str = str(error)
         if isinstance(error, ValueError) and len(error.args) > 0 and error.args[0] == "VRAM_OUT_OF_MEMORY":
             return True, error.args[1] if len(error.args) > 1 else "VRAM out of memory"
-        if "CUDA out of memory" in error_str or "CUBLAS_STATUS_ALLOC_FAILED" in error_str:
+        # 文字列一致は utils に寄せてある (NVIDIA/AMD 両対応、_OUT_OF_MEMORY_MARKERS)。
+        # getWhisperModel が上の ValueError に包んでくれるのは文字起こしの
+        # モデルロード経路だけで、翻訳側 (changeCTranslate2Model) は素の
+        # RuntimeError が上がってくるので、この行が必要。
+        if isOutOfMemoryMessage(error_str):
             return True, error_str
         return False, None
 

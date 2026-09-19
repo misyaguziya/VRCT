@@ -544,6 +544,43 @@ def getBestComputeType(device: str, device_index: int) -> str:
 
     return "float32"
 
+# GPU のメモリ不足を示すエラーメッセージの断片。
+#
+# ctranslate2 / faster-whisper はドライバやBLASから来た文字列をそのまま
+# RuntimeError に載せてくるだけなので、型では判別できず文字列一致になる。
+# 判定は model.detectVRAMError と getWhisperModel の2箇所で必要で、
+# 以前は同じ2つの文字列比較がそれぞれに複製されていた (片方だけ直す事故が
+# 起きるので1箇所に寄せた)。
+#
+# HIP 側 (AMD) の断片も併記してある。ROCm ビルドの ctranslate2 が実際に
+# どの文字列を返すかは実機未確認なので、既知の命名規則から拾える候補を
+# 入れてある。実機で確定したらここだけ直せばよい。
+#
+# 注意: 汎用の "out of memory" までは広げない。CPU 実行時の RAM 不足
+# (MemoryError 等) を "VRAM 不足" として UI に出してしまい、ユーザーに
+# 無関係なGPU設定を触らせることになる。
+#
+# 大文字小文字は区別する。ドライバが返すのは下記の綴りそのままで、
+# 緩めると "cuda out of memory" のような別物まで拾いうる。
+_OUT_OF_MEMORY_MARKERS = (
+    # NVIDIA / CUDA
+    "CUDA out of memory",
+    "CUBLAS_STATUS_ALLOC_FAILED",
+    # AMD / HIP (ROCm)
+    "hipErrorOutOfMemory",
+    "HIPBLAS_STATUS_ALLOC_FAILED",
+    "rocblas_status_memory_error",
+)
+
+def isOutOfMemoryMessage(message: str) -> bool:
+    """エラーメッセージがGPUのメモリ不足を示していれば True。
+
+    ベンダーを問わない。呼び出し側は CUDA か HIP かを気にしなくてよい。
+    """
+    if not message:
+        return False
+    return any(marker in message for marker in _OUT_OF_MEMORY_MARKERS)
+
 def encodeBase64(data: str) -> Dict[str, Any]:
     """Decode a base64-encoded JSON string and return the parsed object.
 

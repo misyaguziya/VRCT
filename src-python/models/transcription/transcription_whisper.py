@@ -15,7 +15,7 @@ from requests import get as requests_get
 from requests.exceptions import HTTPError
 from typing import Callable, Optional
 import logging
-from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging, printLog
+from utils import getBestComputeType, isOutOfMemoryMessage, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging, printLog
 
 # 起動時の初回ダウンロードで一時的なネットワーク断 (接続リセット・HF Hub の
 # 429/503 等) が起きても、1 回の取りこぼしで「AIモデル未検出。VRCTを再起動して
@@ -209,7 +209,7 @@ def getWhisperModel(
     except RuntimeError as e:
         # Detect VRAM out-of-memory-like errors and raise a clear ValueError
         error_message = str(e)
-        if "CUDA out of memory" in error_message or "CUBLAS_STATUS_ALLOC_FAILED" in error_message:
+        if isOutOfMemoryMessage(error_message):
             raise ValueError("VRAM_OUT_OF_MEMORY", error_message)
         raise
 
