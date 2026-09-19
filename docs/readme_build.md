@@ -234,7 +234,7 @@ npm run build-python-cuda
 実行内容:
 
 - `.venv_cuda` 環境をアクティベート
-- PyInstallerで `spec/backend_cuda.spec` を使用してビルド
+- PyInstallerで `spec/backend.spec` を使用してビルド (`VRCT_BUILD_EDITION=cuda`)
 - 出力先: `src-tauri/bin/`
 
 ### フロントエンドのビルド
@@ -400,8 +400,7 @@ VRCT/
 │   ├── install.bat        # Python環境セットアップ
 │   └── sidecar_dev.bat    # dev-fast用sidecarラッパービルド
 ├── spec/                   # PyInstallerスペックファイル
-│   ├── backend.spec       # CPU版ビルド設定
-│   └── backend_cuda.spec  # CUDA版ビルド設定
+│   └── backend.spec       # CPU版/CUDA版共通 (VRCT_BUILD_EDITION で切替)
 ├── src-python/            # Pythonバックエンドソースコード
 ├── src-tauri/             # Tauriアプリケーション設定
 │   ├── bin/              # ビルド済みPythonバイナリ（生成）
@@ -465,8 +464,8 @@ npm run task-kill
 
 ### PyInstallerスペックファイル
 
-- `spec/backend.spec` - CPU版の設定
-- `spec/backend_cuda.spec` - CUDA版の設定
+- `spec/backend.spec` - CPU版/CUDA版で共通。環境変数 `VRCT_BUILD_EDITION`
+  (`cpu` / `cuda`、既定 `cpu`) で参照する venv と `hiddenimports` を切り替える
 
 これらのファイルでは、以下を設定しています:
 - エントリーポイント: `src-python/mainloop.py`

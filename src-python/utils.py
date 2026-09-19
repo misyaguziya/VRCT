@@ -31,7 +31,7 @@ def _registerBundledGpuLibraries() -> None:
     (実測: PATH 無しだと "Could not locate cudnn_ops64_9.dll" で落ちる)。
 
     凍結ビルドでも同じ処理で動く。PyInstaller は同じDLL群を
-    _internal/nvidia/<lib>/bin/ へ収集するので (spec/backend_cuda.spec の
+    _internal/nvidia/<lib>/bin/ へ収集するので (spec/backend.spec の
     hiddenimports 参照)、`nvidia.__path__` からそのまま辿れる。
     CPU版ビルドには `nvidia` が無いので、その場合は何もせず返る。
     """

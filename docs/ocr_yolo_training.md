@@ -126,7 +126,7 @@ ultralyticsがファイルごとcorrupt扱いで黙って捨てる(初回は80�
 実行時に閾値を下げても候補が増えない。実行時の閾値は `BubbleDetector(confidence=...)` で決める。
 
 出力を `src-python/models/ocr/onnx/chatbox_yolov8n.onnx` に置き換える。
-`spec/backend.spec` と `spec/backend_cuda.spec` の datas が `ocr_onnx/` として同梱し、
+`spec/backend.spec` の datas が `ocr_onnx/` として同梱し、
 `findModelPath()` が凍結時は `_internal/ocr_onnx/`、ソース実行時はパッケージ内を見る。
 モデルは12MB程度。Whisperの重みのような実行時ダウンロードにはしない(容量が理由の仕組みなので)。
 

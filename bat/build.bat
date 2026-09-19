@@ -8,6 +8,7 @@ if exist src-tauri\bin\_internal\.vrct-dev-placeholder (
     )
 )
 call .venv/Scripts/activate
+set VRCT_BUILD_EDITION=cpu
 if "%VRCT_PYINSTALLER_CLEAN%"=="1" (
     pyinstaller spec/backend.spec --distpath src-tauri/bin --clean --noconfirm --log-level ERROR
 ) else (

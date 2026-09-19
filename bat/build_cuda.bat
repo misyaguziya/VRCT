@@ -8,8 +8,11 @@ if exist src-tauri\bin\_internal\.vrct-dev-placeholder (
     )
 )
 call .venv_cuda/Scripts/activate
+REM The two specs were merged into spec/backend.spec; the edition is passed
+REM through this variable (see VRCT_BUILD_EDITION in spec/backend.spec).
+set VRCT_BUILD_EDITION=cuda
 if "%VRCT_PYINSTALLER_CLEAN%"=="1" (
-    pyinstaller spec/backend_cuda.spec --distpath src-tauri/bin --clean --noconfirm --log-level ERROR
+    pyinstaller spec/backend.spec --distpath src-tauri/bin --clean --noconfirm --log-level ERROR
 ) else (
-    pyinstaller spec/backend_cuda.spec --distpath src-tauri/bin --noconfirm --log-level ERROR
+    pyinstaller spec/backend.spec --distpath src-tauri/bin --noconfirm --log-level ERROR
 )
