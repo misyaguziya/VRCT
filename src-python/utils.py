@@ -1,6 +1,6 @@
 import base64
 from functools import lru_cache
-from typing import Any, Callable, List, Dict, Optional, Tuple
+from typing import Any, Callable, List, Dict, NamedTuple, Optional, Tuple
 import ctypes
 import glob
 import json
@@ -16,7 +16,7 @@ import requests
 import ipaddress
 import socket
 
-def _registerBundledCudaLibraries() -> None:
+def _registerBundledGpuLibraries() -> None:
     """nvidia-*-cu12 wheel が置いたCUDAライブラリをDLL検索パスへ登録する。
 
     CUDA版ビルドは ctranslate2 が必要とする cuBLAS / cuDNN を
@@ -56,7 +56,35 @@ def _registerBundledCudaLibraries() -> None:
         os.add_dll_directory(library_dir)
     os.environ["PATH"] = os.pathsep.join(library_dirs) + os.pathsep + os.environ.get("PATH", "")
 
-_registerBundledCudaLibraries()
+def _registerHipSdkLibraries() -> None:
+    """開発環境で HIP SDK が入っていれば、その bin をDLL検索パスへ加える。
+
+    AMD 対応の実機検証 (tools/amd_spike) と `.venv_amd` での開発向け。
+    HIP_PATH が無ければ何もしないので、CPU版/CUDA版のビルドには影響しない。
+
+    凍結ビルドが同梱するROCm DLLの登録は、同梱レイアウトが決まる PR-5 で足す。
+    ここで ROCBLAS_TENSILE_LIBPATH を先に設定すると、HIP SDK が提供している
+    正しい探索パスを壊しかねないので、まだ触らない。
+
+    os.name を直接見ているのは、この関数が import 時に走るのに対して
+    _IS_WINDOWS の定義がファイル後半にあるため (上の関数と同じ書き方)。
+    """
+    if os.name != "nt":
+        return
+    hip_path = os.environ.get("HIP_PATH")
+    if not hip_path:
+        return
+    library_dir = os.path.join(hip_path, "bin")
+    if not os.path.isdir(library_dir):
+        return
+    try:
+        os.add_dll_directory(library_dir)
+    except OSError:
+        return
+    os.environ["PATH"] = library_dir + os.pathsep + os.environ.get("PATH", "")
+
+_registerBundledGpuLibraries()
+_registerHipSdkLibraries()
 
 # ctranslate2 は import 時に ctranslate2.converters.transformers 経由で
 # transformers を読み込む。transformers は torch が無いと
@@ -401,27 +429,112 @@ def isWildcardBindAddress(ip_address: str) -> bool:
     except ValueError:
         return False
 
-# ctranslate2.dll は GPU 実行時に cuBLAS を LoadLibrary で遅延ロードする
+# ctranslate2.dll は GPU 実行時に BLAS を LoadLibrary で遅延ロードする
 # (ctranslate2.dll 内の文字列テーブルに "cublas64_12.dll" が入っている)。
 # cuDNN は ctranslate2 の wheel に同梱されているが cuBLAS は入っておらず、
 # CUDA版ビルドだけが nvidia-cublas-cu12 でこれを持つ。つまり
-# 「cuBLASを引けるか」がそのままこのビルドでGPU実行できるかの判定になる。
+# 「BLASを引けるか」がそのままこのビルドでGPU実行できるかの判定になる。
 # torch を使っていた頃は torch.cuda.is_available() が偶然この役目を
 # 果たしていた (CPU版には CPU 版 torch が入るので常に False だった)。
-_CUBLAS_LIBRARY_NAME = "cublas64_12.dll" if os.name == "nt" else "libcublas.so.12"
+#
+# AMD (ROCm) 版も CTranslate2 の Python API では device="cuda" のままなので、
+# 違うのは「どのDLLを引くか」と「デバイス名をどのドライバから取るか」だけ。
+# そこをテーブルに寄せてある (AMD 対応 PR-4)。
+class _GpuRuntime(NamedTuple):
+    vendor: str                        # "nvidia" | "amd"
+    compute_mode: str                  # config.COMPUTE_MODE に入る値
+    probe_libraries: Tuple[str, ...]   # これが引ければこのビルドはGPU実行できる
+    driver_libraries: Tuple[str, ...]  # デバイス名を取るために叩くドライバ
+    init_symbol: str
+    get_device_symbol: str
+    get_name_symbol: str
+    # デバイスの世代を取るAPI。持たないベンダーは None。
+    compute_capability_symbol: Optional[str]
+
+_IS_WINDOWS = os.name == "nt"
+
+# NVIDIA 行は撤去前と完全に同値。ここを変えるとCUDA版が回帰する。
+# AMD 行の libhipblas.dll は CTranslate2 #2016 への安価なヘッジ:
+# 配布 wheel は ROCm 7.2 ビルドで hipblas.dll を期待するが、AMD の Windows
+# 向け HIP SDK は 7.1.1 までで、そちらは libhipblas.dll という名前。
+# amdhip64 はバージョンごとに名前が変わるので候補を並べてある。
+# シンボル名はプレフィックス合成にせず全部書く (grep で追えるように)。
+_GPU_RUNTIMES: Tuple[_GpuRuntime, ...] = (
+    _GpuRuntime(
+        vendor="nvidia",
+        compute_mode="cuda",
+        probe_libraries=("cublas64_12.dll",) if _IS_WINDOWS else ("libcublas.so.12",),
+        driver_libraries=("nvcuda.dll",) if _IS_WINDOWS else ("libcuda.so.1",),
+        init_symbol="cuInit",
+        get_device_symbol="cuDeviceGet",
+        get_name_symbol="cuDeviceGetName",
+        compute_capability_symbol=None,
+    ),
+    _GpuRuntime(
+        vendor="amd",
+        compute_mode="rocm",
+        probe_libraries=("hipblas.dll", "libhipblas.dll") if _IS_WINDOWS else ("libhipblas.so",),
+        driver_libraries=("amdhip64_7.dll", "amdhip64_6.dll", "amdhip64.dll") if _IS_WINDOWS else ("libamdhip64.so",),
+        init_symbol="hipInit",
+        get_device_symbol="hipDeviceGet",
+        get_name_symbol="hipDeviceGetName",
+        compute_capability_symbol="hipDeviceComputeCapability",
+    ),
+)
+
+# 同梱している rocBLAS の Tensile カーネルが対応する gfx 世代
+# (RDNA3 = gfx1100/1101/1102, RDNA3.5 = gfx1150/1151, RDNA4 = gfx1200/1201)。
+# これ以外の AMD デバイス (Ryzen APU の gfx90c=9 / gfx103x=10 等) はカーネルを
+# 持っていないので、選ばせても必ずモデル読み込みで失敗する。一覧に出さない。
+# 「Ryzen APU + Radeon dGPU」「Ryzen APU のみ」は実際に多い構成。
+_AMD_SUPPORTED_ARCH_MAJORS = (11, 12)
+
+# AMD で許可する compute_type。実機検証が済むまで保守的にしている。
+# PR #1989 で唯一の肯定報告が float16 で、CTranslate2 #2021 は float16/int8
+# 両方で落ちている (dtype で回避できる問題ではない) ため、実績のある1つに絞る。
+_AMD_COMPUTE_TYPES = ("float16", "float32")
+
+def _loadFirstAvailableLibrary(names: Tuple[str, ...]):
+    """候補を順に試して、最初にロードできた CDLL を返す。全滅なら None。"""
+    for name in names:
+        try:
+            return ctypes.CDLL(name)
+        except OSError:
+            continue
+    return None
 
 @lru_cache(maxsize=1)
-def _getCudaDeviceNames() -> Tuple[str, ...]:
-    """GPU実行に使えるCUDAデバイスの名前を返す。使えなければ空タプル。
+def _getGpuRuntime() -> Optional[_GpuRuntime]:
+    """このビルドでGPU実行に使えるランタイムを返す。無ければ None。
+
+    判定は「そのベンダーのBLASを引けるか」。テーブルの先頭から順に見るので、
+    NVIDIA と AMD が同居している異常系でも結果は決定論的になる。
+
+    プロセス実行中に変わらないのでキャッシュする。
+    """
+    for runtime in _GPU_RUNTIMES:
+        if _loadFirstAvailableLibrary(runtime.probe_libraries) is not None:
+            return runtime
+    return None
+
+def getGpuRuntimeName() -> Optional[str]:
+    """config.COMPUTE_MODE 用。"cuda" / "rocm" / None。"""
+    runtime = _getGpuRuntime()
+    return runtime.compute_mode if runtime is not None else None
+
+@lru_cache(maxsize=1)
+def _getGpuDeviceNames() -> Tuple[str, ...]:
+    """GPU実行に使えるデバイスの名前を返す。使えなければ空タプル。
 
     torch を落とした代替 (2026-09-18)。デバイスの有無と数は ctranslate2 が
-    答えられるが、名前を返すAPIを持っていないのでそこだけ CUDA Driver API
-    (nvcuda.dll / libcuda.so.1) を直接叩く。どちらもNVIDIAドライバに
-    同梱されていて、CUDA Toolkit のインストールは要らない。
+    答えられるが、名前を返すAPIを持っていないのでそこだけドライバの API
+    (nvcuda.dll / amdhip64.dll) を直接叩く。どちらもベンダーのドライバに
+    同梱されていて、CUDA Toolkit や HIP SDK のインストールは要らない。
 
     名前が取れなくても致命傷ではないので空文字にフォールバックする。
     用途は UI 表示と compute_type 選択のキーワード一致 (GTX/RTX/...) だけで、
-    どれにも一致しなければ "default" の優先順位が使われる。
+    どれにも一致しなければ "default" の優先順位が使われる
+    (AMD はデバイス名の文字列一致を使わない。§_getAmdDeviceCapabilities 参照)。
 
     デバイス構成はプロセス実行中に変わらないので結果をキャッシュする。
     """
@@ -432,35 +545,85 @@ def _getCudaDeviceNames() -> Tuple[str, ...]:
     if device_count <= 0:
         return ()
 
-    try:
-        ctypes.CDLL(_CUBLAS_LIBRARY_NAME)
-    except OSError:
-        # GPUはあるが、このビルドは ctranslate2 が必要とするCUDAライブラリを
+    runtime = _getGpuRuntime()
+    if runtime is None:
+        # GPUはあるが、このビルドは ctranslate2 が必要とするライブラリを
         # 同梱していない (CPU版)。選ばせると必ずモデル読み込みで失敗するので
         # デバイス一覧に出さない。
         return ()
 
     device_names = [""] * device_count
-    try:
-        cuda = ctypes.CDLL("nvcuda.dll" if os.name == "nt" else "libcuda.so.1")
-    except OSError:
+    driver = _loadFirstAvailableLibrary(runtime.driver_libraries)
+    if driver is None:
         # ドライバ不在。ctranslate2 が 0 を返していれば通常ここには来ない。
         return tuple(device_names)
 
     try:
-        if cuda.cuInit(0) != 0:
+        if getattr(driver, runtime.init_symbol)(0) != 0:
             return tuple(device_names)
+        get_device = getattr(driver, runtime.get_device_symbol)
+        get_name = getattr(driver, runtime.get_name_symbol)
         name_buffer = ctypes.create_string_buffer(256)
         for device_index in range(device_count):
             device = ctypes.c_int()
-            if cuda.cuDeviceGet(ctypes.byref(device), device_index) != 0:
+            if get_device(ctypes.byref(device), device_index) != 0:
                 continue
-            if cuda.cuDeviceGetName(name_buffer, len(name_buffer), device) != 0:
+            if get_name(name_buffer, len(name_buffer), device) != 0:
                 continue
             device_names[device_index] = name_buffer.value.decode("utf-8", "replace")
     except Exception:
         errorLogging()
     return tuple(device_names)
+
+@lru_cache(maxsize=1)
+def _getAmdDeviceCapabilities() -> Tuple[Tuple[int, int], ...]:
+    """AMD デバイスの gfx 世代を (major, minor) で返す。
+
+    デバイス名のキーワード一致 ("Radeon" 等) で世代を判定しない。AMD の
+    デバイス名は "AMD Radeon(TM) Graphics" のように揺れがあり、dGPU と APU を
+    名前で見分けられないため。世代は HIP API から取る方が堅い。
+
+    取れなかったデバイスは (0, 0) を返す (= サポート外として扱われ一覧に出ない)。
+    同梱カーネルが無いデバイスを選ばせるより、出さない方が安全なので
+    fail-closed にしている。
+    """
+    runtime = _getGpuRuntime()
+    if runtime is None or runtime.compute_capability_symbol is None:
+        return ()
+    try:
+        device_count = _ct2_get_cuda_device_count()
+    except Exception:
+        return ()
+    if device_count <= 0:
+        return ()
+
+    capabilities = [(0, 0)] * device_count
+    driver = _loadFirstAvailableLibrary(runtime.driver_libraries)
+    if driver is None:
+        return tuple(capabilities)
+
+    try:
+        if getattr(driver, runtime.init_symbol)(0) != 0:
+            return tuple(capabilities)
+        get_device = getattr(driver, runtime.get_device_symbol)
+        get_capability = getattr(driver, runtime.compute_capability_symbol)
+        for device_index in range(device_count):
+            device = ctypes.c_int()
+            if get_device(ctypes.byref(device), device_index) != 0:
+                continue
+            major, minor = ctypes.c_int(), ctypes.c_int()
+            if get_capability(ctypes.byref(major), ctypes.byref(minor), device) != 0:
+                continue
+            capabilities[device_index] = (major.value, minor.value)
+    except Exception:
+        errorLogging()
+    return tuple(capabilities)
+
+def _isSupportedAmdDevice(device_index: int) -> bool:
+    capabilities = _getAmdDeviceCapabilities()
+    if device_index >= len(capabilities):
+        return False
+    return capabilities[device_index][0] in _AMD_SUPPORTED_ARCH_MAJORS
 
 def getComputeDeviceList() -> List[Dict[str, Any]]:
     """Return a list of available compute devices and supported compute types.
@@ -480,11 +643,24 @@ def getComputeDeviceList() -> List[Dict[str, Any]]:
     ]
 
     try:
-        for device_index, gpu_device_name in enumerate(_getCudaDeviceNames()):
+        is_amd = _getGpuRuntime() is not None and _getGpuRuntime().vendor == "amd"
+        for device_index, gpu_device_name in enumerate(_getGpuDeviceNames()):
+            if is_amd and not _isSupportedAmdDevice(device_index):
+                # 同梱カーネルが無い世代。選ばせても必ず失敗するので出さない。
+                continue
+
             gpu_compute_types = ["auto"] + sorted(list(get_supported_compute_types("cuda", device_index)))
 
             # デバイスごとの計算タイプの制限
-            if "GTX" in gpu_device_name:
+            if is_amd:
+                # AMD はデバイス名の文字列一致を使わない。どのランタイムを
+                # 引けたかでベンダーが確定しているので、名前の揺れに依存しない。
+                # "auto" は残す (既定の選択値で、getBestComputeType が解決する)。
+                gpu_compute_types = [
+                    t for t in gpu_compute_types
+                    if t == "auto" or t in _AMD_COMPUTE_TYPES
+                ]
+            elif "GTX" in gpu_device_name:
                 unsupported_types = {"int8_bfloat16", "bfloat16", "float16", "int8"}
                 gpu_compute_types = [t for t in gpu_compute_types if t not in unsupported_types]
             elif not any(keyword in gpu_device_name for keyword in ["RTX", "Tesla", "A100", "Quadro"]):
@@ -517,8 +693,15 @@ def getBestComputeType(device: str, device_index: int) -> str:
     if device == "cpu":
         device_name = "cpu"
     else:
-        cuda_device_names = _getCudaDeviceNames()
-        device_name = cuda_device_names[device_index] if device_index < len(cuda_device_names) else ""
+        # AMD はデバイス名で分岐しない (名前の揺れに依存しないため)。
+        runtime = _getGpuRuntime()
+        if runtime is not None and runtime.vendor == "amd":
+            for compute_type in _AMD_COMPUTE_TYPES:
+                if compute_type in compute_types:
+                    return compute_type
+            return "float32"
+        gpu_device_names = _getGpuDeviceNames()
+        device_name = gpu_device_names[device_index] if device_index < len(gpu_device_names) else ""
 
     # デバイスごとの優先計算タイプ
     preferred_types = {

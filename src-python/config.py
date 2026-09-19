@@ -36,7 +36,7 @@ try:
 except Exception:  # pragma: no cover - optional runtime
     whisper_models = {}  # type: ignore
 
-from utils import errorLogging, printLog, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
+from utils import errorLogging, printLog, validateDictStructure, getComputeDeviceList, getGpuRuntimeName, isValidIpAddress, isWildcardBindAddress
 
 # NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
 # 対応する migration ヘルパは ADR-0004 でストリーミング/VAD 独自実装を撤退した際に
@@ -1046,7 +1046,12 @@ class Config:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
-        self._COMPUTE_MODE = "cuda" if any(
+        # "cpu" / "cuda" / "rocm"。GPU が使えるかは一覧に GPU エントリが
+        # 出たかで判断し、どのランタイムかは utils に聞く。device 文字列は
+        # AMD でも "cuda" のまま (CTranslate2 の都合) なので、
+        # ベンダーの区別はここでは取れない。
+        # serialize=False なので config.json には書かれない = 既存ファイルへの影響なし。
+        self._COMPUTE_MODE = (getGpuRuntimeName() or "cpu") if any(
             device.get("device") == "cuda" for device in self._SELECTABLE_COMPUTE_DEVICE_LIST
         ) else "cpu"
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
