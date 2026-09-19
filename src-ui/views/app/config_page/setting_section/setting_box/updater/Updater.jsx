@@ -42,7 +42,7 @@ export const Updater = () => {
     const { currentComputeMode } = useComputeMode();
     const { currentReleaseChannel, setReleaseChannel } = useUpdater();
     const { currentAvailableReleases, getAvailableReleases } = useAvailableReleases();
-    const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
+    const { updateSoftware } = useUpdateSoftware();
     const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
 
     const [tmp_selected_channel, setTmpSelectedChannel] = useState(null);
@@ -136,11 +136,7 @@ export const Updater = () => {
             setReleaseChannel(target_channel);
         }
         updateIsSoftwareUpdating(true);
-        if (target_compute_mode === "cpu") {
-            updateSoftware(target_version);
-        } else {
-            updateSoftware_CUDA(target_version);
-        }
+        updateSoftware(target_version, target_compute_mode === "cpu" ? "cpu" : "gpu");
     };
 
     const onClickRefresh = () => {

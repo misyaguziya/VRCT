@@ -552,9 +552,6 @@ class TestMainloop():
             case "/run/update_software":
                 data = None
                 expected_status = [401] # !!!Cant be tested here!!!
-            case "/run/update_cuda_software":
-                data = None
-                expected_status = [401] # !!!Cant be tested here!!!
             case "/run/download_ctranslate2_weight":
                 data_list = random.choice(["small", "large"])
                 data = random.choice(data_list)

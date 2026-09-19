@@ -3459,18 +3459,28 @@ class Controller:
                 }
             }
 
-    def updateSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
-        target_version = str(data) if data else None
-        th_start_update_software = Thread(target=model.updateSoftware, args=(target_version,))
+    def updateSoftware(self, data=None, *args, **kwargs) -> dict:
+        """Launch the installer for the requested edition.
+
+        data は `{"version": str|None, "edition": "cpu"|"gpu"}`。
+        CPU版/GPU版で別エンドポイント (/run/update_software と
+        /run/update_cuda_software) に分かれていたのを1本にした
+        (AMD 対応 PR-2)。edition の妥当性は model.updateSoftware が見る
+        (Popen の引数を組み立てる唯一の場所なので、そこに寄せてある)。
+        """
+        if isinstance(data, dict):
+            version = data.get("version")
+            target_version = str(version) if version else None
+            edition = str(data.get("edition") or "cpu")
+        else:
+            # 旧形式 (バージョン文字列だけ、または None) の互換。
+            # 開発中に古いフロントと混ざっても CPU 版として素直に動くように。
+            target_version = str(data) if data else None
+            edition = "cpu"
+        th_start_update_software = Thread(
+            target=model.updateSoftware, args=(target_version, edition))
         th_start_update_software.daemon = True
         th_start_update_software.start()
-        return {"status":200, "result":True}
-
-    def updateCudaSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
-        target_version = str(data) if data else None
-        th_start_update_cuda_software = Thread(target=model.updateCudaSoftware, args=(target_version,))
-        th_start_update_cuda_software.daemon = True
-        th_start_update_cuda_software.start()
         return {"status":200, "result":True}
 
     def downloadCtranslate2Weight(self, data:str, asynchronous:bool=True, *args, **kwargs) -> dict:

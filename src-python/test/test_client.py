@@ -444,7 +444,6 @@ class AutomatedEndpointTester:
             "/run/send_text_overlay",
             "/run/swap_your_language_and_target_language",
             "/run/update_software",
-            "/run/update_cuda_software",
             "/run/download_ctranslate2_weight",
             "/run/download_whisper_weight",
             "/run/open_filepath_logs",
@@ -722,7 +721,7 @@ class AutomatedEndpointTester:
             expected = choice["status"]
         elif endpoint in ["/run/typing_message_box","/run/stop_typing_message_box","/run/send_text_overlay","/run/swap_your_language_and_target_language"]:
             data = "test_overlay" if endpoint == "/run/send_text_overlay" else None
-        elif endpoint in ["/run/update_software","/run/update_cuda_software","/run/download_ctranslate2_weight","/run/download_whisper_weight","/run/open_filepath_logs","/run/open_filepath_config_file","/run/feed_watchdog"]:
+        elif endpoint in ["/run/update_software","/run/download_ctranslate2_weight","/run/download_whisper_weight","/run/open_filepath_logs","/run/open_filepath_config_file","/run/feed_watchdog"]:
             expected=[401]
         elif endpoint in ["/run/lmstudio_connection","/run/ollama_connection"]:
             expected=[200,400]

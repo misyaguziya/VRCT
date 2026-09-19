@@ -961,17 +961,20 @@ return {
 }
 ```
 
-##### `updateSoftware() -> None`
+##### `updateSoftware(target_version=None, edition="cpu") -> None`
 
-**責務:** CPU版へのアップデート/切替実行
+**責務:** 指定エディションへのアップデート/切替実行
 
 **処理:**
-1. Hugging Faceから `VRCT_setup.exe`（NSISインストーラー）をダウンロード（最大5回リトライ）
-2. `Popen(["VRCT_setup.exe", "/EDITION=cpu"])` でセットアップウィザードを起動（CPU版が初期選択された状態で表示される）
-3. 実行中のVRCT本体の終了確認・再起動は起動されたセットアップウィザード側が行う
+1. `edition` が `_SETUP_EDITIONS`（`"cpu"` / `"gpu"`）に無ければ何もせず戻る。
+   `/EDITION=` は外部プロセスの起動引数になるため、ここで既知の値だけに絞る
+2. Hugging Faceから `VRCT_setup.exe`（NSISインストーラー）をダウンロード（最大5回リトライ）し SHA-256 検証
+3. `Popen(["VRCT_setup.exe", f"/EDITION={edition}", ...])` でセットアップウィザードを起動
+   （該当エディションが初期選択された状態で表示される）
+4. 実行中のVRCT本体の終了確認・再起動は起動されたセットアップウィザード側が行う
 
-##### `updateCudaSoftware() -> None`
-GPU版へのアップデート/切替実行。`updateSoftware()`と同様だが `/EDITION=gpu` 付きでセットアップウィザードを起動し、GPU版が初期選択された状態で表示される。
+CPU版/GPU版で `updateSoftware` / `updateCudaSoftware` の2関数に分かれていたが、
+差分が `/EDITION=` の値だけだったため1本にまとめた（AMD対応 PR-2）。
 
 ---
 

@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from model import Model
+from controller import Controller
 from config import config
 
 
@@ -34,7 +35,7 @@ class TestModelUpdate(unittest.TestCase):
         # file must clear that threshold.
         self.payload = b"data" * 300_000
         self.actual_sha256 = hashlib.sha256(self.payload).hexdigest()
-        # updateSoftware()/updateCudaSoftware() resolve the GitHub Release (to
+        # updateSoftware() resolves the GitHub Release (to
         # find its ".sha256" sidecar asset) via Model._resolveReleaseForVersion(),
         # which branches on config.SELECTED_RELEASE_CHANNEL: the "stable" path
         # hits config.GITHUB_URL (which every test below mocks), while the "beta"
@@ -70,7 +71,7 @@ class TestModelUpdate(unittest.TestCase):
 
         with patch("model.Popen") as popen:
             Model.updateSoftware()
-            Model.updateCudaSoftware()
+            Model.updateSoftware(edition="gpu")
 
         popen.assert_not_called()
         # per call: 1 release-resolution attempt (fails, caught inside
@@ -100,7 +101,7 @@ class TestModelUpdate(unittest.TestCase):
 
         requests_get.side_effect = fake_get
 
-        Model.updateCudaSoftware()
+        Model.updateSoftware(edition="gpu")
 
         popen.assert_called_once()
         os_exit.assert_called_once_with(0)
@@ -134,7 +135,7 @@ class TestModelUpdate(unittest.TestCase):
 
         requests_get.side_effect = fake_get
 
-        Model.updateCudaSoftware()
+        Model.updateSoftware(edition="gpu")
 
         # A mismatched checksum means the downloaded file cannot be trusted;
         # the installer must never be launched.
@@ -169,7 +170,7 @@ class TestModelUpdate(unittest.TestCase):
 
         requests_get.side_effect = fake_get
 
-        Model.updateCudaSoftware()
+        Model.updateSoftware(edition="gpu")
 
         popen.assert_called_once()
         os_exit.assert_called_once_with(0)
@@ -207,7 +208,7 @@ class TestModelUpdate(unittest.TestCase):
 
         requests_get.side_effect = fake_get
 
-        Model.updateCudaSoftware()
+        Model.updateSoftware(edition="gpu")
 
         popen.assert_not_called()
         os_exit.assert_not_called()
@@ -253,7 +254,7 @@ class TestModelUpdate(unittest.TestCase):
 
         requests_get.side_effect = fake_get
 
-        Model.updateCudaSoftware()
+        Model.updateSoftware(edition="gpu")
 
         self.assertEqual(sidecar_attempts["n"], 2)
         popen.assert_called_once()
@@ -276,7 +277,7 @@ class TestModelUpdate(unittest.TestCase):
         # the size check, matching pre-item-13 behavior for this happy path.
         requests_get.return_value = _make_download_response(self.payload)
 
-        Model.updateCudaSoftware()
+        Model.updateSoftware(edition="gpu")
 
         popen.assert_called_once_with(
             [
@@ -289,6 +290,143 @@ class TestModelUpdate(unittest.TestCase):
         )
         psutil_process.return_value.terminate.assert_called_once()
         os_exit.assert_called_once_with(0)
+
+    # --- 以下は updateSoftware/updateCudaSoftware を1本化したときの回帰ガード ---
+    # (AMD 対応 PR-2)。インストーラに渡す引数列は外部プロセスの起動引数なので、
+    # 現行と1文字でも変わっていないことを両エディションについて固定する。
+
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_cpu_edition_launches_setup_with_the_expected_arguments(
+        self,
+        requests_get: Mock,
+        popen: Mock,
+        psutil_process: Mock,
+        os_exit: Mock,
+    ) -> None:
+        requests_get.return_value = _make_download_response(self.payload)
+
+        Model.updateSoftware()
+
+        popen.assert_called_once_with(
+            [
+                "VRCT_setup.exe",
+                "/EDITION=cpu",
+                f"/UILANG={config.UI_LANGUAGE}",
+                f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}",
+            ],
+            cwd=config.PATH_LOCAL,
+        )
+        psutil_process.return_value.terminate.assert_called_once()
+        os_exit.assert_called_once_with(0)
+
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_version_is_pinned_after_the_edition_flag(
+        self,
+        requests_get: Mock,
+        popen: Mock,
+        psutil_process: Mock,
+        os_exit: Mock,
+    ) -> None:
+        """/VERSION= は最後に付く。引数の順序も現行のまま。"""
+        requests_get.return_value = _make_download_response(self.payload)
+
+        with patch.object(Model, "_isVersionSupported", return_value=True):
+            Model.updateSoftware("2.5.0", edition="gpu")
+
+        popen.assert_called_once_with(
+            [
+                "VRCT_setup.exe",
+                "/EDITION=gpu",
+                f"/UILANG={config.UI_LANGUAGE}",
+                f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}",
+                "/VERSION=2.5.0",
+            ],
+            cwd=config.PATH_LOCAL,
+        )
+
+    @patch("model.printLog")
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_unknown_edition_does_not_launch_anything(
+        self,
+        requests_get: Mock,
+        popen: Mock,
+        psutil_process: Mock,
+        os_exit: Mock,
+        _print_log: Mock,
+    ) -> None:
+        """edition は外部プロセスの起動引数になるので、既知の値だけ通す。
+
+        不正な値でインストーラを起動してしまうと、何が起きるかは NSIS 側の
+        解釈に委ねられる。ダウンロードもさせない (検証前に弾く)。
+        """
+        requests_get.return_value = _make_download_response(self.payload)
+
+        for edition in ("amd", "", "cpu; rm -rf /", "CPU", None):
+            with self.subTest(edition=edition):
+                popen.reset_mock()
+                requests_get.reset_mock()
+                Model.updateSoftware(edition=edition)
+                popen.assert_not_called()
+                requests_get.assert_not_called()
+        psutil_process.return_value.terminate.assert_not_called()
+        os_exit.assert_not_called()
+
+
+class TestControllerUpdateSoftwarePayload(unittest.TestCase):
+    """`/run/update_software` のペイロード解釈 (AMD 対応 PR-2)。
+
+    CPU版/GPU版で別エンドポイントだったのを1本に統合したので、
+    `{"version", "edition"}` の dict を受ける形になった。UI から来る値なので
+    想定外の形が来ても素直に CPU 版として動くこと (= 何もしないのではなく、
+    従来と同じ挙動になること) を固定する。
+    """
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+
+    def _capture(self, data):
+        """controller.updateSoftware が model へ渡す引数を取る。"""
+        with patch("controller.model.updateSoftware") as update, \
+             patch("controller.Thread") as thread:
+            # Thread(target=..., args=...) の args をそのまま取り出す。
+            # 実際にスレッドを起こすとインストーラ経路へ入ってしまうので起こさない。
+            result = self.controller.updateSoftware(data)
+            thread.return_value.start.assert_called_once()
+            update.assert_not_called()
+            self.assertEqual(result, {"status": 200, "result": True})
+            return thread.call_args.kwargs["args"]
+
+    def test_dict_payload_passes_version_and_edition(self) -> None:
+        self.assertEqual(
+            self._capture({"version": "2.5.0", "edition": "gpu"}),
+            ("2.5.0", "gpu"),
+        )
+
+    def test_dict_without_version_means_latest(self) -> None:
+        self.assertEqual(self._capture({"edition": "gpu"}), (None, "gpu"))
+
+    def test_dict_without_edition_defaults_to_cpu(self) -> None:
+        self.assertEqual(self._capture({"version": "2.5.0"}), ("2.5.0", "cpu"))
+
+    def test_empty_dict_defaults_to_cpu_latest(self) -> None:
+        """encodeBase64 はデコード失敗時に {} を返すので、この形は実際に来る。"""
+        self.assertEqual(self._capture({}), (None, "cpu"))
+
+    def test_none_payload_defaults_to_cpu_latest(self) -> None:
+        self.assertEqual(self._capture(None), (None, "cpu"))
+
+    def test_bare_string_payload_is_treated_as_a_cpu_version(self) -> None:
+        """旧形式の後方互換。古いフロントと混ざっても CPU 版として動く。"""
+        self.assertEqual(self._capture("2.5.0"), ("2.5.0", "cpu"))
 
 
 class TestCheckSoftwareUpdatedBetaChannel(unittest.TestCase):

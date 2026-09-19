@@ -924,19 +924,19 @@ Watchdog を停止。
 }
 ```
 
-#### `updateSoftware(*args, **kwargs) -> dict`
+#### `updateSoftware(data=None, *args, **kwargs) -> dict`
 
-**責務:** 通常版のアップデートを実行
+**責務:** 指定エディションのアップデートを実行
 
 **処理:**
-1. 別スレッドで `model.updateSoftware()` を起動（ブロッキングを避けるため）
-2. 即座に status 200 を返却
+1. `data` は `{"version": str|None, "edition": "cpu"|"gpu"}`。
+   文字列または `None` が来た場合は旧形式とみなし CPU版として扱う（後方互換）
+2. 別スレッドで `model.updateSoftware(target_version, edition)` を起動（ブロッキングを避けるため）
+3. 即座に status 200 を返却
 
-#### `updateCudaSoftware(*args, **kwargs) -> dict`
-
-**責務:** CUDA版のアップデートを実行
-
-**処理:** `updateSoftware()` と同様だが、`model.updateCudaSoftware()` を呼び出す。
+CPU版/GPU版で `/run/update_software` と `/run/update_cuda_software` の2エンドポイントに
+分かれていたが、前者に統合した（AMD対応 PR-2）。`edition` の妥当性検証は
+`model.updateSoftware` 側で行う（`Popen` の引数を組み立てる唯一の場所であるため）。
 
 ---
 

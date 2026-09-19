@@ -883,6 +883,11 @@ class SpeakerSession(_AudioDeviceSession):
 class Model:
     _instance = None
 
+    # NSIS インストーラの /EDITION= が受け付ける値 (src-tauri/nsis/template.nsi)。
+    # config の COMPUTE_MODE ("cpu"/"cuda") とは別の語彙。インストーラ側の既存
+    # 2値を壊さないため、AMD を足すときもここへ "amd" を追加する形にする。
+    _SETUP_EDITIONS = ("cpu", "gpu")
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Model, cls).__new__(cls)
@@ -1901,8 +1906,7 @@ class Model:
     @staticmethod
     def _downloadVerifiedSetup(target_version: Optional[str]) -> bool:
         # GitHub Release を解決して期待する SHA-256 を求め、setup.exe を
-        # ダウンロード & 検証する。updateSoftware()/updateCudaSoftware() の
-        # 共通前処理。
+        # ダウンロード & 検証する。updateSoftware() の前処理。
         #
         # 戻り値 True  : VRCT_setup.exe がディスク上にあり起動して問題ない
         # 戻り値 False : 呼び出し側は何も起動せず中止すること。内訳は
@@ -1928,36 +1932,36 @@ class Model:
         return Model._downloadSetup(expected_sha256)
 
     @staticmethod
-    def updateSoftware(target_version: Optional[str] = None):
-        if target_version is not None and not Model._isVersionSupported(target_version):
-            return
-        if not Model._downloadVerifiedSetup(target_version):
-            return
-        # run the NSIS setup wizard, preselecting the CPU edition; pin to
-        # target_version when the user picked a specific release to install;
-        # carry over the current UI language so the installer chrome and the
-        # custom "UI Language" page start on the user's chosen language;
-        # carry over the current release channel so the installer's channel
-        # page defaults to what the user already has selected in VRCT.
-        args = ["VRCT_setup.exe", "/EDITION=cpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
-        if target_version:
-            args.append(f"/VERSION={target_version}")
-        Popen(args, cwd=config.PATH_LOCAL)
-        Model._quitApp()
+    def updateSoftware(target_version: Optional[str] = None, edition: str = "cpu"):
+        """Download the setup wizard and launch it, then quit VRCT.
 
-    @staticmethod
-    def updateCudaSoftware(target_version: Optional[str] = None):
+        `edition` is what the installer's `/EDITION=` receives, which decides
+        which package it downloads (see src-tauri/nsis/template.nsi).
+
+        CPU版とGPU版で別関数 (updateSoftware / updateCudaSoftware) に分かれて
+        いたのを1本にした。差分は `/EDITION=` の値だけで、残りは完全に同一
+        だったため (AMD 対応 PR-2、第3エディションを足すときに3本目を
+        コピーしたくない)。
+        """
+        # edition は外部プロセスの起動引数になるので、既知の値だけを通す。
+        # ここで弾くのは、この関数が Popen の引数を組み立てる唯一の場所であり、
+        # 呼び出し側 (controller / テスト / 将来の別経路) が全部ここへ集まるため。
+        # NSIS 側の語彙は "cpu"/"gpu" で、config の COMPUTE_MODE ("cpu"/"cuda")
+        # とは別物なので混ぜないこと。
+        if edition not in Model._SETUP_EDITIONS:
+            printLog(f"Refusing to launch the installer for an unknown edition: {edition!r}")
+            return
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
         if not Model._downloadVerifiedSetup(target_version):
             return
-        # run the NSIS setup wizard, preselecting the GPU edition; pin to
+        # run the NSIS setup wizard, preselecting the requested edition; pin to
         # target_version when the user picked a specific release to install;
         # carry over the current UI language so the installer chrome and the
         # custom "UI Language" page start on the user's chosen language;
         # carry over the current release channel so the installer's channel
         # page defaults to what the user already has selected in VRCT.
-        args = ["VRCT_setup.exe", "/EDITION=gpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
+        args = ["VRCT_setup.exe", f"/EDITION={edition}", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
         if target_version:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)

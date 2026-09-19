@@ -285,10 +285,9 @@ setWebSocketPort(data) -> dict
 
 ```python
 updateSoftware(data) -> dict
-updateCudaSoftware(data) -> dict
 ```
 
-- ソフトウェアアップデート
+- ソフトウェアアップデート（`data` の `edition` で CPU版/GPU版を指定）
 
 ```python
 downloadCtranslate2Weight(data) -> dict

@@ -1345,7 +1345,7 @@ class Config:
 
         # config.json から読み込んだ SELECTED_RELEASE_CHANNEL は、前回起動時に
         # UI でチャンネルを切り替えた「つもり」の値をそのまま引き継いでいる
-        # 可能性がある。model.updateSoftware()/updateCudaSoftware() は
+        # 可能性がある。model.updateSoftware() は
         # インストーラ (NSIS) を起動した直後に VRCT を即終了する設計のため、
         # ユーザーがインストーラをキャンセルしても config.json には新
         # チャンネルが書き込まれたまま残ってしまう(実際にインストール

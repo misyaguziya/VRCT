@@ -98,7 +98,7 @@ const SafeActionButtons = () => {
 };
 
 const ActionButtons = () => {
-    const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
+    const { updateSoftware } = useUpdateSoftware();
     const { currentIsSoftwareUpdating, updateIsSoftwareUpdating } = useIsSoftwareUpdating();
     const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { currentComputeMode } = useComputeMode();
@@ -110,11 +110,7 @@ const ActionButtons = () => {
     const onClickUpdate = () => {
         try {
             updateIsSoftwareUpdating(true);
-            if (is_cpu) {
-                updateSoftware();
-            } else {
-                updateSoftware_CUDA();
-            }
+            updateSoftware(null, is_cpu ? "cpu" : "gpu");
         } catch (e) {
             console.error("[AppErrorBoundary] Update failed:", e);
         }
