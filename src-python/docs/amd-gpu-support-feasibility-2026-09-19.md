@@ -28,7 +28,7 @@
   `amd_comgr.dll` は **Apache-2.0 with LLVM Exceptions**、rocBLAS/hipBLAS も MIT。
   proprietary EULA の話ではなかった。義務はライセンス表記の同梱のみ（§5 ブロッカー 1'）。
 - **容量も当初見積もりより小さい。約 280〜300MB**（当初 550〜930MB と書いたのは過大）。
-  Ollama の zip を実地調査して算定した（§5）。VRCT の GPU 版は既に約 4GB なので許容範囲。
+  Ollama の zip を実地調査して算定した（§5）。VRCT の GPU 版は既に約 3.4GB なので許容範囲。
 - **VRChat 領域の競合（TaSTT / VRCTextboxSTT）は 1 つも AMD 対応していない**（§6.5 B）。
   遅れているわけではなく、やれば差別化になる。
 - 業界は whisper.cpp + Vulkan に収束しつつあるが、**それらは STT 専用アプリ**。
@@ -82,12 +82,22 @@ compute_type を組み立てるだけの薄い層で、NVIDIA 固有なのは以
 
 - `COMPUTE_MODE` は起動時に CUDA デバイスが見つかったかで決まる (`config.py:1049`)。実行時切替ではない。
 - CPU/GPU の切替は NSIS インストーラの再実行 (`/EDITION=cpu|gpu`, `model.py:1949`)。
-- 配布物は `VRCT.zip` (約 485MB) と `VRCT_cuda.zip` (約 4GB) の 2 本 (`src-tauri/nsis/template.nsi:738-749`)。
+- 配布物は `VRCT.zip` (約 485MB / 展開約 1.5GB) と `VRCT_cuda.zip` (約 3.4GB / 展開約 5.8GB) の 2 本
+  (`src-tauri/nsis/template.nsi:738-749`。以前ここに「約 4GB」と書いていたのは
+  `REQ_DOWNLOAD_MB_GPU 4096` = 空き容量バジェット値との混同だった)。
 - ビルド系統も 2 本: `spec/backend.spec` / `spec/backend_cuda.spec`、venv も `.venv` / `.venv_cuda` (`bat/install.bat`)。
 
 **AMD を第 3 のエディションにすると、spec・venv・zip・インストーラのページ・locale 文言・
 更新フロー (`updateCudaSoftware` 相当) が 1 系統まるごと増える。** ここが #88 triage の
 「配布コストが大きい」の実体。
+
+> **訂正 (2026-09-19、設計フェーズ)**: この見積もりは重すぎた。NSIS インストーラは
+> 本体を同梱せず、実行時に zip 名を選んでダウンロードする方式
+> (`template.nsi:737-785`)。またエディション選択ページの文言は LangString ではなく
+> ハードコードされた英語なので **NSIS 側の locale 作業は発生しない**。
+> 実際の配布側コストは「zip 名 1 個 + バジェット 2 個 + 分岐 1 つ + locale 1 キー×5 言語」。
+> 実在するのは venv / requirements / CI ビルド時間のコスト。
+> 詳細は `amd-gpu-support-design-2026-09-19.md` §1-1 / §2。
 
 ---
 
@@ -207,7 +217,7 @@ Tensile (gfx1100-1102,
 ```
 
 当初レポートの「550〜930MB」は過大だった。**実際は約 280〜300MB。**
-**VRCT の GPU 版は既に約 4GB** (`VRCT_cuda.zip`) なので、比率としては十分許容範囲。
+**VRCT の GPU 版は既に約 3.4GB / 展開約 5.8GB** (`VRCT_cuda.zip`、`template.nsi:743-745` の実測コメント) なので、比率としては十分許容範囲。
 容量は障害ではなく「対応 GPU 世代を絞る設計判断」にすぎない。
 
 **重要な副産物: Ollama は ROCm 7.1 でビルドしている。**
