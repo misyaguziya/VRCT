@@ -34,6 +34,8 @@ REPORT_PATH = Path("amd_spike_report.txt")
 
 _lines: list[str] = []
 _stage_failed = False
+# 解放するとハングするモデルの置き場。理由は stage_c の末尾を参照。
+_keep_alive: list = []
 
 
 def _setup_frozen_rocm_paths() -> None:
@@ -582,6 +584,7 @@ def stage_c(model_id: str, audio: Path | None, runs: int) -> dict:
     # --- C4: CPU と比べる。ここが本題 ---
     log()
     log("-- for comparison: CPU (the path VRCT already has today) --")
+    cpu_model = None
     try:
         cpu_model = WhisperModel(model_id, device="cpu", compute_type="int8")
         _transcribe_once(cpu_model, audio)
@@ -601,6 +604,13 @@ def stage_c(model_id: str, audio: Path | None, runs: int) -> dict:
     except Exception:
         result("WARN", "CPU comparison failed", "we will go on the GPU numbers alone")
         log(redact(traceback.format_exc()))
+    finally:
+        # モデルを解放しない。RX 7900 XTX の実機で、ROCm 版はモデルの
+        # デストラクタから帰ってこないことを確認した (2026-09-21)。
+        # ここで参照を落とすと return 時に解放が走り、レポートの書き出しに
+        # 到達できず計測結果が丸ごと失われる (実際に失った)。
+        # 診断ツールなので後片付けは OS に任せる (末尾の os._exit)。
+        _keep_alive.extend(m for m in (gpu_model, cpu_model) if m is not None)
     return info
 
 
@@ -669,4 +679,11 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    _code = main()
+    # 普通に終了するとインタプリタ終了時にモデルのデストラクタが走り、ROCm では
+    # そこで帰ってこない (stage_c の finally 参照)。レポートは書き終えているので、
+    # 後片付けを待たずにプロセスを落とす。os._exit はバッファを流さないため、
+    # log() が毎行 flush していることに依存している。
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(_code)
