@@ -186,11 +186,19 @@ def stage_a() -> dict:
         path = _loaded_module_path(hip)
         info["hip_runtime"] = name
         info["hip_runtime_path"] = redact(path)
-        from_sdk = "AMD\\ROCm" in path
+        # 「同梱物から来たのか」を区別する。この exe は ROCm ランタイムを
+        # 同梱して「SDK を入れずに済む」ことを確かめるためのものなので、
+        # どこから来たかが我々の知りたい答えそのものになる。
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass and os.path.normcase(meipass) in os.path.normcase(path):
+            origin = "bundled with this tool (no HIP SDK needed -- this is what we hoped for)"
+        elif "AMD\\ROCm" in path:
+            origin = "the HIP SDK installed on this machine"
+        else:
+            origin = "the driver or somewhere else on PATH"
         result("OK", f"loaded {name}", redact(path))
-        result("INFO", "came from",
-               "the HIP SDK" if from_sdk else "the driver or somewhere else on PATH")
-        info["hip_from_sdk"] = from_sdk
+        result("INFO", "came from", origin)
+        info["hip_origin"] = origin
         break
     if hip is None:
         for name in _HIP_RUNTIME_NAMES:
