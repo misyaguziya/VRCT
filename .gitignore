@@ -79,3 +79,7 @@ src-python/telemetry_state.json
 # 検証者のマシン構成が入るので、誤ってコミットしないように無視する。
 /amd_spike_report.txt
 /amd_spike_test_audio.wav
+
+# bat/build_amd_check.bat の出力 (協力者へ渡す検証用 exe)。
+# ROCm ランタイムを同梱するので展開 900MB / zip 255MB になる。
+/dist_amd_check/
