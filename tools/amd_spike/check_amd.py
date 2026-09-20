@@ -36,6 +36,34 @@ _lines: list[str] = []
 _stage_failed = False
 
 
+def _setup_frozen_rocm_paths() -> None:
+    """凍結 exe のとき、同梱した ROCm ランタイムを見つけられるようにする。
+
+    ROCm 版 ctranslate2.dll は hipblas.dll / amdhip64_7.dll を**静的に**
+    インポートするので、`import ctranslate2` の瞬間にはもう検索パスに載って
+    いる必要がある (2026-09-20 実測。CPU/CUDA 版が cuBLAS を遅延ロードする
+    のとは事情が違う)。このスクリプトは ctranslate2 を stage_b の中でしか
+    import しないので、ここで先に仕込める。
+
+    rocblas.dll は Tensile カーネルを自分の隣の rocblas/library から探す。
+    凍結レイアウトでは相対位置が変わりうるので、環境変数で明示しておく。
+
+    非凍結 (開発中に python で直接叩く場合) は何もしない。その場合は
+    HIP SDK が PATH に入っている前提。
+    """
+    meipass = getattr(sys, "_MEIPASS", None)
+    if not meipass or os.name != "nt":
+        return
+    try:
+        os.add_dll_directory(meipass)
+    except OSError:
+        pass
+    os.environ["PATH"] = meipass + os.pathsep + os.environ.get("PATH", "")
+    tensile = os.path.join(meipass, "rocblas", "library")
+    if os.path.isdir(tensile):
+        os.environ.setdefault("ROCBLAS_TENSILE_LIBPATH", tensile)
+
+
 def _setup_console() -> None:
     """日本語混じりでなくても、パスに非ASCIIが入ると cp932 で落ちうるので UTF-8 に寄せる。
 
@@ -571,6 +599,8 @@ def stage_c(model_id: str, audio: Path | None, runs: int) -> dict:
 # ----------------------------------------------------------------------------
 
 def main() -> int:
+    # ctranslate2 を import する前に済ませる必要がある (関数の docstring 参照)。
+    _setup_frozen_rocm_paths()
     _setup_console()
     parser = argparse.ArgumentParser(
         description="VRCT: check whether AMD GPU (ROCm) inference works")

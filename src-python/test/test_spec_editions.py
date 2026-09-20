@@ -12,11 +12,17 @@ PyInstaller は動かさず、spec を Python として exec して Analysis に
 """
 from pathlib import Path
 import os
+import sys
 import tempfile
 import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SPEC_PATH = REPO_ROOT / "spec" / "backend.spec"
+
+# spec が ROCm 収集ロジックを tools/rocm_bundle.py から取るので、テストからも
+# 同じものを見られるようにする。pytest.ini の pythonpath は src-python だけ。
+if str(REPO_ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
 
 # エディションと、その edition で参照されるべき venv ディレクトリ名。
 _EXPECTED_VENV = {
@@ -80,6 +86,9 @@ def _captureAnalysis(edition, hip_path=None):
     namespace = {
         "Analysis": Analysis, "PYZ": _Stub, "EXE": _Stub, "COLLECT": _Stub,
         "__file__": str(SPEC_PATH),
+        # PyInstaller が spec に注入するもの。実環境に合わせておく。
+        "SPEC": str(SPEC_PATH),
+        "SPECPATH": str(SPEC_PATH.parent),
     }
     try:
         exec(compile(SPEC_PATH.read_text(encoding="utf-8"), str(SPEC_PATH), "exec"),
@@ -285,9 +294,9 @@ class AmdRuntimeBundlingTests(unittest.TestCase):
 
         # edition=cpu で評価しても _AMD_GFX_TARGETS はモジュール変数なので取れる
         # (HIP SDK も要らない)。
-        spec_globals = _captureAnalysis("cpu")["__spec_globals__"]
+        import rocm_bundle
         # gfx1100 -> 11 のように、gfx 名の先頭2桁を major として取り出す。
-        majors = {int(target[3:5]) for target in spec_globals["_AMD_GFX_TARGETS"]}
+        majors = {int(target[3:5]) for target in rocm_bundle.AMD_GFX_TARGETS}
         self.assertEqual(majors, set(utils._AMD_SUPPORTED_ARCH_MAJORS))
 
 
