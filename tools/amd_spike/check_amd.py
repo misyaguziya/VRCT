@@ -654,6 +654,17 @@ def main() -> int:
     except Exception:
         print("Could not write the report file -- please copy the output above.",
               flush=True)
+
+    # 凍結 exe をエクスプローラからダブルクリックで起動すると、終了と同時に
+    # コンソールが閉じて何も読めない。協力者には「動かなかった」ように見える
+    # (レポートは残るが、そこまで気付けない)。対話的なときだけ待つ。
+    # パイプ越しや CI では止めない。
+    if getattr(sys, "frozen", False):
+        try:
+            if sys.stdin is not None and sys.stdin.isatty():
+                input("\nPress Enter to close this window...")
+        except Exception:
+            pass
     return 0
 
 
