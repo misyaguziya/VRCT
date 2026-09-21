@@ -97,6 +97,14 @@ VRCT collects anonymous telemetry data via [Aptabase](https://aptabase.com) to h
 
 You can opt out of telemetry in the app settings at any time. See the [Aptabase Privacy Policy](https://aptabase.com/legal/privacy) for more details.
 
+## License
+
+VRCT is released under the [MIT License](/LICENSE), with one exception: the
+chat-bubble detection model used by the OCR feature
+(`src-python/models/ocr/onnx/chatbox_yolov8n.onnx`) is licensed under
+**AGPL-3.0**, because it is fine-tuned from Ultralytics YOLOv8 weights.
+Read [NOTICE.md](/NOTICE.md) before reusing it in another project.
+
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />

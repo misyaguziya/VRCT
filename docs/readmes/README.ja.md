@@ -97,6 +97,13 @@ VRCTは[Aptabase](https://aptabase.com)を通じて、アプリの改善のた�
 
 テレメトリーはアプリの設定からいつでも無効化できます。詳細は[Aptabaseプライバシーポリシー](https://aptabase.com/legal/privacy)をご確認ください。
 
+## ライセンス
+
+VRCT は [MIT License](/LICENSE) で公開しています。ただし OCR 機能が使うチャットボックス
+検出モデル（`src-python/models/ocr/onnx/chatbox_yolov8n.onnx`）は例外で、Ultralytics
+YOLOv8 の重みをファインチューニングしたものであるため **AGPL-3.0** です。
+他のプロジェクトで流用する前に [NOTICE.md](/NOTICE.md) を確認してください。
+
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />

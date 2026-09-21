@@ -1,0 +1,33 @@
+chatbox_yolov8n.onnx -- VRChat chat-bubble detection model
+==========================================================
+
+Copyright (c) 2026 misyaguziya
+Licensed under the GNU Affero General Public License v3.0 (see LICENSE.txt
+in this directory).
+
+This file is NOT covered by the MIT License that applies to the rest of
+VRCT. See NOTICE.md at the root of the VRCT repository for the full
+statement of scope.
+
+Provenance
+----------
+  Base weights   yolov8n.pt (COCO-pretrained, published by Ultralytics)
+  Framework      ultralytics 8.3.203 (AGPL-3.0)
+  Task           single class detection, class 0 = chat_box
+  Input          1280x1280 letterbox, pad colour (114, 114, 114)
+  Export         ONNX opset 17, NMS baked in at conf=0.05 iou=0.7
+
+The model was fine-tuned from weights that Ultralytics publishes under
+AGPL-3.0. Ultralytics states that weights produced with their software are
+derivative works subject to AGPL-3.0, and that any other terms require an
+Ultralytics Enterprise License. VRCT holds no such license, so this file is
+distributed under AGPL-3.0: the project cannot grant terms broader than the
+ones it received.
+
+Reuse
+-----
+Using this file in another project obliges you to comply with AGPL-3.0,
+including releasing the complete corresponding source of your work under
+AGPL-3.0. If you need different terms, train your own detector or obtain an
+Enterprise License from Ultralytics -- misyaguziya cannot relicense this
+file.

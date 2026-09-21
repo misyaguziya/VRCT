@@ -3,6 +3,9 @@
 # 個別に上書きしたい値はコマンドラインで後ろに付ける (例: epochs=200 batch=4)。
 task: detect
 mode: train
+# 初期値は Ultralytics 配布の AGPL-3.0 重み。ここから学習した成果物も AGPL-3.0 に
+# なる (理由と配布時の手当ては docs/ocr_model_license.md)。基盤を差し替えるときは
+# そちらも更新すること。
 model: weights/yolov8n.pt
 data: dataset_annotated/data.yaml
 project: runs

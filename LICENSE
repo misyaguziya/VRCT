@@ -19,3 +19,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+--------------------------------------------------------------------------
+
+EXCEPTION TO THE SCOPE OF THE LICENSE ABOVE
+
+The MIT License above does not apply to the following file, in this
+repository or in any built distribution of VRCT:
+
+    src-python/models/ocr/onnx/chatbox_yolov8n.onnx
+    (_internal/ocr_onnx/chatbox_yolov8n.onnx in the built application)
+
+That file is the VRChat chat-bubble detection model. It is fine-tuned from
+weights published by Ultralytics under the GNU Affero General Public License
+v3.0, and is therefore distributed under AGPL-3.0 rather than the MIT License.
+
+    Copyright (c) 2026 misyaguziya
+    Licensed under the GNU Affero General Public License v3.0
+    Full text: src-python/models/ocr/onnx/LICENSE.txt
+
+See NOTICE.md for details and for the other third-party model weights
+bundled with VRCT.
