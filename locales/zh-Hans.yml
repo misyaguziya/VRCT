@@ -35,6 +35,7 @@ main_page:
     translation: "翻译"
     transcription_send: "你的语音转文字"
     transcription_receive: "他人语音转文字"
+    ocr: "聊天读取"
     foreground: "顶层显示"
 
     language_settings: "语言设定"

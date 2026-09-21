@@ -35,6 +35,7 @@ main_page:
     translation: "翻訳"
     transcription_send: "マイク入力"
     transcription_receive: "聞き取り"
+    ocr: "チャット読み取り"
     foreground: "最前面固定"
 
     language_settings: "言語設定"

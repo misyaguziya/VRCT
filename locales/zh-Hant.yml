@@ -35,6 +35,7 @@ main_page:
     translation: "翻譯"
     transcription_send: "麥克風轉文字"
     transcription_receive: "喇叭轉文字"
+    ocr: "聊天讀取"
     foreground: "最上層顯示"
 
     language_settings: "語言設定"

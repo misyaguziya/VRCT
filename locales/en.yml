@@ -35,6 +35,7 @@ main_page:
     translation: "Translation"
     transcription_send: "Voice2Chatbox"
     transcription_receive: "Speaker2Log"
+    ocr: "Chat Transcribe"
     foreground: "Set To Stay On Top"
 
     language_settings: "Language Settings"
@@ -125,7 +126,7 @@ config_page:
         hotkeys: "Hotkeys"
         advanced_settings: "Advanced"
         updater: "Updater"
-        ocr: "Chat Capture"
+        ocr: "Chat Transcribe"
 
     device:
         check_volume: "Check Volume"
@@ -355,13 +356,13 @@ config_page:
             aptabase_privacy_policy_label: "Aptabase Privacy Policy"
 
     ocr:
-        section_title: "VRChat Chat Capture"
+        section_title: "VRChat Chat Transcribe"
         section_desc: "Capture VRChat chat bubbles on screen and route the recognized text through the existing translation pipeline. Output is mirrored to the main message log and the SteamVR overlay; it is never sent to VRChat's OSC chatbox."
         capture_target: "Capture target"
         language: "Language"
         performance: "Performance"
         enable_ocr_capture:
-            label: "Enable VRChat chat capture"
+            label: "Enable VRChat chat transcribe"
             desc: "Starts a background loop that captures the VRChat window (or the HMD mirror when SteamVR is running) and translates detected chat bubbles."
         window_title:
             label: "Window name"
