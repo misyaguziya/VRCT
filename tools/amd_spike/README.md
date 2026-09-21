@@ -280,3 +280,13 @@ issue #88 (AMD GPU 対応) の実機検証を、Radeon を持っている協力�
 - `hip_devices[].major` → アーキゲートを `(11, 12)` にするか `(11,)` に絞るか
 - `thread_safety` → `hang` なら VRCT 側で GPU アクセスを直列化する必要がある
 - `speedup` → 1.2 倍を下回るなら **AMD 対応を見送る判断もありうる**
+- Stage D の `conclusion` → 「モデル変更が固まる」のか「終了時だけ固まる」のかで
+  本体側の対処コストが変わる（R10）
+- Stage E の `works but VRCT does not offer it` → `_AMD_COMPUTE_TYPES` を広げる判断材料
+- Stage F の `speedup` → 翻訳の GPU 比。NVIDIA (RTX 2080 Ti) の基準値は 1.98 倍
+
+## 所要時間の目安
+
+exe を渡す場合、`--model Systran/faster-whisper-tiny` の下見が 2〜3 分、
+本番が 15〜20 分（大半がモデルのダウンロード 2GB 弱）。
+レポートは逐次書き出しなので、途中で固まっても止めても、そこまでの結果は残る。
