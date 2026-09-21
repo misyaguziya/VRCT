@@ -13,6 +13,7 @@ import {
     useAppearance,
     useVr,
     useOthers,
+    useOcr,
 } from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
@@ -23,6 +24,7 @@ export const RightSideComponents = () => {
 
     return (
         <div className={styles.container}>
+            <OpenOcrQuickSetting />
             <OpenVrcMicMuteSyncQuickSetting />
             <OpenOverlayQuickSetting />
             <SoftwareUpdateAvailableButton />
@@ -35,6 +37,24 @@ export const RightSideComponents = () => {
                 <HelpSvg className={styles.help_svg} />
             </a>
         </div>
+    );
+};
+
+const OpenOcrQuickSetting = () => {
+    const { t } = useI18n();
+    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+    const { currentEnableOcrCapture } = useOcr();
+
+    const onClickFunction = () => {
+        updateOpenedQuickSetting("ocr");
+    };
+
+    return (
+        <OpenQuickSettingButton
+            label={t("config_page.side_menu_labels.ocr")}
+            variable={currentEnableOcrCapture.data}
+            onClickFunction={onClickFunction}
+        />
     );
 };
 
