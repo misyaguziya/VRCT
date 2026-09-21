@@ -26,6 +26,7 @@ import os
 import platform
 import re
 import struct
+import subprocess
 import sys
 import threading
 import time
@@ -302,7 +303,6 @@ def stage_a() -> dict:
 
     # --- GPU の名前 (WMI 経由。取れなくても致命的ではない) ---
     try:
-        import subprocess
         out = subprocess.run(
             ["powershell", "-NoProfile", "-Command",
              ("Get-CimInstance Win32_VideoController | "
@@ -1091,96 +1091,180 @@ def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
 
 
 # ----------------------------------------------------------------------------
-# Stage D -- 後片付け。ハングしうるので必ず最後に置く
+# Stage D -- 解放。ケースごとに子プロセスへ隔離する
 # ----------------------------------------------------------------------------
+#
+# 2026-09-21 の 3 回目の実行で、CPU モデルの解放がハングし、その直後に
+# プロセスごと落ちた。同じプロセス内で順番に試す作りだと、最初のハングで
+# 残りのケースを全部失う。実際、一番知りたい「モデル切り替え」の結果が
+# 取れずに終わった。
+#
+# そこで 1 ケース 1 プロセスに分ける。どれかが死んでも他は測れる。
+# 解放はメインスレッドで行う。VRCT で解放が走るのもそちら側であり、
+# 「別スレッドから解放したのが原因では」という疑いも同時に消せる。
 
-def _releaseInThread(label: str, box: list, budget: float = 60.0) -> bool:
-    """box が持つ最後の参照を落とし、デストラクタが返るまでを測る。
-
-    返ってこない実績があるので、必ず別スレッドで落とす。daemon なので
-    返らなくてもこのツール自体は先に進める。
-    """
-    if not box:
-        result("--", f"release {label}", "nothing to release")
-        return True
-    done = threading.Event()
-    errors: list[str] = []
-
-    def drop() -> None:
-        try:
-            box.clear()  # 最後の参照。ここでデストラクタが走る
-            gc.collect()
-        except Exception as exc:
-            errors.append(redact(f"{type(exc).__name__}: {exc}"))
-        finally:
-            done.set()
-
-    t0 = time.perf_counter()
-    threading.Thread(target=drop, daemon=True).start()
-    finished = done.wait(budget)
-    elapsed = time.perf_counter() - t0
-    if not finished:
-        result("FAIL", f"release {label}", f"did not return within {budget:.0f}s -- HANG")
-        return False
-    if errors:
-        result("WARN", f"release {label}", "; ".join(errors))
-        return False
-    result("OK", f"release {label}", f"{elapsed:.2f}s")
-    return True
+# 知りたい順。上から測る。途中で環境ごと壊れても上位の答えは残る。
+_RELEASE_CASES = (
+    ("switch", "the old GPU model, with a new one already loaded",
+     "This is what VRCT does when you change the model in settings."),
+    ("last", "the only GPU model, with nothing else loaded",
+     "This is what VRCT does when you close it."),
+    ("translator", "the GPU translator",
+     "Same question for the translation model."),
+    ("cpu", "a CPU model",
+     "Known to hang here on 2026-09-21. Tells us whether this is GPU-specific."),
+)
 
 
-def stage_d(model_id: str, c_info: dict, f_info: dict) -> dict:
+def _runReleaseCase(case: str, model_id: str, budget: float = 180.0) -> dict:
+    """子プロセスを 1 つ起動して 1 ケースだけ測る。"""
+    if getattr(sys, "frozen", False):
+        command = [sys.executable]
+    else:
+        command = [sys.executable, os.path.abspath(__file__)]
+    command += ["--release-case", case, "--model", model_id]
+    started = time.perf_counter()
+    try:
+        finished = subprocess.run(command, capture_output=True, text=True,
+                                  timeout=budget)
+    except subprocess.TimeoutExpired:
+        return {"outcome": "hang", "seconds": budget}
+    except Exception as exc:
+        return {"outcome": "error", "detail": redact(f"{type(exc).__name__}: {exc}")}
+
+    elapsed = time.perf_counter() - started
+    for line in (finished.stdout or "").splitlines():
+        if line.startswith("RELEASED "):
+            return {"outcome": "ok", "seconds": float(line.split()[1])}
+        if line.startswith("SKIPPED "):
+            return {"outcome": "skipped", "detail": line[8:]}
+        if line.startswith("FAILED "):
+            return {"outcome": "failed", "detail": redact(line[7:])}
+    # 解放を始めたのに RELEASED が出ていない = 解放の途中で落ちた
+    tail = (finished.stderr or "").strip().splitlines()
+    return {"outcome": "died", "code": finished.returncode,
+            "seconds": elapsed,
+            "detail": redact(tail[-1]) if tail else ""}
+
+
+def stage_d(model_id: str) -> dict:
     section("Stage D: releasing models")
-    log("       On 2026-09-21 this is where an RX 7900 XTX stopped responding,")
-    log("       after every measurement had already succeeded.")
-    log("       It matters because VRCT rebuilds the transcriber whenever the")
-    log("       model or the device changes, which releases the old model. If")
-    log("       that does not return, changing a setting freezes the app.")
-    log("       Every release below runs in its own thread with a timeout, so")
-    log("       this stage cannot hang the tool itself.")
+    log("       On 2026-09-21 an RX 7900 XTX stopped responding here, after")
+    log("       every measurement had already succeeded. This matters because")
+    log("       VRCT releases the old model whenever you change the model or")
+    log("       the device in settings -- so if that does not come back,")
+    log("       changing a setting would freeze the app.")
+    log()
+    log("       Each case below runs in its own short-lived process, so one")
+    log("       hang cannot cost us the others. This takes a few minutes and")
+    log("       is mostly silent -- that is expected.")
     info: dict = {}
 
-    # CPU から。GPU 固有の問題なのかどうかが最初の切り分け。
-    log()
-    log("-- CPU models (is this specific to the GPU?) --")
-    info["cpu_whisper"] = _releaseInThread("the CPU speech model", c_info.get("cpu_box", []))
-    info["cpu_translator"] = _releaseInThread("the CPU translator", f_info.get("cpu_box", []))
-
-    # VRCT の実際の手順: 新しいモデルを載せてから、古い方を落とす。
-    log()
-    log("-- the sequence VRCT actually performs when you change the model --")
-    second: list = []
-    try:
-        from faster_whisper import WhisperModel
-        t0 = time.perf_counter()
-        second.append(WhisperModel(model_id, device="cuda", device_index=0,
-                                   compute_type="float16"))
-        result("OK", "loaded a second speech model on the GPU",
-               f"{time.perf_counter() - t0:.1f}s")
-    except Exception as exc:
-        result("WARN", "could not load a second model",
-               redact(f"{type(exc).__name__}: {exc}"))
-    info["switch"] = _releaseInThread(
-        "the first GPU speech model, while the second is loaded",
-        c_info.get("gpu_box", []))
-
-    # 最後の1つを落とす。ここだけが駄目なら、影響はアプリ終了時に限られる。
-    log()
-    log("-- releasing the rest --")
-    info["translator"] = _releaseInThread("the GPU translator", f_info.get("gpu_box", []))
-    info["last"] = _releaseInThread("the last GPU speech model", second)
+    for case, what, why in _RELEASE_CASES:
+        log()
+        log(f"-- releasing {what} --")
+        log(f"       {why}")
+        outcome = _runReleaseCase(case, model_id)
+        info[case] = outcome
+        if outcome["outcome"] == "ok":
+            result("OK", f"released {what}", f"{outcome['seconds']:.2f}s")
+        elif outcome["outcome"] == "hang":
+            result("FAIL", f"releasing {what}",
+                   f"did not return within {outcome['seconds']:.0f}s -- HANG")
+        elif outcome["outcome"] == "died":
+            result("FAIL", f"releasing {what}",
+                   f"the process died during the release (exit {outcome['code']})")
+            if outcome.get("detail"):
+                log(f"       last thing it printed: {outcome['detail']}")
+        elif outcome["outcome"] == "skipped":
+            result("--", f"releasing {what}", outcome.get("detail", ""))
+        else:
+            result("WARN", f"releasing {what}", outcome.get("detail", ""))
 
     log()
-    if info.get("switch") and info.get("last"):
-        result("OK", "conclusion", "releasing models returns -- no problem here")
-    elif info.get("switch") and not info.get("last"):
-        result("WARN", "conclusion", "only the very last release hangs")
-        log("       That would affect shutting VRCT down, not changing settings.")
-    else:
-        result("FAIL", "conclusion", "releasing a model hangs")
-        log("       This is the important result. It means VRCT has to avoid")
-        log("       releasing models, or release them with a timeout.")
+    switch = info.get("switch", {}).get("outcome")
+    last = info.get("last", {}).get("outcome")
+    if switch == "ok" and last == "ok":
+        result("OK", "conclusion", "releasing models comes back -- no problem here")
+    elif switch == "ok":
+        result("WARN", "conclusion", "only the very last release is a problem")
+        log("       That would affect closing VRCT, not changing settings.")
+    elif switch in ("hang", "died"):
+        result("FAIL", "conclusion", "releasing a model that VRCT replaces is a problem")
+        log("       This is the important one: VRCT cannot free a model when the")
+        log("       user changes a setting. It has to keep models alive instead.")
     return info
+
+
+def release_case(case: str, model_id: str) -> int:
+    """子プロセス側。1 ケースだけ測って終わる。
+
+    親がタイムアウトと異常終了を見ているので、ここでは何も守らない。
+    ハングしても落ちても、それがこのプロセスの答えになる。
+
+    解放はメインスレッドで行う (VRCT での実際の解放経路に合わせる)。
+    レポートには触らない -- 親が書いているファイルを切り詰めてしまう。
+    """
+    audio = Path("amd_spike_test_audio.wav")
+    if not audio.exists():
+        _make_test_wav(audio)
+    try:
+        import ctranslate2
+        from faster_whisper import WhisperModel
+    except Exception as exc:
+        print(f"FAILED could not import: {type(exc).__name__}: {exc}", flush=True)
+        return 1
+
+    def load_gpu():
+        model = WhisperModel(model_id, device="cuda", device_index=0,
+                             compute_type="float16")
+        _transcribe_once(model, audio)  # 使ってから解放する。VRCT と同じ順序
+        return model
+
+    try:
+        if case == "switch":
+            old = load_gpu()
+            new = load_gpu()          # 先に新しい方を載せる = VRCT の手順
+            started = time.perf_counter()
+            del old
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+            _keep_alive.append(new)   # new は解放しない (測定対象ではない)
+        elif case == "last":
+            only = load_gpu()
+            started = time.perf_counter()
+            del only
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+        elif case == "cpu":
+            model = WhisperModel(model_id, device="cpu", compute_type="int8")
+            _transcribe_once(model, audio)
+            started = time.perf_counter()
+            del model
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+        elif case == "translator":
+            from huggingface_hub import snapshot_download
+            model_dir = snapshot_download(_TRANSLATION_REPO)
+            translator = ctranslate2.Translator(
+                str(model_dir), device="cuda", device_index=0,
+                compute_type="float16", inter_threads=1, intra_threads=4)
+            _translateOnce(translator)
+            started = time.perf_counter()
+            del translator
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+        else:
+            print(f"SKIPPED unknown case {case}", flush=True)
+            return 1
+    except Exception as exc:
+        print(f"FAILED {type(exc).__name__}: {exc}", flush=True)
+        return 1
+
+    # 解放は測り終えた。残りの後片付けで詰まると結果が濁るので即抜ける。
+    sys.stdout.flush()
+    os._exit(0)
+
 
 
 # ----------------------------------------------------------------------------
@@ -1191,8 +1275,11 @@ def main() -> int:
     _setup_console()
     parser = argparse.ArgumentParser(
         description="VRCT: check whether AMD GPU (ROCm) inference works")
-    parser.add_argument("--stage", choices=["a", "ab", "abc"], default="abc",
-                        help="how far to go (default: abc)")
+    parser.add_argument("--stage", choices=["a", "ab", "abc", "d"], default="abc",
+                        help="how far to go (default: abc). Use 'd' to run only "
+                             "the release checks, which is quick")
+    parser.add_argument("--release-case", default=None,
+                        help=argparse.SUPPRESS)  # 親が子プロセスを起こすための内部用
     parser.add_argument("--model", default="deepdml/faster-whisper-large-v3-turbo-ct2",
                         help="model for Stage C. For a quick first pass use "
                              "Systran/faster-whisper-tiny")
@@ -1203,6 +1290,10 @@ def main() -> int:
                         help="how many timed runs (default: 3)")
     args = parser.parse_args()
 
+    # 子プロセス経路。レポートは開かない (親が書いているファイルを潰す)。
+    if args.release_case:
+        return release_case(args.release_case, args.model)
+
     _openReport()
     _startHeartbeat()
     log("VRCT -- AMD GPU check (issue #88)")
@@ -1211,17 +1302,21 @@ def main() -> int:
     log("The report is written as it goes, so nothing is lost if this stops early.")
 
     a_info = stage_a()
-    if not _stage_failed and args.stage in ("ab", "abc"):
+    if not _stage_failed and args.stage in ("ab", "abc", "d"):
         stage_b(a_info)
+    if not _stage_failed and args.stage == "d":
+        # 解放だけを見る早い経路。3 回目の実行でここに到達できずに
+        # 終わったので、測り直しを短時間で頼めるようにしてある。
+        stage_d(args.model)
     if not _stage_failed and args.stage == "abc":
         c_info = stage_c(args.model, args.audio, args.runs)
         if not _stage_failed:
             audio = args.audio or Path("amd_spike_test_audio.wav")
             stage_e(audio, a_info)
-            f_info = stage_f(args.runs, c_info.get("gpu_box", []), audio)
+            stage_f(args.runs, c_info.get("gpu_box", []), audio)
             # Stage D は最後。解放がハングすると以降の GPU 作業が当てに
             # ならなくなるので、測り終えてから触る。
-            stage_d(args.model, c_info, f_info)
+            stage_d(args.model)
 
     section("Summary")
     if _stage_failed:
