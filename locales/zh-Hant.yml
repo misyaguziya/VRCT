@@ -125,7 +125,7 @@ config_page:
         hotkeys: "快捷鍵"
         advanced_settings: "進階設定"
         updater: "更新"
-        ocr: "OCR"
+        ocr: "聊天讀取"
 
     device:
         check_volume: "音量檢查"
@@ -349,26 +349,26 @@ config_page:
             aptabase_privacy_policy_label:
 
     ocr:
-        section_title: "VRChat 聊天 OCR"
-        section_desc: "辨識畫面上顯示的 VRChat 聊天氣泡文字，並透過現有的翻譯流程處理。結果會顯示在主要訊息記錄和 SteamVR 疊加層中，不會傳送到 VRChat 的 OSC 聊天框。"
+        section_title: "VRChat 聊天讀取"
+        section_desc: "讀取畫面上顯示的 VRChat 聊天氣泡文字，並透過現有的翻譯流程處理。結果會顯示在主要訊息記錄和 SteamVR 疊加層中，不會傳送到 VRChat 的 OSC 聊天框。"
         capture_target: "擷取對象"
         language: "語言"
         performance: "效能"
         enable_ocr_capture:
-            label: "啟用 VRChat 聊天 OCR"
+            label: "啟用 VRChat 聊天讀取"
             desc: "開始背景工作，擷取 VRChat 視窗(SteamVR 執行時為頭戴裝置鏡像畫面)並翻譯偵測到的聊天氣泡。"
         window_title:
             label: "視窗名稱"
             desc: "與可見視窗標題的部分相符(不區分大小寫)。如果你使用的用戶端視窗標題不是「VRChat」(例如修改版啟動器)，請變更此項。"
         source_language:
-            label: "OCR 辨識語言"
-            desc: "擷取氣泡所使用的語言。「auto」以單一模型自動辨識日文、英文、中文以及拉丁字母系語言。諺文、西里爾字母、泰文、阿拉伯文、天城文需要另外的模型，請選擇對應的文字體系。在 OCR 執行中變更也會立即切換。阿拉伯文目前精度較低。"
+            label: "讀取語言"
+            desc: "擷取氣泡所使用的語言。「auto」以單一模型自動辨識日文、英文、中文以及拉丁字母系語言。諺文、西里爾字母、泰文、阿拉伯文、天城文需要另外的模型，請選擇對應的文字體系。在執行中變更也會立即切換。阿拉伯文目前精度較低。"
         poll_interval_ms:
             label: "擷取間隔 (毫秒)"
-            desc: "OCR 迴圈擷取新影格的頻率。數值越低反應越快，但 CPU/GPU 負載越高。預設值：750。"
+            desc: "迴圈擷取新影格的頻率。數值越低反應越快，但 CPU/GPU 負載越高。預設值：750。"
         min_confidence:
-            label: "最低 OCR 信心度"
-            desc: "低於此 OCR 信心度分數的文字會被捨棄。調高可減少誤判，調低可捕捉較模糊的氣泡。預設值：0.85。PP-OCR 即使辨識錯誤也會給出較高分數，因此 EasyOCR 時代的 0.55 實際上無法作為過濾。"
+            label: "最低信心度"
+            desc: "低於此信心度分數的文字會被捨棄。調高可減少誤判，調低可捕捉較模糊的氣泡。預設值：0.85。"
         bubble_min_text_length:
             label: "最小文字長度"
             desc: "字元數低於此值的氣泡將被忽略。預設值：2。"
