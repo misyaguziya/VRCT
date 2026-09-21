@@ -1,9 +1,6 @@
 import styles from "./ModalController.module.scss";
-import { useI18n } from "@useI18n";
 import { useStore_OpenedQuickSetting } from "@store";
-import { useMainFunction } from "@logics_main";
-import { Vr, VrcMicMuteSyncContainer, Updater } from "@setting_box";
-import { SwitchBoxContainer } from "../../config_page/setting_section/setting_box/_templates/Templates";
+import { Vr, Updater } from "@setting_box";
 
 export const ModalController = () => {
     const { currentOpenedQuickSetting, updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
@@ -22,10 +19,6 @@ const QuickSettingsController = () => {
     const { currentOpenedQuickSetting, updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
 
     switch (currentOpenedQuickSetting.data) {
-        case "foreground":
-            return <ForegroundContainer />;
-        case "vrc_mic_mute_sync":
-            return <VrcMicMuteSyncContainer />;
         case "overlay":
             return <Vr />;
         case "update_software":
@@ -33,17 +26,4 @@ const QuickSettingsController = () => {
         default:
             return null;
     }
-};
-
-const ForegroundContainer = () => {
-    const { t } = useI18n();
-    const { currentForegroundStatus, toggleForeground } = useMainFunction();
-
-    return (
-        <SwitchBoxContainer
-            label={t("main_page.foreground")}
-            variable={currentForegroundStatus}
-            toggleFunction={toggleForeground}
-        />
-    );
 };
