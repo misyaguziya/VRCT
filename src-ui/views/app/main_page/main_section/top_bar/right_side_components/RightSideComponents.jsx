@@ -42,18 +42,14 @@ export const RightSideComponents = () => {
 
 const OpenForegroundQuickSetting = () => {
     const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-    const { currentForegroundStatus } = useMainFunction();
-
-    const onClickFunction = () => {
-        updateOpenedQuickSetting("foreground");
-    };
+    const { currentForegroundStatus, toggleForeground } = useMainFunction();
 
     return (
         <OpenQuickSettingButton
             label={t("main_page.foreground")}
             variable={currentForegroundStatus.data}
-            onClickFunction={onClickFunction}
+            state={currentForegroundStatus.state}
+            onClickFunction={toggleForeground}
         />
     );
 };
@@ -83,18 +79,19 @@ const OpenOverlayQuickSetting = () => {
 
 const OpenVrcMicMuteSyncQuickSetting = () => {
     const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const { currentIsOscAvailable } = useIsOscAvailable();
-    const { currentEnableVrcMicMuteSync } = useOthers();
+    const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useOthers();
 
     const onClickFunction = () => {
-        updateOpenedQuickSetting("vrc_mic_mute_sync");
+        if (currentIsOscAvailable.data === false) return;
+        toggleEnableVrcMicMuteSync();
     };
 
     return (
         <OpenQuickSettingButton
             label={t("config_page.others.vrc_mic_mute_sync.label")}
             variable={currentEnableVrcMicMuteSync.data}
+            state={currentEnableVrcMicMuteSync.state}
             is_available={currentIsOscAvailable.data}
             onClickFunction={onClickFunction}
         />
