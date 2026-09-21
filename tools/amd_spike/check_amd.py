@@ -911,10 +911,10 @@ def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
         info["speedup"] = speedup
         if speedup < 1.2:
             log("       -> Not faster. For scale, the same measurement on an")
-            log("          NVIDIA RTX 2080 Ti gives 0.54x -- the GPU loses there")
-            log("          too, because one short sentence is too small a job to")
-            log("          pay back the cost of going to the GPU. So this is")
-            log("          probably NOT an AMD problem. Please report it as-is.")
+            log("          NVIDIA RTX 2080 Ti gives 1.98x, so a result below 1.2x")
+            log("          here would be specific to AMD and is worth knowing.")
+            log("          Note one sentence is a small job, so the gain is never")
+            log("          as dramatic as it is for speech. Please report it as-is.")
     except Exception:
         result("WARN", "CPU comparison failed", "we will go on the GPU numbers alone")
         log(redact(traceback.format_exc()))

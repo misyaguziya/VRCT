@@ -469,6 +469,30 @@ CT2 の `get_supported_compute_types` は iGPU にも float16 を返す。つま
 （リストの位置ではない）ため、1 台弾いても残りのインデックスはずれない。
 この構造が実機で意味を持つことを確認できた。
 
+### 翻訳側の基準値（NVIDIA、比較用）
+
+Stage C は faster-whisper しか見ていない。VRCT は CT2 を**翻訳**にも使っており
+（`ctranslate2.Translator`、全メッセージが通る）、そこは未検証だった。
+Stage F を足すにあたり、RTX 2080 Ti で基準値を取った
+（`jncraton/m2m100_418M-ct2-int8`、1文、`inter_threads=1` / `intra_threads=4`、best-of-5）:
+
+| device / compute_type | 最速 | CPU int8 比 |
+|---|---|---|
+| cpu / int8 | 0.793s | 1.00x |
+| **cuda / float16** | **0.401s** | **1.98x** |
+| cuda / int8_float32 | 0.958s | 0.83x |
+| cuda / float32 | 1.269s | 0.63x |
+| cuda / int8_float16 | 2.476s | **0.32x** |
+
+つまり翻訳も GPU で速くなるが、音声認識の 20.95 倍とは桁が違う（1文は小さい仕事）。
+AMD 側がこの 1.98x を大きく下回るなら AMD 固有の問題と言える。
+
+**副産物（AMD とは独立の既存問題）**: `getBestComputeType` の RTX 向け優先順位は
+`int8_bfloat16 → int8_float16 → ...` なので、2080 Ti では **`int8_float16` が選ばれる**。
+上表のとおりそれは `float16` の **6 倍遅く**、CPU よりも遅い。
+AMD 側は `_AMD_COMPUTE_TYPES = ("float16", "float32")` で float16 を先に返すため、
+この罠を偶然踏まずに済んでいる。**AMD 対応とは別件として切り出す。**
+
 ### ROCm 版はモデルの解放から帰ってこない（新規 R10）
 
 上記の計測を全部終えた後、**プロセスが終了しない**。最後の出力行から 5 分以上、
