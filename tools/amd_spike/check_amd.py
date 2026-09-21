@@ -203,6 +203,33 @@ def _bundledGfxTargets() -> set:
     return targets
 
 
+def _vramFreeGiB() -> float:
+    """既定デバイスの空き VRAM (GiB)。取れなければ 0.0。
+
+    「モデルを解放しない」という対策を採った場合、VRAM をどれだけ
+    食い続けるのかが実装可否を決めるので、数字で出せるようにしておく。
+    """
+    for name in _HIP_RUNTIME_NAMES:
+        try:
+            hip = ctypes.CDLL(name)
+        except OSError:
+            continue
+        try:
+            # 先に HIP を起こしておく。モデルを載せる前に呼ぶと未初期化で
+            # 失敗し、黙って 0.0 が返って「VRAM を食っていない」という
+            # 誤った読み方をされうる。
+            hip.hipInit(0)
+            hip.hipSetDevice(0)
+            free_bytes, total_bytes = ctypes.c_size_t(), ctypes.c_size_t()
+            if hip.hipMemGetInfo(ctypes.byref(free_bytes),
+                                 ctypes.byref(total_bytes)) == 0:
+                return free_bytes.value / 2 ** 30
+        except Exception:
+            pass
+        break
+    return 0.0
+
+
 def _gcnArchName(hip: ctypes.CDLL, device_index: int) -> str:
     """デバイスの gfx 名を取る。compute capability では判別できないため。
 
@@ -1244,8 +1271,20 @@ def run_stage_child(stage: str, args) -> int:
 
 # 知りたい順。上から測る。途中で環境ごと壊れても上位の答えは残る。
 _RELEASE_CASES = (
+    # まず問題そのものを測る
     ("switch", "the old GPU model, with a new one already loaded",
      "This is what VRCT does when you change the model in settings."),
+    # 続けて、問題があった場合に VRCT 側で採る手が実際に成立するかを測る。
+    # 「壊れている」ことだけ分かっても直し方が分からないと次に進めないため。
+    ("keepalive", "nothing -- keep both models instead (possible fix A)",
+     "If releasing is impossible, VRCT would keep models and reuse them. "
+     "This checks that an old model still works after a new one is loaded, "
+     "and what that costs in VRAM."),
+    ("abandon", "the old model in the background, without waiting (possible fix B)",
+     "The other option is to hand the release to a thread and carry on. "
+     "This checks whether transcription keeps working while that happens -- "
+     "and whether the process survives it at all."),
+    # 残りは影響範囲の切り分け
     ("last", "the only GPU model, with nothing else loaded",
      "This is what VRCT does when you close it."),
     ("translator", "the GPU translator",
@@ -1271,6 +1310,8 @@ def _runReleaseCase(case: str, model_id: str, budget: float = 180.0) -> dict:
     for line in (finished.stdout or "").splitlines():
         if line.startswith("RELEASED "):
             return {"outcome": "ok", "seconds": float(line.split()[1])}
+        if line.startswith("PASSED "):
+            return {"outcome": "ok", "detail": redact(line[7:])}
         if line.startswith("SKIPPED "):
             return {"outcome": "skipped", "detail": line[8:]}
         if line.startswith("FAILED "):
@@ -1302,7 +1343,10 @@ def stage_d(model_id: str) -> dict:
         outcome = _runReleaseCase(case, model_id)
         info[case] = outcome
         if outcome["outcome"] == "ok":
-            result("OK", f"released {what}", f"{outcome['seconds']:.2f}s")
+            if "seconds" in outcome:
+                result("OK", f"released {what}", f"{outcome['seconds']:.2f}s")
+            else:
+                result("OK", what, outcome.get("detail", ""))
         elif outcome["outcome"] == "hang":
             result("FAIL", f"releasing {what}",
                    f"did not return within {outcome['seconds']:.0f}s -- HANG")
@@ -1327,7 +1371,29 @@ def stage_d(model_id: str) -> dict:
     elif switch in ("hang", "died"):
         result("FAIL", "conclusion", "releasing a model that VRCT replaces is a problem")
         log("       This is the important one: VRCT cannot free a model when the")
-        log("       user changes a setting. It has to keep models alive instead.")
+        log("       user changes a setting. It needs one of the two fixes below.")
+
+    # 対策がどちらも駄目なら、それが一番重い結論になる。
+    keepalive = info.get("keepalive", {}).get("outcome")
+    abandon = info.get("abandon", {}).get("outcome")
+    if switch in ("hang", "died"):
+        log()
+        if keepalive == "ok":
+            result("OK", "fix A is available",
+                   "keeping models instead of freeing them works")
+        else:
+            result("FAIL", "fix A is not available",
+                   "keeping both models did not work either")
+        if abandon == "ok":
+            result("OK", "fix B is available",
+                   "freeing in the background is survivable")
+        else:
+            result("FAIL", "fix B is not available",
+                   "the process does not survive a background release")
+        if keepalive != "ok" and abandon != "ok":
+            log()
+            log("       Neither workaround survives. That is the most important")
+            log("       line in this whole report -- please make sure we see it.")
     return info
 
 
@@ -1371,6 +1437,55 @@ def release_case(case: str, model_id: str) -> int:
             del only
             gc.collect()
             print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+        elif case == "keepalive":
+            # 対策案A: 解放しない。古いモデルを抱えたまま新しいのを載せ、
+            # そのあと**両方**が使えるかを確かめる。VRCT が「使い回す」
+            # 実装に切り替えられるかどうかがこれで決まる。
+            free_start = _vramFreeGiB()
+            first = load_gpu()
+            free_after_first = _vramFreeGiB()
+            second = load_gpu()
+            free_after_second = _vramFreeGiB()
+            # 新しいのを載せた後で古い方がまだ動くか = 使い回せるか
+            _transcribe_once(first, audio)
+            _transcribe_once(second, audio)
+            if free_start > 0:
+                vram = (f"; VRAM free {free_start:.1f} -> {free_after_first:.1f}"
+                        f" -> {free_after_second:.1f} GiB"
+                        f" (about {free_start - free_after_first:.1f} GiB per model)")
+            else:
+                vram = "; could not read the VRAM figures"
+            print("PASSED both models still work with neither released" + vram,
+                  flush=True)
+            _keep_alive.extend([first, second])
+
+        elif case == "abandon":
+            # 対策案B: 解放を別スレッドに投げて待たない。
+            # 3 回目の実行では、ハングしたスレッドを抱えたまま先へ進んだ
+            # 直後にプロセスが落ちている。それが再現するなら案B は使えない。
+            old = load_gpu()
+            new = load_gpu()
+            box = [old]
+            del old
+
+            def drop() -> None:
+                box.clear()
+                gc.collect()
+
+            threading.Thread(target=drop, daemon=True).start()
+            # 解放の完了を待たずに推論を続ける。VRCT が案B を採ったときに
+            # 実際に起きることそのもの。ここで落ちるなら案B は不成立。
+            started = time.perf_counter()
+            done = 0
+            while time.perf_counter() - started < 10.0:
+                _transcribe_once(new, audio)
+                done += 1
+            freed = "finished" if not box else "still running"
+            print(f"PASSED kept transcribing for 10s ({done} runs) while the old "
+                  f"model was being freed in the background; "
+                  f"the release itself {freed}", flush=True)
+            _keep_alive.append(new)
+
         elif case == "cpu":
             model = WhisperModel(model_id, device="cpu", compute_type="int8")
             _transcribe_once(model, audio)
