@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import gc
 import glob
+import json
 import os
 import platform
 import struct
@@ -32,9 +34,9 @@ from pathlib import Path
 
 REPORT_PATH = Path("amd_spike_report.txt")
 
-_lines: list[str] = []
+_report = None  # 逐次書き出し用のハンドル。_openReport() 参照
 _stage_failed = False
-# 解放するとハングするモデルの置き場。理由は stage_c の末尾を参照。
+# 解放するとハングしうるモデルの置き場。理由は Stage D を参照。
 _keep_alive: list = []
 
 
@@ -79,9 +81,30 @@ def _setup_console() -> None:
             pass
 
 
+def _openReport() -> None:
+    """レポートを1行ずつ書き出す。
+
+    以前は最後にまとめて書いていたが、ROCm はモデルの解放から帰ってこない
+    ことがあり (Stage D)、書き出しに到達できずに計測結果を丸ごと失った。
+    1行ずつ flush しておけば、どこでハングしてもそこまでは残る。
+    """
+    global _report
+    try:
+        _report = open(REPORT_PATH, "w", encoding="utf-8")
+    except Exception:
+        _report = None
+
+
 def log(text: str = "") -> None:
     print(text, flush=True)
-    _lines.append(text)
+    if _report is not None:
+        try:
+            # 1行ずつ伏せ字にする。redact は単純な文字列置換なので、
+            # 全体に掛けたときと結果は変わらない。
+            _report.write(redact(text) + "\n")
+            _report.flush()
+        except Exception:
+            pass
 
 
 def redact(text: str) -> str:
@@ -273,7 +296,16 @@ def stage_a() -> dict:
                 ctypes.byref(major), ctypes.byref(minor), dev)
             cap_text = f"{major.value}.{minor.value}" if cap == 0 else "(failed)"
             gated = major.value in (11, 12)
-            result("INFO", f"device {i}", f"{name} / compute capability {cap_text}")
+            # VRAM 容量。モデル同時ロードの上限を見積もるのに要る
+            # (VRCT は STT と翻訳のモデルを同時に載せる)。
+            vram = ""
+            if hasattr(hip, "hipSetDevice") and hasattr(hip, "hipMemGetInfo"):
+                free_b, total_b = ctypes.c_size_t(), ctypes.c_size_t()
+                if (hip.hipSetDevice(i) == 0 and hip.hipMemGetInfo(
+                        ctypes.byref(free_b), ctypes.byref(total_b)) == 0):
+                    vram = (f" / VRAM {total_b.value / 2 ** 30:.1f} GiB"
+                            f" ({free_b.value / 2 ** 30:.1f} GiB free)")
+            result("INFO", f"device {i}", f"{name} / compute capability {cap_text}{vram}")
             result("INFO", f"device {i} passes the planned architecture gate",
                    "yes" if gated else f"no (major={major.value})")
             devices.append({"index": i, "name": name,
@@ -605,12 +637,380 @@ def stage_c(model_id: str, audio: Path | None, runs: int) -> dict:
         result("WARN", "CPU comparison failed", "we will go on the GPU numbers alone")
         log(redact(traceback.format_exc()))
     finally:
-        # モデルを解放しない。RX 7900 XTX の実機で、ROCm 版はモデルの
-        # デストラクタから帰ってこないことを確認した (2026-09-21)。
-        # ここで参照を落とすと return 時に解放が走り、レポートの書き出しに
-        # 到達できず計測結果が丸ごと失われる (実際に失った)。
-        # 診断ツールなので後片付けは OS に任せる (末尾の os._exit)。
-        _keep_alive.extend(m for m in (gpu_model, cpu_model) if m is not None)
+        # ここでは解放しない。解放そのものが Stage D の測定対象であり、
+        # RX 7900 XTX の実機で帰ってこないことを確認している (2026-09-21)。
+        # 1要素のリストに入れて渡し、Stage D がそこから参照を落とす。
+        info["gpu_box"] = [gpu_model] if gpu_model is not None else []
+        info["cpu_box"] = [cpu_model] if cpu_model is not None else []
+    return info
+
+
+# ----------------------------------------------------------------------------
+# Stage E -- compute type と 2台目の GPU
+# ----------------------------------------------------------------------------
+
+# 小さいモデル。ここで見たいのは「その compute type でカーネルが動くか」で
+# あって精度でも速度でもないので、turbo を何度も載せ直す必要はない。
+_SMALL_MODEL = "Systran/faster-whisper-tiny"
+
+# VRCT が AMD 向けに許可している型 (設計 §3)。実機の結果と突き合わせる。
+_DESIGN_ALLOWS = ("float16", "float32")
+
+
+def stage_e(audio: Path) -> dict:
+    section("Stage E: which compute types actually work")
+    log("       CTranslate2 advertises int8 and bfloat16 on this GPU, but VRCT's")
+    log("       design only allows float16/float32 on AMD. If int8 works, the")
+    log("       design is leaving VRAM and speed on the table. If it does not,")
+    log("       the design is right to be conservative.")
+    log(f"       Uses a small model ({_SMALL_MODEL}), so this is quick.")
+    info: dict = {}
+    import ctranslate2
+    from faster_whisper import WhisperModel
+
+    try:
+        advertised = sorted(ctranslate2.get_supported_compute_types("cuda", 0))
+    except Exception:
+        result("WARN", "could not ask for the supported compute types", "skipping")
+        return info
+
+    log()
+    working: list[str] = []
+    for compute_type in advertised:
+        try:
+            model = WhisperModel(_SMALL_MODEL, device="cuda", device_index=0,
+                                 compute_type=compute_type)
+            # 解放はここでしない (Stage D の測定対象なので)。tiny なので
+            # 全部抱えたままでも VRAM は数百 MB で収まる。
+            _keep_alive.append(model)
+            t0 = time.perf_counter()
+            _transcribe_once(model, audio)
+            elapsed = time.perf_counter() - t0
+            working.append(compute_type)
+            note = "" if compute_type in _DESIGN_ALLOWS else "  <- not in VRCT's list"
+            result("OK", f"compute_type={compute_type}", f"{elapsed:.3f}s{note}")
+        except Exception as exc:
+            result("FAIL", f"compute_type={compute_type}", redact(f"{type(exc).__name__}: {exc}"))
+    info["working_compute_types"] = working
+
+    extra = [t for t in working if t not in _DESIGN_ALLOWS]
+    missing = [t for t in _DESIGN_ALLOWS if t not in working]
+    log()
+    if missing:
+        result("FAIL", "a type VRCT relies on does not work", ", ".join(missing))
+        log("       This one matters -- it means the design picks a type that")
+        log("       the hardware cannot run. Please report it.")
+    if extra:
+        result("INFO", "works but VRCT does not offer it", ", ".join(extra))
+
+    # 2台目 (統合 GPU) に載せたらどうなるか。VRCT はアーキゲートで弾くが、
+    # 「弾かなければ何が起きるのか」を知っておきたい。
+    try:
+        count = ctranslate2.get_cuda_device_count()
+    except Exception:
+        count = 0
+    if count > 1:
+        log()
+        log("-- device 1 (the one VRCT's architecture gate rejects) --")
+        try:
+            model = WhisperModel(_SMALL_MODEL, device="cuda", device_index=1,
+                                 compute_type="float16")
+            _keep_alive.append(model)
+            _transcribe_once(model, audio)
+            result("WARN", "device 1 loaded and ran anyway",
+                   "the gate may be stricter than it needs to be")
+            info["device1"] = "works"
+        except Exception as exc:
+            result("OK", "device 1 refuses to run", redact(f"{type(exc).__name__}: {exc}"))
+            log("       Good -- this is what the architecture gate protects users from.")
+            info["device1"] = redact(f"{type(exc).__name__}: {exc}")
+    return info
+
+
+# ----------------------------------------------------------------------------
+# Stage F -- 翻訳 (ctranslate2.Translator)。VRCT の CT2 利用はこちらが本数
+# ----------------------------------------------------------------------------
+
+# VRCT の既定の翻訳モデル (translation_utils.py の ctranslate2_weights)。
+_TRANSLATION_REPO = "jncraton/m2m100_418M-ct2-int8"
+
+# 語彙に実在するトークンで組んだ英文 ("Hello the world is a big place.")。
+# 本来は transformers の tokenizer が作るが、診断 exe には transformers を
+# 入れていない (check_amd.spec の excludes)。測りたいのは翻訳の中身ではなく
+# 所要時間なので、語彙にあるトークンを並べれば足りる。
+# CPU 版 CTranslate2 で日本語が出ることを確認済み (2026-09-21)。
+_SOURCE_TOKENS = ["__en__", "▁Hello", "▁the", "▁world", "▁is",
+                  "▁a", "▁big", "▁place", ".", "</s>"]
+_TARGET_PREFIX = ["__ja__"]
+
+
+def _checkVocabulary(model_dir: Path) -> bool:
+    """組んだトークンがこのモデルの語彙に実在するかを先に確かめる。
+
+    語彙が違えば <unk> だらけになり、デコードが即終了して
+    「速い」という誤った結果になる。
+    """
+    vocab_file = model_dir / "shared_vocabulary.json"
+    if not vocab_file.exists():
+        return True  # 確認できないだけ。測定は続ける
+    try:
+        vocab = set(json.loads(vocab_file.read_text(encoding="utf-8")))
+    except Exception:
+        return True
+    unknown = [t for t in _SOURCE_TOKENS + _TARGET_PREFIX if t not in vocab]
+    if unknown:
+        result("WARN", "some tokens are not in this model's vocabulary",
+               f"{len(unknown)} of {len(_SOURCE_TOKENS) + 1}")
+        return False
+    result("OK", "the test sentence is valid for this model")
+    return True
+
+
+def _translateOnce(translator) -> float:
+    start = time.perf_counter()
+    translator.translate_batch([_SOURCE_TOKENS], target_prefix=[_TARGET_PREFIX])
+    return time.perf_counter() - start
+
+
+def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
+    section("Stage F: translation (ctranslate2.Translator)")
+    log("       VRCT uses CTranslate2 for translation as well as speech, and")
+    log("       translation runs on every single message. Stage C only covered")
+    log("       faster-whisper, which is a different CTranslate2 class.")
+    log(f"       model: {_TRANSLATION_REPO} (about 500 MB, downloaded once)")
+    info: dict = {}
+    try:
+        import ctranslate2
+        from huggingface_hub import snapshot_download
+    except Exception:
+        result("WARN", "cannot import what this stage needs", "skipping")
+        return info
+
+    try:
+        model_dir = Path(snapshot_download(_TRANSLATION_REPO))
+        result("OK", "translation model downloaded")
+    except Exception as exc:
+        result("FAIL", "downloading the translation model",
+               redact(f"{type(exc).__name__}: {exc}"))
+        log("       Probably a network problem rather than an AMD one.")
+        return info
+    _checkVocabulary(model_dir)
+
+    # --- F1: GPU にロード ---
+    log()
+    log("-- loading the translator on the GPU (float16) --")
+    gpu_box: list = []
+    try:
+        gpu_box.append(ctranslate2.Translator(
+            str(model_dir), device="cuda", device_index=0, compute_type="float16",
+            inter_threads=1, intra_threads=4))
+        result("OK", "translator loaded on GPU")
+    except Exception as exc:
+        result("FAIL", "loading the translator on the GPU", type(exc).__name__)
+        log(redact(traceback.format_exc()))
+        info["gpu_load_error"] = redact(f"{type(exc).__name__}: {exc}")
+        log("       This is a big deal: it would mean AMD users get GPU speech")
+        log("       but CPU translation. Please report it.")
+        return info
+    info["gpu_box"] = gpu_box
+
+    # --- F2: レイテンシ ---
+    log()
+    try:
+        _translateOnce(gpu_box[0])  # ウォームアップ
+        gpu_times = [_translateOnce(gpu_box[0]) for _ in range(runs)]
+        gpu_best = min(gpu_times)
+        info["gpu_times"] = gpu_times
+        result("OK", "GPU", "  ".join(f"{t:.3f}s" for t in gpu_times)
+               + f"  (best {gpu_best:.3f}s)")
+    except Exception as exc:
+        result("FAIL", "translating on the GPU", type(exc).__name__)
+        log(redact(traceback.format_exc()))
+        info["gpu_infer_error"] = redact(f"{type(exc).__name__}: {exc}")
+        return info
+
+    # --- F3: 同時実行。translation_translator.py:144 の RLock が守る経路 ---
+    log()
+    log("-- concurrent use (mic and speaker share one translator in VRCT) --")
+    errors: list[str] = []
+
+    def worker(translator) -> None:
+        try:
+            for _ in range(2):
+                _translateOnce(translator)
+        except Exception as exc:
+            errors.append(redact(f"{type(exc).__name__}: {exc}"))
+
+    threads = [threading.Thread(target=worker, args=(gpu_box[0],), daemon=True)
+               for _ in range(2)]
+    t0 = time.perf_counter()
+    for t in threads:
+        t.start()
+    budget = max(60.0, gpu_best * 20)
+    for t in threads:
+        t.join(timeout=budget)
+    if any(t.is_alive() for t in threads):
+        result("FAIL", "concurrent use", f"did not finish within {budget:.0f}s -- looks like a hang")
+        info["thread_safety"] = "hang"
+    elif errors:
+        result("FAIL", "concurrent use", "; ".join(errors))
+        info["thread_safety"] = errors
+    else:
+        result("OK", "concurrent use",
+               f"2 threads x 2 runs finished in {time.perf_counter() - t0:.1f}s")
+        info["thread_safety"] = "ok"
+
+    # --- F4: 音声認識と翻訳を同時に。VRCT が実際に置かれている状態 ---
+    if whisper_box:
+        log()
+        log("-- speech and translation on the GPU at the same time (what VRCT does) --")
+        both_errors: list[str] = []
+
+        def speech_worker(model) -> None:
+            try:
+                for _ in range(2):
+                    _transcribe_once(model, audio)
+            except Exception as exc:
+                both_errors.append(redact(f"whisper: {type(exc).__name__}: {exc}"))
+
+        pair = [threading.Thread(target=speech_worker, args=(whisper_box[0],), daemon=True),
+                threading.Thread(target=worker, args=(gpu_box[0],), daemon=True)]
+        t0 = time.perf_counter()
+        for t in pair:
+            t.start()
+        for t in pair:
+            t.join(timeout=120.0)
+        if any(t.is_alive() for t in pair):
+            result("FAIL", "both models at once", "did not finish within 120s -- looks like a hang")
+            info["both"] = "hang"
+        elif both_errors or errors:
+            result("FAIL", "both models at once", "; ".join(both_errors + errors))
+            info["both"] = both_errors + errors
+        else:
+            result("OK", "both models at once",
+                   f"finished in {time.perf_counter() - t0:.1f}s")
+            info["both"] = "ok"
+
+    # --- F5: CPU と比べる ---
+    log()
+    log("-- for comparison: CPU (int8, the path VRCT has today) --")
+    cpu_box: list = []
+    try:
+        cpu_box.append(ctranslate2.Translator(
+            str(model_dir), device="cpu", compute_type="int8",
+            inter_threads=1, intra_threads=4))
+        _translateOnce(cpu_box[0])
+        cpu_times = [_translateOnce(cpu_box[0]) for _ in range(runs)]
+        cpu_best = min(cpu_times)
+        info["cpu_times"] = cpu_times
+        info["cpu_box"] = cpu_box
+        result("OK", "CPU (int8)", "  ".join(f"{t:.3f}s" for t in cpu_times)
+               + f"  (best {cpu_best:.3f}s)")
+        speedup = cpu_best / gpu_best if gpu_best > 0 else 0
+        result("INFO", "how much faster the GPU is at translation", f"{speedup:.2f}x")
+        info["speedup"] = speedup
+        if speedup < 1.2:
+            log("       -> Not faster. For scale, the same measurement on an")
+            log("          NVIDIA RTX 2080 Ti gives 0.54x -- the GPU loses there")
+            log("          too, because one short sentence is too small a job to")
+            log("          pay back the cost of going to the GPU. So this is")
+            log("          probably NOT an AMD problem. Please report it as-is.")
+    except Exception:
+        result("WARN", "CPU comparison failed", "we will go on the GPU numbers alone")
+        log(redact(traceback.format_exc()))
+    return info
+
+
+# ----------------------------------------------------------------------------
+# Stage D -- 後片付け。ハングしうるので必ず最後に置く
+# ----------------------------------------------------------------------------
+
+def _releaseInThread(label: str, box: list, budget: float = 60.0) -> bool:
+    """box が持つ最後の参照を落とし、デストラクタが返るまでを測る。
+
+    返ってこない実績があるので、必ず別スレッドで落とす。daemon なので
+    返らなくてもこのツール自体は先に進める。
+    """
+    if not box:
+        result("--", f"release {label}", "nothing to release")
+        return True
+    done = threading.Event()
+    errors: list[str] = []
+
+    def drop() -> None:
+        try:
+            box.clear()  # 最後の参照。ここでデストラクタが走る
+            gc.collect()
+        except Exception as exc:
+            errors.append(redact(f"{type(exc).__name__}: {exc}"))
+        finally:
+            done.set()
+
+    t0 = time.perf_counter()
+    threading.Thread(target=drop, daemon=True).start()
+    finished = done.wait(budget)
+    elapsed = time.perf_counter() - t0
+    if not finished:
+        result("FAIL", f"release {label}", f"did not return within {budget:.0f}s -- HANG")
+        return False
+    if errors:
+        result("WARN", f"release {label}", "; ".join(errors))
+        return False
+    result("OK", f"release {label}", f"{elapsed:.2f}s")
+    return True
+
+
+def stage_d(model_id: str, c_info: dict, f_info: dict) -> dict:
+    section("Stage D: releasing models")
+    log("       On 2026-09-21 this is where an RX 7900 XTX stopped responding,")
+    log("       after every measurement had already succeeded.")
+    log("       It matters because VRCT rebuilds the transcriber whenever the")
+    log("       model or the device changes, which releases the old model. If")
+    log("       that does not return, changing a setting freezes the app.")
+    log("       Every release below runs in its own thread with a timeout, so")
+    log("       this stage cannot hang the tool itself.")
+    info: dict = {}
+
+    # CPU から。GPU 固有の問題なのかどうかが最初の切り分け。
+    log()
+    log("-- CPU models (is this specific to the GPU?) --")
+    info["cpu_whisper"] = _releaseInThread("the CPU speech model", c_info.get("cpu_box", []))
+    info["cpu_translator"] = _releaseInThread("the CPU translator", f_info.get("cpu_box", []))
+
+    # VRCT の実際の手順: 新しいモデルを載せてから、古い方を落とす。
+    log()
+    log("-- the sequence VRCT actually performs when you change the model --")
+    second: list = []
+    try:
+        from faster_whisper import WhisperModel
+        t0 = time.perf_counter()
+        second.append(WhisperModel(model_id, device="cuda", device_index=0,
+                                   compute_type="float16"))
+        result("OK", "loaded a second speech model on the GPU",
+               f"{time.perf_counter() - t0:.1f}s")
+    except Exception as exc:
+        result("WARN", "could not load a second model",
+               redact(f"{type(exc).__name__}: {exc}"))
+    info["switch"] = _releaseInThread(
+        "the first GPU speech model, while the second is loaded",
+        c_info.get("gpu_box", []))
+
+    # 最後の1つを落とす。ここだけが駄目なら、影響はアプリ終了時に限られる。
+    log()
+    log("-- releasing the rest --")
+    info["translator"] = _releaseInThread("the GPU translator", f_info.get("gpu_box", []))
+    info["last"] = _releaseInThread("the last GPU speech model", second)
+
+    log()
+    if info.get("switch") and info.get("last"):
+        result("OK", "conclusion", "releasing models returns -- no problem here")
+    elif info.get("switch") and not info.get("last"):
+        result("WARN", "conclusion", "only the very last release hangs")
+        log("       That would affect shutting VRCT down, not changing settings.")
+    else:
+        result("FAIL", "conclusion", "releasing a model hangs")
+        log("       This is the important result. It means VRCT has to avoid")
+        log("       releasing models, or release them with a timeout.")
     return info
 
 
@@ -634,15 +1034,24 @@ def main() -> int:
                         help="how many timed runs (default: 3)")
     args = parser.parse_args()
 
+    _openReport()
     log("VRCT -- AMD GPU check (issue #88)")
     log(f"started: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     log("This script does not send anything anywhere. It only writes a local file.")
+    log("The report is written as it goes, so nothing is lost if this stops early.")
 
     a_info = stage_a()
     if not _stage_failed and args.stage in ("ab", "abc"):
         stage_b(a_info)
     if not _stage_failed and args.stage == "abc":
-        stage_c(args.model, args.audio, args.runs)
+        c_info = stage_c(args.model, args.audio, args.runs)
+        if not _stage_failed:
+            audio = args.audio or Path("amd_spike_test_audio.wav")
+            stage_e(audio)
+            f_info = stage_f(args.runs, c_info.get("gpu_box", []), audio)
+            # Stage D は最後。解放がハングすると以降の GPU 作業が当てに
+            # ならなくなるので、測り終えてから触る。
+            stage_d(args.model, c_info, f_info)
 
     section("Summary")
     if _stage_failed:
@@ -652,18 +1061,14 @@ def main() -> int:
         log("Everything ran. Please share the report.")
     log()
     # 実パスはコンソールにだけ出す (検証者がファイルを見つける必要がある)。
-    # レポート側は下の write_text で伏せ字になる。
-    log(f"report written to: {REPORT_PATH.resolve()}")
-    log("Please read it before sharing. Paths are redacted, but do check.")
-
-    try:
-        # 書き出す直前に全体へもう一度かける。個別の log() 呼び出しを
-        # 監査するより確実で、後から行を足しても漏れない
-        # (redact は冪等なので二重に掛かっても害はない)。
-        REPORT_PATH.write_text(redact("\n".join(_lines)) + "\n", encoding="utf-8")
-    except Exception:
-        print("Could not write the report file -- please copy the output above.",
-              flush=True)
+    # log() 側は redact を通るので、レポートには伏せ字で載る。
+    print(f"report written to: {REPORT_PATH.resolve()}", flush=True)
+    log("Please read the report before sharing. Paths are redacted, but do check.")
+    if _report is not None:
+        try:
+            _report.close()
+        except Exception:
+            pass
 
     # 凍結 exe をエクスプローラからダブルクリックで起動すると、終了と同時に
     # コンソールが閉じて何も読めない。協力者には「動かなかった」ように見える

@@ -21,6 +21,29 @@ running it would directly unblock the decision.
 **Even a run that fails early is useful.** Several of the things we want to
 know are "does this fail, and how". Please send the report either way.
 
+## If you were given `VRCT-AMD-Check.exe`
+
+Then you can ignore the whole setup section below — everything is already
+inside it, including the ROCm runtime. Unzip it and, in a Command Prompt or
+PowerShell opened in that folder:
+
+```
+VRCT-AMD-Check.exe --model Systran/faster-whisper-tiny
+```
+
+That first pass takes a couple of minutes and downloads about 75 MB. If it
+gets through, run the real thing (this downloads about 2 GB in total and takes
+15–20 minutes, most of it downloading):
+
+```
+VRCT-AMD-Check.exe
+```
+
+Then send us `amd_spike_report.txt`, which appears in the same folder. It is
+written as the run goes, so **even if the tool freezes or you have to close
+the window, the file still holds everything up to that point** — please send
+it anyway.
+
 ## What it does and does not do
 
 - It **does not send anything anywhere.** It writes `amd_spike_report.txt` next
@@ -136,6 +159,36 @@ makes the VRCT change small, so this is worth confirming directly.
 | Two threads using one model at once | VRCT transcribes your microphone and your speakers at the same time, through one model. A previous bug in a different library caused real freezes this way, so we do not want to assume this is safe. |
 | Time per utterance, GPU vs CPU | **This is the deciding question.** VRCT already has a reasonably fast CPU path (`large-v3-turbo-int8`). If the GPU is not meaningfully faster, AMD support is not worth a separate installer edition. A result showing little gain is a genuinely useful answer, not a failed test. |
 
+**Stage E — which precisions actually work** (small model, quick)
+
+CTranslate2 advertises `int8` and `bfloat16` on Radeon cards, but we only plan
+to offer `float16` and `float32` there. This loads a tiny model once per
+advertised precision to find out which of them really run. If `int8` works, we
+are needlessly costing AMD users VRAM and speed; if it does not, we were right
+to be careful. It also tries your *second* GPU if you have one (an integrated
+one in a Ryzen CPU, for instance) — we expect that to fail, and want to see
+how it fails.
+
+**Stage F — translation** (downloads about 500 MB)
+
+Stage C only covers speech recognition. VRCT uses CTranslate2 for
+**translation** as well, through a different class, and translation runs on
+every single message. This checks that it loads and runs on the GPU, times it
+against the CPU, runs two threads against it the way VRCT does, and then runs
+speech and translation at the same time — which is the state VRCT is actually
+in while you use it.
+
+**Stage D — releasing models** (last, on purpose)
+
+On 21 Sep 2026 an RX 7900 XTX passed every measurement above and then stopped
+responding at the very end, while freeing the model. That matters because VRCT
+frees the old model every time you change the model or the device in settings
+— so if it does not come back, changing a setting would freeze the app. This
+stage measures each release with a timeout, so **the tool itself cannot hang
+here**, and tells us which release is the problem.
+
+If this stage reports a hang, that is a result, not a failure of your run.
+
 ## What to send back
 
 Attach or paste `amd_spike_report.txt` into
@@ -198,6 +251,11 @@ issue #88 (AMD GPU 対応) の実機検証を、Radeon を持っている協力�
 | C | float16 でのモデルロード | #2021 の再現確認。**例外の文字列が OOM マーカー確定に必要** (R7) |
 | C | 2 スレッド同時実行 | mic/speaker の 2 経路が同一モデルを叩く。過去に別ライブラリで実機フリーズあり (R9) |
 | C | 1 発話レイテンシの CPU 比 | **これが本題。** 改善しないなら第 3 エディションを作る価値がない (spike 7) |
+| E | 実際に動く compute type | CT2 は AMD に int8/bfloat16 を「対応」と返すが、設計 §3 は float16/float32 しか許していない。保守的すぎるかどうかの確認 |
+| E | 2 台目 (iGPU) にロードしたらどうなるか | アーキゲートが「無かったら何が起きるか」。ゲートの価値の裏付け |
+| F | `ctranslate2.Translator` の GPU 実行 | **Stage C は faster-whisper しか見ていない。** 翻訳は別クラスかつ全メッセージが通る経路 |
+| F | STT と翻訳の同時実行 | VRCT が実使用中に置かれている状態そのもの。VRAM と hipBLAS ハンドルの競合 |
+| D | モデル解放が返るか | 2026-09-21 の 7900 XTX で**ここがハングした**。VRCT はモデル変更のたびに解放する (R10) |
 
 ## 依頼時の注意
 
