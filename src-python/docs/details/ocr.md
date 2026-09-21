@@ -40,6 +40,9 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 - モデルは `src-python/models/ocr/onnx/chatbox_yolov8n.onnx`（約12MB）を同梱。
   `findModelPath()` が凍結時は `_internal/ocr_onnx/`、ソース実行時はパッケージ内を見る。
   最初の `detect()` まで読み込まないので、OCRを使わない起動ではメモリも時間も使わない
+- ライセンス: この .onnx だけはリポジトリの MIT ではなく **AGPL-3.0**（Ultralytics 由来）。
+  同ディレクトリの `LICENSE.txt` / `NOTICE.txt` がそのまま配布物の表記になるので消さない。
+  理由と配布時の手当ては `docs/ocr_model_license.md`
 - 結果は信頼度の降順。`MAX_CANDIDATES_PER_TICK` で上位数件のみOCRに回す
 - 実行時の閾値は `BubbleDetector(confidence=...)`（既定0.15）。val20枚での実測は
   0.15で20/20・余分な候補5、0.25で19/20・余分2、0.5で18/20・余分0。取りこぼしは

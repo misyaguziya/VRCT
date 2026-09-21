@@ -4,6 +4,9 @@
 岩・木目を吹き出しと誤認する)ため、収集したVRChatのスクリーンショットで
 学習した検出モデルに置き換えた。学習手順は docs/ocr_yolo_training.md。
 
+同梱する .onnx はリポジトリの MIT ではなく AGPL-3.0 (Ultralytics 由来)。
+詳細は docs/ocr_model_license.md、表記は onnx/NOTICE.txt。
+
 推論は onnxruntime だけで動く。faster-whisper が Silero VAD 用にすでに
 依存しているので、配布物に追加される依存はモデルファイル1つだけ。
 NMS込みでエクスポートしてあるので、ここでやるのは前処理(letterbox)と

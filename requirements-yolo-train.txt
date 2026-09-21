@@ -3,4 +3,6 @@
 --extra-index-url https://download.pytorch.org/whl/cu128
 torch==2.7.0
 torchvision==0.22.0
+# ultralytics は AGPL-3.0。これで学習した重みも AGPL-3.0 として配布している。
+# 詳細は docs/ocr_model_license.md。
 ultralytics==8.3.203

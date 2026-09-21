@@ -96,6 +96,12 @@ VRCT 透過 [Aptabase](https://aptabase.com) 收集匿名遙測資料以協助�
 
 您可以隨時在應用程式設定中停用遙測。詳情請參閱 [Aptabase 隱私權政策](https://aptabase.com/legal/privacy)。
 
+## 授權條款
+
+VRCT 以 [MIT License](/LICENSE) 發布，但有一項例外：OCR 功能所使用的聊天氣泡偵測模型
+（`src-python/models/ocr/onnx/chatbox_yolov8n.onnx`）是從 Ultralytics YOLOv8 權重微調
+而來，因此採用 **AGPL-3.0**。在其他專案中重複使用前，請先閱讀 [NOTICE.md](/NOTICE.md)。
+
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />

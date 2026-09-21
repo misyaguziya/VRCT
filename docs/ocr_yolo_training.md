@@ -3,6 +3,10 @@
 `tools/ocr_dataset_collector.py` で集めた画像をアノテーションし、YOLOv8の軽量モデル(yolov8n)を
 ファインチューニングする手順。検出したChat領域を切り出して文字起こしに渡す。
 
+できあがるモデルは **AGPL-3.0** になる (Ultralytics 由来)。リポジトリ本体の MIT とは
+別扱いで、配布物にライセンス全文を同梱する必要がある。理由と手当ては
+[docs/ocr_model_license.md](ocr_model_license.md) を参照。
+
 開発マシン専用。学習環境・データセット・学習結果はいずれもリポジトリにコミットしない
 (`.venv-yolo/` `dataset_annotated/` `runs/` は .gitignore 済み)。
 
@@ -125,7 +129,9 @@ ultralyticsがファイルごとcorrupt扱いで黙って捨てる(初回は80�
 `conf=0.05` は必ず付ける。エクスポート時の値がNMSに焼き込まれるので、既定(0.25)のままだと
 実行時に閾値を下げても候補が増えない。実行時の閾値は `BubbleDetector(confidence=...)` で決める。
 
-出力を `src-python/models/ocr/onnx/chatbox_yolov8n.onnx` に置き換える。
+出力を `src-python/models/ocr/onnx/chatbox_yolov8n.onnx` に置き換える。同じディレクトリの
+`LICENSE.txt` (AGPL-3.0 全文) と `NOTICE.txt` は消さないこと。datas がディレクトリごと
+同梱するので、この2ファイルがそのまま配布物のライセンス表記になる。
 `spec/backend.spec` と `spec/backend_cuda.spec` の datas が `ocr_onnx/` として同梱し、
 `findModelPath()` が凍結時は `_internal/ocr_onnx/`、ソース実行時はパッケージ内を見る。
 モデルは12MB程度。Whisperの重みのような実行時ダウンロードにはしない(容量が理由の仕組みなので)。
