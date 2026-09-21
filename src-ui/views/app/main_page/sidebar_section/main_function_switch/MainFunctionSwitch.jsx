@@ -4,11 +4,12 @@ import styles from "./MainFunctionSwitch.module.scss";
 import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
-import ForegroundSvg from "@images/foreground.svg?react";
+import DocumentScannerSvg from "@images/mui_document_scanner.svg?react";
 import {
     useIsMainPageCompactMode,
     useMainFunction,
 } from "@logics_main";
+import { useOcr } from "@logics_configs";
 
 export const MainFunctionSwitch = () => {
     const { t } = useI18n();
@@ -17,8 +18,8 @@ export const MainFunctionSwitch = () => {
         toggleTranslation, currentTranslationStatus,
         toggleTranscriptionSend, currentTranscriptionSendStatus,
         toggleTranscriptionReceive, currentTranscriptionReceiveStatus,
-        toggleForeground, currentForegroundStatus,
     } = useMainFunction();
+    const { currentEnableOcrCapture, toggleEnableOcrCapture } = useOcr();
 
 
     const switch_items = [
@@ -44,11 +45,11 @@ export const MainFunctionSwitch = () => {
             toggleFunction: toggleTranscriptionReceive,
         },
         {
-            switch_id: "foreground",
-            label: t("main_page.foreground"),
-            SvgComponent: ForegroundSvg,
-            currentState: currentForegroundStatus,
-            toggleFunction: toggleForeground,
+            switch_id: "ocr",
+            label: t("main_page.ocr"),
+            SvgComponent: DocumentScannerSvg,
+            currentState: currentEnableOcrCapture,
+            toggleFunction: toggleEnableOcrCapture,
         },
     ];
 

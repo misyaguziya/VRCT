@@ -35,6 +35,7 @@ main_page:
     translation: "번역"
     transcription_send: "음성인식 (마이크)"
     transcription_receive: "음성인식 (스피커)"
+    ocr: "채팅 읽기"
     foreground: "항상 위로"
 
     language_settings: "언어 설정"
