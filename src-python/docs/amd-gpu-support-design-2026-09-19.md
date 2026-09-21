@@ -456,15 +456,33 @@ ROCm wheel を先に入れてから requirements を流すと CPU 版に戻さ�
 | 7 | **大差で通過** — GPU 0.289s / CPU(int8) 6.045s = **20.95 倍**。打ち切り基準 1.2 倍を大きく超える |
 | 8 (R6) | 未実施（RDNA4 の実機が無い） |
 
+2 回目の実行（Stage D/E/F 追加版）でモデルのロード時間も採った:
+
+| | 時間 |
+|---|---|
+| GPU ロード (float16, large-v3-turbo) | **1.9s** |
+| CPU ロード (int8, 同じモデル) | 1.9s |
+| 1 発話 (GPU, best of 3) | 0.289s ← 1 回目と一致 |
+
+**rocBLAS / Tensile の初期化は起動時間の問題にならない。** 同梱している
+gfx ターゲット 7 種を削る動機は**サイズだけ**で、起動の速さは理由にならない。
+1 発話のレイテンシも 1 回目と同値なので、計測は安定している。
+
 ### 統合 GPU が 2 台目として見える。設計はこれを正しく弾いた
 
-| index | 名前 | compute capability | アーキゲート |
-|---|---|---|---|
-| 0 | AMD Radeon RX 7900 XTX | 11.0 | **通す** |
-| 1 | AMD Radeon(TM) Graphics（APU の iGPU） | 10.3 | **弾く** (major=10) |
+| index | 名前 | compute capability | `hipMemGetInfo` | アーキゲート |
+|---|---|---|---|---|
+| 0 | AMD Radeon RX 7900 XTX | 11.0 | 24.0 GiB | **通す** |
+| 1 | AMD Radeon(TM) Graphics（APU の iGPU） | 10.3 | **36.2 GiB** | **弾く** (major=10) |
 
 CT2 の `get_supported_compute_types` は iGPU にも float16 を返す。つまり
 **CT2 は選別しない**ので、`utils.py` のゲートが唯一の防波堤である。
+
+**ゲートが無いと実害が出る形が具体化した（2026-09-21 の 2 回目の実行）**:
+iGPU は共有メモリを見ているため **36.2 GiB** と報告する。dGPU の 24.0 GiB
+より大きい。つまり一覧に両方出すと、ユーザーには「VRAM の大きい方」が
+iGPU に見える。名前（`AMD Radeon(TM) Graphics`）も dGPU と紛らわしい。
+**VRAM 表記を UI に出す場合、この値をそのまま信じさせてはいけない。**
 `getComputeDeviceList` は `device_index` を dict のキーとして明示的に持ち回る
 （リストの位置ではない）ため、1 台弾いても残りのインデックスはずれない。
 この構造が実機で意味を持つことを確認できた。
