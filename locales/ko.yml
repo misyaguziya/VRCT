@@ -125,6 +125,7 @@ config_page:
         hotkeys: "단축키"
         advanced_settings: "고급 설정"
         updater: "업데이트"
+        ocr: "OCR"
 
     device:
         check_volume: "음량 확인"

@@ -125,6 +125,7 @@ config_page:
         hotkeys: "快捷键"
         advanced_settings: "高级设置"
         updater: "更新"
+        ocr: "OCR"
 
     device:
         check_volume: "音量检查"

@@ -125,6 +125,7 @@ config_page:
         hotkeys: "ホットキー"
         advanced_settings: "高度な設定"
         updater: "アップデート"
+        ocr: "OCR"
 
     device:
         check_volume: "音量チェック"
