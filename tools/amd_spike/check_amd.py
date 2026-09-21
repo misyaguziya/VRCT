@@ -24,6 +24,7 @@ import glob
 import json
 import os
 import platform
+import re
 import struct
 import sys
 import threading
@@ -178,6 +179,56 @@ _HIP_RUNTIME_NAMES = ("amdhip64_7.dll", "amdhip64_6.dll", "amdhip64.dll")
 # #2016: wheel が ROCm 7.2 ビルドだと hipblas.dll を、7.1.1 以前だと
 # libhipblas.dll を探す。どちらがあるかで回避策の要否が決まる。
 _HIPBLAS_NAMES = ("hipblas.dll", "libhipblas.dll")
+
+
+def _bundledGfxTargets() -> set:
+    """同梱した rocBLAS Tensile カーネルが対応している gfx を集める。
+
+    rocBLAS は自分の arch 用の Tensile ライブラリが無いと**例外ではなく
+    abort() する**。Python の try/except では捕まえられず、プロセスごと
+    即死する (2026-09-21、gfx1036 の iGPU で実測)。
+    したがって「載せる前に対応表を見る」以外に防ぎようがない。
+    """
+    root = getattr(sys, "_MEIPASS", None) or os.path.dirname(os.path.abspath(__file__))
+    library = os.path.join(root, "rocblas", "library")
+    targets = set()
+    try:
+        for name in os.listdir(library):
+            found = re.search(r"gfx[0-9a-f]+", name)
+            if found:
+                targets.add(found.group())
+    except OSError:
+        pass
+    return targets
+
+
+def _gcnArchName(hip: ctypes.CDLL, device_index: int) -> str:
+    """デバイスの gfx 名を取る。compute capability では判別できないため。
+
+    hipDeviceComputeCapability は gfx1036 を 10.3 と返す。末尾の 6 が
+    落ちるので、**gfx1100 と gfx1103 が同じ 11.0 になる**。
+    つまり設計の「major が 11/12 なら通す」ゲートでは、RDNA3 の
+    ノート向け iGPU (gfx1103) を通してしまい、Tensile が無いので abort する。
+
+    hipDeviceProp_t は ROCm のバージョンでレイアウトが変わるので、
+    十分大きいバッファを渡して中の "gfx…" を文字列として拾う。
+    オフセットを決め打ちするより壊れにくい。
+    """
+    # hipDeviceProp_t は ROCm 6 で 2KB 弱。十分な余裕を取る。
+    buffer = ctypes.create_string_buffer(16384)
+    for symbol in ("hipGetDevicePropertiesR0600", "hipGetDeviceProperties"):
+        function = getattr(hip, symbol, None)
+        if function is None:
+            continue
+        try:
+            if function(buffer, ctypes.c_int(device_index)) != 0:
+                continue
+        except Exception:
+            continue
+        found = re.search(rb"gfx[0-9a-f]+", buffer.raw)
+        if found:
+            return found.group().decode("ascii")
+    return ""
 
 
 def _loaded_module_path(handle: ctypes.CDLL) -> str:
@@ -355,6 +406,12 @@ def stage_a() -> dict:
             return info
         result("OK", "hipInit(0)")
 
+        bundled = _bundledGfxTargets()
+        if bundled:
+            result("INFO", "GPU kernels bundled with this tool",
+                   ", ".join(sorted(bundled)))
+        info["bundled_gfx"] = sorted(bundled)
+
         count = ctypes.c_int()
         hip.hipGetDeviceCount(ctypes.byref(count))
         result("INFO", "hipGetDeviceCount", str(count.value))
@@ -383,10 +440,23 @@ def stage_a() -> dict:
                         ctypes.byref(free_b), ctypes.byref(total_b)) == 0):
                     vram = (f" / VRAM {total_b.value / 2 ** 30:.1f} GiB"
                             f" ({free_b.value / 2 ** 30:.1f} GiB free)")
+            arch = _gcnArchName(hip, i)
             result("INFO", f"device {i}", f"{name} / compute capability {cap_text}{vram}")
+            result("INFO", f"device {i} architecture", arch or "(could not read it)")
             result("INFO", f"device {i} passes the planned architecture gate",
                    "yes" if gated else f"no (major={major.value})")
-            devices.append({"index": i, "name": name,
+            # ここが本題。ゲートを通っても Tensile が無ければ abort する。
+            if arch and bundled:
+                if arch in bundled:
+                    result("OK", f"device {i} has GPU kernels in this bundle", arch)
+                else:
+                    result("WARN", f"device {i} has NO GPU kernels in this bundle", arch)
+                    log("       Loading a model on this device would not raise an")
+                    log("       error -- rocBLAS calls abort() and the process dies.")
+                    log("       We will not try it. This is exactly what VRCT has to")
+                    log("       avoid, so it is a useful thing to have found.")
+            devices.append({"index": i, "name": name, "arch": arch,
+                            "bundled": arch in bundled if arch else None,
                             "major": major.value, "minor": minor.value})
         info["hip_devices"] = devices
     except Exception:
@@ -738,7 +808,7 @@ _SMALL_MODEL = "Systran/faster-whisper-tiny"
 _DESIGN_ALLOWS = ("float16", "float32")
 
 
-def stage_e(audio: Path) -> dict:
+def stage_e(audio: Path, a_info: dict) -> dict:
     section("Stage E: which compute types actually work")
     log("       CTranslate2 advertises int8 and bfloat16 on this GPU, but VRCT's")
     log("       design only allows float16/float32 on AMD. If int8 works, the")
@@ -793,6 +863,23 @@ def stage_e(audio: Path) -> dict:
     if count > 1:
         log()
         log("-- device 1 (the one VRCT's architecture gate rejects) --")
+        # 2026-09-21: ここで gfx1036 の iGPU に載せたら rocBLAS が abort し、
+        # プロセスごと落ちて Stage F/D に到達できなかった。例外ではないので
+        # try/except では防げない。同梱カーネルの有無を先に見て、無ければ
+        # 載せない。答えはもう分かっているので試す必要もない。
+        device1_arch = ""
+        for device in a_info.get("hip_devices", []):
+            if device.get("index") == 1:
+                device1_arch = device.get("arch") or ""
+        bundled = set(a_info.get("bundled_gfx") or [])
+        if device1_arch and bundled and device1_arch not in bundled:
+            result("--", "not loading anything on device 1",
+                   f"{device1_arch} has no GPU kernels in this bundle")
+            log("       rocBLAS would call abort() and kill this process, which")
+            log("       is what happened on 2026-09-21 and cost us Stage F and D.")
+            log("       Skipping it deliberately -- we already know the answer.")
+            info["device1"] = f"skipped: {device1_arch} not bundled (known to abort)"
+            return info
         try:
             model = WhisperModel(_SMALL_MODEL, device="cuda", device_index=1,
                                  compute_type="float16")
@@ -1130,7 +1217,7 @@ def main() -> int:
         c_info = stage_c(args.model, args.audio, args.runs)
         if not _stage_failed:
             audio = args.audio or Path("amd_spike_test_audio.wav")
-            stage_e(audio)
+            stage_e(audio, a_info)
             f_info = stage_f(args.runs, c_info.get("gpu_box", []), audio)
             # Stage D は最後。解放がハングすると以降の GPU 作業が当てに
             # ならなくなるので、測り終えてから触る。

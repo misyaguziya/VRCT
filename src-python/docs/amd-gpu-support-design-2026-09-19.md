@@ -152,9 +152,12 @@ major 11/12 にちょうど一致し、**それ以外（Ryzen APU の gfx90c=9�
 `hipGetDeviceProperties` の巨大構造体は使わない（3 引数の API で足りる）。
 RDNA4 が駄目だと分かったら `(11,)` に変える 1 行。
 
-> **未検証の前提**: 「gfx1100 → major 11」というマッピングは HIP の仕様から妥当と見ているが
-> 実機で確認していない。spike 項目 2 で確定させる。崩れたら
-> `hipGetDeviceProperties` の `gcnArchName` 文字列に落とす。
+> **この節は 2026-09-21 の実機検証で覆った。§10.6 の「【重大】アーキゲートを
+> compute capability で作ってはいけない」を必ず読むこと。**
+> `hipDeviceComputeCapability` は gfx 名の下 1 桁を落とすため、gfx1100（同梱あり）と
+> gfx1103（同梱なし、Ryzen 7040/8040 系ノートの iGPU）がどちらも 11.0 になる。
+> 同梱カーネルの無い arch に載せると rocBLAS が `abort()` し、例外にならずプロセスが即死する。
+> **判定は `gcnArchName` と同梱 Tensile リストの突き合わせに変更する。Phase 3 の前に必須。**
 
 ---
 
@@ -448,7 +451,7 @@ ROCm wheel を先に入れてから requirements を流すと CPU 版に戻さ�
 | spike | 結果 |
 |---|---|
 | 1 (R1) | **OK** — `get_cuda_device_count()` = 2、`get_supported_compute_types("cuda", i)` が両デバイスに応答 |
-| 2 (R3) | **OK** — 5 シンボルすべて実在。**gfx1100 → compute capability 11.0**。§3 のアーキゲートはそのまま使える |
+| 2 (R3) | 5 シンボルすべて実在。gfx1100 → compute capability 11.0。**ただし 2 回目の実行でこの判定材料では不十分と判明した（下記「【重大】」）。R3 は再開。** |
 | 3 (R2) | **不要になった** — ROCm 7.2 の wheel は `hipblas.dll` を要求し、同梱物にそれがある。`libhipblas.dll` は無い。自前ビルドは回避できた |
 | 4/5 (R4/R5) | **同梱で自己完結** — HIP SDK 無しの機で `amdhip64_7.dll` / `hipblas.dll` が `_internal/` からロードされた |
 | 5 (R7) | **採取不要** — float16 でロード・推論とも成功。OOM 文字列は出ていない |
@@ -511,6 +514,50 @@ AMD 側がこの 1.98x を大きく下回るなら AMD 固有の問題と言え�
 AMD 側は `_AMD_COMPUTE_TYPES = ("float16", "float32")` で float16 を先に返すため、
 この罠を偶然踏まずに済んでいる。**AMD 対応とは別件として切り出す。**
 
+### 【重大】アーキゲートを compute capability で作ってはいけない（R3 再開）
+
+2026-09-21 の 2 回目の実行で、iGPU（`gfx1036`）にモデルを載せたところ
+**プロセスが即死した**。例外ではない:
+
+```
+rocBLAS error: Cannot read ...\_internal\rocblas\library/TensileLibrary.dat:
+No such file or directory for GPU arch : gfx1036
+```
+
+rocBLAS は自分の arch 用の Tensile カーネルが無いと **`abort()` する**。
+Python の `try/except` では捕まえられず、traceback も残らず、
+コンソールごと落ちる。検証ツールはこれで Stage F と D に到達できなかった。
+
+**`hipDeviceComputeCapability` ではこれを防げない。** gfx 名の下 1 桁が
+落ちるためである:
+
+| gfx | compute capability | 同梱カーネル |
+|---|---|---|
+| gfx1036（Raphael iGPU） | 10.3 | 無し |
+| gfx1100（RX 7900 XTX） | **11.0** | 有り |
+| **gfx1103（Phoenix APU の iGPU、RDNA3）** | **11.0** | **無し** |
+
+つまり `major in (11, 12)` というゲートは **gfx1103 を通してしまう**。
+Ryzen 7040/8040 系ノートの内蔵 GPU がこれに該当し、選ばれた瞬間に
+**VRCT がクラッシュする**（エラーダイアログもログも出ない）。
+同梱しているのは `gfx1100/1101/1102/1150/1151/1200/1201` の 7 種だけなので、
+将来の新 arch（gfx1202 など）も同じ経路で即死する。
+
+**対処（Phase 3 の前に必須）**: ゲートの判定材料を compute capability から
+**`gcnArchName` の文字列**へ変える。そのうえで「major が 11/12 か」ではなく
+**「同梱している Tensile カーネルにその arch があるか」**で判定する。
+同梱リスト（`tools/rocm_bundle.py` の `AMD_GFX_TARGETS`）が唯一の真実になる。
+
+`gcnArchName` は `hipGetDeviceProperties` で取れるが、`hipDeviceProp_t` の
+レイアウトが ROCm のバージョンで変わる。検証ツールでは十分大きいバッファを
+渡して中の `gfx…` を文字列検索する方法を採った（オフセット決め打ちより
+壊れにくい）。実機で通ることを確認してから `utils.py` に移す。
+
+これは **R3 の「無ければ `gcnArchName` に落とす」という代替案が、
+代替ではなく必須だった**ということである。1 回目の実行で「compute
+capability 11.0 が取れた」ことをもって R3 を解決済みとしたのは誤りだった。
+gfx1100 しか繋がっていなかったので区別が付かなかった。
+
 ### ROCm 版はモデルの解放から帰ってこない（新規 R10）
 
 上記の計測を全部終えた後、**プロセスが終了しない**。最後の出力行から 5 分以上、
@@ -540,14 +587,15 @@ Phase 3 に入る前に切り分けが必要:
 
 ## 11. リスクと未決事項
 
-**R1〜R5・R7・R9 は 2026-09-21 の RX 7900 XTX 実機検証で解消した（§10.6）。
-残るのは R6 / R8 と、新たに出た R10。**
+**R1・R2・R4・R5・R7・R9 は 2026-09-21 の RX 7900 XTX 実機検証で解消した（§10.6）。
+残るのは R6 / R8、新たに出た R10、そして**再開した R3**（§10.6 の
+「アーキゲートを compute capability で作ってはいけない」）。**
 
 | # | 未決事項 | 影響 | ブロック箇所 |
 |---|---|---|---|
 | R1 | ROCm CT2 で `get_cuda_device_count` / `get_supported_compute_types("cuda", i)` が AMD を返すか | 返さなければ「CT2 が個数、HIP が名前」という設計前提が崩れ、個数も HIP から取る必要 | spike 1。崩れても直す範囲は `_getGpuDeviceNames` 内のみ |
 | R2 | **#2016 の DLL 名回避策が効くか。効かなければ ROCm 7.1 での CT2 自前ビルドを背負う** | 自前ビルドになると PR-5 の取得方法が「ビルド済み wheel を自前ホスト」に変わり CI が 1 段重くなる | spike 3。**Phase 3 に進む最大の前提** |
-| R3 | `hipDeviceComputeCapability` / `hipDeviceGetName` の export 実在、および gfx→major のマッピング | 無ければアーキゲートを `hipGetDeviceProperties` の `gcnArchName` 文字列に落とす | spike 2 |
+| **R3** | **compute capability ではアーキを判別できない（実機で確認）。** gfx1100 と gfx1103 がどちらも 11.0 になり、同梱カーネルの無い arch を通してしまう | **rocBLAS が `abort()` するので VRCT がクラッシュする。例外ではないので捕捉不能。** Ryzen 7040/8040 系ノートの iGPU が該当 | **`gcnArchName` と同梱 Tensile リストの突き合わせへ変更する。Phase 3 の前に必須** |
 | R4 | ROCm 版 CT2 が MIOpen 等の追加 DLL を要求するか（CUDA 版は cuDNN を wheel 同梱、cuBLAS は外） | 同梱リストとサイズが増える | spike。**wheel の中身を見れば実機前でも半分分かる** |
 | R5 | `amdhip64.dll` / `amd_comgr` がドライバ提供か | 同梱 130MB 超の増減。設計は変わらない | spike 4 |
 | R6 | RDNA4 (#2021) の可否 | アーキゲートが `(11,12)` か `(11,)` か。1 行 | spike 8。入手できなければ**保守的に `(11,)` で出す** |
