@@ -191,13 +191,57 @@ def _loaded_module_path(handle: ctypes.CDLL) -> str:
         return "(unknown)"
 
 
+def _windowsVersion() -> str:
+    """Windows 11 を Windows 10 と誤って報告しないようにする。
+
+    platform.platform() はメジャー番号しか見ないので、Windows 11 でも
+    "Windows-10-10.0.26200-SP0" になる (Windows 11 はメジャー 10 のまま
+    ビルド 22000 以降)。協力者の環境を誤って記録すると、後でドライバや
+    WDDM 由来の差を追うときに前提が崩れる。
+
+    ビルド番号で判定し、リビジョン (UBR) と表示バージョン (25H2 など) を
+    レジストリから足す。ドライバ絡みの問題はここまで無いと絞り込めない。
+    """
+    if not hasattr(sys, "getwindowsversion"):
+        return platform.platform()  # Windows 以外。直後の os.name チェックで止まる
+    try:
+        version = sys.getwindowsversion()
+    except Exception:
+        # platform.platform() は内部で同じ API を呼ぶのでここでは使えない。
+        return "unknown (could not read the Windows version)"
+    if (version.major, version.build) >= (10, 22000):
+        name = "Windows 11"
+    else:
+        name = f"Windows {version.major}"
+
+    build = str(version.build)
+    display = ""
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion") as key:
+            try:
+                build = f"{build}.{winreg.QueryValueEx(key, 'UBR')[0]}"
+            except OSError:
+                pass
+            try:
+                display = f", {winreg.QueryValueEx(key, 'DisplayVersion')[0]}"
+            except OSError:
+                pass
+    except Exception:
+        pass
+    return f"{name} (build {build}{display})"
+
+
 def stage_a() -> dict:
     section("Stage A: environment and HIP runtime (no downloads)")
     info: dict = {}
 
-    log(f"OS            : {platform.platform()}")
+    log(f"OS            : {_windowsVersion()}")
     log(f"Python        : {sys.version.split()[0]} ({struct.calcsize('P') * 8}-bit)")
-    log(f"Machine       : {platform.machine()}")
+    # "AMD64" は x86-64 命令セットの Windows での呼び名で、GPU の話ではない。
+    # AMD GPU の診断ツールで "AMD64" と出ると誤解を招くので但し書きを付ける。
+    log(f"CPU arch      : {platform.machine()} (instruction set, not the GPU vendor)")
     log()
 
     if os.name != "nt":
