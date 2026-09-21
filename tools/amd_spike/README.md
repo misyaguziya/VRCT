@@ -44,6 +44,27 @@ written as the run goes, so **even if the tool freezes or you have to close
 the window, the file still holds everything up to that point** — please send
 it anyway.
 
+### Is it working or is it stuck?
+
+Some steps are genuinely slow and silent — loading a model onto the GPU can
+take the best part of a minute the first time. Whenever nothing has been
+printed for 15 seconds, the tool prints a line of its own:
+
+```
+       ... still working (32s since the last line)
+```
+
+That number is how long the current step has been silent, and it keeps
+counting up while the step runs. So:
+
+- the number rising, then a new `[OK ]` line → normal, just slow
+- the number rising past a few minutes with no `[OK ]` → something really is
+  stuck. **That is a result we want.** Note what the last line above it was,
+  close the window, and send the report.
+
+The one place a freeze is expected is the very last stage, which deliberately
+tests exactly that and gives up after 60 seconds per attempt.
+
 ## What it does and does not do
 
 - It **does not send anything anywhere.** It writes `amd_spike_report.txt` next
@@ -290,3 +311,9 @@ issue #88 (AMD GPU 対応) の実機検証を、Radeon を持っている協力�
 exe を渡す場合、`--model Systran/faster-whisper-tiny` の下見が 2〜3 分、
 本番が 15〜20 分（大半がモデルのダウンロード 2GB 弱）。
 レポートは逐次書き出しなので、途中で固まっても止めても、そこまでの結果は残る。
+
+15 秒以上無音になると `... still working (Ns since the last line)` を出す。
+「動いているのか固まっているのか分からない」という指摘への対応で、
+log() の最終時刻だけを見る仕組みなので長い処理側に細工が要らない。
+**実際にハングしたときも同じ仕組みで「何秒無音か」が出る**のが狙い
+（前回は無言のまま止まったので、協力者がハングだと判断できなかった）。

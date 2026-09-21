@@ -95,7 +95,41 @@ def _openReport() -> None:
         _report = None
 
 
+_last_output_at = time.monotonic()
+_heartbeat_stop = threading.Event()
+# これだけ黙ったら生存表示を出す。モデルのロードと解放待ちが該当する。
+_HEARTBEAT_AFTER = 15.0
+
+
+def _startHeartbeat() -> None:
+    """無音が続いている間、生きていることだけを画面に出す。
+
+    協力者から「動いているのか固まっているのか判断できない」という指摘。
+    モデルのロードと解放待ちは何十秒も黙るうえ、解放待ちはまさにハングを
+    疑っている場所なので、そこが無言なのが一番まずい。
+
+    見ているのは log() が最後に呼ばれた時刻だけなので、長い処理の側に
+    個別の細工を入れずに済む。実際にハングした場合も同じ仕組みで
+    「何秒無音か」が出る。レポートには書かない (ノイズなので画面だけ)。
+    """
+    def beat() -> None:
+        shown = 0.0
+        while not _heartbeat_stop.wait(2.0):
+            idle = time.monotonic() - _last_output_at
+            if idle < _HEARTBEAT_AFTER:
+                shown = 0.0
+                continue
+            if idle - shown >= _HEARTBEAT_AFTER:
+                shown = idle
+                print(f"       ... still working ({idle:.0f}s since the last line)",
+                      flush=True)
+
+    threading.Thread(target=beat, daemon=True).start()
+
+
 def log(text: str = "") -> None:
+    global _last_output_at
+    _last_output_at = time.monotonic()
     print(text, flush=True)
     if _report is not None:
         try:
@@ -539,9 +573,10 @@ def stage_c(model_id: str, audio: Path | None, runs: int) -> dict:
     log("-- loading on GPU (device='cuda', compute_type='float16') --")
     gpu_model = None
     try:
+        _load_started = time.perf_counter()
         gpu_model = WhisperModel(model_id, device="cuda", device_index=0,
                                  compute_type="float16")
-        result("OK", "model loaded on GPU")
+        result("OK", "model loaded on GPU", f"{time.perf_counter() - _load_started:.1f}s")
     except Exception as exc:
         result("FAIL", "loading the model on GPU", type(exc).__name__)
         log()
@@ -618,7 +653,9 @@ def stage_c(model_id: str, audio: Path | None, runs: int) -> dict:
     log("-- for comparison: CPU (the path VRCT already has today) --")
     cpu_model = None
     try:
+        _load_started = time.perf_counter()
         cpu_model = WhisperModel(model_id, device="cpu", compute_type="int8")
+        result("OK", "model loaded on CPU", f"{time.perf_counter() - _load_started:.1f}s")
         _transcribe_once(cpu_model, audio)
         cpu_times = [_transcribe_once(cpu_model, audio) for _ in range(runs)]
         cpu_best = min(cpu_times)
@@ -801,10 +838,11 @@ def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
     log("-- loading the translator on the GPU (float16) --")
     gpu_box: list = []
     try:
+        _load_started = time.perf_counter()
         gpu_box.append(ctranslate2.Translator(
             str(model_dir), device="cuda", device_index=0, compute_type="float16",
             inter_threads=1, intra_threads=4))
-        result("OK", "translator loaded on GPU")
+        result("OK", "translator loaded on GPU", f"{time.perf_counter() - _load_started:.1f}s")
     except Exception as exc:
         result("FAIL", "loading the translator on the GPU", type(exc).__name__)
         log(redact(traceback.format_exc()))
@@ -1035,6 +1073,7 @@ def main() -> int:
     args = parser.parse_args()
 
     _openReport()
+    _startHeartbeat()
     log("VRCT -- AMD GPU check (issue #88)")
     log(f"started: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     log("This script does not send anything anywhere. It only writes a local file.")
@@ -1069,6 +1108,9 @@ def main() -> int:
             _report.close()
         except Exception:
             pass
+
+    # ここから先は入力待ちなので、生存表示を出し続けると邪魔になる。
+    _heartbeat_stop.set()
 
     # 凍結 exe をエクスプローラからダブルクリックで起動すると、終了と同時に
     # コンソールが閉じて何も読めない。協力者には「動かなかった」ように見える
