@@ -232,6 +232,34 @@ def _gcnArchName(hip: ctypes.CDLL, device_index: int) -> str:
     return ""
 
 
+def _deviceArchInfo() -> dict:
+    """arch と同梱 gfx だけを取る、子プロセス用の軽い版。
+
+    Stage E を別プロセスで動かすと Stage A の結果を引き継げないので、
+    device 1 に載せてよいかの判断材料をここで取り直す。
+    """
+    info = {"hip_devices": [], "bundled_gfx": sorted(_bundledGfxTargets())}
+    hip = None
+    for name in _HIP_RUNTIME_NAMES:
+        try:
+            hip = ctypes.CDLL(name)
+            break
+        except OSError:
+            continue
+    if hip is None:
+        return info
+    try:
+        if hip.hipInit(0) != 0:
+            return info
+        count = ctypes.c_int()
+        hip.hipGetDeviceCount(ctypes.byref(count))
+        for index in range(count.value):
+            info["hip_devices"].append({"index": index, "arch": _gcnArchName(hip, index)})
+    except Exception:
+        pass
+    return info
+
+
 def _loaded_module_path(handle: ctypes.CDLL) -> str:
     """ロード済み DLL の実体パスを取る。ドライバ由来か SDK 由来かの判別用。"""
     try:
@@ -940,7 +968,7 @@ def _translateOnce(translator) -> float:
     return time.perf_counter() - start
 
 
-def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
+def stage_f(runs: int, whisper_box: list, audio: Path, model_id: str = "") -> dict:
     section("Stage F: translation (ctranslate2.Translator)")
     log("       VRCT uses CTranslate2 for translation as well as speech, and")
     log("       translation runs on every single message. Stage C only covered")
@@ -1030,6 +1058,18 @@ def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
         info["thread_safety"] = "ok"
 
     # --- F4: 音声認識と翻訳を同時に。VRCT が実際に置かれている状態 ---
+    if not whisper_box and model_id:
+        # ステージごとに別プロセスなので Stage C のモデルは引き継げない。
+        # この確認は残したいので自分で載せる。
+        try:
+            from faster_whisper import WhisperModel
+            whisper_box = [WhisperModel(model_id, device="cuda", device_index=0,
+                                        compute_type="float16")]
+            _keep_alive.extend(whisper_box)
+        except Exception as exc:
+            result("WARN", "could not load a speech model for the combined test",
+                   redact(f"{type(exc).__name__}: {exc}"))
+            whisper_box = []
     if whisper_box:
         log()
         log("-- speech and translation on the GPU at the same time (what VRCT does) --")
@@ -1091,6 +1131,105 @@ def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
 
 
 # ----------------------------------------------------------------------------
+# 各ステージを子プロセスへ隔離する
+# ----------------------------------------------------------------------------
+#
+# 計測そのもの (モデルのロード・推論) にはタイムアウトを掛けられない。
+# 掛けるべき妥当な秒数が処理ごとに違ううえ、モデルのダウンロードは
+# 遅い回線だと平気で 20 分かかるので、総時間で切ると正常な実行を殺す。
+#
+# 代わりに「子の出力が途切れた時間」で見る。ダウンロード中は tqdm が
+# 出力し続けるので回線の遅さと区別が付く。子が黙り込んだら、それは
+# 本当に固まっている。殺して次のステージへ進む。
+
+# 子が何も出さなくなってから諦めるまで。
+_STAGE_IDLE_BUDGET = 300.0
+
+
+def _childCommand() -> list:
+    if getattr(sys, "frozen", False):
+        return [sys.executable]
+    return [sys.executable, os.path.abspath(__file__)]
+
+
+def _runStageInChild(stage: str, title: str, args) -> str:
+    """1 ステージを子プロセスで走らせ、その出力を親のレポートへ流す。"""
+    command = _childCommand() + ["--run-stage", stage,
+                                 "--model", args.model, "--runs", str(args.runs)]
+    if args.audio:
+        command += ["--audio", str(args.audio)]
+
+    state = {"last": time.monotonic()}
+
+    def pump(stream) -> None:
+        # 1 行ごとに親のログへ。ハングしてもそこまでの結果は残る。
+        for line in stream:
+            state["last"] = time.monotonic()
+            log(line.rstrip("\r\n"))
+
+    try:
+        child = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, text=True,
+                                 encoding="utf-8", errors="replace", bufsize=1)
+    except Exception as exc:
+        result("FAIL", f"could not start {title}",
+               redact(f"{type(exc).__name__}: {exc}"))
+        return "error"
+
+    reader = threading.Thread(target=pump, args=(child.stdout,), daemon=True)
+    reader.start()
+    while child.poll() is None:
+        if time.monotonic() - state["last"] > _STAGE_IDLE_BUDGET:
+            child.kill()
+            log()
+            result("FAIL", f"{title} stopped responding",
+                   f"nothing printed for {_STAGE_IDLE_BUDGET / 60:.0f} minutes")
+            log("       Whatever it printed above is kept. Moving on to the next")
+            log("       stage -- one stuck step does not cost us the rest.")
+            reader.join(timeout=5.0)
+            return "hang"
+        time.sleep(1.0)
+    reader.join(timeout=5.0)
+    if child.returncode == 3:
+        return "failed"
+    if child.returncode != 0:
+        log()
+        result("FAIL", f"{title} ended unexpectedly", f"exit code {child.returncode}")
+        log("       Moving on to the next stage.")
+        return "died"
+    return "ok"
+
+
+def run_stage_child(stage: str, args) -> int:
+    """子プロセス側。1 ステージだけ走らせて即座に抜ける。
+
+    レポートは開かない (親が書いているファイルを切り詰めてしまう)。
+    生存表示も出さない -- 親は「子の出力が途切れたか」でハングを判定するので、
+    こちらが定期的に何か出すとその判定が効かなくなる。
+    """
+    audio = args.audio or Path("amd_spike_test_audio.wav")
+    if not audio.exists():
+        _make_test_wav(audio)
+    try:
+        if stage == "c":
+            stage_c(args.model, args.audio, args.runs)
+        elif stage == "e":
+            stage_e(audio, _deviceArchInfo())
+        elif stage == "f":
+            stage_f(args.runs, [], audio, args.model)
+        else:
+            print(f"unknown stage {stage}", flush=True)
+            return 1
+    except Exception:
+        print(redact(traceback.format_exc()), flush=True)
+        return 1
+    sys.stdout.flush()
+    # 後片付けで固まると親からはハングに見える (ROCm では実際に固まる)。
+    # 測り終えたら片付けずに抜ける。
+    os._exit(3 if _stage_failed else 0)
+
+
+# ----------------------------------------------------------------------------
 # Stage D -- 解放。ケースごとに子プロセスへ隔離する
 # ----------------------------------------------------------------------------
 #
@@ -1118,11 +1257,7 @@ _RELEASE_CASES = (
 
 def _runReleaseCase(case: str, model_id: str, budget: float = 180.0) -> dict:
     """子プロセスを 1 つ起動して 1 ケースだけ測る。"""
-    if getattr(sys, "frozen", False):
-        command = [sys.executable]
-    else:
-        command = [sys.executable, os.path.abspath(__file__)]
-    command += ["--release-case", case, "--model", model_id]
+    command = _childCommand() + ["--release-case", case, "--model", model_id]
     started = time.perf_counter()
     try:
         finished = subprocess.run(command, capture_output=True, text=True,
@@ -1280,6 +1415,8 @@ def main() -> int:
                              "the release checks, which is quick")
     parser.add_argument("--release-case", default=None,
                         help=argparse.SUPPRESS)  # 親が子プロセスを起こすための内部用
+    parser.add_argument("--run-stage", default=None,
+                        help=argparse.SUPPRESS)  # 同上
     parser.add_argument("--model", default="deepdml/faster-whisper-large-v3-turbo-ct2",
                         help="model for Stage C. For a quick first pass use "
                              "Systran/faster-whisper-tiny")
@@ -1293,6 +1430,9 @@ def main() -> int:
     # 子プロセス経路。レポートは開かない (親が書いているファイルを潰す)。
     if args.release_case:
         return release_case(args.release_case, args.model)
+    if args.run_stage:
+        _setup_console()
+        return run_stage_child(args.run_stage, args)
 
     _openReport()
     _startHeartbeat()
@@ -1309,14 +1449,20 @@ def main() -> int:
         # 終わったので、測り直しを短時間で頼めるようにしてある。
         stage_d(args.model)
     if not _stage_failed and args.stage == "abc":
-        c_info = stage_c(args.model, args.audio, args.runs)
-        if not _stage_failed:
-            audio = args.audio or Path("amd_spike_test_audio.wav")
-            stage_e(audio, a_info)
-            stage_f(args.runs, c_info.get("gpu_box", []), audio)
+        # ここから先はステージごとに子プロセスへ隔離する。どれが固まっても
+        # そこまでの結果を残したまま次へ進める。
+        outcome = _runStageInChild("c", "Stage C", args)
+        if outcome != "failed":
+            _runStageInChild("e", "Stage E", args)
+            _runStageInChild("f", "Stage F", args)
             # Stage D は最後。解放がハングすると以降の GPU 作業が当てに
             # ならなくなるので、測り終えてから触る。
             stage_d(args.model)
+        else:
+            log()
+            log("Stage C could not run the model at all, so the later stages")
+            log("would not tell us anything. Stopping here. What is above is")
+            log("still exactly what we needed -- please share the report.")
 
     section("Summary")
     if _stage_failed:
