@@ -5,6 +5,7 @@ python tools/prepare_yolo_dataset.py [--val-ratio 0.2] [--scene-size 10] [--seed
 dataset_annotated/<session>/ にある images/ と annotations/ を読み、
 labels/ を作って train.txt / val.txt / data.yaml を書き出す。画像は複製しない。
 2秒周期の連番撮影なので、隣接フレームが train と val に割れないようシーン単位で分割する。
+分割はセッション単位で層化するので、セッションを足しても既存セッションの val は変わらない。
 Chat表示なしの画像(空の.txt)はネガティブサンプルとしてそのまま残す。
 """
 
@@ -78,11 +79,11 @@ def write_labels(session: Path, scene_size: int) -> dict[str, list[tuple[str, bo
     return scenes
 
 
-def split_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
-                 rng: random.Random) -> tuple[list[str], list[str]]:
-    """シーンごと train / val に振り分ける。同じシーンの画像が両方に入ることはない。"""
-    keys = sorted(scenes)
-    rng.shuffle(keys)
+def pick_val_scenes(keys: list[str], scenes: dict[str, list[tuple[str, bool]]],
+                    val_ratio: float, seed: int, label: str) -> set[str]:
+    """シーンを shuffle して、目標枚数に届くまで val に取る。"""
+    keys = sorted(keys)
+    random.Random(seed).shuffle(keys)
     target = round(sum(len(scenes[k]) for k in keys) * val_ratio)
     val_keys: set[str] = set()
     taken = 0
@@ -93,9 +94,29 @@ def split_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
         taken += len(scenes[key])
     if not val_keys or len(val_keys) == len(keys):
         raise SystemExit(
-            f"cannot split {len(keys)} scene(s) with --val-ratio {val_ratio}: "
+            f"cannot split {label} ({len(keys)} scene(s)) with --val-ratio {val_ratio}: "
             "シーン数が足りない。--scene-size を小さくするか撮影シーンを増やす。")
-    train = [e for k in keys if k not in val_keys for e, _ in scenes[k]]
+    return val_keys
+
+
+def split_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
+                 seed: int) -> tuple[list[str], list[str]]:
+    """シーンごと train / val に振り分ける。同じシーンの画像が両方に入ることはない。
+
+    **セッション単位で層化する**。全シーンをまとめて shuffle すると、セッションを
+    足したときに val が特定のセッションへ偏りうる(実際に2セッション目を足した直後、
+    val 40枚が全部2セッション目になり、1セッション目の旧 val が全部 train へ移った)。
+    val はワールドと窓サイズの違いを見るためのものなので、どのセッションからも
+    同じ比率で取る。seed はセッションごとに独立なので、既存セッションの val は
+    セッションを足しても変わらない。
+    """
+    by_session: dict[str, list[str]] = defaultdict(list)
+    for key in scenes:
+        by_session[key.split("/", 1)[0]].append(key)
+    val_keys: set[str] = set()
+    for session, keys in sorted(by_session.items()):
+        val_keys |= pick_val_scenes(keys, scenes, val_ratio, seed, session)
+    train = [e for k in scenes if k not in val_keys for e, _ in scenes[k]]
     val = [e for k in val_keys for e, _ in scenes[k]]
     return sorted(train), sorted(val)
 
@@ -114,7 +135,7 @@ def prepare(root: Path, val_ratio: float, seed: int, scene_size: int = 10) -> tu
         scenes.update(found)
 
     positive = {entry for v in scenes.values() for entry, pos in v if pos}
-    train, val = split_scenes(scenes, val_ratio, random.Random(seed))
+    train, val = split_scenes(scenes, val_ratio, seed)
     (root / "train.txt").write_text("\n".join(train) + "\n", encoding="utf-8")
     (root / "val.txt").write_text("\n".join(val) + "\n", encoding="utf-8")
     (root / "data.yaml").write_text(
