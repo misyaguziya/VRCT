@@ -27,16 +27,21 @@ EXCEPTION TO THE SCOPE OF THE LICENSE ABOVE
 The MIT License above does not apply to the following file, in this
 repository or in any built distribution of VRCT:
 
-    src-python/models/ocr/onnx/chatbox_yolov8n.onnx
-    (_internal/ocr_onnx/chatbox_yolov8n.onnx in the built application)
+    src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx
+    (_internal/ocr_onnx/chatbox_yolox_tiny.onnx in the built application)
 
-That file is the VRChat chat-bubble detection model. It is fine-tuned from
-weights published by Ultralytics under the GNU Affero General Public License
-v3.0, and is therefore distributed under AGPL-3.0 rather than the MIT License.
+That file is the VRChat chat-bubble detection model. It is licensed under
+the VRCT Chat-Bubble Detection Model License Agreement, which permits
+running it as part of VRCT, and as part of a fork of VRCT while working on
+VRCT itself, but does not permit shipping it in a fork's own release, using
+it in unrelated software, redistributing it on its own, or deriving models
+from it or from its outputs.
 
-    Copyright (c) 2026 misyaguziya
-    Licensed under the GNU Affero General Public License v3.0
-    Full text: src-python/models/ocr/onnx/LICENSE.txt
+    Copyright (c) 2026 misyaguziya. All rights reserved.
+    Full text (Japanese, authoritative):
+        src-python/models/ocr/onnx/LICENSE.txt
+    English translation:
+        src-python/models/ocr/onnx/LICENSE.en.txt
 
 See NOTICE.md for details and for the other third-party model weights
 bundled with VRCT.

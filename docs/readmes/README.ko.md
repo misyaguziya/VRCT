@@ -100,9 +100,14 @@ VRCT는 [Aptabase](https://aptabase.com)를 통해 앱 개선을 위한 익명 �
 ## 라이선스
 
 VRCT는 [MIT License](/LICENSE)로 배포됩니다. 단 한 가지 예외가 있습니다. OCR 기능이 사용하는
-채팅 말풍선 검출 모델(`src-python/models/ocr/onnx/chatbox_yolov8n.onnx`)은 Ultralytics
-YOLOv8 가중치를 파인튜닝한 것이므로 **AGPL-3.0**이 적용됩니다.
-다른 프로젝트에서 재사용하기 전에 [NOTICE.md](/NOTICE.md)를 확인하세요.
+채팅 말풍선 검출 모델(`src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx`)에는 **VRCT 전용
+라이선스**가 적용됩니다. VRCT로 실행하는 것, 그리고 **VRCT의 개발·수정·검증을 위한 포크에서
+실행하는 것**은 자유이며, 저장소를 포크해 모델을 그대로 포함해도 됩니다.
+불가능한 것은 포크 자체의 릴리스 빌드에 모델을 동봉하는 것, VRCT 외의 소프트웨어로 가져가는 것,
+단독 재배포, 파생 모델 제작입니다.
+조문은 [LICENSE.en.txt](/src-python/models/ocr/onnx/LICENSE.en.txt), 범위는
+[NOTICE.md](/NOTICE.md)를 확인하세요. 모델 없이도 빌드와 실행이 가능하며 이 경우 말풍선 검출만
+비활성화됩니다(직접 학습하는 절차는 [docs/ocr_yolo_training.md](/docs/ocr_yolo_training.md)).
 
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">

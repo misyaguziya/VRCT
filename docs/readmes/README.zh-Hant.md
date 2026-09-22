@@ -99,8 +99,13 @@ VRCT 透過 [Aptabase](https://aptabase.com) 收集匿名遙測資料以協助�
 ## 授權條款
 
 VRCT 以 [MIT License](/LICENSE) 發布，但有一項例外：OCR 功能所使用的聊天氣泡偵測模型
-（`src-python/models/ocr/onnx/chatbox_yolov8n.onnx`）是從 Ultralytics YOLOv8 權重微調
-而來，因此採用 **AGPL-3.0**。在其他專案中重複使用前，請先閱讀 [NOTICE.md](/NOTICE.md)。
+（`src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx`）適用 **VRCT 專用授權**。
+您可以將它作為 VRCT 的一部分執行，也可以在為了開發、修正或驗證 VRCT 而建立的分支中執行；
+分叉儲存庫並保留模型檔案沒有問題。不可以的是：把模型放進分支自己的發行版、用於 VRCT 以外的
+軟體、單獨再散布，或製作衍生模型。
+條款請見 [LICENSE.en.txt](/src-python/models/ocr/onnx/LICENSE.en.txt)，適用範圍請見
+[NOTICE.md](/NOTICE.md)。沒有這個模型 VRCT 仍可建置與執行，只有氣泡偵測會停用
+（自行訓練的步驟見 [docs/ocr_yolo_training.md](/docs/ocr_yolo_training.md)）。
 
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
