@@ -70,7 +70,7 @@ const TabIcon = ({ tab_id, className }) => {
         case "appearance": return <AppearanceSvg className={clsx(className, styles.mui_icon)} />;
         case "translation": return <TranslationSvg className={className} />;
         case "transcription": return <GraphicEqSvg className={clsx(className, styles.mui_icon)} />;
-        case "ocr": return <ChatTranscribeSvg className={clsx(className, styles.mui_icon)} />;
+        case "ocr": return <ChatTranscribeSvg className={clsx(className, styles.mui_icon, styles.ocr_icon)} />;
         case "vr": return <HMDSvg className={clsx(className, styles.mui_icon)} />;
         case "others" : return <DiscoverTuneSvg className={clsx(className, styles.mui_icon)} />;
         case "hotkeys": return <KeyboardAltSvg className={clsx(className, styles.mui_icon)} />;
