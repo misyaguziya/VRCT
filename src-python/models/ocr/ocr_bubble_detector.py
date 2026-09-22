@@ -52,7 +52,7 @@ MODEL_FILE_NAME = "chatbox_yolox_tiny.onnx"
 # 長辺をこのサイズに合わせる。学習時と同じ縮尺。吹き出しは画面の1%程度しか
 # ないことがあり、640まで落とすと取りこぼす(実測: val20枚で1280が19/20、640は16/20)。
 DEFAULT_IMAGE_SIZE = 1280
-DEFAULT_CONFIDENCE = 0.15
+DEFAULT_CONFIDENCE = 0.85
 DEFAULT_NMS_IOU = 0.65
 # YOLOXのletterboxと同じ余白色。学習時の前処理に合わせる。
 PAD_COLOR = 114
