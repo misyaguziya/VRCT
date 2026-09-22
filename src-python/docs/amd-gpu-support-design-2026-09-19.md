@@ -152,9 +152,12 @@ major 11/12 にちょうど一致し、**それ以外（Ryzen APU の gfx90c=9�
 `hipGetDeviceProperties` の巨大構造体は使わない（3 引数の API で足りる）。
 RDNA4 が駄目だと分かったら `(11,)` に変える 1 行。
 
-> **未検証の前提**: 「gfx1100 → major 11」というマッピングは HIP の仕様から妥当と見ているが
-> 実機で確認していない。spike 項目 2 で確定させる。崩れたら
-> `hipGetDeviceProperties` の `gcnArchName` 文字列に落とす。
+> **この節は 2026-09-21 の実機検証で覆った。§10.6 の「【重大】アーキゲートを
+> compute capability で作ってはいけない」を必ず読むこと。**
+> `hipDeviceComputeCapability` は gfx 名の下 1 桁を落とすため、gfx1100（同梱あり）と
+> gfx1103（同梱なし、Ryzen 7040/8040 系ノートの iGPU）がどちらも 11.0 になる。
+> 同梱カーネルの無い arch に載せると rocBLAS が `abort()` し、例外にならずプロセスが即死する。
+> **判定は `gcnArchName` と同梱 Tensile リストの突き合わせに変更する。Phase 3 の前に必須。**
 
 ---
 
@@ -448,7 +451,7 @@ ROCm wheel を先に入れてから requirements を流すと CPU 版に戻さ�
 | spike | 結果 |
 |---|---|
 | 1 (R1) | **OK** — `get_cuda_device_count()` = 2、`get_supported_compute_types("cuda", i)` が両デバイスに応答 |
-| 2 (R3) | **OK** — 5 シンボルすべて実在。**gfx1100 → compute capability 11.0**。§3 のアーキゲートはそのまま使える |
+| 2 (R3) | 5 シンボルすべて実在。gfx1100 → compute capability 11.0。**ただし 2 回目の実行でこの判定材料では不十分と判明した（下記「【重大】」）。R3 は再開。** |
 | 3 (R2) | **不要になった** — ROCm 7.2 の wheel は `hipblas.dll` を要求し、同梱物にそれがある。`libhipblas.dll` は無い。自前ビルドは回避できた |
 | 4/5 (R4/R5) | **同梱で自己完結** — HIP SDK 無しの機で `amdhip64_7.dll` / `hipblas.dll` が `_internal/` からロードされた |
 | 5 (R7) | **採取不要** — float16 でロード・推論とも成功。OOM 文字列は出ていない |
@@ -456,15 +459,33 @@ ROCm wheel を先に入れてから requirements を流すと CPU 版に戻さ�
 | 7 | **大差で通過** — GPU 0.289s / CPU(int8) 6.045s = **20.95 倍**。打ち切り基準 1.2 倍を大きく超える |
 | 8 (R6) | 未実施（RDNA4 の実機が無い） |
 
+2 回目の実行（Stage D/E/F 追加版）でモデルのロード時間も採った:
+
+| | 時間 |
+|---|---|
+| GPU ロード (float16, large-v3-turbo) | **1.9s** |
+| CPU ロード (int8, 同じモデル) | 1.9s |
+| 1 発話 (GPU, best of 3) | 0.289s ← 1 回目と一致 |
+
+**rocBLAS / Tensile の初期化は起動時間の問題にならない。** 同梱している
+gfx ターゲット 7 種を削る動機は**サイズだけ**で、起動の速さは理由にならない。
+1 発話のレイテンシも 1 回目と同値なので、計測は安定している。
+
 ### 統合 GPU が 2 台目として見える。設計はこれを正しく弾いた
 
-| index | 名前 | compute capability | アーキゲート |
-|---|---|---|---|
-| 0 | AMD Radeon RX 7900 XTX | 11.0 | **通す** |
-| 1 | AMD Radeon(TM) Graphics（APU の iGPU） | 10.3 | **弾く** (major=10) |
+| index | 名前 | compute capability | `hipMemGetInfo` | アーキゲート |
+|---|---|---|---|---|
+| 0 | AMD Radeon RX 7900 XTX | 11.0 | 24.0 GiB | **通す** |
+| 1 | AMD Radeon(TM) Graphics（APU の iGPU） | 10.3 | **36.2 GiB** | **弾く** (major=10) |
 
 CT2 の `get_supported_compute_types` は iGPU にも float16 を返す。つまり
 **CT2 は選別しない**ので、`utils.py` のゲートが唯一の防波堤である。
+
+**ゲートが無いと実害が出る形が具体化した（2026-09-21 の 2 回目の実行）**:
+iGPU は共有メモリを見ているため **36.2 GiB** と報告する。dGPU の 24.0 GiB
+より大きい。つまり一覧に両方出すと、ユーザーには「VRAM の大きい方」が
+iGPU に見える。名前（`AMD Radeon(TM) Graphics`）も dGPU と紛らわしい。
+**VRAM 表記を UI に出す場合、この値をそのまま信じさせてはいけない。**
 `getComputeDeviceList` は `device_index` を dict のキーとして明示的に持ち回る
 （リストの位置ではない）ため、1 台弾いても残りのインデックスはずれない。
 この構造が実機で意味を持つことを確認できた。
@@ -493,11 +514,117 @@ AMD 側がこの 1.98x を大きく下回るなら AMD 固有の問題と言え�
 AMD 側は `_AMD_COMPUTE_TYPES = ("float16", "float32")` で float16 を先に返すため、
 この罠を偶然踏まずに済んでいる。**AMD 対応とは別件として切り出す。**
 
+### 【重大】アーキゲートを compute capability で作ってはいけない（R3 再開）
+
+2026-09-21 の 2 回目の実行で、iGPU（`gfx1036`）にモデルを載せたところ
+**プロセスが即死した**。例外ではない:
+
+```
+rocBLAS error: Cannot read ...\_internal\rocblas\library/TensileLibrary.dat:
+No such file or directory for GPU arch : gfx1036
+```
+
+rocBLAS は自分の arch 用の Tensile カーネルが無いと **`abort()` する**。
+Python の `try/except` では捕まえられず、traceback も残らず、
+コンソールごと落ちる。検証ツールはこれで Stage F と D に到達できなかった。
+
+**`hipDeviceComputeCapability` ではこれを防げない。** gfx 名の下 1 桁が
+落ちるためである:
+
+| gfx | compute capability | 同梱カーネル |
+|---|---|---|
+| gfx1036（Raphael iGPU） | 10.3 | 無し |
+| gfx1100（RX 7900 XTX） | **11.0** | 有り |
+| **gfx1103（Phoenix APU の iGPU、RDNA3）** | **11.0** | **無し** |
+
+つまり `major in (11, 12)` というゲートは **gfx1103 を通してしまう**。
+Ryzen 7040/8040 系ノートの内蔵 GPU がこれに該当し、選ばれた瞬間に
+**VRCT がクラッシュする**（エラーダイアログもログも出ない）。
+同梱しているのは `gfx1100/1101/1102/1150/1151/1200/1201` の 7 種だけなので、
+将来の新 arch（gfx1202 など）も同じ経路で即死する。
+
+**対処（Phase 3 の前に必須）**: ゲートの判定材料を compute capability から
+**`gcnArchName` の文字列**へ変える。そのうえで「major が 11/12 か」ではなく
+**「同梱している Tensile カーネルにその arch があるか」**で判定する。
+同梱リスト（`tools/rocm_bundle.py` の `AMD_GFX_TARGETS`）が唯一の真実になる。
+
+`gcnArchName` は `hipGetDeviceProperties` で取れるが、`hipDeviceProp_t` の
+レイアウトが ROCm のバージョンで変わる。検証ツールでは十分大きいバッファを
+渡して中の `gfx…` を文字列検索する方法を採った（オフセット決め打ちより
+壊れにくい）。実機で通ることを確認してから `utils.py` に移す。
+
+これは **R3 の「無ければ `gcnArchName` に落とす」という代替案が、
+代替ではなく必須だった**ということである。1 回目の実行で「compute
+capability 11.0 が取れた」ことをもって R3 を解決済みとしたのは誤りだった。
+gfx1100 しか繋がっていなかったので区別が付かなかった。
+
+### 翻訳（`ctranslate2.Translator`）は AMD で問題なく動く
+
+3 回目の実行で Stage F が通った。VRCT が CT2 を使うもう一方の経路であり、
+全メッセージが通るのに一度も検証できていなかった部分である。
+
+| 項目 | 結果 |
+|---|---|
+| GPU へのロード (float16) | 1.4s |
+| 1 文の翻訳 (best of 3) | **0.090s** |
+| CPU (int8) 比較 | 0.148s → **1.66 倍** |
+| 2 スレッド同時（mic/speaker 相当） | OK、0.4s |
+| **音声認識と翻訳を同時に GPU で** | **OK、0.9s** |
+
+NVIDIA (RTX 2080 Ti) の基準値 1.98 倍と同程度で、AMD 固有の劣化は無い。
+最後の行が重要で、**VRCT が実使用中に置かれている状態（STT と翻訳の
+モデルを同じ GPU に同時に載せて両方叩く）が実機で成立している。**
+
+音声認識側も 3 回とも安定している（20.95 / 16.44 / **18.60** 倍）。
+
+### 許可する compute_type は現状のままでよい
+
+Stage E で、CT2 が申告する 7 種すべてが gfx1100 で実際に動いた。
+そのうえで **`float16` が最速**だった:
+
+| compute_type | 時間 |
+|---|---|
+| **float16** | **0.050s** |
+| int8_bfloat16 | 0.057s |
+| int8_float32 | 0.063s |
+| int8_float16 | 0.064s |
+| int8 | 0.137s |
+| bfloat16 | 0.217s |
+| float32 | 0.280s |
+
+`_AMD_COMPUTE_TYPES = ("float16", "float32")` は float16 を先に返すので、
+**保守的なリストが結果的に最速の選択になっている。広げる必要は無い。**
+NVIDIA 側で見つかった「自動選択が float16 の 6 倍遅い」問題（§10.6 の
+翻訳基準値）は AMD 側には無い。
+
 ### ROCm 版はモデルの解放から帰ってこない（新規 R10）
 
 上記の計測を全部終えた後、**プロセスが終了しない**。最後の出力行から 5 分以上、
 CPU も GPU も動いていない状態で止まる。止まる場所は `WhisperModel` の参照が
 落ちてデストラクタが走るところ（計測はすべて完了・出力済み）。
+
+**3 回目の実行で場所が 1 つ確定した。ハングしたのは「CPU デバイスの
+モデル」の解放である**（`device="cpu"`, `compute_type="int8"`）:
+
+```
+[FAIL] release the CPU speech model  -- did not return within 60s -- HANG
+```
+
+しかも 60 秒で諦めた直後に**プロセスごと落ちた**（次の行がレポートに
+書かれていない）。ハングしたスレッドを抱えたまま先へ進むと死ぬらしい。
+
+これは想定と違った。GPU 固有だと思っていたが、**ROCm ビルドの CT2 では
+CPU デバイスのモデルですら解放できない**。ROCm 版 `ctranslate2.dll` は
+hipBLAS と HIP ランタイムを静的にリンクしているので（§10.5）、
+デバイス指定に関わらず後始末が HIP 側に触ると考えると辻褄は合う。
+
+対照として、CUDA 版 CT2（RTX 2080 Ti）では同じ 4 ケースすべてが
+**0.02〜0.03 秒で返る**。つまりこれは AMD エディション固有の問題である。
+
+**まだ分かっていないのは「VRCT のモデル切り替え（新しいモデルを載せてから
+古い方を落とす）」が同じように固まるか**である。3 回目は CPU ケースを
+先に置いてしまい、そこで落ちて到達できなかった。ケースごとに子プロセスへ
+隔離し、知りたい順に並べ替えて測り直す。
 
 診断ツール側は `os._exit` で回避した。レポートの書き出しがハングより後ろに
 あったため、**1 回目は計測結果を丸ごと失った**（協力者がコンソールを
@@ -522,14 +649,15 @@ Phase 3 に入る前に切り分けが必要:
 
 ## 11. リスクと未決事項
 
-**R1〜R5・R7・R9 は 2026-09-21 の RX 7900 XTX 実機検証で解消した（§10.6）。
-残るのは R6 / R8 と、新たに出た R10。**
+**R1・R2・R4・R5・R7・R9 は 2026-09-21 の RX 7900 XTX 実機検証で解消した（§10.6）。
+残るのは R6 / R8、新たに出た R10、そして**再開した R3**（§10.6 の
+「アーキゲートを compute capability で作ってはいけない」）。**
 
 | # | 未決事項 | 影響 | ブロック箇所 |
 |---|---|---|---|
 | R1 | ROCm CT2 で `get_cuda_device_count` / `get_supported_compute_types("cuda", i)` が AMD を返すか | 返さなければ「CT2 が個数、HIP が名前」という設計前提が崩れ、個数も HIP から取る必要 | spike 1。崩れても直す範囲は `_getGpuDeviceNames` 内のみ |
 | R2 | **#2016 の DLL 名回避策が効くか。効かなければ ROCm 7.1 での CT2 自前ビルドを背負う** | 自前ビルドになると PR-5 の取得方法が「ビルド済み wheel を自前ホスト」に変わり CI が 1 段重くなる | spike 3。**Phase 3 に進む最大の前提** |
-| R3 | `hipDeviceComputeCapability` / `hipDeviceGetName` の export 実在、および gfx→major のマッピング | 無ければアーキゲートを `hipGetDeviceProperties` の `gcnArchName` 文字列に落とす | spike 2 |
+| **R3** | **compute capability ではアーキを判別できない（実機で確認）。** gfx1100 と gfx1103 がどちらも 11.0 になり、同梱カーネルの無い arch を通してしまう | **rocBLAS が `abort()` するので VRCT がクラッシュする。例外ではないので捕捉不能。** Ryzen 7040/8040 系ノートの iGPU が該当 | **`gcnArchName` と同梱 Tensile リストの突き合わせへ変更する。Phase 3 の前に必須** |
 | R4 | ROCm 版 CT2 が MIOpen 等の追加 DLL を要求するか（CUDA 版は cuDNN を wheel 同梱、cuBLAS は外） | 同梱リストとサイズが増える | spike。**wheel の中身を見れば実機前でも半分分かる** |
 | R5 | `amdhip64.dll` / `amd_comgr` がドライバ提供か | 同梱 130MB 超の増減。設計は変わらない | spike 4 |
 | R6 | RDNA4 (#2021) の可否 | アーキゲートが `(11,12)` か `(11,)` か。1 行 | spike 8。入手できなければ**保守的に `(11,)` で出す** |

@@ -81,5 +81,7 @@ src-python/telemetry_state.json
 /amd_spike_test_audio.wav
 
 # bat/build_amd_check.bat の出力 (協力者へ渡す検証用 exe)。
-# ROCm ランタイムを同梱するので展開 900MB / zip 255MB になる。
-/dist_amd_check/
+# ROCm ランタイムを同梱するので展開 900MB / zip 248MB になる。
+# 出力先を変えて逃げることがあるのでワイルドカードにしてある
+# (何かがフォルダを掴んでいて PyInstaller が消せない状況が実際に起きた)。
+/dist_amd_check*/

@@ -24,7 +24,9 @@ import glob
 import json
 import os
 import platform
+import re
 import struct
+import subprocess
 import sys
 import threading
 import time
@@ -180,6 +182,111 @@ _HIP_RUNTIME_NAMES = ("amdhip64_7.dll", "amdhip64_6.dll", "amdhip64.dll")
 _HIPBLAS_NAMES = ("hipblas.dll", "libhipblas.dll")
 
 
+def _bundledGfxTargets() -> set:
+    """同梱した rocBLAS Tensile カーネルが対応している gfx を集める。
+
+    rocBLAS は自分の arch 用の Tensile ライブラリが無いと**例外ではなく
+    abort() する**。Python の try/except では捕まえられず、プロセスごと
+    即死する (2026-09-21、gfx1036 の iGPU で実測)。
+    したがって「載せる前に対応表を見る」以外に防ぎようがない。
+    """
+    root = getattr(sys, "_MEIPASS", None) or os.path.dirname(os.path.abspath(__file__))
+    library = os.path.join(root, "rocblas", "library")
+    targets = set()
+    try:
+        for name in os.listdir(library):
+            found = re.search(r"gfx[0-9a-f]+", name)
+            if found:
+                targets.add(found.group())
+    except OSError:
+        pass
+    return targets
+
+
+def _vramFreeGiB() -> float:
+    """既定デバイスの空き VRAM (GiB)。取れなければ 0.0。
+
+    「モデルを解放しない」という対策を採った場合、VRAM をどれだけ
+    食い続けるのかが実装可否を決めるので、数字で出せるようにしておく。
+    """
+    for name in _HIP_RUNTIME_NAMES:
+        try:
+            hip = ctypes.CDLL(name)
+        except OSError:
+            continue
+        try:
+            # 先に HIP を起こしておく。モデルを載せる前に呼ぶと未初期化で
+            # 失敗し、黙って 0.0 が返って「VRAM を食っていない」という
+            # 誤った読み方をされうる。
+            hip.hipInit(0)
+            hip.hipSetDevice(0)
+            free_bytes, total_bytes = ctypes.c_size_t(), ctypes.c_size_t()
+            if hip.hipMemGetInfo(ctypes.byref(free_bytes),
+                                 ctypes.byref(total_bytes)) == 0:
+                return free_bytes.value / 2 ** 30
+        except Exception:
+            pass
+        break
+    return 0.0
+
+
+def _gcnArchName(hip: ctypes.CDLL, device_index: int) -> str:
+    """デバイスの gfx 名を取る。compute capability では判別できないため。
+
+    hipDeviceComputeCapability は gfx1036 を 10.3 と返す。末尾の 6 が
+    落ちるので、**gfx1100 と gfx1103 が同じ 11.0 になる**。
+    つまり設計の「major が 11/12 なら通す」ゲートでは、RDNA3 の
+    ノート向け iGPU (gfx1103) を通してしまい、Tensile が無いので abort する。
+
+    hipDeviceProp_t は ROCm のバージョンでレイアウトが変わるので、
+    十分大きいバッファを渡して中の "gfx…" を文字列として拾う。
+    オフセットを決め打ちするより壊れにくい。
+    """
+    # hipDeviceProp_t は ROCm 6 で 2KB 弱。十分な余裕を取る。
+    buffer = ctypes.create_string_buffer(16384)
+    for symbol in ("hipGetDevicePropertiesR0600", "hipGetDeviceProperties"):
+        function = getattr(hip, symbol, None)
+        if function is None:
+            continue
+        try:
+            if function(buffer, ctypes.c_int(device_index)) != 0:
+                continue
+        except Exception:
+            continue
+        found = re.search(rb"gfx[0-9a-f]+", buffer.raw)
+        if found:
+            return found.group().decode("ascii")
+    return ""
+
+
+def _deviceArchInfo() -> dict:
+    """arch と同梱 gfx だけを取る、子プロセス用の軽い版。
+
+    Stage E を別プロセスで動かすと Stage A の結果を引き継げないので、
+    device 1 に載せてよいかの判断材料をここで取り直す。
+    """
+    info = {"hip_devices": [], "bundled_gfx": sorted(_bundledGfxTargets())}
+    hip = None
+    for name in _HIP_RUNTIME_NAMES:
+        try:
+            hip = ctypes.CDLL(name)
+            break
+        except OSError:
+            continue
+    if hip is None:
+        return info
+    try:
+        if hip.hipInit(0) != 0:
+            return info
+        count = ctypes.c_int()
+        hip.hipGetDeviceCount(ctypes.byref(count))
+        for index in range(count.value):
+            info["hip_devices"].append({"index": index, "arch": _gcnArchName(hip, index)})
+    except Exception:
+        pass
+    return info
+
+
 def _loaded_module_path(handle: ctypes.CDLL) -> str:
     """ロード済み DLL の実体パスを取る。ドライバ由来か SDK 由来かの判別用。"""
     try:
@@ -191,13 +298,57 @@ def _loaded_module_path(handle: ctypes.CDLL) -> str:
         return "(unknown)"
 
 
+def _windowsVersion() -> str:
+    """Windows 11 を Windows 10 と誤って報告しないようにする。
+
+    platform.platform() はメジャー番号しか見ないので、Windows 11 でも
+    "Windows-10-10.0.26200-SP0" になる (Windows 11 はメジャー 10 のまま
+    ビルド 22000 以降)。協力者の環境を誤って記録すると、後でドライバや
+    WDDM 由来の差を追うときに前提が崩れる。
+
+    ビルド番号で判定し、リビジョン (UBR) と表示バージョン (25H2 など) を
+    レジストリから足す。ドライバ絡みの問題はここまで無いと絞り込めない。
+    """
+    if not hasattr(sys, "getwindowsversion"):
+        return platform.platform()  # Windows 以外。直後の os.name チェックで止まる
+    try:
+        version = sys.getwindowsversion()
+    except Exception:
+        # platform.platform() は内部で同じ API を呼ぶのでここでは使えない。
+        return "unknown (could not read the Windows version)"
+    if (version.major, version.build) >= (10, 22000):
+        name = "Windows 11"
+    else:
+        name = f"Windows {version.major}"
+
+    build = str(version.build)
+    display = ""
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion") as key:
+            try:
+                build = f"{build}.{winreg.QueryValueEx(key, 'UBR')[0]}"
+            except OSError:
+                pass
+            try:
+                display = f", {winreg.QueryValueEx(key, 'DisplayVersion')[0]}"
+            except OSError:
+                pass
+    except Exception:
+        pass
+    return f"{name} (build {build}{display})"
+
+
 def stage_a() -> dict:
     section("Stage A: environment and HIP runtime (no downloads)")
     info: dict = {}
 
-    log(f"OS            : {platform.platform()}")
+    log(f"OS            : {_windowsVersion()}")
     log(f"Python        : {sys.version.split()[0]} ({struct.calcsize('P') * 8}-bit)")
-    log(f"Machine       : {platform.machine()}")
+    # "AMD64" は x86-64 命令セットの Windows での呼び名で、GPU の話ではない。
+    # AMD GPU の診断ツールで "AMD64" と出ると誤解を招くので但し書きを付ける。
+    log(f"CPU arch      : {platform.machine()} (instruction set, not the GPU vendor)")
     log()
 
     if os.name != "nt":
@@ -207,7 +358,6 @@ def stage_a() -> dict:
 
     # --- GPU の名前 (WMI 経由。取れなくても致命的ではない) ---
     try:
-        import subprocess
         out = subprocess.run(
             ["powershell", "-NoProfile", "-Command",
              ("Get-CimInstance Win32_VideoController | "
@@ -311,6 +461,12 @@ def stage_a() -> dict:
             return info
         result("OK", "hipInit(0)")
 
+        bundled = _bundledGfxTargets()
+        if bundled:
+            result("INFO", "GPU kernels bundled with this tool",
+                   ", ".join(sorted(bundled)))
+        info["bundled_gfx"] = sorted(bundled)
+
         count = ctypes.c_int()
         hip.hipGetDeviceCount(ctypes.byref(count))
         result("INFO", "hipGetDeviceCount", str(count.value))
@@ -339,10 +495,23 @@ def stage_a() -> dict:
                         ctypes.byref(free_b), ctypes.byref(total_b)) == 0):
                     vram = (f" / VRAM {total_b.value / 2 ** 30:.1f} GiB"
                             f" ({free_b.value / 2 ** 30:.1f} GiB free)")
+            arch = _gcnArchName(hip, i)
             result("INFO", f"device {i}", f"{name} / compute capability {cap_text}{vram}")
+            result("INFO", f"device {i} architecture", arch or "(could not read it)")
             result("INFO", f"device {i} passes the planned architecture gate",
                    "yes" if gated else f"no (major={major.value})")
-            devices.append({"index": i, "name": name,
+            # ここが本題。ゲートを通っても Tensile が無ければ abort する。
+            if arch and bundled:
+                if arch in bundled:
+                    result("OK", f"device {i} has GPU kernels in this bundle", arch)
+                else:
+                    result("WARN", f"device {i} has NO GPU kernels in this bundle", arch)
+                    log("       Loading a model on this device would not raise an")
+                    log("       error -- rocBLAS calls abort() and the process dies.")
+                    log("       We will not try it. This is exactly what VRCT has to")
+                    log("       avoid, so it is a useful thing to have found.")
+            devices.append({"index": i, "name": name, "arch": arch,
+                            "bundled": arch in bundled if arch else None,
                             "major": major.value, "minor": minor.value})
         info["hip_devices"] = devices
     except Exception:
@@ -694,7 +863,7 @@ _SMALL_MODEL = "Systran/faster-whisper-tiny"
 _DESIGN_ALLOWS = ("float16", "float32")
 
 
-def stage_e(audio: Path) -> dict:
+def stage_e(audio: Path, a_info: dict) -> dict:
     section("Stage E: which compute types actually work")
     log("       CTranslate2 advertises int8 and bfloat16 on this GPU, but VRCT's")
     log("       design only allows float16/float32 on AMD. If int8 works, the")
@@ -749,6 +918,23 @@ def stage_e(audio: Path) -> dict:
     if count > 1:
         log()
         log("-- device 1 (the one VRCT's architecture gate rejects) --")
+        # 2026-09-21: ここで gfx1036 の iGPU に載せたら rocBLAS が abort し、
+        # プロセスごと落ちて Stage F/D に到達できなかった。例外ではないので
+        # try/except では防げない。同梱カーネルの有無を先に見て、無ければ
+        # 載せない。答えはもう分かっているので試す必要もない。
+        device1_arch = ""
+        for device in a_info.get("hip_devices", []):
+            if device.get("index") == 1:
+                device1_arch = device.get("arch") or ""
+        bundled = set(a_info.get("bundled_gfx") or [])
+        if device1_arch and bundled and device1_arch not in bundled:
+            result("--", "not loading anything on device 1",
+                   f"{device1_arch} has no GPU kernels in this bundle")
+            log("       rocBLAS would call abort() and kill this process, which")
+            log("       is what happened on 2026-09-21 and cost us Stage F and D.")
+            log("       Skipping it deliberately -- we already know the answer.")
+            info["device1"] = f"skipped: {device1_arch} not bundled (known to abort)"
+            return info
         try:
             model = WhisperModel(_SMALL_MODEL, device="cuda", device_index=1,
                                  compute_type="float16")
@@ -809,7 +995,7 @@ def _translateOnce(translator) -> float:
     return time.perf_counter() - start
 
 
-def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
+def stage_f(runs: int, whisper_box: list, audio: Path, model_id: str = "") -> dict:
     section("Stage F: translation (ctranslate2.Translator)")
     log("       VRCT uses CTranslate2 for translation as well as speech, and")
     log("       translation runs on every single message. Stage C only covered")
@@ -899,6 +1085,18 @@ def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
         info["thread_safety"] = "ok"
 
     # --- F4: 音声認識と翻訳を同時に。VRCT が実際に置かれている状態 ---
+    if not whisper_box and model_id:
+        # ステージごとに別プロセスなので Stage C のモデルは引き継げない。
+        # この確認は残したいので自分で載せる。
+        try:
+            from faster_whisper import WhisperModel
+            whisper_box = [WhisperModel(model_id, device="cuda", device_index=0,
+                                        compute_type="float16")]
+            _keep_alive.extend(whisper_box)
+        except Exception as exc:
+            result("WARN", "could not load a speech model for the combined test",
+                   redact(f"{type(exc).__name__}: {exc}"))
+            whisper_box = []
     if whisper_box:
         log()
         log("-- speech and translation on the GPU at the same time (what VRCT does) --")
@@ -960,96 +1158,363 @@ def stage_f(runs: int, whisper_box: list, audio: Path) -> dict:
 
 
 # ----------------------------------------------------------------------------
-# Stage D -- 後片付け。ハングしうるので必ず最後に置く
+# 各ステージを子プロセスへ隔離する
 # ----------------------------------------------------------------------------
+#
+# 計測そのもの (モデルのロード・推論) にはタイムアウトを掛けられない。
+# 掛けるべき妥当な秒数が処理ごとに違ううえ、モデルのダウンロードは
+# 遅い回線だと平気で 20 分かかるので、総時間で切ると正常な実行を殺す。
+#
+# 代わりに「子の出力が途切れた時間」で見る。ダウンロード中は tqdm が
+# 出力し続けるので回線の遅さと区別が付く。子が黙り込んだら、それは
+# 本当に固まっている。殺して次のステージへ進む。
 
-def _releaseInThread(label: str, box: list, budget: float = 60.0) -> bool:
-    """box が持つ最後の参照を落とし、デストラクタが返るまでを測る。
+# 子が何も出さなくなってから諦めるまで。
+_STAGE_IDLE_BUDGET = 300.0
 
-    返ってこない実績があるので、必ず別スレッドで落とす。daemon なので
-    返らなくてもこのツール自体は先に進める。
+
+def _childCommand() -> list:
+    if getattr(sys, "frozen", False):
+        return [sys.executable]
+    return [sys.executable, os.path.abspath(__file__)]
+
+
+def _runStageInChild(stage: str, title: str, args) -> str:
+    """1 ステージを子プロセスで走らせ、その出力を親のレポートへ流す。"""
+    command = _childCommand() + ["--run-stage", stage,
+                                 "--model", args.model, "--runs", str(args.runs)]
+    if args.audio:
+        command += ["--audio", str(args.audio)]
+
+    state = {"last": time.monotonic()}
+
+    def pump(stream) -> None:
+        # 1 行ごとに親のログへ。ハングしてもそこまでの結果は残る。
+        for line in stream:
+            state["last"] = time.monotonic()
+            log(line.rstrip("\r\n"))
+
+    try:
+        child = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, text=True,
+                                 encoding="utf-8", errors="replace", bufsize=1)
+    except Exception as exc:
+        result("FAIL", f"could not start {title}",
+               redact(f"{type(exc).__name__}: {exc}"))
+        return "error"
+
+    reader = threading.Thread(target=pump, args=(child.stdout,), daemon=True)
+    reader.start()
+    while child.poll() is None:
+        if time.monotonic() - state["last"] > _STAGE_IDLE_BUDGET:
+            child.kill()
+            log()
+            result("FAIL", f"{title} stopped responding",
+                   f"nothing printed for {_STAGE_IDLE_BUDGET / 60:.0f} minutes")
+            log("       Whatever it printed above is kept. Moving on to the next")
+            log("       stage -- one stuck step does not cost us the rest.")
+            reader.join(timeout=5.0)
+            return "hang"
+        time.sleep(1.0)
+    reader.join(timeout=5.0)
+    if child.returncode == 3:
+        return "failed"
+    if child.returncode != 0:
+        log()
+        result("FAIL", f"{title} ended unexpectedly", f"exit code {child.returncode}")
+        log("       Moving on to the next stage.")
+        return "died"
+    return "ok"
+
+
+def run_stage_child(stage: str, args) -> int:
+    """子プロセス側。1 ステージだけ走らせて即座に抜ける。
+
+    レポートは開かない (親が書いているファイルを切り詰めてしまう)。
+    生存表示も出さない -- 親は「子の出力が途切れたか」でハングを判定するので、
+    こちらが定期的に何か出すとその判定が効かなくなる。
     """
-    if not box:
-        result("--", f"release {label}", "nothing to release")
-        return True
-    done = threading.Event()
-    errors: list[str] = []
-
-    def drop() -> None:
-        try:
-            box.clear()  # 最後の参照。ここでデストラクタが走る
-            gc.collect()
-        except Exception as exc:
-            errors.append(redact(f"{type(exc).__name__}: {exc}"))
-        finally:
-            done.set()
-
-    t0 = time.perf_counter()
-    threading.Thread(target=drop, daemon=True).start()
-    finished = done.wait(budget)
-    elapsed = time.perf_counter() - t0
-    if not finished:
-        result("FAIL", f"release {label}", f"did not return within {budget:.0f}s -- HANG")
-        return False
-    if errors:
-        result("WARN", f"release {label}", "; ".join(errors))
-        return False
-    result("OK", f"release {label}", f"{elapsed:.2f}s")
-    return True
+    audio = args.audio or Path("amd_spike_test_audio.wav")
+    if not audio.exists():
+        _make_test_wav(audio)
+    try:
+        if stage == "c":
+            stage_c(args.model, args.audio, args.runs)
+        elif stage == "e":
+            stage_e(audio, _deviceArchInfo())
+        elif stage == "f":
+            stage_f(args.runs, [], audio, args.model)
+        else:
+            print(f"unknown stage {stage}", flush=True)
+            return 1
+    except Exception:
+        print(redact(traceback.format_exc()), flush=True)
+        return 1
+    sys.stdout.flush()
+    # 後片付けで固まると親からはハングに見える (ROCm では実際に固まる)。
+    # 測り終えたら片付けずに抜ける。
+    os._exit(3 if _stage_failed else 0)
 
 
-def stage_d(model_id: str, c_info: dict, f_info: dict) -> dict:
+# ----------------------------------------------------------------------------
+# Stage D -- 解放。ケースごとに子プロセスへ隔離する
+# ----------------------------------------------------------------------------
+#
+# 2026-09-21 の 3 回目の実行で、CPU モデルの解放がハングし、その直後に
+# プロセスごと落ちた。同じプロセス内で順番に試す作りだと、最初のハングで
+# 残りのケースを全部失う。実際、一番知りたい「モデル切り替え」の結果が
+# 取れずに終わった。
+#
+# そこで 1 ケース 1 プロセスに分ける。どれかが死んでも他は測れる。
+# 解放はメインスレッドで行う。VRCT で解放が走るのもそちら側であり、
+# 「別スレッドから解放したのが原因では」という疑いも同時に消せる。
+
+# 知りたい順。上から測る。途中で環境ごと壊れても上位の答えは残る。
+_RELEASE_CASES = (
+    # まず問題そのものを測る
+    ("switch", "the old GPU model, with a new one already loaded",
+     "This is what VRCT does when you change the model in settings."),
+    # 続けて、問題があった場合に VRCT 側で採る手が実際に成立するかを測る。
+    # 「壊れている」ことだけ分かっても直し方が分からないと次に進めないため。
+    ("keepalive", "nothing -- keep both models instead (possible fix A)",
+     "If releasing is impossible, VRCT would keep models and reuse them. "
+     "This checks that an old model still works after a new one is loaded, "
+     "and what that costs in VRAM."),
+    ("abandon", "the old model in the background, without waiting (possible fix B)",
+     "The other option is to hand the release to a thread and carry on. "
+     "This checks whether transcription keeps working while that happens -- "
+     "and whether the process survives it at all."),
+    # 残りは影響範囲の切り分け
+    ("last", "the only GPU model, with nothing else loaded",
+     "This is what VRCT does when you close it."),
+    ("translator", "the GPU translator",
+     "Same question for the translation model."),
+    ("cpu", "a CPU model",
+     "Known to hang here on 2026-09-21. Tells us whether this is GPU-specific."),
+)
+
+
+def _runReleaseCase(case: str, model_id: str, budget: float = 180.0) -> dict:
+    """子プロセスを 1 つ起動して 1 ケースだけ測る。"""
+    command = _childCommand() + ["--release-case", case, "--model", model_id]
+    started = time.perf_counter()
+    try:
+        finished = subprocess.run(command, capture_output=True, text=True,
+                                  timeout=budget)
+    except subprocess.TimeoutExpired:
+        return {"outcome": "hang", "seconds": budget}
+    except Exception as exc:
+        return {"outcome": "error", "detail": redact(f"{type(exc).__name__}: {exc}")}
+
+    elapsed = time.perf_counter() - started
+    for line in (finished.stdout or "").splitlines():
+        if line.startswith("RELEASED "):
+            return {"outcome": "ok", "seconds": float(line.split()[1])}
+        if line.startswith("PASSED "):
+            return {"outcome": "ok", "detail": redact(line[7:])}
+        if line.startswith("SKIPPED "):
+            return {"outcome": "skipped", "detail": line[8:]}
+        if line.startswith("FAILED "):
+            return {"outcome": "failed", "detail": redact(line[7:])}
+    # 解放を始めたのに RELEASED が出ていない = 解放の途中で落ちた
+    tail = (finished.stderr or "").strip().splitlines()
+    return {"outcome": "died", "code": finished.returncode,
+            "seconds": elapsed,
+            "detail": redact(tail[-1]) if tail else ""}
+
+
+def stage_d(model_id: str) -> dict:
     section("Stage D: releasing models")
-    log("       On 2026-09-21 this is where an RX 7900 XTX stopped responding,")
-    log("       after every measurement had already succeeded.")
-    log("       It matters because VRCT rebuilds the transcriber whenever the")
-    log("       model or the device changes, which releases the old model. If")
-    log("       that does not return, changing a setting freezes the app.")
-    log("       Every release below runs in its own thread with a timeout, so")
-    log("       this stage cannot hang the tool itself.")
+    log("       On 2026-09-21 an RX 7900 XTX stopped responding here, after")
+    log("       every measurement had already succeeded. This matters because")
+    log("       VRCT releases the old model whenever you change the model or")
+    log("       the device in settings -- so if that does not come back,")
+    log("       changing a setting would freeze the app.")
+    log()
+    log("       Each case below runs in its own short-lived process, so one")
+    log("       hang cannot cost us the others. This takes a few minutes and")
+    log("       is mostly silent -- that is expected.")
     info: dict = {}
 
-    # CPU から。GPU 固有の問題なのかどうかが最初の切り分け。
-    log()
-    log("-- CPU models (is this specific to the GPU?) --")
-    info["cpu_whisper"] = _releaseInThread("the CPU speech model", c_info.get("cpu_box", []))
-    info["cpu_translator"] = _releaseInThread("the CPU translator", f_info.get("cpu_box", []))
-
-    # VRCT の実際の手順: 新しいモデルを載せてから、古い方を落とす。
-    log()
-    log("-- the sequence VRCT actually performs when you change the model --")
-    second: list = []
-    try:
-        from faster_whisper import WhisperModel
-        t0 = time.perf_counter()
-        second.append(WhisperModel(model_id, device="cuda", device_index=0,
-                                   compute_type="float16"))
-        result("OK", "loaded a second speech model on the GPU",
-               f"{time.perf_counter() - t0:.1f}s")
-    except Exception as exc:
-        result("WARN", "could not load a second model",
-               redact(f"{type(exc).__name__}: {exc}"))
-    info["switch"] = _releaseInThread(
-        "the first GPU speech model, while the second is loaded",
-        c_info.get("gpu_box", []))
-
-    # 最後の1つを落とす。ここだけが駄目なら、影響はアプリ終了時に限られる。
-    log()
-    log("-- releasing the rest --")
-    info["translator"] = _releaseInThread("the GPU translator", f_info.get("gpu_box", []))
-    info["last"] = _releaseInThread("the last GPU speech model", second)
+    for case, what, why in _RELEASE_CASES:
+        log()
+        log(f"-- releasing {what} --")
+        log(f"       {why}")
+        outcome = _runReleaseCase(case, model_id)
+        info[case] = outcome
+        if outcome["outcome"] == "ok":
+            if "seconds" in outcome:
+                result("OK", f"released {what}", f"{outcome['seconds']:.2f}s")
+            else:
+                result("OK", what, outcome.get("detail", ""))
+        elif outcome["outcome"] == "hang":
+            result("FAIL", f"releasing {what}",
+                   f"did not return within {outcome['seconds']:.0f}s -- HANG")
+        elif outcome["outcome"] == "died":
+            result("FAIL", f"releasing {what}",
+                   f"the process died during the release (exit {outcome['code']})")
+            if outcome.get("detail"):
+                log(f"       last thing it printed: {outcome['detail']}")
+        elif outcome["outcome"] == "skipped":
+            result("--", f"releasing {what}", outcome.get("detail", ""))
+        else:
+            result("WARN", f"releasing {what}", outcome.get("detail", ""))
 
     log()
-    if info.get("switch") and info.get("last"):
-        result("OK", "conclusion", "releasing models returns -- no problem here")
-    elif info.get("switch") and not info.get("last"):
-        result("WARN", "conclusion", "only the very last release hangs")
-        log("       That would affect shutting VRCT down, not changing settings.")
-    else:
-        result("FAIL", "conclusion", "releasing a model hangs")
-        log("       This is the important result. It means VRCT has to avoid")
-        log("       releasing models, or release them with a timeout.")
+    switch = info.get("switch", {}).get("outcome")
+    last = info.get("last", {}).get("outcome")
+    if switch == "ok" and last == "ok":
+        result("OK", "conclusion", "releasing models comes back -- no problem here")
+    elif switch == "ok":
+        result("WARN", "conclusion", "only the very last release is a problem")
+        log("       That would affect closing VRCT, not changing settings.")
+    elif switch in ("hang", "died"):
+        result("FAIL", "conclusion", "releasing a model that VRCT replaces is a problem")
+        log("       This is the important one: VRCT cannot free a model when the")
+        log("       user changes a setting. It needs one of the two fixes below.")
+
+    # 対策がどちらも駄目なら、それが一番重い結論になる。
+    keepalive = info.get("keepalive", {}).get("outcome")
+    abandon = info.get("abandon", {}).get("outcome")
+    if switch in ("hang", "died"):
+        log()
+        if keepalive == "ok":
+            result("OK", "fix A is available",
+                   "keeping models instead of freeing them works")
+        else:
+            result("FAIL", "fix A is not available",
+                   "keeping both models did not work either")
+        if abandon == "ok":
+            result("OK", "fix B is available",
+                   "freeing in the background is survivable")
+        else:
+            result("FAIL", "fix B is not available",
+                   "the process does not survive a background release")
+        if keepalive != "ok" and abandon != "ok":
+            log()
+            log("       Neither workaround survives. That is the most important")
+            log("       line in this whole report -- please make sure we see it.")
     return info
+
+
+def release_case(case: str, model_id: str) -> int:
+    """子プロセス側。1 ケースだけ測って終わる。
+
+    親がタイムアウトと異常終了を見ているので、ここでは何も守らない。
+    ハングしても落ちても、それがこのプロセスの答えになる。
+
+    解放はメインスレッドで行う (VRCT での実際の解放経路に合わせる)。
+    レポートには触らない -- 親が書いているファイルを切り詰めてしまう。
+    """
+    audio = Path("amd_spike_test_audio.wav")
+    if not audio.exists():
+        _make_test_wav(audio)
+    try:
+        import ctranslate2
+        from faster_whisper import WhisperModel
+    except Exception as exc:
+        print(f"FAILED could not import: {type(exc).__name__}: {exc}", flush=True)
+        return 1
+
+    def load_gpu():
+        model = WhisperModel(model_id, device="cuda", device_index=0,
+                             compute_type="float16")
+        _transcribe_once(model, audio)  # 使ってから解放する。VRCT と同じ順序
+        return model
+
+    try:
+        if case == "switch":
+            old = load_gpu()
+            new = load_gpu()          # 先に新しい方を載せる = VRCT の手順
+            started = time.perf_counter()
+            del old
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+            _keep_alive.append(new)   # new は解放しない (測定対象ではない)
+        elif case == "last":
+            only = load_gpu()
+            started = time.perf_counter()
+            del only
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+        elif case == "keepalive":
+            # 対策案A: 解放しない。古いモデルを抱えたまま新しいのを載せ、
+            # そのあと**両方**が使えるかを確かめる。VRCT が「使い回す」
+            # 実装に切り替えられるかどうかがこれで決まる。
+            free_start = _vramFreeGiB()
+            first = load_gpu()
+            free_after_first = _vramFreeGiB()
+            second = load_gpu()
+            free_after_second = _vramFreeGiB()
+            # 新しいのを載せた後で古い方がまだ動くか = 使い回せるか
+            _transcribe_once(first, audio)
+            _transcribe_once(second, audio)
+            if free_start > 0:
+                vram = (f"; VRAM free {free_start:.1f} -> {free_after_first:.1f}"
+                        f" -> {free_after_second:.1f} GiB"
+                        f" (about {free_start - free_after_first:.1f} GiB per model)")
+            else:
+                vram = "; could not read the VRAM figures"
+            print("PASSED both models still work with neither released" + vram,
+                  flush=True)
+            _keep_alive.extend([first, second])
+
+        elif case == "abandon":
+            # 対策案B: 解放を別スレッドに投げて待たない。
+            # 3 回目の実行では、ハングしたスレッドを抱えたまま先へ進んだ
+            # 直後にプロセスが落ちている。それが再現するなら案B は使えない。
+            old = load_gpu()
+            new = load_gpu()
+            box = [old]
+            del old
+
+            def drop() -> None:
+                box.clear()
+                gc.collect()
+
+            threading.Thread(target=drop, daemon=True).start()
+            # 解放の完了を待たずに推論を続ける。VRCT が案B を採ったときに
+            # 実際に起きることそのもの。ここで落ちるなら案B は不成立。
+            started = time.perf_counter()
+            done = 0
+            while time.perf_counter() - started < 10.0:
+                _transcribe_once(new, audio)
+                done += 1
+            freed = "finished" if not box else "still running"
+            print(f"PASSED kept transcribing for 10s ({done} runs) while the old "
+                  f"model was being freed in the background; "
+                  f"the release itself {freed}", flush=True)
+            _keep_alive.append(new)
+
+        elif case == "cpu":
+            model = WhisperModel(model_id, device="cpu", compute_type="int8")
+            _transcribe_once(model, audio)
+            started = time.perf_counter()
+            del model
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+        elif case == "translator":
+            from huggingface_hub import snapshot_download
+            model_dir = snapshot_download(_TRANSLATION_REPO)
+            translator = ctranslate2.Translator(
+                str(model_dir), device="cuda", device_index=0,
+                compute_type="float16", inter_threads=1, intra_threads=4)
+            _translateOnce(translator)
+            started = time.perf_counter()
+            del translator
+            gc.collect()
+            print(f"RELEASED {time.perf_counter() - started:.2f}", flush=True)
+        else:
+            print(f"SKIPPED unknown case {case}", flush=True)
+            return 1
+    except Exception as exc:
+        print(f"FAILED {type(exc).__name__}: {exc}", flush=True)
+        return 1
+
+    # 解放は測り終えた。残りの後片付けで詰まると結果が濁るので即抜ける。
+    sys.stdout.flush()
+    os._exit(0)
+
 
 
 # ----------------------------------------------------------------------------
@@ -1060,8 +1525,13 @@ def main() -> int:
     _setup_console()
     parser = argparse.ArgumentParser(
         description="VRCT: check whether AMD GPU (ROCm) inference works")
-    parser.add_argument("--stage", choices=["a", "ab", "abc"], default="abc",
-                        help="how far to go (default: abc)")
+    parser.add_argument("--stage", choices=["a", "ab", "abc", "d"], default="abc",
+                        help="how far to go (default: abc). Use 'd' to run only "
+                             "the release checks, which is quick")
+    parser.add_argument("--release-case", default=None,
+                        help=argparse.SUPPRESS)  # 親が子プロセスを起こすための内部用
+    parser.add_argument("--run-stage", default=None,
+                        help=argparse.SUPPRESS)  # 同上
     parser.add_argument("--model", default="deepdml/faster-whisper-large-v3-turbo-ct2",
                         help="model for Stage C. For a quick first pass use "
                              "Systran/faster-whisper-tiny")
@@ -1072,6 +1542,13 @@ def main() -> int:
                         help="how many timed runs (default: 3)")
     args = parser.parse_args()
 
+    # 子プロセス経路。レポートは開かない (親が書いているファイルを潰す)。
+    if args.release_case:
+        return release_case(args.release_case, args.model)
+    if args.run_stage:
+        _setup_console()
+        return run_stage_child(args.run_stage, args)
+
     _openReport()
     _startHeartbeat()
     log("VRCT -- AMD GPU check (issue #88)")
@@ -1080,17 +1557,27 @@ def main() -> int:
     log("The report is written as it goes, so nothing is lost if this stops early.")
 
     a_info = stage_a()
-    if not _stage_failed and args.stage in ("ab", "abc"):
+    if not _stage_failed and args.stage in ("ab", "abc", "d"):
         stage_b(a_info)
+    if not _stage_failed and args.stage == "d":
+        # 解放だけを見る早い経路。3 回目の実行でここに到達できずに
+        # 終わったので、測り直しを短時間で頼めるようにしてある。
+        stage_d(args.model)
     if not _stage_failed and args.stage == "abc":
-        c_info = stage_c(args.model, args.audio, args.runs)
-        if not _stage_failed:
-            audio = args.audio or Path("amd_spike_test_audio.wav")
-            stage_e(audio)
-            f_info = stage_f(args.runs, c_info.get("gpu_box", []), audio)
+        # ここから先はステージごとに子プロセスへ隔離する。どれが固まっても
+        # そこまでの結果を残したまま次へ進める。
+        outcome = _runStageInChild("c", "Stage C", args)
+        if outcome != "failed":
+            _runStageInChild("e", "Stage E", args)
+            _runStageInChild("f", "Stage F", args)
             # Stage D は最後。解放がハングすると以降の GPU 作業が当てに
             # ならなくなるので、測り終えてから触る。
-            stage_d(args.model, c_info, f_info)
+            stage_d(args.model)
+        else:
+            log()
+            log("Stage C could not run the model at all, so the later stages")
+            log("would not tell us anything. Stopping here. What is above is")
+            log("still exactly what we needed -- please share the report.")
 
     section("Summary")
     if _stage_failed:

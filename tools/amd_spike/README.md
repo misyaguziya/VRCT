@@ -199,6 +199,16 @@ against the CPU, runs two threads against it the way VRCT does, and then runs
 speech and translation at the same time — which is the state VRCT is actually
 in while you use it.
 
+### Just the release checks
+
+If we only need Stage D again (that is usually the case once the benchmarks
+have been collected), this skips everything else and takes a couple of
+minutes:
+
+```
+VRCT-AMD-Check.exe --stage d
+```
+
 **Stage D — releasing models** (last, on purpose)
 
 On 21 Sep 2026 an RX 7900 XTX passed every measurement above and then stopped
