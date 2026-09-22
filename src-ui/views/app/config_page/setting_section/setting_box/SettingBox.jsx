@@ -12,6 +12,7 @@ import {
     Supporters,
     AboutVrct,
     Updater,
+    Ocr,
 } from "@setting_box";
 
 export const SettingBox = () => {
@@ -35,6 +36,8 @@ export const SettingBox = () => {
             return <AdvancedSettings />;
         case "updater":
             return <Updater />;
+        case "ocr":
+            return <Ocr />;
         case "supporters":
             return <Supporters />;
         case "about_vrct":

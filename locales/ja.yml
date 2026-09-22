@@ -35,6 +35,7 @@ main_page:
     translation: "翻訳"
     transcription_send: "マイク入力"
     transcription_receive: "聞き取り"
+    ocr: "チャット読み取り"
     foreground: "最前面固定"
 
     language_settings: "言語設定"
@@ -125,6 +126,7 @@ config_page:
         hotkeys: "ホットキー"
         advanced_settings: "高度な設定"
         updater: "アップデート"
+        ocr: "チャット読み取り"
 
     device:
         check_volume: "音量チェック"
@@ -354,26 +356,26 @@ config_page:
             aptabase_privacy_policy_label: "Aptabase プライバシーポリシー"
 
     ocr:
-        section_title: "VRChatチャットOCR"
-        section_desc: "画面に表示されるVRChatのチャット吹き出しをOCRで読み取り、既存の翻訳パイプラインに送ります。結果はメインのメッセージログとSteamVRオーバーレイに表示されます。VRChatのOSCチャットボックスへは送信されません。"
+        section_title: "VRChatチャット読み取り"
+        section_desc: "画面に表示されるVRChatのチャット吹き出しを読み取り、既存の翻訳パイプラインに送ります。結果はメインのメッセージログとSteamVRオーバーレイに表示されます。VRChatのOSCチャットボックスへは送信されません。"
         capture_target: "キャプチャ対象"
         language: "言語"
         performance: "パフォーマンス"
         enable_ocr_capture:
-            label: "VRChatチャットOCRを有効にする"
+            label: "VRChatチャット読み取りを有効にする"
             desc: "VRChatのウィンドウ（SteamVR起動中はHMDのミラー映像）をキャプチャし、検出したチャット吹き出しを翻訳するバックグラウンド処理を開始します。"
         window_title:
             label: "ウィンドウ名"
             desc: "表示されているウィンドウタイトルとの部分一致（大文字小文字を区別しません）。「VRChat」というタイトルではないクライアント（改造版ランチャー等）を使用している場合はここを変更してください。"
         source_language:
-            label: "OCR読み取り言語"
-            desc: "キャプチャする吹き出しに書かれている言語です。「auto」は日本語・英語・中国語とラテン文字系の言語を1つのモデルで自動認識します。ハングル・キリル文字・タイ文字・アラビア文字・デーヴァナーガリーは別モデルが必要なため、その文字体系を選んでください。OCRの実行中に変更してもそのまま切り替わります。アラビア文字は現状精度が低めです。"
+            label: "読み取り言語"
+            desc: "キャプチャする吹き出しに書かれている言語です。「auto」は日本語・英語・中国語とラテン文字系の言語を1つのモデルで自動認識します。ハングル・キリル文字・タイ文字・アラビア文字・デーヴァナーガリーは別モデルが必要なため、その文字体系を選んでください。読み取りの実行中に変更してもそのまま切り替わります。アラビア文字は現状精度が低めです。"
         poll_interval_ms:
             label: "キャプチャ間隔（ミリ秒）"
-            desc: "OCRループが新しいフレームを取得する頻度です。小さいほど反応が早くなりますが、CPU/GPU負荷が高くなります。既定値: 750。"
+            desc: "読み取りループが新しいフレームを取得する頻度です。小さいほど反応が早くなりますが、CPU/GPU負荷が高くなります。既定値: 750。"
         min_confidence:
-            label: "OCR信頼度の下限"
-            desc: "このOCRの信頼度スコアを下回る単語は破棄されます。誤検出を減らすには上げ、薄い吹き出しも拾うには下げてください。既定値: 0.85。PP-OCRは読めていないときでも高いスコアを返すため、EasyOCR時代の0.55では実質フィルタになりません。"
+            label: "読み取り信頼度の下限"
+            desc: "この信頼度スコアを下回る単語は破棄されます。誤検出を減らすには上げ、薄い吹き出しも拾うには下げてください。既定値: 0.85。"
         bubble_min_text_length:
             label: "最小文字数"
             desc: "この文字数未満の吹き出しは無視されます。既定値: 2。"
