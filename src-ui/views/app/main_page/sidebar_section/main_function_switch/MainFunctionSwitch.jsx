@@ -4,7 +4,7 @@ import styles from "./MainFunctionSwitch.module.scss";
 import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
-import DocumentScannerSvg from "@images/mui_document_scanner.svg?react";
+import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 import {
     useIsMainPageCompactMode,
     useMainFunction,
@@ -47,7 +47,7 @@ export const MainFunctionSwitch = () => {
         {
             switch_id: "ocr",
             label: t("main_page.ocr"),
-            SvgComponent: DocumentScannerSvg,
+            SvgComponent: ChatTranscribeSvg,
             currentState: currentEnableOcrCapture,
             toggleFunction: toggleEnableOcrCapture,
         },
