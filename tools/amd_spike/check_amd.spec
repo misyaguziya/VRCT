@@ -36,7 +36,11 @@ a = Analysis(
     pathex=[],
     binaries=[],
     # ROCm ランタイムを同梱する。HIP_PATH が無ければここで止まる。
-    datas=rocmRuntimeDatas(),
+    datas=rocmRuntimeDatas() + [
+        # ダブルクリックで解放テストだけを回せるようにする。引数を付け忘れると
+        # 20 分コースになり、協力者の時間を無駄にするため。
+        (os.path.join(_tools_dir, 'amd_spike', 'run-release-check.bat'), '.'),
+    ],
     # faster_whisper.vad は本体の spec と同じ理由で明示が要る
     # (遅延 import されるので依存解析に掛からない)。
     hiddenimports=['faster_whisper.vad'],

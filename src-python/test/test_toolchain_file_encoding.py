@@ -24,8 +24,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # install.bat が pip に渡す2つだけを対象にする。requirements-yolo-train.txt など
 # 学習ツール用のファイルは配布物にもインストーラにも関わらないので対象外。
-TARGETS = ("bat/*.bat", "requirements.txt", "requirements_cuda.txt",
-           "requirements_amd.txt")
+TARGETS = ("bat/*.bat", "tools/*/*.bat", "requirements.txt",
+           "requirements_cuda.txt", "requirements_amd.txt")
 
 # 改行だけ許可する。.bat と requirements にタブが必要な場面は無く、タブを許すと
 # `\t` を含むパスの取り違え (例: tools\test.py) を見逃す。
