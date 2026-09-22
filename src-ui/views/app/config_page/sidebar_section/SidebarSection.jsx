@@ -17,7 +17,7 @@ import KeyboardAltSvg from "@images/mui_keyboard_alt.svg?react";
 import CodeBlocksSvg from "@images/mui_code_blocks.svg?react";
 import RefreshSvg from "@images/refresh.svg?react";
 import CrownSvg from "@images/mui_crown.svg?react";
-import DocumentScannerSvg from "@images/mui_document_scanner.svg?react";
+import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 
 import chat_white_square from "@images/chato_white_square.png";
 
@@ -70,7 +70,7 @@ const TabIcon = ({ tab_id, className }) => {
         case "appearance": return <AppearanceSvg className={clsx(className, styles.mui_icon)} />;
         case "translation": return <TranslationSvg className={className} />;
         case "transcription": return <GraphicEqSvg className={clsx(className, styles.mui_icon)} />;
-        case "ocr": return <DocumentScannerSvg className={clsx(className, styles.mui_icon)} />;
+        case "ocr": return <ChatTranscribeSvg className={clsx(className, styles.mui_icon)} />;
         case "vr": return <HMDSvg className={clsx(className, styles.mui_icon)} />;
         case "others" : return <DiscoverTuneSvg className={clsx(className, styles.mui_icon)} />;
         case "hotkeys": return <KeyboardAltSvg className={clsx(className, styles.mui_icon)} />;
