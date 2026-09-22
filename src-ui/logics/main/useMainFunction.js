@@ -29,6 +29,7 @@ export const useMainFunction = () => {
     const {
         currentForegroundStatus,
         updateForegroundStatus,
+        pendingForegroundStatus,
     } = useStore_ForegroundStatus();
 
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -72,9 +73,16 @@ export const useMainFunction = () => {
 
 
     const toggleForeground = async () => {
+        if (currentForegroundStatus.state === "pending") return;
+        pendingForegroundStatus();
         const is_foreground_enabled = !currentForegroundStatus.data;
-        await appWindow.setAlwaysOnTop(is_foreground_enabled);
-        updateForegroundStatus(is_foreground_enabled);
+        try {
+            await appWindow.setAlwaysOnTop(is_foreground_enabled);
+            updateForegroundStatus(is_foreground_enabled);
+        } catch (e) {
+            updateForegroundStatus(currentForegroundStatus.data);
+            console.error(e);
+        }
     };
 
     return {

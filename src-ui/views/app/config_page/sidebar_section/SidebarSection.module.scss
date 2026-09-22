@@ -101,6 +101,9 @@
     &.updater_icon {
         transform: rotate(-30deg);
     }
+    &.ocr_icon {
+        fill: var(--dark_500_color);
+    }
 }
 
 .switch_indicator {
