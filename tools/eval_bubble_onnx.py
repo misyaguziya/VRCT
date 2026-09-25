@@ -25,10 +25,17 @@ PAD_COLOR = 114
 
 def letterbox(frame: np.ndarray, size) -> tuple[np.ndarray, float]:
     """BubbleDetector._letterbox と同じ前処理。BGRのまま、0-255のまま、余白は左上寄せ。"""
-    size_h, size_w = (size, size) if isinstance(size, int) else size
     h, w = frame.shape[:2]
-    scale = min(size_w / w, size_h / h)
-    nw, nh = max(1, int(w * scale)), max(1, int(h * scale))
+    if isinstance(size, int):
+        # BubbleDetector と同じく、長辺を size に合わせて縦横を32の倍数へ切り上げる。
+        # 固定形状で測ると縦長のVRフレームだけ不当に縮む。
+        scale = min(size / w, size / h)
+        nw, nh = max(1, int(w * scale)), max(1, int(h * scale))
+        size_h, size_w = -(-nh // 32) * 32, -(-nw // 32) * 32
+    else:
+        size_h, size_w = size
+        scale = min(size_w / w, size_h / h)
+        nw, nh = max(1, int(w * scale)), max(1, int(h * scale))
     canvas = np.full((size_h, size_w, 3), PAD_COLOR, dtype=np.uint8)
     canvas[:nh, :nw] = cv2.resize(frame, (nw, nh), interpolation=cv2.INTER_LINEAR)
     return np.ascontiguousarray(canvas.transpose(2, 0, 1)[None], dtype=np.float32), scale
@@ -124,7 +131,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
     parser.add_argument("--split", default="val")
-    parser.add_argument("--imgsz", default="1280", help="入力サイズ。正方形なら 1280、長方形なら H,W")
+    parser.add_argument("--imgsz", default="1280", help="長辺のサイズ(既定1280、実機と同じ可変形状)。H,W を渡すと固定形状")
     parser.add_argument("--conf", type=float, default=0.15)
     parser.add_argument("--iou", type=float, default=0.65, help="NMSの閾値")
     parser.add_argument("--match-iou", type=float, default=0.5)
@@ -147,6 +154,7 @@ def main() -> None:
     latencies: list[float] = []
     worst: list[tuple[float, str]] = []
     detections: list[dict] = []
+    per_session: dict[str, list[int]] = {}  # session -> [matched, total, extra]
 
     for image_id, entry in enumerate(entries, start=1):
         image_path = ROOT / (entry[2:] if entry.startswith("./") else entry)
@@ -180,6 +188,10 @@ def main() -> None:
                 missed += 1
                 worst.append((0.0, image_path.name))
         extra += len(boxes) - len(used)
+        stats = per_session.setdefault(image_path.parents[1].name, [0, 0, 0])
+        stats[0] += len(used)
+        stats[1] += len(truth)
+        stats[2] += len(boxes) - len(used)
 
     total = matched + missed
     print(f"model    : {args.model}")
@@ -188,6 +200,8 @@ def main() -> None:
     if ious:
         print(f"IoU      : mean {np.mean(ious):.3f}  min {np.min(ious):.3f}")
     print(f"CPU      : mean {np.mean(latencies):.1f} ms  median {np.median(latencies):.1f} ms")
+    for name, (hit, count, more) in sorted(per_session.items()):
+        print(f"  {name}: {hit}/{count}  extra {more}")
     for value, name in sorted(worst)[:3]:
         print(f"  worst  : IoU {value:.3f}  {name}")
     if args.coco_eval:
