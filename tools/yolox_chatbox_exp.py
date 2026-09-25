@@ -43,12 +43,14 @@ class Exp(MyExp):
         # FPN の stride は 8/16/32 なので 1280 は割り切れる。
         self.input_size = (1280, 1280)
         self.test_size = (1280, 1280)
-        self.multiscale_range = 0  # 固定入力。YOLOv8n 側も imgsz 固定で比較する。
+        # HWND(縮小率0.5-0.66)とOpenVR(0.39)で吹き出しの見かけの大きさが倍違うので、
+        # スケール拡張を入れる。±5 = 1120〜1440。
+        self.multiscale_range = 5
 
         # ---- augmentation (引退した YOLOv8n 側の設定と対応) ----
         self.mosaic_prob = 0.3      # mosaic: 0.3
         self.enable_mixup = False
-        self.mosaic_scale = (0.8, 1.2)  # scale: 0.2
+        self.mosaic_scale = (0.5, 1.5)
         self.translate = 0.05       # translate: 0.05
         self.degrees = 0.0          # Chat表示は回らない
         self.shear = 0.0
@@ -56,7 +58,7 @@ class Exp(MyExp):
         self.hsv_prob = 1.0         # hsv_s / hsv_v 相当 (YOLOX は色相も僅かに振る)
 
         # ---- 学習 ----
-        self.max_epoch = 150        # epochs: 150
+        self.max_epoch = 80         # 150 では全runが52〜85epochで頭打ちだった
         self.no_aug_epochs = 20     # close_mosaic: 20
         self.warmup_epochs = 5
         self.eval_interval = 5
