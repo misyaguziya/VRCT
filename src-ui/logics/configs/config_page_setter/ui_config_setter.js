@@ -622,6 +622,7 @@ export const SETTINGS_ARRAY = [
         default_value: ui_configs.overlay_small_log_default_settings,
         ui_template_id: "object",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_small_log_settings",
     },
     {
@@ -638,6 +639,7 @@ export const SETTINGS_ARRAY = [
         default_value: ui_configs.overlay_large_log_default_settings,
         ui_template_id: "object",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_large_log_settings",
     },
     {
