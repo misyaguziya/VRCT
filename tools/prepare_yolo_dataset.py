@@ -1,12 +1,15 @@
 """アノテーション結果をYOLO学習用のデータセットに整える。
 
 python tools/prepare_yolo_dataset.py [--val-ratio 0.2] [--scene-size 10] [--seed 0]
+                                     [--stratify-label-ratio]
 
 dataset_annotated/<session>/ にある images/ と annotations/ を読み、
 labels/ を作って train.txt / val.txt / data.yaml を書き出す。画像は複製しない。
 2秒周期の連番撮影なので、隣接フレームが train と val に割れないようシーン単位で分割する。
 分割はセッション単位で層化するので、セッションを足しても既存セッションの val は変わらない。
 Chat表示なしの画像(空の.txt)はネガティブサンプルとしてそのまま残す。
+--stratify-label-ratio は全画像を使い、positive / negative の比率が train と val で
+ほぼ同じになるようにシーンを割り当てる。
 """
 
 from __future__ import annotations
@@ -121,7 +124,57 @@ def split_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
     return sorted(train), sorted(val)
 
 
-def prepare(root: Path, val_ratio: float, seed: int, scene_size: int = 10) -> tuple[int, int]:
+def split_stratified_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
+                            seed: int) -> tuple[list[str], list[str]]:
+    """全画像を使い、positive / negative比率を揃えてシーン単位で分割する。"""
+    session_names = sorted({key.split("/", 1)[0] for key in scenes})
+    session_bits = {name: 1 << index for index, name in enumerate(session_names)}
+    full_mask = (1 << len(session_names)) - 1
+    total_images = sum(len(entries) for entries in scenes.values())
+    total_positive = sum(1 for entries in scenes.values() for _, positive in entries if positive)
+    val_image_target = round(total_images * val_ratio)
+    val_positive_target = round(total_positive * val_ratio)
+
+    # (画像数, positive数, session mask)ごとに選択シーンを1組保持する。
+    states: dict[tuple[int, int, int], tuple[str, ...]] = {(0, 0, 0): ()}
+    for key in sorted(scenes):
+        entries = scenes[key]
+        images = len(entries)
+        positive = sum(1 for _, is_positive in entries if is_positive)
+        bit = session_bits[key.split("/", 1)[0]]
+        additions = {}
+        for (image_count, positive_count, mask), selected in states.items():
+            next_images = image_count + images
+            if next_images > val_image_target + max(len(v) for v in scenes.values()):
+                continue
+            state = (next_images, positive_count + positive, mask | bit)
+            additions.setdefault(state, selected + (key,))
+        states.update(additions)
+
+    candidates = []
+    for (images, positive, mask), selected in states.items():
+        if mask != full_mask:
+            continue
+        candidates.append((
+            abs(images - val_image_target) + abs(positive - val_positive_target),
+            abs(images - val_image_target),
+            abs(positive - val_positive_target),
+            tuple(random.Random(seed).sample(list(selected), len(selected))),
+        ))
+    if not candidates:
+        raise SystemExit(
+            "cannot make a scene-separated stratified split across every session")
+
+    val_keys = set(min(candidates)[3])
+    train = [entry for key, entries in scenes.items() if key not in val_keys
+             for entry, _ in entries]
+    val = [entry for key, entries in scenes.items() if key in val_keys
+           for entry, _ in entries]
+    return sorted(train), sorted(val)
+
+
+def prepare(root: Path, val_ratio: float, seed: int, scene_size: int = 10,
+            stratify_label_ratio: bool = False) -> tuple[int, int]:
     sessions = find_sessions(root)
     if not sessions:
         raise SystemExit(f"no annotated session under {root}")
@@ -135,7 +188,10 @@ def prepare(root: Path, val_ratio: float, seed: int, scene_size: int = 10) -> tu
         scenes.update(found)
 
     positive = {entry for v in scenes.values() for entry, pos in v if pos}
-    train, val = split_scenes(scenes, val_ratio, seed)
+    if stratify_label_ratio:
+        train, val = split_stratified_scenes(scenes, val_ratio, seed)
+    else:
+        train, val = split_scenes(scenes, val_ratio, seed)
     (root / "train.txt").write_text("\n".join(train) + "\n", encoding="utf-8")
     (root / "val.txt").write_text("\n".join(val) + "\n", encoding="utf-8")
     (root / "data.yaml").write_text(
@@ -154,12 +210,15 @@ def main() -> None:
     parser.add_argument("--scene-size", type=int, default=10,
                         help="連続する何フレームを1シーンとみなすか (既定: 10 = 2秒周期で約20秒)")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--stratify-label-ratio", action="store_true",
+                        help="全画像を使いpositive/negative比率をtrainとvalで揃える")
     args = parser.parse_args()
     if not 0.0 < args.val_ratio < 1.0:
         raise SystemExit("--val-ratio must be between 0 and 1")
     if args.scene_size < 1:
         raise SystemExit("--scene-size must be 1 or more")
-    n_train, n_val = prepare(args.root, args.val_ratio, args.seed, args.scene_size)
+    n_train, n_val = prepare(
+        args.root, args.val_ratio, args.seed, args.scene_size, args.stratify_label_ratio)
     print(f"train {n_train} / val {n_val} -> {args.root / 'data.yaml'}")
 
 
