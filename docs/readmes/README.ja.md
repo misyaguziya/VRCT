@@ -97,6 +97,18 @@ VRCTは[Aptabase](https://aptabase.com)を通じて、アプリの改善のた�
 
 テレメトリーはアプリの設定からいつでも無効化できます。詳細は[Aptabaseプライバシーポリシー](https://aptabase.com/legal/privacy)をご確認ください。
 
+## ライセンス
+
+VRCT は [MIT License](/LICENSE) で公開しています。ただし OCR 機能が使うチャットボックス
+検出モデル（`src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx`）は例外で、**VRCT 専用の
+利用許諾**が適用されます。VRCT として、また **VRCT の開発・修正・検証のためのフォークとして**
+実行することは自由で、リポジトリをフォークしてモデルを含んだまま持っていて構いません。
+できないのは、フォーク独自のリリース版にモデルを同梱すること、VRCT 以外のソフトウェアへ
+持ち出すこと、単体での再配布、派生モデルの作成です。
+条文は [LICENSE.txt](/src-python/models/ocr/onnx/LICENSE.txt)、範囲は [NOTICE.md](/NOTICE.md) を
+確認してください。モデルを持たない状態でもビルド・実行でき、その場合は吹き出し検出だけが
+無効になります（自前で学習する手順は [docs/ocr_yolo_training.md](/docs/ocr_yolo_training.md)）。
+
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />

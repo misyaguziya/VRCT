@@ -32,20 +32,38 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
   - **SteamVR 非起動** → HWND キャプチャ
 - 切り替えの理由: VR プレイヤーは負荷軽減のため VRChat のデスクトップミラーウィンドウを最小化することが多く、その場合 HWND では黒フレームしか取れないため
 
-### ocr_bubble_detector.py — 吹き出し検出（YOLOv8n / ONNX）
+### ocr_bubble_detector.py — 吹き出し検出（YOLOX-Tiny / ONNX）
 - 収集したVRChatのスクリーンショットで学習した検出モデルで、吹き出しの矩形を直接得る
 - 推論は onnxruntime のみ（faster-whisper が Silero VAD 用に既に依存しているので追加依存なし）。
-  ultralytics も torch も推論には不要。NMS はエクスポート時にグラフへ焼き込んであるので、
-  このモジュールがやるのは letterbox と、元画像の画素座標への戻しだけ
-- モデルは `src-python/models/ocr/onnx/chatbox_yolov8n.onnx`（約12MB）を同梱。
+  YOLOX も torch も推論には不要。grid/stride のデコードはエクスポート時にグラフへ
+  入れてあるので、このモジュールがやるのは letterbox・閾値・NMS・元画像座標への戻しだけ
+- モデルは `src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx`（約5.5MB、INT8）を同梱。
   `findModelPath()` が凍結時は `_internal/ocr_onnx/`、ソース実行時はパッケージ内を見る。
   最初の `detect()` まで読み込まないので、OCRを使わない起動ではメモリも時間も使わない
-- 結果は信頼度の降順。`MAX_CANDIDATES_PER_TICK` で上位数件のみOCRに回す
-- 実行時の閾値は `BubbleDetector(confidence=...)`（既定0.15）。val20枚での実測は
-  0.15で20/20・余分な候補5、0.25で19/20・余分2、0.5で18/20・余分0。取りこぼしは
-  翻訳されない文が出ることを意味するのに対し、余分な候補はOCR側の
-  `OCR_MIN_CONFIDENCE` で文字が読めずに落ちるだけなので、取りこぼしを優先している
-- 速度は約300ms/枚（CPU、imgsz=1280、RTX 2080 Ti機のCPUでの実測）
+- **入力サイズは可変**。VRChatのウィンドウはユーザーがリサイズできるのでアスペクト比が
+  一定ではない。`_letterbox()` は長辺を `DEFAULT_IMAGE_SIZE`(1280) に合わせ、短辺を32の
+  倍数（FPNのstrideが8/16/32）へ切り上げた大きさでキャンバスを作る。余白は左上寄せなので
+  座標の戻しは `scale` で割るだけ。正方形に固定すると16:9で4割強を余白の推論に使う
+- 前処理は YOLOX の `preproc` と同じで、BGRのまま・0-255のまま・余白色114。
+  YOLOv8n のときの「RGB変換して255で割る・中央寄せ」とは違うので、モデルを
+  差し替えるときはここも合わせる
+- NMS は `nonMaxSuppression()` が numpy で行う（YOLOXの実装は torchvision.ops に依存して
+  いてONNXへ落ちない）。おかげで閾値が `BubbleDetector(confidence=...)` 一箇所になった。
+  YOLOv8n のときはエクスポート時のconfがNMSへ焼き込まれ、実行時に下げても候補が増えなかった
+- ライセンス: この .onnx だけはリポジトリの MIT ではなく **VRCT 専用の利用許諾**。
+  同ディレクトリの `LICENSE.txt` / `LICENSE.en.txt` / `NOTICE.txt` がそのまま配布物の
+  表記になるので消さない。経緯は `docs/ocr_model_license.md`
+- 結果は信頼度の降順（NMSが強い順に残すので、この時点で降順になっている）。
+  `MAX_CANDIDATES_PER_TICK` で上位数件のみOCRに回す
+- 実行時の閾値は `BubbleDetector(confidence=...)`（既定0.7）。固定val80枚(正解70個)での実測は
+  0.5で69/70・余分な候補1、0.7で68/70・余分0、0.85で52/70・余分0。実機で低い閾値だと
+  VRChat の config 画面を誤検出したため引き上げた。モデルを学習し直したら決め直す
+  （表は docs/ocr_yolo_training.md）
+- 速度は 16:9 のウィンドウで約60ms/枚、正方形に近い窓でも約110ms/枚（i7-9700K の実測、
+  他の処理が動いていると2〜3倍ぶれる）。検出は tick のOCR予算の外で走るので、
+  そのまま tick の長さに乗る
+- `crop_padding`（既定4px）はOCRに渡す切り出しを各辺4px広げる。小さい吹き出しでは
+  この分だけ枠がGTからずれるので、IoUで評価するときは0にして測る
 - 学習・再学習とモデルの差し替え手順は [docs/ocr_yolo_training.md](../../../docs/ocr_yolo_training.md)
 
 #### 経緯: 色/輪郭ヒューリスティックからの置き換え（2026-09-17）
@@ -148,7 +166,7 @@ class OcrCapture:
 ```
 ┌───────────────────┐        ┌──────────────────┐
 │  OcrCapture       │        │ BubbleDetector   │
-│  (HWND / OpenVR)  │──BGR──►│ (YOLOv8n / ONNX) │
+│  (HWND / OpenVR)  │──BGR──►│ (YOLOX-Tiny/ONNX)│
 └───────────────────┘        └────────┬─────────┘
                                       │ [(bbox, crop), ...]
                                       ▼

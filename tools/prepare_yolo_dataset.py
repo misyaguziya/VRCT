@@ -1,11 +1,15 @@
 """アノテーション結果をYOLO学習用のデータセットに整える。
 
 python tools/prepare_yolo_dataset.py [--val-ratio 0.2] [--scene-size 10] [--seed 0]
+                                     [--refreeze]
 
 dataset_annotated/<session>/ にある images/ と annotations/ を読み、
 labels/ を作って train.txt / val.txt / data.yaml を書き出す。画像は複製しない。
 2秒周期の連番撮影なので、隣接フレームが train と val に割れないようシーン単位で分割する。
+分割はセッション単位で層化するので、セッションを足しても既存セッションの val は変わらない。
 Chat表示なしの画像(空の.txt)はネガティブサンプルとしてそのまま残す。
+val は val_fixed.txt に固定する。初回(または --refreeze)だけセッション単位の層化で作り、
+以後はセッションを足しても val は変わらず、新しい画像はすべて train に入る。
 """
 
 from __future__ import annotations
@@ -19,6 +23,8 @@ import sys
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg")
 ROOT = Path(__file__).resolve().parents[1] / "dataset_annotated"
 LITERAL_NEWLINE = "\\" + "n"
+# 評価の基準。一度作ったら動かさず、データは train にだけ足していく。
+FROZEN_VAL = "val_fixed.txt"
 
 
 def find_sessions(root: Path) -> list[Path]:
@@ -78,11 +84,11 @@ def write_labels(session: Path, scene_size: int) -> dict[str, list[tuple[str, bo
     return scenes
 
 
-def split_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
-                 rng: random.Random) -> tuple[list[str], list[str]]:
-    """シーンごと train / val に振り分ける。同じシーンの画像が両方に入ることはない。"""
-    keys = sorted(scenes)
-    rng.shuffle(keys)
+def pick_val_scenes(keys: list[str], scenes: dict[str, list[tuple[str, bool]]],
+                    val_ratio: float, seed: int, label: str) -> set[str]:
+    """シーンを shuffle して、目標枚数に届くまで val に取る。"""
+    keys = sorted(keys)
+    random.Random(seed).shuffle(keys)
     target = round(sum(len(scenes[k]) for k in keys) * val_ratio)
     val_keys: set[str] = set()
     taken = 0
@@ -93,14 +99,35 @@ def split_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
         taken += len(scenes[key])
     if not val_keys or len(val_keys) == len(keys):
         raise SystemExit(
-            f"cannot split {len(keys)} scene(s) with --val-ratio {val_ratio}: "
+            f"cannot split {label} ({len(keys)} scene(s)) with --val-ratio {val_ratio}: "
             "シーン数が足りない。--scene-size を小さくするか撮影シーンを増やす。")
-    train = [e for k in keys if k not in val_keys for e, _ in scenes[k]]
+    return val_keys
+
+
+def split_scenes(scenes: dict[str, list[tuple[str, bool]]], val_ratio: float,
+                 seed: int) -> tuple[list[str], list[str]]:
+    """シーンごと train / val に振り分ける。同じシーンの画像が両方に入ることはない。
+
+    **セッション単位で層化する**。全シーンをまとめて shuffle すると、セッションを
+    足したときに val が特定のセッションへ偏りうる(実際に2セッション目を足した直後、
+    val 40枚が全部2セッション目になり、1セッション目の旧 val が全部 train へ移った)。
+    val はワールドと窓サイズの違いを見るためのものなので、どのセッションからも
+    同じ比率で取る。seed はセッションごとに独立なので、既存セッションの val は
+    セッションを足しても変わらない。
+    """
+    by_session: dict[str, list[str]] = defaultdict(list)
+    for key in scenes:
+        by_session[key.split("/", 1)[0]].append(key)
+    val_keys: set[str] = set()
+    for session, keys in sorted(by_session.items()):
+        val_keys |= pick_val_scenes(keys, scenes, val_ratio, seed, session)
+    train = [e for k in scenes if k not in val_keys for e, _ in scenes[k]]
     val = [e for k in val_keys for e, _ in scenes[k]]
     return sorted(train), sorted(val)
 
 
-def prepare(root: Path, val_ratio: float, seed: int, scene_size: int = 10) -> tuple[int, int]:
+def prepare(root: Path, val_ratio: float, seed: int, scene_size: int = 10,
+            refreeze: bool = False) -> tuple[int, int]:
     sessions = find_sessions(root)
     if not sessions:
         raise SystemExit(f"no annotated session under {root}")
@@ -114,7 +141,20 @@ def prepare(root: Path, val_ratio: float, seed: int, scene_size: int = 10) -> tu
         scenes.update(found)
 
     positive = {entry for v in scenes.values() for entry, pos in v if pos}
-    train, val = split_scenes(scenes, val_ratio, random.Random(seed))
+    frozen = root / FROZEN_VAL
+    if frozen.is_file() and not refreeze:
+        # 固定した val はそのまま。後から足したセッションは全部 train に入る。
+        val = sorted(set(frozen.read_text(encoding="utf-8").split()))
+        known = {e for v in scenes.values() for e, _ in v}
+        missing = [e for e in val if e not in known]
+        if missing:
+            raise SystemExit(f"{FROZEN_VAL} にあるが見つからない画像: {missing[:3]} ...")
+        val_set = set(val)
+        train = sorted(e for e in known if e not in val_set)
+    else:
+        train, val = split_scenes(scenes, val_ratio, seed)
+        frozen.write_text("\n".join(val) + "\n", encoding="utf-8")
+        print(f"froze val -> {frozen}")
     (root / "train.txt").write_text("\n".join(train) + "\n", encoding="utf-8")
     (root / "val.txt").write_text("\n".join(val) + "\n", encoding="utf-8")
     (root / "data.yaml").write_text(
@@ -133,12 +173,15 @@ def main() -> None:
     parser.add_argument("--scene-size", type=int, default=10,
                         help="連続する何フレームを1シーンとみなすか (既定: 10 = 2秒周期で約20秒)")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--refreeze", action="store_true",
+                        help=f"{FROZEN_VAL} を作り直す。モデル間の比較が切れるので基準を変えるときだけ")
     args = parser.parse_args()
     if not 0.0 < args.val_ratio < 1.0:
         raise SystemExit("--val-ratio must be between 0 and 1")
     if args.scene_size < 1:
         raise SystemExit("--scene-size must be 1 or more")
-    n_train, n_val = prepare(args.root, args.val_ratio, args.seed, args.scene_size)
+    n_train, n_val = prepare(
+        args.root, args.val_ratio, args.seed, args.scene_size, args.refreeze)
     print(f"train {n_train} / val {n_val} -> {args.root / 'data.yaml'}")
 
 
