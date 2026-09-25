@@ -34,11 +34,13 @@ _SHUTDOWN_JOIN_TIMEOUT_SEC = 5.0
 # 入力を奪えない)、短押しはアバターの掴み操作と区別できないため。
 _GRAB_HOLD_SEC = 0.5
 _GRIP_MASK = 1 << openvr.k_EButton_Grip
-_POINTER_WIDTH_M = 0.015
+_POINTER_WIDTH_M = 0.0075
+# 長押し中はポインタが縮んでいき、この倍率まで縮んだら掴む(XSOverlayと同様の見せ方)
+_POINTER_MIN_SCALE = 0.5
+# VRCTの primary カラー (src-ui の --primary_300_color / --primary_100_color)
 _COLOR_NORMAL = (1.0, 1.0, 1.0)
-_COLOR_POINTER = (1.0, 1.0, 1.0)
-_COLOR_HOLDING = (1.0, 0.85, 0.3)
-_COLOR_GRABBING = (0.4, 1.0, 0.5)
+_COLOR_POINTER = (0x61 / 255, 0xB4 / 255, 0xA7 / 255)
+_COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
 
 try:
     from . import overlay_utils as utils
@@ -315,7 +317,7 @@ class Overlay:
         self.fadeRatio[size] = 1.0
         self.overlay.setOverlayAlpha(self.handle[size], self.settings[size]["opacity"])
 
-    def showPointer(self, results: Optional[Any], color: Sequence[float]) -> None:
+    def showPointer(self, results: Optional[Any], color: Sequence[float], scale: float = 1.0) -> None:
         """レーザーの当たった位置に小さな点を表示する。results が None なら隠す。"""
         if self.pointer_handle is None:
             return
@@ -331,6 +333,7 @@ class Overlay:
         m = np.column_stack([x_axis, y_axis, normal, point])
         self.overlay.setOverlayTransformAbsolute(self.pointer_handle, openvr.TrackingUniverseStanding, mat34Id(m))
         self.overlay.setOverlayColor(self.pointer_handle, *color)
+        self.overlay.setOverlayWidthInMeters(self.pointer_handle, _POINTER_WIDTH_M * scale)
         self.overlay.showOverlay(self.pointer_handle)
 
     def setHighlight(self, size: Optional[str], color: Sequence[float]) -> None:
@@ -341,7 +344,8 @@ class Overlay:
     def updateGrab(self) -> None:
         """グリップ長押しでオーバーレイを掴み、離したら位置を確定する。
 
-        ポインタの色: 白=指している / 黄=グリップ長押し中 / 緑=掴んでいる。
+        ポインタは指している位置に出て、グリップ長押し中は縮んでいき、縮みきったら掴む。
+        掴んでいる間はオーバーレイを薄い緑で色付けする。
         """
         # None を渡すと pyopenvr は配列を確保せず None を返すため、自前で確保して渡す
         poses = (openvr.TrackedDevicePose_t * openvr.k_unMaxTrackedDeviceCount)()
@@ -383,8 +387,7 @@ class Overlay:
                 self.commitPosition(size, relative[:3, :])
             return
 
-        pointer = None  # (results, color)
-        highlight = None  # (size, color)
+        pointer = None  # (results, color[, scale])
         for role in (openvr.TrackedControllerRole_LeftHand, openvr.TrackedControllerRole_RightHand):
             hand = self.overlay_system.getTrackedDeviceIndexForControllerRole(role)
             hand_pose = poseOf(hand)
@@ -409,8 +412,8 @@ class Overlay:
             self.wakeOverlay(size)  # フェード済みでもグリップで起こす
             if self.grab_candidate is None or self.grab_candidate[:2] != (size, hand):
                 self.grab_candidate = (size, hand, now)
-            pointer = (results, _COLOR_HOLDING)
-            highlight = (size, _COLOR_HOLDING)
+            progress = min((now - self.grab_candidate[2]) / _GRAB_HOLD_SEC, 1.0)
+            pointer = (results, _COLOR_POINTER, 1.0 - (1.0 - _POINTER_MIN_SCALE) * progress)
             if now - self.grab_candidate[2] >= _GRAB_HOLD_SEC:
                 base_matrix, tracker_index = self.getTracker(self.settings[size]["tracker"])
                 tracker_pose = poseOf(tracker_index)
@@ -431,7 +434,6 @@ class Overlay:
                 return
 
         self.showPointer(*(pointer or (None, _COLOR_NORMAL)))
-        self.setHighlight(*(highlight or (None, _COLOR_NORMAL)))
 
     def commitPosition(self, size: str, relative: np.ndarray) -> None:
         base_matrix, _ = self.getTracker(self.settings[size]["tracker"])
