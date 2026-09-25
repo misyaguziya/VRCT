@@ -52,7 +52,7 @@ MODEL_FILE_NAME = "chatbox_yolox_tiny.onnx"
 # 長辺をこのサイズに合わせる。学習時と同じ縮尺。吹き出しは画面の1%程度しか
 # ないことがあり、640まで落とすと取りこぼす(実測: val20枚で1280が19/20、640は16/20)。
 DEFAULT_IMAGE_SIZE = 1280
-DEFAULT_CONFIDENCE = 0.85
+DEFAULT_CONFIDENCE = 0.7
 DEFAULT_NMS_IOU = 0.65
 # YOLOXのletterboxと同じ余白色。学習時の前処理に合わせる。
 PAD_COLOR = 114
@@ -111,10 +111,9 @@ class BubbleDetector:
         self.model_path = model_path or findModelPath()
         self.image_size = int(image_size)
         # 実機のワールドや距離によって当たり方が変わるので調整できるようにしておく。
-        # 既定0.15は取りこぼしを優先した値(val20枚の実測は
-        # docs/ocr_yolo_training.md の閾値の表)。余分な候補はOCR側の
-        # min_confidenceで文字が読めずに落ちるだけだが、下げすぎるとtickの
-        # OCR予算を無駄な切り出しに使う。
+        # 既定0.7 (固定val80枚で 68/70・余分0、0.5 だと 69/70・余分1)。実機では
+        # 低い閾値でVRChatのconfig画面を吹き出しと誤検出した。0.85 まで上げると
+        # 70個中18個を落とすので上げすぎない。表は docs/ocr_yolo_training.md。
         self.confidence = float(confidence)
         self.crop_padding = max(0, int(crop_padding))
         self.nms_iou = float(nms_iou)
