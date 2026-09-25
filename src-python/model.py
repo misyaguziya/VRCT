@@ -2348,6 +2348,11 @@ class Model:
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
 
+    def setOverlayPositionChangedCallback(self, fn: Optional[Callable[[str, dict], None]]) -> None:
+        """VR内でオーバーレイを掴んで動かし、位置が確定したときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.position_changed_callback = fn
+
     def startOverlay(self):
         self.ensure_initialized()
         self.overlay.startOverlay()

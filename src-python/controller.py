@@ -4487,6 +4487,19 @@ class Controller:
             self._model.setMicMuteStatusChangeCallback(self._changeMicTranscriptStatusLocked)
         except Exception:
             errorLogging()
+        try:
+            self._model.setOverlayPositionChangedCallback(self._onOverlayPositionChanged)
+        except Exception:
+            errorLogging()
+
+    def _onOverlayPositionChanged(self, size: str, position: dict) -> None:
+        """VR内の掴み移動で確定した位置を保存し、UIへ通知する (オーバーレイスレッドから呼ばれる)。"""
+        if size == "small":
+            config.OVERLAY_SMALL_LOG_SETTINGS = {**config.OVERLAY_SMALL_LOG_SETTINGS, **position}
+            self.run(200, self.run_mapping["overlay_small_log_settings"], config.OVERLAY_SMALL_LOG_SETTINGS)
+        elif size == "large":
+            config.OVERLAY_LARGE_LOG_SETTINGS = {**config.OVERLAY_LARGE_LOG_SETTINGS, **position}
+            self.run(200, self.run_mapping["overlay_large_log_settings"], config.OVERLAY_LARGE_LOG_SETTINGS)
 
     def init(self, *args, **kwargs) -> None:
         removeLog()
