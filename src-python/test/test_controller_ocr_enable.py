@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 from config import config
 from controller import Controller
-from errors import ErrorCode
+from errors import ErrorCode, OcrStartError
 
 
 class TestEnableOcrCapture(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestEnableOcrCapture(unittest.TestCase):
         config.ENABLE_OCR_CAPTURE = False
 
     def test_success_responds_true_after_start_and_pushes_nothing(self) -> None:
-        with patch("controller.model.startOCRCapture", return_value=None) as start:
+        with patch("controller.model.startOCRCapture", return_value=True) as start:
             response = self.controller.setEnableOcrCapture()
 
         start.assert_called_once()
@@ -37,7 +37,7 @@ class TestEnableOcrCapture(unittest.TestCase):
         ):
             config.ENABLE_OCR_CAPTURE = False
             self.controller.run.reset_mock()
-            with patch("controller.model.startOCRCapture", return_value=code):
+            with patch("controller.model.startOCRCapture", side_effect=OcrStartError(code)):
                 response = self.controller.setEnableOcrCapture()
 
             self.assertEqual(response, {"status": 200, "result": False}, code)

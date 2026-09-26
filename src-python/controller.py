@@ -11,7 +11,7 @@ from device_manager import device_manager
 from config import config, ConfigValidationError
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
-from errors import ErrorCode, VRCTError
+from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC, OCR_MESSAGE_SPEC
@@ -3669,12 +3669,13 @@ class Controller:
     def startOcrCapture(self) -> None:
         """Start OCR and load its models. Blocks until ready (or rolled back)."""
         try:
-            error_code = model.startOCRCapture(self.ocrMessage)
+            if not model.startOCRCapture(self.ocrMessage):
+                self._rollbackOcrCaptureToggle(ErrorCode.OCR_DISABLED_UNKNOWN)
+        except OcrStartError as e:
+            self._rollbackOcrCaptureToggle(e.error_code)
         except Exception:
             errorLogging()
-            error_code = ErrorCode.OCR_DISABLED_UNKNOWN
-        if error_code is not None:
-            self._rollbackOcrCaptureToggle(error_code)
+            self._rollbackOcrCaptureToggle(ErrorCode.OCR_DISABLED_UNKNOWN)
 
     @staticmethod
     def stopOcrCapture() -> None:

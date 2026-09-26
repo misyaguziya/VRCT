@@ -233,6 +233,18 @@ class AudioPipelineError(RuntimeError):
         self.failure = failure
 
 
+class OcrStartError(RuntimeError):
+    """OCRを開始できなかった理由 (OCR_DISABLED_*) を controller へ渡す例外。
+
+    AudioPipelineError と同じく、理由を知っている下位層が ErrorCode を載せて投げ、
+    controller が通知する。
+    """
+
+    def __init__(self, error_code: ErrorCode, message: str = "") -> None:
+        super().__init__(message or error_code.value)
+        self.error_code = error_code
+
+
 class ErrorCategory(str, Enum):
     """エラーカテゴリ"""
     DEVICE = "device"
