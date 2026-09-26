@@ -791,6 +791,7 @@ class Config:
     ENABLE_TRANSLATION = ManagedProperty('ENABLE_TRANSLATION', type_=bool, serialize=False)
     ENABLE_TRANSCRIPTION_SEND = ManagedProperty('ENABLE_TRANSCRIPTION_SEND', type_=bool, serialize=False)
     ENABLE_TRANSCRIPTION_RECEIVE = ManagedProperty('ENABLE_TRANSCRIPTION_RECEIVE', type_=bool, serialize=False)
+    ENABLE_OCR_CAPTURE = ManagedProperty('ENABLE_OCR_CAPTURE', type_=bool, serialize=False)
     ENABLE_FOREGROUND = ManagedProperty('ENABLE_FOREGROUND', type_=bool, serialize=False)
     ENABLE_CHECK_ENERGY_SEND = ManagedProperty('ENABLE_CHECK_ENERGY_SEND', type_=bool, serialize=False)
     ENABLE_CHECK_ENERGY_RECEIVE = ManagedProperty('ENABLE_CHECK_ENERGY_RECEIVE', type_=bool, serialize=False)
@@ -1000,7 +1001,6 @@ class Config:
     ENABLE_CLIPBOARD = ManagedProperty('ENABLE_CLIPBOARD', type_=bool)
 
     # --- VRChat chat-bubble OCR ---
-    ENABLE_OCR_CAPTURE = ManagedProperty('ENABLE_OCR_CAPTURE', type_=bool, serialize=False)
     # Target language is intentionally absent: OCR reads other players' chat,
     # so it always translates into your own language via getOutputTranslate.
     OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str)
@@ -1055,6 +1055,7 @@ class Config:
         self._ENABLE_TRANSLATION = False
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
+        self._ENABLE_OCR_CAPTURE = False
         self._ENABLE_FOREGROUND = False
         self._ENABLE_CHECK_ENERGY_SEND = False
         self._ENABLE_CHECK_ENERGY_RECEIVE = False
@@ -1302,7 +1303,6 @@ class Config:
         self._ENABLE_TELEMETRY = True
 
         # OCR defaults (VRChat chat-bubble text capture)
-        self._ENABLE_OCR_CAPTURE = False
         # PP-OCRv6 small が日英中＋ラテン文字系を1モデルで読むので "auto" が既定。
         # ハングル・キリル・タイ・アラビア・デーヴァナーガリーは別モデルが要るため
         # 明示選択する (選択肢は models/ocr/ocr_languages.py)。

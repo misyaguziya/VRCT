@@ -4296,10 +4296,6 @@ class Controller:
 
     # ---------- VRChat chat-bubble OCR settings ----------
 
-    @staticmethod
-    def getEnableOcrCapture(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
-
     def setEnableOcrCapture(self, *args, **kwargs) -> dict:
         if config.ENABLE_OCR_CAPTURE is False:
             # 翻訳のONと同じく、モデルの読み込みまで済ませてから応答する

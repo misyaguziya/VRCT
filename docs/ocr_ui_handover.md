@@ -32,13 +32,12 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
 
 ## 3. バックエンドとフロントの受け渡し
 
-### 3-1. 起動時に一括で届く（7件）
+### 3-1. 起動時に一括で届く（6件）
 
 他の設定とまとめて `/run/initialization_complete` に同梱される。個別に取りに行く必要はない。
 
 | キー | 型 | 既定値 |
 |---|---|---|
-| `/get/data/ocr_capture` | bool | 常に `false`（保存されない。後述） |
 | `/get/data/selectable_ocr_source_languages` | string[] | 読み取り言語の選択肢。3-5を参照 |
 | `/get/data/ocr_source_language` | string | `"auto"` |
 | `/get/data/ocr_window_title` | string | `"VRChat"` |
@@ -46,14 +45,17 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
 | `/get/data/ocr_min_confidence` | float | `0.85` |
 | `/get/data/ocr_bubble_min_text_length` | int | `2` |
 
-`ocr_capture` は `serialize=False` で保存されないため、**起動時は必ず `false`**。
-OCRが勝手に始まることはなく、毎回ユーザーがONにする。
+OCRのON/OFFはここに含まれない。翻訳と同じメイン機能の扱いで、状態を保存しないため
+**起動時は必ずOFF**（`/get/data/ocr_capture` は廃止）。OCRが勝手に始まることはなく、毎回ユーザーがONにする。
+`/set/enable/ocr_capture` / `/set/disable/ocr_capture` は翻訳と同じく初期化完了までロックされる（423）。
+UIでは `ui_config_setter.js` の設定項目から外し、応答は `/set/enable|disable/translation` と同じく
+メイン機能側（`useMainFunction` 等）で受ける想定。
 
 ### 3-2. バックエンドから随時pushされる（2件）
 
 | エンドポイント | 中身 | 現在の受け手 |
 |---|---|---|
-| `/run/enable_ocr_capture` | エラー応答（下記） | `useOcr.updateFromBackendEnableOcrCapture` |
+| `/run/enable_ocr_capture` | エラー応答（下記） | `useOcr.updateFromBackendEnableOcrCapture`（メイン機能側へ移す想定） |
 | `/run/transcription_ocr_message` | 下記 | `useMessage.addReceivedMessageLog` |
 
 `/run/enable_ocr_capture` は**ONにして開始に失敗したときだけ**、status 400 のエラー応答
@@ -104,7 +106,6 @@ OCR専用ではなく、マイク/スピーカーと共通の経路。OCRで読�
 currentOcrSourceLanguage       状態（初期値は起動時のペイロード）
 getOcrSourceLanguage()         /get/data/ocr_source_language を再取得
 setOcrSourceLanguage(value)    /set/data/ocr_source_language
-toggleEnableOcrCapture()       /set/enable/ocr_capture または /set/disable/ocr_capture
 ```
 
 設定の値域と、範囲外を送ったときの挙動:
