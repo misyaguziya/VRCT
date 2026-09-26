@@ -50,7 +50,7 @@ OCRのON/OFFはここに含まれない。翻訳と同じメイン機能の扱�
 `/set/enable/ocr_capture` / `/set/disable/ocr_capture` は翻訳と同じく初期化完了までロックされる（423）。
 UIでは `ui_config_setter.js` の設定項目から外し、`useMainFunction` の `toggleOcrCapture` /
 `currentOcrCaptureStatus`（store は `OcrCaptureStatus`）で翻訳と同じく扱う。
-（実機確認のためバックエンド側で仮に実装済み。OCR_DISABLED_* の文言はバックエンドの message を仮表示）
+（実機確認のため UI 側も仮に実装済み。OCR_DISABLED_* の文言はバックエンドの message を仮表示）
 
 ### 3-2. バックエンドから随時pushされる（2件）
 
