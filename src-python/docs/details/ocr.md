@@ -24,12 +24,17 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 ### ocr_capture_openvr.py — OpenVR ミラーテクスチャキャプチャ
 - `IVRCompositor::GetMirrorTextureGL(Eye_Left)` で HMD 左目の submitted 画像を取得
 - PyOpenGL + GLFW（非表示ウィンドウ）で GL コンテキストを作成し `glGetTexImage` で読み出し
-- OpenVR は既存 `models/overlay/overlay.py` と同じく `openvr` パッケージを使用
+- OpenVR のセッションは Overlay / Clipboard と同じく `models/openvr_session.py`（参照カウント）経由で取得・解放する
+- 読み出し前に、SteamVR が表示中のアプリが VRChat かを確認する（`getLastFrameRenderer()` と
+  `getCurrentSceneFocusProcess()` が一致し、そのプロセスが `vrchat.exe`）。SteamVR Home 等なら None を返す。
+  判定は収集ツール（`tools/ocr_capture_source.py`）で実機確認済みの方法と同じ
 
 ### ocr_capture.py — バックエンド選択ファサード
 - SteamVR 起動状態を 5 秒間隔でリチェックし、backend を自動切り替え
-  - **SteamVR 起動中** → OpenVR ミラーテクスチャ
+  - **SteamVR 起動中** → OpenVR ミラーテクスチャ。VR 側で何も取れなければ（VRChat がシーンでない、
+    読み出し失敗）、次のリチェックまで HWND キャプチャへ切り替える
   - **SteamVR 非起動** → HWND キャプチャ
+- ログ `OCR capture backend -> ...` は、実際にフレームが取れた経路が変わったときだけ出す
 - 切り替えの理由: VR プレイヤーは負荷軽減のため VRChat のデスクトップミラーウィンドウを最小化することが多く、その場合 HWND では黒フレームしか取れないため
 
 ### ocr_bubble_detector.py — 吹き出し検出（YOLOX-Tiny / ONNX）
@@ -238,12 +243,14 @@ OCRは吹き出し内の各行を別々に返す。そこには「送信者が�
 
 ## OpenVR セッションの共有について
 
-OpenVR の初期化は**プロセス単位**で、`models/overlay/overlay.py` が既に `openvr.init()` したセッションを保持しています。そのため本モジュールは:
+OpenVR の初期化は**プロセス単位**で、Overlay・Clipboard と共有しています。そのため本モジュールは:
 
-- `openvr.init()` は呼ぶ（既存セッションに合流する形になる）
-- **`openvr.shutdown()` は決して呼ばない** — 呼ぶと VR オーバーレイのセッションまで巻き添えで破棄されるため
+- `openvr.init()` / `openvr.shutdown()` を直接呼ばず、`models/openvr_session.py` の `acquire()` / `release()` を使う。
+  本当の `openvr.shutdown()` は、全員が解放したときだけ走る
 - ミラーテクスチャは**初回に 1 度だけ取得**し、以降フレーム毎に `lockGLSharedTextureForAccess` / `unlockGLSharedTextureForAccess` で囲んで読み出し
-- 失敗時はテクスチャのみ解放して `_initialized` を落とし、次 tick で再取得（SteamVR 再起動やオーバーレイ側 shutdown からの自動復帰）
+- 失敗時はテクスチャと自分のセッション参照を解放して `_initialized` を落とし、次 tick で取り直す
+  （Overlay の `reStartOverlay()` と同じ「解放してから取り直す」順）。OCR 停止時（`close()`）も参照を解放する
+- VRChat 以外のシーンを表示中なのは異常ではないので、テクスチャもセッションも保持したまま None を返す
 
 ## 設定の反映タイミング
 
