@@ -252,6 +252,12 @@ _SIMPLE_CONFIG_GETTERS = {
     "getObsBrowserSourceFontOutlineThickness": "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS",
     "getObsBrowserSourceFontOutlineColor": "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR",
     "getClipboard": "ENABLE_CLIPBOARD",
+    "getSelectableOcrSourceLanguages": "SELECTABLE_OCR_SOURCE_LANGUAGE_LIST",
+    "getOcrSourceLanguage": "OCR_SOURCE_LANGUAGE",
+    "getOcrWindowTitle": "OCR_WINDOW_TITLE",
+    "getOcrPollIntervalMs": "OCR_POLL_INTERVAL_MS",
+    "getOcrMinConfidence": "OCR_MIN_CONFIDENCE",
+    "getOcrBubbleMinTextLength": "OCR_BUBBLE_MIN_TEXT_LENGTH",
 }
 
 class Controller:
@@ -4297,82 +4303,39 @@ class Controller:
         return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
 
     @staticmethod
-    def getSelectableOcrSourceLanguages(*args, **kwargs) -> dict:
-        return {"status": 200, "result": model.getSelectableOCRSourceLanguages()}
-
-    @staticmethod
-    def getOcrSourceLanguage(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrSourceLanguage(data, *args, **kwargs) -> dict:
-        # OCRエンジンが読める言語だけを受け付ける。VRCTが翻訳できる言語の
-        # 全てをOCRできるわけではないので、ここで弾かないと「設定できたのに
-        # 何も読めない」状態になる。
-        language = str(data)
-        if language not in model.getSelectableOCRSourceLanguages():
-            return {"status": 400, "result": config.OCR_SOURCE_LANGUAGE}
-        config.OCR_SOURCE_LANGUAGE = language
+        config.OCR_SOURCE_LANGUAGE = str(data)
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
+        return {"status":200, "result":config.OCR_SOURCE_LANGUAGE}
 
     @staticmethod
-    def getOcrWindowTitle(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_WINDOW_TITLE}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrWindowTitle(data, *args, **kwargs) -> dict:
-        title = str(data).strip()
-        if not title:
-            return {"status": 400, "result": config.OCR_WINDOW_TITLE}
-        config.OCR_WINDOW_TITLE = title
+        config.OCR_WINDOW_TITLE = str(data).strip()
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_WINDOW_TITLE}
+        return {"status":200, "result":config.OCR_WINDOW_TITLE}
 
     @staticmethod
-    def getOcrPollIntervalMs(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_POLL_INTERVAL_MS}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrPollIntervalMs(data, *args, **kwargs) -> dict:
-        try:
-            value = int(data)
-        except (TypeError, ValueError):
-            return {"status": 400, "result": config.OCR_POLL_INTERVAL_MS}
-        value = max(100, min(5000, value))
-        config.OCR_POLL_INTERVAL_MS = value
+        config.OCR_POLL_INTERVAL_MS = data
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_POLL_INTERVAL_MS}
+        return {"status":200, "result":config.OCR_POLL_INTERVAL_MS}
 
     @staticmethod
-    def getOcrMinConfidence(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrMinConfidence(data, *args, **kwargs) -> dict:
-        try:
-            value = float(data)
-        except (TypeError, ValueError):
-            return {"status": 400, "result": config.OCR_MIN_CONFIDENCE}
-        value = max(0.1, min(0.99, value))
-        config.OCR_MIN_CONFIDENCE = value
+        config.OCR_MIN_CONFIDENCE = data
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
+        return {"status":200, "result":config.OCR_MIN_CONFIDENCE}
 
     @staticmethod
-    def getOcrBubbleMinTextLength(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrBubbleMinTextLength(data, *args, **kwargs) -> dict:
-        try:
-            value = int(data)
-        except (TypeError, ValueError):
-            return {"status": 400, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
-        value = max(1, min(50, value))
-        config.OCR_BUBBLE_MIN_TEXT_LENGTH = value
+        config.OCR_BUBBLE_MIN_TEXT_LENGTH = data
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
+        return {"status":200, "result":config.OCR_BUBBLE_MIN_TEXT_LENGTH}
 
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)

@@ -36,6 +36,11 @@ try:
 except Exception:  # pragma: no cover - optional runtime
     whisper_models = {}  # type: ignore
 
+try:
+    from models.ocr.ocr_languages import SELECTABLE_LANGUAGES as ocr_selectable_languages
+except Exception:  # pragma: no cover - optional runtime
+    ocr_selectable_languages = ()  # type: ignore
+
 from utils import errorLogging, printLog, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
 
 # NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
@@ -782,6 +787,7 @@ class Config:
     SELECTABLE_TRANSLATION_ENGINE_LIST = ManagedProperty('SELECTABLE_TRANSLATION_ENGINE_LIST', readonly=True, serialize=False)
     SELECTABLE_TRANSCRIPTION_ENGINE_LIST = ManagedProperty('SELECTABLE_TRANSCRIPTION_ENGINE_LIST', readonly=True, serialize=False)
     SELECTABLE_UI_LANGUAGE_LIST = ManagedProperty('SELECTABLE_UI_LANGUAGE_LIST', readonly=True, serialize=False)
+    SELECTABLE_OCR_SOURCE_LANGUAGE_LIST = ManagedProperty('SELECTABLE_OCR_SOURCE_LANGUAGE_LIST', readonly=True, serialize=False)
     COMPUTE_MODE = ManagedProperty('COMPUTE_MODE', readonly=True, serialize=False)
     SELECTABLE_COMPUTE_DEVICE_LIST = ManagedProperty('SELECTABLE_COMPUTE_DEVICE_LIST', readonly=True, serialize=False)
     SEND_MESSAGE_BUTTON_TYPE_LIST = ManagedProperty('SEND_MESSAGE_BUTTON_TYPE_LIST', readonly=True, serialize=False)
@@ -1003,11 +1009,11 @@ class Config:
     # --- VRChat chat-bubble OCR ---
     # Target language is intentionally absent: OCR reads other players' chat,
     # so it always translates into your own language via getOutputTranslate.
-    OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str)
-    OCR_WINDOW_TITLE = ManagedProperty('OCR_WINDOW_TITLE', type_=str)
-    OCR_POLL_INTERVAL_MS = ManagedProperty('OCR_POLL_INTERVAL_MS', type_=int)
-    OCR_MIN_CONFIDENCE = ManagedProperty('OCR_MIN_CONFIDENCE', type_=(int, float))
-    OCR_BUBBLE_MIN_TEXT_LENGTH = ManagedProperty('OCR_BUBBLE_MIN_TEXT_LENGTH', type_=int)
+    OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_OCR_SOURCE_LANGUAGE_LIST)
+    OCR_WINDOW_TITLE = ManagedProperty('OCR_WINDOW_TITLE', type_=str, allowed=lambda v, inst: len(v) > 0)
+    OCR_POLL_INTERVAL_MS = ManagedProperty('OCR_POLL_INTERVAL_MS', type_=int, allowed=lambda v, inst: 100 <= v <= 5000)
+    OCR_MIN_CONFIDENCE = ManagedProperty('OCR_MIN_CONFIDENCE', type_=(int, float), allowed=lambda v, inst: 0.1 <= v <= 0.99)
+    OCR_BUBBLE_MIN_TEXT_LENGTH = ManagedProperty('OCR_BUBBLE_MIN_TEXT_LENGTH', type_=int, allowed=lambda v, inst: 1 <= v <= 50)
 
     def init_config(self):
         # Read Only
@@ -1045,6 +1051,8 @@ class Config:
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
+        # OCRエンジンが読める言語だけ (VRCTが翻訳できる言語の全てではない)。
+        self._SELECTABLE_OCR_SOURCE_LANGUAGE_LIST = list(ocr_selectable_languages)
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._COMPUTE_MODE = "cuda" if any(
             device.get("device") == "cuda" for device in self._SELECTABLE_COMPUTE_DEVICE_LIST
