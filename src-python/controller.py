@@ -3650,42 +3650,30 @@ class Controller:
         with self.speaker_lifecycle_lock:
             self._stopTranscriptionReceiveMessageLocked()
 
-    def _rollbackOcrCaptureToggle(self, error_code: ErrorCode) -> None:
-        """Turn the OCR flag back off and tell the UI why.
+    def startOcrCapture(self) -> bool:
+        """OCRを開始する (モデル読み込みまで済ませて戻る)。
 
-        Same shape as TRANSLATION_DISABLED_VRAM: the error response (data=False)
-        goes to /run/enable_ocr_capture, so the toggle flips back and the UI can
-        pick a message from error_code.
+        開始できなければ、翻訳の TRANSLATION_DISABLED_VRAM と同じく
+        OCR_DISABLED_* を /run/enable_ocr_capture へ送って False を返す。
         """
-        config.ENABLE_OCR_CAPTURE = False
         try:
-            endpoint = self.run_mapping.get("enable_ocr_capture")
-            if endpoint is not None:
-                response = VRCTError.create_error_response(error_code, data=False)
-                self.run(response["status"], endpoint, response["result"])
-        except Exception:
-            errorLogging()
-
-    def startOcrCapture(self) -> None:
-        """Start OCR and load its models. Blocks until ready (or rolled back)."""
-        try:
-            if not model.startOCRCapture(self.ocrMessage):
-                self._rollbackOcrCaptureToggle(ErrorCode.OCR_DISABLED_UNKNOWN)
+            return model.startOCRCapture(self.ocrMessage)
         except OcrStartError as e:
-            self._rollbackOcrCaptureToggle(e.error_code)
+            error_code = e.error_code
         except Exception:
             errorLogging()
-            self._rollbackOcrCaptureToggle(ErrorCode.OCR_DISABLED_UNKNOWN)
+            error_code = ErrorCode.OCR_DISABLED_UNKNOWN
+        disable_response = VRCTError.create_error_response(error_code, data=False)
+        self.run(
+            disable_response["status"],
+            self.run_mapping["enable_ocr_capture"],
+            disable_response["result"],
+        )
+        return False
 
     @staticmethod
     def stopOcrCapture() -> None:
         model.stopOCRCapture()
-
-    def stopThreadingOcrCapture(self) -> None:
-        th = Thread(target=self.stopOcrCapture)
-        th.daemon = True
-        th.start()
-        th.join()
 
     @staticmethod
     def replaceExclamationsWithRandom(text):
@@ -4299,17 +4287,13 @@ class Controller:
 
     def setEnableOcrCapture(self, *args, **kwargs) -> dict:
         if config.ENABLE_OCR_CAPTURE is False:
-            # 翻訳のONと同じく、モデルの読み込みまで済ませてから応答する
-            # (UIは応答までローディング表示)。失敗時は startOcrCapture が
-            # OCR_DISABLED_* を通知してフラグを False に戻す。
-            config.ENABLE_OCR_CAPTURE = True
-            self.startOcrCapture()
+            config.ENABLE_OCR_CAPTURE = self.startOcrCapture()
         return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
 
     def setDisableOcrCapture(self, *args, **kwargs) -> dict:
         if config.ENABLE_OCR_CAPTURE is True:
+            self.stopOcrCapture()
             config.ENABLE_OCR_CAPTURE = False
-            self.stopThreadingOcrCapture()
         return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
 
     @staticmethod
