@@ -9,7 +9,6 @@ import {
     useIsMainPageCompactMode,
     useMainFunction,
 } from "@logics_main";
-import { useOcr } from "@logics_configs";
 
 export const MainFunctionSwitch = () => {
     const { t } = useI18n();
@@ -18,8 +17,8 @@ export const MainFunctionSwitch = () => {
         toggleTranslation, currentTranslationStatus,
         toggleTranscriptionSend, currentTranscriptionSendStatus,
         toggleTranscriptionReceive, currentTranscriptionReceiveStatus,
+        toggleOcrCapture, currentOcrCaptureStatus,
     } = useMainFunction();
-    const { currentEnableOcrCapture, toggleEnableOcrCapture } = useOcr();
 
 
     const switch_items = [
@@ -48,8 +47,8 @@ export const MainFunctionSwitch = () => {
             switch_id: "ocr",
             label: t("main_page.ocr"),
             SvgComponent: ChatTranscribeSvg,
-            currentState: currentEnableOcrCapture,
-            toggleFunction: toggleEnableOcrCapture,
+            currentState: currentOcrCaptureStatus,
+            toggleFunction: toggleOcrCapture,
         },
     ];
 
