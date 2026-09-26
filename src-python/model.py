@@ -48,7 +48,7 @@ from models.transcription.transcription_deepgram import (
     isLanguageSupportedByDeepgramModel,
 )
 from models.transliteration.transliteration_transliterator import Transliterator
-from models.overlay.overlay import Overlay
+from models.overlay.overlay import PANEL, Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
@@ -955,6 +955,7 @@ class Model:
         overlay_settings = {
             "small": overlay_small_log_settings,
             "large": overlay_large_log_settings,
+            PANEL: copy.deepcopy(config.OVERLAY_VR_PANEL_SETTINGS),
         }
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)

@@ -450,3 +450,6 @@ config_page:
     notifications:
         save_success: "설정을 저장했습니다."
         opened_folder: "폴더를 열었습니다."
+
+vr_panel:
+    locked_by_config_page: "데스크톱에서 설정 화면이 열려 있습니다. 닫으면 조작할 수 있습니다."

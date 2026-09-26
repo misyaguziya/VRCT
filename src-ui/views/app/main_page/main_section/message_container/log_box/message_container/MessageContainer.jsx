@@ -5,6 +5,7 @@ import styles from "./MessageContainer.module.scss";
 import { MessageSubMenuContainer } from "./message_sub_menu_container/MessageSubMenuContainer";
 import { useMessage } from "@logics_common";
 import { useAppearance } from "@logics_configs";
+import { store } from "@store";
 
 export const MessageContainer = ({ messages, status, category, created_at, source }) => {
     const { t } = useI18n();
@@ -80,7 +81,8 @@ export const MessageContainer = ({ messages, status, category, created_at, sourc
                     )}
                 </div>
             </div>
-            {currentShowResendButton.data && is_sent_message && is_hovered ? (
+            {/* VRパネルでは、レーザーの誤操作で過去のメッセージを再送しないよう出さない */}
+            {currentShowResendButton.data && is_sent_message && is_hovered && !store.is_vr_panel ? (
                 <MessageSubMenuContainer
                     setIsHovered={lockHoverState}
                     resendFunction={resendFunction}

@@ -450,3 +450,6 @@ config_page:
     notifications:
         save_success: "设置已保存。"
         opened_folder: "已打开文件夹。"
+
+vr_panel:
+    locked_by_config_page: "桌面上已打开设置界面。关闭后即可操作。"

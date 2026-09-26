@@ -490,6 +490,19 @@ def _overlay_small_validator(val, inst):
             new[key] = float(v)
     return new
 
+def _overlay_vr_panel_validator(val, inst):
+    if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_VR_PANEL_SETTINGS.keys())):
+        return None
+    new = dict(inst.OVERLAY_VR_PANEL_SETTINGS)
+    for key, v in val.items():
+        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
+            new[key] = v
+        elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation','opacity','ui_scaling'] and isinstance(v,(int,float)):
+            new[key] = float(v)
+        elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
+            new[key] = v
+    return new
+
 def _overlay_large_validator(val, inst):
     if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_LARGE_LOG_SETTINGS.keys())):
         return None
@@ -907,6 +920,8 @@ class Config:
     # --- Overlay settings ---
     OVERLAY_SMALL_LOG_SETTINGS = ValidatedProperty('OVERLAY_SMALL_LOG_SETTINGS', _overlay_small_validator)
     OVERLAY_LARGE_LOG_SETTINGS = ValidatedProperty('OVERLAY_LARGE_LOG_SETTINGS', _overlay_large_validator)
+    # VRパネルの位置。UIからは設定せず、VR内で掴んで動かした位置だけが保存される。
+    OVERLAY_VR_PANEL_SETTINGS = ValidatedProperty('OVERLAY_VR_PANEL_SETTINGS', _overlay_vr_panel_validator)
 
     # --- Message format settings ---
     SEND_MESSAGE_FORMAT_PARTS = ValidatedProperty('SEND_MESSAGE_FORMAT_PARTS', _format_validator_send)
@@ -1247,6 +1262,19 @@ class Config:
             "fadeout_duration": 2,
             "opacity": 1.0,
             "ui_scaling": 1.0,
+            "tracker": "LeftHand",
+        }
+        self._OVERLAY_VR_PANEL_SETTINGS = {
+            "x_pos": 0.0,
+            "y_pos": 0.3,
+            "z_pos": 0.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
+            "display_duration": 5,
+            "fadeout_duration": 0,  # パネルはフェードさせない
+            "opacity": 1.0,
+            "ui_scaling": 0.4,  # 横幅(m)
             "tracker": "LeftHand",
         }
         self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False

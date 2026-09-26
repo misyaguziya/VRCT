@@ -4500,6 +4500,8 @@ class Controller:
         elif size == "large":
             config.OVERLAY_LARGE_LOG_SETTINGS = {**config.OVERLAY_LARGE_LOG_SETTINGS, **position}
             self.run(200, self.run_mapping["overlay_large_log_settings"], config.OVERLAY_LARGE_LOG_SETTINGS)
+        elif size == "panel":
+            config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, **position}
 
     def init(self, *args, **kwargs) -> None:
         removeLog()
