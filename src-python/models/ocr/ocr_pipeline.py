@@ -30,7 +30,7 @@ from .ocr_bubble_detector import BubbleDetector
 from .ocr_capture import OcrCapture
 from . import ocr_engine_rapidocr as ocr_engine
 from .ocr_languages import resolveModelSpec
-from errors import ErrorCode
+from errors import ErrorCode, OcrStartError
 
 try:
     from utils import errorLogging, printLog
@@ -184,37 +184,37 @@ class OcrPipeline:
     def isEngineAvailable(self) -> bool:
         return ocr_engine.isAvailable() and self._detector.isAvailable()
 
-    def start(self) -> Optional[ErrorCode]:
+    def start(self) -> bool:
         """モデルを読み込んでからワーカーを起動する。
 
-        成功なら None、失敗ならOFFに戻した理由の ErrorCode を返す。
+        起動できなければ理由 (OCR_DISABLED_*) を載せた OcrStartError を投げる。
         どちらのモデルもここで読むので、戻った時点で読み取りを始められる。
         """
         if not self.isEngineAvailable():
             printLog("OCR pipeline: engine or opencv unavailable, refusing to start")
-            return ErrorCode.OCR_DISABLED_ENGINE_UNAVAILABLE
+            raise OcrStartError(ErrorCode.OCR_DISABLED_ENGINE_UNAVAILABLE)
         if self._thread is not None and self._thread.is_alive():
-            return None
+            return True
         self._stop_event.clear()
         spec = resolveModelSpec(self._source_language)
         if spec is None:
             printLog(f"OCR pipeline: language {self._source_language!r} is not supported by the OCR engine")
-            return ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE
+            raise OcrStartError(ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE)
         self._reader = ocr_engine.getReader(spec)
         if self._reader is None:
             printLog(f"OCR pipeline: OCR engine init failed for {spec.label}")
             self.stop()
-            return ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED
+            raise OcrStartError(ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED)
         try:
             self._detector.loadModel()
         except Exception:
             errorLogging()
             printLog("OCR pipeline: bubble detector model load failed")
             self.stop()
-            return ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED
+            raise OcrStartError(ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED)
         self._thread = Thread(target=self._run, name="ocr_pipeline", daemon=True)
         self._thread.start()
-        return None
+        return True
 
     def stop(self) -> None:
         self._stop_event.set()
