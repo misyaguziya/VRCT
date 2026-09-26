@@ -7,15 +7,16 @@ Uses IVRCompositor::GetMirrorTextureGL + PyOpenGL to read pixels back
 into a numpy array. Requires an active OpenGL context, which we create
 via GLFW (hidden window) on first use.
 
-Two lifecycle rules matter here:
+Three lifecycle rules matter here:
 
-1. OpenVR is initialized **per process**, and models/overlay/overlay.py
-   already owns an `openvr.init()` session. Calling `openvr.shutdown()`
-   from this module would tear down that shared session and silently
-   break the VR overlay, so this module never shuts OpenVR down — it
-   only releases the resources it created itself.
+1. OpenVR is initialized **per process** and shared with Overlay and
+   Clipboard, so the session goes through models/openvr_session.py
+   (acquire()/release()), never openvr.init()/shutdown() directly.
 2. The mirror texture must be acquired once (not per frame) and then
    locked/unlocked around every read, per the OpenVR contract.
+3. Only VRChat's frames are read: while another scene app (SteamVR Home
+   etc.) is presenting, capture() returns None so the facade can fall back
+   to the desktop window.
 """
 
 from __future__ import annotations
@@ -26,8 +27,18 @@ import numpy as np
 
 try:
     import openvr
+    try:
+        from models import openvr_session
+    except ImportError:
+        import openvr_session
 except Exception:  # pragma: no cover
     openvr = None  # type: ignore
+    openvr_session = None  # type: ignore
+
+try:
+    from psutil import Process
+except Exception:  # pragma: no cover
+    Process = None  # type: ignore
 
 try:
     from OpenGL import GL
@@ -65,6 +76,7 @@ class OpenVRMirrorCapture:
         self._gl_window = None
         self._texture_id: Optional[int] = None
         self._shared_handle = None
+        self._session_held = False
         self._initialized = False
 
     def isAvailable(self) -> bool:
@@ -102,21 +114,22 @@ class OpenVRMirrorCapture:
 
             # Join (or create) the process-wide OpenVR session. Background
             # mode so we never steal focus from the running scene app.
-            # Ownership is deliberately not tracked: see module docstring.
-            openvr.init(openvr.VRApplication_Background)
+            openvr_session.acquire(openvr.VRApplication_Background)
+            self._session_held = True
             self._compositor = openvr.IVRCompositor()
 
             # Acquire the mirror texture exactly once.
             tex = self._compositor.getMirrorTextureGL(self._eye)
             if not isinstance(tex, (tuple, list)) or len(tex) < 2:
                 printLog("OCR: unexpected getMirrorTextureGL return shape")
+                self._resetVrState()
                 return False
             self._texture_id = int(tex[0])
             self._shared_handle = tex[1]
             if not self._texture_id:
                 printLog("OCR: compositor returned an empty mirror texture")
                 self._texture_id = None
-                self._shared_handle = None
+                self._resetVrState()
                 return False
 
             self._initialized = True
@@ -127,8 +140,10 @@ class OpenVRMirrorCapture:
             return False
 
     def _resetVrState(self) -> None:
-        """Release the mirror texture but keep the GL context and the
-        process-wide OpenVR session alive, so a retry is cheap."""
+        """Release the mirror texture and our session reference, but keep
+        the GL context so a retry is cheap. Releasing (rather than holding
+        a possibly dead session) lets the next _init() reconnect, the same
+        release-then-acquire order Overlay.reStartOverlay() uses."""
         try:
             if (
                 self._compositor is not None
@@ -142,6 +157,28 @@ class OpenVRMirrorCapture:
         self._shared_handle = None
         self._compositor = None
         self._initialized = False
+        if self._session_held:
+            self._session_held = False
+            try:
+                openvr_session.release()
+            except Exception:
+                errorLogging()
+
+    def _isVrchatScene(self) -> bool:
+        """VRChat is the app SteamVR is currently presenting.
+
+        Same check as tools/ocr_capture_source.py, verified on hardware: the
+        last frame renderer is the scene focus process and it is VRChat.
+        """
+        if Process is None:
+            return False
+        renderer = self._compositor.getLastFrameRenderer()
+        if not renderer or renderer != self._compositor.getCurrentSceneFocusProcess():
+            return False
+        try:
+            return Process(renderer).name().lower() == "vrchat.exe"
+        except Exception:
+            return False
 
     def _lock(self) -> None:
         if self._shared_handle is None:
@@ -157,6 +194,14 @@ class OpenVRMirrorCapture:
 
     def capture(self) -> Optional[np.ndarray]:
         if not self._init():
+            return None
+
+        try:
+            if not self._isVrchatScene():
+                return None
+        except Exception:
+            errorLogging()
+            self._resetVrState()
             return None
 
         locked = False
@@ -201,10 +246,10 @@ class OpenVRMirrorCapture:
                     pass
 
     def close(self) -> None:
-        """Release OCR-owned resources.
+        """Release OCR-owned resources and our shared-session reference.
 
-        Deliberately does NOT call openvr.shutdown(): the OpenVR session is
-        shared with models/overlay/overlay.py, which owns its lifecycle.
+        The real openvr.shutdown() only runs once Overlay/Clipboard have
+        released theirs too (models/openvr_session.py).
         """
         self._resetVrState()
         if self._gl_window is not None and glfw is not None:
