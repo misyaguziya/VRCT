@@ -324,3 +324,30 @@ class TestApplyConfig(unittest.TestCase):
         pipeline._applyPending()
 
         self.assertAlmostEqual(pipeline._poll_interval, 0.75)
+
+
+class TestStartReportsReason(unittest.TestCase):
+    """start() はOFFに戻した理由をUIへ渡せるよう ErrorCode で返す。"""
+
+    def _make(self):
+        pipeline = OcrPipeline(callback=lambda payload: None, source_language="auto")
+        pipeline._detector = Mock()
+        return pipeline
+
+    def test_engine_missing(self) -> None:
+        from errors import ErrorCode
+        pipeline = self._make()
+        with patch("models.ocr.ocr_pipeline.ocr_engine.isAvailable", return_value=False):
+            self.assertEqual(pipeline.start(), ErrorCode.OCR_DISABLED_ENGINE_UNAVAILABLE)
+
+    def test_detector_model_load_failure(self) -> None:
+        # 検出モデルもONの時点で読む (最初の検出時の待ちを無くすため)。ここで
+        # 壊れていたら起動せず理由を返す。
+        from errors import ErrorCode
+        pipeline = self._make()
+        pipeline._detector.loadModel.side_effect = RuntimeError("bad onnx")
+        with patch("models.ocr.ocr_pipeline.ocr_engine.isAvailable", return_value=True), \
+                patch("models.ocr.ocr_pipeline.ocr_engine.getReader", return_value=object()), \
+                patch("models.ocr.ocr_pipeline.errorLogging"):
+            self.assertEqual(pipeline.start(), ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED)
+        self.assertIsNone(pipeline._thread)
