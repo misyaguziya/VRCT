@@ -290,7 +290,7 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 
 - `Controller.startOcrCapture()` — `setEnableOcrCapture` から同期で呼ぶ。文字認識モデルと
   吹き出し検出モデルを読み込み終えてから応答を返す（翻訳のONと同じ）。失敗したら
-  `model.startOCRCapture` が返した `OCR_DISABLED_*` を `/run/enable_ocr_capture` に送ってOFFに戻す
+  `model.startOCRCapture` が投げた `OcrStartError` の `OCR_DISABLED_*`（それ以外の例外は `OCR_DISABLED_UNKNOWN`）を `/run/enable_ocr_capture` に送ってOFFに戻す
 - `Controller.stopOcrCapture()` — 停止（スレッドで実行して join）
 - `model.updateOCRCaptureSettings()` — 設定変更を実行中のパイプラインへ渡す（各setterから呼ばれる）
 - `Controller.ocrMessage(result)` — `OCR_MESSAGE_SPEC` を渡して `_processMessage` に委ねる
