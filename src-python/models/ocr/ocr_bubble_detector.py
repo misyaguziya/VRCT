@@ -127,8 +127,11 @@ class BubbleDetector:
         return (cv2 is not None and ort is not None
                 and bool(self.model_path) and os_path.isfile(self.model_path))
 
-    def _ensureSession(self):
-        """最初のdetect()でだけモデルを読む。OCRを使わない起動では読み込まない。"""
+    def loadModel(self):
+        """モデルを読む (読み込み済みなら何もしない)。
+
+        OCRをONにしたときに OcrPipeline.start() から呼ぶ。OCRを使わない起動では
+        読み込まない。"""
         if self._session is not None:
             return self._session
         with self._lock:
@@ -172,7 +175,7 @@ class BubbleDetector:
         if h <= 0 or w <= 0:
             return []
         try:
-            session = self._ensureSession()
+            session = self.loadModel()
             tensor, scale = self._letterbox(frame)
             outputs = session.run(None, {self._input_name: tensor})[0]
         except Exception:
