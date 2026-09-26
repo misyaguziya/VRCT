@@ -1,0 +1,121 @@
+"""VRパネル用: Tauriの "VRCT VR Panel" ウィンドウを撮影し、マウス入力を送る (Windows専用)。
+
+ウィンドウは画面外に置かれ、隠れていても PrintWindow(PW_RENDERFULLCONTENT) で撮影できる
+(最小化中は不可)。入力はOSのカーソルを動かさないよう PostMessage で送る。
+描画側のChromiumが隠れたウィンドウの描画を止めないよう、Tauri側で起動引数を指定している
+(src-tauri/src/lib.rs の BROWSER_ARGS)。
+"""
+import ctypes
+from ctypes import wintypes
+from typing import Optional
+
+from PIL import Image
+
+VR_PANEL_TITLE = "VRCT VR Panel"
+
+_PW_RENDERFULLCONTENT = 2
+_WM_MOUSEMOVE = 0x0200
+_WM_LBUTTONDOWN = 0x0201
+_WM_LBUTTONUP = 0x0202
+_WM_MOUSEWHEEL = 0x020A
+_MK_LBUTTON = 0x0001
+
+_user32 = ctypes.windll.user32 if hasattr(ctypes, "windll") else None
+_gdi32 = ctypes.windll.gdi32 if hasattr(ctypes, "windll") else None
+
+
+class _BITMAPINFOHEADER(ctypes.Structure):
+    _fields_ = [
+        ("biSize", wintypes.DWORD), ("biWidth", wintypes.LONG), ("biHeight", wintypes.LONG),
+        ("biPlanes", wintypes.WORD), ("biBitCount", wintypes.WORD), ("biCompression", wintypes.DWORD),
+        ("biSizeImage", wintypes.DWORD), ("biXPelsPerMeter", wintypes.LONG),
+        ("biYPelsPerMeter", wintypes.LONG), ("biClrUsed", wintypes.DWORD), ("biClrImportant", wintypes.DWORD),
+    ]
+
+
+def findWindow(title: str = VR_PANEL_TITLE) -> Optional[int]:
+    hwnd = _user32.FindWindowW(None, title)
+    return hwnd or None
+
+
+def isWindow(hwnd: int) -> bool:
+    return bool(_user32.IsWindow(hwnd))
+
+
+def captureWindow(hwnd: int) -> Optional[Image.Image]:
+    """ウィンドウ全体をRGBA画像として撮影する。最小化中などで撮れなければ None。"""
+    if _user32.IsIconic(hwnd):
+        return None
+    rect = wintypes.RECT()
+    _user32.GetWindowRect(hwnd, ctypes.byref(rect))
+    width, height = rect.right - rect.left, rect.bottom - rect.top
+    if width <= 0 or height <= 0:
+        return None
+    hdc = _user32.GetWindowDC(hwnd)
+    mdc = _gdi32.CreateCompatibleDC(hdc)
+    bmp = _gdi32.CreateCompatibleBitmap(hdc, width, height)
+    try:
+        _gdi32.SelectObject(mdc, bmp)
+        if not _user32.PrintWindow(hwnd, mdc, _PW_RENDERFULLCONTENT):
+            return None
+        info = _BITMAPINFOHEADER(ctypes.sizeof(_BITMAPINFOHEADER), width, -height, 1, 32, 0, 0, 0, 0, 0, 0)
+        buf = ctypes.create_string_buffer(width * height * 4)
+        _gdi32.GetDIBits(mdc, bmp, 0, height, buf, ctypes.byref(info), 0)
+    finally:
+        _gdi32.DeleteObject(bmp)
+        _gdi32.DeleteDC(mdc)
+        _user32.ReleaseDC(hwnd, hdc)
+    # PrintWindowのアルファは不定なので不透明として扱う
+    return Image.frombuffer("RGBX", (width, height), buf, "raw", "BGRX", 0, 1).convert("RGBA")
+
+
+def _lparam(x: int, y: int) -> int:
+    return ((y & 0xFFFF) << 16) | (x & 0xFFFF)
+
+
+_ENUM_PROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+
+
+_target_cache: dict = {}
+
+
+def _target(hwnd: int) -> int:
+    """WebView2では、子孫の描画用ウィンドウ (Chrome_RenderWidgetHostHWND) が入力を受け取る。"""
+    cached = _target_cache.get(hwnd)
+    if cached is not None and _user32.IsWindow(cached):
+        return cached
+    found = []
+
+    def callback(child, _):
+        name = ctypes.create_unicode_buffer(64)
+        _user32.GetClassNameW(child, name, 64)
+        if name.value == "Chrome_RenderWidgetHostHWND":
+            found.append(child)
+            return False
+        return True
+
+    _user32.EnumChildWindows(hwnd, _ENUM_PROC(callback), 0)
+    if not found:
+        return hwnd
+    _target_cache[hwnd] = found[0]
+    return found[0]
+
+
+def mouseMove(hwnd: int, x: int, y: int, pressed: bool = False) -> None:
+    _user32.PostMessageW(_target(hwnd), _WM_MOUSEMOVE, _MK_LBUTTON if pressed else 0, _lparam(x, y))
+
+
+def mouseDown(hwnd: int, x: int, y: int) -> None:
+    _user32.PostMessageW(_target(hwnd), _WM_LBUTTONDOWN, _MK_LBUTTON, _lparam(x, y))
+
+
+def mouseUp(hwnd: int, x: int, y: int) -> None:
+    _user32.PostMessageW(_target(hwnd), _WM_LBUTTONUP, 0, _lparam(x, y))
+
+
+def mouseWheel(hwnd: int, x: int, y: int, delta: int) -> None:
+    # WM_MOUSEWHEEL の座標はスクリーン座標
+    target = _target(hwnd)
+    point = wintypes.POINT(x, y)
+    _user32.ClientToScreen(target, ctypes.byref(point))
+    _user32.PostMessageW(target, _WM_MOUSEWHEEL, (delta & 0xFFFF) << 16, _lparam(point.x, point.y))

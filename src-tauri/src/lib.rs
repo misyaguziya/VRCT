@@ -1,8 +1,28 @@
-use tauri::Manager;
+use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::{Error, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+// WebView2は同じプロセス内の全ウィンドウで起動引数が一致している必要があるため、
+// tauri.conf.json の main ウィンドウと同じ値にする。Tauri既定の --disable-features に加えて、
+// 隠れたウィンドウの描画停止を無効にする (VRパネルは画面外に置いて撮影するため)。
+const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding";
+
+// VRオーバーレイに映す画面。Python側 (models/overlay) がタイトルで見つけて撮影・入力する。
+fn create_vr_panel_window(app: &tauri::App) -> tauri::Result<()> {
+    WebviewWindowBuilder::new(app, "vr_panel", WebviewUrl::App("vr.html".into()))
+        .title("VRCT VR Panel")
+        .inner_size(900.0, 700.0)
+        .position(-10000.0, -10000.0)
+        .decorations(false)
+        .resizable(false)
+        .skip_taskbar(true)
+        .focused(false)
+        .additional_browser_args(BROWSER_ARGS)
+        .build()?;
+    Ok(())
+}
 
 fn startup_log_path(executable_path: &Path) -> PathBuf {
     executable_path
@@ -46,10 +66,21 @@ pub fn run() {
             }
             startup_log("Main window is ready");
 
+            if let Err(error) = create_vr_panel_window(app) {
+                startup_log(&format!("VR panel window creation failed: {error}"));
+            }
+
             #[cfg(debug_assertions)]
             { main_window.open_devtools(); }
 
             Ok(())
+        })
+        // 画面外の vr_panel ウィンドウが残るため「最後のウィンドウが閉じたら終了」に頼れない。
+        // main が閉じたらアプリを終了する。
+        .on_window_event(|window, event| {
+            if window.label() == "main" && matches!(event, WindowEvent::Destroyed) {
+                window.app_handle().exit(0);
+            }
         })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_http::init())

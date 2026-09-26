@@ -456,3 +456,6 @@ config_page:
     notifications:
         save_success: "Settings have been saved."
         opened_folder: "Opened the folder."
+
+vr_panel:
+    locked_by_config_page: "The settings page is open on the desktop. Close it to use these controls."

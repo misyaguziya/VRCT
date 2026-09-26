@@ -44,8 +44,19 @@ _COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
 
 try:
     from . import overlay_utils as utils
+    from . import window_capture
 except ImportError:
     import overlay_utils as utils
+    import window_capture
+
+# VRパネル: Tauriの "VRCT VR Panel" ウィンドウを撮影して映すオーバーレイ (settingsのキー)
+PANEL = "panel"
+_PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
+_PANEL_FIND_INTERVAL_SEC = 2.0
+_TRIGGER_MASK = 1 << openvr.k_EButton_SteamVR_Trigger
+# スティックの倒し具合をホイール量へ変換する係数 (1フレームあたり)。WHEEL_DELTA=120
+_PANEL_SCROLL_PER_FRAME = 60
+_PANEL_SCROLL_DEADZONE = 0.3
 
 def mat34Id(array: Sequence[Sequence[float]]) -> Any:
     """Convert a 3x4 nested sequence into an openvr.HmdMatrix34_t instance.
@@ -135,6 +146,18 @@ class Overlay:
         self.grab_last_relative: Optional[np.ndarray] = None
         self.pointer_handle: Optional[int] = None
         self.grab_error: Optional[str] = None
+        # 追従先が未接続で位置を設定できていないオーバーレイ
+        self.position_pending: set = set()
+
+        # VRパネル。setOverlayRawは約190回で RequestFailed が続くようになり連続更新に
+        # 使えないため、OpenGLテクスチャ経由 (setOverlayTexture) で渡す。
+        self.gl: Optional[Dict[str, Any]] = None
+        self.panel_hwnd: Optional[int] = None
+        self.panel_last_find: float = 0.0
+        self.panel_last_capture: float = 0.0
+        self.panel_image_size: Optional[tuple] = None
+        # 手ごとの (トリガーを押しているか, 最後に送った座標)
+        self.panel_input: Dict[int, tuple] = {}
         # 手ごとの (grip, hit) 。変化したときだけログに出す(実機での切り分け用)
         self.debug_state: Dict[int, tuple] = {}
         # self.settings[size] の位置はオーバーレイスレッド(掴み確定)とUI設定変更の
@@ -163,6 +186,12 @@ class Overlay:
             dot = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
             ImageDraw.Draw(dot).ellipse((2, 2, 29, 29), fill=(255, 255, 255, 255), outline=(0, 0, 0, 255), width=3)
             self.updatePointerImage(dot)
+            if PANEL in self.settings:
+                try:
+                    self.initPanelTexture()
+                except Exception:
+                    self.gl = None
+                    errorLogging()
 
             for size in self.settings.keys():
                 self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
@@ -222,6 +251,104 @@ class Overlay:
         buf = (ctypes.c_char * len(raw)).from_buffer_copy(raw)
         self.overlay.setOverlayRaw(self.pointer_handle, buf, img.size[0], img.size[1], 4)
 
+    def initPanelTexture(self) -> None:
+        """VRパネル用のOpenGLコンテキストとテクスチャを作る (オーバーレイのスレッドで呼ぶこと)。"""
+        if os.name != "nt":
+            raise RuntimeError("VR panel capture is Windows only")
+        import glfw
+        from OpenGL import GL
+
+        if not glfw.init():
+            raise RuntimeError("glfw.init() failed")
+        glfw.window_hint(glfw.VISIBLE, False)
+        window = glfw.create_window(16, 16, "VRCT overlay GL", None, None)
+        if not window:
+            glfw.terminate()
+            raise RuntimeError("glfw.create_window() failed")
+        glfw.make_context_current(window)
+        texture = GL.glGenTextures(1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+        vr_texture = openvr.Texture_t()
+        vr_texture.handle = int(texture)
+        vr_texture.eType = openvr.TextureType_OpenGL
+        vr_texture.eColorSpace = openvr.ColorSpace_Auto
+        bounds = openvr.VRTextureBounds_t()
+        bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = 0.0, 1.0, 1.0, 0.0  # OpenGLは上下が逆
+        self.overlay.setOverlayTextureBounds(self.handle[PANEL], bounds)
+        self.gl = {"glfw": glfw, "GL": GL, "window": window, "texture": texture, "vr_texture": vr_texture, "size": None}
+
+    def shutdownPanelTexture(self) -> None:
+        if self.gl is None:
+            return
+        try:
+            self.gl["glfw"].destroy_window(self.gl["window"])
+            self.gl["glfw"].terminate()
+        except Exception:
+            errorLogging()
+        self.gl = None
+
+    def updatePanel(self) -> None:
+        """VRパネルのウィンドウを撮影してオーバーレイへ転送する。"""
+        now = time.monotonic()
+        if self.gl is None or now - self.panel_last_capture < _PANEL_CAPTURE_INTERVAL_SEC:
+            return
+        self.panel_last_capture = now
+        if self.panel_hwnd is None or not window_capture.isWindow(self.panel_hwnd):
+            self.panel_hwnd = None
+            if now - self.panel_last_find < _PANEL_FIND_INTERVAL_SEC:
+                return
+            self.panel_last_find = now
+            self.panel_hwnd = window_capture.findWindow()
+            if self.panel_hwnd is None:
+                return
+        img = window_capture.captureWindow(self.panel_hwnd)
+        if img is None:
+            return
+        GL = self.gl["GL"]
+        raw = img.tobytes()
+        # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.gl["texture"])
+        if self.gl["size"] != img.size:
+            self.gl["size"] = img.size
+            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA8, img.size[0], img.size[1], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, raw)
+        else:
+            GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, img.size[0], img.size[1], GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, raw)
+        GL.glFinish()
+        self.overlay.setOverlayTexture(self.handle[PANEL], self.gl["vr_texture"])
+        self.panel_image_size = img.size
+
+    def handlePanelInput(self, hand: int, results: Optional[Any], state: Optional[Any]) -> None:
+        """レーザーが当たっている位置へマウス入力を送る。トリガー=クリック、スティック上下=スクロール。"""
+        last_pressed, last_xy = self.panel_input.get(hand, (False, None))
+        if self.panel_hwnd is None or self.panel_image_size is None or state is None:
+            return
+        pressed = bool(state.ulButtonPressed & _TRIGGER_MASK)
+        if results is None:
+            # パネルの外でトリガーを離したときも、押しっぱなしにしない
+            if last_pressed and last_xy is not None:
+                window_capture.mouseUp(self.panel_hwnd, *last_xy)
+            self.panel_input.pop(hand, None)
+            return
+        width, height = self.panel_image_size
+        # UVは左下が原点
+        xy = (
+            min(max(int(results.vUVs.v[0] * width), 0), width - 1),
+            min(max(int((1.0 - results.vUVs.v[1]) * height), 0), height - 1),
+        )
+        if xy != last_xy:
+            window_capture.mouseMove(self.panel_hwnd, *xy, pressed=pressed)
+        if pressed and not last_pressed:
+            printLog("vr panel click", {"uv": (round(results.vUVs.v[0], 4), round(results.vUVs.v[1], 4)), "xy": xy, "size": self.panel_image_size})
+            window_capture.mouseDown(self.panel_hwnd, *xy)
+        elif last_pressed and not pressed:
+            window_capture.mouseUp(self.panel_hwnd, *xy)
+        stick_y = state.rAxis[0].y
+        if abs(stick_y) > _PANEL_SCROLL_DEADZONE:
+            window_capture.mouseWheel(self.panel_hwnd, *xy, int(_PANEL_SCROLL_PER_FRAME * stick_y))
+        self.panel_input[hand] = (pressed, xy)
+
     def clearImage(self, size: str) -> None:
         if self.initialized is True:
             self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
@@ -277,6 +404,15 @@ class Overlay:
                     trackerIndex,
                     transform
                 )
+                self.position_pending.discard(size)
+            else:
+                # 追従先 (コントローラ等) がまだ繋がっていない。mainloop で繋がり次第やり直す
+                self.position_pending.add(size)
+
+    def retryPendingPositions(self) -> None:
+        for size in list(self.position_pending):
+            s = self.settings[size]
+            self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], size)
 
     def getTracker(self, tracker: str) -> tuple:
         """Return (base 3x4 matrix, tracked device index) for a tracker name."""
@@ -357,9 +493,13 @@ class Overlay:
             m = poses[index].mDeviceToAbsoluteTracking
             return utils.toHomogeneous(np.array([[m[i][j] for j in range(4)] for i in range(3)]))
 
-        def gripPressed(index: int) -> bool:
+        def controllerState(index: int) -> Optional[Any]:
             ok, state = self.overlay_system.getControllerState(index)
-            return bool(ok) and bool(state.ulButtonPressed & _GRIP_MASK)
+            return state if ok else None
+
+        def gripPressed(index: int) -> bool:
+            state = controllerState(index)
+            return state is not None and bool(state.ulButtonPressed & _GRIP_MASK)
 
         now = time.monotonic()
 
@@ -397,10 +537,13 @@ class Overlay:
             if size is not None and self.getTracker(self.settings[size]["tracker"])[1] == hand:
                 size, results = None, None
 
-            state = (grip, size)
-            if self.debug_state.get(hand) != state:
-                self.debug_state[hand] = state
+            debug_state = (grip, size)
+            if self.debug_state.get(hand) != debug_state:
+                self.debug_state[hand] = debug_state
                 printLog("overlay grab", {"hand": hand, "grip": grip, "hit": size})
+
+            if hand_pose is not None and not grip:
+                self.handlePanelInput(hand, results if size == PANEL else None, controllerState(hand))
 
             if size is None or not grip:
                 if self.grab_candidate is not None and self.grab_candidate[1] == hand:
@@ -486,6 +629,16 @@ class Overlay:
             for size in self.settings.keys():
                 self.update(size)
             try:
+                self.retryPendingPositions()
+            except Exception:
+                errorLogging()
+            try:
+                self.updatePanel()
+            except Exception:
+                # 失敗し続けてもログを埋めないよう、パネルを止める
+                errorLogging()
+                self.shutdownPanelTexture()
+            try:
                 self.updateGrab()
                 self.grab_error = None
             except Exception as e:
@@ -500,6 +653,8 @@ class Overlay:
             sleepTime = interval - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
+        # GLコンテキストは作ったスレッドでしか破棄できない
+        self.shutdownPanelTexture()
 
     def main(self) -> None:
         while self.checkSteamvrRunning() is False:

@@ -1,0 +1,34 @@
+.container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    background-color: var(--dark_888_color);
+}
+
+.sidebar {
+    flex-shrink: 0;
+    width: 22rem;
+    background-color: var(--dark_850_color);
+}
+
+.log_box_wrapper {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    padding: 1rem;
+}
+
+.locked {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    font-size: 2rem;
+    color: var(--dark_basic_text_color);
+    background-color: rgba(0, 0, 0, 0.7);
+}

@@ -83,7 +83,6 @@ class UpdateGrabFlowTest(unittest.TestCase):
                 for r in range(3):
                     for c in range(4):
                         poses[i].mDeviceToAbsoluteTracking[r][c] = 1.0 if r == c else 0.0
-            return None
         system.getDeviceToAbsoluteTrackingPose.side_effect = fill_poses
 
         def controller_state(index):
@@ -123,6 +122,38 @@ class UpdateGrabFlowTest(unittest.TestCase):
             self.overlay.updateGrab()  # 離す → 確定
         self.assertIsNone(self.overlay.grabbing)
         self.callback.assert_called_once()
+
+
+class PanelInputTest(unittest.TestCase):
+    """VRパネルへの入力: UV→ピクセル変換とトリガーのクリック判定。"""
+
+    def test_trigger_click_and_scroll(self):
+        from unittest.mock import patch
+
+        import openvr
+
+        overlay = Overlay({})
+        overlay.panel_hwnd = 123
+        overlay.panel_image_size = (900, 700)
+        results = MagicMock()
+        results.vUVs.v = [0.5, 0.25]  # 左下原点 → y = (1-0.25)*700
+        state = MagicMock()
+        state.rAxis[0].y = 0.0
+
+        with patch("models.overlay.overlay.window_capture") as wc:
+            state.ulButtonPressed = 0
+            overlay.handlePanelInput(1, results, state)
+            wc.mouseMove.assert_called_with(123, 450, 525, pressed=False)
+            state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
+            overlay.handlePanelInput(1, results, state)
+            wc.mouseDown.assert_called_once_with(123, 450, 525)
+            # パネルの外で離しても mouseUp を送る
+            overlay.handlePanelInput(1, None, state)
+            wc.mouseUp.assert_called_once_with(123, 450, 525)
+            state.ulButtonPressed = 0
+            state.rAxis[0].y = -1.0
+            overlay.handlePanelInput(1, results, state)
+            wc.mouseWheel.assert_called_once_with(123, 450, 525, -60)
 
 
 if __name__ == "__main__":
