@@ -2082,17 +2082,18 @@ class Model:
         self.ensure_initialized()
         self._speaker_session.reconfigure(transcript=False)
 
-    def startOCRCapture(self, fnc: Callable[[dict], None]) -> bool:
+    def startOCRCapture(self, fnc: Callable[[dict], None]) -> Optional[ErrorCode]:
         """Start the VRChat chat-bubble OCR pipeline.
 
         The callback receives dicts shaped like mic/speaker transcripts so
         Controller.ocrMessage can share the mic/speaker translation path.
-        Returns True if the pipeline started, False otherwise.
+        Returns None if the pipeline started (models loaded), otherwise the
+        ErrorCode explaining why OCR was turned back off.
         """
         self.ensure_initialized()
         if isinstance(self.ocr_pipeline, OcrPipeline):
             # Already running.
-            return True
+            return None
 
         # 読み取る言語の扱いは models/ocr/ocr_languages.py を参照。
         # "auto" は PP-OCRv6 small (日英中+ラテン文字系を1モデル) を使い、
@@ -2103,7 +2104,7 @@ class Model:
         source_language = config.OCR_SOURCE_LANGUAGE
         if not isSupportedOcrLanguage(source_language):
             printLog(f"OCR: source language {source_language!r} is not selected or not supported, refusing to start")
-            return False
+            return ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE
 
         try:
             self.ocr_pipeline = OcrPipeline(
@@ -2117,12 +2118,12 @@ class Model:
         except Exception:
             errorLogging()
             self.ocr_pipeline = None
-            return False
+            return ErrorCode.OCR_DISABLED_UNKNOWN
 
-        started = self.ocr_pipeline.start()
-        if not started:
+        error_code = self.ocr_pipeline.start()
+        if error_code is not None:
             self.ocr_pipeline = None
-        return started
+        return error_code
 
     def updateOCRCaptureSettings(self) -> None:
         """設定変更を実行中のOCRパイプラインへ渡す。停止中なら何もしない。
