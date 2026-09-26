@@ -108,18 +108,16 @@ getOcrSourceLanguage()         /get/data/ocr_source_language を再取得
 setOcrSourceLanguage(value)    /set/data/ocr_source_language
 ```
 
-設定の値域と、範囲外を送ったときの挙動:
+設定の値域。範囲外・型違いを送ると、他の設定と同じく `VALIDATION_CONFIG_VALUE_INVALID`
+のエラー応答（400、`data` は送った値）が返り、値は変わらない（丸めはしない）。
 
-| エンドポイント | 型 | 値域 | 範囲外を送ると |
-|---|---|---|---|
-| `/set/data/ocr_source_language` | str | 3-5の選択肢のみ | **400** と現在値が返る（変更しない） |
-| `/set/data/ocr_window_title` | str | 空文字は不可 | **400** と現在値が返る |
-| `/set/data/ocr_poll_interval_ms` | int | 100〜5000 | クランプした値が返る |
-| `/set/data/ocr_min_confidence` | float | 0.1〜0.99 | クランプした値が返る |
-| `/set/data/ocr_bubble_min_text_length` | int | 1〜50 | クランプした値が返る |
-
-**setの返却値で表示を更新すること。** 送った値がそのまま採用されるとは限らない
-（例: `ocr_poll_interval_ms` に10000を送ると5000が返る）。
+| エンドポイント | 型 | 値域 |
+|---|---|---|
+| `/set/data/ocr_source_language` | str | 3-5の選択肢のみ |
+| `/set/data/ocr_window_title` | str | 空文字は不可（前後の空白は除去して保存） |
+| `/set/data/ocr_poll_interval_ms` | int | 100〜5000 |
+| `/set/data/ocr_min_confidence` | float | 0.1〜0.99 |
+| `/set/data/ocr_bubble_min_text_length` | int | 1〜50 |
 
 ### 3-5. 読み取り言語の選択肢
 

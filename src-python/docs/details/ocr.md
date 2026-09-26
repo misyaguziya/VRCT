@@ -270,9 +270,14 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 | `ENABLE_OCR_CAPTURE` | bool | False | OCR パイプラインの有効化（serialize=False, 起動毎にオフ） |
 | `OCR_SOURCE_LANGUAGE` | str | "auto" | 読み取る言語。`auto` は日英中＋ラテン文字系を1モデルで読む。別モデルが要る文字体系のみ明示選択する（選択肢は `ocr_languages.SELECTABLE_LANGUAGES`） |
 | `OCR_WINDOW_TITLE` | str | "VRChat" | キャプチャ対象ウィンドウのタイトル部分一致文字列（大文字小文字を区別しない） |
-| `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
+| `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000） |
 | `OCR_MIN_CONFIDENCE` | float | 0.85 | OCR 信頼度の下限（0.1〜0.99）。PP-OCRは誤読時もスコアが高く、実測では 0.55 で誤りを1件も落とせず、0.85 なら正解を失わずに誤りの34%を落とせた |
 | `OCR_BUBBLE_MIN_TEXT_LENGTH` | int | 2 | 最小テキスト長（1〜50） |
+
+値域・選択肢は config のディスクリプタ（`allowed=`）で検証する。setter は他の設定と同じく
+`@_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)` を付け、不正値は
+エラー応答で拒否する（丸めない）。getter は `_SIMPLE_CONFIG_GETTERS` で生成する。
+読み取り言語の選択肢は `config.SELECTABLE_OCR_SOURCE_LANGUAGE_LIST`（中身は `ocr_languages.SELECTABLE_LANGUAGES`）。
 
 ## エンドポイント
 

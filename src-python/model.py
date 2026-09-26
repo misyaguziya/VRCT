@@ -55,7 +55,7 @@ from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
 from models.ocr import OcrPipeline
-from models.ocr.ocr_languages import SELECTABLE_LANGUAGES as OCR_SELECTABLE_LANGUAGES, isSupported as isSupportedOcrLanguage
+from models.ocr.ocr_languages import isSupported as isSupportedOcrLanguage
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
 from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode, OcrStartError
@@ -2138,11 +2138,6 @@ class Model:
             })
         except Exception:
             errorLogging()
-
-    @staticmethod
-    def getSelectableOCRSourceLanguages() -> list:
-        """OCRで選べる言語 (VRCTの言語名)。VRCTが翻訳できる言語の全てではない。"""
-        return list(OCR_SELECTABLE_LANGUAGES)
 
     def stopOCRCapture(self) -> None:
         self.ensure_initialized()
