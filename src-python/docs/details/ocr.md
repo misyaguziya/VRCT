@@ -278,7 +278,9 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 
 `mainloop.py` に登録済み。Frontend からは `useOcr()` フック経由で自動的に叩かれます。
 
-- `/set/enable/ocr_capture`, `/set/disable/ocr_capture` — 開始・停止
+- `/set/enable/ocr_capture`, `/set/disable/ocr_capture` — 開始・停止。翻訳と同じメイン機能として
+  「Main Window」グループに置き、初期化完了までロックする。状態は保存せず起動時は常にOFFなので
+  `/get/data/ocr_capture` は無い
 - `/get/data/ocr_*`, `/set/data/ocr_*` — 各設定キー（setterは実行中のパイプラインへ即時反映する）
   - エンジンを選ぶ設定は持たない。実装が1つしか無いのに保存値と判定値がずれてOCRが起動しなくなる事故を起こしたため (2026-09-18)
 - `/get/data/selectable_ocr_source_languages` — OCRで選べる言語の一覧（UIのドロップダウンの中身）
