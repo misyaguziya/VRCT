@@ -207,9 +207,9 @@ class PanelInputTest(unittest.TestCase):
             state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
             overlay.handlePanelInput(1, results, state)
             wc.mouseDown.assert_called_once_with(123, 450, 260)
-            # パネルの外で離しても mouseUp を送る
+            # 押したままパネルの外へ外れたら、パネルの外で離したことにする (クリックを成立させない)
             overlay.handlePanelInput(1, None, state)
-            wc.mouseUp.assert_called_once_with(123, 450, 260)
+            wc.mouseUp.assert_called_once_with(123, -1, -1)
             state.ulButtonPressed = 0
             state.rAxis[0].y = -1.0
             overlay.handlePanelInput(1, results, state)
@@ -266,6 +266,30 @@ class CycleAnchorTest(unittest.TestCase):
         _, saved = overlay.position_changed_callback.call_args.args
         self.assertEqual(saved["tracker"], PLAYSPACE)
         overlay.overlay.setOverlayTransformAbsolute.assert_called()
+
+class PanelTriggerBlockTest(unittest.TestCase):
+    def test_trigger_held_after_grab_is_ignored_until_released(self):
+        import openvr
+        from unittest.mock import patch
+
+        overlay = Overlay({})
+        overlay.panel_hwnd = 123
+        overlay.panel_image_size = (900, 700)
+        overlay.trigger_blocked.add(1)
+        results = MagicMock()
+        results.vUVs.v = [0.5, 0.5]
+        state = MagicMock()
+        state.rAxis[0].y = 0.0
+        with patch("models.overlay.overlay.window_capture") as wc:
+            state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
+            overlay.handlePanelInput(1, results, state)  # 掴み終えたときから押したまま
+            state.ulButtonPressed = 0
+            overlay.handlePanelInput(1, results, state)  # 離す
+            wc.mouseDown.assert_not_called()
+            wc.mouseUp.assert_not_called()
+            state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
+            overlay.handlePanelInput(1, results, state)  # 押し直せば効く
+            wc.mouseDown.assert_called_once()
 
 
 if __name__ == "__main__":
