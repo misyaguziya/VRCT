@@ -44,7 +44,8 @@ export const VrPanelSyncController = () => {
         );
         const unlistenReady = listen("vr-panel-ready", () => emitState(atomEntries()));
         const unlistenStdout = listen("vr-panel-stdout", ({ payload }) => {
-            if (isOpenedConfigPageRef.current === true) {
+            // ウィンドウの開閉は状態を変えないので、設定画面を開いている間も通す
+            if (isOpenedConfigPageRef.current === true && payload.path !== "/run/vr_panel_windows") {
                 // VRパネル側で pending にした表示を元に戻すため、状態を送り直す
                 emitState(atomEntries());
                 return;

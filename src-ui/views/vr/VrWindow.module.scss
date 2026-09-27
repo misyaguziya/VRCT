@@ -30,9 +30,30 @@
 }
 
 .title {
+    flex: 1;
     font-size: 22px;
     font-weight: 600;
     color: var(--dark_basic_text_color);
+}
+
+.close_button {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    // VRのポインタが当たっている (VrApp の VrPointerHover が付ける)。赤はエラー用に残す
+    &[data-vr-hover] {
+        background-color: var(--dark_750_color);
+    }
+}
+
+.close_icon {
+    width: 24px;
+    height: 24px;
+    color: var(--dark_400_color);
+    fill: var(--dark_400_color);
 }
 
 .body {

@@ -48,7 +48,7 @@ from models.transcription.transcription_deepgram import (
     isLanguageSupportedByDeepgramModel,
 )
 from models.transliteration.transliteration_transliterator import Transliterator
-from models.overlay.overlay import LAUNCHER, PANEL, Overlay
+from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
@@ -957,6 +957,13 @@ class Model:
             "large": overlay_large_log_settings,
             PANEL: copy.deepcopy(config.OVERLAY_VR_PANEL_SETTINGS),
             LAUNCHER: copy.deepcopy(config.OVERLAY_VR_LAUNCHER_SETTINGS),
+            # 一時ウィンドウ (言語 / VR設定)。開くたびにランチャーの近くに置き直すので保存しない
+            POPUP: {
+                "x_pos": 0.0, "y_pos": 0.0, "z_pos": 0.0,
+                "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
+                "display_duration": 5, "fadeout_duration": 0, "opacity": 1.0,
+                "ui_scaling": 0.36, "tracker": "Playspace",
+            },
         }
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
@@ -2340,6 +2347,11 @@ class Model:
             self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], size, True)
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
+
+    def setVrPanelWindows(self, log: bool, popup: bool) -> None:
+        """VR UIのログウィンドウと一時ウィンドウの表示・非表示を切り替える。"""
+        self.ensure_initialized()
+        self.overlay.setVrWindows(log, popup)
 
     def setOverlayPointerCallback(self, fn: Optional[Callable[[Optional[tuple]], None]]) -> None:
         """VR UI上のポインタの位置が変わったときに呼ぶ関数を登録する (ホバー表示用)。"""

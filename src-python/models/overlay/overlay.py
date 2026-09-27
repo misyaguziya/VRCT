@@ -63,13 +63,19 @@ except ImportError:
 # settings のキー。PANEL はログウィンドウ (位置は OVERLAY_VR_PANEL_SETTINGS に保存)
 PANEL = "panel"
 LAUNCHER = "launcher"
+# 一時ウィンドウ (言語 / VR設定)。同時に1つだけ開き、開くたびにランチャーの近くに出す。位置は保存しない
+POPUP = "popup"
 # 撮影するウィンドウの大きさと各領域 (x, y, w, h)。論理px。
 # src-ui/views/vr/vr_layout.json と一致させる (test_overlay_grab_move で確認)
-VR_ATLAS_SIZE = (900, 836)
+VR_ATLAS_SIZE = (1628, 836)
 VR_REGIONS = {
     PANEL: (0, 0, 900, 700),
     LAUNCHER: (10, 708, 880, 128),
+    POPUP: (908, 0, 720, 640),
 }
+# 一時ウィンドウを出す位置: ランチャーの中心から上へ、頭との水平距離をこの範囲に収める
+_POPUP_ABOVE_LAUNCHER_M = 0.18
+_POPUP_DISTANCE_RANGE_M = (0.45, 0.65)
 _PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
 _PANEL_FIND_INTERVAL_SEC = 2.0
 # 各領域の角丸の半径 (論理px)。撮影した画像の領域の外と四隅を透明にする
@@ -132,6 +138,21 @@ def atlasMask(image_size: tuple) -> Image.Image:
         x0, y0, x1, y1 = regionRect(size, image_size)
         draw.rounded_rectangle((x0, y0, x1 - 1, y1 - 1), radius=round(_PANEL_CORNER_RADIUS_PX * scale), fill=255)
     return mask
+
+
+def popupPoseFacing(position: np.ndarray, target: np.ndarray) -> np.ndarray:
+    """position に置き、表 (+Z) を target に向けた姿勢。傾きは付けない (上はワールドの上)。"""
+    z = target - position
+    z = z / (np.linalg.norm(z) or 1.0)
+    up = np.array([0.0, 1.0, 0.0])
+    x = np.cross(up, z)
+    if np.linalg.norm(x) < 1e-6:
+        x = np.array([1.0, 0.0, 0.0])
+    x = x / np.linalg.norm(x)
+    y = np.cross(z, x)
+    pose = np.eye(4)
+    pose[:3, 0], pose[:3, 1], pose[:3, 2], pose[:3, 3] = x, y, z, position
+    return pose
 
 
 def createAnchorButtonImages() -> Dict[str, Image.Image]:
@@ -303,6 +324,10 @@ class Overlay:
         # 外れたら None) をこのコールバックで知らせ、画面側でホバーを表示する
         self.pointer_callback: Optional[Callable[[Optional[tuple]], None]] = None
         self.pointer_notified: Optional[tuple] = None
+        # VR UIのウィンドウの表示・非表示。VR画面 (React) が /run/vr_panel_windows で決め、
+        # オーバーレイのスレッドが updateGrab の最初で反映する (vr_windows_hidden が今の状態)
+        self.vr_windows_wanted: Dict[str, bool] = {PANEL: True, POPUP: False}
+        self.vr_windows_hidden: set = set()
         # 手ごとの (grip, hit) 。変化したときだけログに出す(実機での切り分け用)
         self.debug_state: Dict[int, tuple] = {}
         # self.settings[size] の位置はオーバーレイスレッド(掴み確定)とUI設定変更の
@@ -321,6 +346,7 @@ class Overlay:
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
             self.handle = {}
+            self.vr_windows_hidden = set()
             for i, size in enumerate(self.settings.keys()):
                 self.handle[size] = self.overlay.createOverlay(f"VRCT{i}", f"VRCT{i}")
                 self.overlay.showOverlay(self.handle[size])
@@ -591,7 +617,7 @@ class Overlay:
         offset[1][3] = -(panel_width * image_height / image_width / 2 + _TOOLBAR_GAP_M + height / 2)
         relative = (utils.toHomogeneous(panel_relative) @ offset)[:3, :]
         for anchor, handle in self.toolbar_handles.items():
-            if anchor != self.settings[PANEL]["tracker"]:
+            if anchor != self.settings[PANEL]["tracker"] or PANEL in self.vr_windows_hidden:
                 self.overlay.hideOverlay(handle)
                 continue
             self.overlay.setOverlayWidthInMeters(handle, width)
@@ -672,7 +698,7 @@ class Overlay:
 
     def intersectToolbar(self, pose: np.ndarray) -> Optional[Any]:
         handle = self.toolbar_handles.get(self.settings.get(PANEL, {}).get("tracker"))
-        if handle is None:
+        if handle is None or PANEL in self.vr_windows_hidden:
             return None
         params = openvr.VROverlayIntersectionParams_t()
         params.eOrigin = openvr.TrackingUniverseStanding
@@ -700,7 +726,7 @@ class Overlay:
         """
         best = (None, None)
         for size in self.settings.keys():
-            if self.settings[size]["opacity"] <= 0:
+            if self.settings[size]["opacity"] <= 0 or size in self.vr_windows_hidden:
                 continue
             results = self.intersect(pose, size)
             if results is None or not self.hasContentAt(size, results):
@@ -770,6 +796,7 @@ class Overlay:
             return state is not None and bool(state.ulButtonPressed & _GRIP_MASK)
 
         now = time.monotonic()
+        self.applyVrWindows(poseOf)
 
         if self.grabbing is not None:
             size, hand, hand_to_overlay = self.grabbing
@@ -877,6 +904,59 @@ class Overlay:
 
         self.showPointer(*(pointer or (None, _COLOR_NORMAL)))
         self.notifyPointer(hover_xy)
+
+    def setVrWindows(self, log: bool, popup: bool) -> None:
+        """VR UIのウィンドウの表示・非表示を指定する (どのスレッドからでもよい)。"""
+        self.vr_windows_wanted = {PANEL: log, POPUP: popup}
+
+    def applyVrWindows(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
+        """指定された表示・非表示をオーバーレイに反映する (オーバーレイのスレッドで呼ぶ)。"""
+        for size, wanted in self.vr_windows_wanted.items():
+            if size not in self.handle:
+                continue
+            hidden = size in self.vr_windows_hidden
+            if wanted and hidden:
+                if size == POPUP:
+                    self.placePopup(poseOf)
+                self.vr_windows_hidden.discard(size)
+                self.overlay.showOverlay(self.handle[size])
+                if size == PANEL:
+                    s = self.settings[PANEL]
+                    self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], PANEL)
+            elif not wanted and not hidden:
+                self.vr_windows_hidden.add(size)
+                self.overlay.hideOverlay(self.handle[size])
+                if size == PANEL:
+                    for handle in self.toolbar_handles.values():
+                        self.overlay.hideOverlay(handle)
+                if self.grabbing is not None and self.grabbing[0] == size:
+                    self.grabbing = None
+                    self.grab_scale = None
+                    self.setHighlight(None, _COLOR_NORMAL)
+                    self.showPointer(None, _COLOR_NORMAL)
+
+    def placePopup(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
+        """一時ウィンドウをランチャーの上に、頭の方を向けて空間固定で出す。"""
+        head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+        if head is None:
+            return
+        head_pos = head[:3, 3]
+        launcher = self.overlayWorldPose(LAUNCHER, poseOf) if LAUNCHER in self.settings else None
+        if launcher is not None:
+            pos = launcher[:3, 3] + np.array([0.0, _POPUP_ABOVE_LAUNCHER_M, 0.0])
+        else:
+            pos = head_pos + (-head[:3, 2]) * _POPUP_DISTANCE_RANGE_M[0]  # ランチャーが無ければ頭の正面
+        horizontal = pos - head_pos
+        horizontal[1] = 0.0
+        distance = float(np.linalg.norm(horizontal))
+        if distance > 1e-6:
+            clamped = min(max(distance, _POPUP_DISTANCE_RANGE_M[0]), _POPUP_DISTANCE_RANGE_M[1])
+            pos = head_pos + horizontal / distance * clamped + np.array([0.0, pos[1] - head_pos[1], 0.0])
+        world = popupPoseFacing(pos, head_pos)
+        self.settings[POPUP]["tracker"] = PLAYSPACE
+        self.commitPosition(POPUP, world[:3, :])
+        s = self.settings[POPUP]
+        self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], PLAYSPACE, POPUP)
 
     def notifyPointer(self, xy: Optional[tuple]) -> None:
         """ポインタの位置が変わったときだけ VR UI へ知らせる。"""

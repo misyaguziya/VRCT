@@ -471,6 +471,8 @@ mapping = {
     "/set/disable/overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
 
     "/get/data/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
+    # VR UIのウィンドウの開閉 (VR画面からメイン経由で届く)
+    "/run/vr_panel_windows": {"status": False, "variable":controller.setVrPanelWindows},
     "/set/data/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
 
     "/get/data/overlay_large_log": {"status": True, "variable":controller.getOverlayLargeLog},

@@ -4437,6 +4437,17 @@ class Controller:
         except Exception:
             errorLogging()
 
+    @staticmethod
+    def setVrPanelWindows(data, *args, **kwargs) -> dict:
+        """VR UI (VR画面) が決めたウィンドウの開閉をオーバーレイに反映する。
+
+        data: {"log": bool, "popup": bool}。送り手はVR画面だけなので、bool 以外は False として扱う。
+        """
+        data = data if isinstance(data, dict) else {}
+        windows = {"log": data.get("log") is True, "popup": data.get("popup") is True}
+        model.setVrPanelWindows(windows["log"], windows["popup"])
+        return {"status": 200, "result": windows}
+
     def _onVrPanelPointer(self, xy) -> None:
         """VR UI上のポインタの位置をUIへ送る (オーバーレイスレッドから呼ばれる)。外れたら None。"""
         self.run(200, self.run_mapping["vr_panel_pointer"], None if xy is None else {"x": xy[0], "y": xy[1]})
