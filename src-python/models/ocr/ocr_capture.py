@@ -2,7 +2,9 @@
 
 Contract: get() returns a BGR ndarray or None. It never raises. The
 facade rechecks SteamVR periodically so the backend follows the user
-launching/closing SteamVR while VRCT is running.
+launching/closing SteamVR while VRCT is running. When the VR read gives
+nothing (VRChat is not the SteamVR scene, or the read failed) it falls back
+to the desktop window until the next recheck.
 """
 
 from __future__ import annotations
@@ -56,6 +58,9 @@ class OcrCapture:
         self._hwnd = HwndCapture(window_title=window_title)
         self._openvr: Optional[OpenVRMirrorCapture] = None
         self._backend = self.BACKEND_NONE
+        # 実際にフレームが取れた経路。VRとデスクトップを5秒ごとに試し直すので、
+        # 試した経路ではなく取れた経路が変わったときだけログに出す。
+        self._source = self.BACKEND_NONE
         self._last_check = 0.0
 
     def _selectBackend(self, force: bool = False) -> str:
@@ -71,8 +76,6 @@ class OcrCapture:
                 if candidate.isAvailable():
                     self._openvr = candidate
             if self._openvr is not None and self._openvr.isAvailable():
-                if self._backend != self.BACKEND_OPENVR:
-                    printLog(f"OCR capture backend -> {self.BACKEND_OPENVR}")
                 self._backend = self.BACKEND_OPENVR
                 return self._backend
         # Fall back to HWND
@@ -82,13 +85,13 @@ class OcrCapture:
             except Exception:
                 pass
             self._openvr = None
-        if self._hwnd.isAvailable():
-            if self._backend != self.BACKEND_HWND:
-                printLog(f"OCR capture backend -> {self.BACKEND_HWND}")
-            self._backend = self.BACKEND_HWND
-        else:
-            self._backend = self.BACKEND_NONE
+        self._backend = self.BACKEND_HWND if self._hwnd.isAvailable() else self.BACKEND_NONE
         return self._backend
+
+    def _noteSource(self, backend: str) -> None:
+        if self._source != backend:
+            printLog(f"OCR capture backend -> {backend}")
+            self._source = backend
 
     @property
     def backend(self) -> str:
@@ -99,19 +102,27 @@ class OcrCapture:
         try:
             if backend == self.BACKEND_OPENVR and self._openvr is not None:
                 frame = self._openvr.capture()
-                # The compositor only hands back a texture when it is actually
-                # presenting, so an all-black frame here is a legitimately dark
-                # scene (night world, loading screen) rather than a dead
-                # surface. Only reject a truly uniform frame.
-                if isFrameBlank(frame, mean_threshold=0.0, var_threshold=1e-6):
-                    return None
-                return frame
+                if frame is not None:
+                    # The compositor only hands back a texture when it is actually
+                    # presenting, so an all-black frame here is a legitimately dark
+                    # scene (night world, loading screen) rather than a dead
+                    # surface. Only reject a truly uniform frame.
+                    if isFrameBlank(frame, mean_threshold=0.0, var_threshold=1e-6):
+                        return None
+                    self._noteSource(self.BACKEND_OPENVR)
+                    return frame
+                # VRChat is not the SteamVR scene (desktop mode, SteamVR Home)
+                # or the VR read failed: use the desktop window until the
+                # next recheck instead of reading nothing.
+                self._backend = self.BACKEND_HWND if self._hwnd.isAvailable() else self.BACKEND_NONE
+                backend = self._backend
             if backend == self.BACKEND_HWND:
                 frame = self._hwnd.capture()
                 # A minimized or occluded window keeps returning a stale black
                 # buffer, so the stricter thresholds earn their keep here.
                 if isFrameBlank(frame):
                     return None
+                self._noteSource(self.BACKEND_HWND)
                 return frame
         except Exception:
             errorLogging()
@@ -129,3 +140,4 @@ class OcrCapture:
                 pass
             self._openvr = None
         self._backend = self.BACKEND_NONE
+        self._source = self.BACKEND_NONE

@@ -4,6 +4,7 @@ python tools/ocr_dataset_collector.py [session_name]
 既定: 自動選択(HWND/OpenVR D3D11)、左眼、2秒周期、10分で終了。
 コンソールで P=一時停止/再開、Q=終了、R=状態表示（Enter不要）。
 --manual: Enter=その場でpositive撮影、N=negative撮影、U=未分類撮影。
+--wander: VRChatのOSC入力(/input/*)でアバターをランダムに歩かせる（要OSC有効化）。
 撮影開始から保存・解放まで同じworkerが所有。VRCT本体へimportしない。
 """
 
@@ -15,6 +16,9 @@ import json
 import math
 from pathlib import Path
 import queue
+import random
+import socket
+import struct
 import sys
 import threading
 import time
@@ -41,6 +45,70 @@ def session_name(value: str) -> str:
 def next_deadline(previous: float, now: float, interval: float) -> float:
     """Keep the requested cadence, skipping missed slots instead of bursting."""
     return previous + max(1, math.floor((now - previous) / interval) + 1) * interval
+
+
+def osc_message(address: str, value) -> bytes:
+    """Minimal OSC 1.0 encoder for one int or float; keeps the exe free of python-osc."""
+    def pad(raw: bytes) -> bytes:
+        return raw + b"\0" * (4 - len(raw) % 4)
+    tag, payload = (",i", struct.pack(">i", value)) if isinstance(value, int) else (",f", struct.pack(">f", value))
+    return pad(address.encode()) + pad(tag.encode()) + payload
+
+
+class Wanderer:
+    """Random walk via VRChat OSC input. No obstacle sensing, so it just turns often."""
+    # ponytail: blind random walk; add stuck detection (frame diff) if it hugs walls too long.
+
+    def __init__(self, host: str = "127.0.0.1", port: int = 9000, rng=None, send=None) -> None:
+        self.target = (host, port)
+        self.rng = rng or random.Random()
+        self._socket = None if send else socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.send = send or (lambda address, value: self._socket.sendto(osc_message(address, value), self.target))
+        self.stop_requested = threading.Event()
+        self.paused = threading.Event()
+        self.thread = threading.Thread(target=self.run, name="wander", daemon=True)
+
+    def start(self) -> None:
+        self.thread.start()
+
+    def toggle_pause(self) -> None:
+        self.paused.clear() if self.paused.is_set() else self.paused.set()
+
+    def _hold(self, address: str, value, seconds: float) -> None:
+        self.send(address, value)
+        self.stop_requested.wait(seconds)
+        self.send(address, 0 if isinstance(value, int) else 0.0)
+
+    def step(self) -> None:
+        self._hold("/input/Vertical", 1.0, self.rng.uniform(2, 6))
+        self._hold("/input/LookHorizontal", self.rng.choice((-1.0, 1.0)), self.rng.uniform(0.2, 1.2))
+        if self.rng.random() < 0.2:
+            self._hold("/input/Jump", 1, 0.1)
+
+    def run(self) -> None:
+        try:
+            while not self.stop_requested.is_set():
+                if self.paused.is_set():
+                    self.stop_requested.wait(0.1)
+                else:
+                    self.step()
+        finally:
+            self.release()
+
+    def release(self) -> None:
+        """Always leave VRChat with all axes neutral, or the avatar keeps walking."""
+        for address in ("/input/Vertical", "/input/LookHorizontal"):
+            self.send(address, 0.0)
+        self.send("/input/Jump", 0)
+
+    def stop(self) -> None:
+        self.stop_requested.set()
+        if self.thread.is_alive():
+            self.thread.join(2)
+        else:
+            self.release()
+        if self._socket:
+            self._socket.close()
 
 
 class ImageStore:
@@ -190,6 +258,8 @@ def parse_args(argv=None):
     parser.add_argument("--max-frames", type=int, default=0, help="Stop after this many successful saves; 0=unlimited")
     parser.add_argument("--max-age", type=float, default=2, help="Reject captures older than this many seconds")
     parser.add_argument("--manual", action="store_true", help="Enter=positive, N=negative, U=unlabeled (fresh capture)")
+    parser.add_argument("--wander", action="store_true", help="Walk the avatar randomly via VRChat OSC input")
+    parser.add_argument("--osc-port", type=int, default=9000, help="VRChat OSC input port (127.0.0.1)")
     args = parser.parse_args(argv)
     if not math.isfinite(args.interval) or args.interval < 0.1:
         parser.error("--interval must be finite and at least 0.1")
@@ -214,7 +284,12 @@ def main(argv=None) -> int:
     print(f"output={store.directory}", flush=True)
     print("P=pause/resume  Q=quit  R=status (console focused, no Enter required)", flush=True)
     print("Enter=positive  N=negative  U=unlabeled" if args.manual else "Automatic capture -> unlabeled/", flush=True)
+    wanderer = Wanderer(port=args.osc_port) if args.wander else None
+    if wanderer:
+        print(f"Wandering via OSC 127.0.0.1:{args.osc_port} (P also pauses walking)", flush=True)
     collector.start()
+    if wanderer:
+        wanderer.start()
     try:
         import msvcrt
 
@@ -229,9 +304,13 @@ def main(argv=None) -> int:
                         "\r": "positive", "n": "negative", "u": "unlabeled"}
             if key.lower() in commands:
                 collector.command(commands[key.lower()])
+            if wanderer and key.lower() == "p":
+                wanderer.toggle_pause()
     except KeyboardInterrupt:
         print("Stopping after the current operation...", flush=True)
     finally:
+        if wanderer:
+            wanderer.stop()
         collector.stop()
     print(f"{'ERROR' if collector.error else 'done'}: saved={store.count} in this run, output={store.directory}", flush=True)
     return 1 if collector.error else 0
