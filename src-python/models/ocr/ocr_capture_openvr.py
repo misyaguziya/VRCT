@@ -1,19 +1,21 @@
 """OpenVR compositor mirror-texture capture.
 
-Grabs the HMD left-eye submitted image so OCR still works when the
-VRChat desktop mirror window is minimized (a common VR-mode setup).
+Grabs the HMD left-eye image so OCR still works when the VRChat desktop
+mirror window is minimized (a common VR-mode setup).
 
-Uses IVRCompositor::GetMirrorTextureGL + PyOpenGL to read pixels back
-into a numpy array. Requires an active OpenGL context, which we create
-via GLFW (hidden window) on first use.
+Reads IVRCompositor::GetMirrorTextureD3D11 through ocr_capture_d3d11.py.
+The OpenGL variant (GetMirrorTextureGL) is not an option: SteamVR fails to
+import its own D3D11 texture into GL ("Invalid format") and always returns
+CompositorError_InvalidTexture (ValveSoftware/openvr#178, #1410; reproduced
+on hardware 2026-09-27).
 
 Three lifecycle rules matter here:
 
 1. OpenVR is initialized **per process** and shared with Overlay and
    Clipboard, so the session goes through models/openvr_session.py
    (acquire()/release()), never openvr.init()/shutdown() directly.
-2. The mirror texture must be acquired once (not per frame) and then
-   locked/unlocked around every read, per the OpenVR contract.
+2. The mirror texture is acquired once and reused every frame; the D3D11
+   objects are created, read and released on the OCR worker thread.
 3. Only VRChat's frames are read: while another scene app (SteamVR Home
    etc.) is presenting, capture() returns None so the facade can fall back
    to the desktop window.
@@ -21,7 +23,8 @@ Three lifecycle rules matter here:
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
+import sys
+from typing import Optional
 
 import numpy as np
 
@@ -40,15 +43,7 @@ try:
 except Exception:  # pragma: no cover
     Process = None  # type: ignore
 
-try:
-    from OpenGL import GL
-except Exception:  # pragma: no cover
-    GL = None  # type: ignore
-
-try:
-    import glfw
-except Exception:  # pragma: no cover
-    glfw = None  # type: ignore
+from .ocr_capture_d3d11 import D3D11Mirror
 
 try:
     from utils import errorLogging, printLog
@@ -64,23 +59,22 @@ except Exception:  # pragma: no cover
 class OpenVRMirrorCapture:
     """Read the HMD left-eye mirror texture from the OpenVR compositor.
 
-    Lazily initializes a hidden GLFW window (for the GL context), joins the
-    process-wide OpenVR session, and acquires the compositor mirror texture.
-    capture() never raises: on any failure it tears down just enough state to
-    retry cleanly on the next tick and returns None.
+    Lazily joins the process-wide OpenVR session and acquires the compositor
+    mirror texture. capture() never raises: on any failure it releases what it
+    holds so the next tick can reconnect, and returns None.
     """
 
     def __init__(self, eye: str = "left") -> None:
         self._eye_name = eye
         self._compositor = None
-        self._gl_window = None
-        self._texture_id: Optional[int] = None
-        self._shared_handle = None
+        self._mirror: Optional[D3D11Mirror] = None
         self._session_held = False
-        self._initialized = False
+        # 失敗が続く間 (SteamVR再起動中など) は5秒ごとに再試行するので、
+        # トレースバックは最初の1回だけ残す。成功したら次の失敗をまた残す。
+        self._failure_logged = False
 
     def isAvailable(self) -> bool:
-        return openvr is not None and GL is not None and glfw is not None
+        return openvr is not None and sys.platform == "win32"
 
     @property
     def _eye(self):
@@ -88,75 +82,46 @@ class OpenVRMirrorCapture:
             return 0
         return openvr.Eye_Right if self._eye_name == "right" else openvr.Eye_Left
 
-    def _initGlContext(self) -> bool:
-        if self._gl_window is not None:
-            return True
-        if not glfw.init():
-            printLog("OCR: glfw.init() failed")
-            return False
-        glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-        self._gl_window = glfw.create_window(64, 64, "vrct-ocr-gl", None, None)
-        if self._gl_window is None:
-            glfw.terminate()
-            printLog("OCR: failed to create hidden GLFW window")
-            return False
-        glfw.make_context_current(self._gl_window)
-        return True
+    def _logFailure(self, message: str) -> None:
+        if self._failure_logged:
+            return
+        self._failure_logged = True
+        errorLogging()
+        printLog(f"OCR: {message} (further failures are not logged until a frame is read)")
 
     def _init(self) -> bool:
-        if self._initialized:
+        if self._mirror is not None:
             return True
         if not self.isAvailable():
             return False
         try:
-            if not self._initGlContext():
-                return False
-
             # Join (or create) the process-wide OpenVR session. Background
             # mode so we never steal focus from the running scene app.
-            openvr_session.acquire(openvr.VRApplication_Background)
+            system = openvr_session.acquire(openvr.VRApplication_Background)
             self._session_held = True
             self._compositor = openvr.IVRCompositor()
-
-            # Acquire the mirror texture exactly once.
-            tex = self._compositor.getMirrorTextureGL(self._eye)
-            if not isinstance(tex, (tuple, list)) or len(tex) < 2:
-                printLog("OCR: unexpected getMirrorTextureGL return shape")
-                self._resetVrState()
-                return False
-            self._texture_id = int(tex[0])
-            self._shared_handle = tex[1]
-            if not self._texture_id:
-                printLog("OCR: compositor returned an empty mirror texture")
-                self._texture_id = None
-                self._resetVrState()
-                return False
-
-            self._initialized = True
+            self._mirror = D3D11Mirror(system, self._compositor, self._eye)
             return True
         except Exception:
-            errorLogging()
+            self._logFailure("could not open the OpenVR mirror texture")
             self._resetVrState()
             return False
 
     def _resetVrState(self) -> None:
-        """Release the mirror texture and our session reference, but keep
-        the GL context so a retry is cheap. Releasing (rather than holding
-        a possibly dead session) lets the next _init() reconnect, the same
-        release-then-acquire order Overlay.reStartOverlay() uses."""
-        try:
-            if (
-                self._compositor is not None
-                and self._texture_id is not None
-                and hasattr(self._compositor, "releaseSharedGLTexture")
-            ):
-                self._compositor.releaseSharedGLTexture(self._texture_id, self._shared_handle)
-        except Exception:
-            pass
-        self._texture_id = None
-        self._shared_handle = None
+        """Release the mirror texture, then our session reference.
+
+        The mirror is released through the compositor, so it goes first.
+        Releasing the session (rather than holding a possibly dead one) lets
+        the next _init() reconnect, the same release-then-acquire order
+        Overlay.reStartOverlay() uses.
+        """
+        if self._mirror is not None:
+            try:
+                self._mirror.close()
+            except Exception:
+                errorLogging()
+            self._mirror = None
         self._compositor = None
-        self._initialized = False
         if self._session_held:
             self._session_held = False
             try:
@@ -180,70 +145,22 @@ class OpenVRMirrorCapture:
         except Exception:
             return False
 
-    def _lock(self) -> None:
-        if self._shared_handle is None:
-            return
-        if hasattr(self._compositor, "lockGLSharedTextureForAccess"):
-            self._compositor.lockGLSharedTextureForAccess(self._shared_handle)
-
-    def _unlock(self) -> None:
-        if self._shared_handle is None:
-            return
-        if hasattr(self._compositor, "unlockGLSharedTextureForAccess"):
-            self._compositor.unlockGLSharedTextureForAccess(self._shared_handle)
-
     def capture(self) -> Optional[np.ndarray]:
         if not self._init():
             return None
-
         try:
             if not self._isVrchatScene():
                 return None
+            rgb = self._mirror.read()
         except Exception:
-            errorLogging()
+            # The compositor session may have been torn down (SteamVR restart).
+            # Drop everything so the next tick re-acquires.
+            self._logFailure("reading the OpenVR mirror texture failed")
             self._resetVrState()
             return None
-
-        locked = False
-        try:
-            glfw.make_context_current(self._gl_window)
-            self._lock()
-            locked = True
-
-            GL.glBindTexture(GL.GL_TEXTURE_2D, self._texture_id)
-            width = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_WIDTH)
-            height = GL.glGetTexLevelParameteriv(GL.GL_TEXTURE_2D, 0, GL.GL_TEXTURE_HEIGHT)
-            if not width or not height:
-                GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
-                return None
-
-            buf = (GL.GLubyte * (int(width) * int(height) * 4))()
-            GL.glGetTexImage(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, buf)
-            GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
-
-            arr = np.frombuffer(buf, dtype=np.uint8).reshape((int(height), int(width), 4))
-            # OpenGL textures are bottom-up; flip so top-of-image is row 0.
-            # Convert RGBA -> BGR to match the HWND path (OpenCV convention).
-            arr = np.flipud(arr)[:, :, [2, 1, 0]]
-            return np.ascontiguousarray(arr)
-        except Exception:
-            errorLogging()
-            # The compositor session may have been torn down (SteamVR restart,
-            # overlay shutdown). Drop the texture so the next tick re-acquires.
-            if locked:
-                try:
-                    self._unlock()
-                except Exception:
-                    pass
-                locked = False
-            self._resetVrState()
-            return None
-        finally:
-            if locked:
-                try:
-                    self._unlock()
-                except Exception:
-                    pass
+        self._failure_logged = False
+        # D3D11Mirror returns RGB (for the tools); OCR uses BGR like the HWND path.
+        return np.ascontiguousarray(rgb[:, :, ::-1])
 
     def close(self) -> None:
         """Release OCR-owned resources and our shared-session reference.
@@ -252,10 +169,3 @@ class OpenVRMirrorCapture:
         released theirs too (models/openvr_session.py).
         """
         self._resetVrState()
-        if self._gl_window is not None and glfw is not None:
-            try:
-                glfw.destroy_window(self._gl_window)
-                glfw.terminate()
-            except Exception:
-                pass
-            self._gl_window = None
