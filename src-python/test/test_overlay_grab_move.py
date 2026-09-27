@@ -15,6 +15,11 @@ from models.overlay.overlay import (
     getRightHandBaseMatrix,
 )
 
+def pytest_approx(value):
+    import pytest
+    return pytest.approx(value)
+
+
 KEYS = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")
 
 
@@ -53,7 +58,7 @@ class CommitPositionTest(unittest.TestCase):
 
         size, position = callback.call_args.args
         self.assertEqual(size, "small")
-        self.assertEqual(set(position), {*KEYS, "ui_scaling"})
+        self.assertEqual(set(position), {*KEYS, "ui_scaling", "tracker"})
         np.testing.assert_allclose([position[k] for k in KEYS], target, atol=1e-3)
         np.testing.assert_allclose([overlay.settings["small"][k] for k in KEYS], target, atol=1e-3)
 
@@ -112,28 +117,35 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.callback = MagicMock()
         self.overlay.position_changed_callback = self.callback
 
-    def test_hold_grab_release_commits(self):
+    def test_press_grab_release_commits(self):
         from unittest.mock import patch
         t = [100.0]
         with patch("models.overlay.overlay.time.monotonic", side_effect=lambda: t[0]):
-            self.overlay.updateGrab()  # 指しているだけ → 白ポインタ
+            self.overlay.updateGrab()  # 指しているだけ → ポインタ
             self.overlay.overlay.showOverlay.assert_called_with(11)
             self.grip = True
-            self.overlay.updateGrab()  # 長押し開始
-            self.assertIsNotNone(self.overlay.grab_candidate)
-            t[0] += 0.6
-            self.overlay.updateGrab()  # 0.5s経過 → 掴む
+            self.overlay.updateGrab()  # 押した瞬間に掴む
             self.assertIsNotNone(self.overlay.grabbing)
-            self.overlay.updateGrab()  # 掴み中の追従
+            t[0] += 0.2
+            self.overlay.updateGrab()  # 掴み中の追従。ポインタは大きくなる
+            self.overlay.overlay.setOverlayWidthInMeters.assert_called_with(11, pytest_approx(0.0075 * 1.8))
             self.grip = False
             self.overlay.updateGrab()  # 離す → 確定
         self.assertIsNone(self.overlay.grabbing)
         self.callback.assert_called_once()
 
+    def test_grip_held_before_pointing_does_not_grab(self):
+        """グリップを押したままレーザーを当てても掴まない (VRChatで物を持っている時など)。"""
+        hit = self.overlay.overlay.computeOverlayIntersection.return_value
+        self.overlay.overlay.computeOverlayIntersection.return_value = (False, hit[1])
+        self.grip = True
+        self.overlay.updateGrab()  # どこも指さずにグリップ
+        self.overlay.overlay.computeOverlayIntersection.return_value = hit
+        self.overlay.updateGrab()  # 押したままオーバーレイを指す
+        self.assertIsNone(self.overlay.grabbing)
+
     def _grab(self, t):
         self.grip = True
-        self.overlay.updateGrab()
-        t[0] += 0.6
         self.overlay.updateGrab()
         self.overlay.updateGrab()
         self.assertIsNotNone(self.overlay.grabbing)
@@ -225,6 +237,35 @@ class UpdatePanelTest(unittest.TestCase):
         results = MagicMock()
         results.vUVs.v = [0.5, 0.5]
         self.assertTrue(overlay.hasContentAt(PANEL, results))
+
+class CycleAnchorTest(unittest.TestCase):
+    def test_switch_to_playspace_keeps_world_position(self):
+        """追従先を切り替えてもパネルは今見えている場所から動かない。"""
+        from models.overlay.overlay import PANEL, PLAYSPACE
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="HMD", opacity=1.0, fadeout_duration=0, ui_scaling=0.4, y_pos=0.3)
+        overlay = Overlay({PANEL: settings})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.overlay_system = MagicMock()
+        overlay.overlay_system.getTrackedDeviceIndexForControllerRole.return_value = 1
+        overlay.handle = {PANEL: 10}
+        overlay.position_changed_callback = MagicMock()
+        head = np.eye(4)
+        head[:3, 3] = (0.2, 1.1, -0.3)
+
+        base = getHMDBaseMatrix()
+        before = head @ utils.toHomogeneous(_relative(base, [settings[k] for k in KEYS]))
+        overlay.cycleAnchor(lambda index: np.eye(4) if index == -1 else head)
+
+        self.assertEqual(overlay.settings[PANEL]["tracker"], PLAYSPACE)
+        s = overlay.settings[PANEL]
+        after = utils.toHomogeneous(_relative(np.hstack([np.eye(3), np.zeros((3, 1))]), [s[k] for k in KEYS]))
+        np.testing.assert_allclose(after, before, atol=1e-3)
+        _, saved = overlay.position_changed_callback.call_args.args
+        self.assertEqual(saved["tracker"], PLAYSPACE)
+        overlay.overlay.setOverlayTransformAbsolute.assert_called()
 
 
 if __name__ == "__main__":

@@ -31,13 +31,13 @@ _REINIT_WAIT_TIMEOUT_SEC = 5.0
 _REINIT_WAIT_POLL_INTERVAL_SEC = 0.1
 _SHUTDOWN_JOIN_TIMEOUT_SEC = 5.0
 
-# グリップ長押しで掴む。グリップはVRChatにも同時に届き(オーバーレイ側で
-# 入力を奪えない)、短押しはアバターの掴み操作と区別できないため。
-_GRAB_HOLD_SEC = 0.5
+# オーバーレイを指したままグリップを押した瞬間に掴む。グリップはVRChatにも
+# 同時に届く(オーバーレイ側で入力を奪えない)ことは既知の制約。
 _GRIP_MASK = 1 << openvr.k_EButton_Grip
 _POINTER_WIDTH_M = 0.0075
-# 長押し中はポインタが縮んでいき、この倍率まで縮んだら掴む(XSOverlayと同様の見せ方)
-_POINTER_MIN_SCALE = 0.5
+# 掴んだ瞬間にポインタをこの倍率まで大きくして、掴んだことを伝える
+_GRAB_POP_SCALE = 1.8
+_GRAB_POP_SEC = 0.12
 # VRCTの primary カラー (src-ui の --primary_300_color / --primary_100_color)
 # 掴んだままトリガーを引いて手を前後に動かすと拡大縮小する (XSOverlayと同様)。
 # 前に押し出すと拡大、手前に引くと縮小。この距離動かすと2倍 (1/2倍) になる
@@ -64,6 +64,15 @@ _PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
 _PANEL_FIND_INTERVAL_SEC = 2.0
 # パネルの角丸の半径 (px)。撮影した画像の四隅を透明にして角丸にする
 _PANEL_CORNER_RADIUS_PX = 16
+
+# 追従先 "Playspace": SteamVRの空間 (プレイスペース) に固定する。VRChatのスティック移動や
+# 回転はワールド側が動くので、空間に固定したオーバーレイはアバターと一緒についてくる
+PLAYSPACE = "Playspace"
+_PLAYSPACE_INDEX = -1
+# パネル下の追従先切り替えボタン。押すたびにこの順で切り替わる
+PANEL_ANCHORS = (PLAYSPACE, "LeftHand", "RightHand", "HMD")
+_TOOLBAR_WIDTH_RATIO = 0.3  # パネル幅に対するボタンの幅
+_TOOLBAR_GAP_M = 0.012
 _TRIGGER_MASK = 1 << openvr.k_EButton_SteamVR_Trigger
 # スティックの倒し具合をホイール量へ変換する係数 (1フレームあたり)。WHEEL_DELTA=120
 _PANEL_SCROLL_PER_FRAME = 60
@@ -85,6 +94,41 @@ def roundedCornerMask(size: tuple, radius: int) -> Image.Image:
     mask = Image.new("L", size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=255)
     return mask
+
+
+def createAnchorButtonImages() -> Dict[str, Image.Image]:
+    """パネル下の追従先切り替えボタンの画像 (今の追従先を表示)。"""
+    from PIL import ImageFont
+
+    font = ImageFont.truetype(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "NotoSansJP-Regular.ttf"), 34)
+    labels = {PLAYSPACE: "Space", "LeftHand": "Left hand", "RightHand": "Right hand", "HMD": "Head"}
+    images = {}
+    for anchor, label in labels.items():
+        img = Image.new("RGBA", (320, 88), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        draw.rounded_rectangle((2, 2, 317, 85), radius=42, fill=(0x2E, 0x2F, 0x32, 255), outline=(0x61, 0xB4, 0xA7, 255), width=3)
+        icon = (28, 22, 72, 66)
+        white = (0xF2, 0xF2, 0xF2, 255)
+        if anchor == PLAYSPACE:  # ピン
+            draw.ellipse((36, 18, 64, 46), outline=white, width=5)
+            draw.polygon([(38, 40), (62, 40), (50, 66)], fill=white)
+            draw.ellipse((46, 28, 54, 36), fill=white)
+        elif anchor == "HMD":  # 人の頭と肩
+            draw.ellipse((40, 18, 60, 38), outline=white, width=5)
+            draw.arc((30, 42, 70, 82), 180, 360, fill=white, width=5)
+        else:  # 手の平と指。右手は左右反転
+            hand = Image.new("RGBA", (44, 44), (0, 0, 0, 0))
+            d = ImageDraw.Draw(hand)
+            d.rounded_rectangle((10, 18, 36, 42), radius=6, fill=white)
+            for x in (10, 17, 24, 31):
+                d.rounded_rectangle((x, 4, x + 5, 22), radius=2, fill=white)
+            d.rounded_rectangle((32, 20, 43, 27), radius=3, fill=white)
+            if anchor == "RightHand":
+                hand = hand.transpose(Image.FLIP_LEFT_RIGHT)
+            img.alpha_composite(hand, (icon[0], icon[1]))
+        draw.text((90, 44), label, font=font, fill=white, anchor="lm")
+        images[anchor] = img
+    return images
 
 
 def createPointerImages() -> Dict[str, Image.Image]:
@@ -183,8 +227,13 @@ class Overlay:
             self.lastUpdate[key] = time.monotonic()
             self.fadeRatio[key] = 1.0
 
-        # 掴み移動の状態。grab_candidate: (size, 手のindex, 押し始め時刻)
-        self.grab_candidate: Optional[tuple] = None
+        # 手ごとの前フレームのグリップ状態。押した瞬間 (離→押) だけ掴む。
+        # 押したままレーザーがオーバーレイに入っても掴まない (VRChatで物を持っている時など)
+        self.grip_prev: Dict[int, bool] = {}
+        self.grab_started: float = 0.0
+        # パネル下の追従先切り替えボタン。追従先ごとに別オーバーレイにして表示を切り替える
+        self.toolbar_handles: Dict[str, int] = {}
+        self.trigger_prev: Dict[int, bool] = {}
         # grabbing: (size, 手のindex, 手から見たオーバーレイの4x4行列)
         self.grabbing: Optional[tuple] = None
         self.grab_last_relative: Optional[np.ndarray] = None
@@ -237,6 +286,12 @@ class Overlay:
                 self.overlay.setOverlayRaw(handle, (ctypes.c_char * len(raw)).from_buffer_copy(raw), img.size[0], img.size[1], 4)
                 self.pointer_handles[kind] = handle
             if PANEL in self.settings:
+                for anchor, img in createAnchorButtonImages().items():
+                    handle = self.overlay.createOverlay(f"VRCT_anchor_{anchor}", f"VRCT_anchor_{anchor}")
+                    raw = img.tobytes()
+                    self.overlay.setOverlayRaw(handle, (ctypes.c_char * len(raw)).from_buffer_copy(raw), img.size[0], img.size[1], 4)
+                    self.toolbar_handles[anchor] = handle
+                self.images["toolbar"] = next(iter(createAnchorButtonImages().values()))
                 try:
                     self.initPanelTexture()
                 except Exception:
@@ -440,14 +495,9 @@ class Overlay:
             translation = (self.settings[size]["x_pos"], self.settings[size]["y_pos"], - self.settings[size]["z_pos"])
             rotation = (self.settings[size]["x_rotation"], self.settings[size]["y_rotation"], self.settings[size]["z_rotation"])
             transform = utils.transform_matrix(base_matrix, translation, rotation)
-            transform = mat34Id(transform)
 
-            if bool(self.overlay_system.isTrackedDeviceConnected(trackerIndex)) is True:
-                self.overlay.setOverlayTransformTrackedDeviceRelative(
-                    self.handle[size],
-                    trackerIndex,
-                    transform
-                )
+            if trackerIndex == _PLAYSPACE_INDEX or bool(self.overlay_system.isTrackedDeviceConnected(trackerIndex)) is True:
+                self.setTransform(size, trackerIndex, transform)
                 self.position_pending.discard(size)
             else:
                 # 追従先 (コントローラ等) がまだ繋がっていない。mainloop で繋がり次第やり直す
@@ -458,9 +508,59 @@ class Overlay:
             s = self.settings[size]
             self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], size)
 
+    def setTransform(self, size: str, tracker_index: int, relative: np.ndarray) -> None:
+        """オーバーレイを追従先から見た位置 (3x4) に置く。パネルなら下のボタンも一緒に動かす。"""
+        if tracker_index == _PLAYSPACE_INDEX:
+            self.overlay.setOverlayTransformAbsolute(self.handle[size], openvr.TrackingUniverseStanding, mat34Id(relative))
+        else:
+            self.overlay.setOverlayTransformTrackedDeviceRelative(self.handle[size], tracker_index, mat34Id(relative))
+        if size == PANEL and self.toolbar_handles:
+            self.placeToolbar(tracker_index, relative)
+
+    def placeToolbar(self, tracker_index: int, panel_relative: np.ndarray) -> None:
+        """追従先切り替えボタンをパネルの下に置き、今の追従先のボタンだけ表示する。"""
+        panel_width = self.settings[PANEL]["ui_scaling"]
+        image_width, image_height = self.panel_image_size or (900, 700)
+        button = self.images["toolbar"]
+        width = panel_width * _TOOLBAR_WIDTH_RATIO
+        height = width * button.size[1] / button.size[0]
+        offset = np.eye(4)
+        offset[1][3] = -(panel_width * image_height / image_width / 2 + _TOOLBAR_GAP_M + height / 2)
+        relative = (utils.toHomogeneous(panel_relative) @ offset)[:3, :]
+        for anchor, handle in self.toolbar_handles.items():
+            if anchor != self.settings[PANEL]["tracker"]:
+                self.overlay.hideOverlay(handle)
+                continue
+            self.overlay.setOverlayWidthInMeters(handle, width)
+            if tracker_index == _PLAYSPACE_INDEX:
+                self.overlay.setOverlayTransformAbsolute(handle, openvr.TrackingUniverseStanding, mat34Id(relative))
+            else:
+                self.overlay.setOverlayTransformTrackedDeviceRelative(handle, tracker_index, mat34Id(relative))
+            self.overlay.showOverlay(handle)
+
+    def cycleAnchor(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
+        """パネルの追従先を次に切り替える。パネルは今見えている場所から動かさない。"""
+        s = self.settings[PANEL]
+        base_matrix, tracker_index = self.getTracker(s["tracker"])
+        tracker_pose = poseOf(tracker_index)
+        anchors = PANEL_ANCHORS
+        new_anchor = anchors[(anchors.index(s["tracker"]) + 1) % len(anchors)] if s["tracker"] in anchors else anchors[0]
+        _, new_index = self.getTracker(new_anchor)
+        new_pose = poseOf(new_index)
+        if tracker_pose is None or new_pose is None:
+            return
+        relative = utils.transform_matrix(base_matrix, (s["x_pos"], s["y_pos"], -s["z_pos"]), (s["x_rotation"], s["y_rotation"], s["z_rotation"]))
+        world = tracker_pose @ utils.toHomogeneous(relative)
+        s["tracker"] = new_anchor
+        new_relative = (np.linalg.inv(new_pose) @ world)[:3, :]
+        self.commitPosition(PANEL, new_relative)
+        self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], new_anchor, PANEL)
+
     def getTracker(self, tracker: str) -> tuple:
         """Return (base 3x4 matrix, tracked device index) for a tracker name."""
         match tracker:
+            case "Playspace":
+                return np.hstack([np.eye(3), np.zeros((3, 1))]), _PLAYSPACE_INDEX
             case "LeftHand":
                 return getLeftHandBaseMatrix(), self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_LeftHand)
             case "RightHand":
@@ -481,6 +581,18 @@ class Overlay:
             params.vSource.v[i] = pose[i][3]
             params.vDirection.v[i] = -pose[i][2]  # コントローラの前方は -Z
         hit, results = self.overlay.computeOverlayIntersection(self.handle[size], params)
+        return results if hit else None
+
+    def intersectToolbar(self, pose: np.ndarray) -> Optional[Any]:
+        handle = self.toolbar_handles.get(self.settings.get(PANEL, {}).get("tracker"))
+        if handle is None:
+            return None
+        params = openvr.VROverlayIntersectionParams_t()
+        params.eOrigin = openvr.TrackingUniverseStanding
+        for i in range(3):
+            params.vSource.v[i] = pose[i][3]
+            params.vDirection.v[i] = -pose[i][2]
+        hit, results = self.overlay.computeOverlayIntersection(handle, params)
         return results if hit else None
 
     def hasContentAt(self, size: str, results: Any) -> bool:
@@ -554,6 +666,8 @@ class Overlay:
         self.overlay_system.getDeviceToAbsoluteTrackingPose(openvr.TrackingUniverseStanding, 0, poses)
 
         def poseOf(index: int) -> Optional[np.ndarray]:
+            if index == _PLAYSPACE_INDEX:
+                return np.eye(4)
             if index == openvr.k_unTrackedDeviceIndexInvalid or not poses[index].bPoseIsValid:
                 return None
             m = poses[index].mDeviceToAbsoluteTracking
@@ -587,6 +701,7 @@ class Overlay:
             state = controllerState(hand)
             grip = state is not None and bool(state.ulButtonPressed & _GRIP_MASK)
             trigger = state is not None and bool(state.ulButtonPressed & _TRIGGER_MASK)
+            self.grip_prev[hand] = grip
             if grip and trigger:
                 self.updateGrabScale(size, hand_pose, tracker_pose, tracker_index)
                 return
@@ -599,11 +714,14 @@ class Overlay:
             relative = np.linalg.inv(tracker_pose) @ hand_pose @ hand_to_overlay
             self.grab_last_relative = relative[:3, :]
             if grip:
-                self.overlay.setOverlayTransformTrackedDeviceRelative(self.handle[size], tracker_index, mat34Id(relative[:3, :]))
+                self.setTransform(size, tracker_index, relative[:3, :])
                 self.wakeOverlay(size)  # 掴んでいる間はフェードさせない
+                pop = min((now - self.grab_started) / _GRAB_POP_SEC, 1.0)
+                self.showPointer(self.intersect(hand_pose, size), _COLOR_POINTER, 1.0 + (_GRAB_POP_SCALE - 1.0) * pop)
             else:
                 self.grabbing = None
                 self.setHighlight(None, _COLOR_NORMAL)
+                self.showPointer(None, _COLOR_NORMAL)
                 self.commitPosition(size, relative[:3, :])
             return
 
@@ -625,36 +743,44 @@ class Overlay:
             if hand_pose is not None and not grip:
                 self.handlePanelInput(hand, results if size == PANEL else None, controllerState(hand))
 
-            if size is None or not grip:
-                if self.grab_candidate is not None and self.grab_candidate[1] == hand:
-                    self.grab_candidate = None
-                if size is not None and self.isVisible(size) and pointer is None:
+            # パネル下の追従先切り替えボタン: トリガーを押した瞬間に切り替える
+            state = controllerState(hand) if hand_pose is not None else None
+            trigger = state is not None and bool(state.ulButtonPressed & _TRIGGER_MASK)
+            trigger_pressed_now = trigger and not self.trigger_prev.get(hand, False)
+            self.trigger_prev[hand] = trigger
+            toolbar = self.intersectToolbar(hand_pose) if hand_pose is not None else None
+            if toolbar is not None and (results is None or toolbar.fDistance < results.fDistance):
+                if trigger_pressed_now:
+                    self.cycleAnchor(poseOf)
+                if pointer is None:
+                    pointer = (toolbar, _COLOR_POINTER)
+                continue
+
+            grip_pressed_now = grip and not self.grip_prev.get(hand, False)
+            self.grip_prev[hand] = grip
+            if size is None or not grip_pressed_now:
+                if size is not None and not grip and self.isVisible(size) and pointer is None:
                     pointer = (results, _COLOR_POINTER)
                 continue
 
+            base_matrix, tracker_index = self.getTracker(self.settings[size]["tracker"])
+            tracker_pose = poseOf(tracker_index)
+            if tracker_pose is None:
+                continue
             self.wakeOverlay(size)  # フェード済みでもグリップで起こす
-            if self.grab_candidate is None or self.grab_candidate[:2] != (size, hand):
-                self.grab_candidate = (size, hand, now)
-            progress = min((now - self.grab_candidate[2]) / _GRAB_HOLD_SEC, 1.0)
-            pointer = (results, _COLOR_POINTER, 1.0 - (1.0 - _POINTER_MIN_SCALE) * progress)
-            if now - self.grab_candidate[2] >= _GRAB_HOLD_SEC:
-                base_matrix, tracker_index = self.getTracker(self.settings[size]["tracker"])
-                tracker_pose = poseOf(tracker_index)
-                if tracker_pose is None:
-                    continue
-                s = self.settings[size]
-                relative = utils.transform_matrix(
-                    base_matrix,
-                    (s["x_pos"], s["y_pos"], -s["z_pos"]),
-                    (s["x_rotation"], s["y_rotation"], s["z_rotation"]),
-                )
-                overlay_pose = tracker_pose @ utils.toHomogeneous(relative)
-                self.grabbing = (size, hand, np.linalg.inv(hand_pose) @ overlay_pose)
-                self.grab_last_relative = None
-                self.grab_candidate = None
-                self.showPointer(None, _COLOR_NORMAL)
-                self.setHighlight(size, _COLOR_GRABBING)
-                return
+            s = self.settings[size]
+            relative = utils.transform_matrix(
+                base_matrix,
+                (s["x_pos"], s["y_pos"], -s["z_pos"]),
+                (s["x_rotation"], s["y_rotation"], s["z_rotation"]),
+            )
+            overlay_pose = tracker_pose @ utils.toHomogeneous(relative)
+            self.grabbing = (size, hand, np.linalg.inv(hand_pose) @ overlay_pose)
+            self.grab_last_relative = None
+            self.grab_started = now
+            self.showPointer(results, _COLOR_POINTER)
+            self.setHighlight(size, _COLOR_GRABBING)
+            return
 
         self.showPointer(*(pointer or (None, _COLOR_NORMAL)))
 
@@ -671,7 +797,7 @@ class Overlay:
         self.updateUiScaling(width, size)
         relative = np.linalg.inv(tracker_pose) @ overlay_pose
         self.grab_last_relative = relative[:3, :]
-        self.overlay.setOverlayTransformTrackedDeviceRelative(self.handle[size], tracker_index, mat34Id(relative[:3, :]))
+        self.setTransform(size, tracker_index, relative[:3, :])
         self.wakeOverlay(size)
         kind = "plus" if pushed > _SCALE_ICON_THRESHOLD_M else "minus" if pushed < -_SCALE_ICON_THRESHOLD_M else "dot"
         self.showPointer(self.intersect(hand_pose, size), _COLOR_POINTER, kind=kind)
@@ -685,7 +811,11 @@ class Overlay:
         if self.position_changed_callback is not None:
             try:
                 # ui_scaling はオーバーレイの幅(m)。設定値への換算は呼び出し側で行う
-                self.position_changed_callback(size, {**{k: self.settings[size][k] for k in keys}, "ui_scaling": self.settings[size]["ui_scaling"]})
+                self.position_changed_callback(size, {
+                    **{k: self.settings[size][k] for k in keys},
+                    "ui_scaling": self.settings[size]["ui_scaling"],
+                    "tracker": self.settings[size]["tracker"],
+                })
             except Exception:
                 errorLogging()
 
@@ -743,7 +873,6 @@ class Overlay:
                 self.grab_error = None
             except Exception as e:
                 self.grabbing = None
-                self.grab_candidate = None
                 # 毎フレーム呼ばれるため、同じ例外が続く間はログを1回だけにする
                 if repr(e) != self.grab_error:
                     self.grab_error = repr(e)
@@ -801,9 +930,10 @@ class Overlay:
                 for size in self.settings.keys():
                     if isinstance(self.handle[size], int):
                         self.overlay.destroyOverlay(self.handle[size])
-                for handle in self.pointer_handles.values():
+                for handle in [*self.pointer_handles.values(), *self.toolbar_handles.values()]:
                     self.overlay.destroyOverlay(handle)
                 self.pointer_handles = {}
+                self.toolbar_handles = {}
                 self.overlay = None
             if isinstance(self.system, openvr.IVRSystem):
                 # Only releases our reference; the real openvr.shutdown()
