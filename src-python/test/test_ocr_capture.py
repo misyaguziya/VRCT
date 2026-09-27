@@ -51,7 +51,7 @@ class TestVrchatSceneCheck(unittest.TestCase):
 
     def _make(self, renderer: int, focus: int):
         capture = OpenVRMirrorCapture()
-        capture._initialized = True
+        capture._mirror = MagicMock()
         capture._session_held = True
         capture._compositor = MagicMock()
         capture._compositor.getLastFrameRenderer.return_value = renderer
@@ -70,7 +70,27 @@ class TestVrchatSceneCheck(unittest.TestCase):
             self.assertIsNone(capture.capture())
         # 異常ではないので、次に VRChat へ戻ったときのためにセッションは保持する。
         release.assert_not_called()
-        self.assertTrue(capture._initialized)
+        self.assertIsNotNone(capture._mirror)
+        capture._mirror.read.assert_not_called()
+
+    def test_vrchat_frame_is_returned_as_bgr(self) -> None:
+        # D3D11Mirror は収集ツール向けに RGB で返す。OCR は HWND 経路と同じ BGR。
+        capture = self._make(renderer=100, focus=100)
+        rgb = np.zeros((2, 2, 3), dtype=np.uint8)
+        rgb[..., 0] = 10
+        rgb[..., 2] = 30
+        capture._mirror.read.return_value = rgb
+        with self._name("VRChat.exe"):
+            frame = capture.capture()
+        self.assertEqual(tuple(frame[0, 0]), (30, 0, 10))
+
+    def test_repeated_failures_log_once_until_a_frame_is_read(self) -> None:
+        # SteamVR 再起動中などは5秒ごとに再試行する。error.log を毎回汚さない。
+        capture = OpenVRMirrorCapture()
+        with patch.object(OpenVRMirrorCapture, "isAvailable", return_value=True),                 patch("models.ocr.ocr_capture_openvr.openvr_session.acquire", side_effect=RuntimeError("no vr")),                 patch("models.ocr.ocr_capture_openvr.errorLogging") as logging:
+            for _ in range(3):
+                self.assertIsNone(capture.capture())
+        logging.assert_called_once()
 
     def test_vrchat_scene_is_detected(self) -> None:
         with self._name("VRChat.exe"):
