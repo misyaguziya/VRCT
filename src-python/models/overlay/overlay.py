@@ -353,6 +353,8 @@ class Overlay:
         if img is None:
             return
         img.putalpha(roundedCornerMask(img.size, _PANEL_CORNER_RADIUS_PX))
+        # 当たり判定 (hasContentAt) 用。updateImage を通らないのでここで記録する
+        self.images[PANEL] = img
         GL = self.gl["GL"]
         raw = img.tobytes()
         # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す

@@ -203,6 +203,29 @@ class PanelInputTest(unittest.TestCase):
             overlay.handlePanelInput(1, results, state)
             wc.mouseWheel.assert_called_once_with(123, 450, 260, -60)
 
+class UpdatePanelTest(unittest.TestCase):
+    def test_captured_panel_becomes_pointable(self):
+        """撮影したパネル画像が当たり判定に使われる (起動時の1x1透明画像のままにしない)。"""
+        from unittest.mock import patch
+
+        from PIL import Image
+
+        from models.overlay.overlay import PANEL
+
+        overlay = Overlay({})
+        overlay.handle = {PANEL: 10}
+        overlay.overlay = MagicMock()
+        overlay.images[PANEL] = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
+        overlay.gl = {"GL": MagicMock(), "texture": 1, "vr_texture": MagicMock(), "size": None}
+        overlay.panel_hwnd = 123
+        with patch("models.overlay.overlay.window_capture") as wc:
+            wc.isWindow.return_value = True
+            wc.captureWindow.return_value = Image.new("RGBA", (900, 700), (40, 40, 40, 255))
+            overlay.updatePanel()
+        results = MagicMock()
+        results.vUVs.v = [0.5, 0.5]
+        self.assertTrue(overlay.hasContentAt(PANEL, results))
+
 
 if __name__ == "__main__":
     unittest.main()
