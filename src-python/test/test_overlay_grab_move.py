@@ -42,7 +42,7 @@ class MatrixToPositionTest(unittest.TestCase):
 class CommitPositionTest(unittest.TestCase):
     def test_commit_updates_settings_and_calls_callback(self):
         settings = {k: 0.0 for k in KEYS}
-        settings.update(tracker="HMD", opacity=1.0, fadeout_duration=0)
+        settings.update(tracker="HMD", opacity=1.0, fadeout_duration=0, ui_scaling=1.0)
         overlay = Overlay({"small": settings})
         overlay.overlay_system = MagicMock()
         callback = MagicMock()
@@ -53,7 +53,7 @@ class CommitPositionTest(unittest.TestCase):
 
         size, position = callback.call_args.args
         self.assertEqual(size, "small")
-        self.assertEqual(set(position), set(KEYS))
+        self.assertEqual(set(position), {*KEYS, "ui_scaling"})
         np.testing.assert_allclose([position[k] for k in KEYS], target, atol=1e-3)
         np.testing.assert_allclose([overlay.settings["small"][k] for k in KEYS], target, atol=1e-3)
 
@@ -66,9 +66,11 @@ class UpdateGrabFlowTest(unittest.TestCase):
     def setUp(self):
         import openvr
         settings = {k: 0.0 for k in KEYS}
-        settings.update(tracker="LeftHand", opacity=1.0, fadeout_duration=0, z_pos=0.0)
+        settings.update(tracker="LeftHand", opacity=1.0, fadeout_duration=0, z_pos=0.0, ui_scaling=1.0)
         self.overlay = Overlay({"small": settings})
         self.grip = False
+        self.trigger = False
+        self.right_z = 0.0  # 右手の位置 (z)。前方は -Z
 
         system = MagicMock()
         system.getTrackedDeviceIndexForControllerRole.side_effect = (
@@ -83,11 +85,16 @@ class UpdateGrabFlowTest(unittest.TestCase):
                 for r in range(3):
                     for c in range(4):
                         poses[i].mDeviceToAbsoluteTracking[r][c] = 1.0 if r == c else 0.0
+            poses[self.RIGHT].mDeviceToAbsoluteTracking[2][3] = self.right_z
         system.getDeviceToAbsoluteTrackingPose.side_effect = fill_poses
 
         def controller_state(index):
             state = MagicMock()
-            state.ulButtonPressed = (1 << openvr.k_EButton_Grip) if (self.grip and index == self.RIGHT) else 0
+            pressed = 0
+            if index == self.RIGHT:
+                pressed |= (1 << openvr.k_EButton_Grip) if self.grip else 0
+                pressed |= (1 << openvr.k_EButton_SteamVR_Trigger) if self.trigger else 0
+            state.ulButtonPressed = pressed
             return True, state
         system.getControllerState.side_effect = controller_state
 
@@ -101,7 +108,7 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.overlay.overlay_system = system
         self.overlay.overlay = ovr
         self.overlay.handle = {"small": 10}
-        self.overlay.pointer_handle = 11
+        self.overlay.pointer_handles = {"dot": 11, "plus": 12, "minus": 13}
         self.callback = MagicMock()
         self.overlay.position_changed_callback = self.callback
 
@@ -123,15 +130,51 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.assertIsNone(self.overlay.grabbing)
         self.callback.assert_called_once()
 
+    def _grab(self, t):
+        self.grip = True
+        self.overlay.updateGrab()
+        t[0] += 0.6
+        self.overlay.updateGrab()
+        self.overlay.updateGrab()
+        self.assertIsNotNone(self.overlay.grabbing)
+
+    def test_trigger_push_forward_scales_up_and_saves_width(self):
+        from unittest.mock import patch
+        t = [100.0]
+        self.overlay.settings["small"]["ui_scaling"] = 1.0
+        with patch("models.overlay.overlay.time.monotonic", side_effect=lambda: t[0]):
+            self._grab(t)
+            self.trigger = True
+            self.overlay.updateGrab()  # 拡大縮小の開始
+            self.right_z = -0.15  # 前へ15cm押し出す → 2倍
+            self.overlay.updateGrab()
+            self.overlay.overlay.showOverlay.assert_called_with(12)  # + アイコン
+            self.assertAlmostEqual(self.overlay.settings["small"]["ui_scaling"], 2.0, places=5)
+            self.trigger = False
+            self.overlay.updateGrab()  # 掴み直し
+            self.grip = False
+            self.overlay.updateGrab()
+        _, saved = self.callback.call_args.args
+        self.assertAlmostEqual(saved["ui_scaling"], 2.0, places=5)
+
+    def test_transparent_area_is_not_pointed(self):
+        from PIL import Image
+        self.overlay.images["small"] = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
+        hit = self.overlay.overlay.computeOverlayIntersection.return_value[1]
+        hit.vUVs.v = [0.5, 0.5]
+        self.assertEqual(self.overlay.pointingOverlay(np.eye(4)), (None, None))
+        self.overlay.images["small"].putpixel((50, 50), (255, 255, 255, 255))
+        self.assertEqual(self.overlay.pointingOverlay(np.eye(4))[0], "small")
+
 
 class PanelInputTest(unittest.TestCase):
     """VRパネルへの入力: UV→ピクセル変換とトリガーのクリック判定。"""
 
     def test_uv_to_pixel_matches_device_measurement(self):
-        from models.overlay.overlay import panelUvToPixel
+        from models.overlay.overlay import uvToPixel
         # 実機: 900x700 のパネルで Voice2Chatbox (y≈73) を指したときの UV
-        self.assertEqual(panelUvToPixel(0.1216, 0.8048, 900, 700)[1], 75)
-        self.assertEqual(panelUvToPixel(0.5, 0.5, 900, 700), (450, 350))
+        self.assertEqual(uvToPixel(0.1216, 0.8048, 900, 700)[1], 75)
+        self.assertEqual(uvToPixel(0.5, 0.5, 900, 700), (450, 350))
 
     def test_trigger_click_and_scroll(self):
         import openvr

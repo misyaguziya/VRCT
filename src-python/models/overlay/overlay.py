@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 import ctypes
 import time
 from psutil import process_iter
@@ -38,6 +39,14 @@ _POINTER_WIDTH_M = 0.0075
 # 長押し中はポインタが縮んでいき、この倍率まで縮んだら掴む(XSOverlayと同様の見せ方)
 _POINTER_MIN_SCALE = 0.5
 # VRCTの primary カラー (src-ui の --primary_300_color / --primary_100_color)
+# 掴んだままトリガーを引いて手を前後に動かすと拡大縮小する (XSOverlayと同様)。
+# 前に押し出すと拡大、手前に引くと縮小。この距離動かすと2倍 (1/2倍) になる
+_SCALE_DOUBLING_M = 0.15
+_SCALE_ICON_THRESHOLD_M = 0.01
+_WIDTH_MIN_M = 0.05
+_WIDTH_MAX_M = 3.0
+# 透明な部分にはポインタを出さない。この半径 (px) 内に描画があれば当たりとみなす
+_HIT_MARGIN_PX = 12
 _COLOR_NORMAL = (1.0, 1.0, 1.0)
 _COLOR_POINTER = (0x61 / 255, 0xB4 / 255, 0xA7 / 255)
 _COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
@@ -53,13 +62,15 @@ except ImportError:
 PANEL = "panel"
 _PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
 _PANEL_FIND_INTERVAL_SEC = 2.0
+# パネルの角丸の半径 (px)。撮影した画像の四隅を透明にして角丸にする
+_PANEL_CORNER_RADIUS_PX = 16
 _TRIGGER_MASK = 1 << openvr.k_EButton_SteamVR_Trigger
 # スティックの倒し具合をホイール量へ変換する係数 (1フレームあたり)。WHEEL_DELTA=120
 _PANEL_SCROLL_PER_FRAME = 60
 _PANEL_SCROLL_DEADZONE = 0.3
 
-def panelUvToPixel(u: float, v: float, width: int, height: int) -> tuple:
-    """computeOverlayIntersection のUVをパネル画像のピクセル座標に変換する。
+def uvToPixel(u: float, v: float, width: int, height: int) -> tuple:
+    """computeOverlayIntersection のUVをオーバーレイ画像のピクセル座標に変換する。
 
     UVは左下が原点だが、縦方向も「横幅」を1とした長さで、中心 (0.5) を基準にしている
     (実機で確認。縦横比の分だけ端ほどずれていた)。
@@ -67,6 +78,28 @@ def panelUvToPixel(u: float, v: float, width: int, height: int) -> tuple:
     x = u * width
     y = height / 2 - (v - 0.5) * width
     return (min(max(int(x), 0), width - 1), min(max(int(y), 0), height - 1))
+
+
+@lru_cache(maxsize=4)
+def roundedCornerMask(size: tuple, radius: int) -> Image.Image:
+    mask = Image.new("L", size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=255)
+    return mask
+
+
+def createPointerImages() -> Dict[str, Image.Image]:
+    """ポインタ画像。白で描いてオーバーレイの色 (VRCTの緑) で着色する。"""
+    images = {}
+    for kind in ("dot", "plus", "minus"):
+        img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        draw.ellipse((4, 4, 59, 59), fill=(255, 255, 255, 255), outline=(0, 0, 0, 255), width=5)
+        if kind != "dot":
+            draw.line((18, 32, 46, 32), fill=(0, 0, 0, 255), width=7)
+        if kind == "plus":
+            draw.line((32, 18, 32, 46), fill=(0, 0, 0, 255), width=7)
+        images[kind] = img
+    return images
 
 
 def mat34Id(array: Sequence[Sequence[float]]) -> Any:
@@ -155,7 +188,13 @@ class Overlay:
         # grabbing: (size, 手のindex, 手から見たオーバーレイの4x4行列)
         self.grabbing: Optional[tuple] = None
         self.grab_last_relative: Optional[np.ndarray] = None
-        self.pointer_handle: Optional[int] = None
+        # ポインタは種類ごとに別のオーバーレイにして表示を切り替える
+        # (setOverlayRaw は約190回で失敗し続けるため、画像の差し替えはしない)
+        self.pointer_handles: Dict[str, int] = {}
+        # 掴み中の拡大縮小: (開始時の手の位置, 手の前方向, 開始時の幅, 固定したオーバーレイの姿勢)
+        self.grab_scale: Optional[tuple] = None
+        # 当たり判定で透明部分を除くため、最後に貼った画像を覚えておく
+        self.images: Dict[str, Image.Image] = {}
         self.grab_error: Optional[str] = None
         # 追従先が未接続で位置を設定できていないオーバーレイ
         self.position_pending: set = set()
@@ -190,13 +229,13 @@ class Overlay:
             for i, size in enumerate(self.settings.keys()):
                 self.handle[size] = self.overlay.createOverlay(f"VRCT{i}", f"VRCT{i}")
                 self.overlay.showOverlay(self.handle[size])
-            self.pointer_handle = self.overlay.createOverlay("VRCT_pointer", "VRCT_pointer")
-            self.overlay.setOverlayWidthInMeters(self.pointer_handle, _POINTER_WIDTH_M)
-            self.overlay.setOverlaySortOrder(self.pointer_handle, 100)
             self.initialized = True
-            dot = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-            ImageDraw.Draw(dot).ellipse((2, 2, 29, 29), fill=(255, 255, 255, 255), outline=(0, 0, 0, 255), width=3)
-            self.updatePointerImage(dot)
+            for kind, img in createPointerImages().items():
+                handle = self.overlay.createOverlay(f"VRCT_pointer_{kind}", f"VRCT_pointer_{kind}")
+                self.overlay.setOverlaySortOrder(handle, 100)
+                raw = img.tobytes()
+                self.overlay.setOverlayRaw(handle, (ctypes.c_char * len(raw)).from_buffer_copy(raw), img.size[0], img.size[1], 4)
+                self.pointer_handles[kind] = handle
             if PANEL in self.settings:
                 try:
                     self.initPanelTexture()
@@ -228,6 +267,7 @@ class Overlay:
 
     def updateImage(self, img: Image.Image, size: str) -> None:
         if self.initialized is True:
+            self.images[size] = img
             width, height = img.size
             img = img.tobytes()
             img = (ctypes.c_char * len(img)).from_buffer_copy(img)
@@ -256,11 +296,6 @@ class Overlay:
 
             self.updateOpacity(self.settings[size]["opacity"], size)
             self.lastUpdate[size] = time.monotonic()
-
-    def updatePointerImage(self, img: Image.Image) -> None:
-        raw = img.tobytes()
-        buf = (ctypes.c_char * len(raw)).from_buffer_copy(raw)
-        self.overlay.setOverlayRaw(self.pointer_handle, buf, img.size[0], img.size[1], 4)
 
     def initPanelTexture(self) -> None:
         """VRパネル用のOpenGLコンテキストとテクスチャを作る (オーバーレイのスレッドで呼ぶこと)。"""
@@ -317,6 +352,7 @@ class Overlay:
         img = window_capture.captureWindow(self.panel_hwnd)
         if img is None:
             return
+        img.putalpha(roundedCornerMask(img.size, _PANEL_CORNER_RADIUS_PX))
         GL = self.gl["GL"]
         raw = img.tobytes()
         # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す
@@ -343,7 +379,7 @@ class Overlay:
             self.panel_input.pop(hand, None)
             return
         width, height = self.panel_image_size
-        xy = panelUvToPixel(results.vUVs.v[0], results.vUVs.v[1], width, height)
+        xy = uvToPixel(results.vUVs.v[0], results.vUVs.v[1], width, height)
         if xy != last_xy:
             window_capture.mouseMove(self.panel_hwnd, *xy, pressed=pressed)
         if pressed and not last_pressed:
@@ -435,22 +471,39 @@ class Overlay:
             return False
         return self.settings[size]["fadeout_duration"] == 0 or self.fadeRatio[size] > 0
 
-    def pointingOverlay(self, pose: np.ndarray) -> tuple:
-        """Return (size, intersection results) of the overlay the controller ray hits, or (None, None).
-
-        フェードアウトした(見えない)オーバーレイも対象にする: グリップで起こして掴めるように。
-        """
+    def intersect(self, pose: np.ndarray, size: str) -> Optional[Any]:
+        """コントローラのレーザーとオーバーレイの交点。当たらなければ None。"""
         params = openvr.VROverlayIntersectionParams_t()
         params.eOrigin = openvr.TrackingUniverseStanding
         for i in range(3):
             params.vSource.v[i] = pose[i][3]
             params.vDirection.v[i] = -pose[i][2]  # コントローラの前方は -Z
+        hit, results = self.overlay.computeOverlayIntersection(self.handle[size], params)
+        return results if hit else None
+
+    def hasContentAt(self, size: str, results: Any) -> bool:
+        """当たった位置の近くに描画がある (透明でない) か。"""
+        img = self.images.get(size)
+        if img is None or img.mode != "RGBA":
+            return True
+        x, y = uvToPixel(results.vUVs.v[0], results.vUVs.v[1], img.size[0], img.size[1])
+        r = _HIT_MARGIN_PX
+        return img.crop((x - r, y - r, x + r + 1, y + r + 1)).getchannel("A").getextrema()[1] > 0
+
+    def pointingOverlay(self, pose: np.ndarray) -> tuple:
+        """Return (size, intersection results) of the overlay the controller ray hits, or (None, None).
+
+        フェードアウトした(見えない)オーバーレイも対象にする: グリップで起こして掴めるように。
+        画像の透明な部分は対象にしない。
+        """
         best = (None, None)
         for size in self.settings.keys():
             if self.settings[size]["opacity"] <= 0:
                 continue
-            hit, results = self.overlay.computeOverlayIntersection(self.handle[size], params)
-            if hit and (best[1] is None or results.fDistance < best[1].fDistance):
+            results = self.intersect(pose, size)
+            if results is None or not self.hasContentAt(size, results):
+                continue
+            if best[1] is None or results.fDistance < best[1].fDistance:
                 best = (size, results)
         return best
 
@@ -459,12 +512,16 @@ class Overlay:
         self.fadeRatio[size] = 1.0
         self.overlay.setOverlayAlpha(self.handle[size], self.settings[size]["opacity"])
 
-    def showPointer(self, results: Optional[Any], color: Sequence[float], scale: float = 1.0) -> None:
-        """レーザーの当たった位置に小さな点を表示する。results が None なら隠す。"""
-        if self.pointer_handle is None:
-            return
-        if results is None:
-            self.overlay.hideOverlay(self.pointer_handle)
+    def showPointer(self, results: Optional[Any], color: Sequence[float], scale: float = 1.0, kind: str = "dot") -> None:
+        """レーザーの当たった位置にポインタを表示する。results が None なら隠す。
+
+        kind: "dot" / "plus" (拡大中) / "minus" (縮小中)
+        """
+        for other, handle in self.pointer_handles.items():
+            if other != kind or results is None:
+                self.overlay.hideOverlay(handle)
+        handle = self.pointer_handles.get(kind)
+        if handle is None or results is None:
             return
         normal = np.array([results.vNormal.v[i] for i in range(3)])
         point = np.array([results.vPoint.v[i] for i in range(3)]) + normal * 0.002
@@ -473,10 +530,11 @@ class Overlay:
         x_axis /= np.linalg.norm(x_axis)
         y_axis = np.cross(normal, x_axis)
         m = np.column_stack([x_axis, y_axis, normal, point])
-        self.overlay.setOverlayTransformAbsolute(self.pointer_handle, openvr.TrackingUniverseStanding, mat34Id(m))
-        self.overlay.setOverlayColor(self.pointer_handle, *color)
-        self.overlay.setOverlayWidthInMeters(self.pointer_handle, _POINTER_WIDTH_M * scale)
-        self.overlay.showOverlay(self.pointer_handle)
+        width = _POINTER_WIDTH_M * (1.0 if kind == "dot" else 2.0) * scale
+        self.overlay.setOverlayTransformAbsolute(handle, openvr.TrackingUniverseStanding, mat34Id(m))
+        self.overlay.setOverlayColor(handle, *color)
+        self.overlay.setOverlayWidthInMeters(handle, width)
+        self.overlay.showOverlay(handle)
 
     def setHighlight(self, size: Optional[str], color: Sequence[float]) -> None:
         """掴み対象のオーバーレイを色付けする。size が None なら全て元の色に戻す。"""
@@ -518,13 +576,27 @@ class Overlay:
                 # トラッキングロスト(スリープ・電源断等)では離したことも検知できないため、
                 # 掴みを解除して最後に表示していた位置で確定する。
                 self.grabbing = None
+                self.grab_scale = None
                 self.setHighlight(None, _COLOR_NORMAL)
+                self.showPointer(None, _COLOR_NORMAL)
                 if self.grab_last_relative is not None:
                     self.commitPosition(size, self.grab_last_relative)
                 return
+            state = controllerState(hand)
+            grip = state is not None and bool(state.ulButtonPressed & _GRIP_MASK)
+            trigger = state is not None and bool(state.ulButtonPressed & _TRIGGER_MASK)
+            if grip and trigger:
+                self.updateGrabScale(size, hand_pose, tracker_pose, tracker_index)
+                return
+            if self.grab_scale is not None:
+                # 拡大縮小を終えたら、止めていた位置を今の手から掴み直す
+                hand_to_overlay = np.linalg.inv(hand_pose) @ self.grab_scale[3]
+                self.grabbing = (size, hand, hand_to_overlay)
+                self.grab_scale = None
+                self.showPointer(None, _COLOR_NORMAL)
             relative = np.linalg.inv(tracker_pose) @ hand_pose @ hand_to_overlay
             self.grab_last_relative = relative[:3, :]
-            if gripPressed(hand):
+            if grip:
                 self.overlay.setOverlayTransformTrackedDeviceRelative(self.handle[size], tracker_index, mat34Id(relative[:3, :]))
                 self.wakeOverlay(size)  # 掴んでいる間はフェードさせない
             else:
@@ -584,14 +656,34 @@ class Overlay:
 
         self.showPointer(*(pointer or (None, _COLOR_NORMAL)))
 
+    def updateGrabScale(self, size: str, hand_pose: np.ndarray, tracker_pose: np.ndarray, tracker_index: int) -> None:
+        """掴んだままトリガーを引いている間: オーバーレイをその場に止め、手の前後の動きで拡大縮小する。"""
+        if self.grab_scale is None:
+            if self.grab_last_relative is None:
+                return
+            overlay_pose = tracker_pose @ utils.toHomogeneous(self.grab_last_relative)
+            self.grab_scale = (hand_pose[:3, 3].copy(), -hand_pose[:3, 2].copy(), self.settings[size]["ui_scaling"], overlay_pose)
+        start_position, forward, start_width, overlay_pose = self.grab_scale
+        pushed = float(np.dot(hand_pose[:3, 3] - start_position, forward))
+        width = min(max(start_width * 2 ** (pushed / _SCALE_DOUBLING_M), _WIDTH_MIN_M), _WIDTH_MAX_M)
+        self.updateUiScaling(width, size)
+        relative = np.linalg.inv(tracker_pose) @ overlay_pose
+        self.grab_last_relative = relative[:3, :]
+        self.overlay.setOverlayTransformTrackedDeviceRelative(self.handle[size], tracker_index, mat34Id(relative[:3, :]))
+        self.wakeOverlay(size)
+        kind = "plus" if pushed > _SCALE_ICON_THRESHOLD_M else "minus" if pushed < -_SCALE_ICON_THRESHOLD_M else "dot"
+        self.showPointer(self.intersect(hand_pose, size), _COLOR_POINTER, kind=kind)
+
     def commitPosition(self, size: str, relative: np.ndarray) -> None:
+        """掴んで動かした結果 (位置と幅) を確定し、保存用にコールバックへ渡す。"""
         base_matrix, _ = self.getTracker(self.settings[size]["tracker"])
         keys = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")
         for key, value in zip(keys, utils.matrix_to_position(base_matrix, relative)):
             self.settings[size][key] = round(value, 4)
         if self.position_changed_callback is not None:
             try:
-                self.position_changed_callback(size, {k: self.settings[size][k] for k in keys})
+                # ui_scaling はオーバーレイの幅(m)。設定値への換算は呼び出し側で行う
+                self.position_changed_callback(size, {**{k: self.settings[size][k] for k in keys}, "ui_scaling": self.settings[size]["ui_scaling"]})
             except Exception:
                 errorLogging()
 
@@ -707,9 +799,9 @@ class Overlay:
                 for size in self.settings.keys():
                     if isinstance(self.handle[size], int):
                         self.overlay.destroyOverlay(self.handle[size])
-                if isinstance(self.pointer_handle, int):
-                    self.overlay.destroyOverlay(self.pointer_handle)
-                self.pointer_handle = None
+                for handle in self.pointer_handles.values():
+                    self.overlay.destroyOverlay(handle)
+                self.pointer_handles = {}
                 self.overlay = None
             if isinstance(self.system, openvr.IVRSystem):
                 # Only releases our reference; the real openvr.shutdown()

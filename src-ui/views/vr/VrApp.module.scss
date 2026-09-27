@@ -1,3 +1,10 @@
+// root.css の角丸 (html/body) は透過ウィンドウのメイン画面向け。VRパネルは不透明な
+// ウィンドウを撮影するため、角の外側がWebViewの白い背景として映ってしまう
+:global(html), :global(body) {
+    border-radius: 0;
+    background-color: var(--dark_888_color);
+}
+
 .container {
     position: relative;
     width: 100vw;
@@ -14,10 +21,21 @@
 }
 
 .log_box_wrapper {
+    position: relative;
     flex: 1;
     display: flex;
     min-width: 0;
+    min-height: 0;
     padding: 1rem;
+
+    // VRではスクロール位置が分かるよう、スクロールバーを太く明るくする
+    :global(#log_container)::-webkit-scrollbar {
+        width: 1.6rem;
+    }
+    :global(#log_container)::-webkit-scrollbar-thumb {
+        background-color: var(--dark_600_color);
+        border-radius: 0.8rem;
+    }
 }
 
 .locked {

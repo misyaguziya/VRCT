@@ -4493,12 +4493,24 @@ class Controller:
             errorLogging()
 
     def _onOverlayPositionChanged(self, size: str, position: dict) -> None:
-        """VR内の掴み移動で確定した位置を保存し、UIへ通知する (オーバーレイスレッドから呼ばれる)。"""
+        """VR内の掴み移動・拡大縮小で確定した位置と大きさを保存し、UIへ通知する (オーバーレイスレッドから呼ばれる)。
+
+        position["ui_scaling"] はオーバーレイの幅(m)。small は幅=設定値、large は幅=設定値*0.25
+        (Model.init参照)。設定画面のスライダーの範囲 (src-ui/logics/ui_configs.js の
+        ui_scaling: 40〜200%) に収めてから保存し、収めた値をオーバーレイにも戻す。
+        """
+        def clamp(value: float) -> float:
+            return round(min(max(value, 0.4), 2.0), 2)
+
         if size == "small":
+            position["ui_scaling"] = clamp(position["ui_scaling"])
             config.OVERLAY_SMALL_LOG_SETTINGS = {**config.OVERLAY_SMALL_LOG_SETTINGS, **position}
+            self._model.updateOverlaySmallLogSettings()
             self.run(200, self.run_mapping["overlay_small_log_settings"], config.OVERLAY_SMALL_LOG_SETTINGS)
         elif size == "large":
+            position["ui_scaling"] = clamp(position["ui_scaling"] / 0.25)
             config.OVERLAY_LARGE_LOG_SETTINGS = {**config.OVERLAY_LARGE_LOG_SETTINGS, **position}
+            self._model.updateOverlayLargeLogSettings()
             self.run(200, self.run_mapping["overlay_large_log_settings"], config.OVERLAY_LARGE_LOG_SETTINGS)
         elif size == "panel":
             config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, **position}
