@@ -13,7 +13,8 @@ const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreen
 fn create_vr_panel_window(app: &tauri::App) -> tauri::Result<()> {
     WebviewWindowBuilder::new(app, "vr_panel", WebviewUrl::App("vr.html".into()))
         .title("VRCT VR Panel")
-        .inner_size(900.0, 700.0)
+        // src-ui/views/vr/vr_layout.json の atlas と一致させる
+        .inner_size(900.0, 836.0)
         .position(-10000.0, -10000.0)
         .decorations(false)
         .resizable(false)

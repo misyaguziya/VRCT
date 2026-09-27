@@ -458,4 +458,7 @@ config_page:
         opened_folder: "フォルダを開きました。"
 
 vr_panel:
+    window_log: "ログ"
+    window_language: "言語"
+    window_settings: "VR設定"
     locked_by_config_page: "デスクトップで設定画面を開いています。閉じると操作できます。"

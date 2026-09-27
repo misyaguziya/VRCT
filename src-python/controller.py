@@ -4433,8 +4433,13 @@ class Controller:
             errorLogging()
         try:
             self._model.setOverlayPositionChangedCallback(self._onOverlayPositionChanged)
+            self._model.setOverlayPointerCallback(self._onVrPanelPointer)
         except Exception:
             errorLogging()
+
+    def _onVrPanelPointer(self, xy) -> None:
+        """VR UI上のポインタの位置をUIへ送る (オーバーレイスレッドから呼ばれる)。外れたら None。"""
+        self.run(200, self.run_mapping["vr_panel_pointer"], None if xy is None else {"x": xy[0], "y": xy[1]})
 
     def _onOverlayPositionChanged(self, size: str, position: dict) -> None:
         """VR内の掴み移動・拡大縮小で確定した位置と大きさを保存し、UIへ通知する (オーバーレイスレッドから呼ばれる)。
@@ -4458,6 +4463,8 @@ class Controller:
             self.run(200, self.run_mapping["overlay_large_log_settings"], config.OVERLAY_LARGE_LOG_SETTINGS)
         elif size == "panel":
             config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, **position}
+        elif size == "launcher":
+            config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, **position}
 
     def init(self, *args, **kwargs) -> None:
         removeLog()

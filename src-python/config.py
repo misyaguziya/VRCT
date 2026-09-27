@@ -495,12 +495,18 @@ def _overlay_small_validator(val, inst):
             new[key] = float(v)
     return new
 
-def _overlay_vr_panel_validator(val, inst):
-    if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_VR_PANEL_SETTINGS.keys())):
+def _make_overlay_vr_window_validator(name):
+    """VR UIのウィンドウ (ログ・ランチャー) の位置設定用。VR内で掴んで動かした結果だけが保存される。"""
+    def validator(val, inst):
+        return _validate_overlay_vr_window(val, getattr(inst, name))
+    return validator
+
+def _validate_overlay_vr_window(val, current):
+    if not (isinstance(val, dict) and set(val.keys()) == set(current.keys())):
         return None
-    new = dict(inst.OVERLAY_VR_PANEL_SETTINGS)
+    new = dict(current)
     for key, v in val.items():
-        # Playspace: SteamVRの空間に固定 (VRパネルだけが選べる)
+        # Playspace: SteamVRの空間に固定 (VR UIのウィンドウだけが選べる)
         if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand', 'Playspace']:
             new[key] = v
         elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation','opacity','ui_scaling'] and isinstance(v,(int,float)):
@@ -929,7 +935,9 @@ class Config:
     OVERLAY_SMALL_LOG_SETTINGS = ValidatedProperty('OVERLAY_SMALL_LOG_SETTINGS', _overlay_small_validator)
     OVERLAY_LARGE_LOG_SETTINGS = ValidatedProperty('OVERLAY_LARGE_LOG_SETTINGS', _overlay_large_validator)
     # VRパネルの位置。UIからは設定せず、VR内で掴んで動かした位置だけが保存される。
-    OVERLAY_VR_PANEL_SETTINGS = ValidatedProperty('OVERLAY_VR_PANEL_SETTINGS', _overlay_vr_panel_validator)
+    OVERLAY_VR_PANEL_SETTINGS = ValidatedProperty('OVERLAY_VR_PANEL_SETTINGS', _make_overlay_vr_window_validator('OVERLAY_VR_PANEL_SETTINGS'))
+    # VR UIのランチャー (手首の帯) の位置。OVERLAY_VR_PANEL_SETTINGS はログウィンドウの位置。
+    OVERLAY_VR_LAUNCHER_SETTINGS = ValidatedProperty('OVERLAY_VR_LAUNCHER_SETTINGS', _make_overlay_vr_window_validator('OVERLAY_VR_LAUNCHER_SETTINGS'))
 
     # --- Message format settings ---
     SEND_MESSAGE_FORMAT_PARTS = ValidatedProperty('SEND_MESSAGE_FORMAT_PARTS', _format_validator_send)
@@ -1272,6 +1280,19 @@ class Config:
             "fadeout_duration": 2,
             "opacity": 1.0,
             "ui_scaling": 1.0,
+            "tracker": "LeftHand",
+        }
+        self._OVERLAY_VR_LAUNCHER_SETTINGS = {
+            "x_pos": 0.0,
+            "y_pos": 0.0,
+            "z_pos": 0.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
+            "display_duration": 5,
+            "fadeout_duration": 0,  # 常に表示
+            "opacity": 1.0,
+            "ui_scaling": 0.28,  # 横幅(m)。880x128px の帯で高さ約4cm
             "tracker": "LeftHand",
         }
         self._OVERLAY_VR_PANEL_SETTINGS = {

@@ -58,12 +58,22 @@ except ImportError:
     import overlay_utils as utils
     import window_capture
 
-# VRパネル: Tauriの "VRCT VR Panel" ウィンドウを撮影して映すオーバーレイ (settingsのキー)
+# VR UI: Tauriの "VRCT VR Panel" ウィンドウ1枚に複数のウィンドウ (ログ・ランチャー) を並べて描き、
+# 1回だけ撮影して、オーバーレイごとにその一部 (領域) を切り出して表示する。
+# settings のキー。PANEL はログウィンドウ (位置は OVERLAY_VR_PANEL_SETTINGS に保存)
 PANEL = "panel"
+LAUNCHER = "launcher"
+# 撮影するウィンドウの大きさと各領域 (x, y, w, h)。論理px。
+# src-ui/views/vr/vr_layout.json と一致させる (test_overlay_grab_move で確認)
+VR_ATLAS_SIZE = (900, 836)
+VR_REGIONS = {
+    PANEL: (0, 0, 900, 700),
+    LAUNCHER: (10, 708, 880, 128),
+}
 _PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
 _PANEL_FIND_INTERVAL_SEC = 2.0
-# パネルの角丸の半径 (px)。撮影した画像の四隅を透明にして角丸にする
-_PANEL_CORNER_RADIUS_PX = 16
+# 各領域の角丸の半径 (論理px)。撮影した画像の領域の外と四隅を透明にする
+_PANEL_CORNER_RADIUS_PX = 24
 
 # 追従先 "Playspace": SteamVRの空間 (プレイスペース) に固定する。VRChatのスティック移動や
 # 回転はワールド側が動くので、空間に固定したオーバーレイはアバターと一緒についてくる
@@ -79,6 +89,8 @@ _PANEL_SCROLL_PER_FRAME = 60
 _PANEL_SCROLL_DEADZONE = 0.3
 # パネルの外 (クライアント領域外) の座標。ここへ移動・離すと、Webのclickは成立せずホバーも外れる
 _OUTSIDE_XY = (-1, -1)
+# ポインタの位置をVR UIへ知らせる (ホバー表示用)。この距離 (論理px) 未満の動きは送らない
+_POINTER_NOTIFY_MIN_MOVE_PX = 4
 
 def uvToPixel(u: float, v: float, width: int, height: int) -> tuple:
     """computeOverlayIntersection のUVをオーバーレイ画像のピクセル座標に変換する。
@@ -91,10 +103,34 @@ def uvToPixel(u: float, v: float, width: int, height: int) -> tuple:
     return (min(max(int(x), 0), width - 1), min(max(int(y), 0), height - 1))
 
 
+def regionRect(size: str, image_size: tuple) -> tuple:
+    """撮影した画像 (DPIで論理pxより大きいことがある) 上での領域 (x0, y0, x1, y1)。"""
+    scale = image_size[0] / VR_ATLAS_SIZE[0]
+    x, y, w, h = VR_REGIONS[size]
+    return (round(x * scale), round(y * scale), round((x + w) * scale), round((y + h) * scale))
+
+
+def regionBounds(size: str) -> tuple:
+    """setOverlayTextureBounds の (uMin, uMax, vMin, vMax)。
+
+    OpenGLのテクスチャでは、画像の上から y 行目は v = 1 - y/H として扱われる
+    (画像全体なら vMin=1, vMax=0 で正しい向きになることを実機で確認済み)。
+    vMin が表示の上端、vMax が下端に対応する。
+    """
+    W, H = VR_ATLAS_SIZE
+    x, y, w, h = VR_REGIONS[size]
+    return (x / W, (x + w) / W, 1 - y / H, 1 - (y + h) / H)
+
+
 @lru_cache(maxsize=4)
-def roundedCornerMask(size: tuple, radius: int) -> Image.Image:
-    mask = Image.new("L", size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0] - 1, size[1] - 1), radius=radius, fill=255)
+def atlasMask(image_size: tuple) -> Image.Image:
+    """各領域だけを角丸で残し、それ以外を透明にするマスク。"""
+    scale = image_size[0] / VR_ATLAS_SIZE[0]
+    mask = Image.new("L", image_size, 0)
+    draw = ImageDraw.Draw(mask)
+    for size in VR_REGIONS:
+        x0, y0, x1, y1 = regionRect(size, image_size)
+        draw.rounded_rectangle((x0, y0, x1 - 1, y1 - 1), radius=round(_PANEL_CORNER_RADIUS_PX * scale), fill=255)
     return mask
 
 
@@ -262,6 +298,11 @@ class Overlay:
         # 掴み終えた時点でトリガーを押したままだった手。一度離すまでトリガーを無視する
         # (掴んだまま拡大縮小し、グリップを先に離したときのクリック誤爆を防ぐ)
         self.trigger_blocked: set = set()
+        # VR UIのホバー表示用。WebView2 はOSの本物のカーソル位置でホバーを判定するので、
+        # PostMessage のマウス移動ではホバーが付かない。ポインタの位置 (VR画面の論理px、
+        # 外れたら None) をこのコールバックで知らせ、画面側でホバーを表示する
+        self.pointer_callback: Optional[Callable[[Optional[tuple]], None]] = None
+        self.pointer_notified: Optional[tuple] = None
         # 手ごとの (grip, hit) 。変化したときだけログに出す(実機での切り分け用)
         self.debug_state: Dict[int, tuple] = {}
         # self.settings[size] の位置はオーバーレイスレッド(掴み確定)とUI設定変更の
@@ -297,6 +338,7 @@ class Overlay:
                     self.overlay.setOverlayRaw(handle, (ctypes.c_char * len(raw)).from_buffer_copy(raw), img.size[0], img.size[1], 4)
                     self.toolbar_handles[anchor] = handle
                 self.images["toolbar"] = next(iter(createAnchorButtonImages().values()))
+            if any(size in self.settings for size in VR_REGIONS):
                 try:
                     self.initPanelTexture()
                 except Exception:
@@ -380,10 +422,14 @@ class Overlay:
         vr_texture.handle = int(texture)
         vr_texture.eType = openvr.TextureType_OpenGL
         vr_texture.eColorSpace = openvr.ColorSpace_Auto
-        bounds = openvr.VRTextureBounds_t()
-        bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = 0.0, 1.0, 1.0, 0.0  # OpenGLは上下が逆
-        self.overlay.setOverlayTextureBounds(self.handle[PANEL], bounds)
+        for size in self.vrRegionSizes():
+            bounds = openvr.VRTextureBounds_t()
+            bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = regionBounds(size)
+            self.overlay.setOverlayTextureBounds(self.handle[size], bounds)
         self.gl = {"glfw": glfw, "GL": GL, "window": window, "texture": texture, "vr_texture": vr_texture, "size": None}
+
+    def vrRegionSizes(self) -> list:
+        return [size for size in VR_REGIONS if size in self.settings]
 
     def shutdownPanelTexture(self) -> None:
         if self.gl is None:
@@ -412,9 +458,10 @@ class Overlay:
         img = window_capture.captureWindow(self.panel_hwnd)
         if img is None:
             return
-        img.putalpha(roundedCornerMask(img.size, _PANEL_CORNER_RADIUS_PX))
+        img.putalpha(atlasMask(img.size))
         # 当たり判定 (hasContentAt) 用。updateImage を通らないのでここで記録する
-        self.images[PANEL] = img
+        for size in self.vrRegionSizes():
+            self.images[size] = img.crop(regionRect(size, img.size))
         GL = self.gl["GL"]
         raw = img.tobytes()
         # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す
@@ -425,11 +472,16 @@ class Overlay:
         else:
             GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, img.size[0], img.size[1], GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, raw)
         GL.glFinish()
-        self.overlay.setOverlayTexture(self.handle[PANEL], self.gl["vr_texture"])
+        # 1枚のテクスチャを全領域のオーバーレイに渡す。表示される範囲は各オーバーレイの bounds で決まる
+        for size in self.vrRegionSizes():
+            self.overlay.setOverlayTexture(self.handle[size], self.gl["vr_texture"])
         self.panel_image_size = img.size
 
-    def handlePanelInput(self, hand: int, results: Optional[Any], state: Optional[Any]) -> None:
-        """レーザーが当たっている位置へマウス入力を送る。トリガー=クリック、スティック上下=スクロール。"""
+    def handlePanelInput(self, hand: int, xy: Optional[tuple], state: Optional[Any]) -> None:
+        """レーザーが当たっている位置 (撮影画像上のピクセル、外れていれば None) へマウス入力を送る。
+
+        トリガー=クリック、スティック上下=スクロール。
+        """
         last_pressed, last_xy = self.panel_input.get(hand, (False, None))
         if self.panel_hwnd is None or self.panel_image_size is None or state is None:
             return
@@ -439,7 +491,7 @@ class Overlay:
                 pressed = False
             else:
                 self.trigger_blocked.discard(hand)
-        if results is None:
+        if xy is None:
             # レーザーがパネルから外れた。押したまま外れた場合もパネルの外で離したことにして、
             # 押し始めたボタンのクリックを成立させない (マイクの誤ONを防ぐ)。ホバーも外す
             if last_xy is not None:
@@ -448,8 +500,6 @@ class Overlay:
                     window_capture.mouseUp(self.panel_hwnd, *_OUTSIDE_XY)
             self.panel_input.pop(hand, None)
             return
-        width, height = self.panel_image_size
-        xy = uvToPixel(results.vUVs.v[0], results.vUVs.v[1], width, height)
         if xy != last_xy:
             window_capture.mouseMove(self.panel_hwnd, *xy, pressed=pressed)
         if pressed and not last_pressed:
@@ -533,7 +583,7 @@ class Overlay:
     def placeToolbar(self, tracker_index: int, panel_relative: np.ndarray) -> None:
         """追従先切り替えボタンをパネルの下に置き、今の追従先のボタンだけ表示する。"""
         panel_width = self.settings[PANEL]["ui_scaling"]
-        image_width, image_height = self.panel_image_size or (900, 700)
+        _, _, image_width, image_height = VR_REGIONS[PANEL]
         button = self.images["toolbar"]
         width = panel_width * _TOOLBAR_WIDTH_RATIO
         height = width * button.size[1] / button.size[0]
@@ -551,19 +601,43 @@ class Overlay:
                 self.overlay.setOverlayTransformTrackedDeviceRelative(handle, tracker_index, mat34Id(relative))
             self.overlay.showOverlay(handle)
 
+    def overlayWorldPose(self, size: str, poseOf: Callable[[int], Optional[np.ndarray]]) -> Optional[np.ndarray]:
+        """オーバーレイの今の姿勢 (空間座標の4x4)。追従先の姿勢が取れなければ None。"""
+        s = self.settings[size]
+        base_matrix, tracker_index = self.getTracker(s["tracker"])
+        tracker_pose = poseOf(tracker_index)
+        if tracker_pose is None:
+            return None
+        relative = utils.transform_matrix(base_matrix, (s["x_pos"], s["y_pos"], -s["z_pos"]), (s["x_rotation"], s["y_rotation"], s["z_rotation"]))
+        return tracker_pose @ utils.toHomogeneous(relative)
+
+    def regionPixel(self, size: str, results: Any, overlay_pose: np.ndarray) -> tuple:
+        """レーザーの当たった点 (空間座標) を、撮影画像上のピクセル座標にする。
+
+        computeOverlayIntersection の UV は、テクスチャの一部を切り出したオーバーレイで基準が
+        変わるため使わない。オーバーレイの姿勢と幅から、当たった点の位置を自分で求める。
+        オーバーレイの中心が原点で、x が右、y が上。
+        """
+        point = np.array([results.vPoint.v[0], results.vPoint.v[1], results.vPoint.v[2], 1.0])
+        local = np.linalg.inv(overlay_pose) @ point
+        _, _, region_w, region_h = VR_REGIONS[size]
+        width_m = self.settings[size]["ui_scaling"]
+        height_m = width_m * region_h / region_w
+        fx = min(max(local[0] / width_m + 0.5, 0.0), 1.0)
+        fy = min(max(0.5 - local[1] / height_m, 0.0), 1.0)
+        x0, y0, x1, y1 = regionRect(size, self.panel_image_size)
+        return (min(x0 + int(fx * (x1 - x0)), x1 - 1), min(y0 + int(fy * (y1 - y0)), y1 - 1))
+
     def cycleAnchor(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
         """パネルの追従先を次に切り替える。パネルは今見えている場所から動かさない。"""
         s = self.settings[PANEL]
-        base_matrix, tracker_index = self.getTracker(s["tracker"])
-        tracker_pose = poseOf(tracker_index)
         anchors = PANEL_ANCHORS
         new_anchor = anchors[(anchors.index(s["tracker"]) + 1) % len(anchors)] if s["tracker"] in anchors else anchors[0]
         _, new_index = self.getTracker(new_anchor)
         new_pose = poseOf(new_index)
-        if tracker_pose is None or new_pose is None:
+        world = self.overlayWorldPose(PANEL, poseOf)
+        if world is None or new_pose is None:
             return
-        relative = utils.transform_matrix(base_matrix, (s["x_pos"], s["y_pos"], -s["z_pos"]), (s["x_rotation"], s["y_rotation"], s["z_rotation"]))
-        world = tracker_pose @ utils.toHomogeneous(relative)
         s["tracker"] = new_anchor
         new_relative = (np.linalg.inv(new_pose) @ world)[:3, :]
         self.commitPosition(PANEL, new_relative)
@@ -611,7 +685,8 @@ class Overlay:
     def hasContentAt(self, size: str, results: Any) -> bool:
         """当たった位置の近くに描画がある (透明でない) か。"""
         img = self.images.get(size)
-        if img is None or img.mode != "RGBA":
+        # VR UIの領域は角丸以外すべて不透明。UVの基準も違うので判定しない (regionPixel 参照)
+        if size in VR_REGIONS or img is None or img.mode != "RGBA":
             return True
         x, y = uvToPixel(results.vUVs.v[0], results.vUVs.v[1], img.size[0], img.size[1])
         r = _HIT_MARGIN_PX
@@ -711,6 +786,7 @@ class Overlay:
                 if self.grab_last_relative is not None:
                     self.commitPosition(size, self.grab_last_relative)
                 return
+            self.notifyPointer(None)
             state = controllerState(hand)
             grip = state is not None and bool(state.ulButtonPressed & _GRIP_MASK)
             trigger = state is not None and bool(state.ulButtonPressed & _TRIGGER_MASK)
@@ -742,6 +818,7 @@ class Overlay:
             return
 
         pointer = None  # (results, color[, scale])
+        hover_xy = None
         for role in (openvr.TrackedControllerRole_LeftHand, openvr.TrackedControllerRole_RightHand):
             hand = self.overlay_system.getTrackedDeviceIndexForControllerRole(role)
             hand_pose = poseOf(hand)
@@ -757,7 +834,15 @@ class Overlay:
                 printLog("overlay grab", {"hand": hand, "grip": grip, "hit": size})
 
             if hand_pose is not None and not grip:
-                self.handlePanelInput(hand, results if size == PANEL else None, controllerState(hand))
+                xy = None
+                if size in VR_REGIONS and self.panel_image_size is not None:
+                    overlay_pose = self.overlayWorldPose(size, poseOf)
+                    if overlay_pose is not None:
+                        xy = self.regionPixel(size, results, overlay_pose)
+                self.handlePanelInput(hand, xy, controllerState(hand))
+                if xy is not None and hover_xy is None:
+                    scale = self.panel_image_size[0] / VR_ATLAS_SIZE[0]
+                    hover_xy = (round(xy[0] / scale), round(xy[1] / scale))
 
             # パネル下の追従先切り替えボタン: トリガーを押した瞬間に切り替える
             state = controllerState(hand) if hand_pose is not None else None
@@ -779,18 +864,10 @@ class Overlay:
                     pointer = (results, _COLOR_POINTER)
                 continue
 
-            base_matrix, tracker_index = self.getTracker(self.settings[size]["tracker"])
-            tracker_pose = poseOf(tracker_index)
-            if tracker_pose is None:
+            overlay_pose = self.overlayWorldPose(size, poseOf)
+            if overlay_pose is None:
                 continue
             self.wakeOverlay(size)  # フェード済みでもグリップで起こす
-            s = self.settings[size]
-            relative = utils.transform_matrix(
-                base_matrix,
-                (s["x_pos"], s["y_pos"], -s["z_pos"]),
-                (s["x_rotation"], s["y_rotation"], s["z_rotation"]),
-            )
-            overlay_pose = tracker_pose @ utils.toHomogeneous(relative)
             self.grabbing = (size, hand, np.linalg.inv(hand_pose) @ overlay_pose)
             self.grab_last_relative = None
             self.grab_started = now
@@ -799,6 +876,22 @@ class Overlay:
             return
 
         self.showPointer(*(pointer or (None, _COLOR_NORMAL)))
+        self.notifyPointer(hover_xy)
+
+    def notifyPointer(self, xy: Optional[tuple]) -> None:
+        """ポインタの位置が変わったときだけ VR UI へ知らせる。"""
+        last = self.pointer_notified
+        if xy == last or (
+            xy is not None and last is not None
+            and abs(xy[0] - last[0]) < _POINTER_NOTIFY_MIN_MOVE_PX and abs(xy[1] - last[1]) < _POINTER_NOTIFY_MIN_MOVE_PX
+        ):
+            return
+        self.pointer_notified = xy
+        if self.pointer_callback is not None:
+            try:
+                self.pointer_callback(xy)
+            except Exception:
+                errorLogging()
 
     def updateGrabScale(self, size: str, hand_pose: np.ndarray, tracker_pose: np.ndarray, tracker_index: int) -> None:
         """掴んだままトリガーを引いている間: オーバーレイをその場に止め、手の前後の動きで拡大縮小する。"""

@@ -48,7 +48,7 @@ from models.transcription.transcription_deepgram import (
     isLanguageSupportedByDeepgramModel,
 )
 from models.transliteration.transliteration_transliterator import Transliterator
-from models.overlay.overlay import PANEL, Overlay
+from models.overlay.overlay import LAUNCHER, PANEL, Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
@@ -956,6 +956,7 @@ class Model:
             "small": overlay_small_log_settings,
             "large": overlay_large_log_settings,
             PANEL: copy.deepcopy(config.OVERLAY_VR_PANEL_SETTINGS),
+            LAUNCHER: copy.deepcopy(config.OVERLAY_VR_LAUNCHER_SETTINGS),
         }
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
@@ -2339,6 +2340,11 @@ class Model:
             self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], size, True)
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
+
+    def setOverlayPointerCallback(self, fn: Optional[Callable[[Optional[tuple]], None]]) -> None:
+        """VR UI上のポインタの位置が変わったときに呼ぶ関数を登録する (ホバー表示用)。"""
+        self.ensure_initialized()
+        self.overlay.pointer_callback = fn
 
     def setOverlayPositionChangedCallback(self, fn: Optional[Callable[[str, dict], None]]) -> None:
         """VR内でオーバーレイを掴んで動かし、位置が確定したときに呼ぶ関数を登録する。"""

@@ -15,6 +15,9 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/enable_ocr_capture", ns: configs, hook_name: "useOcr", method_name: "updateFromBackendEnableOcrCapture" },
 
     { endpoint: "/run/update_software", ns: null, hook_name: null, method_name: null },
+
+    // VR UI のポインタ位置 (ホバー表示用)。VR ウィンドウへ転送する
+    { endpoint: "/run/vr_panel_pointer", ns: common, hook_name: "useVrPanelPointer", method_name: "forwardVrPanelPointer" },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
 
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },
