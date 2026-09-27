@@ -763,7 +763,15 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "release_channel",
     },
 
-    // OCR (VRChat chat-bubble capture). ON/OFF is a main function (useMainFunction).
+    // OCR (VRChat chat-bubble capture)
+    {
+        Category: "Ocr",
+        Base_Name: "EnableOcrCapture",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "ocr_capture",
+    },
     {
         Category: "Ocr",
         Base_Name: "OcrWindowTitle",
