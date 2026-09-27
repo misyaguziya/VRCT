@@ -135,6 +135,7 @@ run_mapping = {
     "selected_deepgram_model":"/run/selected_deepgram_model",
 
     "overlay_small_log_settings":"/run/overlay_small_log_settings",
+    "vr_panel_pointer":"/run/vr_panel_pointer",
     "overlay_large_log_settings":"/run/overlay_large_log_settings",
 
     "selectable_mic_host_list":"/run/selectable_mic_host_list",

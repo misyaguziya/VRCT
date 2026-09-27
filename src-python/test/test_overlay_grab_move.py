@@ -9,6 +9,10 @@ from unittest.mock import MagicMock
 import numpy as np
 from models.overlay import overlay_utils as utils
 from models.overlay.overlay import (
+    LAUNCHER,
+    PANEL,
+    VR_ATLAS_SIZE,
+    VR_REGIONS,
     Overlay,
     getHMDBaseMatrix,
     getLeftHandBaseMatrix,
@@ -180,7 +184,7 @@ class UpdateGrabFlowTest(unittest.TestCase):
 
 
 class PanelInputTest(unittest.TestCase):
-    """VRパネルへの入力: UV→ピクセル変換とトリガーのクリック判定。"""
+    """VRパネルへの入力: トリガーのクリック判定とスクロール。"""
 
     def test_uv_to_pixel_matches_device_measurement(self):
         from models.overlay.overlay import uvToPixel
@@ -194,25 +198,24 @@ class PanelInputTest(unittest.TestCase):
 
         overlay = Overlay({})
         overlay.panel_hwnd = 123
-        overlay.panel_image_size = (900, 700)
-        results = MagicMock()
-        results.vUVs.v = [0.5, 0.6]  # → (450, 260)
+        overlay.panel_image_size = (900, 836)
+        xy = (450, 260)
         state = MagicMock()
         state.rAxis[0].y = 0.0
 
         with patch("models.overlay.overlay.window_capture") as wc:
             state.ulButtonPressed = 0
-            overlay.handlePanelInput(1, results, state)
+            overlay.handlePanelInput(1, xy, state)
             wc.mouseMove.assert_called_with(123, 450, 260, pressed=False)
             state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
-            overlay.handlePanelInput(1, results, state)
+            overlay.handlePanelInput(1, xy, state)
             wc.mouseDown.assert_called_once_with(123, 450, 260)
             # 押したままパネルの外へ外れたら、パネルの外で離したことにする (クリックを成立させない)
             overlay.handlePanelInput(1, None, state)
             wc.mouseUp.assert_called_once_with(123, -1, -1)
             state.ulButtonPressed = 0
             state.rAxis[0].y = -1.0
-            overlay.handlePanelInput(1, results, state)
+            overlay.handlePanelInput(1, xy, state)
             wc.mouseWheel.assert_called_once_with(123, 450, 260, -60)
 
 class UpdatePanelTest(unittest.TestCase):
@@ -224,7 +227,7 @@ class UpdatePanelTest(unittest.TestCase):
 
         from models.overlay.overlay import PANEL
 
-        overlay = Overlay({})
+        overlay = Overlay({PANEL: {}})
         overlay.handle = {PANEL: 10}
         overlay.overlay = MagicMock()
         overlay.images[PANEL] = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
@@ -232,7 +235,7 @@ class UpdatePanelTest(unittest.TestCase):
         overlay.panel_hwnd = 123
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
-            wc.captureWindow.return_value = Image.new("RGBA", (900, 700), (40, 40, 40, 255))
+            wc.captureWindow.return_value = Image.new("RGBA", (900, 836), (40, 40, 40, 255))
             overlay.updatePanel()
         results = MagicMock()
         results.vUVs.v = [0.5, 0.5]
@@ -274,7 +277,7 @@ class PanelTriggerBlockTest(unittest.TestCase):
 
         overlay = Overlay({})
         overlay.panel_hwnd = 123
-        overlay.panel_image_size = (900, 700)
+        overlay.panel_image_size = (900, 836)
         overlay.trigger_blocked.add(1)
         results = MagicMock()
         results.vUVs.v = [0.5, 0.5]
@@ -282,14 +285,87 @@ class PanelTriggerBlockTest(unittest.TestCase):
         state.rAxis[0].y = 0.0
         with patch("models.overlay.overlay.window_capture") as wc:
             state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
-            overlay.handlePanelInput(1, results, state)  # 掴み終えたときから押したまま
+            overlay.handlePanelInput(1, (450, 350), state)  # 掴み終えたときから押したまま
             state.ulButtonPressed = 0
-            overlay.handlePanelInput(1, results, state)  # 離す
+            overlay.handlePanelInput(1, (450, 350), state)  # 離す
             wc.mouseDown.assert_not_called()
             wc.mouseUp.assert_not_called()
             state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
-            overlay.handlePanelInput(1, results, state)  # 押し直せば効く
+            overlay.handlePanelInput(1, (450, 350), state)  # 押し直せば効く
             wc.mouseDown.assert_called_once()
+
+class VrLayoutTest(unittest.TestCase):
+    def test_python_regions_match_react_layout(self):
+        """撮影側 (Python) と描画側 (React) で領域の定義がずれていない。"""
+        import json
+        import os
+
+        path = os.path.join(os.path.dirname(__file__), "..", "..", "src-ui", "views", "vr", "vr_layout.json")
+        with open(path, encoding="utf-8") as f:
+            layout = json.load(f)
+        self.assertEqual(tuple(layout["atlas"]), VR_ATLAS_SIZE)
+        self.assertEqual({k: tuple(v) for k, v in layout["regions"].items()}, VR_REGIONS)
+
+    def test_region_bounds_and_input_offset(self):
+        from models.overlay.overlay import regionBounds
+
+        u0, _u1, v0, v1 = regionBounds(LAUNCHER)
+        self.assertAlmostEqual(u0, 10 / 900)
+        self.assertAlmostEqual(v0, 1 - 708 / 836)  # 表示の上端 = 画像の708行目
+        self.assertAlmostEqual(v1, 0.0)  # 表示の下端 = 画像の最下行
+        self.assertEqual(regionBounds(PANEL)[2:], (1.0, 1 - 700 / 836))  # ログは画像の上側
+        # レーザーの当たった点 (空間座標) → 撮影画像上のピクセル。空間固定・原点に置いたランチャー
+        overlay = Overlay({LAUNCHER: {k: 0.0 for k in KEYS} | {"tracker": "Playspace", "ui_scaling": 0.28}})
+        overlay.panel_image_size = (1350, 1254)  # DPI 150%
+        pose = overlay.overlayWorldPose(LAUNCHER, lambda index: np.eye(4))
+        results = MagicMock()
+        results.vPoint.v = [0.0, 0.0, 0.0]  # 中央
+        x, y = overlay.regionPixel(LAUNCHER, results, pose)
+        self.assertAlmostEqual(x, (10 + 440) * 1.5, delta=2)
+        self.assertAlmostEqual(y, (708 + 64) * 1.5, delta=2)
+        results.vPoint.v = [-0.14 + 0.001, 0.28 * 128 / 880 / 2 - 0.001, 0.0]  # 左上の角
+        x, y = overlay.regionPixel(LAUNCHER, results, pose)
+        self.assertAlmostEqual(x, 10 * 1.5, delta=8)
+        self.assertAlmostEqual(y, 708 * 1.5, delta=8)
+
+class UpdatePanelRegionsTest(unittest.TestCase):
+    def test_one_capture_is_split_into_log_and_launcher(self):
+        """1回の撮影から、ログとランチャーそれぞれの領域が別々に切り出される。"""
+        from unittest.mock import patch
+
+        from PIL import Image, ImageDraw
+
+        overlay = Overlay({PANEL: {}, LAUNCHER: {}})
+        overlay.handle = {PANEL: 10, LAUNCHER: 11}
+        overlay.overlay = MagicMock()
+        overlay.gl = {"GL": MagicMock(), "texture": 1, "vr_texture": MagicMock(), "size": None}
+        overlay.panel_hwnd = 123
+        atlas = Image.new("RGBA", VR_ATLAS_SIZE, (255, 0, 0, 255))  # ログ領域 = 赤
+        ImageDraw.Draw(atlas).rectangle((0, 700, 900, 836), fill=(0, 0, 255, 255))  # ランチャー側 = 青
+        with patch("models.overlay.overlay.window_capture") as wc:
+            wc.isWindow.return_value = True
+            wc.captureWindow.return_value = atlas
+            overlay.updatePanel()
+        self.assertEqual(overlay.images[PANEL].size, (900, 700))
+        self.assertEqual(overlay.images[LAUNCHER].size, (880, 128))
+        self.assertEqual(overlay.images[PANEL].getpixel((450, 350))[:3], (255, 0, 0))
+        self.assertEqual(overlay.images[LAUNCHER].getpixel((410, 64))[:3], (0, 0, 255))
+        # 1枚のテクスチャを両方のオーバーレイへ渡す
+        handles = [c.args[0] for c in overlay.overlay.setOverlayTexture.call_args_list]
+        self.assertEqual(sorted(handles), [10, 11])
+
+class NotifyPointerTest(unittest.TestCase):
+    def test_only_meaningful_moves_are_sent(self):
+        """ホバー表示用のポインタ位置は、動いたとき・外れたときだけ送る。"""
+        overlay = Overlay({})
+        sent = []
+        overlay.pointer_callback = sent.append
+        overlay.notifyPointer((100, 100))
+        overlay.notifyPointer((102, 101))  # 4px未満の揺れは送らない
+        overlay.notifyPointer((110, 100))
+        overlay.notifyPointer(None)
+        overlay.notifyPointer(None)
+        self.assertEqual(sent, [(100, 100), (110, 100), None])
 
 
 if __name__ == "__main__":

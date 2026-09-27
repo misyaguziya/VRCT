@@ -452,4 +452,7 @@ config_page:
         opened_folder: "已開啟檔案夾。"
 
 vr_panel:
+    window_log: "日誌"
+    window_language: "語言"
+    window_settings: "VR設定"
     locked_by_config_page: "桌面上已開啟設定畫面。關閉後即可操作。"

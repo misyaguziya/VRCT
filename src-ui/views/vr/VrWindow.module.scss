@@ -1,0 +1,87 @@
+// VR UIのウィンドウ共通の様式 (ログ・言語・VR設定)。
+// タイトルバー56px、角丸24px (撮影後に Python 側で切り抜く)、外枠4px。
+
+.window {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+    background-color: var(--dark_888_color);
+    box-shadow: inset 0 0 0 4px var(--dark_750_color);
+}
+
+.title_bar {
+    flex-shrink: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 16px;
+    background-color: var(--dark_950_color);
+}
+
+.title_icon {
+    width: 28px;
+    height: 28px;
+    color: var(--dark_350_color);
+    fill: var(--dark_350_color);
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--dark_basic_text_color);
+}
+
+.body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.log_box_wrapper {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    padding: 12px 16px 16px;
+
+    // VRではスクロール位置が分かるよう、スクロールバーを太く明るくする
+    :global(#log_container)::-webkit-scrollbar {
+        width: 16px;
+    }
+    :global(#log_container)::-webkit-scrollbar-thumb {
+        background-color: var(--dark_600_color);
+        border-radius: 8px;
+    }
+    // ログの訳文が約24px (1.4em) になる基準。デスクトップのログ文字サイズ設定はVRでは使わない
+    :global(#log_container) {
+        font-size: 17px !important;
+    }
+}
+
+// 設定画面を開いている間: 本文だけを覆う (タイトルバーの閉じる・掴むは使える)
+.locked {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 32px;
+    text-align: center;
+    font-size: 22px;
+    color: var(--dark_basic_text_color);
+    background-color: var(--dark_1000_color_dd);
+}
+
+.locked_icon {
+    width: 48px;
+    height: 48px;
+    color: var(--warning_color);
+    fill: var(--warning_color);
+}

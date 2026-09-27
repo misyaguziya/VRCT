@@ -667,6 +667,10 @@ def printLog(log: str, data: Any = None) -> None:
     serialized = json.dumps(response)
     _enqueueLogLine(serialized)
 
+# 頻繁に送るため process.log に残さないエンドポイント (VR UIのポインタ位置は1秒に十数回送る)
+_UNLOGGED_ENDPOINTS = {"/run/vr_panel_pointer"}
+
+
 def printResponse(status: int, endpoint: str, result: Any = None) -> None:
     """Log and print a structured response object.
 
@@ -691,7 +695,8 @@ def printResponse(status: int, endpoint: str, result: Any = None) -> None:
     else:
         logged_result = _maskSensitiveData(result)
     logged_response = {**response, "result": logged_result}
-    process_logger.info(logged_response)  # Log the (possibly masked) response, never the raw secret
+    if endpoint not in _UNLOGGED_ENDPOINTS:
+        process_logger.info(logged_response)  # Log the (possibly masked) response, never the raw secret
 
     try:
         serialized_response = json.dumps(response)
