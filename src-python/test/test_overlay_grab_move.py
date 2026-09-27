@@ -127,33 +127,38 @@ class UpdateGrabFlowTest(unittest.TestCase):
 class PanelInputTest(unittest.TestCase):
     """VRパネルへの入力: UV→ピクセル変換とトリガーのクリック判定。"""
 
-    def test_trigger_click_and_scroll(self):
-        from unittest.mock import patch
+    def test_uv_to_pixel_matches_device_measurement(self):
+        from models.overlay.overlay import panelUvToPixel
+        # 実機: 900x700 のパネルで Voice2Chatbox (y≈73) を指したときの UV
+        self.assertEqual(panelUvToPixel(0.1216, 0.8048, 900, 700)[1], 75)
+        self.assertEqual(panelUvToPixel(0.5, 0.5, 900, 700), (450, 350))
 
+    def test_trigger_click_and_scroll(self):
         import openvr
+        from unittest.mock import patch
 
         overlay = Overlay({})
         overlay.panel_hwnd = 123
         overlay.panel_image_size = (900, 700)
         results = MagicMock()
-        results.vUVs.v = [0.5, 0.25]  # 左下原点 → y = (1-0.25)*700
+        results.vUVs.v = [0.5, 0.6]  # → (450, 260)
         state = MagicMock()
         state.rAxis[0].y = 0.0
 
         with patch("models.overlay.overlay.window_capture") as wc:
             state.ulButtonPressed = 0
             overlay.handlePanelInput(1, results, state)
-            wc.mouseMove.assert_called_with(123, 450, 525, pressed=False)
+            wc.mouseMove.assert_called_with(123, 450, 260, pressed=False)
             state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
             overlay.handlePanelInput(1, results, state)
-            wc.mouseDown.assert_called_once_with(123, 450, 525)
+            wc.mouseDown.assert_called_once_with(123, 450, 260)
             # パネルの外で離しても mouseUp を送る
             overlay.handlePanelInput(1, None, state)
-            wc.mouseUp.assert_called_once_with(123, 450, 525)
+            wc.mouseUp.assert_called_once_with(123, 450, 260)
             state.ulButtonPressed = 0
             state.rAxis[0].y = -1.0
             overlay.handlePanelInput(1, results, state)
-            wc.mouseWheel.assert_called_once_with(123, 450, 525, -60)
+            wc.mouseWheel.assert_called_once_with(123, 450, 260, -60)
 
 
 if __name__ == "__main__":

@@ -58,6 +58,17 @@ _TRIGGER_MASK = 1 << openvr.k_EButton_SteamVR_Trigger
 _PANEL_SCROLL_PER_FRAME = 60
 _PANEL_SCROLL_DEADZONE = 0.3
 
+def panelUvToPixel(u: float, v: float, width: int, height: int) -> tuple:
+    """computeOverlayIntersection のUVをパネル画像のピクセル座標に変換する。
+
+    UVは左下が原点だが、縦方向も「横幅」を1とした長さで、中心 (0.5) を基準にしている
+    (実機で確認。縦横比の分だけ端ほどずれていた)。
+    """
+    x = u * width
+    y = height / 2 - (v - 0.5) * width
+    return (min(max(int(x), 0), width - 1), min(max(int(y), 0), height - 1))
+
+
 def mat34Id(array: Sequence[Sequence[float]]) -> Any:
     """Convert a 3x4 nested sequence into an openvr.HmdMatrix34_t instance.
 
@@ -332,15 +343,10 @@ class Overlay:
             self.panel_input.pop(hand, None)
             return
         width, height = self.panel_image_size
-        # UVは左下が原点
-        xy = (
-            min(max(int(results.vUVs.v[0] * width), 0), width - 1),
-            min(max(int((1.0 - results.vUVs.v[1]) * height), 0), height - 1),
-        )
+        xy = panelUvToPixel(results.vUVs.v[0], results.vUVs.v[1], width, height)
         if xy != last_xy:
             window_capture.mouseMove(self.panel_hwnd, *xy, pressed=pressed)
         if pressed and not last_pressed:
-            printLog("vr panel click", {"uv": (round(results.vUVs.v[0], 4), round(results.vUVs.v[1], 4)), "xy": xy, "size": self.panel_image_size})
             window_capture.mouseDown(self.panel_hwnd, *xy)
         elif last_pressed and not pressed:
             window_capture.mouseUp(self.panel_hwnd, *xy)
