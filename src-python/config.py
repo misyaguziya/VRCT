@@ -495,7 +495,8 @@ def _overlay_vr_panel_validator(val, inst):
         return None
     new = dict(inst.OVERLAY_VR_PANEL_SETTINGS)
     for key, v in val.items():
-        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
+        # Playspace: SteamVRの空間に固定 (VRパネルだけが選べる)
+        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand', 'Playspace']:
             new[key] = v
         elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation','opacity','ui_scaling'] and isinstance(v,(int,float)):
             new[key] = float(v)
