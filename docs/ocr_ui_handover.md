@@ -48,15 +48,14 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
 OCRのON/OFFはここに含まれない。翻訳と同じメイン機能の扱いで、状態を保存しないため
 **起動時は必ずOFF**（`/get/data/ocr_capture` は廃止）。OCRが勝手に始まることはなく、毎回ユーザーがONにする。
 `/set/enable/ocr_capture` / `/set/disable/ocr_capture` は翻訳と同じく初期化完了までロックされる（423）。
-UIでは `ui_config_setter.js` の設定項目から外し、`useMainFunction` の `toggleOcrCapture` /
-`currentOcrCaptureStatus`（store は `OcrCaptureStatus`）で翻訳と同じく扱う。
-（実機確認のため UI 側も仮に実装済み。OCR_DISABLED_* の文言はバックエンドの message を仮表示）
+UIでは `ui_config_setter.js` の設定項目から外し、応答は `/set/enable|disable/translation` と同じく
+メイン機能側（`useMainFunction` 等）で受ける想定。
 
 ### 3-2. バックエンドから随時pushされる（2件）
 
 | エンドポイント | 中身 | 現在の受け手 |
 |---|---|---|
-| `/run/enable_ocr_capture` | エラー応答（下記） | 400 なので `_useBackendErrorHandling` が受け、`useMainFunction.updateOcrCaptureStatus` で戻す（`TRANSLATION_DISABLED_VRAM` と同じ） |
+| `/run/enable_ocr_capture` | エラー応答（下記） | `useOcr.updateFromBackendEnableOcrCapture`（メイン機能側へ移す想定） |
 | `/run/transcription_ocr_message` | 下記 | `useMessage.addReceivedMessageLog` |
 
 `/run/enable_ocr_capture` は**ONにして開始に失敗したときだけ**、status 400 のエラー応答
