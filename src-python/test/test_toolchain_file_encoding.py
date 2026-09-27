@@ -22,7 +22,7 @@ import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# install.bat が pip に渡す2つだけを対象にする。requirements-yolo-train.txt など
+# install.bat が pip に渡す2つだけを対象にする。requirements-yolox-train.txt など
 # 学習ツール用のファイルは配布物にもインストーラにも関わらないので対象外。
 TARGETS = ("bat/*.bat", "requirements.txt", "requirements_cuda.txt")
 

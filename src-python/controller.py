@@ -11,7 +11,7 @@ from device_manager import device_manager
 from config import config, ConfigValidationError
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
-from errors import ErrorCode, VRCTError
+from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC, OCR_MESSAGE_SPEC
@@ -252,6 +252,12 @@ _SIMPLE_CONFIG_GETTERS = {
     "getObsBrowserSourceFontOutlineThickness": "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS",
     "getObsBrowserSourceFontOutlineColor": "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR",
     "getClipboard": "ENABLE_CLIPBOARD",
+    "getSelectableOcrSourceLanguages": "SELECTABLE_OCR_SOURCE_LANGUAGE_LIST",
+    "getOcrSourceLanguage": "OCR_SOURCE_LANGUAGE",
+    "getOcrWindowTitle": "OCR_WINDOW_TITLE",
+    "getOcrPollIntervalMs": "OCR_POLL_INTERVAL_MS",
+    "getOcrMinConfidence": "OCR_MIN_CONFIDENCE",
+    "getOcrBubbleMinTextLength": "OCR_BUBBLE_MIN_TEXT_LENGTH",
 }
 
 class Controller:
@@ -3650,44 +3656,30 @@ class Controller:
         with self.speaker_lifecycle_lock:
             self._stopTranscriptionReceiveMessageLocked()
 
-    def _rollbackOcrCaptureToggle(self) -> None:
-        """Turn the OCR flag back off and push the new state to the UI.
+    def startOcrCapture(self) -> bool:
+        """OCRを開始する (モデル読み込みまで済ませて戻る)。
 
-        The frontend routes this push to updateFromBackendEnableOcrCapture,
-        so the toggle flips back instead of being left switched on over a
-        pipeline that never started.
+        開始できなければ、翻訳の TRANSLATION_DISABLED_VRAM と同じく
+        OCR_DISABLED_* を /run/enable_ocr_capture へ送って False を返す。
         """
-        config.ENABLE_OCR_CAPTURE = False
         try:
-            endpoint = self.run_mapping.get("enable_ocr_capture")
-            if endpoint is not None:
-                self.run(200, endpoint, False)
+            return model.startOCRCapture(self.ocrMessage)
+        except OcrStartError as e:
+            error_code = e.error_code
         except Exception:
             errorLogging()
-
-    def startOcrCapture(self) -> None:
-        try:
-            started = model.startOCRCapture(self.ocrMessage)
-            if not started:
-                self._rollbackOcrCaptureToggle()
-        except Exception:
-            errorLogging()
-            self._rollbackOcrCaptureToggle()
+            error_code = ErrorCode.OCR_DISABLED_UNKNOWN
+        disable_response = VRCTError.create_error_response(error_code, data=False)
+        self.run(
+            disable_response["status"],
+            self.run_mapping["enable_ocr_capture"],
+            disable_response["result"],
+        )
+        return False
 
     @staticmethod
     def stopOcrCapture() -> None:
         model.stopOCRCapture()
-
-    def startThreadingOcrCapture(self) -> None:
-        th = Thread(target=self.startOcrCapture)
-        th.daemon = True
-        th.start()
-
-    def stopThreadingOcrCapture(self) -> None:
-        th = Thread(target=self.stopOcrCapture)
-        th.daemon = True
-        th.start()
-        th.join()
 
     @staticmethod
     def replaceExclamationsWithRandom(text):
@@ -4299,99 +4291,51 @@ class Controller:
 
     # ---------- VRChat chat-bubble OCR settings ----------
 
-    @staticmethod
-    def getEnableOcrCapture(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
-
     def setEnableOcrCapture(self, *args, **kwargs) -> dict:
         if config.ENABLE_OCR_CAPTURE is False:
-            config.ENABLE_OCR_CAPTURE = True
-            self.startThreadingOcrCapture()
+            config.ENABLE_OCR_CAPTURE = self.startOcrCapture()
         return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
 
     def setDisableOcrCapture(self, *args, **kwargs) -> dict:
         if config.ENABLE_OCR_CAPTURE is True:
+            self.stopOcrCapture()
             config.ENABLE_OCR_CAPTURE = False
-            self.stopThreadingOcrCapture()
         return {"status": 200, "result": config.ENABLE_OCR_CAPTURE}
 
     @staticmethod
-    def getSelectableOcrSourceLanguages(*args, **kwargs) -> dict:
-        return {"status": 200, "result": model.getSelectableOCRSourceLanguages()}
-
-    @staticmethod
-    def getOcrSourceLanguage(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrSourceLanguage(data, *args, **kwargs) -> dict:
-        # OCRエンジンが読める言語だけを受け付ける。VRCTが翻訳できる言語の
-        # 全てをOCRできるわけではないので、ここで弾かないと「設定できたのに
-        # 何も読めない」状態になる。
-        language = str(data)
-        if language not in model.getSelectableOCRSourceLanguages():
-            return {"status": 400, "result": config.OCR_SOURCE_LANGUAGE}
-        config.OCR_SOURCE_LANGUAGE = language
+        config.OCR_SOURCE_LANGUAGE = str(data)
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_SOURCE_LANGUAGE}
+        return {"status":200, "result":config.OCR_SOURCE_LANGUAGE}
 
     @staticmethod
-    def getOcrWindowTitle(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_WINDOW_TITLE}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrWindowTitle(data, *args, **kwargs) -> dict:
-        title = str(data).strip()
-        if not title:
-            return {"status": 400, "result": config.OCR_WINDOW_TITLE}
-        config.OCR_WINDOW_TITLE = title
+        config.OCR_WINDOW_TITLE = str(data).strip()
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_WINDOW_TITLE}
+        return {"status":200, "result":config.OCR_WINDOW_TITLE}
 
     @staticmethod
-    def getOcrPollIntervalMs(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_POLL_INTERVAL_MS}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrPollIntervalMs(data, *args, **kwargs) -> dict:
-        try:
-            value = int(data)
-        except (TypeError, ValueError):
-            return {"status": 400, "result": config.OCR_POLL_INTERVAL_MS}
-        value = max(100, min(5000, value))
-        config.OCR_POLL_INTERVAL_MS = value
+        config.OCR_POLL_INTERVAL_MS = data
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_POLL_INTERVAL_MS}
+        return {"status":200, "result":config.OCR_POLL_INTERVAL_MS}
 
     @staticmethod
-    def getOcrMinConfidence(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrMinConfidence(data, *args, **kwargs) -> dict:
-        try:
-            value = float(data)
-        except (TypeError, ValueError):
-            return {"status": 400, "result": config.OCR_MIN_CONFIDENCE}
-        value = max(0.1, min(0.99, value))
-        config.OCR_MIN_CONFIDENCE = value
+        config.OCR_MIN_CONFIDENCE = data
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_MIN_CONFIDENCE}
+        return {"status":200, "result":config.OCR_MIN_CONFIDENCE}
 
     @staticmethod
-    def getOcrBubbleMinTextLength(*args, **kwargs) -> dict:
-        return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
-
-    @staticmethod
+    @_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)
     def setOcrBubbleMinTextLength(data, *args, **kwargs) -> dict:
-        try:
-            value = int(data)
-        except (TypeError, ValueError):
-            return {"status": 400, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
-        value = max(1, min(50, value))
-        config.OCR_BUBBLE_MIN_TEXT_LENGTH = value
+        config.OCR_BUBBLE_MIN_TEXT_LENGTH = data
         model.updateOCRCaptureSettings()
-        return {"status": 200, "result": config.OCR_BUBBLE_MIN_TEXT_LENGTH}
+        return {"status":200, "result":config.OCR_BUBBLE_MIN_TEXT_LENGTH}
 
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)

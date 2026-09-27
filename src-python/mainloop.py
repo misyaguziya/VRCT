@@ -167,6 +167,10 @@ mapping = {
     "/set/enable/transcription_receive": {"status": False, "variable":controller.setEnableTranscriptionReceive},
     "/set/disable/transcription_receive": {"status": False, "variable":controller.setDisableTranscriptionReceive},
 
+    # 翻訳と同じメイン機能。起動時は常にOFF (保存しない) なので /get/data は無い。
+    "/set/enable/ocr_capture": {"status": False, "variable":controller.setEnableOcrCapture},
+    "/set/disable/ocr_capture": {"status": False, "variable":controller.setDisableOcrCapture},
+
     "/set/enable/foreground": {"status": True, "variable":controller.setEnableForeground},
     "/set/disable/foreground": {"status": True, "variable":controller.setDisableForeground},
 
@@ -547,13 +551,7 @@ mapping = {
     "/set/enable/clipboard": {"status": True, "variable":controller.setEnableClipboard},
     "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
 
-    # VRChat chat-bubble OCR
-    # Endpoint names must stay in sync with base_endpoint_name in
-    # src-ui/logics/configs/config_page_setter/ui_config_setter.js, which
-    # derives /get/data/<base>, /set/enable/<base> and /set/disable/<base>.
-    "/get/data/ocr_capture": {"status": True, "variable":controller.getEnableOcrCapture},
-    "/set/enable/ocr_capture": {"status": True, "variable":controller.setEnableOcrCapture},
-    "/set/disable/ocr_capture": {"status": True, "variable":controller.setDisableOcrCapture},
+    # VRChat chat-bubble OCR settings (ON/OFF is a main function, see Main Window)
     "/get/data/selectable_ocr_source_languages": {"status": True, "variable":controller.getSelectableOcrSourceLanguages},
     "/get/data/ocr_source_language": {"status": True, "variable":controller.getOcrSourceLanguage},
     "/set/data/ocr_source_language": {"status": True, "variable":controller.setOcrSourceLanguage},

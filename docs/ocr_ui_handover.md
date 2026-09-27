@@ -32,13 +32,12 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
 
 ## 3. バックエンドとフロントの受け渡し
 
-### 3-1. 起動時に一括で届く（7件）
+### 3-1. 起動時に一括で届く（6件）
 
 他の設定とまとめて `/run/initialization_complete` に同梱される。個別に取りに行く必要はない。
 
 | キー | 型 | 既定値 |
 |---|---|---|
-| `/get/data/ocr_capture` | bool | 常に `false`（保存されない。後述） |
 | `/get/data/selectable_ocr_source_languages` | string[] | 読み取り言語の選択肢。3-5を参照 |
 | `/get/data/ocr_source_language` | string | `"auto"` |
 | `/get/data/ocr_window_title` | string | `"VRChat"` |
@@ -46,18 +45,32 @@ UIの構成に合わせて自由に組み替えてよいが、**エンドポイ�
 | `/get/data/ocr_min_confidence` | float | `0.85` |
 | `/get/data/ocr_bubble_min_text_length` | int | `2` |
 
-`ocr_capture` は `serialize=False` で保存されないため、**起動時は必ず `false`**。
-OCRが勝手に始まることはなく、毎回ユーザーがONにする。
+OCRのON/OFFはここに含まれない。翻訳と同じメイン機能の扱いで、状態を保存しないため
+**起動時は必ずOFF**（`/get/data/ocr_capture` は廃止）。OCRが勝手に始まることはなく、毎回ユーザーがONにする。
+`/set/enable/ocr_capture` / `/set/disable/ocr_capture` は翻訳と同じく初期化完了までロックされる（423）。
+UIでは `ui_config_setter.js` の設定項目から外し、応答は `/set/enable|disable/translation` と同じく
+メイン機能側（`useMainFunction` 等）で受ける想定。
 
 ### 3-2. バックエンドから随時pushされる（2件）
 
 | エンドポイント | 中身 | 現在の受け手 |
 |---|---|---|
-| `/run/enable_ocr_capture` | bool | `useOcr.updateFromBackendEnableOcrCapture` |
+| `/run/enable_ocr_capture` | エラー応答（下記） | `useOcr.updateFromBackendEnableOcrCapture`（メイン機能側へ移す想定） |
 | `/run/transcription_ocr_message` | 下記 | `useMessage.addReceivedMessageLog` |
 
-`/run/enable_ocr_capture` は**開始に失敗したときに `false` が飛んでくる**。UI側はこれを受けて
-トグルを戻す（現在の実装もそうなっている）。成功時には飛ばない。
+`/run/enable_ocr_capture` は**ONにして開始に失敗したときだけ**、status 400 のエラー応答
+（`TRANSLATION_DISABLED_VRAM` と同じ形、`data: false`）が飛んでくる。UI側はトグルを戻し、
+`error_code` に合わせて文言を出す。成功時と、動作中（ON後）には飛ばない。
+
+| error_code | 意味 |
+|---|---|
+| `OCR_DISABLED_ENGINE_UNAVAILABLE` | OCRエンジンや依存（opencv / onnxruntime / 吹き出し検出モデル）が無い。同梱漏れなど |
+| `OCR_DISABLED_MODEL_LOAD_FAILED` | 文字認識モデルか吹き出し検出モデルの読み込みに失敗 |
+| `OCR_DISABLED_UNSUPPORTED_LANGUAGE` | 読み取り言語に未対応（設定時に弾いているので通常は起きない） |
+| `OCR_DISABLED_UNKNOWN` | 想定外のエラー |
+
+`/set/enable/ocr_capture` はモデルの読み込みまで済ませてから応答する（翻訳のONと同じ）。
+初回は数百ms〜かかるので、応答までローディング表示にする。
 
 OCR結果のペイロード:
 
@@ -93,21 +106,18 @@ OCR専用ではなく、マイク/スピーカーと共通の経路。OCRで読�
 currentOcrSourceLanguage       状態（初期値は起動時のペイロード）
 getOcrSourceLanguage()         /get/data/ocr_source_language を再取得
 setOcrSourceLanguage(value)    /set/data/ocr_source_language
-toggleEnableOcrCapture()       /set/enable/ocr_capture または /set/disable/ocr_capture
 ```
 
-設定の値域と、範囲外を送ったときの挙動:
+設定の値域。範囲外・型違いを送ると、他の設定と同じく `VALIDATION_CONFIG_VALUE_INVALID`
+のエラー応答（400、`data` は送った値）が返り、値は変わらない（丸めはしない）。
 
-| エンドポイント | 型 | 値域 | 範囲外を送ると |
-|---|---|---|---|
-| `/set/data/ocr_source_language` | str | 3-5の選択肢のみ | **400** と現在値が返る（変更しない） |
-| `/set/data/ocr_window_title` | str | 空文字は不可 | **400** と現在値が返る |
-| `/set/data/ocr_poll_interval_ms` | int | 100〜5000 | クランプした値が返る |
-| `/set/data/ocr_min_confidence` | float | 0.1〜0.99 | クランプした値が返る |
-| `/set/data/ocr_bubble_min_text_length` | int | 1〜50 | クランプした値が返る |
-
-**setの返却値で表示を更新すること。** 送った値がそのまま採用されるとは限らない
-（例: `ocr_poll_interval_ms` に10000を送ると5000が返る）。
+| エンドポイント | 型 | 値域 |
+|---|---|---|
+| `/set/data/ocr_source_language` | str | 3-5の選択肢のみ |
+| `/set/data/ocr_window_title` | str | 空文字は不可（前後の空白は除去して保存） |
+| `/set/data/ocr_poll_interval_ms` | int | 100〜5000 |
+| `/set/data/ocr_min_confidence` | float | 0.1〜0.99 |
+| `/set/data/ocr_bubble_min_text_length` | int | 1〜50 |
 
 ### 3-5. 読み取り言語の選択肢
 
@@ -135,7 +145,7 @@ toggleEnableOcrCapture()       /set/enable/ocr_capture または /set/disable/oc
 
 ## 5. UIで必要な要素
 
-1. **OCRのON/OFF**（トグル）。開始失敗時は `/run/enable_ocr_capture` で `false` が飛んでくる
+1. **OCRのON/OFF**（トグル）。開始失敗時は `/run/enable_ocr_capture` で `OCR_DISABLED_*` が飛んでくる（3-2）
 2. **読み取り言語**（選択肢は 3-5 のとおりバックエンドから取得）。既定は `auto`
 3. **対象ウィンドウ**（テキスト入力）。通常は変更不要
 4. **取得間隔 / 信頼度のしきい値 / 最小文字数**（スライダー）。上級者向けにまとめてよい
@@ -155,7 +165,7 @@ toggleEnableOcrCapture()       /set/enable/ocr_capture または /set/disable/oc
 
 ## 7. 改善したい点（UI側で拾えると嬉しい）
 
-- **開始失敗の理由が伝わらない**。今はトグルが黙って戻るだけ。エラーコードを返す仕組みを
-  バックエンドに足せるので、UIで出したい形式があれば合わせる
-- **初回の待ち時間**。モデルの読み込みで最初の1回だけ数百msかかる。進捗表示は未実装
-- **VRChatが起動していないときの扱い**。現状はフレームが取れないまま静かに待ち続ける
+- ~~開始失敗の理由が伝わらない~~ → `OCR_DISABLED_*` で通知するようにした（3-2）
+- ~~初回の待ち時間~~ → ONの応答をモデル読み込み完了まで待たせるようにした（3-2）。UIはローディング表示
+- **VRChatが起動していないときの扱い**。フレームが取れないまま静かに待ち続ける。
+  SteamVR未起動時のVRオーバーレイと同じ扱いとして、このままとする
