@@ -22,8 +22,11 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 - 最小化時（`IsIconic`）や空フレームは None を返してスキップ
 
 ### ocr_capture_openvr.py — OpenVR ミラーテクスチャキャプチャ
-- `IVRCompositor::GetMirrorTextureGL(Eye_Left)` で HMD 左目の submitted 画像を取得
-- PyOpenGL + GLFW（非表示ウィンドウ）で GL コンテキストを作成し `glGetTexImage` で読み出し
+- `IVRCompositor::GetMirrorTextureD3D11(Eye_Left)` で HMD 左目の画像を取得し、CPU 用の staging テクスチャへコピーして読み出す
+  （読み出し本体は `ocr_capture_d3d11.py`。収集ツール `tools/` と同じ実装を共有し、ツールはパス指定で読み込む）
+- 実測（Meta Quest 3 / Virtual Desktop + SteamVR）: 3012x3284、BGR 変換込みで約100ms/枚。VRChat のウィンドウを最小化していても取れる
+- OpenGL 版（`GetMirrorTextureGL`）は使えない。SteamVR が自分の D3D11 テクスチャを GL へ取り込めず（`GL_INVALID_OPERATION ... Invalid format.`）
+  常に `CompositorError_InvalidTexture` を返す既知の不具合（ValveSoftware/openvr#178, #1410）。2026-09-27 に実機で再現を確認し D3D11 へ置き換えた
 - OpenVR のセッションは Overlay / Clipboard と同じく `models/openvr_session.py`（参照カウント）経由で取得・解放する
 - 読み出し前に、SteamVR が表示中のアプリが VRChat かを確認する（`getLastFrameRenderer()` と
   `getCurrentSceneFocusProcess()` が一致し、そのプロセスが `vrchat.exe`）。SteamVR Home 等なら None を返す。
@@ -247,7 +250,9 @@ OpenVR の初期化は**プロセス単位**で、Overlay・Clipboard と共有�
 
 - `openvr.init()` / `openvr.shutdown()` を直接呼ばず、`models/openvr_session.py` の `acquire()` / `release()` を使う。
   本当の `openvr.shutdown()` は、全員が解放したときだけ走る
-- ミラーテクスチャは**初回に 1 度だけ取得**し、以降フレーム毎に `lockGLSharedTextureForAccess` / `unlockGLSharedTextureForAccess` で囲んで読み出し
+- ミラーテクスチャは**初回に 1 度だけ取得**して毎フレーム使い回す。毎回取り直すと古いフレームが返り続ける（ValveSoftware/openvr#1888）。
+  D3D11 の資源は OCR のワーカースレッドで作成・読み出し・解放する
+- 取得に失敗し続ける間（SteamVR 再起動中など）は、トレースバックを最初の1回だけ `error.log` に残す
 - 失敗時はテクスチャと自分のセッション参照を解放して `_initialized` を落とし、次 tick で取り直す
   （Overlay の `reStartOverlay()` と同じ「解放してから取り直す」順）。OCR 停止時（`close()`）も参照を解放する
 - VRChat 以外のシーンを表示中なのは異常ではないので、テクスチャもセッションも保持したまま None を返す
@@ -336,6 +341,4 @@ Windows + VRCT ビルド前提。詳細は「VR モードでのデスクトッ�
   `BubbleDetector(confidence=...)` を下げ、その場面の画像を集めて再学習する
 - **ワールド由来のテキスト**（看板・ワールド内の案内文）は検出対象外として学習している。
   アバターのチャット吹き出し（角丸の暗いパネル＋しっぽ）だけを拾う
-- **VRChat Desktop モード起動 + SteamVR も起動中** というレアケースでは、OpenVR ミラー側に VRChat の映像が来ないため OCR 対象なしになる（誤翻訳より無害）
-- **設定変更は次回 OCR 開始時に反映**されます（`OCR_SOURCE_LANGUAGE` 等はパイプライン起動時に読み込まれるため、実行中の変更を反映するには一度 OFF→ON が必要）
-- **GLFW の初期化を OCR スレッドから行っている**点は Windows では実用上問題ありませんが、GLFW の公式なスレッド要件（多くの API はメインスレッド呼び出しを想定）からは外れています。将来的にキャプチャ用 GL コンテキストを専用スレッドに集約する余地があります
+- **VRChat Desktop モード起動 + SteamVR も起動中** の場合は、SteamVR が表示中のアプリが VRChat でないため、次の再判定まで HWND キャプチャで読む（デスクトップのウィンドウが最小化されていれば読めない）
