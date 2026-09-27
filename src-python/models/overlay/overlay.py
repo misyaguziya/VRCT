@@ -77,6 +77,8 @@ _TRIGGER_MASK = 1 << openvr.k_EButton_SteamVR_Trigger
 # スティックの倒し具合をホイール量へ変換する係数 (1フレームあたり)。WHEEL_DELTA=120
 _PANEL_SCROLL_PER_FRAME = 60
 _PANEL_SCROLL_DEADZONE = 0.3
+# パネルの外 (クライアント領域外) の座標。ここへ移動・離すと、Webのclickは成立せずホバーも外れる
+_OUTSIDE_XY = (-1, -1)
 
 def uvToPixel(u: float, v: float, width: int, height: int) -> tuple:
     """computeOverlayIntersection のUVをオーバーレイ画像のピクセル座標に変換する。
@@ -257,6 +259,9 @@ class Overlay:
         self.panel_image_size: Optional[tuple] = None
         # 手ごとの (トリガーを押しているか, 最後に送った座標)
         self.panel_input: Dict[int, tuple] = {}
+        # 掴み終えた時点でトリガーを押したままだった手。一度離すまでトリガーを無視する
+        # (掴んだまま拡大縮小し、グリップを先に離したときのクリック誤爆を防ぐ)
+        self.trigger_blocked: set = set()
         # 手ごとの (grip, hit) 。変化したときだけログに出す(実機での切り分け用)
         self.debug_state: Dict[int, tuple] = {}
         # self.settings[size] の位置はオーバーレイスレッド(掴み確定)とUI設定変更の
@@ -429,10 +434,18 @@ class Overlay:
         if self.panel_hwnd is None or self.panel_image_size is None or state is None:
             return
         pressed = bool(state.ulButtonPressed & _TRIGGER_MASK)
+        if hand in self.trigger_blocked:
+            if pressed:
+                pressed = False
+            else:
+                self.trigger_blocked.discard(hand)
         if results is None:
-            # パネルの外でトリガーを離したときも、押しっぱなしにしない
-            if last_pressed and last_xy is not None:
-                window_capture.mouseUp(self.panel_hwnd, *last_xy)
+            # レーザーがパネルから外れた。押したまま外れた場合もパネルの外で離したことにして、
+            # 押し始めたボタンのクリックを成立させない (マイクの誤ONを防ぐ)。ホバーも外す
+            if last_xy is not None:
+                window_capture.mouseMove(self.panel_hwnd, *_OUTSIDE_XY, pressed=last_pressed)
+                if last_pressed:
+                    window_capture.mouseUp(self.panel_hwnd, *_OUTSIDE_XY)
             self.panel_input.pop(hand, None)
             return
         width, height = self.panel_image_size
@@ -722,6 +735,9 @@ class Overlay:
                 self.grabbing = None
                 self.setHighlight(None, _COLOR_NORMAL)
                 self.showPointer(None, _COLOR_NORMAL)
+                if trigger:
+                    self.trigger_blocked.add(hand)
+                    self.trigger_prev[hand] = True  # 切り替えボタンも押した扱いにしない
                 self.commitPosition(size, relative[:3, :])
             return
 
