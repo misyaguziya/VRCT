@@ -195,8 +195,10 @@ class OpenvrSessionSharingTests(unittest.TestCase):
     @patch("openvr.shutdown")
     @patch("openvr.init")
     @patch("openvr.IVRCompositor")
+    @patch("models.ocr.ocr_capture_openvr.D3D11Mirror")
     def test_ocr_mirror_capture_holds_the_shared_session_until_closed(
         self,
+        d3d11_mirror_cls: MagicMock,
         ivrcompositor_cls: MagicMock,
         openvr_init: MagicMock,
         openvr_shutdown: MagicMock,
@@ -207,19 +209,23 @@ class OpenvrSessionSharingTests(unittest.TestCase):
         from models.ocr.ocr_capture_openvr import OpenVRMirrorCapture
 
         openvr_init.return_value = MagicMock(spec=_RealIVRSystem)
-        ivrcompositor_cls.return_value.getMirrorTextureGL.return_value = (5, "handle")
 
         overlay_ref = openvr_session.acquire()  # Overlay already running
         capture = OpenVRMirrorCapture()
-        with patch.object(OpenVRMirrorCapture, "isAvailable", return_value=True),              patch.object(OpenVRMirrorCapture, "_initGlContext", return_value=True):
+        with patch.object(OpenVRMirrorCapture, "isAvailable", return_value=True):
             self.assertTrue(capture._init())
 
         self.assertIsNotNone(overlay_ref)
         openvr_session.release()  # Overlay shuts down
         openvr_shutdown.assert_not_called()
 
+        # The mirror is released through the compositor, so it must go
+        # before the session that the compositor belongs to.
+        order = []
+        d3d11_mirror_cls.return_value.close.side_effect = lambda: order.append("mirror")
+        openvr_shutdown.side_effect = lambda: order.append("session")
         capture.close()
-        openvr_shutdown.assert_called_once()
+        self.assertEqual(order, ["mirror", "session"])
 
 
 if __name__ == "__main__":
