@@ -65,8 +65,16 @@ def captureWindow(hwnd: int) -> Optional[Image.Image]:
         _gdi32.DeleteObject(bmp)
         _gdi32.DeleteDC(mdc)
         _user32.ReleaseDC(hwnd, hdc)
+    img = Image.frombuffer("RGBX", (width, height), buf, "raw", "BGRX", 0, 1)
+    # ウィンドウ枠 (装飾なしでも数px残る) を除き、入力座標と一致するクライアント領域だけにする
+    client = wintypes.RECT()
+    _user32.GetClientRect(hwnd, ctypes.byref(client))
+    origin = wintypes.POINT(0, 0)
+    _user32.ClientToScreen(hwnd, ctypes.byref(origin))
+    left, top = origin.x - rect.left, origin.y - rect.top
+    img = img.crop((left, top, left + client.right, top + client.bottom))
     # PrintWindowのアルファは不定なので不透明として扱う
-    return Image.frombuffer("RGBX", (width, height), buf, "raw", "BGRX", 0, 1).convert("RGBA")
+    return img.convert("RGBA")
 
 
 def _lparam(x: int, y: int) -> int:
