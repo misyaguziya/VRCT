@@ -310,13 +310,13 @@ class VrLayoutTest(unittest.TestCase):
         from models.overlay.overlay import regionBounds
 
         u0, _u1, v0, v1 = regionBounds(LAUNCHER)
-        self.assertAlmostEqual(u0, 10 / 900)
+        self.assertAlmostEqual(u0, 10 / 1628)
         self.assertAlmostEqual(v0, 1 - 708 / 836)  # 表示の上端 = 画像の708行目
         self.assertAlmostEqual(v1, 0.0)  # 表示の下端 = 画像の最下行
         self.assertEqual(regionBounds(PANEL)[2:], (1.0, 1 - 700 / 836))  # ログは画像の上側
         # レーザーの当たった点 (空間座標) → 撮影画像上のピクセル。空間固定・原点に置いたランチャー
         overlay = Overlay({LAUNCHER: {k: 0.0 for k in KEYS} | {"tracker": "Playspace", "ui_scaling": 0.28}})
-        overlay.panel_image_size = (1350, 1254)  # DPI 150%
+        overlay.panel_image_size = (2442, 1254)  # DPI 150%
         pose = overlay.overlayWorldPose(LAUNCHER, lambda index: np.eye(4))
         results = MagicMock()
         results.vPoint.v = [0.0, 0.0, 0.0]  # 中央
@@ -366,6 +366,52 @@ class NotifyPointerTest(unittest.TestCase):
         overlay.notifyPointer(None)
         overlay.notifyPointer(None)
         self.assertEqual(sent, [(100, 100), (110, 100), None])
+
+class VrWindowsTest(unittest.TestCase):
+    def _overlay(self):
+        from models.overlay.overlay import POPUP
+
+        base = {k: 0.0 for k in KEYS} | {"opacity": 1.0, "fadeout_duration": 0, "display_duration": 5}
+        overlay = Overlay({
+            PANEL: base | {"tracker": "Playspace", "ui_scaling": 0.5},
+            LAUNCHER: base | {"tracker": "Playspace", "ui_scaling": 0.28, "y_pos": 1.0, "z_pos": 0.4},
+            POPUP: base | {"tracker": "Playspace", "ui_scaling": 0.36},
+        })
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.overlay_system = MagicMock()
+        overlay.handle = {PANEL: 10, LAUNCHER: 11, POPUP: 12}
+        return overlay, POPUP
+
+    def test_hide_and_show_follow_the_requested_state(self):
+        overlay, POPUP = self._overlay()
+        head = np.eye(4)
+        head[:3, 3] = (0.0, 1.6, 0.0)
+        pose_of = lambda index: head if index == 0 else np.eye(4)  # noqa: E731
+        overlay.applyVrWindows(pose_of)  # 既定: ログは表示、一時ウィンドウは非表示
+        overlay.overlay.hideOverlay.assert_any_call(12)
+        self.assertEqual(overlay.vr_windows_hidden, {POPUP})
+        overlay.setVrWindows(log=False, popup=True)
+        overlay.applyVrWindows(pose_of)
+        self.assertEqual(overlay.vr_windows_hidden, {PANEL})
+        overlay.overlay.showOverlay.assert_any_call(12)
+        # 隠れているウィンドウにはレーザーが当たらない
+        overlay.overlay.computeOverlayIntersection.return_value = (True, MagicMock(fDistance=0.5))
+        self.assertEqual(overlay.pointingOverlay(np.eye(4))[0], LAUNCHER)
+
+    def test_popup_is_placed_above_launcher_facing_the_head(self):
+        overlay, POPUP = self._overlay()
+        head = np.eye(4)
+        head[:3, 3] = (0.0, 1.6, 0.0)
+        pose_of = lambda index: head if index == 0 else np.eye(4)  # noqa: E731
+        overlay.placePopup(pose_of)
+        world = overlay.overlayWorldPose(POPUP, pose_of)
+        launcher = overlay.overlayWorldPose(LAUNCHER, pose_of)
+        self.assertGreater(world[1, 3], launcher[1, 3])  # ランチャーより上
+        to_head = head[:3, 3] - world[:3, 3]
+        self.assertGreater(float(np.dot(world[:3, 2], to_head)), 0)  # 表が頭を向く
+        horizontal = np.linalg.norm([to_head[0], to_head[2]])
+        self.assertTrue(0.45 - 1e-3 <= horizontal <= 0.65 + 1e-3)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,8 @@ export const STATIC_ROUTE_META_LIST = [
 
     // VR UI のポインタ位置 (ホバー表示用)。VR ウィンドウへ転送する
     { endpoint: "/run/vr_panel_pointer", ns: common, hook_name: "useVrPanelPointer", method_name: "forwardVrPanelPointer" },
+    // VR UI のウィンドウ開閉の応答 (VR画面が状態を持つので受け取るだけ)
+    { endpoint: "/run/vr_panel_windows", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
 
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },

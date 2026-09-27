@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getDefaultStore } from "jotai";
 
 import { dynamicStoreRegistry } from "@store";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 import {
     UiLanguageController,
@@ -12,6 +13,7 @@ import {
 import layout from "./vr_layout.json";
 import { VrLauncher } from "./VrLauncher";
 import { VrLogWindow } from "./VrLogWindow";
+import { VrPopupWindow } from "./VrPopupWindow";
 
 import styles from "./VrApp.module.scss";
 
@@ -30,6 +32,18 @@ const Region = ({ name, children }) => {
 
 export const VrApp = () => {
     const [atlas_width, atlas_height] = layout.atlas;
+    // 開いているウィンドウはこの画面の中だけで持つ (同期される atom に置くとメインの値で上書きされる)。
+    // 表示・非表示の結果だけを Python に伝える。一時ウィンドウは同時に1つだけ
+    const [windows, setWindows] = useState({ log: true, popup: null });
+    const { asyncStdoutToPython } = useStdoutToPython();
+    useEffect(() => {
+        asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null });
+    }, [windows.log, windows.popup]);
+
+    const toggleLog = () => setWindows(w => ({ ...w, log: !w.log }));
+    const togglePopup = (name) => setWindows(w => ({ ...w, popup: w.popup === name ? null : name }));
+    const closePopup = () => setWindows(w => ({ ...w, popup: null }));
+
     return (
         <div className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>
             <VrStateReceiver />
@@ -37,8 +51,9 @@ export const VrApp = () => {
             <UiLanguageController />
             <FontFamilyController />
 
-            <Region name="panel"><VrLogWindow /></Region>
-            <Region name="launcher"><VrLauncher /></Region>
+            <Region name="panel"><VrLogWindow onClose={toggleLog} /></Region>
+            <Region name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} togglePopup={togglePopup} /></Region>
+            <Region name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
         </div>
     );
 };

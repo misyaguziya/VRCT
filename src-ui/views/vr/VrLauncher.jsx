@@ -15,7 +15,7 @@ import HmdSvg from "@images/mui_head_mounted_device.svg?react";
 import styles from "./VrLauncher.module.scss";
 
 // 手首に付ける横長の帯。4機能のON/OFFと、各ウィンドウを開くボタン。
-export const VrLauncher = () => {
+export const VrLauncher = ({ windows, toggleLog, togglePopup }) => {
     const { t } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
     const {
@@ -41,10 +41,12 @@ export const VrLauncher = () => {
             </div>
             <div className={styles.divider} />
             <div className={styles.group}>
-                {/* ウィンドウの開閉は次の段階で実装する。今はログが常に開いている */}
-                <WindowButton Svg={CopyThinSvg} label={t("vr_panel.window_log")} is_open={true} />
-                <WindowButton Svg={TranslationSvg} label={t("vr_panel.window_language")} is_disabled={true} />
-                <WindowButton Svg={HmdSvg} label={t("vr_panel.window_settings")} is_disabled={true} />
+                {/* ウィンドウの開閉は状態を変えないので、設定画面を開いている間も使える */}
+                <WindowButton Svg={CopyThinSvg} label={t("vr_panel.window_log")} is_open={windows.log} onClick={toggleLog} />
+                <WindowButton Svg={TranslationSvg} label={t("vr_panel.window_language")}
+                    is_open={windows.popup === "language"} onClick={() => togglePopup("language")} />
+                <WindowButton Svg={HmdSvg} label={t("vr_panel.window_settings")}
+                    is_open={windows.popup === "settings"} onClick={() => togglePopup("settings")} />
             </div>
         </div>
     );
@@ -72,8 +74,8 @@ const FunctionButton = ({ Svg, label, state, onClick, is_locked }) => {
     );
 };
 
-const WindowButton = ({ Svg, label, is_open = false, is_disabled = false }) => (
-    <button className={clsx(styles.button, styles.window_button, { [styles.is_open]: is_open, [styles.is_disabled]: is_disabled })}>
+const WindowButton = ({ Svg, label, is_open, onClick }) => (
+    <button className={clsx(styles.button, styles.window_button, { [styles.is_open]: is_open })} onClick={onClick}>
         <Svg className={styles.icon} />
         <span className={styles.label}>{label}</span>
     </button>
