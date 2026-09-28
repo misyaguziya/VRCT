@@ -93,6 +93,26 @@ export const useLanguageSettings = () => {
         asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
     };
 
+    // 今のプリセットの相手の言語を、languages ([{language, country}], 1〜3件) の順に枠1から詰めて設定する。
+    // 余った枠は無効にする (言語はそのまま残す)。VR UIで候補を選ぶ・外すときに使う
+    const setTargetLanguagesInOrder = (languages) => {
+        if (languages.length < 1 || languages.length > 3) return;
+        pendingSelectedTargetLanguages();
+        const tab_no = currentSelectedPresetTabNumber.data;
+        const current = currentSelectedTargetLanguages.data[tab_no];
+        const updated = {};
+        for (const target_key of ["1", "2", "3"]) {
+            const language = languages[Number(target_key) - 1];
+            updated[target_key] = language
+                ? { language: language.language, country: language.country, enable: true }
+                : { ...current[target_key], enable: false };
+        }
+        asyncStdoutToPython("/set/data/selected_target_languages", {
+            ...currentSelectedTargetLanguages.data,
+            [tab_no]: updated,
+        });
+    };
+
     const addTargetLanguage = () => {
         pendingSelectedTargetLanguages();
         const tab_no = currentSelectedPresetTabNumber.data;
@@ -191,6 +211,7 @@ export const useLanguageSettings = () => {
 
         addTargetLanguage,
         removeTargetLanguage,
+        setTargetLanguagesInOrder,
 
         currentTranslationEngines,
         getTranslationEngines,
