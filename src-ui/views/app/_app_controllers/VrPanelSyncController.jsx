@@ -10,6 +10,9 @@ import { useIsOpenedConfigPage } from "@logics_common";
 // - 全atomの値をVRパネルへ一方向に同期する (機能が増えても個別の同期コードは不要)
 // - VRパネルからのバックエンド送信を代わりに行う。設定画面を開いている間は
 //   メイン機能を一時停止しているため (ConfigPageCloseTriggerController)、拒否する
+// - VRのVR設定ウィンドウを開いている間は、デスクトップで設定画面を開いたのと同じ扱いにする
+//   (メイン機能を止め、閉じたら戻す)。このときだけ設定画面中でもVRからの送信を通す
+//   (VR側は設定ウィンドウ以外を操作できないようにしている)
 const jotai = getDefaultStore();
 
 const atomEntries = () => Object.entries(dynamicStoreRegistry)
@@ -33,9 +36,21 @@ const emitState = (entries) => {
 
 export const VrPanelSyncController = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
+    const { currentIsOpenedConfigPage, setIsOpenedConfigPage } = useIsOpenedConfigPage();
     const isOpenedConfigPageRef = useRef(currentIsOpenedConfigPage.data);
     isOpenedConfigPageRef.current = currentIsOpenedConfigPage.data;
+    // VRのVR設定ウィンドウを開いているか (開いている間はVRからの送信を通す)
+    const isVrSettingsOpenRef = useRef(false);
+    // 設定画面を開いたのがVRか (VR設定ウィンドウを閉じたとき、設定画面も閉じてよいか)
+    const isOpenedByVrRef = useRef(false);
+
+    // デスクトップ側で設定画面が閉じられたら、VRの扱いも終わる (VR側は設定ウィンドウを閉じる)
+    useEffect(() => {
+        if (currentIsOpenedConfigPage.data !== true) {
+            isVrSettingsOpenRef.current = false;
+            isOpenedByVrRef.current = false;
+        }
+    }, [currentIsOpenedConfigPage.data]);
 
     useEffect(() => {
         const entries = atomEntries();
@@ -45,12 +60,28 @@ export const VrPanelSyncController = () => {
         const unlistenReady = listen("vr-panel-ready", () => emitState(atomEntries()));
         const unlistenStdout = listen("vr-panel-stdout", ({ payload }) => {
             // ウィンドウの開閉は状態を変えないので、設定画面を開いている間も通す
-            if (isOpenedConfigPageRef.current === true && payload.path !== "/run/vr_panel_windows") {
+            const is_allowed = payload.path === "/run/vr_panel_windows" || isVrSettingsOpenRef.current === true;
+            if (isOpenedConfigPageRef.current === true && !is_allowed) {
                 // VRパネル側で pending にした表示を元に戻すため、状態を送り直す
                 emitState(atomEntries());
                 return;
             }
             asyncStdoutToPython(payload.path, payload.value);
+        });
+        const unlistenConfigPage = listen("vr-panel-config-page", ({ payload: is_opened }) => {
+            if (is_opened === true) {
+                isVrSettingsOpenRef.current = true;
+                // デスクトップが先に開いていたら、VR側を閉じてもデスクトップの設定画面は閉じない
+                if (isOpenedConfigPageRef.current !== true) isOpenedByVrRef.current = true;
+                setIsOpenedConfigPage(true);
+                return;
+            }
+            isVrSettingsOpenRef.current = false;
+            // VRが開いたときだけ閉じる (VRの起動時などに届く false でデスクトップの設定画面を閉じない)
+            if (isOpenedByVrRef.current === true) {
+                isOpenedByVrRef.current = false;
+                setIsOpenedConfigPage(false);
+            }
         });
         // VRパネルが先に起動していた場合に備えて、こちらからも一度送る
         emitState(entries);
@@ -59,6 +90,7 @@ export const VrPanelSyncController = () => {
             unsubscribes.forEach(unsubscribe => unsubscribe());
             unlistenReady.then(f => f());
             unlistenStdout.then(f => f());
+            unlistenConfigPage.then(f => f());
         };
     }, []);
 

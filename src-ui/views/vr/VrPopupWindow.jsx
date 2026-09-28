@@ -1,18 +1,13 @@
-import { useI18n } from "@useI18n";
-
-import HmdSvg from "@images/mui_head_mounted_device.svg?react";
-
-import { VrWindow } from "./VrWindow";
 import { VrLanguageWindow } from "./VrLanguageWindow";
+import { VrSettingsWindow } from "./VrSettingsWindow";
 
-// 一時ウィンドウ (言語 / VR設定)。同時に1つだけ開く。VR設定の中身は後の段階で作る
+// 一時ウィンドウ (言語 / VR設定)。同時に1つだけ開く
 export const VrPopupWindow = ({ popup, onClose }) => {
-    const { t } = useI18n();
     if (popup === "language") {
         return <VrLanguageWindow onClose={onClose} />;
     }
     if (popup === "settings") {
-        return <VrWindow Icon={HmdSvg} title={t("vr_panel.window_settings")} onClose={onClose} />;
+        return <VrSettingsWindow onClose={onClose} />;
     }
     return null;
 };

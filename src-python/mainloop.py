@@ -473,6 +473,9 @@ mapping = {
     "/get/data/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
     # VR UIのウィンドウの開閉 (VR画面からメイン経由で届く)
     "/run/vr_panel_windows": {"status": False, "variable":controller.setVrPanelWindows},
+    # VR UIのログウィンドウの不透明度 (VR設定ウィンドウから)
+    "/get/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.getOverlayVrPanelOpacity},
+    "/set/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.setOverlayVrPanelOpacity},
     "/set/data/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
 
     "/get/data/overlay_large_log": {"status": True, "variable":controller.getOverlayLargeLog},
