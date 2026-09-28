@@ -8,7 +8,8 @@ import styles from "./VrWindow.module.scss";
 
 // VR UIのウィンドウ共通の枠 (タイトルバー・閉じるボタン・設定画面中のロック表示)。
 // ロックは本文だけを覆い、閉じる操作は残す (状態を変えないため)。
-export const VrWindow = ({ Icon, title, onClose, children }) => {
+// VR設定ウィンドウは設定画面そのものなのでロックしない (is_lockable=false)。
+export const VrWindow = ({ Icon, title, onClose, is_lockable = true, children }) => {
     const { t } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
 
@@ -23,7 +24,7 @@ export const VrWindow = ({ Icon, title, onClose, children }) => {
             </div>
             <div className={styles.body}>
                 {children}
-                {currentIsOpenedConfigPage.data === true && (
+                {is_lockable && currentIsOpenedConfigPage.data === true && (
                     <div className={styles.locked}>
                         <WarningSvg className={styles.locked_icon} />
                         <p>{t("vr_panel.locked_by_config_page")}</p>

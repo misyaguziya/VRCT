@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getDefaultStore } from "jotai";
 
 import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
+import { useIsOpenedConfigPage } from "@logics_common";
 
 import {
     UiLanguageController,
@@ -39,6 +40,23 @@ export const VrApp = () => {
     useEffect(() => {
         asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null });
     }, [windows.log, windows.popup]);
+
+    // VR設定ウィンドウを開いている間は、デスクトップで設定画面を開いたのと同じ扱いにする
+    // (メインがメイン機能を止め、閉じたら戻す。VrPanelSyncController)
+    const is_settings_open = windows.popup === "settings";
+    useEffect(() => {
+        emit("vr-panel-config-page", is_settings_open);
+    }, [is_settings_open]);
+    // デスクトップ側で設定画面が閉じられたら、VR設定ウィンドウも閉じる
+    const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
+    const was_config_page_open = useRef(false);
+    useEffect(() => {
+        const is_open = currentIsOpenedConfigPage.data === true;
+        if (was_config_page_open.current && !is_open) {
+            setWindows(w => (w.popup === "settings" ? { ...w, popup: null } : w));
+        }
+        was_config_page_open.current = is_open;
+    }, [currentIsOpenedConfigPage.data]);
 
     const toggleLog = () => setWindows(w => ({ ...w, log: !w.log }));
     const togglePopup = (name) => setWindows(w => ({ ...w, popup: w.popup === name ? null : name }));

@@ -651,6 +651,15 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_show_only_translated_messages",
     },
     {
+        // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelOpacity",
+        default_value: 1.0,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_panel_opacity",
+    },
+    {
         Category: "Vr",
         Base_Name: "VoiceTypingMode",
         default_value: false,

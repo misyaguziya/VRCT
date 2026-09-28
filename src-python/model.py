@@ -2353,6 +2353,11 @@ class Model:
         self.ensure_initialized()
         self.overlay.setVrWindows(log, popup)
 
+    def updateOverlayVrPanelOpacity(self) -> None:
+        """VR UIのログウィンドウの不透明度を反映する (オーバーレイのスレッドが毎フレーム settings から適用する)。"""
+        self.ensure_initialized()
+        self.overlay.settings[PANEL]["opacity"] = config.OVERLAY_VR_PANEL_SETTINGS["opacity"]
+
     def setOverlayPointerCallback(self, fn: Optional[Callable[[Optional[tuple]], None]]) -> None:
         """VR UI上のポインタの位置が変わったときに呼ぶ関数を登録する (ホバー表示用)。"""
         self.ensure_initialized()

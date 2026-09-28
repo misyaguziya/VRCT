@@ -1,0 +1,355 @@
+// VR設定ウィンドウ (vr_layout.json の popup: 720x640、本文 720x584)。
+// 左にカテゴリ (168px)、右に項目の一覧 (約500px、スティックでスクロール)。押せる対象は高さ56px以上。
+
+.window_body {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    color: var(--dark_basic_text_color);
+}
+
+// 設定中はメイン機能を止めていることを常に見せる
+.banner {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    font-size: 17px;
+    color: var(--warning_color);
+    background-color: var(--dark_850_color);
+}
+
+.banner_icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    fill: var(--warning_color);
+    color: var(--warning_color);
+}
+
+.body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px 16px;
+    // メインが設定画面を開くまで (メイン機能を止めるまで) は押せない
+    &.is_waiting {
+        opacity: 0.55;
+        pointer-events: none;
+    }
+}
+
+.side {
+    width: 168px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.list {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    padding-right: 8px;
+    &::-webkit-scrollbar {
+        width: 14px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: var(--dark_600_color);
+        border-radius: 7px;
+    }
+}
+
+// ---- 押せるもの共通 ----
+
+%hoverable {
+    cursor: pointer;
+    // VRのポインタが当たっている (VrApp の VrPointerHover が付ける)
+    &[data-vr-hover] {
+        box-shadow: inset 0 0 0 3px var(--primary_300_color);
+    }
+    &.is_pending {
+        opacity: 0.55;
+    }
+    &.is_disabled {
+        opacity: 0.35;
+        cursor: default;
+        &[data-vr-hover] {
+            box-shadow: none;
+        }
+    }
+}
+
+.button {
+    @extend %hoverable;
+    // reset.css が button の text-align を継承 (左寄せ) にするので中央へ寄せ直す
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    height: 56px;
+    border-radius: 12px;
+    background-color: var(--dark_750_color);
+    color: var(--dark_basic_text_color);
+    font-weight: 700;
+    &.is_on {
+        background-color: var(--primary_700_color);
+    }
+}
+
+// ---- 左のカテゴリ ----
+
+.category {
+    position: relative;
+    min-height: 64px;
+    height: auto;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 12px;
+    background-color: var(--dark_825_color);
+    &.is_selected {
+        background-color: var(--primary_700_color);
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 12px;
+            bottom: 12px;
+            width: 5px;
+            border-radius: 3px;
+            background-color: var(--primary_200_color);
+        }
+    }
+}
+
+.category_icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    fill: var(--dark_basic_text_color);
+    color: var(--dark_basic_text_color);
+}
+
+// 幅は約100px。英語の "Translation" など長い名前は2行まで折り返し、それ以上は切る
+.category_label {
+    min-width: 0;
+    font-size: 17px;
+    text-align: left;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+// ---- 右の一覧の行 ----
+
+.section_label {
+    flex-shrink: 0;
+    margin-top: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--primary_300_color);
+}
+
+.row {
+    flex-shrink: 0;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background-color: var(--dark_850_color);
+    color: var(--dark_basic_text_color);
+    text-align: left;
+}
+
+.clickable {
+    @extend %hoverable;
+    &.is_selected {
+        background-color: var(--primary_700_color);
+    }
+}
+
+.label {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.sub {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--dark_450_color);
+}
+
+// ON/OFF のスイッチ (行全体が押せる)
+.switch {
+    position: relative;
+    width: 72px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    background-color: var(--dark_600_color);
+    &::after {
+        content: "";
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: var(--dark_400_color);
+    }
+    &.is_on {
+        background-color: var(--primary_500_color);
+        &::after {
+            left: auto;
+            right: 5px;
+            background-color: var(--dark_basic_text_color);
+        }
+    }
+}
+
+.select_value {
+    max-width: 45%;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--dark_400_color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chevron {
+    font-size: 26px;
+    color: var(--dark_500_color);
+}
+
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    &.is_pending {
+        opacity: 0.55;
+    }
+}
+
+.step {
+    width: 56px;
+    font-size: 30px;
+}
+
+.value {
+    width: 84px;
+    text-align: center;
+    font-size: 21px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    &.is_disabled {
+        color: var(--dark_500_color);
+    }
+}
+
+// ---- 入力感度 (音量を見ながら合わせる) ----
+
+.threshold_row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 14px;
+}
+
+.row_line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.automatic {
+    min-width: 88px;
+    padding: 0 14px;
+    font-size: 18px;
+}
+
+.check {
+    width: 56px;
+}
+
+.check_icon {
+    width: 30px;
+    height: 30px;
+    fill: var(--dark_basic_text_color);
+    color: var(--dark_basic_text_color);
+}
+
+// 音量 (0〜max) と、しきい値の位置の線。しきい値を超えた音量は明るい緑
+.meter {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 26px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--dark_900_color);
+}
+
+.meter_level {
+    height: 100%;
+    background-color: var(--primary_750_color);
+    &.is_over {
+        background-color: var(--primary_400_color);
+    }
+}
+
+.meter_threshold {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    margin-left: -2px;
+    background-color: var(--dark_basic_text_color);
+}
+
+// ---- 選択肢の一覧 ----
+
+.picker_head {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.back {
+    padding: 0 18px;
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.picker_title {
+    min-width: 0;
+    font-size: 17px;
+    color: var(--dark_450_color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.option {
+    min-height: 60px;
+}

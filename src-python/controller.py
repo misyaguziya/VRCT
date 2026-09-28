@@ -25,6 +25,10 @@ _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 # ハンドラロック競合で feedWatchdog が 35s 遅延するのを freeze_trace.log で
 # 2026-08-20 に観測した。前回報告から MIN_DELTA 以上進んだ、または
 # MIN_INTERVAL_SEC 以上経過した場合のみ forward する (0% / 100% は必ず送る)。
+# config.OVERLAY_VR_PANEL_SETTINGS は dict を丸ごと読み書きする。掴み移動の保存 (オーバーレイの
+# スレッド) と不透明度の変更 (エンドポイント) が重なると片方が消えるので、読み書きを直列にする
+_VR_PANEL_SETTINGS_LOCK = Lock()
+
 _DOWNLOAD_PROGRESS_MIN_DELTA = 0.01
 _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
 
@@ -4448,6 +4452,30 @@ class Controller:
         model.setVrPanelWindows(windows["log"], windows["popup"])
         return {"status": 200, "result": windows}
 
+    @staticmethod
+    def getOverlayVrPanelOpacity(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OVERLAY_VR_PANEL_SETTINGS["opacity"]}
+
+    @staticmethod
+    def setOverlayVrPanelOpacity(data, *args, **kwargs) -> dict:
+        """VR UIのログウィンドウの不透明度 (0.2〜1.0)。
+
+        0 に近いと見えなくなり、VR内で見つけて戻す手段がなくなるので下限を設ける。
+        """
+        try:
+            opacity = float(data)
+            if not 0.2 <= opacity <= 1.0:
+                raise ValueError()
+        except (TypeError, ValueError):
+            return VRCTError.create_error_response(
+                ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
+                data=config.OVERLAY_VR_PANEL_SETTINGS["opacity"],
+            )
+        with _VR_PANEL_SETTINGS_LOCK:
+            config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, "opacity": round(opacity, 2)}
+        model.updateOverlayVrPanelOpacity()
+        return {"status": 200, "result": config.OVERLAY_VR_PANEL_SETTINGS["opacity"]}
+
     def _onVrPanelPointer(self, xy) -> None:
         """VR UI上のポインタの位置をUIへ送る (オーバーレイスレッドから呼ばれる)。外れたら None。"""
         self.run(200, self.run_mapping["vr_panel_pointer"], None if xy is None else {"x": xy[0], "y": xy[1]})
@@ -4473,7 +4501,8 @@ class Controller:
             self._model.updateOverlayLargeLogSettings()
             self.run(200, self.run_mapping["overlay_large_log_settings"], config.OVERLAY_LARGE_LOG_SETTINGS)
         elif size == "panel":
-            config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, **position}
+            with _VR_PANEL_SETTINGS_LOCK:
+                config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, **position}
         elif size == "launcher":
             config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, **position}
 
