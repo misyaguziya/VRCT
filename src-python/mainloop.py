@@ -136,6 +136,7 @@ run_mapping = {
 
     "overlay_small_log_settings":"/run/overlay_small_log_settings",
     "vr_panel_pointer":"/run/vr_panel_pointer",
+    "vr_panel_log_out_of_view":"/run/vr_panel_log_out_of_view",
     "overlay_large_log_settings":"/run/overlay_large_log_settings",
 
     "selectable_mic_host_list":"/run/selectable_mic_host_list",
@@ -473,12 +474,17 @@ mapping = {
     "/get/data/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
     # VR UIのウィンドウの開閉 (VR画面からメイン経由で届く)
     "/run/vr_panel_windows": {"status": False, "variable":controller.setVrPanelWindows},
+    # 見失ったVR UIのログウィンドウを目の前へ呼び戻す (VR画面からメイン経由で届く)
+    "/run/vr_panel_recall_log": {"status": False, "variable":controller.recallVrPanelLog},
     # VR UIのログウィンドウの不透明度 (VR設定ウィンドウから)
     "/get/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.getOverlayVrPanelOpacity},
     "/set/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.setOverlayVrPanelOpacity},
     "/set/data/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
 
     "/get/data/overlay_large_log": {"status": True, "variable":controller.getOverlayLargeLog},
+    "/get/data/overlay_vr_panel": {"status": True, "variable":controller.getOverlayVrPanel},
+    "/set/enable/overlay_vr_panel": {"status": True, "variable":controller.setEnableOverlayVrPanel},
+    "/set/disable/overlay_vr_panel": {"status": True, "variable":controller.setDisableOverlayVrPanel},
     "/set/enable/overlay_large_log": {"status": True, "variable":controller.setEnableOverlayLargeLog},
     "/set/disable/overlay_large_log": {"status": True, "variable":controller.setDisableOverlayLargeLog},
 

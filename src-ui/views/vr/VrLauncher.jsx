@@ -1,7 +1,8 @@
 import clsx from "clsx";
 
 import { useI18n } from "@useI18n";
-import { useIsOpenedConfigPage } from "@logics_common";
+import { useIsOpenedConfigPage, useVrPanelLogOutOfView } from "@logics_common";
+import { useStdoutToPython } from "@useStdoutToPython";
 import { useMainFunction } from "@logics_main";
 import { useOcr } from "@logics_configs";
 
@@ -24,6 +25,10 @@ export const VrLauncher = ({ windows, toggleLog, togglePopup }) => {
         toggleTranscriptionReceive, currentTranscriptionReceiveStatus,
     } = useMainFunction();
     const { currentEnableOcrCapture, toggleEnableOcrCapture } = useOcr();
+    const { currentVrPanelLogOutOfView } = useVrPanelLogOutOfView();
+    const { asyncStdoutToPython } = useStdoutToPython();
+    // ログウィンドウを開いたまま見失っているときは、閉じる代わりに目の前へ呼び戻す
+    const is_log_lost = windows.log && currentVrPanelLogOutOfView.data === true;
 
     const is_locked = currentIsOpenedConfigPage.data === true;
 
@@ -42,7 +47,9 @@ export const VrLauncher = ({ windows, toggleLog, togglePopup }) => {
             <div className={styles.divider} />
             <div className={styles.group}>
                 {/* ウィンドウの開閉は状態を変えないので、設定画面を開いている間も使える */}
-                <WindowButton Svg={CopyThinSvg} label={t("vr_panel.window_log")} is_open={windows.log} onClick={toggleLog} />
+                <WindowButton Svg={CopyThinSvg} label={is_log_lost ? t("vr_panel.recall_log") : t("vr_panel.window_log")}
+                    is_open={windows.log} is_attention={is_log_lost}
+                    onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog} />
                 <WindowButton Svg={TranslationSvg} label={t("vr_panel.window_language")}
                     is_open={windows.popup === "language"} onClick={() => togglePopup("language")} />
                 <WindowButton Svg={HmdSvg} label={t("vr_panel.window_settings")}
@@ -74,8 +81,8 @@ const FunctionButton = ({ Svg, label, state, onClick, is_locked }) => {
     );
 };
 
-const WindowButton = ({ Svg, label, is_open, onClick }) => (
-    <button className={clsx(styles.button, styles.window_button, { [styles.is_open]: is_open })} onClick={onClick}>
+const WindowButton = ({ Svg, label, is_open, is_attention = false, onClick }) => (
+    <button className={clsx(styles.button, styles.window_button, { [styles.is_open]: is_open, [styles.is_attention]: is_attention })} onClick={onClick}>
         <Svg className={styles.icon} />
         <span className={styles.label}>{label}</span>
     </button>

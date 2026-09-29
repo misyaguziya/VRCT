@@ -291,6 +291,9 @@ config_page:
         right_hand: "右手"
         overlay_show_only_translated_messages:
             label: "仅显示翻译后的消息"
+        vr_panel:
+            label: "显示VR UI"
+            desc: "在VR中显示手腕启动器和窗口，可切换功能开关、查看日志、更改语言和设置。可独立于字幕叠加层使用。"
         voice_typing_mode:
             label:
             desc:
@@ -455,6 +458,7 @@ vr_panel:
     window_log: "日志"
     window_language: "语言"
     window_settings: "VR设置"
+    recall_log: "召回"
     locked_by_config_page: "设置已打开。关闭后即可操作。"
     log_opacity: "日志不透明度"
     mic_threshold: "麦克风输入阈值"
@@ -463,4 +467,3 @@ vr_panel:
     paused_while_settings: "设置期间暂停翻译和语音识别。关闭后恢复。"
     overlay_small_log: "字幕（单行）"
     overlay_large_log: "字幕（多行）"
-    overlay_keep_one: "显示VR UI时，至少保持其中一个开启"

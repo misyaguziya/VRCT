@@ -76,6 +76,13 @@ VR_REGIONS = {
 # 一時ウィンドウを出す位置: ランチャーの中心から上へ、頭との水平距離をこの範囲に収める
 _POPUP_ABOVE_LAUNCHER_M = 0.18
 _POPUP_DISTANCE_RANGE_M = (0.45, 0.65)
+# ログウィンドウが「見えない」とみなす範囲: 視線から外れた角度、または遠すぎる距離。
+# 境界で頭が揺れてもランチャーのボタンが切り替わり続けないよう、戻るときは内側の値で判定する
+_RECALL_OUT_OF_VIEW_DEG = (60.0, 50.0)  # (見えなくなる, 見えるようになる)
+_RECALL_OUT_OF_VIEW_DISTANCE_M = (3.0, 2.7)
+# 呼び戻す位置: 頭の正面 (水平方向) にこの距離、目の高さからこれだけ下
+_RECALL_DISTANCE_M = 0.7
+_RECALL_BELOW_EYE_M = 0.1
 _PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
 _PANEL_FIND_INTERVAL_SEC = 2.0
 # 各領域の角丸の半径 (論理px)。撮影した画像の領域の外と四隅を透明にする
@@ -153,6 +160,36 @@ def popupPoseFacing(position: np.ndarray, target: np.ndarray) -> np.ndarray:
     pose = np.eye(4)
     pose[:3, 0], pose[:3, 1], pose[:3, 2], pose[:3, 3] = x, y, z, position
     return pose
+
+
+def isOutOfView(head: np.ndarray, position: np.ndarray, was_out: bool = False) -> bool:
+    """position が頭の向き (-Z) から外れている、または遠すぎるか。
+
+    was_out (前回の判定) が True なら、内側のしきい値まで戻ったときに初めて見えると判定する。
+    """
+    index = 1 if was_out else 0
+    direction = position - head[:3, 3]
+    distance = float(np.linalg.norm(direction))
+    if distance > _RECALL_OUT_OF_VIEW_DISTANCE_M[index]:
+        return True
+    if distance < 1e-6:
+        return False
+    cos = float(np.dot(direction / distance, -head[:3, 2]))
+    # numpy の bool_ のままだと UI への通知 (JSON) で失敗するので Python の bool にする
+    return bool(cos < np.cos(np.radians(_RECALL_OUT_OF_VIEW_DEG[index])))
+
+
+def recallPose(head: np.ndarray) -> np.ndarray:
+    """頭の正面 (上下の向きは無視) の少し下に置き、頭の方を向けた姿勢。"""
+    head_pos = head[:3, 3]
+    forward = -head[:3, 2].copy()
+    forward[1] = 0.0
+    if np.linalg.norm(forward) < 1e-6:  # 真上・真下を向いているときは頭の上方向を正面にする
+        forward = head[:3, 1].copy()
+        forward[1] = 0.0
+    forward = forward / (np.linalg.norm(forward) or 1.0)
+    position = head_pos + forward * _RECALL_DISTANCE_M - np.array([0.0, _RECALL_BELOW_EYE_M, 0.0])
+    return popupPoseFacing(position, head_pos)
 
 
 def createAnchorButtonImages() -> Dict[str, Image.Image]:
@@ -326,8 +363,18 @@ class Overlay:
         self.pointer_notified: Optional[tuple] = None
         # VR UIのウィンドウの表示・非表示。VR画面 (React) が /run/vr_panel_windows で決め、
         # オーバーレイのスレッドが updateGrab の最初で反映する (vr_windows_hidden が今の状態)
-        self.vr_windows_wanted: Dict[str, bool] = {PANEL: True, POPUP: False}
+        # 起動時はランチャーだけ (VR画面の初期状態と同じ。VR画面から届くまでログを出さない)
+        self.vr_windows_wanted: Dict[str, bool] = {PANEL: False, POPUP: False}
         self.vr_windows_hidden: set = set()
+        # VR UI 全体のON/OFF (設定 OVERLAY_VR_PANEL)。OFFの間はランチャーも含めて隠し、撮影しない。
+        # 字幕のオーバーレイだけが動いているときに False になる
+        self.vr_panel_enabled = True
+        # ログウィンドウを見失ったとき用。VR画面が呼び戻しを頼む (どのスレッドからでもよい) と、
+        # オーバーレイのスレッドが頭の正面へ置き直す。見えなくなった・見えるようになったときに
+        # panel_out_of_view_callback(bool) で知らせ、ランチャーのボタンを「呼び戻す」に変える
+        self.vr_recall_requested = False
+        self.panel_out_of_view = False
+        self.panel_out_of_view_callback: Optional[Callable[[bool], None]] = None
         # 手ごとの (grip, hit) 。変化したときだけログに出す(実機での切り分け用)
         self.debug_state: Dict[int, tuple] = {}
         # self.settings[size] の位置はオーバーレイスレッド(掴み確定)とUI設定変更の
@@ -470,7 +517,7 @@ class Overlay:
     def updatePanel(self) -> None:
         """VRパネルのウィンドウを撮影してオーバーレイへ転送する。"""
         now = time.monotonic()
-        if self.gl is None or now - self.panel_last_capture < _PANEL_CAPTURE_INTERVAL_SEC:
+        if not self.vr_panel_enabled or self.gl is None or now - self.panel_last_capture < _PANEL_CAPTURE_INTERVAL_SEC:
             return
         self.panel_last_capture = now
         if self.panel_hwnd is None or not window_capture.isWindow(self.panel_hwnd):
@@ -617,7 +664,7 @@ class Overlay:
         offset[1][3] = -(panel_width * image_height / image_width / 2 + _TOOLBAR_GAP_M + height / 2)
         relative = (utils.toHomogeneous(panel_relative) @ offset)[:3, :]
         for anchor, handle in self.toolbar_handles.items():
-            if anchor != self.settings[PANEL]["tracker"] or PANEL in self.vr_windows_hidden:
+            if anchor != self.settings[PANEL]["tracker"] or PANEL in self.vr_windows_hidden or not self.vr_panel_enabled:
                 self.overlay.hideOverlay(handle)
                 continue
             self.overlay.setOverlayWidthInMeters(handle, width)
@@ -911,9 +958,11 @@ class Overlay:
 
     def applyVrWindows(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
         """指定された表示・非表示をオーバーレイに反映する (オーバーレイのスレッドで呼ぶ)。"""
-        for size, wanted in self.vr_windows_wanted.items():
+        wanted_windows = {**self.vr_windows_wanted, LAUNCHER: True}
+        for size, wanted in wanted_windows.items():
             if size not in self.handle:
                 continue
+            wanted = wanted and self.vr_panel_enabled
             hidden = size in self.vr_windows_hidden
             if wanted and hidden:
                 if size == POPUP:
@@ -923,6 +972,9 @@ class Overlay:
                 if size == PANEL:
                     s = self.settings[PANEL]
                     self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], PANEL)
+                    # 前回置いた場所が見えないところなら、開いたときに目の前へ出す
+                    if self.isPanelOutOfView(poseOf):
+                        self.recallPanel(poseOf)
             elif not wanted and not hidden:
                 self.vr_windows_hidden.add(size)
                 self.overlay.hideOverlay(self.handle[size])
@@ -934,6 +986,52 @@ class Overlay:
                     self.grab_scale = None
                     self.setHighlight(None, _COLOR_NORMAL)
                     self.showPointer(None, _COLOR_NORMAL)
+        # 掴んでいる間は動かさない (掴み処理が同じフレームで位置を上書きする)。呼び戻しは離してから行う
+        if self.grabbing is not None:
+            return
+        if self.vr_recall_requested:
+            self.vr_recall_requested = False
+            if PANEL in self.handle and PANEL not in self.vr_windows_hidden:
+                self.recallPanel(poseOf)
+        self.notifyPanelOutOfView(PANEL in self.handle and self.isPanelOutOfView(poseOf))
+
+    def requestRecallPanel(self) -> None:
+        """ログウィンドウを目の前へ呼び戻すよう頼む (どのスレッドからでもよい)。"""
+        self.vr_recall_requested = True
+
+    def isPanelOutOfView(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> bool:
+        """ログウィンドウが開いていて、視線から外れているか。
+
+        手に付けているときは手を上げれば見えるので対象にしない (空間固定と頭に付けたときだけ)。
+        """
+        if PANEL in self.vr_windows_hidden or self.settings[PANEL]["tracker"] not in (PLAYSPACE, "HMD"):
+            return False
+        head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+        world = self.overlayWorldPose(PANEL, poseOf)
+        if head is None or world is None:
+            return False
+        return isOutOfView(head, world[:3, 3], was_out=self.panel_out_of_view)
+
+    def recallPanel(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
+        """ログウィンドウを頭の正面に空間固定で置き直し、その位置を保存する。"""
+        head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+        if head is None:
+            return
+        self.settings[PANEL]["tracker"] = PLAYSPACE
+        self.commitPosition(PANEL, recallPose(head)[:3, :])
+        s = self.settings[PANEL]
+        self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], PLAYSPACE, PANEL)
+
+    def notifyPanelOutOfView(self, out_of_view: bool) -> None:
+        """ログウィンドウが見えなくなった・見えるようになったときだけ知らせる。"""
+        if out_of_view == self.panel_out_of_view:
+            return
+        self.panel_out_of_view = out_of_view
+        if self.panel_out_of_view_callback is not None:
+            try:
+                self.panel_out_of_view_callback(out_of_view)
+            except Exception:
+                errorLogging()
 
     def placePopup(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
         """一時ウィンドウをランチャーの上に、頭の方を向けて空間固定で出す。"""
@@ -1073,6 +1171,8 @@ class Overlay:
                 time.sleep(sleepTime)
         # GLコンテキストは作ったスレッドでしか破棄できない
         self.shutdownPanelTexture()
+        # 止まったあとは「見失っている」表示を残さない
+        self.notifyPanelOutOfView(False)
 
     def main(self) -> None:
         while self.checkSteamvrRunning() is False:

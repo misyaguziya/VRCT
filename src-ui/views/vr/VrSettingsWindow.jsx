@@ -211,17 +211,14 @@ const TranslationSettings = ({ t, openPicker }) => {
 
 const VrSettings = ({ t }) => {
     const vr = useVr();
-    const small = vr.currentIsEnabledOverlaySmallLog;
-    const large = vr.currentIsEnabledOverlayLargeLog;
-    // 字幕のオーバーレイが両方OFFになるとVR UIごと止まるので、最後の1つはOFFにできない
-    const is_last = (self, other) => self.data === true && other.data !== true;
     const opacity = vr.currentOverlayVrPanelOpacity;
+    // VR UI 自体のON/OFFはここに置かない (VRの中で消すと戻せなくなる。デスクトップの設定で行う)
     return (
         <>
-            <ToggleRow label={t("vr_panel.overlay_small_log")} variable={small} onToggle={vr.toggleIsEnabledOverlaySmallLog}
-                is_disabled={is_last(small, large)} sub={is_last(small, large) ? t("vr_panel.overlay_keep_one") : null} />
-            <ToggleRow label={t("vr_panel.overlay_large_log")} variable={large} onToggle={vr.toggleIsEnabledOverlayLargeLog}
-                is_disabled={is_last(large, small)} sub={is_last(large, small) ? t("vr_panel.overlay_keep_one") : null} />
+            <ToggleRow label={t("vr_panel.overlay_small_log")} variable={vr.currentIsEnabledOverlaySmallLog}
+                onToggle={vr.toggleIsEnabledOverlaySmallLog} />
+            <ToggleRow label={t("vr_panel.overlay_large_log")} variable={vr.currentIsEnabledOverlayLargeLog}
+                onToggle={vr.toggleIsEnabledOverlayLargeLog} />
             <ToggleRow label={t("config_page.vr.overlay_show_only_translated_messages.label")}
                 variable={vr.currentOverlayShowOnlyTranslatedMessages} onToggle={vr.toggleOverlayShowOnlyTranslatedMessages} />
             <StepperRow label={t("vr_panel.log_opacity")} variable={opacity} setValue={vr.setOverlayVrPanelOpacity}

@@ -236,6 +236,7 @@ _SIMPLE_CONFIG_GETTERS = {
     "getOverlaySmallLog": "OVERLAY_SMALL_LOG",
     "getOverlaySmallLogSettings": "OVERLAY_SMALL_LOG_SETTINGS",
     "getOverlayLargeLog": "OVERLAY_LARGE_LOG",
+    "getOverlayVrPanel": "OVERLAY_VR_PANEL",
     "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
     "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
     "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
@@ -3222,20 +3223,27 @@ class Controller:
 
 
     @staticmethod
+    def syncOverlayRunning() -> None:
+        """字幕 (一行 / 複数行) と VR UI のどれかがONならオーバーレイを動かし、全部OFFなら止める。"""
+        model.setVrPanelEnabled(config.OVERLAY_VR_PANEL)
+        if config.OVERLAY_SMALL_LOG or config.OVERLAY_LARGE_LOG or config.OVERLAY_VR_PANEL:
+            model.startOverlay()
+        else:
+            model.shutdownOverlay()
+
+    @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
         if config.OVERLAY_SMALL_LOG is False:
-            if config.OVERLAY_LARGE_LOG is False:
-                model.startOverlay()
             config.OVERLAY_SMALL_LOG = True
+            Controller.syncOverlayRunning()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
     def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
         if config.OVERLAY_SMALL_LOG is True:
             model.clearOverlayImageSmallLog()
-            if config.OVERLAY_LARGE_LOG is False:
-                model.shutdownOverlay()
             config.OVERLAY_SMALL_LOG = False
+            Controller.syncOverlayRunning()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
 
@@ -3249,19 +3257,31 @@ class Controller:
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
         if config.OVERLAY_LARGE_LOG is False:
-            if config.OVERLAY_SMALL_LOG is False:
-                model.startOverlay()
             config.OVERLAY_LARGE_LOG = True
+            Controller.syncOverlayRunning()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
     def setDisableOverlayLargeLog(*args, **kwargs) -> dict:
         if config.OVERLAY_LARGE_LOG is True:
             model.clearOverlayImageLargeLog()
-            if config.OVERLAY_SMALL_LOG is False:
-                model.shutdownOverlay()
             config.OVERLAY_LARGE_LOG = False
+            Controller.syncOverlayRunning()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
+
+    @staticmethod
+    def setEnableOverlayVrPanel(*args, **kwargs) -> dict:
+        if config.OVERLAY_VR_PANEL is False:
+            config.OVERLAY_VR_PANEL = True
+            Controller.syncOverlayRunning()
+        return {"status":200, "result":config.OVERLAY_VR_PANEL}
+
+    @staticmethod
+    def setDisableOverlayVrPanel(*args, **kwargs) -> dict:
+        if config.OVERLAY_VR_PANEL is True:
+            config.OVERLAY_VR_PANEL = False
+            Controller.syncOverlayRunning()
+        return {"status":200, "result":config.OVERLAY_VR_PANEL}
 
 
     @staticmethod
@@ -4438,6 +4458,7 @@ class Controller:
         try:
             self._model.setOverlayPositionChangedCallback(self._onOverlayPositionChanged)
             self._model.setOverlayPointerCallback(self._onVrPanelPointer)
+            self._model.setOverlayPanelOutOfViewCallback(self._onVrPanelLogOutOfView)
         except Exception:
             errorLogging()
 
@@ -4451,6 +4472,12 @@ class Controller:
         windows = {"log": data.get("log") is True, "popup": data.get("popup") is True}
         model.setVrPanelWindows(windows["log"], windows["popup"])
         return {"status": 200, "result": windows}
+
+    @staticmethod
+    def recallVrPanelLog(*args, **kwargs) -> dict:
+        """VR UIのログウィンドウを目の前へ呼び戻す (見失ったとき、ランチャーのボタンから)。"""
+        model.recallVrPanelLog()
+        return {"status": 200, "result": True}
 
     @staticmethod
     def getOverlayVrPanelOpacity(*args, **kwargs) -> dict:
@@ -4479,6 +4506,10 @@ class Controller:
     def _onVrPanelPointer(self, xy) -> None:
         """VR UI上のポインタの位置をUIへ送る (オーバーレイスレッドから呼ばれる)。外れたら None。"""
         self.run(200, self.run_mapping["vr_panel_pointer"], None if xy is None else {"x": xy[0], "y": xy[1]})
+
+    def _onVrPanelLogOutOfView(self, out_of_view: bool) -> None:
+        """ログウィンドウが視線から外れた・戻ったことをUIへ送る (オーバーレイスレッドから呼ばれる)。"""
+        self.run(200, self.run_mapping["vr_panel_log_out_of_view"], out_of_view)
 
     def _onOverlayPositionChanged(self, size: str, position: dict) -> None:
         """VR内の掴み移動・拡大縮小で確定した位置と大きさを保存し、UIへ通知する (オーバーレイスレッドから呼ばれる)。
@@ -5092,8 +5123,7 @@ class Controller:
 
         # Init Overlay
         printLog("Init Overlay")
-        if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
-            model.startOverlay()
+        self.syncOverlayRunning()
 
         # Init WebSocket Server
         printLog("Init WebSocket Server")

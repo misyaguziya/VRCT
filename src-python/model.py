@@ -2353,6 +2353,21 @@ class Model:
         self.ensure_initialized()
         self.overlay.setVrWindows(log, popup)
 
+    def setVrPanelEnabled(self, enabled: bool) -> None:
+        """VR UI (ランチャーと各ウィンドウ) を表示するか。OFFの間は撮影もしない。"""
+        self.ensure_initialized()
+        self.overlay.vr_panel_enabled = enabled
+
+    def recallVrPanelLog(self) -> None:
+        """VR UIのログウィンドウを目の前へ呼び戻す。"""
+        self.ensure_initialized()
+        self.overlay.requestRecallPanel()
+
+    def setOverlayPanelOutOfViewCallback(self, fn: Optional[Callable[[bool], None]]) -> None:
+        """VR UIのログウィンドウが視線から外れた・戻ったときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.panel_out_of_view_callback = fn
+
     def updateOverlayVrPanelOpacity(self) -> None:
         """VR UIのログウィンドウの不透明度を反映する (オーバーレイのスレッドが毎フレーム settings から適用する)。"""
         self.ensure_initialized()

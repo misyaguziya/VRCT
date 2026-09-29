@@ -233,6 +233,9 @@ _debounce_time: int = 2  # デバウンス時間（秒）
 - `OVERLAY_LARGE_LOG`: 大ログオーバーレイ有効
 - `OVERLAY_LARGE_LOG_SETTINGS`: 大ログオーバーレイ設定
 - `OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES`: 翻訳メッセージのみ表示
+- `OVERLAY_VR_PANEL`: VR UI (手首のランチャーとログ・言語・VR設定のウィンドウ) 有効。字幕のオーバーレイとは別にON/OFFする (既定 OFF)
+- `OVERLAY_VR_PANEL_SETTINGS`: VR UI のログウィンドウの位置・大きさ・不透明度 (VR内で掴んで動かした結果を保存)
+- `OVERLAY_VR_LAUNCHER_SETTINGS`: VR UI のランチャーの位置・大きさ
 
 **その他設定**
 - `HOTKEYS`: ホットキー設定辞書（即座保存）

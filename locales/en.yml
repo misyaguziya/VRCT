@@ -297,6 +297,9 @@ config_page:
         right_hand: "Right Hand"
         overlay_show_only_translated_messages:
             label: "Show Only Translated Messages"
+        vr_panel:
+            label: "Show the VR UI"
+            desc: "Shows a wrist launcher and windows in VR for turning features on and off, reading the log, and changing languages and settings. Works independently of the subtitle overlays."
         voice_typing_mode:
             label: "Voice Typing Mode"
             desc: "Automatically pastes transcribed text into the active input field.\n*Utilizes standard Windows clipboard functionality."
@@ -461,6 +464,7 @@ vr_panel:
     window_log: "Log"
     window_language: "Language"
     window_settings: "VR settings"
+    recall_log: "Recall"
     locked_by_config_page: "Settings are open. Close them to use these controls."
     log_opacity: "Log opacity"
     mic_threshold: "Mic sensitivity"
@@ -469,4 +473,3 @@ vr_panel:
     paused_while_settings: "Translation and transcription are paused while settings are open. They resume when you close this."
     overlay_small_log: "Subtitles (single line)"
     overlay_large_log: "Subtitles (multiple lines)"
-    overlay_keep_one: "While the VR UI is shown, one of these stays ON"

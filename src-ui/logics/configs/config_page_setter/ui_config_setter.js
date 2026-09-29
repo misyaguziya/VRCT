@@ -651,6 +651,15 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_show_only_translated_messages",
     },
     {
+        // VR UI (手首のランチャーと各ウィンドウ)。字幕のオーバーレイとは別にON/OFFする
+        Category: "Vr",
+        Base_Name: "IsEnabledOverlayVrPanel",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_panel",
+    },
+    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

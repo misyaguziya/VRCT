@@ -17,4 +17,4 @@ export { useIsOscAvailable } from "./useIsOscAvailable";
 export { useIsVrctAvailable } from "./useIsVrctAvailable";
 export { useLLMConnection } from "./useLLMConnection";
 export { useCopyToClipboard } from "./useCopyToClipboard";
-export { useVrPanelPointer } from "./useVrPanelPointer";
+export { useVrPanelPointer, useVrPanelLogOutOfView } from "./useVrPanelPointer";
