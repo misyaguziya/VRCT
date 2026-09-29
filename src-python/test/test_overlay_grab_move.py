@@ -235,7 +235,8 @@ class UpdatePanelTest(unittest.TestCase):
         overlay.panel_hwnd = 123
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
-            wc.captureWindow.return_value = Image.new("RGBA", (900, 836), (40, 40, 40, 255))
+            wc.captureWindowRaw.return_value = (b"frame", None, None)
+            wc.imageFromCapture.return_value = Image.new("RGBA", (900, 836), (40, 40, 40, 255))
             overlay.updatePanel()
         results = MagicMock()
         results.vUVs.v = [0.5, 0.5]
@@ -344,7 +345,8 @@ class UpdatePanelRegionsTest(unittest.TestCase):
         ImageDraw.Draw(atlas).rectangle((0, 700, 900, 836), fill=(0, 0, 255, 255))  # ランチャー側 = 青
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
-            wc.captureWindow.return_value = atlas
+            wc.captureWindowRaw.return_value = (b"frame", None, None)
+            wc.imageFromCapture.return_value = atlas
             overlay.updatePanel()
         self.assertEqual(overlay.images[PANEL].size, (900, 700))
         self.assertEqual(overlay.images[LAUNCHER].size, (880, 128))
@@ -353,6 +355,55 @@ class UpdatePanelRegionsTest(unittest.TestCase):
         # 1枚のテクスチャを両方のオーバーレイへ渡す
         handles = [c.args[0] for c in overlay.overlay.setOverlayTexture.call_args_list]
         self.assertEqual(sorted(handles), [10, 11])
+
+class PanelCaptureLoadTest(unittest.TestCase):
+    """撮影の負荷を下げる: 画面が変わっていなければ転送しない、操作していなければ撮影を減らす。"""
+
+    def _overlay(self):
+        from PIL import Image
+
+        overlay = Overlay({PANEL: {}, LAUNCHER: {}})
+        overlay.handle = {PANEL: 10, LAUNCHER: 11}
+        overlay.overlay = MagicMock()
+        overlay.gl = {"GL": MagicMock(), "texture": 1, "vr_texture": MagicMock(), "size": None}
+        overlay.panel_hwnd = 123
+        return overlay, Image.new("RGBA", VR_ATLAS_SIZE, (40, 40, 40, 255))
+
+    def test_unchanged_frame_is_not_uploaded(self):
+        overlay, atlas = self._overlay()
+        with patch("models.overlay.overlay.window_capture") as wc:
+            wc.isWindow.return_value = True
+            wc.imageFromCapture.return_value = atlas
+            for raw in (b"a", b"a", b"b"):
+                overlay.panel_last_capture = 0.0  # 撮影間隔の待ちを飛ばす
+                wc.captureWindowRaw.return_value = (raw, None, None)
+                overlay.updatePanel()
+        self.assertEqual(wc.captureWindowRaw.call_count, 3)
+        self.assertEqual(wc.imageFromCapture.call_count, 2)  # 2回目は前回と同じなので変換しない
+        self.assertEqual(overlay.overlay.setOverlayTexture.call_count, 2 * 2)  # 転送は2回 x オーバーレイ2つ
+
+    def test_capture_slows_down_while_idle(self):
+        from models.overlay.overlay import _PANEL_CAPTURE_INTERVAL_SEC, _PANEL_IDLE_CAPTURE_INTERVAL_SEC
+
+        overlay, _ = self._overlay()
+        now = 100.0
+        overlay.panel_last_change = now - 0.5  # 変わった直後
+        self.assertEqual(overlay.panelCaptureInterval(now), _PANEL_CAPTURE_INTERVAL_SEC)
+        overlay.panel_last_change = now - 5.0  # しばらく変わっていない
+        self.assertEqual(overlay.panelCaptureInterval(now), _PANEL_IDLE_CAPTURE_INTERVAL_SEC)
+        overlay.pointer_notified = (10, 10)  # ポインタがVR UIにある
+        self.assertEqual(overlay.panelCaptureInterval(now), _PANEL_CAPTURE_INTERVAL_SEC)
+
+    def test_image_from_capture_keeps_colors_and_crops_the_client_area(self):
+        from models.overlay.window_capture import imageFromCapture
+
+        # 3x2 のウィンドウ。左端の1列が枠。BGRX で 青, 緑, 赤 の順に並べる
+        row = bytes([255, 0, 0, 0, 0, 255, 0, 0, 0, 0, 255, 0])
+        img = imageFromCapture((row * 2, (3, 2), (1, 0, 3, 2)))
+        self.assertEqual(img.size, (2, 2))
+        self.assertEqual(img.getpixel((0, 0)), (0, 255, 0, 255))  # 緑
+        self.assertEqual(img.getpixel((1, 0)), (255, 0, 0, 255))  # 赤
+
 
 class NotifyPointerTest(unittest.TestCase):
     def test_only_meaningful_moves_are_sent(self):
@@ -439,7 +490,7 @@ class VrPanelDisabledTest(unittest.TestCase):
         with patch("models.overlay.overlay.window_capture") as capture:
             overlay.updatePanel()
         capture.findWindow.assert_not_called()
-        capture.captureWindow.assert_not_called()
+        capture.captureWindowRaw.assert_not_called()
 
 
 class RecallPanelTest(unittest.TestCase):

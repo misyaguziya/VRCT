@@ -44,6 +44,16 @@ def isWindow(hwnd: int) -> bool:
 
 def captureWindow(hwnd: int) -> Optional[Image.Image]:
     """ウィンドウ全体をRGBA画像として撮影する。最小化中などで撮れなければ None。"""
+    capture = captureWindowRaw(hwnd)
+    return None if capture is None else imageFromCapture(capture)
+
+
+def captureWindowRaw(hwnd: int) -> Optional[tuple]:
+    """撮影した生データ (BGRX のバイト列, (幅, 高さ), クライアント領域の切り出し範囲) を返す。
+
+    画像への変換は重い (数ms) ので、前回と同じか (バイト列の比較) を先に確かめられるようにしている。
+    最小化中などで撮れなければ None。
+    """
     if _user32.IsIconic(hwnd):
         return None
     rect = wintypes.RECT()
@@ -65,14 +75,19 @@ def captureWindow(hwnd: int) -> Optional[Image.Image]:
         _gdi32.DeleteObject(bmp)
         _gdi32.DeleteDC(mdc)
         _user32.ReleaseDC(hwnd, hdc)
-    img = Image.frombuffer("RGBX", (width, height), buf, "raw", "BGRX", 0, 1)
     # ウィンドウ枠 (装飾なしでも数px残る) を除き、入力座標と一致するクライアント領域だけにする
     client = wintypes.RECT()
     _user32.GetClientRect(hwnd, ctypes.byref(client))
     origin = wintypes.POINT(0, 0)
     _user32.ClientToScreen(hwnd, ctypes.byref(origin))
     left, top = origin.x - rect.left, origin.y - rect.top
-    img = img.crop((left, top, left + client.right, top + client.bottom))
+    return buf.raw, (width, height), (left, top, left + client.right, top + client.bottom)
+
+
+def imageFromCapture(capture: tuple) -> Image.Image:
+    """captureWindowRaw の結果をクライアント領域のRGBA画像にする。"""
+    raw, size, box = capture
+    img = Image.frombuffer("RGBX", size, raw, "raw", "BGRX", 0, 1).crop(box)
     # PrintWindowのアルファは不定なので不透明として扱う
     return img.convert("RGBA")
 
