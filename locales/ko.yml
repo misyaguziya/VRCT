@@ -470,8 +470,6 @@ vr_panel:
     launcher_hand_desc: "다른 손의 레이저로 누릅니다"
     launcher_auto_hide: "손목을 볼 때만 표시"
     launcher_auto_hide_desc: "손목을 얼굴 쪽으로 돌렸을 때만 나타납니다"
-    launcher_hide_angle: "표시 범위(각도)"
-    launcher_hide_angle_desc: "작을수록 손목을 정면으로 봐야 나타납니다"
     locked_by_config_page: "설정이 열려 있습니다. 닫으면 조작할 수 있습니다."
     log_opacity: "로그 불투명도"
     mic_threshold: "마이크 입력 최소 볼륨"

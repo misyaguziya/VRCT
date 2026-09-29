@@ -70,10 +70,10 @@ class TestVrPanelFontSize(unittest.TestCase):
 
 class TestVrLauncher(unittest.TestCase):
     def setUp(self) -> None:
-        self.original = (config.OVERLAY_VR_LAUNCHER_SETTINGS, config.OVERLAY_VR_LAUNCHER_AUTO_HIDE, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
+        self.original = (config.OVERLAY_VR_LAUNCHER_SETTINGS, config.OVERLAY_VR_LAUNCHER_AUTO_HIDE)
 
     def tearDown(self) -> None:
-        config.OVERLAY_VR_LAUNCHER_SETTINGS, config.OVERLAY_VR_LAUNCHER_AUTO_HIDE, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE = self.original
+        config.OVERLAY_VR_LAUNCHER_SETTINGS, config.OVERLAY_VR_LAUNCHER_AUTO_HIDE = self.original
 
     def test_switching_hand_mirrors_the_saved_position(self) -> None:
         config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, "tracker": "LeftHand", "x_pos": 0.02, "y_rotation": 10.0}
@@ -91,15 +91,12 @@ class TestVrLauncher(unittest.TestCase):
             self.assertNotEqual(Controller.setOverlayVrLauncherHand("HMD")["status"], 200)
             model.updateVrLauncherPosition.assert_not_called()
 
-    def test_auto_hide_and_angle(self) -> None:
+    def test_auto_hide(self) -> None:
         with patch("controller.model") as model:
             Controller.setDisableOverlayVrLauncherAutoHide()
-            model.setVrLauncherAutoHide.assert_called_with(False, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
-            self.assertEqual(Controller.setOverlayVrLauncherHideAngle(60), {"status": 200, "result": 60})
-            model.setVrLauncherAutoHide.assert_called_with(False, 60)
-            for bad in (10, 95, 45.0, True):
-                with self.subTest(bad=bad):
-                    self.assertNotEqual(Controller.setOverlayVrLauncherHideAngle(bad)["status"], 200)
+            model.setVrLauncherAutoHide.assert_called_with(False)
+            Controller.setEnableOverlayVrLauncherAutoHide()
+            model.setVrLauncherAutoHide.assert_called_with(True)
 
 
 if __name__ == "__main__":

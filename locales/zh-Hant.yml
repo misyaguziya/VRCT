@@ -470,8 +470,6 @@ vr_panel:
     launcher_hand_desc: "用另一隻手的雷射點擊"
     launcher_auto_hide: "僅在看手腕時顯示"
     launcher_auto_hide_desc: "僅在把手腕轉向臉部時出現"
-    launcher_hide_angle: "顯示範圍（角度）"
-    launcher_hide_angle_desc: "數值越小，越需要正視手腕才會出現"
     locked_by_config_page: "設定已開啟。關閉後即可操作。"
     log_opacity: "日誌不透明度"
     mic_threshold: "麥克風能量閾值"

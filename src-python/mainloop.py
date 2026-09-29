@@ -495,8 +495,6 @@ mapping = {
     "/get/data/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.getOverlayVrLauncherAutoHide},
     "/set/enable/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.setEnableOverlayVrLauncherAutoHide},
     "/set/disable/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.setDisableOverlayVrLauncherAutoHide},
-    "/get/data/overlay_vr_launcher_hide_angle": {"status": True, "variable":controller.getOverlayVrLauncherHideAngle},
-    "/set/data/overlay_vr_launcher_hide_angle": {"status": True, "variable":controller.setOverlayVrLauncherHideAngle},
     "/set/data/overlay_vr_panel_font_size": {"status": True, "variable":controller.setOverlayVrPanelFontSize},
     "/set/enable/overlay_vr_panel_locked": {"status": True, "variable":controller.setEnableOverlayVrPanelLocked},
     "/set/disable/overlay_vr_panel_locked": {"status": True, "variable":controller.setDisableOverlayVrPanelLocked},

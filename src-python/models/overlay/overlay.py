@@ -56,22 +56,18 @@ _PUSH_PULL_DISTANCE_RANGE_M = (0.25, 2.5)
 # 掴んで動かしている間の手の震えをならす。ゆっくり動かしているときだけ (速いときは遅れないようそのまま)
 _GRAB_SMOOTH_TAU_SEC = 0.06
 _GRAB_SMOOTH_MAX_SPEED_M = 0.3
-# 放したときに空間固定のウィンドウを自分の方へ向け直す。頭がこれ以上傾いていれば (寝転がっているなど)
-# 水平ではなく頭の傾きに合わせる。頭にこれより近いウィンドウは向き直さない
-_FACE_USER_HEAD_ROLL_DEG = 30.0
-_FACE_USER_MIN_DISTANCE_M = 0.3
-# 向き直すときは、この秒数をかけてなめらかに回す (いきなり向きが変わると驚くため)
-_FACE_USER_TURN_SEC = 0.2
 # ランチャーを手首を見たときだけ出す (XSOverlay と同じ)。
-# 出す: ランチャーの面が顔の方を向き (hide_angle 以内)、視線からも近い (_LAUNCHER_GAZE_SHOW_DEG 以内) 状態が続いたら。
-# 消す: 面の角度が hide_angle + _LAUNCHER_HIDE_MARGIN_DEG を超えるか、視線から大きく外れた状態が続いたら。
-# 会話中の身振りで出たり、境目で点滅したりしないよう、出す・消すで角度と待ち時間を変えている
-_LAUNCHER_GAZE_SHOW_DEG = 35.0
+# 出す: ランチャーの面が顔の方を向き (_LAUNCHER_FACE_DEG 以内)、視線からも近い (_LAUNCHER_GAZE_SHOW_DEG 以内) 状態が続いたら。
+# 消す: 面の角度が _LAUNCHER_FACE_DEG + _LAUNCHER_HIDE_MARGIN_DEG を超えるか、視線から大きく外れた状態が続いたら。
+# 会話中の身振りで出たり、境目で点滅したりしないよう、出す・消すで角度と待ち時間を変えている。
+# 出るまでは短くする (手首を戻してから出るまでが長いと感じた。実機)
+_LAUNCHER_FACE_DEG = 45.0
+_LAUNCHER_GAZE_SHOW_DEG = 40.0
 _LAUNCHER_GAZE_HIDE_DEG = 45.0
 _LAUNCHER_HIDE_MARGIN_DEG = 10.0
-_LAUNCHER_SHOW_AFTER_SEC = 0.2
+_LAUNCHER_SHOW_AFTER_SEC = 0.05
 _LAUNCHER_HIDE_AFTER_SEC = 0.3
-_LAUNCHER_FADE_SEC = 0.25
+_LAUNCHER_FADE_SEC = 0.1
 _LAUNCHER_INPUT_DELAY_SEC = 0.2  # 出始めは押せない (手首を返した勢いで押さないように)
 _COLOR_NORMAL = (1.0, 1.0, 1.0)
 _COLOR_POINTER = (0x61 / 255, 0xB4 / 255, 0xA7 / 255)
@@ -297,6 +293,34 @@ def popupPoseFacing(position: np.ndarray, target: np.ndarray, up: Optional[np.nd
     return pose
 
 
+def faceHead(position: np.ndarray, head: np.ndarray) -> np.ndarray:
+    """position に置き、表を頭へ向けた姿勢。上は頭の上 (見ている人にとって水平・垂直になる)。"""
+    return popupPoseFacing(position, head[:3, 3], head[:3, 1])
+
+
+def poseOnSphere(point: np.ndarray, head: np.ndarray, radius: float) -> np.ndarray:
+    """目 (頭の位置) を中心とした半径 radius の球面上の、point の方向に置き、頭の方へ向けた姿勢。
+
+    掴んで動かすウィンドウは手の向きでは回さず、いつもこの球面上で自分の方を向ける (XSOverlay と同じ)。
+    """
+    head_pos = head[:3, 3]
+    direction = point - head_pos
+    length = float(np.linalg.norm(direction))
+    if length < 1e-6:
+        direction, length = -head[:3, 2], 1.0
+    return faceHead(head_pos + direction / length * radius, head)
+
+
+def sphereRadius(base: float, hand_start: float, hand_now: float) -> float:
+    """掴んでいる間の、目からウィンドウまでの距離。
+
+    腕を前に伸ばす・手前に引くと、その割合で遠ざける・近づける (目から手までの距離の比)。
+    base はスティックの上下で変わる距離 (pushPullDistance)。
+    """
+    low, high = _PUSH_PULL_DISTANCE_RANGE_M
+    return min(max(base * hand_now / max(hand_start, 0.05), low), high)
+
+
 def isOutOfView(head: np.ndarray, position: np.ndarray, was_out: bool = False) -> bool:
     """position が頭の向き (-Z) から外れている、または遠すぎるか。
 
@@ -332,47 +356,34 @@ def recallPose(head: np.ndarray) -> np.ndarray:
     pitch = np.radians(min(max(np.degrees(np.arcsin(np.clip(gaze[1], -1.0, 1.0))), low), high))
     direction = forward * np.cos(pitch) + np.array([0.0, np.sin(pitch), 0.0])
     position = head_pos + direction * _RECALL_DISTANCE_M - np.array([0.0, _RECALL_BELOW_EYE_M, 0.0])
-    return popupPoseFacing(position, head_pos)
+    return faceHead(position, head)
 
 
-def pushPull(hand_to_overlay: np.ndarray, state: Optional[Any], dt: float) -> np.ndarray:
-    """掴んでいる手のスティックの上下で、ウィンドウを手から遠ざける (上)・近づける (下)。
+def pushPullDistance(distance: float, state: Optional[Any], dt: float) -> float:
+    """掴んでいる手のスティックの上下で、距離を伸ばす (上)・縮める (下)。
 
     縦にはっきり倒したときだけ動かす (横移動・回転に使う操作と区別するため)。
     範囲の外にあるときは、範囲へ戻る向きにだけ動かせる。
     """
     if state is None:
-        return hand_to_overlay
+        return distance
     x, y = state.rAxis[0].x, state.rAxis[0].y
     if abs(y) < _PUSH_PULL_DEADZONE or abs(y) < 2 * abs(x):
-        return hand_to_overlay
+        return distance
+    low, high = _PUSH_PULL_DISTANCE_RANGE_M
+    moved = distance * (1.0 + y * _PUSH_PULL_SPEED * dt)
+    return min(moved, max(high, distance)) if y > 0 else max(moved, min(low, distance))
+
+
+def pushPull(hand_to_overlay: np.ndarray, state: Optional[Any], dt: float) -> np.ndarray:
+    """掴んでいる手のスティックの上下で、ウィンドウを手から遠ざける (上)・近づける (下)。"""
     offset = hand_to_overlay[:3, 3]
     distance = float(np.linalg.norm(offset))
     if distance < 1e-6:
         return hand_to_overlay
-    low, high = _PUSH_PULL_DISTANCE_RANGE_M
-    moved = distance * (1.0 + y * _PUSH_PULL_SPEED * dt)
-    moved = min(moved, max(high, distance)) if y > 0 else max(moved, min(low, distance))
     result = hand_to_overlay.copy()
-    result[:3, 3] = offset / distance * moved
+    result[:3, 3] = offset / distance * pushPullDistance(distance, state, dt)
     return result
-
-
-def interpolatePose(start: np.ndarray, end: np.ndarray, t: float) -> np.ndarray:
-    """3x4 の姿勢の間 (t=0 で start、1 で end)。位置は直線で、向きは同じ軸まわりに一定の速さで回す。"""
-    r0, r1 = start[:, :3], end[:, :3]
-    delta = r0.T @ r1
-    angle = float(np.arccos(np.clip((np.trace(delta) - 1) / 2, -1.0, 1.0)))
-    if angle < 1e-6:
-        rotation = r1
-    elif np.pi - angle < 1e-3:
-        rotation = r0 if t < 0.5 else r1  # ちょうど裏返し: 回す軸が決まらないので途中で切り替える
-    else:
-        axis = np.array([delta[2, 1] - delta[1, 2], delta[0, 2] - delta[2, 0], delta[1, 0] - delta[0, 1]]) / (2 * np.sin(angle))
-        k = np.array([[0.0, -axis[2], axis[1]], [axis[2], 0.0, -axis[0]], [-axis[1], axis[0], 0.0]])
-        a = angle * t
-        rotation = r0 @ (np.eye(3) + np.sin(a) * k + (1 - np.cos(a)) * (k @ k))
-    return np.hstack([rotation, (start[:, 3] + (end[:, 3] - start[:, 3]) * t).reshape(3, 1)])
 
 
 def mirrorHandPosition(position: Dict[str, Any]) -> Dict[str, Any]:
@@ -517,7 +528,6 @@ class Overlay:
         self.panel_locked = False
         # ランチャーを手首を見たときだけ出す (updateLauncherVisibility)。設定は Model が入れる
         self.launcher_auto_hide = True
-        self.launcher_hide_angle = 45.0
         self.launcher_shown = True
         self.launcher_alpha = 1.0
         self.launcher_interactive = True
@@ -537,8 +547,10 @@ class Overlay:
         self.grab_prev_time: float = 0.0
         self.grab_smoothed: Optional[np.ndarray] = None
         self.grab_prev_target: Optional[np.ndarray] = None
-        # 放したあと自分の方へ向き直している途中 (size, 追従先, 放した姿勢, 向き直した姿勢, 始めた時刻)
-        self.settling: Optional[tuple] = None
+        # 空間・頭に固定したウィンドウを掴んでいる間の、目からの距離 (球面の半径)。手に付けたものは None
+        self.grab_radius: Optional[float] = None
+        # 掴み始め (掴み直し) のときの、目から手までの距離。腕の前後で奥行きを変える基準
+        self.grab_hand_distance = 1.0
         # 当たり判定で透明部分を除くため、最後に貼った画像を覚えておく
         self.images: Dict[str, Image.Image] = {}
         self.grab_error: Optional[str] = None
@@ -1376,7 +1388,6 @@ class Overlay:
         now = time.monotonic()
         self.applyVrWindows(poseOf)
         self.updateLauncherVisibility(poseOf, now)
-        self.updateSettle(now)
 
         if self.resizing is not None:
             self.updateResize(poseOf, controllerState, now)
@@ -1412,15 +1423,32 @@ class Overlay:
                 # 拡大縮小を終えたら、止めていた位置を今の手から掴み直す
                 hand_to_overlay = np.linalg.inv(hand_pose) @ self.grab_scale[3]
                 self.grabbing = (size, hand, hand_to_overlay)
+                head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+                if self.grab_radius is not None and head is not None:
+                    self.grab_radius = float(np.linalg.norm(self.grab_scale[3][:3, 3] - head[:3, 3]))
+                    self.grab_hand_distance = float(np.linalg.norm(hand_pose[:3, 3] - head[:3, 3]))
                 self.grab_scale = None
                 self.showPointer(None, _COLOR_NORMAL)
             dt = min(max(now - self.grab_prev_time, 0.0), 0.1)  # 撮影で止まったフレームでも跳ばないよう上限を付ける
             self.grab_prev_time = now
-            if grip:
+            # 空間・頭に固定したウィンドウは、手の向きでは回さず、目を中心とした球面上で自分の方を向ける。
+            # 距離はスティックの上下で変える (手に付けたウィンドウは手から見た距離を変える)
+            head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+            on_sphere = self.grab_radius is not None and head is not None
+            if grip and on_sphere:
+                self.grab_radius = pushPullDistance(self.grab_radius, state, dt)
+            elif grip:
                 hand_to_overlay = pushPull(hand_to_overlay, state, dt)
                 self.grabbing = (size, hand, hand_to_overlay)
-            target = (np.linalg.inv(tracker_pose) @ hand_pose @ hand_to_overlay)[:3, :]
-            relative = self.smoothGrab(target, dt)
+            world = hand_pose @ hand_to_overlay
+            if on_sphere:
+                hand_distance = float(np.linalg.norm(hand_pose[:3, 3] - head[:3, 3]))
+                world = poseOnSphere(world[:3, 3], head, sphereRadius(self.grab_radius, self.grab_hand_distance, hand_distance))
+            relative = self.smoothGrab((np.linalg.inv(tracker_pose) @ world)[:3, :], dt)
+            if on_sphere:
+                # ならして少し遅れた位置でも、頭の方を向ける
+                smoothed = (tracker_pose @ utils.toHomogeneous(relative))[:3, 3]
+                relative = (np.linalg.inv(tracker_pose) @ faceHead(smoothed, head))[:3, :]
             self.grab_last_relative = relative
             if grip:
                 self.setTransform(size, tracker_index, relative)
@@ -1433,12 +1461,9 @@ class Overlay:
                 self.showPointer(None, _COLOR_NORMAL)
                 if trigger:
                     self.trigger_blocked.add(hand)
-                # 放した位置は、ならした後の位置 (放した瞬間に跳ねないように)。空間固定なら自分の方へ向け直す
-                faced = self.faceUserOnRelease(size, relative, tracker_pose, poseOf)
+                # 放した位置は、ならした後の位置 (放した瞬間に跳ねないように)
                 self.setTransform(size, tracker_index, relative)
-                self.commitPosition(size, faced)  # 保存するのは向き直した位置
-                if faced is not relative:
-                    self.settling = (size, tracker_index, relative, faced, now)
+                self.commitPosition(size, relative)
             return
 
         pointer = None  # (results, color[, scale])
@@ -1526,8 +1551,12 @@ class Overlay:
             if overlay_pose is None:
                 continue
             self.wakeOverlay(size)  # フェード済みでもグリップで起こす
-            self.settling = None
             self.grabbing = (size, hand, np.linalg.inv(hand_pose) @ overlay_pose)
+            head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+            on_sphere = self.settings[size]["tracker"] in (PLAYSPACE, "HMD") and head is not None
+            self.grab_radius = float(np.linalg.norm(overlay_pose[:3, 3] - head[:3, 3])) if on_sphere else None
+            if on_sphere:
+                self.grab_hand_distance = float(np.linalg.norm(hand_pose[:3, 3] - head[:3, 3]))
             self.grab_last_relative = None
             self.grab_started = now
             self.grab_prev_time = now
@@ -1541,17 +1570,6 @@ class Overlay:
         self.notifyPointer(hover_xy)
         self.updateToolbarVisibility(now, pointing_log)
         self.launcher_pointed = pointing_launcher
-
-    def updateSettle(self, now: float) -> None:
-        """放したあと、自分の方へ向き直す途中の姿勢を置く。"""
-        if self.settling is None:
-            return
-        size, tracker_index, start, end, started = self.settling
-        t = min((now - started) / _FACE_USER_TURN_SEC, 1.0)
-        eased = t * t * (3 - 2 * t)
-        self.setTransform(size, tracker_index, interpolatePose(start, end, eased))
-        if t >= 1.0:
-            self.settling = None
 
     def updateLauncherVisibility(self, poseOf: Callable[[int], Optional[np.ndarray]], now: float) -> None:
         """手首を見たときだけランチャーを出す。レーザーを当てている間は消さない。"""
@@ -1569,9 +1587,9 @@ class Overlay:
             if head is None or launcher is None:
                 want = self.launcher_shown
             elif self.launcher_shown:
-                want = launcherLooksVisible(launcher, head, self.launcher_hide_angle + _LAUNCHER_HIDE_MARGIN_DEG, _LAUNCHER_GAZE_HIDE_DEG)
+                want = launcherLooksVisible(launcher, head, _LAUNCHER_FACE_DEG + _LAUNCHER_HIDE_MARGIN_DEG, _LAUNCHER_GAZE_HIDE_DEG)
             else:
-                want = launcherLooksVisible(launcher, head, self.launcher_hide_angle, _LAUNCHER_GAZE_SHOW_DEG)
+                want = launcherLooksVisible(launcher, head, _LAUNCHER_FACE_DEG, _LAUNCHER_GAZE_SHOW_DEG)
         # 出す・消すは、その状態が少し続いてから (設定で OFF にしたときはすぐ出す)
         if want == self.launcher_shown:
             self.launcher_change_since = None
@@ -1702,7 +1720,7 @@ class Overlay:
         if distance > 1e-6:
             clamped = min(max(distance, _POPUP_DISTANCE_RANGE_M[0]), _POPUP_DISTANCE_RANGE_M[1])
             pos = head_pos + horizontal / distance * clamped + np.array([0.0, pos[1] - head_pos[1], 0.0])
-        world = popupPoseFacing(pos, head_pos)
+        world = faceHead(pos, head)
         self.settings[POPUP]["tracker"] = PLAYSPACE
         self.commitPosition(POPUP, world[:3, :])
         s = self.settings[POPUP]
@@ -1800,7 +1818,6 @@ class Overlay:
             "fixed": (-sx * width_px * m_per_px / 2, -sy * height_px * m_per_px / 2),
             "size": (width_px, height_px), "center": (0.0, 0.0),
         }
-        self.settling = None
         self.setToolbarVisible(False)
         self.notifyPointer(None)
         self.setHighlight(PANEL, _COLOR_GRABBING)
@@ -1897,23 +1914,6 @@ class Overlay:
         self.grab_smoothed = smoothed
         return smoothed
 
-    def faceUserOnRelease(self, size: str, relative: np.ndarray, tracker_pose: np.ndarray, poseOf: Callable[[int], Optional[np.ndarray]]) -> np.ndarray:
-        """空間固定のウィンドウを放したとき、表を自分の方へ向け直す。手や頭に付けたものはそのまま。"""
-        if self.settings[size]["tracker"] != PLAYSPACE:
-            return relative
-        head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
-        if head is None:
-            return relative
-        position = (tracker_pose @ utils.toHomogeneous(relative))[:3, 3]
-        head_position = head[:3, 3]
-        if float(np.linalg.norm(position - head_position)) < _FACE_USER_MIN_DISTANCE_M:
-            return relative
-        # 頭の横軸がどれだけ水平から傾いているか。寝転がっているときは頭の上に合わせる
-        roll = np.degrees(np.arcsin(np.clip(head[1, 0], -1.0, 1.0)))
-        up = head[:3, 1] if abs(roll) >= _FACE_USER_HEAD_ROLL_DEG else None
-        facing = popupPoseFacing(position, head_position, up)
-        return (np.linalg.inv(tracker_pose) @ facing)[:3, :]
-
     def commitPosition(self, size: str, relative: np.ndarray) -> None:
         """掴んで動かした結果 (位置と幅) を確定し、保存用にコールバックへ渡す。"""
         base_matrix, _ = self.getTracker(self.settings[size]["tracker"])
@@ -1924,9 +1924,6 @@ class Overlay:
             # 伸ばした後に動かした・固定先を変えた・呼び戻した位置を、大きさを元に戻すときに消さない
             # (伸ばして放したときは finishResize がこの後で記録し直す)
             self.resize_undo = None
-        # 向き直しの途中なら終わりにする (放したときは、この後で始め直す)
-        if self.settling is not None and self.settling[0] == size:
-            self.settling = None
         self.notifyPosition(size)
 
     def notifyPosition(self, size: str) -> None:
@@ -2004,7 +2001,7 @@ class Overlay:
             except Exception as e:
                 self.onGrabError(e)
             # 掴んでいる間・伸ばしている間・向き直している間は、滑らかにするため更新頻度を上げる
-            is_moving = self.grabbing is not None or self.resizing is not None or self.settling is not None
+            is_moving = self.grabbing is not None or self.resizing is not None
             interval = (1 / 60) if is_moving else (1 / 16)
             sleepTime = interval - (time.monotonic() - startTime)
             if sleepTime > 0:
@@ -2047,7 +2044,6 @@ class Overlay:
         self.toolbar_visible = False
         self.ghost_handle = None
         self.resizing = None
-        self.settling = None
         self.overlay = None
 
     def releaseSession(self) -> None:
@@ -2078,7 +2074,6 @@ class Overlay:
     def onGrabError(self, e: Exception) -> None:
         """掴み・伸ばす処理で例外が出たら、その操作をやめる (同じ例外で毎フレーム止まり続けないように)。"""
         self.grabbing = None
-        self.settling = None
         if self.resizing is not None:
             self.resizing = None
             try:

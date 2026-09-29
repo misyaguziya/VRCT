@@ -421,71 +421,6 @@ class GrabMotionTest(unittest.TestCase):
                 steady = lags[30:]
                 self.assertLess(max(steady) - min(steady), 1e-4)
 
-    def _face(self, tracker, head):
-        from models.overlay.overlay import PANEL
-
-        settings = {k: 0.0 for k in KEYS}
-        settings.update(tracker=tracker, opacity=1.0, fadeout_duration=0, ui_scaling=0.4)
-        overlay = Overlay({PANEL: settings})
-        overlay.overlay_system = MagicMock()
-        relative = np.hstack([np.eye(3), np.array([[0.5], [1.6], [-1.0]])])  # 右前方、表は +Z (横を向いたまま)
-        pose_of = lambda index: head if index == 0 else np.eye(4)  # noqa: E731
-        return overlay.faceUserOnRelease(PANEL, relative, np.eye(4), pose_of)
-
-    def test_window_in_space_turns_to_face_the_user_level(self):
-        head = np.eye(4)
-        head[:3, 3] = (0.0, 1.6, 0.0)
-        faced = self._face("Playspace", head)
-        to_head = head[:3, 3] - faced[:, 3]
-        self.assertGreater(float(np.dot(faced[:, 2], to_head / np.linalg.norm(to_head))), 0.999)  # 表が頭を向く
-        self.assertAlmostEqual(float(faced[1, 0]), 0.0, places=6)  # 横軸は水平 (傾けない)
-        np.testing.assert_allclose(faced[:, 3], (0.5, 1.6, -1.0))  # 位置は変えない
-
-    def test_lying_down_aligns_with_the_head(self):
-        head = np.eye(4)
-        head[:3, 3] = (0.0, 1.6, 0.0)
-        c, s = np.cos(np.radians(60)), np.sin(np.radians(60))
-        head[:3, :3] = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])  # 頭を横に60°傾けている
-        faced = self._face("Playspace", head)
-        self.assertGreater(abs(float(faced[1, 0])), 0.5)  # 水平ではなく頭の傾きに合わせる
-
-    def test_window_on_a_hand_is_not_turned(self):
-        head = np.eye(4)
-        head[:3, 3] = (0.0, 1.6, 0.0)
-        faced = self._face("LeftHand", head)
-        np.testing.assert_allclose(faced[:, :3], np.eye(3))
-
-
-class FaceUserTurnTest(unittest.TestCase):
-    """放したときの向き直しは、少しずつ回す。"""
-
-    def test_interpolated_pose(self):
-        from models.overlay.overlay import interpolatePose
-
-        start = np.hstack([np.eye(3), np.zeros((3, 1))])
-        c, s_ = np.cos(np.radians(90)), np.sin(np.radians(90))
-        end = np.hstack([np.array([[c, 0, s_], [0, 1, 0], [-s_, 0, c]]), np.array([[1.0], [0.0], [0.0]])])
-        np.testing.assert_allclose(interpolatePose(start, end, 0.0), start, atol=1e-9)
-        np.testing.assert_allclose(interpolatePose(start, end, 1.0), end, atol=1e-9)
-        half = interpolatePose(start, end, 0.5)
-        np.testing.assert_allclose(half[:, 3], (0.5, 0.0, 0.0))
-        self.assertAlmostEqual(float(half[0, 0]), np.cos(np.radians(45)), places=6)  # 半分 (45°) 回っている
-        np.testing.assert_allclose(half[:, :3] @ half[:, :3].T, np.eye(3), atol=1e-9)  # 回転のまま (歪まない)
-
-    def test_settle_ends_at_the_faced_pose(self):
-        overlay = Overlay({})
-        overlay.setTransform = MagicMock()
-        start = np.hstack([np.eye(3), np.zeros((3, 1))])
-        end = start.copy()
-        end[0, 3] = 1.0
-        overlay.settling = (PANEL, -1, start, end, 10.0)
-        overlay.updateSettle(10.1)
-        self.assertIsNotNone(overlay.settling)
-        overlay.updateSettle(10.3)
-        self.assertIsNone(overlay.settling)
-        np.testing.assert_allclose(overlay.setTransform.call_args.args[2], end)
-
-
 class PanelRecoveryTest(unittest.TestCase):
     """VR画面の撮影・転送の失敗と、止めるときの後片付け。"""
 
@@ -618,6 +553,41 @@ class PanelRecoveryTest(unittest.TestCase):
             overlay.onGrabError(RuntimeError("GL"))
         overlay.setHighlight.assert_called_with(None, ANY)
         overlay.showPointer.assert_called_with(None, ANY)
+
+
+class GrabOnSphereTest(unittest.TestCase):
+    """空間・頭に固定したウィンドウは、手の向きでは回さず、目を中心とした球面上で自分の方を向く。"""
+
+    def test_pose_on_sphere_faces_the_head_and_stays_level_in_view(self):
+        from models.overlay.overlay import poseOnSphere
+
+        head = np.eye(4)
+        head[:3, 3] = (0.0, 1.6, 0.0)
+        c, s_ = np.cos(np.radians(20)), np.sin(np.radians(20))
+        head[:3, :3] = np.array([[c, -s_, 0], [s_, c, 0], [0, 0, 1]])  # 頭を横に20°傾けている
+        pose = poseOnSphere(np.array([0.5, 1.2, -1.5]), head, 0.8)
+        to_head = head[:3, 3] - pose[:3, 3]
+        self.assertAlmostEqual(float(np.linalg.norm(to_head)), 0.8)  # 目からの距離は半径のまま
+        self.assertGreater(float(np.dot(pose[:3, 2], to_head / 0.8)), 0.999)  # 表が頭を向く
+        self.assertAlmostEqual(float(np.dot(pose[:3, 0], head[:3, 1])), 0.0, places=6)  # 見ている人にとって水平
+
+    def test_moving_the_arm_forward_pushes_the_window_away(self):
+        """掴んだまま腕を前後に動かすと、その割合でウィンドウも遠ざかる・近づく (範囲は 0.25〜2.5m)。"""
+        from models.overlay.overlay import sphereRadius
+
+        self.assertAlmostEqual(sphereRadius(1.0, 0.4, 0.4), 1.0)  # 動かしていない
+        self.assertAlmostEqual(sphereRadius(1.0, 0.4, 0.6), 1.5)  # 腕を伸ばした
+        self.assertAlmostEqual(sphereRadius(1.0, 0.4, 0.3), 0.75)  # 手前に引いた
+        self.assertEqual(sphereRadius(2.0, 0.3, 0.7), 2.5)  # 遠すぎない
+
+    def test_push_pull_changes_the_distance_only(self):
+        from models.overlay.overlay import pushPullDistance
+
+        state = MagicMock()
+        state.rAxis = [MagicMock(x=0.0, y=1.0)]
+        self.assertGreater(pushPullDistance(1.0, state, 0.1), 1.0)
+        state.rAxis = [MagicMock(x=0.0, y=0.2)]  # 倒し量が小さい
+        self.assertEqual(pushPullDistance(1.0, state, 0.1), 1.0)
 
 
 class LauncherHandTest(unittest.TestCase):
