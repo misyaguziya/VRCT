@@ -242,7 +242,7 @@ class UpdatePanelTest(unittest.TestCase):
         results.vUVs.v = [0.5, 0.5]
         self.assertTrue(overlay.hasContentAt(PANEL, results))
 
-class CycleAnchorTest(unittest.TestCase):
+class SetAnchorTest(unittest.TestCase):
     def test_switch_to_playspace_keeps_world_position(self):
         """追従先を切り替えてもパネルは今見えている場所から動かない。"""
         from models.overlay.overlay import PANEL, PLAYSPACE
@@ -261,7 +261,7 @@ class CycleAnchorTest(unittest.TestCase):
 
         base = getHMDBaseMatrix()
         before = head @ utils.toHomogeneous(_relative(base, [settings[k] for k in KEYS]))
-        overlay.cycleAnchor(lambda index: np.eye(4) if index == -1 else head)
+        overlay.setAnchor(lambda index: np.eye(4) if index == -1 else head, PLAYSPACE)
 
         self.assertEqual(overlay.settings[PANEL]["tracker"], PLAYSPACE)
         s = overlay.settings[PANEL]
@@ -270,6 +270,145 @@ class CycleAnchorTest(unittest.TestCase):
         _, saved = overlay.position_changed_callback.call_args.args
         self.assertEqual(saved["tracker"], PLAYSPACE)
         overlay.overlay.setOverlayTransformAbsolute.assert_called()
+
+    def _overlay_in_space(self, distance):
+        """空間固定で、頭 (原点) の正面 distance m にあるログ。"""
+        from models.overlay.overlay import PANEL
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=0.4, z_pos=distance)
+        overlay = Overlay({PANEL: settings})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.overlay_system = MagicMock()
+        overlay.overlay_system.getTrackedDeviceIndexForControllerRole.return_value = 1
+        overlay.handle = {PANEL: 10}
+        return overlay
+
+    def test_far_window_is_pulled_in_when_attached_to_a_hand(self):
+        """遠くのウィンドウを手に付けると手元 (0.5m以内) に寄せる。手首をひねるたびに大きく振れないように。"""
+        from models.overlay.overlay import PANEL
+
+        overlay = self._overlay_in_space(2.0)
+        pose_of = lambda index: np.eye(4)  # noqa: E731  空間も手も原点
+        overlay.setAnchor(pose_of, "LeftHand")
+        world = overlay.overlayWorldPose(PANEL, pose_of)
+        self.assertAlmostEqual(float(np.linalg.norm(world[:3, 3])), 0.5, places=3)
+        self.assertEqual(overlay.settings[PANEL]["tracker"], "LeftHand")
+
+    def test_near_window_keeps_its_place_on_a_hand(self):
+        from models.overlay.overlay import PANEL
+
+        overlay = self._overlay_in_space(0.3)
+        pose_of = lambda index: np.eye(4)  # noqa: E731
+        before = overlay.overlayWorldPose(PANEL, pose_of)
+        overlay.setAnchor(pose_of, "RightHand")
+        np.testing.assert_allclose(overlay.overlayWorldPose(PANEL, pose_of), before, atol=1e-3)
+
+    def test_failed_switch_tells_the_current_anchor(self):
+        """切り替え先の姿勢が取れないときは動かさず、今の固定先を知らせて UI の表示を戻す。"""
+        from models.overlay.overlay import PANEL
+
+        overlay = self._overlay_in_space(0.3)
+        overlay.position_changed_callback = MagicMock()
+        overlay.setAnchor(lambda index: np.eye(4) if index == -1 else None, "RightHand")
+        self.assertEqual(overlay.settings[PANEL]["tracker"], "Playspace")
+        _, notified = overlay.position_changed_callback.call_args.args
+        self.assertEqual(notified["tracker"], "Playspace")
+
+    def test_request_is_applied_on_the_overlay_thread(self):
+        from models.overlay.overlay import PANEL
+
+        overlay = self._overlay_in_space(0.3)
+        overlay.requestAnchor("Nowhere")  # 知らない固定先は無視する
+        self.assertIsNone(overlay.requested_anchor)
+        overlay.requestAnchor("HMD")
+        overlay.applyVrWindows(lambda index: np.eye(4))
+        self.assertEqual(overlay.settings[PANEL]["tracker"], "HMD")
+        self.assertIsNone(overlay.requested_anchor)
+
+
+class PanelLockTest(unittest.TestCase):
+    """ロック中のログウィンドウはグリップしても掴めない。"""
+
+    HMD, LEFT, RIGHT = UpdateGrabFlowTest.HMD, UpdateGrabFlowTest.LEFT, UpdateGrabFlowTest.RIGHT
+
+    def setUp(self):
+        UpdateGrabFlowTest.setUp(self)  # 偽の SteamVR だけ借りる (テストは継がない)
+        settings = dict(self.overlay.settings["small"], tracker="Playspace")
+        overlay = Overlay({PANEL: settings})
+        overlay.overlay_system = self.overlay.overlay_system
+        overlay.overlay = self.overlay.overlay
+        overlay.handle = {PANEL: 10}
+        overlay.pointer_handles = self.overlay.pointer_handles
+        overlay.setVrWindows(log=True, popup=False)  # ログウィンドウを開いている
+        self.overlay = overlay
+
+    def test_press_grab_release_commits(self):
+        """ロックしていなければ、ログも今までどおり掴める。"""
+        self.grip = True
+        self.overlay.updateGrab()
+        self.assertIsNotNone(self.overlay.grabbing)
+
+    def test_locked_panel_is_not_grabbed(self):
+        self.overlay.panel_locked = True
+        self.grip = True
+        self.overlay.updateGrab()
+        self.assertIsNone(self.overlay.grabbing)
+
+
+class ToolbarTest(unittest.TestCase):
+    """ログの下の操作バー: 指している間だけ出し、ログに付いて動く。"""
+
+    def _overlay(self):
+        from models.overlay.overlay import PANEL
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=0.8, z_pos=1.0)
+        overlay = Overlay({PANEL: settings})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.overlay_system = MagicMock()
+        overlay.handle = {PANEL: 10}
+        overlay.toolbar_handle = 20
+        return overlay
+
+    def test_shown_after_pointing_for_a_moment_and_hidden_later(self):
+        overlay = self._overlay()
+        overlay.updateToolbarVisibility(10.0, True)
+        self.assertFalse(overlay.toolbar_visible)  # 横切っただけでは出さない
+        overlay.updateToolbarVisibility(10.35, True)
+        self.assertTrue(overlay.toolbar_visible)
+        overlay.overlay.showOverlay.assert_called_with(20)
+        overlay.updateToolbarVisibility(11.0, False)
+        self.assertTrue(overlay.toolbar_visible)  # 外れてすぐは消さない (バーへ移る間)
+        overlay.updateToolbarVisibility(12.4, False)
+        self.assertFalse(overlay.toolbar_visible)
+        overlay.overlay.hideOverlay.assert_called_with(20)
+
+    def test_hidden_with_the_log_window(self):
+        from models.overlay.overlay import PANEL
+
+        overlay = self._overlay()
+        overlay.updateToolbarVisibility(10.0, True)
+        overlay.updateToolbarVisibility(10.5, True)
+        overlay.vr_windows_hidden.add(PANEL)
+        overlay.updateToolbarVisibility(10.6, True)
+        self.assertFalse(overlay.toolbar_visible)
+
+    def test_size_is_fixed_and_placed_below_the_log(self):
+        """ログを拡大してもバーの大きさは変わらず、ログの下端のすぐ下に付く。"""
+        from models.overlay.overlay import TOOLBAR, VR_REGIONS
+
+        overlay = self._overlay()
+        self.assertAlmostEqual(overlay.regionWidthM(TOOLBAR), 720 * 0.4 / 900)
+        overlay.setToolbarVisible(True)
+        pose = overlay.regionWorldPose(TOOLBAR, lambda index: np.eye(4))
+        log_bottom = -(0.8 * 700 / 900) / 2
+        bar_half = overlay.regionWidthM(TOOLBAR) * VR_REGIONS[TOOLBAR][3] / VR_REGIONS[TOOLBAR][2] / 2
+        self.assertAlmostEqual(pose[1, 3], log_bottom - 0.012 - bar_half, places=4)
+        self.assertAlmostEqual(pose[2, 3], -1.0, places=4)  # ログと同じ奥行き
+
 
 class PanelTriggerBlockTest(unittest.TestCase):
     def test_trigger_held_after_grab_is_ignored_until_released(self):
@@ -348,10 +487,8 @@ class UpdatePanelRegionsTest(unittest.TestCase):
             wc.captureWindowRaw.return_value = (b"frame", None, None)
             wc.imageFromCapture.return_value = atlas
             overlay.updatePanel()
-        self.assertEqual(overlay.images[PANEL].size, (900, 700))
-        self.assertEqual(overlay.images[LAUNCHER].size, (880, 128))
-        self.assertEqual(overlay.images[PANEL].getpixel((450, 350))[:3], (255, 0, 0))
-        self.assertEqual(overlay.images[LAUNCHER].getpixel((410, 64))[:3], (0, 0, 255))
+        # 領域ごとの切り出しは各オーバーレイのテクスチャ範囲 (bounds) で行う (VrLayoutTest 参照)
+        self.assertEqual(overlay.panel_image_size, VR_ATLAS_SIZE)
         # 1枚のテクスチャを両方のオーバーレイへ渡す
         handles = [c.args[0] for c in overlay.overlay.setOverlayTexture.call_args_list]
         self.assertEqual(sorted(handles), [10, 11])

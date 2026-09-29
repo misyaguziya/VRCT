@@ -15,6 +15,16 @@ import { useIsOpenedConfigPage } from "@logics_common";
 //   (VR側は設定ウィンドウ以外を操作できないようにしている)
 const jotai = getDefaultStore();
 
+const WINDOW_REQUEST_PATHS = [
+    "/run/vr_panel_windows",
+    "/run/vr_panel_recall_log",
+    "/set/data/overlay_vr_panel_anchor",
+    "/set/enable/overlay_vr_panel_locked",
+    "/set/disable/overlay_vr_panel_locked",
+    "/set/data/overlay_vr_panel_opacity",
+    "/set/data/overlay_vr_panel_font_size",
+];
+
 const atomEntries = () => Object.entries(dynamicStoreRegistry)
     .filter(([key]) => key.startsWith("Atom_"))
     .map(([key, atom]) => [key.slice("Atom_".length), atom]);
@@ -59,8 +69,9 @@ export const VrPanelSyncController = () => {
         );
         const unlistenReady = listen("vr-panel-ready", () => emitState(atomEntries()));
         const unlistenStdout = listen("vr-panel-stdout", ({ payload }) => {
-            // ウィンドウの開閉・呼び戻しは状態を変えないので、設定画面を開いている間も通す
-            const is_window_request = payload.path === "/run/vr_panel_windows" || payload.path === "/run/vr_panel_recall_log";
+            // ウィンドウの開閉・呼び戻しと、ログの操作バー (固定先・ロック・不透明度) はメイン機能と関係ないので、
+            // 設定画面を開いている間も通す
+            const is_window_request = WINDOW_REQUEST_PATHS.includes(payload.path);
             const is_allowed = is_window_request || isVrSettingsOpenRef.current === true;
             if (isOpenedConfigPageRef.current === true && !is_allowed) {
                 // VRパネル側で pending にした表示を元に戻すため、状態を送り直す

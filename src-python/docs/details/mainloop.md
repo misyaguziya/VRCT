@@ -122,6 +122,9 @@ class Main:
 - `/set/data/overlay_vr_panel_opacity`: VR UI のログウィンドウの不透明度 (0.2〜1.0)
 - `/run/vr_panel_windows`: VR UI のウィンドウの開閉 (VR画面からメイン経由で届く)
 - `/run/vr_panel_recall_log`: 見失った VR UI のログウィンドウを目の前へ呼び戻す
+- `/set/data/overlay_vr_panel_anchor`: VR UI のログウィンドウの固定先 (Playspace / LeftHand / RightHand / HMD)。確定した値は `/run/overlay_vr_panel_anchor` で通知
+- `/set/enable/overlay_vr_panel_locked` / `/set/disable/overlay_vr_panel_locked`: ログウィンドウのロック (掴めなくする)
+- `/set/data/overlay_vr_panel_font_size`: VR UI のログの文字の大きさ (14〜28px)
 - バックエンドからの通知: `/run/vr_panel_pointer` (ポインタ位置、ホバー表示用)、`/run/vr_panel_log_out_of_view` (ログウィンドウが視線から外れた・戻った)
 
 ### WebSocket機能

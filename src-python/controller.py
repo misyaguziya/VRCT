@@ -15,6 +15,7 @@ from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC, OCR_MESSAGE_SPEC
+from models.overlay.overlay import PANEL_ANCHORS
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -237,6 +238,8 @@ _SIMPLE_CONFIG_GETTERS = {
     "getOverlaySmallLogSettings": "OVERLAY_SMALL_LOG_SETTINGS",
     "getOverlayLargeLog": "OVERLAY_LARGE_LOG",
     "getOverlayVrPanel": "OVERLAY_VR_PANEL",
+    "getOverlayVrPanelLocked": "OVERLAY_VR_PANEL_LOCKED",
+    "getOverlayVrPanelFontSize": "OVERLAY_VR_PANEL_FONT_SIZE",
     "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
     "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
     "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
@@ -3226,6 +3229,7 @@ class Controller:
     def syncOverlayRunning() -> None:
         """字幕 (一行 / 複数行) と VR UI のどれかがONならオーバーレイを動かし、全部OFFなら止める。"""
         model.setVrPanelEnabled(config.OVERLAY_VR_PANEL)
+        model.setVrPanelLocked(config.OVERLAY_VR_PANEL_LOCKED)
         if config.OVERLAY_SMALL_LOG or config.OVERLAY_LARGE_LOG or config.OVERLAY_VR_PANEL:
             model.startOverlay()
         else:
@@ -3275,6 +3279,18 @@ class Controller:
             config.OVERLAY_VR_PANEL = True
             Controller.syncOverlayRunning()
         return {"status":200, "result":config.OVERLAY_VR_PANEL}
+
+    @staticmethod
+    def setEnableOverlayVrPanelLocked(*args, **kwargs) -> dict:
+        config.OVERLAY_VR_PANEL_LOCKED = True
+        model.setVrPanelLocked(True)
+        return {"status":200, "result":config.OVERLAY_VR_PANEL_LOCKED}
+
+    @staticmethod
+    def setDisableOverlayVrPanelLocked(*args, **kwargs) -> dict:
+        config.OVERLAY_VR_PANEL_LOCKED = False
+        model.setVrPanelLocked(False)
+        return {"status":200, "result":config.OVERLAY_VR_PANEL_LOCKED}
 
     @staticmethod
     def setDisableOverlayVrPanel(*args, **kwargs) -> dict:
@@ -4480,6 +4496,36 @@ class Controller:
         return {"status": 200, "result": True}
 
     @staticmethod
+    def getOverlayVrPanelAnchor(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OVERLAY_VR_PANEL_SETTINGS["tracker"]}
+
+    @staticmethod
+    def setOverlayVrPanelAnchor(data, *args, **kwargs) -> dict:
+        """VR UIのログウィンドウの固定先 (Playspace / LeftHand / RightHand / HMD) を切り替える。
+
+        見えている位置を保ったまま付け替えるので、オーバーレイのスレッドで行う。
+        確定した値は _onOverlayPositionChanged が /run/overlay_vr_panel_anchor で知らせる。
+        """
+        if data not in PANEL_ANCHORS:
+            return VRCTError.create_error_response(
+                ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
+                data=config.OVERLAY_VR_PANEL_SETTINGS["tracker"],
+            )
+        model.requestVrPanelAnchor(data)
+        return {"status": 200, "result": data}
+
+    @staticmethod
+    def setOverlayVrPanelFontSize(data, *args, **kwargs) -> dict:
+        """VR UIのログの文字の大きさ (14〜28px)。表示は VR画面だけで決まり、オーバーレイは関わらない。"""
+        if isinstance(data, bool) or not isinstance(data, int) or not 14 <= data <= 28:
+            return VRCTError.create_error_response(
+                ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
+                data=config.OVERLAY_VR_PANEL_FONT_SIZE,
+            )
+        config.OVERLAY_VR_PANEL_FONT_SIZE = data
+        return {"status": 200, "result": config.OVERLAY_VR_PANEL_FONT_SIZE}
+
+    @staticmethod
     def getOverlayVrPanelOpacity(*args, **kwargs) -> dict:
         return {"status": 200, "result": config.OVERLAY_VR_PANEL_SETTINGS["opacity"]}
 
@@ -4534,6 +4580,8 @@ class Controller:
         elif size == "panel":
             with _VR_PANEL_SETTINGS_LOCK:
                 config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, **position}
+            # 固定先は操作バーでも、呼び戻し (空間固定になる) でも変わるので毎回知らせる
+            self.run(200, self.run_mapping["overlay_vr_panel_anchor"], position["tracker"])
         elif size == "launcher":
             config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, **position}
 

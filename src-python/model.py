@@ -2358,6 +2358,16 @@ class Model:
         self.ensure_initialized()
         self.overlay.vr_panel_enabled = enabled
 
+    def setVrPanelLocked(self, locked: bool) -> None:
+        """VR UIのログウィンドウを掴めなくする (操作バーのロック)。"""
+        self.ensure_initialized()
+        self.overlay.panel_locked = locked
+
+    def requestVrPanelAnchor(self, anchor: str) -> None:
+        """VR UIのログウィンドウの固定先を切り替える (オーバーレイのスレッドで反映される)。"""
+        self.ensure_initialized()
+        self.overlay.requestAnchor(anchor)
+
     def recallVrPanelLog(self) -> None:
         """VR UIのログウィンドウを目の前へ呼び戻す。"""
         self.ensure_initialized()

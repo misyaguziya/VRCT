@@ -36,5 +36,24 @@ class TestVrPanelOpacity(unittest.TestCase):
                 model.updateOverlayVrPanelOpacity.assert_not_called()
 
 
+class TestVrWindowSettingsValidator(unittest.TestCase):
+    """VR UIのウィンドウの保存値: 項目が増えても、以前に保存した値を捨てない。"""
+
+    def test_missing_keys_are_filled_from_the_current_value(self) -> None:
+        from config import _validate_overlay_vr_window
+
+        current = {"x_pos": 0.0, "tracker": "LeftHand", "opacity": 1.0}
+        saved_before_new_key = {"x_pos": 0.5, "tracker": "Playspace"}
+        self.assertEqual(
+            _validate_overlay_vr_window(saved_before_new_key, current),
+            {"x_pos": 0.5, "tracker": "Playspace", "opacity": 1.0},
+        )
+
+    def test_unknown_keys_are_rejected(self) -> None:
+        from config import _validate_overlay_vr_window
+
+        self.assertIsNone(_validate_overlay_vr_window({"x_pos": 0.5, "unknown": 1}, {"x_pos": 0.0}))
+
+
 if __name__ == "__main__":
     unittest.main()
