@@ -1,4 +1,4 @@
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::{Manager, PhysicalPosition, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::{Error, Write};
 use std::path::{Path, PathBuf};
@@ -11,17 +11,21 @@ const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreen
 
 // VRオーバーレイに映す画面。Python側 (models/overlay) がタイトルで見つけて撮影・入力する。
 fn create_vr_panel_window(app: &tauri::App) -> tauri::Result<()> {
-    WebviewWindowBuilder::new(app, "vr_panel", WebviewUrl::App("vr.html".into()))
+    let window = WebviewWindowBuilder::new(app, "vr_panel", WebviewUrl::App("vr.html".into()))
         .title("VRCT VR Panel")
         // src-ui/views/vr/vr_layout.json の atlas と一致させる
         .inner_size(1628.0, 836.0)
-        .position(-10000.0, -10000.0)
         .decorations(false)
         .resizable(false)
         .skip_taskbar(true)
         .focused(false)
+        .visible(false)
         .additional_browser_args(BROWSER_ARGS)
         .build()?;
+    // 画面外に置く。Windows ではビルダーの .position() が効かず既定の位置 (画面内) に出るため、
+    // 作ってから動かし、動かした後で表示する (撮影のため、表示状態で画面外に置いておく)
+    window.set_position(PhysicalPosition::new(-10000, -10000))?;
+    window.show()?;
     Ok(())
 }
 
