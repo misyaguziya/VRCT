@@ -689,6 +689,33 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_vr_panel_font_size",
     },
     {
+        // VR UIのランチャーを付ける手 (LeftHand / RightHand)。VR設定で変える
+        Category: "Vr",
+        Base_Name: "OverlayVrLauncherHand",
+        default_value: "LeftHand",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_launcher_hand",
+    },
+    {
+        // VR UIのランチャーを手首を見たときだけ出す
+        Category: "Vr",
+        Base_Name: "OverlayVrLauncherAutoHide",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_launcher_auto_hide",
+    },
+    {
+        // ランチャーを出す角度 (15〜90度)
+        Category: "Vr",
+        Base_Name: "OverlayVrLauncherHideAngle",
+        default_value: 45,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_launcher_hide_angle",
+    },
+    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

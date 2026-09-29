@@ -125,6 +125,9 @@ class Main:
 - `/set/data/overlay_vr_panel_anchor`: VR UI のログウィンドウの固定先 (Playspace / LeftHand / RightHand / HMD)。確定した値は `/run/overlay_vr_panel_anchor` で通知
 - `/set/enable/overlay_vr_panel_locked` / `/set/disable/overlay_vr_panel_locked`: ログウィンドウのロック (掴めなくする)
 - `/set/data/overlay_vr_panel_font_size`: VR UI のログの文字の大きさ (14〜28px)
+- `/set/data/overlay_vr_launcher_hand`: VR UI のランチャーを付ける手 (LeftHand / RightHand)。手首に対する位置を左右反転して引き継ぐ
+- `/set/enable/overlay_vr_launcher_auto_hide` / `/set/disable/overlay_vr_launcher_auto_hide`: ランチャーを手首を見たときだけ出す
+- `/set/data/overlay_vr_launcher_hide_angle`: ランチャーを出す角度 (15〜90度)
 - バックエンドからの通知: `/run/vr_panel_pointer` (ポインタ位置、ホバー表示用)、`/run/vr_panel_log_out_of_view` (ログウィンドウが視線から外れた・戻った)
 
 ### WebSocket機能

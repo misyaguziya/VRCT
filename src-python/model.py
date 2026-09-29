@@ -2363,6 +2363,19 @@ class Model:
         self.ensure_initialized()
         self.overlay.panel_locked = locked
 
+    def setVrLauncherAutoHide(self, enabled: bool, angle: int) -> None:
+        """VR UIのランチャーを手首を見たときだけ出すか、と出す角度。"""
+        self.ensure_initialized()
+        # 設定ファイルを手で書き換えられても、エンドポイントと同じ範囲に収める
+        self.overlay.launcher_hide_angle = float(min(max(angle, 15), 90))
+        self.overlay.launcher_auto_hide = enabled
+
+    def updateVrLauncherPosition(self) -> None:
+        """保存したランチャーの位置と付ける手をオーバーレイに反映する。"""
+        self.ensure_initialized()
+        s = config.OVERLAY_VR_LAUNCHER_SETTINGS
+        self.overlay.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], LAUNCHER)
+
     def requestVrPanelAnchor(self, anchor: str) -> None:
         """VR UIのログウィンドウの固定先を切り替える (オーバーレイのスレッドで反映される)。"""
         self.ensure_initialized()

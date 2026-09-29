@@ -36,7 +36,7 @@ export const SelectRow = ({ label, value, is_pending = false, is_disabled = fals
     </button>
 );
 
-export const StepperRow = ({ label, variable, setValue, min, max, step, format = (v) => v }) => {
+export const StepperRow = ({ label, sub, variable, setValue, min, max, step, format = (v) => v, is_disabled = false }) => {
     // 小数の刻み (0.05 など) の誤差を丸める
     const decimals = (String(step).split(".")[1] ?? "").length;
     const value = Number(variable.data);
@@ -45,15 +45,42 @@ export const StepperRow = ({ label, variable, setValue, min, max, step, format =
         setValue(Math.min(Math.max(next, min), max));
     };
     return (
-        <div className={styles.row}>
-            <span className={styles.label}>{label}</span>
+        <div className={clsx(styles.row, { [styles.is_row_disabled]: is_disabled })}>
+            <span className={styles.label}>
+                {label}
+                {sub && <span className={styles.sub}>{sub}</span>}
+            </span>
             <Stepper
                 value={format(value)}
                 is_pending={variable.state === "pending"}
+                is_disabled={is_disabled}
                 can_decrease={value > min}
                 can_increase={value < max}
                 onStep={stepValue}
             />
+        </div>
+    );
+};
+
+// 2〜3択を並べて直接選ぶ (選んでいるものは塗り)。options: [{ id, label }]
+export const SegmentRow = ({ label, sub, variable, options, onSelect }) => {
+    const is_pending = variable.state === "pending";
+    return (
+        <div className={clsx(styles.row, { [styles.is_pending]: is_pending })}>
+            <span className={styles.label}>
+                {label}
+                {sub && <span className={styles.sub}>{sub}</span>}
+            </span>
+            <div className={styles.segment}>
+                {options.map(option => (
+                    <button key={option.id}
+                        className={clsx(styles.button, styles.segment_button, { [styles.is_on]: option.id === variable.data })}
+                        onClick={() => !is_pending && option.id !== variable.data && onSelect(option.id)}
+                    >
+                        {option.label}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 };

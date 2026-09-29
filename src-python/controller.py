@@ -15,7 +15,7 @@ from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC, OCR_MESSAGE_SPEC
-from models.overlay.overlay import PANEL_ANCHORS
+from models.overlay.overlay import PANEL_ANCHORS, mirrorHandPosition
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -240,6 +240,8 @@ _SIMPLE_CONFIG_GETTERS = {
     "getOverlayVrPanel": "OVERLAY_VR_PANEL",
     "getOverlayVrPanelLocked": "OVERLAY_VR_PANEL_LOCKED",
     "getOverlayVrPanelFontSize": "OVERLAY_VR_PANEL_FONT_SIZE",
+    "getOverlayVrLauncherAutoHide": "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
+    "getOverlayVrLauncherHideAngle": "OVERLAY_VR_LAUNCHER_HIDE_ANGLE",
     "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
     "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
     "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
@@ -3230,6 +3232,7 @@ class Controller:
         """字幕 (一行 / 複数行) と VR UI のどれかがONならオーバーレイを動かし、全部OFFなら止める。"""
         model.setVrPanelEnabled(config.OVERLAY_VR_PANEL)
         model.setVrPanelLocked(config.OVERLAY_VR_PANEL_LOCKED)
+        model.setVrLauncherAutoHide(config.OVERLAY_VR_LAUNCHER_AUTO_HIDE, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
         if config.OVERLAY_SMALL_LOG or config.OVERLAY_LARGE_LOG or config.OVERLAY_VR_PANEL:
             model.startOverlay()
         else:
@@ -4513,6 +4516,49 @@ class Controller:
             )
         model.requestVrPanelAnchor(data)
         return {"status": 200, "result": data}
+
+    @staticmethod
+    def getOverlayVrLauncherHand(*args, **kwargs) -> dict:
+        return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_SETTINGS["tracker"]}
+
+    @staticmethod
+    def setOverlayVrLauncherHand(data, *args, **kwargs) -> dict:
+        """VR UIのランチャーを付ける手 (LeftHand / RightHand)。手首に対する位置を左右反転して引き継ぐ。"""
+        if data not in ("LeftHand", "RightHand"):
+            return VRCTError.create_error_response(
+                ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
+                data=config.OVERLAY_VR_LAUNCHER_SETTINGS["tracker"],
+            )
+        current = config.OVERLAY_VR_LAUNCHER_SETTINGS
+        if current["tracker"] != data:
+            # 反転した位置に、指定された手を明示する (今の固定先が手以外の不正な値でも取り違えないように)
+            config.OVERLAY_VR_LAUNCHER_SETTINGS = {**current, **mirrorHandPosition(current), "tracker": data}
+            model.updateVrLauncherPosition()
+        return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_SETTINGS["tracker"]}
+
+    @staticmethod
+    def setEnableOverlayVrLauncherAutoHide(*args, **kwargs) -> dict:
+        config.OVERLAY_VR_LAUNCHER_AUTO_HIDE = True
+        model.setVrLauncherAutoHide(True, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
+        return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_AUTO_HIDE}
+
+    @staticmethod
+    def setDisableOverlayVrLauncherAutoHide(*args, **kwargs) -> dict:
+        config.OVERLAY_VR_LAUNCHER_AUTO_HIDE = False
+        model.setVrLauncherAutoHide(False, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
+        return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_AUTO_HIDE}
+
+    @staticmethod
+    def setOverlayVrLauncherHideAngle(data, *args, **kwargs) -> dict:
+        """ランチャーを出す角度 (15〜90度)。小さいほど手首をまっすぐ見ないと出ない。"""
+        if isinstance(data, bool) or not isinstance(data, int) or not 15 <= data <= 90:
+            return VRCTError.create_error_response(
+                ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
+                data=config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE,
+            )
+        config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE = data
+        model.setVrLauncherAutoHide(config.OVERLAY_VR_LAUNCHER_AUTO_HIDE, data)
+        return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE}
 
     @staticmethod
     def setOverlayVrPanelFontSize(data, *args, **kwargs) -> dict:
