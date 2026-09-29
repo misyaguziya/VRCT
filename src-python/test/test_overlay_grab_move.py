@@ -87,6 +87,7 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.trigger = False
         self.right_z = 0.0  # 右手の位置 (z)。前方は -Z
         self.stick = (0.0, 0.0)  # 右手のスティック (x, y)
+        self.hmd_lost = False  # 頭のトラッキングが切れている
 
         system = MagicMock()
         system.getTrackedDeviceIndexForControllerRole.side_effect = (
@@ -97,7 +98,7 @@ class UpdateGrabFlowTest(unittest.TestCase):
             # 実物の pyopenvr と同じく、渡された配列へ書き込むだけ (戻り値に頼らない)
             self.assertIsNotNone(poses)
             for i in (self.HMD, self.LEFT, self.RIGHT):
-                poses[i].bPoseIsValid = True
+                poses[i].bPoseIsValid = not (i == self.HMD and self.hmd_lost)
                 for r in range(3):
                     for c in range(4):
                         poses[i].mDeviceToAbsoluteTracking[r][c] = 1.0 if r == c else 0.0
@@ -128,6 +129,38 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.overlay.pointer_handles = {"dot": 11, "plus": 12, "minus": 13}
         self.callback = MagicMock()
         self.overlay.position_changed_callback = self.callback
+
+    def test_window_on_the_sphere_stays_put_while_the_head_is_lost(self):
+        """頭のトラッキングが一瞬切れても、掴んでいる空間固定のウィンドウは跳ばず、放せばその位置で確定する。"""
+        from unittest.mock import patch
+
+        settings = dict(self.overlay.settings["small"], tracker="Playspace", z_pos=1.0, width=900, height=700)
+        overlay = Overlay({PANEL: settings})
+        overlay.overlay_system, overlay.overlay = self.overlay.overlay_system, self.overlay.overlay
+        overlay.handle = {PANEL: 10}
+        overlay.pointer_handles = self.overlay.pointer_handles
+        overlay.setVrWindows(log=True, popup=False)
+        center = overlay.overlayWorldPose(PANEL, lambda index: np.eye(4))[:3, 3]
+        overlay.overlay.computeOverlayIntersection.return_value[1].vPoint.v = list(center)
+        t = [100.0]
+        with patch("models.overlay.overlay.time.monotonic", side_effect=lambda: t[0]),                 patch("models.overlay.overlay.window_capture"):
+            overlay.updateGrab()  # 指している
+            self.grip = True
+            overlay.updateGrab()  # 掴む
+            self.assertIsNotNone(overlay.grab_radius)  # 空間固定なので球面上で動かす
+            t[0] += 0.05
+            overlay.updateGrab()
+            before = overlay.grab_last_relative.copy()
+            self.hmd_lost = True
+            self.right_z = -0.3  # 頭が取れない間に手が動いた
+            t[0] += 0.05
+            overlay.updateGrab()
+            np.testing.assert_allclose(overlay.grab_last_relative, before)  # 動かさない
+            self.grip = False
+            t[0] += 0.05
+            overlay.updateGrab()  # 頭が取れないまま放した
+        self.assertIsNone(overlay.grabbing)
+        np.testing.assert_allclose(overlay.panelRelative(), before, atol=1e-3)  # 最後に置いた位置で確定
 
     def test_no_input_while_the_layout_is_switching(self):
         """ログの大きさの切り替え中は、表示と VR画面の並びが合っていないのでクリックを送らない。"""
@@ -467,7 +500,10 @@ class PanelRecoveryTest(unittest.TestCase):
                 overlay.onPanelError(RuntimeError("GL"))
             self.assertIsNotNone(overlay.gl)
             overlay.onPanelError(RuntimeError("GL"))  # 30回続いたら止める
-        self.assertIsNone(overlay.gl)
+        self.assertTrue(overlay.panel_stopped)
+        # OpenGL の環境は残す (消した後に SteamVR との接続を閉じると落ちるため、teardown まで待つ)
+        self.assertIsNotNone(overlay.gl)
+        overlay.gl["glfw"].destroy_window.assert_not_called()
         self.assertEqual(logged.call_count, 1)  # 同じ失敗は1回だけ記録する
 
     def test_teardown_closes_steamvr_while_the_gl_context_is_current(self):
@@ -583,6 +619,10 @@ class GrabOnSphereTest(unittest.TestCase):
         self.assertAlmostEqual(sphereRadius(1.0, 0.4, 0.6), 1.5)  # 腕を伸ばした
         self.assertAlmostEqual(sphereRadius(1.0, 0.4, 0.3), 0.75)  # 手前に引いた
         self.assertEqual(sphereRadius(2.0, 0.3, 0.7), 2.5)  # 遠すぎない
+        # 範囲の外 (3m) にあるウィンドウを掴んでも跳ばない。近づける向きにだけ動かせる
+        self.assertAlmostEqual(sphereRadius(3.0, 0.4, 0.4), 3.0)
+        self.assertAlmostEqual(sphereRadius(3.0, 0.4, 0.6), 3.0)
+        self.assertAlmostEqual(sphereRadius(3.0, 0.4, 0.3), 2.25)
 
     def test_push_pull_changes_the_distance_only(self):
         from models.overlay.overlay import pushPullDistance

@@ -220,13 +220,9 @@ def regionBounds(size: str, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> tuple:
     return (x / W, (x + w) / W, 1 - y / H, 1 - (y + h) / H)
 
 
-def atlasMask(image_size: tuple, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> Image.Image:
-    """各領域だけを角丸で残し、それ以外を透明にするマスク。"""
-    return _atlasMask(image_size, layout["atlas"], tuple(sorted(layout["regions"].items())))
-
-
 @lru_cache(maxsize=4)
 def _atlasMask(image_size: tuple, atlas: tuple, regions: tuple) -> Image.Image:
+    """各領域だけを角丸で残し、それ以外を透明にするマスク。"""
     layout = {"atlas": atlas, "regions": dict(regions)}
     scale = image_size[0] / atlas[0]
     mask = Image.new("L", image_size, 0)
@@ -238,7 +234,7 @@ def _atlasMask(image_size: tuple, atlas: tuple, regions: tuple) -> Image.Image:
 
 
 def atlasMaskArray(image_size: tuple, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> np.ndarray:
-    """atlasMask を numpy の配列 (高さ, 幅) にしたもの。撮影画像のアルファにそのまま入れる。"""
+    """各領域だけを角丸で残し、それ以外を透明にするマスク (高さ, 幅)。撮影画像のアルファにそのまま入れる。"""
     return _atlasMaskArray(image_size, layout["atlas"], tuple(sorted(layout["regions"].items())))
 
 
@@ -326,10 +322,11 @@ def sphereRadius(base: float, hand_start: float, hand_now: float) -> float:
     """掴んでいる間の、目からウィンドウまでの距離。
 
     腕を前に伸ばす・手前に引くと、その割合で遠ざける・近づける (目から手までの距離の比)。
-    base はスティックの上下で変わる距離 (pushPullDistance)。
+    base はスティックの上下で変わる距離 (pushPullDistance)。範囲の外にあるウィンドウは、掴んだ瞬間に
+    範囲へ跳ばさず、範囲へ戻る向きにだけ動かせる (歩いて離れた遠くのウィンドウを掴んだときなど)。
     """
     low, high = _PUSH_PULL_DISTANCE_RANGE_M
-    return min(max(base * hand_now / max(hand_start, 0.05), low), high)
+    return min(max(base * hand_now / max(hand_start, 0.05), min(low, base)), max(high, base))
 
 
 def isOutOfView(head: np.ndarray, position: np.ndarray, was_out: bool = False) -> bool:
@@ -583,6 +580,8 @@ class Overlay:
         self.panel_error: Optional[str] = None
         # SteamVR が OpenGL に残したエラーを見つけたことをログに出したか (1回だけ出す)
         self.gl_error_logged = False
+        # 撮影が続けて失敗したので撮影をやめた (OpenGL の環境は、接続を閉じるまで残す)
+        self.panel_stopped = False
         # VR画面の並び (ログの大きさで変わる)。layout_applied は今のテクスチャと表示範囲 (bounds) が合っている並び。
         # 大きさを変えたら、VR画面のウィンドウを合わせ、新しい並びで撮れた最初のフレームで表示範囲を切り替える
         self.layout: Dict[str, Any] = computeVrLayout(*self.panelSize())
@@ -774,6 +773,7 @@ class Overlay:
             "old_textures": [],
         }
         self.panel_last_raw = None  # 作り直したテクスチャには必ず転送する
+        self.panel_stopped = False
         self.layout_applied = None  # 最初に撮れたフレームで表示範囲を設定する
         self.window_fitted_layout = None
         # 大きさを合わせるのを待つ時間は、撮影を始めたときから測る (起動直後に元の大きさへ戻さないように)
@@ -921,7 +921,7 @@ class Overlay:
     def updatePanel(self) -> None:
         """VRパネルのウィンドウを撮影してオーバーレイへ転送する。"""
         now = time.monotonic()
-        if not self.vr_panel_enabled or self.gl is None or now - self.panel_last_capture < self.panelCaptureInterval(now):
+        if not self.vr_panel_enabled or self.gl is None or self.panel_stopped or now - self.panel_last_capture < self.panelCaptureInterval(now):
             return
         self.panel_last_capture = now
         if self.panel_hwnd is None or not window_capture.isWindow(self.panel_hwnd):
@@ -992,10 +992,12 @@ class Overlay:
         OpenGL のエラーを残して前の画像を映し続けた (実機で、ログを縮めると前の大きな画像の一部が
         新しい表示範囲で切り出され、見切れた。同じ名前で大きさを変えても、別の名前にしても同じ)。
         そのため最大の並びが入る大きさで1回だけ作り、表示範囲 (bounds) で使う部分を決める。
-        最初の1回は initPanelTexture で作ったものをそのまま使う。DPI が上がって入らなくなったときだけ作り直す。
+        最初の1回は initPanelTexture で作ったものをそのまま使う。DPI が上がって入らなくなったときだけ作り直すが、
+        上の制約のため SteamVR は新しい大きさを受け取れず、表示が見切れることがある (VR UI を OFF/ON するか、
+        アプリを起動し直すと直る)。DPI の変更はまれなので、それ以上の対応はしない。
         """
         if self.gl["size"] is not None:
-            printLog("overlay: VR画面のテクスチャを大きくします", {"from": self.gl["size"], "to": size})
+            printLog("overlay: VR画面のテクスチャを大きくします (表示が見切れたら VR UI を OFF/ON してください)", {"from": self.gl["size"], "to": size})
             # 古いテクスチャは SteamVR が持っているかもしれないので、接続を閉じた後に消す
             self.gl.setdefault("old_textures", []).append(self.gl["texture"])
             texture = GL.glGenTextures(1)
@@ -1448,20 +1450,26 @@ class Overlay:
             # 距離はスティックの上下で変える (手に付けたウィンドウは手から見た距離を変える)
             head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
             on_sphere = self.grab_radius is not None and head is not None
+            # 頭の位置が取れない (一瞬のトラッキングロスト): 球面上に置けないので、最後に置いた位置のままにする
+            # (手の向きに合わせた姿勢で置くと、向きが一瞬跳ぶ。放したときもその位置で確定する)
+            lost_head = self.grab_radius is not None and head is None and self.grab_last_relative is not None
             if grip and on_sphere:
                 self.grab_radius = pushPullDistance(self.grab_radius, state, dt)
-            elif grip:
+            elif grip and not lost_head:
                 hand_to_overlay = pushPull(hand_to_overlay, state, dt)
                 self.grabbing = (size, hand, hand_to_overlay)
-            world = hand_pose @ hand_to_overlay
-            if on_sphere:
-                hand_distance = float(np.linalg.norm(hand_pose[:3, 3] - head[:3, 3]))
-                world = poseOnSphere(world[:3, 3], head, sphereRadius(self.grab_radius, self.grab_hand_distance, hand_distance))
-            relative = self.smoothGrab((np.linalg.inv(tracker_pose) @ world)[:3, :], dt)
-            if on_sphere:
-                # ならして少し遅れた位置でも、頭の方を向ける
-                smoothed = (tracker_pose @ utils.toHomogeneous(relative))[:3, 3]
-                relative = (np.linalg.inv(tracker_pose) @ faceHead(smoothed, head))[:3, :]
+            if lost_head:
+                relative = self.grab_last_relative
+            else:
+                world = hand_pose @ hand_to_overlay
+                if on_sphere:
+                    hand_distance = float(np.linalg.norm(hand_pose[:3, 3] - head[:3, 3]))
+                    world = poseOnSphere(world[:3, 3], head, sphereRadius(self.grab_radius, self.grab_hand_distance, hand_distance))
+                relative = self.smoothGrab((np.linalg.inv(tracker_pose) @ world)[:3, :], dt)
+                if on_sphere:
+                    # ならして少し遅れた位置でも、頭の方を向ける
+                    smoothed = (tracker_pose @ utils.toHomogeneous(relative))[:3, 3]
+                    relative = (np.linalg.inv(tracker_pose) @ faceHead(smoothed, head))[:3, :]
             self.grab_last_relative = relative
             if grip:
                 self.setTransform(size, tracker_index, relative)
@@ -2085,9 +2093,10 @@ class Overlay:
         if repr(e) != self.panel_error:
             self.panel_error = repr(e)
             errorLogging()
-        if self.panel_errors >= _PANEL_ERROR_LIMIT:
+        if self.panel_errors >= _PANEL_ERROR_LIMIT and not self.panel_stopped:
             printLog("overlay: VR画面の撮影が続けて失敗したので止めます", {"errors": self.panel_errors})
-            self.shutdownPanelTexture()
+            # OpenGL の環境はここでは消さない。消した後に SteamVR との接続を閉じると落ちる (teardown 参照)
+            self.panel_stopped = True
 
     def onGrabError(self, e: Exception) -> None:
         """掴み・伸ばす処理で例外が出たら、その操作をやめる (同じ例外で毎フレーム止まり続けないように)。"""
