@@ -28,6 +28,11 @@ def pytest_approx(value):
 KEYS = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")
 
 
+def _bgra(size):
+    """撮影したクライアント領域の画素 (window_capture.bgraFromCapture の結果) の代わり。"""
+    return np.zeros((size[1], size[0], 4), np.uint8)
+
+
 def _relative(base, p):
     return utils.transform_matrix(base, (p[0], p[1], -p[2]), (p[3], p[4], p[5]))
 
@@ -267,7 +272,7 @@ class UpdatePanelTest(unittest.TestCase):
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"frame", None, (0, 0) + VR_ATLAS_SIZE)
-            wc.imageFromCapture.return_value = Image.new("RGBA", (900, 836), (40, 40, 40, 255))
+            wc.bgraFromCapture.return_value = _bgra((900, 836))
             overlay.updatePanel()
         results = MagicMock()
         results.vUVs.v = [0.5, 0.5]
@@ -497,7 +502,6 @@ class PanelRecoveryTest(unittest.TestCase):
     def test_texture_size_is_fixed_and_the_bounds_shrink(self):
         """SteamVR は最初のテクスチャの大きさのまま受け取るので、最大の並びが入る大きさで1回だけ作り、
         撮影画像は左上に書いて、表示範囲をその分だけ縮める。"""
-        from PIL import Image
 
         from models.overlay.overlay import MAX_LAYOUT, computeVrLayout
 
@@ -512,7 +516,7 @@ class PanelRecoveryTest(unittest.TestCase):
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"a", None, (0, 0) + VR_ATLAS_SIZE)
-            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
             overlay.updatePanel()
             self.assertEqual(overlay.gl["size"], MAX_LAYOUT["atlas"])  # 最大の並びの大きさで作った
             self.assertEqual(overlay.gl["texture"], 1)
@@ -524,7 +528,7 @@ class PanelRecoveryTest(unittest.TestCase):
             small = computeVrLayout(790, 668)["atlas"]
             overlay.setLayoutRendered([790, 668])
             wc.captureWindowRaw.return_value = (b"b", None, (0, 0) + small)
-            wc.imageFromCapture.return_value = Image.new("RGBA", small)
+            wc.bgraFromCapture.return_value = _bgra(small)
             overlay.overlay.setOverlayTextureBounds.reset_mock()
             overlay.panel_last_capture = 0.0
             overlay.updatePanel()
@@ -819,7 +823,7 @@ class UpdatePanelRegionsTest(unittest.TestCase):
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"frame", None, (0, 0) + VR_ATLAS_SIZE)
-            wc.imageFromCapture.return_value = atlas
+            wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
             overlay.updatePanel()
         # 領域ごとの切り出しは各オーバーレイのテクスチャ範囲 (bounds) で行う (VrLayoutTest 参照)
         self.assertEqual(overlay.panel_image_size, VR_ATLAS_SIZE)
@@ -845,13 +849,13 @@ class PanelCaptureLoadTest(unittest.TestCase):
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
-            wc.imageFromCapture.return_value = atlas
+            wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
             for raw in (b"a", b"a", b"b"):
                 overlay.panel_last_capture = 0.0  # 撮影間隔の待ちを飛ばす
                 wc.captureWindowRaw.return_value = (raw, None, (0, 0) + VR_ATLAS_SIZE)
                 overlay.updatePanel()
         self.assertEqual(wc.captureWindowRaw.call_count, 3)
-        self.assertEqual(wc.imageFromCapture.call_count, 2)  # 2回目は前回と同じなので変換しない
+        self.assertEqual(wc.bgraFromCapture.call_count, 2)  # 2回目は前回と同じなので変換しない
         self.assertEqual(overlay.overlay.setOverlayTexture.call_count, 2 * 2)  # 転送は2回 x オーバーレイ2つ
 
     def test_capture_slows_down_while_idle(self):
@@ -866,15 +870,16 @@ class PanelCaptureLoadTest(unittest.TestCase):
         overlay.pointer_notified = (10, 10)  # ポインタがVR UIにある
         self.assertEqual(overlay.panelCaptureInterval(now), _PANEL_CAPTURE_INTERVAL_SEC)
 
-    def test_image_from_capture_keeps_colors_and_crops_the_client_area(self):
-        from models.overlay.window_capture import imageFromCapture
+    def test_capture_keeps_bgra_and_crops_the_client_area(self):
+        from models.overlay.window_capture import bgraFromCapture
 
         # 3x2 のウィンドウ。左端の1列が枠。BGRX で 青, 緑, 赤 の順に並べる
         row = bytes([255, 0, 0, 0, 0, 255, 0, 0, 0, 0, 255, 0])
-        img = imageFromCapture((row * 2, (3, 2), (1, 0, 3, 2)))
-        self.assertEqual(img.size, (2, 2))
-        self.assertEqual(img.getpixel((0, 0)), (0, 255, 0, 255))  # 緑
-        self.assertEqual(img.getpixel((1, 0)), (255, 0, 0, 255))  # 赤
+        pixels = bgraFromCapture((row * 2, (3, 2), (1, 0, 3, 2)))
+        self.assertEqual(pixels.shape, (2, 2, 4))
+        self.assertEqual(tuple(pixels[0, 0][:3]), (0, 255, 0))  # 緑 (BGR のまま)
+        self.assertEqual(tuple(pixels[0, 1][:3]), (0, 0, 255))  # 赤 (BGR のまま)
+        pixels[..., 3] = 255  # 書き換えられる (撮影のバッファとは別)
 
 
 class PanelLayoutTest(unittest.TestCase):
@@ -901,7 +906,6 @@ class PanelLayoutTest(unittest.TestCase):
         return overlay
 
     def test_resize_updates_the_window_and_waits_for_a_matching_frame(self):
-        from PIL import Image
 
         from models.overlay.overlay import computeVrLayout
 
@@ -912,7 +916,7 @@ class PanelLayoutTest(unittest.TestCase):
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)
-            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
             overlay.updatePanel()
             self.assertIs(overlay.layout_applied, overlay.layout)
             overlay.overlay.setOverlayTextureBounds.reset_mock()
@@ -926,7 +930,7 @@ class PanelLayoutTest(unittest.TestCase):
             overlay.overlay.setOverlayTextureBounds.assert_not_called()
 
             wc.captureWindowRaw.return_value = (b"new", None, (0, 0) + new_atlas)
-            wc.imageFromCapture.return_value = Image.new("RGBA", new_atlas)
+            wc.bgraFromCapture.return_value = _bgra(new_atlas)
             overlay.panel_last_capture = 0.0
             overlay.updatePanel()  # ウィンドウは新しい大きさでも、VR画面がまだ古い並びで描いている
             overlay.overlay.setOverlayTextureBounds.assert_not_called()
@@ -939,14 +943,13 @@ class PanelLayoutTest(unittest.TestCase):
 
     def test_smaller_log_with_the_same_window_size_waits_for_the_new_layout(self):
         """ログを縮めても VR画面全体の大きさが変わらないことがある。その場合も描き直しを待ってから切り替える。"""
-        from PIL import Image
 
         overlay = self._overlay()
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)
-            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
             overlay.updatePanel()
             overlay.overlay.setOverlayTextureBounds.reset_mock()
             overlay.setPanelSize(700, 700)
@@ -962,7 +965,6 @@ class PanelLayoutTest(unittest.TestCase):
 
     def test_saved_size_is_kept_while_waiting_for_the_first_layout(self):
         """起動時に保存した大きさがあると、VR画面がその並びで描くまで待つ (既定の大きさへ戻さない)。"""
-        from PIL import Image
 
         from models.overlay.overlay import computeVrLayout
 
@@ -976,7 +978,7 @@ class PanelLayoutTest(unittest.TestCase):
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"new", None, (0, 0) + new_atlas)
-            wc.imageFromCapture.return_value = Image.new("RGBA", new_atlas)
+            wc.bgraFromCapture.return_value = _bgra(new_atlas)
             for t in (100.0, 110.0):  # 設定が届くまで時間がかかっても
                 clock.return_value = t
                 overlay.panel_last_capture = 0.0
@@ -991,14 +993,13 @@ class PanelLayoutTest(unittest.TestCase):
 
     def test_window_resized_while_shown_is_fitted_again(self):
         """表示中にウィンドウの大きさが変わったら (DPIの変更など)、そのフレームは使わずに合わせ直す。"""
-        from PIL import Image
 
         overlay = self._overlay()
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)
-            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
             overlay.updatePanel()
             overlay.overlay.setOverlayTexture.reset_mock()
             wc.captureWindowRaw.return_value = (b"odd", None, (0, 0, 1630, 836))  # 縦横比はほぼ同じでも大きさが違う
@@ -1016,14 +1017,13 @@ class PanelLayoutTest(unittest.TestCase):
 
     def test_window_that_cannot_be_resized_is_retried_and_then_reverted(self):
         """VR画面のウィンドウが新しい大きさにならないと、1秒後にやり直し、3秒後に元の大きさへ戻す (固まらない)。"""
-        from PIL import Image
 
         overlay = self._overlay()
         with patch("models.overlay.overlay.window_capture") as wc, patch("models.overlay.overlay.time.monotonic") as clock:
             wc.isWindow.return_value = True
             wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)  # ずっと古い大きさのまま
-            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
             clock.return_value = 10.0
             overlay.updatePanel()
             overlay.setPanelSize(1200, 800)
