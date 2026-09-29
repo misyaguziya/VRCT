@@ -660,6 +660,35 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_vr_panel",
     },
     {
+        // VR UIのログウィンドウの固定先 (Playspace / LeftHand / RightHand / HMD)。操作バーで変える。
+        // 掴みや呼び戻しで変わったときもバックエンドから届く
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelAnchor",
+        default_value: "LeftHand",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "overlay_vr_panel_anchor",
+    },
+    {
+        // VR UIのログウィンドウのロック (掴めなくする)。操作バーで変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelLocked",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_panel_locked",
+    },
+    {
+        // VR UIのログの文字の大きさ (14〜28px)。操作バーの A−／A＋ で変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelFontSize",
+        default_value: 17,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_panel_font_size",
+    },
+    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

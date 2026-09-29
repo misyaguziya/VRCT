@@ -502,7 +502,8 @@ def _make_overlay_vr_window_validator(name):
     return validator
 
 def _validate_overlay_vr_window(val, current):
-    if not (isinstance(val, dict) and set(val.keys()) == set(current.keys())):
+    # 足りないキーは今の値で補う (項目を増やしても、以前に保存した位置を捨てないため)。知らないキーは受け付けない
+    if not (isinstance(val, dict) and set(val.keys()) <= set(current.keys())):
         return None
     new = dict(current)
     for key, v in val.items():
@@ -953,6 +954,10 @@ class Config:
     OVERLAY_LARGE_LOG = ManagedProperty('OVERLAY_LARGE_LOG', type_=bool)
     # VR UI (手首のランチャーとログ・言語・VR設定のウィンドウ)。字幕のオーバーレイとは別にON/OFFする
     OVERLAY_VR_PANEL = ManagedProperty('OVERLAY_VR_PANEL', type_=bool)
+    # VR UIのログウィンドウを掴めなくする (操作バーのロック)
+    OVERLAY_VR_PANEL_LOCKED = ManagedProperty('OVERLAY_VR_PANEL_LOCKED', type_=bool)
+    # VR UIのログの文字の大きさ (px、訳文はこの約1.4倍)。デスクトップのログの文字サイズとは別
+    OVERLAY_VR_PANEL_FONT_SIZE = ManagedProperty('OVERLAY_VR_PANEL_FONT_SIZE', type_=int)
     OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = ManagedProperty('OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES', type_=bool)
     SEND_MESSAGE_TO_VRC = ManagedProperty('SEND_MESSAGE_TO_VRC', type_=bool)
     SEND_RECEIVED_MESSAGE_TO_VRC = ManagedProperty('SEND_RECEIVED_MESSAGE_TO_VRC', type_=bool)
@@ -1298,6 +1303,8 @@ class Config:
             "tracker": "LeftHand",
         }
         self._OVERLAY_VR_PANEL = False
+        self._OVERLAY_VR_PANEL_LOCKED = False
+        self._OVERLAY_VR_PANEL_FONT_SIZE = 17
         self._OVERLAY_VR_PANEL_SETTINGS = {
             "x_pos": 0.0,
             "y_pos": 0.3,

@@ -65,6 +65,8 @@ PANEL = "panel"
 LAUNCHER = "launcher"
 # 一時ウィンドウ (言語 / VR設定)。同時に1つだけ開き、開くたびにランチャーの近くに出す。位置は保存しない
 POPUP = "popup"
+# ログウィンドウの下の操作バー (XSOverlay と同じ位置)。settings には入れない (位置はログに付いて動き、保存もしない)
+TOOLBAR = "toolbar"
 # 撮影するウィンドウの大きさと各領域 (x, y, w, h)。論理px。
 # src-ui/views/vr/vr_layout.json と一致させる (test_overlay_grab_move で確認)
 VR_ATLAS_SIZE = (1628, 836)
@@ -72,6 +74,7 @@ VR_REGIONS = {
     PANEL: (0, 0, 900, 700),
     LAUNCHER: (10, 708, 880, 128),
     POPUP: (908, 0, 720, 640),
+    TOOLBAR: (908, 656, 720, 96),
 }
 # 一時ウィンドウを出す位置: ランチャーの中心から上へ、頭との水平距離をこの範囲に収める
 _POPUP_ABOVE_LAUNCHER_M = 0.18
@@ -98,8 +101,15 @@ PLAYSPACE = "Playspace"
 _PLAYSPACE_INDEX = -1
 # パネル下の追従先切り替えボタン。押すたびにこの順で切り替わる
 PANEL_ANCHORS = (PLAYSPACE, "LeftHand", "RightHand", "HMD")
-_TOOLBAR_WIDTH_RATIO = 0.3  # パネル幅に対するボタンの幅
+# 操作バーの実際の大きさはログの拡大縮小によらず固定する (ランチャーと同じ。ボタン64pxで約28mm)
+_TOOLBAR_M_PER_PX = 0.4 / 900
 _TOOLBAR_GAP_M = 0.012
+# ログか操作バーをこの秒数指し続けたら出し、外れてからこの秒数で消す
+_TOOLBAR_SHOW_AFTER_SEC = 0.3
+_TOOLBAR_HIDE_AFTER_SEC = 2.0
+# 固定先を手・頭に切り替えたとき、遠すぎる (近すぎる) ウィンドウを寄せる距離 (m)
+_HAND_ANCHOR_MAX_DISTANCE_M = 0.5
+_HMD_ANCHOR_DISTANCE_RANGE_M = (0.4, 1.5)
 _TRIGGER_MASK = 1 << openvr.k_EButton_SteamVR_Trigger
 # スティックの倒し具合をホイール量へ変換する係数 (1フレームあたり)。WHEEL_DELTA=120
 _PANEL_SCROLL_PER_FRAME = 60
@@ -194,41 +204,6 @@ def recallPose(head: np.ndarray) -> np.ndarray:
     forward = forward / (np.linalg.norm(forward) or 1.0)
     position = head_pos + forward * _RECALL_DISTANCE_M - np.array([0.0, _RECALL_BELOW_EYE_M, 0.0])
     return popupPoseFacing(position, head_pos)
-
-
-def createAnchorButtonImages() -> Dict[str, Image.Image]:
-    """パネル下の追従先切り替えボタンの画像 (今の追従先を表示)。"""
-    from PIL import ImageFont
-
-    font = ImageFont.truetype(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "NotoSansJP-Regular.ttf"), 34)
-    labels = {PLAYSPACE: "Space", "LeftHand": "Left hand", "RightHand": "Right hand", "HMD": "Head"}
-    images = {}
-    for anchor, label in labels.items():
-        img = Image.new("RGBA", (320, 88), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        draw.rounded_rectangle((2, 2, 317, 85), radius=42, fill=(0x2E, 0x2F, 0x32, 255), outline=(0x61, 0xB4, 0xA7, 255), width=3)
-        icon = (28, 22, 72, 66)
-        white = (0xF2, 0xF2, 0xF2, 255)
-        if anchor == PLAYSPACE:  # ピン
-            draw.ellipse((36, 18, 64, 46), outline=white, width=5)
-            draw.polygon([(38, 40), (62, 40), (50, 66)], fill=white)
-            draw.ellipse((46, 28, 54, 36), fill=white)
-        elif anchor == "HMD":  # 人の頭と肩
-            draw.ellipse((40, 18, 60, 38), outline=white, width=5)
-            draw.arc((30, 42, 70, 82), 180, 360, fill=white, width=5)
-        else:  # 手の平と指。右手は左右反転
-            hand = Image.new("RGBA", (44, 44), (0, 0, 0, 0))
-            d = ImageDraw.Draw(hand)
-            d.rounded_rectangle((10, 18, 36, 42), radius=6, fill=white)
-            for x in (10, 17, 24, 31):
-                d.rounded_rectangle((x, 4, x + 5, 22), radius=2, fill=white)
-            d.rounded_rectangle((32, 20, 43, 27), radius=3, fill=white)
-            if anchor == "RightHand":
-                hand = hand.transpose(Image.FLIP_LEFT_RIGHT)
-            img.alpha_composite(hand, (icon[0], icon[1]))
-        draw.text((90, 44), label, font=font, fill=white, anchor="lm")
-        images[anchor] = img
-    return images
 
 
 def createPointerImages() -> Dict[str, Image.Image]:
@@ -332,8 +307,18 @@ class Overlay:
         self.grip_prev: Dict[int, bool] = {}
         self.grab_started: float = 0.0
         # パネル下の追従先切り替えボタン。追従先ごとに別オーバーレイにして表示を切り替える
-        self.toolbar_handles: Dict[str, int] = {}
-        self.trigger_prev: Dict[int, bool] = {}
+        # 操作バー (VR画面の TOOLBAR 領域を表示するオーバーレイ)。指している間だけ出す
+        self.toolbar_handle: Optional[int] = None
+        self.toolbar_visible = False
+        self.toolbar_pointed_since: Optional[float] = None
+        self.toolbar_last_pointed = 0.0
+        # 操作バーの置き場所 (追従先から見た 3x4) と追従先。当たった位置の計算に使う
+        self.toolbar_relative: Optional[np.ndarray] = None
+        self.toolbar_tracker_index: Optional[int] = None
+        # 固定先の切り替えの要求 (操作バーから、どのスレッドからでもよい)。オーバーレイのスレッドで反映する
+        self.requested_anchor: Optional[str] = None
+        # ログウィンドウのロック (掴めない。スクロールと操作バーは使える)
+        self.panel_locked = False
         # grabbing: (size, 手のindex, 手から見たオーバーレイの4x4行列)
         self.grabbing: Optional[tuple] = None
         self.grab_last_relative: Optional[np.ndarray] = None
@@ -412,12 +397,10 @@ class Overlay:
                 self.overlay.setOverlayRaw(handle, (ctypes.c_char * len(raw)).from_buffer_copy(raw), img.size[0], img.size[1], 4)
                 self.pointer_handles[kind] = handle
             if PANEL in self.settings:
-                for anchor, img in createAnchorButtonImages().items():
-                    handle = self.overlay.createOverlay(f"VRCT_anchor_{anchor}", f"VRCT_anchor_{anchor}")
-                    raw = img.tobytes()
-                    self.overlay.setOverlayRaw(handle, (ctypes.c_char * len(raw)).from_buffer_copy(raw), img.size[0], img.size[1], 4)
-                    self.toolbar_handles[anchor] = handle
-                self.images["toolbar"] = next(iter(createAnchorButtonImages().values()))
+                self.toolbar_handle = self.overlay.createOverlay("VRCT_toolbar", "VRCT_toolbar")
+                self.overlay.setOverlayWidthInMeters(self.toolbar_handle, self.regionWidthM(TOOLBAR))
+                self.overlay.hideOverlay(self.toolbar_handle)
+                self.toolbar_visible = False
             if any(size in self.settings for size in VR_REGIONS):
                 try:
                     self.initPanelTexture()
@@ -502,15 +485,22 @@ class Overlay:
         vr_texture.handle = int(texture)
         vr_texture.eType = openvr.TextureType_OpenGL
         vr_texture.eColorSpace = openvr.ColorSpace_Auto
-        for size in self.vrRegionSizes():
+        for size, handle in self.vrRegionHandles().items():
             bounds = openvr.VRTextureBounds_t()
             bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = regionBounds(size)
-            self.overlay.setOverlayTextureBounds(self.handle[size], bounds)
+            self.overlay.setOverlayTextureBounds(handle, bounds)
         self.gl = {"glfw": glfw, "GL": GL, "window": window, "texture": texture, "vr_texture": vr_texture, "size": None}
         self.panel_last_raw = None  # 作り直したテクスチャには必ず転送する
 
     def vrRegionSizes(self) -> list:
         return [size for size in VR_REGIONS if size in self.settings]
+
+    def vrRegionHandles(self) -> Dict[str, int]:
+        """VR画面の領域ごとのオーバーレイ (操作バーを含む)。"""
+        handles = {size: self.handle[size] for size in self.vrRegionSizes()}
+        if self.toolbar_handle is not None:
+            handles[TOOLBAR] = self.toolbar_handle
+        return handles
 
     def shutdownPanelTexture(self) -> None:
         if self.gl is None:
@@ -546,9 +536,6 @@ class Overlay:
         self.panel_last_change = now
         img = window_capture.imageFromCapture(capture)
         img.putalpha(atlasMask(img.size))
-        # 当たり判定 (hasContentAt) 用。updateImage を通らないのでここで記録する
-        for size in self.vrRegionSizes():
-            self.images[size] = img.crop(regionRect(size, img.size))
         GL = self.gl["GL"]
         raw = img.tobytes()
         # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す
@@ -560,8 +547,8 @@ class Overlay:
             GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, img.size[0], img.size[1], GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, raw)
         GL.glFinish()
         # 1枚のテクスチャを全領域のオーバーレイに渡す。表示される範囲は各オーバーレイの bounds で決まる
-        for size in self.vrRegionSizes():
-            self.overlay.setOverlayTexture(self.handle[size], self.gl["vr_texture"])
+        for handle in self.vrRegionHandles().values():
+            self.overlay.setOverlayTexture(handle, self.gl["vr_texture"])
         self.panel_image_size = img.size
 
     def panelCaptureInterval(self, now: float) -> float:
@@ -673,29 +660,75 @@ class Overlay:
             self.overlay.setOverlayTransformAbsolute(self.handle[size], openvr.TrackingUniverseStanding, mat34Id(relative))
         else:
             self.overlay.setOverlayTransformTrackedDeviceRelative(self.handle[size], tracker_index, mat34Id(relative))
-        if size == PANEL and self.toolbar_handles:
+        if size == PANEL and self.toolbar_handle is not None:
             self.placeToolbar(tracker_index, relative)
 
     def placeToolbar(self, tracker_index: int, panel_relative: np.ndarray) -> None:
-        """追従先切り替えボタンをパネルの下に置き、今の追従先のボタンだけ表示する。"""
-        panel_width = self.settings[PANEL]["ui_scaling"]
-        _, _, image_width, image_height = VR_REGIONS[PANEL]
-        button = self.images["toolbar"]
-        width = panel_width * _TOOLBAR_WIDTH_RATIO
-        height = width * button.size[1] / button.size[0]
+        """操作バーをログの下に置く。出すのは指している間だけ (updateToolbarVisibility)。"""
+        _, _, panel_w, panel_h = VR_REGIONS[PANEL]
+        _, _, bar_w, bar_h = VR_REGIONS[TOOLBAR]
+        panel_height_m = self.settings[PANEL]["ui_scaling"] * panel_h / panel_w
+        bar_height_m = self.regionWidthM(TOOLBAR) * bar_h / bar_w
         offset = np.eye(4)
-        offset[1][3] = -(panel_width * image_height / image_width / 2 + _TOOLBAR_GAP_M + height / 2)
-        relative = (utils.toHomogeneous(panel_relative) @ offset)[:3, :]
-        for anchor, handle in self.toolbar_handles.items():
-            if anchor != self.settings[PANEL]["tracker"] or PANEL in self.vr_windows_hidden or not self.vr_panel_enabled:
-                self.overlay.hideOverlay(handle)
-                continue
-            self.overlay.setOverlayWidthInMeters(handle, width)
-            if tracker_index == _PLAYSPACE_INDEX:
-                self.overlay.setOverlayTransformAbsolute(handle, openvr.TrackingUniverseStanding, mat34Id(relative))
-            else:
-                self.overlay.setOverlayTransformTrackedDeviceRelative(handle, tracker_index, mat34Id(relative))
-            self.overlay.showOverlay(handle)
+        offset[1][3] = -(panel_height_m / 2 + _TOOLBAR_GAP_M + bar_height_m / 2)
+        self.toolbar_relative = (utils.toHomogeneous(panel_relative) @ offset)[:3, :]
+        self.toolbar_tracker_index = tracker_index
+        if not self.toolbar_visible:
+            return
+        if tracker_index == _PLAYSPACE_INDEX:
+            self.overlay.setOverlayTransformAbsolute(self.toolbar_handle, openvr.TrackingUniverseStanding, mat34Id(self.toolbar_relative))
+        else:
+            self.overlay.setOverlayTransformTrackedDeviceRelative(self.toolbar_handle, tracker_index, mat34Id(self.toolbar_relative))
+
+    def panelRelative(self) -> np.ndarray:
+        """今のログの位置 (追従先から見た 3x4)。"""
+        s = self.settings[PANEL]
+        base_matrix, _ = self.getTracker(s["tracker"])
+        return utils.transform_matrix(base_matrix, (s["x_pos"], s["y_pos"], -s["z_pos"]), (s["x_rotation"], s["y_rotation"], s["z_rotation"]))
+
+    def setToolbarVisible(self, visible: bool) -> None:
+        if self.toolbar_handle is None or visible == self.toolbar_visible:
+            return
+        if visible and PANEL in self.position_pending:
+            return
+        self.toolbar_visible = visible
+        if visible:
+            self.placeToolbar(self.getTracker(self.settings[PANEL]["tracker"])[1], self.panelRelative())
+            self.overlay.showOverlay(self.toolbar_handle)
+        else:
+            self.overlay.hideOverlay(self.toolbar_handle)
+
+    def updateToolbarVisibility(self, now: float, pointing_log: bool) -> None:
+        """ログか操作バーを少し指し続けたら操作バーを出し、外れてしばらくしたら消す。"""
+        if PANEL in self.vr_windows_hidden or not self.vr_panel_enabled:
+            self.toolbar_pointed_since = None
+            self.setToolbarVisible(False)
+            return
+        if pointing_log:
+            if self.toolbar_pointed_since is None:
+                self.toolbar_pointed_since = now
+            self.toolbar_last_pointed = now
+            if now - self.toolbar_pointed_since >= _TOOLBAR_SHOW_AFTER_SEC:
+                self.setToolbarVisible(True)
+        else:
+            self.toolbar_pointed_since = None
+            if now - self.toolbar_last_pointed >= _TOOLBAR_HIDE_AFTER_SEC:
+                self.setToolbarVisible(False)
+
+    def regionWidthM(self, size: str) -> float:
+        """VR画面の領域のオーバーレイの横幅 (m)。操作バーはログの大きさによらず固定。"""
+        if size == TOOLBAR:
+            return VR_REGIONS[TOOLBAR][2] * _TOOLBAR_M_PER_PX
+        return self.settings[size]["ui_scaling"]
+
+    def regionWorldPose(self, size: str, poseOf: Callable[[int], Optional[np.ndarray]]) -> Optional[np.ndarray]:
+        """VR画面の領域のオーバーレイの今の姿勢。操作バーはログに付いて動く。"""
+        if size != TOOLBAR:
+            return self.overlayWorldPose(size, poseOf)
+        if self.toolbar_relative is None:
+            return None
+        tracker_pose = poseOf(self.toolbar_tracker_index)
+        return None if tracker_pose is None else tracker_pose @ utils.toHomogeneous(self.toolbar_relative)
 
     def overlayWorldPose(self, size: str, poseOf: Callable[[int], Optional[np.ndarray]]) -> Optional[np.ndarray]:
         """オーバーレイの今の姿勢 (空間座標の4x4)。追従先の姿勢が取れなければ None。"""
@@ -717,27 +750,46 @@ class Overlay:
         point = np.array([results.vPoint.v[0], results.vPoint.v[1], results.vPoint.v[2], 1.0])
         local = np.linalg.inv(overlay_pose) @ point
         _, _, region_w, region_h = VR_REGIONS[size]
-        width_m = self.settings[size]["ui_scaling"]
+        width_m = self.regionWidthM(size)
         height_m = width_m * region_h / region_w
         fx = min(max(local[0] / width_m + 0.5, 0.0), 1.0)
         fy = min(max(0.5 - local[1] / height_m, 0.0), 1.0)
         x0, y0, x1, y1 = regionRect(size, self.panel_image_size)
         return (min(x0 + int(fx * (x1 - x0)), x1 - 1), min(y0 + int(fy * (y1 - y0)), y1 - 1))
 
-    def cycleAnchor(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
-        """パネルの追従先を次に切り替える。パネルは今見えている場所から動かさない。"""
+    def requestAnchor(self, anchor: str) -> None:
+        """ログの固定先の切り替えを頼む (どのスレッドからでもよい)。"""
+        if anchor in PANEL_ANCHORS:
+            self.requested_anchor = anchor
+
+    def setAnchor(self, poseOf: Callable[[int], Optional[np.ndarray]], anchor: str) -> None:
+        """ログの固定先を切り替える。見えている場所からは動かさない。
+
+        手に付けるときに手から遠すぎれば手元へ、頭に付けるときは近すぎ・遠すぎを適度な距離へ寄せる
+        (遠くのウィンドウを手に付けると、手首を少しひねるだけで大きく振れるため)。
+        """
         s = self.settings[PANEL]
-        anchors = PANEL_ANCHORS
-        new_anchor = anchors[(anchors.index(s["tracker"]) + 1) % len(anchors)] if s["tracker"] in anchors else anchors[0]
-        _, new_index = self.getTracker(new_anchor)
+        _, new_index = self.getTracker(anchor)
         new_pose = poseOf(new_index)
         world = self.overlayWorldPose(PANEL, poseOf)
         if world is None or new_pose is None:
+            # 追従先が見つからない (コントローラが未接続など)。UI は切り替わった表示になっているので戻す
+            self.notifyPosition(PANEL)
             return
-        s["tracker"] = new_anchor
-        new_relative = (np.linalg.inv(new_pose) @ world)[:3, :]
-        self.commitPosition(PANEL, new_relative)
-        self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], new_anchor, PANEL)
+        new_relative = np.linalg.inv(new_pose) @ world
+        offset = new_relative[:3, 3].copy()
+        distance = float(np.linalg.norm(offset))
+        if anchor in ("LeftHand", "RightHand"):
+            low, high = 0.0, _HAND_ANCHOR_MAX_DISTANCE_M
+        elif anchor == "HMD":
+            low, high = _HMD_ANCHOR_DISTANCE_RANGE_M
+        else:
+            low, high = 0.0, float("inf")
+        if distance > 1e-6 and not low <= distance <= high:
+            new_relative[:3, 3] = offset / distance * min(max(distance, low), high)
+        s["tracker"] = anchor
+        self.commitPosition(PANEL, new_relative[:3, :])
+        self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], anchor, PANEL)
 
     def getTracker(self, tracker: str) -> tuple:
         """Return (base 3x4 matrix, tracked device index) for a tracker name."""
@@ -767,15 +819,14 @@ class Overlay:
         return results if hit else None
 
     def intersectToolbar(self, pose: np.ndarray) -> Optional[Any]:
-        handle = self.toolbar_handles.get(self.settings.get(PANEL, {}).get("tracker"))
-        if handle is None or PANEL in self.vr_windows_hidden:
+        if self.toolbar_handle is None or not self.toolbar_visible:
             return None
         params = openvr.VROverlayIntersectionParams_t()
         params.eOrigin = openvr.TrackingUniverseStanding
         for i in range(3):
             params.vSource.v[i] = pose[i][3]
             params.vDirection.v[i] = -pose[i][2]
-        hit, results = self.overlay.computeOverlayIntersection(handle, params)
+        hit, results = self.overlay.computeOverlayIntersection(self.toolbar_handle, params)
         return results if hit else None
 
     def hasContentAt(self, size: str, results: Any) -> bool:
@@ -910,20 +961,25 @@ class Overlay:
                 self.showPointer(None, _COLOR_NORMAL)
                 if trigger:
                     self.trigger_blocked.add(hand)
-                    self.trigger_prev[hand] = True  # 切り替えボタンも押した扱いにしない
                 self.commitPosition(size, relative[:3, :])
             return
 
         pointer = None  # (results, color[, scale])
         hover_xy = None
+        pointing_log = False
         for role in (openvr.TrackedControllerRole_LeftHand, openvr.TrackedControllerRole_RightHand):
             hand = self.overlay_system.getTrackedDeviceIndexForControllerRole(role)
             hand_pose = poseOf(hand)
             grip = hand_pose is not None and gripPressed(hand)
             size, results = (None, None) if hand_pose is None else self.pointingOverlay(hand_pose)
-            # 自分の手に付いているオーバーレイはその手では動かせない(手と一緒に動くだけ)
-            if size is not None and self.getTracker(self.settings[size]["tracker"])[1] == hand:
+            toolbar = self.intersectToolbar(hand_pose) if hand_pose is not None else None
+            if toolbar is not None and (results is None or toolbar.fDistance < results.fDistance):
+                size, results = TOOLBAR, toolbar
+            # 自分の手に付いているオーバーレイはその手では動かせない(手と一緒に動くだけ)。操作バーはログと同じ
+            tracker = self.settings[PANEL if size == TOOLBAR else size]["tracker"] if size is not None else None
+            if tracker is not None and self.getTracker(tracker)[1] == hand:
                 size, results = None, None
+            pointing_log = pointing_log or size in (PANEL, TOOLBAR)
 
             debug_state = (grip, size)
             if self.debug_state.get(hand) != debug_state:
@@ -933,7 +989,7 @@ class Overlay:
             if hand_pose is not None and not grip:
                 xy = None
                 if size in VR_REGIONS and self.panel_image_size is not None:
-                    overlay_pose = self.overlayWorldPose(size, poseOf)
+                    overlay_pose = self.regionWorldPose(size, poseOf)
                     if overlay_pose is not None:
                         xy = self.regionPixel(size, results, overlay_pose)
                 self.handlePanelInput(hand, xy, controllerState(hand))
@@ -941,17 +997,11 @@ class Overlay:
                     scale = self.panel_image_size[0] / VR_ATLAS_SIZE[0]
                     hover_xy = (round(xy[0] / scale), round(xy[1] / scale))
 
-            # パネル下の追従先切り替えボタン: トリガーを押した瞬間に切り替える
-            state = controllerState(hand) if hand_pose is not None else None
-            trigger = state is not None and bool(state.ulButtonPressed & _TRIGGER_MASK)
-            trigger_pressed_now = trigger and not self.trigger_prev.get(hand, False)
-            self.trigger_prev[hand] = trigger
-            toolbar = self.intersectToolbar(hand_pose) if hand_pose is not None else None
-            if toolbar is not None and (results is None or toolbar.fDistance < results.fDistance):
-                if trigger_pressed_now:
-                    self.cycleAnchor(poseOf)
+            # 操作バーは掴めない (ログに付いて動くだけ)。ボタンは VR画面へのクリックで押す
+            if size == TOOLBAR:
+                self.grip_prev[hand] = grip
                 if pointer is None:
-                    pointer = (toolbar, _COLOR_POINTER)
+                    pointer = (results, _COLOR_POINTER)
                 continue
 
             grip_pressed_now = grip and not self.grip_prev.get(hand, False)
@@ -961,6 +1011,8 @@ class Overlay:
                     pointer = (results, _COLOR_POINTER)
                 continue
 
+            if size == PANEL and self.panel_locked:
+                continue
             overlay_pose = self.overlayWorldPose(size, poseOf)
             if overlay_pose is None:
                 continue
@@ -974,6 +1026,7 @@ class Overlay:
 
         self.showPointer(*(pointer or (None, _COLOR_NORMAL)))
         self.notifyPointer(hover_xy)
+        self.updateToolbarVisibility(now, pointing_log)
 
     def setVrWindows(self, log: bool, popup: bool) -> None:
         """VR UIのウィンドウの表示・非表示を指定する (どのスレッドからでもよい)。"""
@@ -1003,8 +1056,7 @@ class Overlay:
                 self.vr_windows_hidden.add(size)
                 self.overlay.hideOverlay(self.handle[size])
                 if size == PANEL:
-                    for handle in self.toolbar_handles.values():
-                        self.overlay.hideOverlay(handle)
+                    self.setToolbarVisible(False)
                 if self.grabbing is not None and self.grabbing[0] == size:
                     self.grabbing = None
                     self.grab_scale = None
@@ -1013,6 +1065,10 @@ class Overlay:
         # 掴んでいる間は動かさない (掴み処理が同じフレームで位置を上書きする)。呼び戻しは離してから行う
         if self.grabbing is not None:
             return
+        if self.requested_anchor is not None:
+            anchor, self.requested_anchor = self.requested_anchor, None
+            if PANEL in self.handle:
+                self.setAnchor(poseOf, anchor)
         if self.vr_recall_requested:
             self.vr_recall_requested = False
             if PANEL in self.handle and PANEL not in self.vr_windows_hidden:
@@ -1119,16 +1175,22 @@ class Overlay:
         keys = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")
         for key, value in zip(keys, utils.matrix_to_position(base_matrix, relative)):
             self.settings[size][key] = round(value, 4)
-        if self.position_changed_callback is not None:
-            try:
-                # ui_scaling はオーバーレイの幅(m)。設定値への換算は呼び出し側で行う
-                self.position_changed_callback(size, {
-                    **{k: self.settings[size][k] for k in keys},
-                    "ui_scaling": self.settings[size]["ui_scaling"],
-                    "tracker": self.settings[size]["tracker"],
-                })
-            except Exception:
-                errorLogging()
+        self.notifyPosition(size)
+
+    def notifyPosition(self, size: str) -> None:
+        """今の位置と幅・固定先を、保存と UI への通知のためにコールバックへ渡す。"""
+        if self.position_changed_callback is None:
+            return
+        keys = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")
+        try:
+            # ui_scaling はオーバーレイの幅(m)。設定値への換算は呼び出し側で行う
+            self.position_changed_callback(size, {
+                **{k: self.settings[size][k] for k in keys},
+                "ui_scaling": self.settings[size]["ui_scaling"],
+                "tracker": self.settings[size]["tracker"],
+            })
+        except Exception:
+            errorLogging()
 
     def updateDisplayDuration(self, display_duration: float, size: str) -> None:
         self.settings[size]["display_duration"] = display_duration
@@ -1213,6 +1275,7 @@ class Overlay:
             self.thread_overlay.start()
 
     def shutdownOverlay(self) -> None:
+        self.requested_anchor = None
         if self.initialized is True and self.init_process is False:
             if isinstance(self.thread_overlay, Thread):
                 self.loop = False
@@ -1243,10 +1306,11 @@ class Overlay:
                 for size in self.settings.keys():
                     if isinstance(self.handle[size], int):
                         self.overlay.destroyOverlay(self.handle[size])
-                for handle in [*self.pointer_handles.values(), *self.toolbar_handles.values()]:
+                for handle in [*self.pointer_handles.values(), *([self.toolbar_handle] if self.toolbar_handle is not None else [])]:
                     self.overlay.destroyOverlay(handle)
                 self.pointer_handles = {}
-                self.toolbar_handles = {}
+                self.toolbar_handle = None
+                self.toolbar_visible = False
                 self.overlay = None
             if isinstance(self.system, openvr.IVRSystem):
                 # Only releases our reference; the real openvr.shutdown()

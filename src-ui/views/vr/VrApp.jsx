@@ -15,6 +15,7 @@ import layout from "./vr_layout.json";
 import { VrLauncher } from "./VrLauncher";
 import { VrLogWindow } from "./VrLogWindow";
 import { VrPopupWindow } from "./VrPopupWindow";
+import { VrToolbar } from "./VrToolbar";
 
 import styles from "./VrApp.module.scss";
 
@@ -73,6 +74,7 @@ export const VrApp = () => {
             <Region name="panel"><VrLogWindow onClose={toggleLog} /></Region>
             <Region name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} togglePopup={togglePopup} /></Region>
             <Region name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
+            <Region name="toolbar"><VrToolbar /></Region>
         </div>
     );
 };
