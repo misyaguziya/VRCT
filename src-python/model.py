@@ -55,10 +55,10 @@ from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
 from models.ocr import OcrPipeline
-from models.ocr.ocr_languages import SELECTABLE_LANGUAGES as OCR_SELECTABLE_LANGUAGES, isSupported as isSupportedOcrLanguage
+from models.ocr.ocr_languages import isSupported as isSupportedOcrLanguage
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
-from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
+from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode, OcrStartError
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 
@@ -2087,7 +2087,8 @@ class Model:
 
         The callback receives dicts shaped like mic/speaker transcripts so
         Controller.ocrMessage can share the mic/speaker translation path.
-        Returns True if the pipeline started, False otherwise.
+        Returns True once the pipeline started (models loaded). Raises
+        OcrStartError carrying the OCR_DISABLED_* reason when it cannot start.
         """
         self.ensure_initialized()
         if isinstance(self.ocr_pipeline, OcrPipeline):
@@ -2103,7 +2104,7 @@ class Model:
         source_language = config.OCR_SOURCE_LANGUAGE
         if not isSupportedOcrLanguage(source_language):
             printLog(f"OCR: source language {source_language!r} is not selected or not supported, refusing to start")
-            return False
+            raise OcrStartError(ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE)
 
         try:
             self.ocr_pipeline = OcrPipeline(
@@ -2114,15 +2115,10 @@ class Model:
                 min_confidence=config.OCR_MIN_CONFIDENCE,
                 min_text_length=config.OCR_BUBBLE_MIN_TEXT_LENGTH,
             )
+            return self.ocr_pipeline.start()
         except Exception:
-            errorLogging()
             self.ocr_pipeline = None
-            return False
-
-        started = self.ocr_pipeline.start()
-        if not started:
-            self.ocr_pipeline = None
-        return started
+            raise
 
     def updateOCRCaptureSettings(self) -> None:
         """設定変更を実行中のOCRパイプラインへ渡す。停止中なら何もしない。
@@ -2142,11 +2138,6 @@ class Model:
             })
         except Exception:
             errorLogging()
-
-    @staticmethod
-    def getSelectableOCRSourceLanguages() -> list:
-        """OCRで選べる言語 (VRCTの言語名)。VRCTが翻訳できる言語の全てではない。"""
-        return list(OCR_SELECTABLE_LANGUAGES)
 
     def stopOCRCapture(self) -> None:
         self.ensure_initialized()

@@ -181,6 +181,15 @@ class ErrorCode(str, Enum):
     # VRC連携エラー (VRC_*)
     # ============================================================================
     VRC_MIC_MUTE_SYNC_OSC_DISABLED = "VRC_MIC_MUTE_SYNC_OSC_DISABLED"
+
+    # ============================================================================
+    # OCR関連エラー (OCR_*)
+    # OCRを開始できずOFFに戻したときに /run/enable_ocr_capture で通知する。
+    # ============================================================================
+    OCR_DISABLED_ENGINE_UNAVAILABLE = "OCR_DISABLED_ENGINE_UNAVAILABLE"
+    OCR_DISABLED_MODEL_LOAD_FAILED = "OCR_DISABLED_MODEL_LOAD_FAILED"
+    OCR_DISABLED_UNSUPPORTED_LANGUAGE = "OCR_DISABLED_UNSUPPORTED_LANGUAGE"
+    OCR_DISABLED_UNKNOWN = "OCR_DISABLED_UNKNOWN"
     
     # ============================================================================
     # 汎用エラー (GENERAL_*)
@@ -224,6 +233,18 @@ class AudioPipelineError(RuntimeError):
         self.failure = failure
 
 
+class OcrStartError(RuntimeError):
+    """OCRを開始できなかった理由 (OCR_DISABLED_*) を controller へ渡す例外。
+
+    AudioPipelineError と同じく、理由を知っている下位層が ErrorCode を載せて投げ、
+    controller が通知する。
+    """
+
+    def __init__(self, error_code: ErrorCode, message: str = "") -> None:
+        super().__init__(message or error_code.value)
+        self.error_code = error_code
+
+
 class ErrorCategory(str, Enum):
     """エラーカテゴリ"""
     DEVICE = "device"
@@ -234,6 +255,7 @@ class ErrorCategory(str, Enum):
     AUTH = "auth"
     MODEL = "model"
     CONNECTION = "connection"
+    OCR = "ocr"
     WEBSOCKET = "websocket"
     OBS_BROWSER_SOURCE = "obs_browser_source"
     VRC = "vrc"
@@ -745,6 +767,32 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "user_action_required": True,
     },
     
+    # OCRエラー
+    ErrorCode.OCR_DISABLED_ENGINE_UNAVAILABLE: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled: OCR engine or its dependencies are unavailable",
+        "severity": "error",
+        "user_action_required": False,
+    },
+    ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled: failed to load OCR model",
+        "severity": "error",
+        "user_action_required": False,
+    },
+    ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled: source language is not supported",
+        "severity": "error",
+        "user_action_required": False,
+    },
+    ErrorCode.OCR_DISABLED_UNKNOWN: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled due to an unknown error",
+        "severity": "error",
+        "user_action_required": False,
+    },
+
     # 汎用エラー
     ErrorCode.GENERAL_EXCEPTION: {
         "category": ErrorCategory.GENERAL,

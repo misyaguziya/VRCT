@@ -22,30 +22,56 @@ VRChatの画面上に浮かぶチャット吹き出し（他プレイヤーの�
 - 最小化時（`IsIconic`）や空フレームは None を返してスキップ
 
 ### ocr_capture_openvr.py — OpenVR ミラーテクスチャキャプチャ
-- `IVRCompositor::GetMirrorTextureGL(Eye_Left)` で HMD 左目の submitted 画像を取得
-- PyOpenGL + GLFW（非表示ウィンドウ）で GL コンテキストを作成し `glGetTexImage` で読み出し
-- OpenVR は既存 `models/overlay/overlay.py` と同じく `openvr` パッケージを使用
+- `IVRCompositor::GetMirrorTextureD3D11(Eye_Left)` で HMD 左目の画像を取得し、CPU 用の staging テクスチャへコピーして読み出す
+  （読み出し本体は `ocr_capture_d3d11.py`。収集ツール `tools/` と同じ実装を共有し、ツールはパス指定で読み込む）
+- 実測（Meta Quest 3 / Virtual Desktop + SteamVR）: 3012x3284、BGR 変換込みで約100ms/枚。VRChat のウィンドウを最小化していても取れる
+- OpenGL 版（`GetMirrorTextureGL`）は使えない。SteamVR が自分の D3D11 テクスチャを GL へ取り込めず（`GL_INVALID_OPERATION ... Invalid format.`）
+  常に `CompositorError_InvalidTexture` を返す既知の不具合（ValveSoftware/openvr#178, #1410）。2026-09-27 に実機で再現を確認し D3D11 へ置き換えた
+- OpenVR のセッションは Overlay / Clipboard と同じく `models/openvr_session.py`（参照カウント）経由で取得・解放する
+- 読み出し前に、SteamVR が表示中のアプリが VRChat かを確認する（`getLastFrameRenderer()` と
+  `getCurrentSceneFocusProcess()` が一致し、そのプロセスが `vrchat.exe`）。SteamVR Home 等なら None を返す。
+  判定は収集ツール（`tools/ocr_capture_source.py`）で実機確認済みの方法と同じ
 
 ### ocr_capture.py — バックエンド選択ファサード
 - SteamVR 起動状態を 5 秒間隔でリチェックし、backend を自動切り替え
-  - **SteamVR 起動中** → OpenVR ミラーテクスチャ
+  - **SteamVR 起動中** → OpenVR ミラーテクスチャ。VR 側で何も取れなければ（VRChat がシーンでない、
+    読み出し失敗）、次のリチェックまで HWND キャプチャへ切り替える
   - **SteamVR 非起動** → HWND キャプチャ
+- ログ `OCR capture backend -> ...` は、実際にフレームが取れた経路が変わったときだけ出す
 - 切り替えの理由: VR プレイヤーは負荷軽減のため VRChat のデスクトップミラーウィンドウを最小化することが多く、その場合 HWND では黒フレームしか取れないため
 
-### ocr_bubble_detector.py — 吹き出し検出（YOLOv8n / ONNX）
+### ocr_bubble_detector.py — 吹き出し検出（YOLOX-Tiny / ONNX）
 - 収集したVRChatのスクリーンショットで学習した検出モデルで、吹き出しの矩形を直接得る
 - 推論は onnxruntime のみ（faster-whisper が Silero VAD 用に既に依存しているので追加依存なし）。
-  ultralytics も torch も推論には不要。NMS はエクスポート時にグラフへ焼き込んであるので、
-  このモジュールがやるのは letterbox と、元画像の画素座標への戻しだけ
-- モデルは `src-python/models/ocr/onnx/chatbox_yolov8n.onnx`（約12MB）を同梱。
+  YOLOX も torch も推論には不要。grid/stride のデコードはエクスポート時にグラフへ
+  入れてあるので、このモジュールがやるのは letterbox・閾値・NMS・元画像座標への戻しだけ
+- モデルは `src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx`（約5.5MB、INT8）を同梱。
   `findModelPath()` が凍結時は `_internal/ocr_onnx/`、ソース実行時はパッケージ内を見る。
   最初の `detect()` まで読み込まないので、OCRを使わない起動ではメモリも時間も使わない
-- 結果は信頼度の降順。`MAX_CANDIDATES_PER_TICK` で上位数件のみOCRに回す
-- 実行時の閾値は `BubbleDetector(confidence=...)`（既定0.15）。val20枚での実測は
-  0.15で20/20・余分な候補5、0.25で19/20・余分2、0.5で18/20・余分0。取りこぼしは
-  翻訳されない文が出ることを意味するのに対し、余分な候補はOCR側の
-  `OCR_MIN_CONFIDENCE` で文字が読めずに落ちるだけなので、取りこぼしを優先している
-- 速度は約300ms/枚（CPU、imgsz=1280、RTX 2080 Ti機のCPUでの実測）
+- **入力サイズは可変**。VRChatのウィンドウはユーザーがリサイズできるのでアスペクト比が
+  一定ではない。`_letterbox()` は長辺を `DEFAULT_IMAGE_SIZE`(1280) に合わせ、短辺を32の
+  倍数（FPNのstrideが8/16/32）へ切り上げた大きさでキャンバスを作る。余白は左上寄せなので
+  座標の戻しは `scale` で割るだけ。正方形に固定すると16:9で4割強を余白の推論に使う
+- 前処理は YOLOX の `preproc` と同じで、BGRのまま・0-255のまま・余白色114。
+  YOLOv8n のときの「RGB変換して255で割る・中央寄せ」とは違うので、モデルを
+  差し替えるときはここも合わせる
+- NMS は `nonMaxSuppression()` が numpy で行う（YOLOXの実装は torchvision.ops に依存して
+  いてONNXへ落ちない）。おかげで閾値が `BubbleDetector(confidence=...)` 一箇所になった。
+  YOLOv8n のときはエクスポート時のconfがNMSへ焼き込まれ、実行時に下げても候補が増えなかった
+- ライセンス: この .onnx だけはリポジトリの MIT ではなく **VRCT 専用の利用許諾**。
+  同ディレクトリの `LICENSE.txt` / `LICENSE.en.txt` / `NOTICE.txt` がそのまま配布物の
+  表記になるので消さない。経緯は `docs/ocr_model_license.md`
+- 結果は信頼度の降順（NMSが強い順に残すので、この時点で降順になっている）。
+  `MAX_CANDIDATES_PER_TICK` で上位数件のみOCRに回す
+- 実行時の閾値は `BubbleDetector(confidence=...)`（既定0.7）。固定val80枚(正解70個)での実測は
+  0.5で69/70・余分な候補1、0.7で68/70・余分0、0.85で52/70・余分0。実機で低い閾値だと
+  VRChat の config 画面を誤検出したため引き上げた。モデルを学習し直したら決め直す
+  （表は docs/ocr_yolo_training.md）
+- 速度は 16:9 のウィンドウで約60ms/枚、正方形に近い窓でも約110ms/枚（i7-9700K の実測、
+  他の処理が動いていると2〜3倍ぶれる）。検出は tick のOCR予算の外で走るので、
+  そのまま tick の長さに乗る
+- `crop_padding`（既定4px）はOCRに渡す切り出しを各辺4px広げる。小さい吹き出しでは
+  この分だけ枠がGTからずれるので、IoUで評価するときは0にして測る
 - 学習・再学習とモデルの差し替え手順は [docs/ocr_yolo_training.md](../../../docs/ocr_yolo_training.md)
 
 #### 経緯: 色/輪郭ヒューリスティックからの置き換え（2026-09-17）
@@ -148,7 +174,7 @@ class OcrCapture:
 ```
 ┌───────────────────┐        ┌──────────────────┐
 │  OcrCapture       │        │ BubbleDetector   │
-│  (HWND / OpenVR)  │──BGR──►│ (YOLOv8n / ONNX) │
+│  (HWND / OpenVR)  │──BGR──►│ (YOLOX-Tiny/ONNX)│
 └───────────────────┘        └────────┬─────────┘
                                       │ [(bbox, crop), ...]
                                       ▼
@@ -220,12 +246,16 @@ OCRは吹き出し内の各行を別々に返す。そこには「送信者が�
 
 ## OpenVR セッションの共有について
 
-OpenVR の初期化は**プロセス単位**で、`models/overlay/overlay.py` が既に `openvr.init()` したセッションを保持しています。そのため本モジュールは:
+OpenVR の初期化は**プロセス単位**で、Overlay・Clipboard と共有しています。そのため本モジュールは:
 
-- `openvr.init()` は呼ぶ（既存セッションに合流する形になる）
-- **`openvr.shutdown()` は決して呼ばない** — 呼ぶと VR オーバーレイのセッションまで巻き添えで破棄されるため
-- ミラーテクスチャは**初回に 1 度だけ取得**し、以降フレーム毎に `lockGLSharedTextureForAccess` / `unlockGLSharedTextureForAccess` で囲んで読み出し
-- 失敗時はテクスチャのみ解放して `_initialized` を落とし、次 tick で再取得（SteamVR 再起動やオーバーレイ側 shutdown からの自動復帰）
+- `openvr.init()` / `openvr.shutdown()` を直接呼ばず、`models/openvr_session.py` の `acquire()` / `release()` を使う。
+  本当の `openvr.shutdown()` は、全員が解放したときだけ走る
+- ミラーテクスチャは**初回に 1 度だけ取得**して毎フレーム使い回す。毎回取り直すと古いフレームが返り続ける（ValveSoftware/openvr#1888）。
+  D3D11 の資源は OCR のワーカースレッドで作成・読み出し・解放する
+- 取得に失敗し続ける間（SteamVR 再起動中など）は、トレースバックを最初の1回だけ `error.log` に残す
+- 失敗時はテクスチャと自分のセッション参照を解放して `_initialized` を落とし、次 tick で取り直す
+  （Overlay の `reStartOverlay()` と同じ「解放してから取り直す」順）。OCR 停止時（`close()`）も参照を解放する
+- VRChat 以外のシーンを表示中なのは異常ではないので、テクスチャもセッションも保持したまま None を返す
 
 ## 設定の反映タイミング
 
@@ -252,15 +282,22 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 | `ENABLE_OCR_CAPTURE` | bool | False | OCR パイプラインの有効化（serialize=False, 起動毎にオフ） |
 | `OCR_SOURCE_LANGUAGE` | str | "auto" | 読み取る言語。`auto` は日英中＋ラテン文字系を1モデルで読む。別モデルが要る文字体系のみ明示選択する（選択肢は `ocr_languages.SELECTABLE_LANGUAGES`） |
 | `OCR_WINDOW_TITLE` | str | "VRChat" | キャプチャ対象ウィンドウのタイトル部分一致文字列（大文字小文字を区別しない） |
-| `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000 でクランプ） |
+| `OCR_POLL_INTERVAL_MS` | int | 750 | キャプチャ間隔（100〜5000） |
 | `OCR_MIN_CONFIDENCE` | float | 0.85 | OCR 信頼度の下限（0.1〜0.99）。PP-OCRは誤読時もスコアが高く、実測では 0.55 で誤りを1件も落とせず、0.85 なら正解を失わずに誤りの34%を落とせた |
 | `OCR_BUBBLE_MIN_TEXT_LENGTH` | int | 2 | 最小テキスト長（1〜50） |
+
+値域・選択肢は config のディスクリプタ（`allowed=`）で検証する。setter は他の設定と同じく
+`@_configValidationErrorResponse(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID)` を付け、不正値は
+エラー応答で拒否する（丸めない）。getter は `_SIMPLE_CONFIG_GETTERS` で生成する。
+読み取り言語の選択肢は `config.SELECTABLE_OCR_SOURCE_LANGUAGE_LIST`（中身は `ocr_languages.SELECTABLE_LANGUAGES`）。
 
 ## エンドポイント
 
 `mainloop.py` に登録済み。Frontend からは `useOcr()` フック経由で自動的に叩かれます。
 
-- `/set/enable/ocr_capture`, `/set/disable/ocr_capture` — 開始・停止
+- `/set/enable/ocr_capture`, `/set/disable/ocr_capture` — 開始・停止。翻訳と同じメイン機能として
+  「Main Window」グループに置き、初期化完了までロックする。状態は保存せず起動時は常にOFFなので
+  `/get/data/ocr_capture` は無い
 - `/get/data/ocr_*`, `/set/data/ocr_*` — 各設定キー（setterは実行中のパイプラインへ即時反映する）
   - エンジンを選ぶ設定は持たない。実装が1つしか無いのに保存値と判定値がずれてOCRが起動しなくなる事故を起こしたため (2026-09-18)
 - `/get/data/selectable_ocr_source_languages` — OCRで選べる言語の一覧（UIのドロップダウンの中身）
@@ -268,7 +305,11 @@ ReaderとキャプチャはOSリソース・スレッドに紐づくので、値
 
 ## Controller 連携
 
-- `Controller.startOcrCapture()` / `stopOcrCapture()` — スレッド起動・停止
+- `Controller.startOcrCapture() -> bool` — 文字起こしと同じく `config.ENABLE_OCR_CAPTURE = self.startOcrCapture()`
+  の形で呼ぶ。文字認識モデルと吹き出し検出モデルを読み込み終えてから戻る（翻訳のONと同じく応答を待たせる）。
+  失敗したら `model.startOCRCapture` が投げた `OcrStartError` の `OCR_DISABLED_*`（それ以外の例外は
+  `OCR_DISABLED_UNKNOWN`）を、翻訳の `TRANSLATION_DISABLED_VRAM` と同じく `/run/enable_ocr_capture` へ送って False を返す
+- `Controller.stopOcrCapture()` — 停止
 - `model.updateOCRCaptureSettings()` — 設定変更を実行中のパイプラインへ渡す（各setterから呼ばれる）
 - `Controller.ocrMessage(result)` — `OCR_MESSAGE_SPEC` を渡して `_processMessage` に委ねる
   (mic/speaker/chat と同じ共通パイプライン。差分は spec 側に持たせている)
@@ -300,6 +341,4 @@ Windows + VRCT ビルド前提。詳細は「VR モードでのデスクトッ�
   `BubbleDetector(confidence=...)` を下げ、その場面の画像を集めて再学習する
 - **ワールド由来のテキスト**（看板・ワールド内の案内文）は検出対象外として学習している。
   アバターのチャット吹き出し（角丸の暗いパネル＋しっぽ）だけを拾う
-- **VRChat Desktop モード起動 + SteamVR も起動中** というレアケースでは、OpenVR ミラー側に VRChat の映像が来ないため OCR 対象なしになる（誤翻訳より無害）
-- **設定変更は次回 OCR 開始時に反映**されます（`OCR_SOURCE_LANGUAGE` 等はパイプライン起動時に読み込まれるため、実行中の変更を反映するには一度 OFF→ON が必要）
-- **GLFW の初期化を OCR スレッドから行っている**点は Windows では実用上問題ありませんが、GLFW の公式なスレッド要件（多くの API はメインスレッド呼び出しを想定）からは外れています。将来的にキャプチャ用 GL コンテキストを専用スレッドに集約する余地があります
+- **VRChat Desktop モード起動 + SteamVR も起動中** の場合は、SteamVR が表示中のアプリが VRChat でないため、次の再判定まで HWND キャプチャで読む（デスクトップのウィンドウが最小化されていれば読めない）
