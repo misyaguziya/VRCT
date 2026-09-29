@@ -476,8 +476,6 @@ vr_panel:
     launcher_hand_desc: "Press it with the laser from your other hand"
     launcher_auto_hide: "Show only when looking at the wrist"
     launcher_auto_hide_desc: "Appears only when you turn your wrist toward your face"
-    launcher_hide_angle: "Visible range (angle)"
-    launcher_hide_angle_desc: "Smaller values need a more direct look at the wrist"
     locked_by_config_page: "Settings are open. Close them to use these controls."
     log_opacity: "Log opacity"
     mic_threshold: "Mic sensitivity"

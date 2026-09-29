@@ -3,12 +3,13 @@ import clsx from "clsx";
 
 import { useI18n } from "@useI18n";
 import { useIsOpenedConfigPage, useIsOscAvailable, useVolume } from "@logics_common";
-import { useDevice, useOcr, useOthers, useTranscription, useTranslation, useVr } from "@logics_configs";
+import { useAppearance, useDevice, useOcr, useOthers, useTranscription, useTranslation, useVr } from "@logics_configs";
 import { useStore_MicVolume, useStore_SpeakerVolume } from "@store";
 import { ui_configs } from "@ui_configs";
 
 import HmdSvg from "@images/mui_head_mounted_device.svg?react";
 import MicSvg from "@images/mic.svg?react";
+import AppearanceSvg from "@images/mui_palette.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import TranslationSvg from "@images/translation.svg?react";
 import GraphicEqSvg from "@images/mui_graphic_eq.svg?react";
@@ -24,6 +25,7 @@ import styles from "./VrSettingsWindow.module.scss";
 // (APIキー、URL、単語フィルターなど) と、モデルのダウンロードは載せない
 const CATEGORIES = [
     { id: "device", Icon: MicSvg },
+    { id: "appearance", Icon: AppearanceSvg },
     { id: "transcription", Icon: GraphicEqSvg },
     { id: "translation", Icon: TranslationSvg },
     { id: "vr", Icon: HmdSvg },
@@ -99,6 +101,7 @@ export const VrSettingsWindow = ({ onClose }) => {
 const Category = ({ id, t, openPicker }) => {
     switch (id) {
         case "device": return <DeviceSettings t={t} openPicker={openPicker} />;
+        case "appearance": return <AppearanceSettings t={t} openPicker={openPicker} />;
         case "transcription": return <TranscriptionSettings t={t} openPicker={openPicker} />;
         case "translation": return <TranslationSettings t={t} openPicker={openPicker} />;
         case "vr": return <VrSettings t={t} />;
@@ -148,6 +151,18 @@ const DeviceSettings = ({ t, openPicker }) => {
                 min={ui_configs.speaker_threshold_min} max={ui_configs.speaker_threshold_max} step={THRESHOLD_STEP}
             />
         </>
+    );
+};
+
+// UIの言語。デスクトップの設定画面と同じ (VR UIの表示にも使う)
+const AppearanceSettings = ({ t, openPicker }) => {
+    const { currentUiLanguage, setUiLanguage } = useAppearance();
+    const languages = ui_configs.selectable_ui_languages;
+    const label = t("config_page.appearance.ui_language.label");
+    return (
+        <SelectRow label={label} value={languages.find(l => l.id === currentUiLanguage.data)?.label ?? currentUiLanguage.data}
+            is_pending={currentUiLanguage.state === "pending"}
+            onOpen={() => openPicker(label, languages, currentUiLanguage.data, setUiLanguage)} />
     );
 };
 
@@ -232,10 +247,6 @@ const VrSettings = ({ t }) => {
                 ]} />
             <ToggleRow label={t("vr_panel.launcher_auto_hide")} sub={t("vr_panel.launcher_auto_hide_desc")}
                 variable={vr.currentOverlayVrLauncherAutoHide} onToggle={vr.toggleOverlayVrLauncherAutoHide} />
-            <StepperRow label={t("vr_panel.launcher_hide_angle")} sub={t("vr_panel.launcher_hide_angle_desc")}
-                variable={vr.currentOverlayVrLauncherHideAngle} setValue={vr.setOverlayVrLauncherHideAngle}
-                min={15} max={90} step={5} format={(v) => `${v}°`}
-                is_disabled={vr.currentOverlayVrLauncherAutoHide.data !== true} />
         </>
     );
 };

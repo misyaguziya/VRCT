@@ -247,7 +247,6 @@ _SIMPLE_CONFIG_GETTERS = {
     "getOverlayVrPanelLocked": "OVERLAY_VR_PANEL_LOCKED",
     "getOverlayVrPanelFontSize": "OVERLAY_VR_PANEL_FONT_SIZE",
     "getOverlayVrLauncherAutoHide": "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
-    "getOverlayVrLauncherHideAngle": "OVERLAY_VR_LAUNCHER_HIDE_ANGLE",
     "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
     "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
     "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
@@ -3238,7 +3237,7 @@ class Controller:
         """字幕 (一行 / 複数行) と VR UI のどれかがONならオーバーレイを動かし、全部OFFなら止める。"""
         model.setVrPanelEnabled(config.OVERLAY_VR_PANEL)
         model.setVrPanelLocked(config.OVERLAY_VR_PANEL_LOCKED)
-        model.setVrLauncherAutoHide(config.OVERLAY_VR_LAUNCHER_AUTO_HIDE, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
+        model.setVrLauncherAutoHide(config.OVERLAY_VR_LAUNCHER_AUTO_HIDE)
         if config.OVERLAY_SMALL_LOG or config.OVERLAY_LARGE_LOG or config.OVERLAY_VR_PANEL:
             model.startOverlay()
         else:
@@ -4549,26 +4548,14 @@ class Controller:
     @staticmethod
     def setEnableOverlayVrLauncherAutoHide(*args, **kwargs) -> dict:
         config.OVERLAY_VR_LAUNCHER_AUTO_HIDE = True
-        model.setVrLauncherAutoHide(True, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
+        model.setVrLauncherAutoHide(True)
         return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_AUTO_HIDE}
 
     @staticmethod
     def setDisableOverlayVrLauncherAutoHide(*args, **kwargs) -> dict:
         config.OVERLAY_VR_LAUNCHER_AUTO_HIDE = False
-        model.setVrLauncherAutoHide(False, config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE)
+        model.setVrLauncherAutoHide(False)
         return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_AUTO_HIDE}
-
-    @staticmethod
-    def setOverlayVrLauncherHideAngle(data, *args, **kwargs) -> dict:
-        """ランチャーを出す角度 (15〜90度)。小さいほど手首をまっすぐ見ないと出ない。"""
-        if isinstance(data, bool) or not isinstance(data, int) or not 15 <= data <= 90:
-            return VRCTError.create_error_response(
-                ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
-                data=config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE,
-            )
-        config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE = data
-        model.setVrLauncherAutoHide(config.OVERLAY_VR_LAUNCHER_AUTO_HIDE, data)
-        return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_HIDE_ANGLE}
 
     @staticmethod
     def setOverlayVrPanelFontSize(data, *args, **kwargs) -> dict:

@@ -239,7 +239,6 @@ _debounce_time: int = 2  # デバウンス時間（秒）
 - `OVERLAY_VR_PANEL_FONT_SIZE`: VR UI のログの文字の大きさ (14〜28px、既定 17。デスクトップのログの文字サイズとは別)
 - `OVERLAY_VR_LAUNCHER_SETTINGS`: VR UI のランチャーの位置・大きさ・付ける手 (tracker)
 - `OVERLAY_VR_LAUNCHER_AUTO_HIDE`: ランチャーを手首を見たときだけ出す (既定 ON)
-- `OVERLAY_VR_LAUNCHER_HIDE_ANGLE`: ランチャーを出す角度 (15〜90度、既定 45)
 
 **その他設定**
 - `HOTKEYS`: ホットキー設定辞書（即座保存）

@@ -718,15 +718,6 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_vr_launcher_auto_hide",
     },
     {
-        // ランチャーを出す角度 (15〜90度)
-        Category: "Vr",
-        Base_Name: "OverlayVrLauncherHideAngle",
-        default_value: 45,
-        ui_template_id: "slider",
-        logics_template_id: "get_set",
-        base_endpoint_name: "overlay_vr_launcher_hide_angle",
-    },
-    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

@@ -476,8 +476,6 @@ vr_panel:
     launcher_hand_desc: "もう片方の手のレーザーで押します"
     launcher_auto_hide: "手首を見たときだけ表示"
     launcher_auto_hide_desc: "手首を顔に向けたときだけ出ます"
-    launcher_hide_angle: "表示される範囲（角度）"
-    launcher_hide_angle_desc: "小さいほど、手首をまっすぐ見ないと出ません"
     locked_by_config_page: "設定を開いています。閉じると操作できます。"
     log_opacity: "ログの不透明度"
     mic_threshold: "マイクの入力感度"
