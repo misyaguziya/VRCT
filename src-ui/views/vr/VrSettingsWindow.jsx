@@ -17,7 +17,7 @@ import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 import WarningSvg from "@images/warning.svg?react";
 
 import { VrWindow } from "./VrWindow";
-import { Picker, SectionLabel, SelectRow, StepperRow, ThresholdRow, ToggleRow } from "./VrSettingsRows";
+import { Picker, SectionLabel, SegmentRow, SelectRow, StepperRow, ThresholdRow, ToggleRow } from "./VrSettingsRows";
 import styles from "./VrSettingsWindow.module.scss";
 
 // 左のカテゴリはデスクトップの設定画面と同じ名前・アイコン。VRでは文字入力が要る項目
@@ -223,6 +223,19 @@ const VrSettings = ({ t }) => {
                 variable={vr.currentOverlayShowOnlyTranslatedMessages} onToggle={vr.toggleOverlayShowOnlyTranslatedMessages} />
             <StepperRow label={t("vr_panel.log_opacity")} variable={opacity} setValue={vr.setOverlayVrPanelOpacity}
                 min={0.2} max={1.0} step={0.1} format={(v) => `${Math.round(v * 100)}%`} />
+            <SectionLabel label={t("vr_panel.launcher")} />
+            <SegmentRow label={t("vr_panel.launcher_hand")} sub={t("vr_panel.launcher_hand_desc")}
+                variable={vr.currentOverlayVrLauncherHand} onSelect={vr.setOverlayVrLauncherHand}
+                options={[
+                    { id: "LeftHand", label: t("vr_panel.anchor_left_hand") },
+                    { id: "RightHand", label: t("vr_panel.anchor_right_hand") },
+                ]} />
+            <ToggleRow label={t("vr_panel.launcher_auto_hide")} sub={t("vr_panel.launcher_auto_hide_desc")}
+                variable={vr.currentOverlayVrLauncherAutoHide} onToggle={vr.toggleOverlayVrLauncherAutoHide} />
+            <StepperRow label={t("vr_panel.launcher_hide_angle")} sub={t("vr_panel.launcher_hide_angle_desc")}
+                variable={vr.currentOverlayVrLauncherHideAngle} setValue={vr.setOverlayVrLauncherHideAngle}
+                min={15} max={90} step={5} format={(v) => `${v}°`}
+                is_disabled={vr.currentOverlayVrLauncherAutoHide.data !== true} />
         </>
     );
 };

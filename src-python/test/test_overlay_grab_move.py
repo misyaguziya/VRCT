@@ -80,6 +80,7 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.grip = False
         self.trigger = False
         self.right_z = 0.0  # 右手の位置 (z)。前方は -Z
+        self.stick = (0.0, 0.0)  # 右手のスティック (x, y)
 
         system = MagicMock()
         system.getTrackedDeviceIndexForControllerRole.side_effect = (
@@ -104,6 +105,7 @@ class UpdateGrabFlowTest(unittest.TestCase):
                 pressed |= (1 << openvr.k_EButton_Grip) if self.grip else 0
                 pressed |= (1 << openvr.k_EButton_SteamVR_Trigger) if self.trigger else 0
             state.ulButtonPressed = pressed
+            state.rAxis = [MagicMock(x=self.stick[0], y=self.stick[1]) if index == self.RIGHT else MagicMock(x=0.0, y=0.0)]
             return True, state
         system.getControllerState.side_effect = controller_state
 
@@ -326,6 +328,174 @@ class SetAnchorTest(unittest.TestCase):
         overlay.applyVrWindows(lambda index: np.eye(4))
         self.assertEqual(overlay.settings[PANEL]["tracker"], "HMD")
         self.assertIsNone(overlay.requested_anchor)
+
+
+class GrabMotionTest(unittest.TestCase):
+    """掴んでいる間の押し引き・ならしと、放したときに自分の方へ向け直す動き。"""
+
+    def _state(self, x, y):
+        state = MagicMock()
+        state.rAxis = [MagicMock(x=x, y=y)]
+        return state
+
+    def _hand_to_overlay(self, distance):
+        m = np.eye(4)
+        m[2, 3] = -distance  # 手の前方 (-Z) distance m
+        return m
+
+    def test_stick_up_pushes_away_and_down_pulls_in(self):
+        from models.overlay.overlay import pushPull
+
+        far = pushPull(self._hand_to_overlay(1.0), self._state(0.0, 1.0), 0.1)
+        near = pushPull(self._hand_to_overlay(1.0), self._state(0.0, -1.0), 0.1)
+        self.assertAlmostEqual(-far[2, 3], 1.1)  # 距離 x 1.0/秒 x 0.1秒
+        self.assertAlmostEqual(-near[2, 3], 0.9)
+
+    def test_small_or_sideways_stick_does_nothing(self):
+        """VRChat の移動・回転に使う倒し方では動かさない。"""
+        from models.overlay.overlay import pushPull
+
+        for x, y in ((0.0, 0.4), (0.8, 0.6)):
+            with self.subTest(x=x, y=y):
+                moved = pushPull(self._hand_to_overlay(1.0), self._state(x, y), 0.1)
+                self.assertAlmostEqual(-moved[2, 3], 1.0)
+
+    def test_distance_is_limited(self):
+        from models.overlay.overlay import pushPull
+
+        self.assertAlmostEqual(-pushPull(self._hand_to_overlay(2.45), self._state(0.0, 1.0), 0.1)[2, 3], 2.5)
+        self.assertAlmostEqual(-pushPull(self._hand_to_overlay(0.26), self._state(0.0, -1.0), 0.1)[2, 3], 0.25)
+        # 範囲の外にあっても、急に範囲へ跳ばない (近くで掴んだウィンドウを押し出すと、そこから遠ざかる)
+        self.assertAlmostEqual(-pushPull(self._hand_to_overlay(0.1), self._state(0.0, -1.0), 0.1)[2, 3], 0.1)
+
+    def test_slow_motion_is_smoothed_and_fast_motion_follows(self):
+        overlay = Overlay({})
+        start = np.hstack([np.eye(3), np.zeros((3, 1))])
+        overlay.smoothGrab(start, 0.016)
+        slow = start.copy()
+        slow[0, 3] = 0.002  # 0.125 m/s
+        self.assertLess(overlay.smoothGrab(slow, 0.016)[0, 3], 0.002)  # 震え程度の動きはならす
+        fast = start.copy()
+        fast[0, 3] = 0.05  # 3 m/s
+        self.assertAlmostEqual(overlay.smoothGrab(fast, 0.016)[0, 3], 0.05)  # 速い動きには遅れない
+
+    def test_steady_medium_speed_does_not_judder(self):
+        """0.1〜0.3 m/s で一定に動かしたとき、遅れがフレームごとに入れ替わらない (ガタつかない)。"""
+        for speed in (0.1, 0.2, 0.28):
+            with self.subTest(speed=speed):
+                overlay = Overlay({})
+                dt = 1 / 60
+                lags = []
+                for i in range(60):
+                    target = np.hstack([np.eye(3), np.array([[speed * dt * i], [0.0], [0.0]])])
+                    lags.append(target[0, 3] - overlay.smoothGrab(target, dt)[0, 3])
+                steady = lags[30:]
+                self.assertLess(max(steady) - min(steady), 1e-4)
+
+    def _face(self, tracker, head):
+        from models.overlay.overlay import PANEL
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker=tracker, opacity=1.0, fadeout_duration=0, ui_scaling=0.4)
+        overlay = Overlay({PANEL: settings})
+        overlay.overlay_system = MagicMock()
+        relative = np.hstack([np.eye(3), np.array([[0.5], [1.6], [-1.0]])])  # 右前方、表は +Z (横を向いたまま)
+        pose_of = lambda index: head if index == 0 else np.eye(4)  # noqa: E731
+        return overlay.faceUserOnRelease(PANEL, relative, np.eye(4), pose_of)
+
+    def test_window_in_space_turns_to_face_the_user_level(self):
+        head = np.eye(4)
+        head[:3, 3] = (0.0, 1.6, 0.0)
+        faced = self._face("Playspace", head)
+        to_head = head[:3, 3] - faced[:, 3]
+        self.assertGreater(float(np.dot(faced[:, 2], to_head / np.linalg.norm(to_head))), 0.999)  # 表が頭を向く
+        self.assertAlmostEqual(float(faced[1, 0]), 0.0, places=6)  # 横軸は水平 (傾けない)
+        np.testing.assert_allclose(faced[:, 3], (0.5, 1.6, -1.0))  # 位置は変えない
+
+    def test_lying_down_aligns_with_the_head(self):
+        head = np.eye(4)
+        head[:3, 3] = (0.0, 1.6, 0.0)
+        c, s = np.cos(np.radians(60)), np.sin(np.radians(60))
+        head[:3, :3] = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])  # 頭を横に60°傾けている
+        faced = self._face("Playspace", head)
+        self.assertGreater(abs(float(faced[1, 0])), 0.5)  # 水平ではなく頭の傾きに合わせる
+
+    def test_window_on_a_hand_is_not_turned(self):
+        head = np.eye(4)
+        head[:3, 3] = (0.0, 1.6, 0.0)
+        faced = self._face("LeftHand", head)
+        np.testing.assert_allclose(faced[:, :3], np.eye(3))
+
+
+class LauncherHandTest(unittest.TestCase):
+    """ランチャーを付ける手の切り替えと、手首を見たときだけ出す動き。"""
+
+    def test_switching_hand_mirrors_the_wrist_position(self):
+        """左手で付けていた位置を反転すると、右手の同じ場所 (鏡写し) に付く。"""
+        from models.overlay.overlay import mirrorHandPosition
+
+        left = {"x_pos": 0.03, "y_pos": 0.05, "z_pos": -0.02, "x_rotation": 10.0, "y_rotation": 20.0, "z_rotation": -30.0, "tracker": "LeftHand"}
+        right = mirrorHandPosition(left)
+        self.assertEqual(right["tracker"], "RightHand")
+        mirror = np.diag([-1.0, 1.0, 1.0, 1.0])
+        on_left = utils.toHomogeneous(_relative(getLeftHandBaseMatrix(), [left[k] for k in KEYS]))
+        on_right = utils.toHomogeneous(_relative(getRightHandBaseMatrix(), [right[k] for k in KEYS]))
+        np.testing.assert_allclose(on_right, mirror @ on_left @ mirror, atol=1e-6)
+        self.assertEqual(mirrorHandPosition(right), left)  # 戻せば元どおり
+
+    def _launcher_overlay(self):
+        from models.overlay.overlay import LAUNCHER
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=0.28)
+        overlay = Overlay({LAUNCHER: settings})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.overlay_system = MagicMock()
+        overlay.handle = {LAUNCHER: 11}
+        return overlay
+
+    def _head(self, facing_launcher):
+        """ランチャー (原点、表は +Z) の 0.4m 手前に頭。facing_launcher なら頭もランチャーを見ている。"""
+        head = np.eye(4)
+        head[:3, 3] = (0.0, 0.0, 0.4)
+        if not facing_launcher:
+            c, s_ = np.cos(np.radians(90)), np.sin(np.radians(90))
+            head[:3, :3] = np.array([[c, 0, s_], [0, 1, 0], [-s_, 0, c]])  # 横を向いている
+        return head
+
+    def test_launcher_shows_when_looking_at_the_wrist_and_hides_otherwise(self):
+        overlay = self._launcher_overlay()
+        overlay.launcher_shown, overlay.launcher_alpha = False, 0.0
+        looking = lambda index: self._head(True) if index == 0 else np.eye(4)  # noqa: E731
+        away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        overlay.updateLauncherVisibility(looking, 10.0)
+        self.assertFalse(overlay.launcher_shown)  # 一瞬見ただけでは出さない
+        overlay.updateLauncherVisibility(looking, 10.25)
+        self.assertTrue(overlay.launcher_shown)
+        self.assertFalse(overlay.launcher_interactive)  # 出始めは押せない
+        for t in (10.35, 10.45, 10.55, 10.65):
+            overlay.updateLauncherVisibility(looking, t)
+        self.assertEqual(overlay.launcher_alpha, 1.0)
+        self.assertTrue(overlay.launcher_interactive)
+        overlay.updateLauncherVisibility(away, 11.0)
+        self.assertTrue(overlay.launcher_shown)  # 目をそらしてすぐは消さない
+        overlay.updateLauncherVisibility(away, 11.35)
+        self.assertFalse(overlay.launcher_shown)
+        self.assertFalse(overlay.launcher_interactive)
+
+    def test_pointed_launcher_stays_and_disabled_auto_hide_always_shows(self):
+        overlay = self._launcher_overlay()
+        away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        overlay.launcher_pointed = True
+        overlay.updateLauncherVisibility(away, 10.0)
+        overlay.updateLauncherVisibility(away, 11.0)
+        self.assertTrue(overlay.launcher_shown)  # レーザーを当てている間は消さない
+        overlay.launcher_pointed = False
+        overlay.launcher_auto_hide = False
+        overlay.updateLauncherVisibility(away, 12.0)
+        overlay.updateLauncherVisibility(away, 13.0)
+        self.assertTrue(overlay.launcher_shown)
 
 
 class PanelLockTest(unittest.TestCase):

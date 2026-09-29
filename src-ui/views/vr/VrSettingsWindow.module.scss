@@ -240,6 +240,26 @@
     color: var(--dark_500_color);
 }
 
+// 押せない行 (条件がOFFのときの角度など)。既存の「使えない = .35」
+.is_row_disabled {
+    opacity: 0.35;
+}
+
+.segment {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background-color: var(--dark_900_color);
+}
+
+.segment_button {
+    min-width: 88px;
+    padding: 0 14px;
+    font-size: 18px;
+}
+
 .stepper {
     display: flex;
     align-items: center;
