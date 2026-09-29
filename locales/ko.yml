@@ -291,6 +291,9 @@ config_page:
         right_hand: "오른손"
         overlay_show_only_translated_messages:
             label: "번역된 메시지만 표시"
+        vr_panel:
+            label: "VR UI 표시"
+            desc: "VR 안에 기능 켜기/끄기, 로그, 언어, 설정을 조작할 수 있는 손목 런처와 창을 표시합니다. 자막 오버레이와 별도로 사용할 수 있습니다."
         voice_typing_mode:
             label:
             desc:
@@ -455,6 +458,7 @@ vr_panel:
     window_log: "로그"
     window_language: "언어"
     window_settings: "VR 설정"
+    recall_log: "불러오기"
     locked_by_config_page: "설정이 열려 있습니다. 닫으면 조작할 수 있습니다."
     log_opacity: "로그 불투명도"
     mic_threshold: "마이크 입력 최소 볼륨"
@@ -463,4 +467,3 @@ vr_panel:
     paused_while_settings: "설정 중에는 번역과 음성 인식을 멈춥니다. 닫으면 다시 시작합니다."
     overlay_small_log: "자막 (한 줄)"
     overlay_large_log: "자막 (여러 줄)"
-    overlay_keep_one: "VR UI가 표시되는 동안에는 둘 중 하나는 켜 둡니다"

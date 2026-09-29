@@ -118,6 +118,11 @@ class Main:
 
 - `/set/data/overlay_small_log_settings`: 小型オーバーレイ設定
 - `/set/data/overlay_large_log_settings`: 大型オーバーレイ設定
+- `/set/enable/overlay_vr_panel` / `/set/disable/overlay_vr_panel`: VR UI の有効化 / 無効化 (字幕のオーバーレイとは別)
+- `/set/data/overlay_vr_panel_opacity`: VR UI のログウィンドウの不透明度 (0.2〜1.0)
+- `/run/vr_panel_windows`: VR UI のウィンドウの開閉 (VR画面からメイン経由で届く)
+- `/run/vr_panel_recall_log`: 見失った VR UI のログウィンドウを目の前へ呼び戻す
+- バックエンドからの通知: `/run/vr_panel_pointer` (ポインタ位置、ホバー表示用)、`/run/vr_panel_log_out_of_view` (ログウィンドウが視線から外れた・戻った)
 
 ### WebSocket機能
 

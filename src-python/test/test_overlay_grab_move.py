@@ -4,7 +4,7 @@
 ここでは「掴んで離した後の行列を設定値へ正しく逆算できるか」だけを確かめる。
 """
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 from models.overlay import overlay_utils as utils
@@ -388,8 +388,11 @@ class VrWindowsTest(unittest.TestCase):
         head = np.eye(4)
         head[:3, 3] = (0.0, 1.6, 0.0)
         pose_of = lambda index: head if index == 0 else np.eye(4)  # noqa: E731
-        overlay.applyVrWindows(pose_of)  # 既定: ログは表示、一時ウィンドウは非表示
+        overlay.applyVrWindows(pose_of)  # 既定: ランチャーだけ表示 (ログと一時ウィンドウは非表示)
         overlay.overlay.hideOverlay.assert_any_call(12)
+        self.assertEqual(overlay.vr_windows_hidden, {PANEL, POPUP})
+        overlay.setVrWindows(log=True, popup=False)
+        overlay.applyVrWindows(pose_of)
         self.assertEqual(overlay.vr_windows_hidden, {POPUP})
         overlay.setVrWindows(log=False, popup=True)
         overlay.applyVrWindows(pose_of)
@@ -412,6 +415,109 @@ class VrWindowsTest(unittest.TestCase):
         self.assertGreater(float(np.dot(world[:3, 2], to_head)), 0)  # 表が頭を向く
         horizontal = np.linalg.norm([to_head[0], to_head[2]])
         self.assertTrue(0.45 - 1e-3 <= horizontal <= 0.65 + 1e-3)
+
+
+class VrPanelDisabledTest(unittest.TestCase):
+    """VR UI がOFF (字幕のオーバーレイだけが動いている) の間は、ランチャーも含めて隠し、撮影しない。"""
+
+    def test_all_vr_windows_are_hidden_and_shown_again(self):
+        overlay, POPUP = VrWindowsTest._overlay(self)
+        pose_of = lambda index: np.eye(4)  # noqa: E731
+        overlay.vr_panel_enabled = False
+        overlay.applyVrWindows(pose_of)
+        self.assertEqual(overlay.vr_windows_hidden, {PANEL, LAUNCHER, POPUP})
+        overlay.overlay.computeOverlayIntersection.return_value = (True, MagicMock(fDistance=0.5))
+        self.assertEqual(overlay.pointingOverlay(np.eye(4))[0], None)
+        overlay.vr_panel_enabled = True
+        overlay.applyVrWindows(pose_of)
+        self.assertEqual(overlay.vr_windows_hidden, {PANEL, POPUP})  # ログと一時ウィンドウは開いていないので隠れたまま
+
+    def test_panel_is_not_captured(self):
+        overlay, _ = VrWindowsTest._overlay(self)
+        overlay.gl = MagicMock()
+        overlay.vr_panel_enabled = False
+        with patch("models.overlay.overlay.window_capture") as capture:
+            overlay.updatePanel()
+        capture.findWindow.assert_not_called()
+        capture.captureWindow.assert_not_called()
+
+
+class RecallPanelTest(unittest.TestCase):
+    """見失ったログウィンドウを目の前へ呼び戻す。頭は (0, 1.6, 0) で -Z を向く。"""
+
+    def setUp(self):
+        self.overlay, _ = VrWindowsTest._overlay(self)
+        self.overlay.setVrWindows(log=True, popup=False)  # ログウィンドウを開いている
+        self.head = np.eye(4)
+        self.head[:3, 3] = (0.0, 1.6, 0.0)
+        self.pose_of = lambda index: self.head if index == 0 else np.eye(4)  # noqa: E731
+        self.notified = []
+        self.overlay.panel_out_of_view_callback = self.notified.append
+        self.saved = []
+        self.overlay.position_changed_callback = lambda size, position: self.saved.append((size, position))
+
+    def assertInFront(self):
+        world = self.overlay.overlayWorldPose(PANEL, self.pose_of)
+        np.testing.assert_allclose(world[:3, 3], (0.0, 1.5, -0.7), atol=1e-3)
+        self.assertGreater(float(world[2, 2]), 0.98)  # 表が頭 (+Z 側、少し上) を向く
+        self.assertEqual(self.overlay.settings[PANEL]["tracker"], "Playspace")
+
+    def test_out_of_view_by_angle_and_distance(self):
+        from models.overlay.overlay import isOutOfView
+
+        def at(deg, distance):
+            rad = np.radians(deg)
+            return self.head[:3, 3] + distance * np.array([np.sin(rad), 0.0, -np.cos(rad)])
+
+        self.assertFalse(isOutOfView(self.head, at(0, 1.0)))
+        self.assertFalse(isOutOfView(self.head, at(50, 1.0)))
+        self.assertTrue(isOutOfView(self.head, at(70, 1.0)))
+        self.assertTrue(isOutOfView(self.head, at(180, 1.0)))
+        self.assertTrue(isOutOfView(self.head, at(0, 4.0)))  # 正面でも遠すぎる
+        # 一度外れたら、内側 (50°, 2.7m) まで戻るまでは外れたまま (境界での切り替わり続けを防ぐ)
+        self.assertTrue(isOutOfView(self.head, at(55, 1.0), was_out=True))
+        self.assertFalse(isOutOfView(self.head, at(45, 1.0), was_out=True))
+        self.assertTrue(isOutOfView(self.head, at(0, 2.8), was_out=True))
+        self.assertFalse(isOutOfView(self.head, at(0, 2.8), was_out=False))
+
+    def test_recall_waits_until_the_grab_ends(self):
+        self.overlay.requestRecallPanel()
+        self.overlay.grabbing = (PANEL, 1, np.eye(4))
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertEqual(self.saved, [])
+        self.overlay.grabbing = None
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertInFront()
+
+    def test_recall_request_moves_the_panel_in_front_and_saves_it(self):
+        # 最初はパネルが足元 (空間の原点) にあり、視線から外れている
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertEqual(self.notified, [True])
+        self.overlay.requestRecallPanel()
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertInFront()
+        self.assertEqual(self.saved[-1][0], PANEL)
+        self.assertEqual(self.saved[-1][1]["tracker"], "Playspace")
+        self.assertEqual(self.notified, [True, False])  # 変わったときだけ知らせる
+        # UI へは JSON で送るので、numpy の bool_ ではなく Python の bool で知らせる
+        self.assertTrue(all(type(value) is bool for value in self.notified))
+
+    def test_opening_a_lost_panel_brings_it_in_front(self):
+        self.overlay.setVrWindows(log=False, popup=False)
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertEqual(self.saved, [])
+        self.overlay.setVrWindows(log=True, popup=False)
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertInFront()
+
+    def test_panel_on_a_hand_is_left_alone(self):
+        self.overlay.settings[PANEL]["tracker"] = "LeftHand"
+        self.overlay.setVrWindows(log=False, popup=False)
+        self.overlay.applyVrWindows(self.pose_of)
+        self.overlay.setVrWindows(log=True, popup=False)
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertEqual(self.saved, [])
+        self.assertEqual(self.notified, [])
 
 
 if __name__ == "__main__":

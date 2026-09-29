@@ -104,3 +104,14 @@
     border-radius: 2px;
     background-color: var(--primary_300_color);
 }
+
+// 開いているのに視線から外れているログウィンドウ: 押すと呼び戻す。
+// 下端の帯と文字を警告色にする (枠はホバー表示に使うので変えない)
+.window_button.is_attention {
+    .label {
+        color: var(--warning_color);
+    }
+    &::after {
+        background-color: var(--warning_color);
+    }
+}

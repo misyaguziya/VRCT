@@ -35,7 +35,8 @@ export const VrApp = () => {
     const [atlas_width, atlas_height] = layout.atlas;
     // 開いているウィンドウはこの画面の中だけで持つ (同期される atom に置くとメインの値で上書きされる)。
     // 表示・非表示の結果だけを Python に伝える。一時ウィンドウは同時に1つだけ
-    const [windows, setWindows] = useState({ log: true, popup: null });
+    // 起動時はランチャーだけを出す (ログは必要なときにランチャーから開く)
+    const [windows, setWindows] = useState({ log: false, popup: null });
     const { asyncStdoutToPython } = useStdoutToPython();
     useEffect(() => {
         asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null });

@@ -297,6 +297,9 @@ config_page:
         right_hand: "右手"
         overlay_show_only_translated_messages:
             label: "翻訳後のメッセージのみ表示する"
+        vr_panel:
+            label: "VR UIを表示する"
+            desc: "VRの中に、機能のON/OFFやログ・言語・設定を操作できる手首のランチャーとウィンドウを表示します。字幕のオーバーレイとは別に使えます。"
         voice_typing_mode:
             label: "音声タイピングモード"
             desc: "文字起こしされたテキストを、アクティブな入力欄へと自動的に貼り付けます。\n※Windows標準のクリップボード機能を利用しています。"
@@ -461,6 +464,7 @@ vr_panel:
     window_log: "ログ"
     window_language: "言語"
     window_settings: "VR設定"
+    recall_log: "呼び戻す"
     locked_by_config_page: "設定を開いています。閉じると操作できます。"
     log_opacity: "ログの不透明度"
     mic_threshold: "マイクの入力感度"
@@ -469,4 +473,3 @@ vr_panel:
     paused_while_settings: "設定中は翻訳と文字起こしを止めています。閉じると再開します。"
     overlay_small_log: "字幕（一行）"
     overlay_large_log: "字幕（複数行）"
-    overlay_keep_one: "VR UIの表示中は、どちらか1つはONのままにします"
