@@ -234,7 +234,7 @@ _debounce_time: int = 2  # デバウンス時間（秒）
 - `OVERLAY_LARGE_LOG_SETTINGS`: 大ログオーバーレイ設定
 - `OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES`: 翻訳メッセージのみ表示
 - `OVERLAY_VR_PANEL`: VR UI (手首のランチャーとログ・言語・VR設定のウィンドウ) 有効。字幕のオーバーレイとは別にON/OFFする (既定 OFF)
-- `OVERLAY_VR_PANEL_SETTINGS`: VR UI のログウィンドウの位置・大きさ・不透明度・固定先 (VR内で掴んで動かした結果を保存。足りないキーは今の値で補う)
+- `OVERLAY_VR_PANEL_SETTINGS`: VR UI のログウィンドウの位置・幅 (m)・不透明度・固定先と、`width` / `height` (論理px、600x400〜1400x1000。角を掴んで伸ばす)。VR内で掴んで動かした結果を保存し、足りないキーは今の値で補う
 - `OVERLAY_VR_PANEL_LOCKED`: VR UI のログウィンドウのロック (掴めなくする)
 - `OVERLAY_VR_PANEL_FONT_SIZE`: VR UI のログの文字の大きさ (14〜28px、既定 17。デスクトップのログの文字サイズとは別)
 - `OVERLAY_VR_LAUNCHER_SETTINGS`: VR UI のランチャーの位置・大きさ・付ける手 (tracker)

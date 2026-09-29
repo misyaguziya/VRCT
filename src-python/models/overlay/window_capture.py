@@ -19,6 +19,9 @@ _WM_LBUTTONDOWN = 0x0201
 _WM_LBUTTONUP = 0x0202
 _WM_MOUSEWHEEL = 0x020A
 _MK_LBUTTON = 0x0001
+_SWP_NOMOVE = 0x0002
+_SWP_NOZORDER = 0x0004
+_SWP_NOACTIVATE = 0x0010
 
 _user32 = ctypes.windll.user32 if hasattr(ctypes, "windll") else None
 _gdi32 = ctypes.windll.gdi32 if hasattr(ctypes, "windll") else None
@@ -40,12 +43,6 @@ def findWindow(title: str = VR_PANEL_TITLE) -> Optional[int]:
 
 def isWindow(hwnd: int) -> bool:
     return bool(_user32.IsWindow(hwnd))
-
-
-def captureWindow(hwnd: int) -> Optional[Image.Image]:
-    """ウィンドウ全体をRGBA画像として撮影する。最小化中などで撮れなければ None。"""
-    capture = captureWindowRaw(hwnd)
-    return None if capture is None else imageFromCapture(capture)
 
 
 def captureWindowRaw(hwnd: int) -> Optional[tuple]:
@@ -82,6 +79,24 @@ def captureWindowRaw(hwnd: int) -> Optional[tuple]:
     _user32.ClientToScreen(hwnd, ctypes.byref(origin))
     left, top = origin.x - rect.left, origin.y - rect.top
     return buf.raw, (width, height), (left, top, left + client.right, top + client.bottom)
+
+
+def resizeClient(hwnd: int, width: int, height: int) -> tuple:
+    """クライアント領域が論理px (width x height) になるよう、ウィンドウの大きさを変える (位置は変えない)。
+
+    戻り値: 目標のクライアント領域の大きさ (物理px)。撮影がこの大きさになれば変わり終えている。
+    """
+    scale = (_user32.GetDpiForWindow(hwnd) or 96) / 96
+    rect, client = wintypes.RECT(), wintypes.RECT()
+    _user32.GetWindowRect(hwnd, ctypes.byref(rect))
+    _user32.GetClientRect(hwnd, ctypes.byref(client))
+    target_w, target_h = round(width * scale), round(height * scale)
+    if (client.right, client.bottom) == (target_w, target_h):
+        return (target_w, target_h)
+    frame_w = (rect.right - rect.left) - client.right
+    frame_h = (rect.bottom - rect.top) - client.bottom
+    _user32.SetWindowPos(hwnd, 0, 0, 0, target_w + frame_w, target_h + frame_h, _SWP_NOMOVE | _SWP_NOZORDER | _SWP_NOACTIVATE)
+    return (target_w, target_h)
 
 
 def imageFromCapture(capture: tuple) -> Image.Image:

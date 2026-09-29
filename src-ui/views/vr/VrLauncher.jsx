@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 
 import { useI18n } from "@useI18n";
@@ -15,8 +16,11 @@ import HmdSvg from "@images/mui_head_mounted_device.svg?react";
 
 import styles from "./VrLauncher.module.scss";
 
+// ボタンをこの時間押し続けると長押し (ログの呼び戻し)
+const LONG_PRESS_MS = 600;
+
 // 手首に付ける横長の帯。4機能のON/OFFと、各ウィンドウを開くボタン。
-export const VrLauncher = ({ windows, toggleLog, togglePopup }) => {
+export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup }) => {
     const { t } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
     const {
@@ -31,6 +35,11 @@ export const VrLauncher = ({ windows, toggleLog, togglePopup }) => {
     const is_log_lost = windows.log && currentVrPanelLogOutOfView.data === true;
 
     const is_locked = currentIsOpenedConfigPage.data === true;
+    // ログボタンの長押し: 固定先によらず、ログを目の前へ呼び戻す (閉じていれば開いてから)
+    const recallLog = () => {
+        openLog();
+        asyncStdoutToPython("/run/vr_panel_recall_log");
+    };
 
     return (
         <div className={styles.container}>
@@ -49,7 +58,8 @@ export const VrLauncher = ({ windows, toggleLog, togglePopup }) => {
                 {/* ウィンドウの開閉は状態を変えないので、設定画面を開いている間も使える */}
                 <WindowButton Svg={CopyThinSvg} label={is_log_lost ? t("vr_panel.recall_log") : t("vr_panel.window_log")}
                     is_open={windows.log} is_attention={is_log_lost}
-                    onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog} />
+                    onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog}
+                    onLongPress={recallLog} long_press_label={t("vr_panel.recall_log")} />
                 <WindowButton Svg={TranslationSvg} label={t("vr_panel.window_language")}
                     is_open={windows.popup === "language"} onClick={() => togglePopup("language")} />
                 <WindowButton Svg={HmdSvg} label={t("vr_panel.window_settings")}
@@ -81,9 +91,42 @@ const FunctionButton = ({ Svg, label, state, onClick, is_locked }) => {
     );
 };
 
-const WindowButton = ({ Svg, label, is_open, is_attention = false, onClick }) => (
-    <button className={clsx(styles.button, styles.window_button, { [styles.is_open]: is_open, [styles.is_attention]: is_attention })} onClick={onClick}>
-        <Svg className={styles.icon} />
-        <span className={styles.label}>{label}</span>
-    </button>
-);
+// onLongPress があれば、押し続けている間は long_press_label を出し、長押しで onLongPress を呼ぶ (クリックはしない)
+const WindowButton = ({ Svg, label, is_open, is_attention = false, onClick, onLongPress = null, long_press_label = null }) => {
+    const timer = useRef(null);
+    const long_pressed = useRef(false);
+    const [is_holding, setIsHolding] = useState(false);
+    useEffect(() => () => clearTimeout(timer.current), []);
+
+    const stopTimer = () => {
+        clearTimeout(timer.current);
+        timer.current = null;
+        setIsHolding(false);
+    };
+    const onMouseDown = () => {
+        clearTimeout(timer.current); // 1回の押し込みで長押しは1回だけ
+        long_pressed.current = false;
+        if (!onLongPress) return;
+        setIsHolding(true);
+        timer.current = setTimeout(() => {
+            long_pressed.current = true;
+            stopTimer();
+            onLongPress();
+        }, LONG_PRESS_MS);
+    };
+    const onClickButton = () => {
+        if (long_pressed.current) return; // 長押しの後の離しではクリックしない
+        onClick();
+    };
+    return (
+        <button
+            className={clsx(styles.button, styles.window_button, {
+                [styles.is_open]: is_open, [styles.is_attention]: is_attention, [styles.is_holding]: is_holding,
+            })}
+            onMouseDown={onMouseDown} onMouseUp={stopTimer} onMouseLeave={stopTimer} onClick={onClickButton}
+        >
+            <Svg className={styles.icon} />
+            <span className={styles.label}>{is_holding && long_press_label ? long_press_label : label}</span>
+        </button>
+    );
+};

@@ -11,7 +11,7 @@ import {
     FontFamilyController,
 } from "../app/_app_controllers";
 
-import layout from "./vr_layout.json";
+import { useVr } from "@logics_configs";
 import { VrLauncher } from "./VrLauncher";
 import { VrLogWindow } from "./VrLogWindow";
 import { VrPopupWindow } from "./VrPopupWindow";
@@ -23,7 +23,7 @@ import styles from "./VrApp.module.scss";
 // Python 側 (models/overlay/overlay.py) が1回だけ撮影し、領域ごとに別のオーバーレイとして表示する。
 // VRでは px で固定する (デスクトップのUI倍率 UiSizeController は使わない。
 // 大きさはVR内で掴んで拡大縮小できる)。
-const Region = ({ name, children }) => {
+const Region = ({ layout, name, children }) => {
     const [x, y, w, h] = layout.regions[name];
     return (
         <div className={styles.region} style={{ left: x, top: y, width: w, height: h }}>
@@ -33,12 +33,29 @@ const Region = ({ name, children }) => {
 };
 
 export const VrApp = () => {
+    // 並びはログの大きさで変わる (Python が決めて知らせる。models/overlay/overlay.py computeVrLayout)
+    const { currentVrPanelLayout } = useVr();
+    const layout = currentVrPanelLayout.data;
     const [atlas_width, atlas_height] = layout.atlas;
+    const [, , panel_width, panel_height] = layout.regions.panel;
+    const { asyncStdoutToPython } = useStdoutToPython();
+    // 新しい並びで描き終えたら Python に知らせる (それまで撮ったフレームは表示に使われない)。
+    // 並びはログの大きさで決まるので、ログの大きさを送る (全体の大きさはログを縮めても変わらないことがある)。
+    // 描画が画面に反映されるのを待つため、2フレーム後に送る
+    useEffect(() => {
+        let second = null;
+        const first = requestAnimationFrame(() => {
+            second = requestAnimationFrame(() => asyncStdoutToPython("/run/vr_panel_layout_rendered", [panel_width, panel_height]));
+        });
+        return () => {
+            cancelAnimationFrame(first);
+            if (second !== null) cancelAnimationFrame(second);
+        };
+    }, [panel_width, panel_height]);
     // 開いているウィンドウはこの画面の中だけで持つ (同期される atom に置くとメインの値で上書きされる)。
     // 表示・非表示の結果だけを Python に伝える。一時ウィンドウは同時に1つだけ
     // 起動時はランチャーだけを出す (ログは必要なときにランチャーから開く)
     const [windows, setWindows] = useState({ log: false, popup: null });
-    const { asyncStdoutToPython } = useStdoutToPython();
     useEffect(() => {
         asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null });
     }, [windows.log, windows.popup]);
@@ -61,6 +78,7 @@ export const VrApp = () => {
     }, [currentIsOpenedConfigPage.data]);
 
     const toggleLog = () => setWindows(w => ({ ...w, log: !w.log }));
+    const openLog = () => setWindows(w => ({ ...w, log: true }));
     const togglePopup = (name) => setWindows(w => ({ ...w, popup: w.popup === name ? null : name }));
     const closePopup = () => setWindows(w => ({ ...w, popup: null }));
 
@@ -71,10 +89,10 @@ export const VrApp = () => {
             <UiLanguageController />
             <FontFamilyController />
 
-            <Region name="panel"><VrLogWindow onClose={toggleLog} /></Region>
-            <Region name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} togglePopup={togglePopup} /></Region>
-            <Region name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
-            <Region name="toolbar"><VrToolbar /></Region>
+            <Region layout={layout} name="panel"><VrLogWindow onClose={toggleLog} /></Region>
+            <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} /></Region>
+            <Region layout={layout} name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
+            <Region layout={layout} name="toolbar"><VrToolbar /></Region>
         </div>
     );
 };

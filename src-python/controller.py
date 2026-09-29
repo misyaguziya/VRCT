@@ -15,7 +15,7 @@ from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC, OCR_MESSAGE_SPEC
-from models.overlay.overlay import PANEL_ANCHORS, mirrorHandPosition
+from models.overlay.overlay import PANEL_ANCHORS, computeVrLayout, clampPanelSize, mirrorHandPosition
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -26,12 +26,18 @@ _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 # ハンドラロック競合で feedWatchdog が 35s 遅延するのを freeze_trace.log で
 # 2026-08-20 に観測した。前回報告から MIN_DELTA 以上進んだ、または
 # MIN_INTERVAL_SEC 以上経過した場合のみ forward する (0% / 100% は必ず送る)。
-# config.OVERLAY_VR_PANEL_SETTINGS は dict を丸ごと読み書きする。掴み移動の保存 (オーバーレイの
-# スレッド) と不透明度の変更 (エンドポイント) が重なると片方が消えるので、読み書きを直列にする
-_VR_PANEL_SETTINGS_LOCK = Lock()
-
 _DOWNLOAD_PROGRESS_MIN_DELTA = 0.01
 _DOWNLOAD_PROGRESS_MIN_INTERVAL_SEC = 0.5
+
+# config.OVERLAY_VR_PANEL_SETTINGS / OVERLAY_VR_LAUNCHER_SETTINGS は dict を丸ごと読み書きする。
+# 掴み移動の保存 (オーバーレイのスレッド) と、不透明度・ランチャーの手の変更 (エンドポイント) が
+# 重なると片方が消えるので、読み書きを直列にする
+_VR_WINDOW_SETTINGS_LOCK = Lock()
+
+
+def vrLayoutToJson(layout: dict) -> dict:
+    """VR画面の並びを UI へ送る形 (リスト) にする。src-ui/views/vr/vr_layout.json と同じ形。"""
+    return {"atlas": list(layout["atlas"]), "regions": {name: list(rect) for name, rect in layout["regions"].items()}}
 
 # shutdown() が mic/speaker_lifecycle_lock を待つ上限。model.py の
 # TRANSCRIPT_STOP_JOIN_TIMEOUT (15s) + PyAudio open の _MIC_OPEN_TIMEOUT_SEC
@@ -4478,6 +4484,7 @@ class Controller:
             self._model.setOverlayPositionChangedCallback(self._onOverlayPositionChanged)
             self._model.setOverlayPointerCallback(self._onVrPanelPointer)
             self._model.setOverlayPanelOutOfViewCallback(self._onVrPanelLogOutOfView)
+            self._model.setOverlayLayoutCallback(self._onVrPanelLayout)
         except Exception:
             errorLogging()
 
@@ -4529,10 +4536,13 @@ class Controller:
                 ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
                 data=config.OVERLAY_VR_LAUNCHER_SETTINGS["tracker"],
             )
-        current = config.OVERLAY_VR_LAUNCHER_SETTINGS
-        if current["tracker"] != data:
-            # 反転した位置に、指定された手を明示する (今の固定先が手以外の不正な値でも取り違えないように)
-            config.OVERLAY_VR_LAUNCHER_SETTINGS = {**current, **mirrorHandPosition(current), "tracker": data}
+        with _VR_WINDOW_SETTINGS_LOCK:
+            current = config.OVERLAY_VR_LAUNCHER_SETTINGS
+            changed = current["tracker"] != data
+            if changed:
+                # 反転した位置に、指定された手を明示する (今の固定先が手以外の不正な値でも取り違えないように)
+                config.OVERLAY_VR_LAUNCHER_SETTINGS = {**current, **mirrorHandPosition(current), "tracker": data}
+        if changed:
             model.updateVrLauncherPosition()
         return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_SETTINGS["tracker"]}
 
@@ -4590,7 +4600,7 @@ class Controller:
                 ErrorCode.VALIDATION_CONFIG_VALUE_INVALID,
                 data=config.OVERLAY_VR_PANEL_SETTINGS["opacity"],
             )
-        with _VR_PANEL_SETTINGS_LOCK:
+        with _VR_WINDOW_SETTINGS_LOCK:
             config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, "opacity": round(opacity, 2)}
         model.updateOverlayVrPanelOpacity()
         return {"status": 200, "result": config.OVERLAY_VR_PANEL_SETTINGS["opacity"]}
@@ -4598,6 +4608,24 @@ class Controller:
     def _onVrPanelPointer(self, xy) -> None:
         """VR UI上のポインタの位置をUIへ送る (オーバーレイスレッドから呼ばれる)。外れたら None。"""
         self.run(200, self.run_mapping["vr_panel_pointer"], None if xy is None else {"x": xy[0], "y": xy[1]})
+
+    @staticmethod
+    def getVrPanelLayout(*args, **kwargs) -> dict:
+        """VR画面の並び (ログの大きさで変わる)。VR画面 (React) はこれに従って各ウィンドウを描く。"""
+        s = config.OVERLAY_VR_PANEL_SETTINGS
+        return {"status": 200, "result": vrLayoutToJson(computeVrLayout(*clampPanelSize(s["width"], s["height"])))}
+
+    @staticmethod
+    def setVrPanelLayoutRendered(data, *args, **kwargs) -> dict:
+        """VR画面が新しい並びで描き終えた (その並びのログの [幅, 高さ])。送り手は VR画面だけ。"""
+        if not (isinstance(data, list) and len(data) == 2 and all(isinstance(v, int) and not isinstance(v, bool) for v in data)):
+            return VRCTError.create_error_response(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID, data=None)
+        model.setVrPanelLayoutRendered(data)
+        return {"status": 200, "result": data}
+
+    def _onVrPanelLayout(self, layout: dict) -> None:
+        """VR画面の並びが変わったことを UI へ送る (オーバーレイスレッドから呼ばれる)。"""
+        self.run(200, self.run_mapping["vr_panel_layout"], vrLayoutToJson(layout))
 
     def _onVrPanelLogOutOfView(self, out_of_view: bool) -> None:
         """ログウィンドウが視線から外れた・戻ったことをUIへ送る (オーバーレイスレッドから呼ばれる)。"""
@@ -4624,12 +4652,13 @@ class Controller:
             self._model.updateOverlayLargeLogSettings()
             self.run(200, self.run_mapping["overlay_large_log_settings"], config.OVERLAY_LARGE_LOG_SETTINGS)
         elif size == "panel":
-            with _VR_PANEL_SETTINGS_LOCK:
+            with _VR_WINDOW_SETTINGS_LOCK:
                 config.OVERLAY_VR_PANEL_SETTINGS = {**config.OVERLAY_VR_PANEL_SETTINGS, **position}
             # 固定先は操作バーでも、呼び戻し (空間固定になる) でも変わるので毎回知らせる
             self.run(200, self.run_mapping["overlay_vr_panel_anchor"], position["tracker"])
         elif size == "launcher":
-            config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, **position}
+            with _VR_WINDOW_SETTINGS_LOCK:
+                config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, **position}
 
     def init(self, *args, **kwargs) -> None:
         removeLog()

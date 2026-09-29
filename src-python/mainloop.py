@@ -138,6 +138,7 @@ run_mapping = {
     "vr_panel_pointer":"/run/vr_panel_pointer",
     "vr_panel_log_out_of_view":"/run/vr_panel_log_out_of_view",
     "overlay_vr_panel_anchor":"/run/overlay_vr_panel_anchor",
+    "vr_panel_layout":"/run/vr_panel_layout",
     "overlay_large_log_settings":"/run/overlay_large_log_settings",
 
     "selectable_mic_host_list":"/run/selectable_mic_host_list",
@@ -481,6 +482,10 @@ mapping = {
     "/get/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.getOverlayVrPanelOpacity},
     # VR UIのログウィンドウの操作バー (固定先・ロック)
     "/get/data/overlay_vr_panel_anchor": {"status": True, "variable":controller.getOverlayVrPanelAnchor},
+    # VR画面の並び (ログの大きさで変わる。変わったら /run/vr_panel_layout で通知)
+    "/get/data/vr_panel_layout": {"status": True, "variable":controller.getVrPanelLayout},
+    # 初期化中にも受け付ける (起動時の設定を受けて描き直した知らせを取りこぼすと、ログの表示が切り替わらない)
+    "/run/vr_panel_layout_rendered": {"status": True, "variable":controller.setVrPanelLayoutRendered},
     "/set/data/overlay_vr_panel_anchor": {"status": True, "variable":controller.setOverlayVrPanelAnchor},
     "/get/data/overlay_vr_panel_locked": {"status": True, "variable":controller.getOverlayVrPanelLocked},
     "/get/data/overlay_vr_panel_font_size": {"status": True, "variable":controller.getOverlayVrPanelFontSize},

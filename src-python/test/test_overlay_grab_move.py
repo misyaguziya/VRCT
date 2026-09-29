@@ -4,9 +4,10 @@
 ここでは「掴んで離した後の行列を設定値へ正しく逆算できるか」だけを確かめる。
 """
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import numpy as np
+import openvr
 from models.overlay import overlay_utils as utils
 from models.overlay.overlay import (
     LAUNCHER,
@@ -123,6 +124,33 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.callback = MagicMock()
         self.overlay.position_changed_callback = self.callback
 
+    def test_no_input_while_the_layout_is_switching(self):
+        """ログの大きさの切り替え中は、表示と VR画面の並びが合っていないのでクリックを送らない。"""
+        from unittest.mock import patch
+
+        settings = dict(self.overlay.settings["small"], width=900, height=700)
+        overlay = Overlay({PANEL: settings})
+        overlay.overlay_system, overlay.overlay = self.overlay.overlay_system, self.overlay.overlay
+        overlay.handle = {PANEL: 10}
+        overlay.pointer_handles = self.overlay.pointer_handles
+        overlay.panel_hwnd = 123
+        overlay.panel_image_size = VR_ATLAS_SIZE
+        overlay.layout_applied = overlay.layout
+        overlay.setVrWindows(log=True, popup=False)
+        # レーザーはログの真ん中に当たっている (見えている範囲の外の当たりは無視されるため)
+        center = overlay.overlayWorldPose(PANEL, lambda index: np.eye(4))[:3, 3]
+        overlay.overlay.computeOverlayIntersection.return_value[1].vPoint.v = list(center)
+        self.trigger = True
+        with patch("models.overlay.overlay.window_capture") as wc:
+            overlay.updateGrab()
+            wc.mouseDown.assert_called_once()  # 切り替え中でなければ押せる
+            overlay.panel_input.clear()
+            wc.reset_mock()
+            overlay.setPanelSize(1200, 800)  # 大きさを変えた (まだ新しい並びで撮れていない)
+            overlay.updateGrab()
+        wc.mouseMove.assert_not_called()
+        wc.mouseDown.assert_not_called()
+
     def test_press_grab_release_commits(self):
         from unittest.mock import patch
         t = [100.0]
@@ -237,7 +265,8 @@ class UpdatePanelTest(unittest.TestCase):
         overlay.panel_hwnd = 123
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
-            wc.captureWindowRaw.return_value = (b"frame", None, None)
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"frame", None, (0, 0) + VR_ATLAS_SIZE)
             wc.imageFromCapture.return_value = Image.new("RGBA", (900, 836), (40, 40, 40, 255))
             overlay.updatePanel()
         results = MagicMock()
@@ -425,6 +454,170 @@ class GrabMotionTest(unittest.TestCase):
         head[:3, 3] = (0.0, 1.6, 0.0)
         faced = self._face("LeftHand", head)
         np.testing.assert_allclose(faced[:, :3], np.eye(3))
+
+
+class FaceUserTurnTest(unittest.TestCase):
+    """放したときの向き直しは、少しずつ回す。"""
+
+    def test_interpolated_pose(self):
+        from models.overlay.overlay import interpolatePose
+
+        start = np.hstack([np.eye(3), np.zeros((3, 1))])
+        c, s_ = np.cos(np.radians(90)), np.sin(np.radians(90))
+        end = np.hstack([np.array([[c, 0, s_], [0, 1, 0], [-s_, 0, c]]), np.array([[1.0], [0.0], [0.0]])])
+        np.testing.assert_allclose(interpolatePose(start, end, 0.0), start, atol=1e-9)
+        np.testing.assert_allclose(interpolatePose(start, end, 1.0), end, atol=1e-9)
+        half = interpolatePose(start, end, 0.5)
+        np.testing.assert_allclose(half[:, 3], (0.5, 0.0, 0.0))
+        self.assertAlmostEqual(float(half[0, 0]), np.cos(np.radians(45)), places=6)  # 半分 (45°) 回っている
+        np.testing.assert_allclose(half[:, :3] @ half[:, :3].T, np.eye(3), atol=1e-9)  # 回転のまま (歪まない)
+
+    def test_settle_ends_at_the_faced_pose(self):
+        overlay = Overlay({})
+        overlay.setTransform = MagicMock()
+        start = np.hstack([np.eye(3), np.zeros((3, 1))])
+        end = start.copy()
+        end[0, 3] = 1.0
+        overlay.settling = (PANEL, -1, start, end, 10.0)
+        overlay.updateSettle(10.1)
+        self.assertIsNotNone(overlay.settling)
+        overlay.updateSettle(10.3)
+        self.assertIsNone(overlay.settling)
+        np.testing.assert_allclose(overlay.setTransform.call_args.args[2], end)
+
+
+class PanelRecoveryTest(unittest.TestCase):
+    """VR画面の撮影・転送の失敗と、止めるときの後片付け。"""
+
+    def _overlay(self):
+        overlay = Overlay({PANEL: {}, LAUNCHER: {}})
+        overlay.handle = {PANEL: 10, LAUNCHER: 11}
+        overlay.overlay = MagicMock()
+        overlay.gl = {"GL": MagicMock(), "glfw": MagicMock(), "window": 5, "texture": 1, "vr_texture": MagicMock(), "size": None}
+        return overlay
+
+    def test_textures_are_cleared_before_the_gl_context_is_destroyed(self):
+        """テクスチャを渡したまま OpenGL の環境を消すと、SteamVR との接続を閉じるときに落ちる。"""
+        overlay = self._overlay()
+        order = MagicMock()
+        order.attach_mock(overlay.overlay.clearOverlayTexture, "clear")
+        order.attach_mock(overlay.gl["glfw"].destroy_window, "destroy")
+        overlay.shutdownPanelTexture()
+        names = [c[0] for c in order.mock_calls]
+        self.assertEqual(names, ["clear", "clear", "destroy"])
+        self.assertIsNone(overlay.gl)
+
+    def test_error_left_by_steamvr_is_discarded_before_drawing(self):
+        overlay = self._overlay()
+        GL = overlay.gl["GL"]
+        GL.GL_NO_ERROR = 0
+        GL.glGetError.side_effect = [1281, 0]
+        with patch("models.overlay.overlay.printLog") as log:
+            self.assertIs(overlay.prepareGl(), GL)
+        overlay.gl["glfw"].make_context_current.assert_called_once_with(5)
+        self.assertEqual(GL.glGetError.call_count, 2)
+        log.assert_called_once()
+
+    def test_one_failure_does_not_stop_the_panel(self):
+        overlay = self._overlay()
+        with patch("models.overlay.overlay.errorLogging") as logged:
+            overlay.onPanelError(RuntimeError("GL"))
+            self.assertIsNotNone(overlay.gl)
+            for _ in range(28):
+                overlay.onPanelError(RuntimeError("GL"))
+            self.assertIsNotNone(overlay.gl)
+            overlay.onPanelError(RuntimeError("GL"))  # 30回続いたら止める
+        self.assertIsNone(overlay.gl)
+        self.assertEqual(logged.call_count, 1)  # 同じ失敗は1回だけ記録する
+
+    def test_teardown_closes_steamvr_while_the_gl_context_is_current(self):
+        """SteamVR との接続は、OpenGL の環境を今のものにしたまま閉じ、その後で環境を消す。"""
+        overlay = self._overlay()
+        overlay.overlay = MagicMock(spec=openvr.IVROverlay)
+        overlay.system = MagicMock(spec=openvr.IVRSystem)
+        order = MagicMock()
+        order.attach_mock(overlay.gl["glfw"].make_context_current, "current")
+        order.attach_mock(overlay.overlay.destroyOverlay, "destroy_overlay")
+        order.attach_mock(overlay.gl["glfw"].destroy_window, "destroy_gl")
+        with patch("models.overlay.overlay.openvr_session") as session:
+            order.attach_mock(session.release, "release")
+            overlay.teardown()
+        names = [c[0] for c in order.mock_calls]
+        self.assertEqual(names, ["current", "destroy_overlay", "destroy_overlay", "release", "destroy_gl"])
+        self.assertIsNone(overlay.overlay)
+        self.assertIsNone(overlay.system)
+
+    def test_failed_close_still_allows_turning_on_again(self):
+        """接続を閉じるのに失敗しても (実機で access violation)、止まった状態にして次の ON で作り直せるようにする。"""
+        overlay = self._overlay()
+        overlay.gl = None
+        overlay.initialized = True
+        overlay.system = MagicMock(spec=openvr.IVRSystem)
+        with patch("models.overlay.overlay.openvr_session") as session, patch("models.overlay.overlay.errorLogging"):
+            session.release.side_effect = OSError("access violation")
+            overlay.shutdownOverlay()
+        self.assertFalse(overlay.initialized)
+        self.assertIsNone(overlay.system)
+
+    def test_texture_size_is_fixed_and_the_bounds_shrink(self):
+        """SteamVR は最初のテクスチャの大きさのまま受け取るので、最大の並びが入る大きさで1回だけ作り、
+        撮影画像は左上に書いて、表示範囲をその分だけ縮める。"""
+        from PIL import Image
+
+        from models.overlay.overlay import MAX_LAYOUT, computeVrLayout
+
+        overlay = self._overlay()
+        overlay.initialized = False  # 位置の更新は見ない
+        overlay.panel_hwnd = 123
+        overlay.layout_applied = None
+        GL = overlay.gl["GL"]
+        GL.GL_NO_ERROR = 0
+        GL.glGetError.return_value = 0
+        with patch("models.overlay.overlay.window_capture") as wc:
+            wc.isWindow.return_value = True
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"a", None, (0, 0) + VR_ATLAS_SIZE)
+            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            overlay.updatePanel()
+            self.assertEqual(overlay.gl["size"], MAX_LAYOUT["atlas"])  # 最大の並びの大きさで作った
+            self.assertEqual(overlay.gl["texture"], 1)
+            bounds = overlay.overlay.setOverlayTextureBounds.call_args_list[0].args[1]
+            self.assertAlmostEqual(bounds.uMax, 900 / MAX_LAYOUT["atlas"][0])  # ログの右端 (900px)
+            self.assertAlmostEqual(bounds.vMax, 1 - 700 / MAX_LAYOUT["atlas"][1])  # ログの下端 (700px)
+
+            overlay.setPanelSize(790, 668)  # 縮めても、テクスチャは作り直さない
+            small = computeVrLayout(790, 668)["atlas"]
+            overlay.setLayoutRendered([790, 668])
+            wc.captureWindowRaw.return_value = (b"b", None, (0, 0) + small)
+            wc.imageFromCapture.return_value = Image.new("RGBA", small)
+            overlay.overlay.setOverlayTextureBounds.reset_mock()
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()
+        GL.glGenTextures.assert_not_called()
+        self.assertEqual(overlay.gl["size"], MAX_LAYOUT["atlas"])
+        bounds = overlay.overlay.setOverlayTextureBounds.call_args_list[0].args[1]
+        self.assertAlmostEqual(bounds.uMax, 790 / MAX_LAYOUT["atlas"][0])
+        self.assertAlmostEqual(bounds.vMax, 1 - 668 / MAX_LAYOUT["atlas"][1])
+
+    def test_hit_outside_the_visible_region_is_ignored(self):
+        overlay = Overlay({PANEL: {k: 0.0 for k in KEYS} | {"tracker": "Playspace", "ui_scaling": 0.9, "z_pos": 1.0}})
+        overlay.overlay_system = MagicMock()
+        pose_of = lambda index: np.eye(4)  # noqa: E731
+        center = overlay.overlayWorldPose(PANEL, pose_of)
+        hit = MagicMock()
+        hit.vPoint.v = list((center @ np.array([0.0, -0.30, 0.0, 1.0]))[:3])  # 下端 (0.35m) の内側
+        self.assertTrue(overlay.hitInsideRegion(PANEL, hit, pose_of))
+        hit.vPoint.v = list((center @ np.array([0.0, -0.40, 0.0, 1.0]))[:3])  # 下の操作バーのあたり
+        self.assertFalse(overlay.hitInsideRegion(PANEL, hit, pose_of))
+
+    def test_grab_error_clears_the_highlight(self):
+        overlay = self._overlay()
+        overlay.setHighlight = MagicMock()
+        overlay.showPointer = MagicMock()
+        with patch("models.overlay.overlay.errorLogging"):
+            overlay.onGrabError(RuntimeError("GL"))
+        overlay.setHighlight.assert_called_with(None, ANY)
+        overlay.showPointer.assert_called_with(None, ANY)
 
 
 class LauncherHandTest(unittest.TestCase):
@@ -654,7 +847,8 @@ class UpdatePanelRegionsTest(unittest.TestCase):
         ImageDraw.Draw(atlas).rectangle((0, 700, 900, 836), fill=(0, 0, 255, 255))  # ランチャー側 = 青
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
-            wc.captureWindowRaw.return_value = (b"frame", None, None)
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"frame", None, (0, 0) + VR_ATLAS_SIZE)
             wc.imageFromCapture.return_value = atlas
             overlay.updatePanel()
         # 領域ごとの切り出しは各オーバーレイのテクスチャ範囲 (bounds) で行う (VrLayoutTest 参照)
@@ -680,10 +874,11 @@ class PanelCaptureLoadTest(unittest.TestCase):
         overlay, atlas = self._overlay()
         with patch("models.overlay.overlay.window_capture") as wc:
             wc.isWindow.return_value = True
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
             wc.imageFromCapture.return_value = atlas
             for raw in (b"a", b"a", b"b"):
                 overlay.panel_last_capture = 0.0  # 撮影間隔の待ちを飛ばす
-                wc.captureWindowRaw.return_value = (raw, None, None)
+                wc.captureWindowRaw.return_value = (raw, None, (0, 0) + VR_ATLAS_SIZE)
                 overlay.updatePanel()
         self.assertEqual(wc.captureWindowRaw.call_count, 3)
         self.assertEqual(wc.imageFromCapture.call_count, 2)  # 2回目は前回と同じなので変換しない
@@ -710,6 +905,346 @@ class PanelCaptureLoadTest(unittest.TestCase):
         self.assertEqual(img.size, (2, 2))
         self.assertEqual(img.getpixel((0, 0)), (0, 255, 0, 255))  # 緑
         self.assertEqual(img.getpixel((1, 0)), (255, 0, 0, 255))  # 赤
+
+
+class PanelLayoutTest(unittest.TestCase):
+    """ログの大きさで VR画面の並びが変わる。新しい並びで撮れたフレームから表示を切り替える。"""
+
+    def test_layout_grows_with_the_log(self):
+        from models.overlay.overlay import POPUP, TOOLBAR, computeVrLayout
+
+        layout = computeVrLayout(1400, 1000)
+        self.assertEqual(layout["regions"][PANEL], (0, 0, 1400, 1000))
+        self.assertEqual(layout["regions"][LAUNCHER], (10, 1008, 880, 128))  # ログの下
+        self.assertEqual(layout["regions"][POPUP][0], 1408)  # ログの右
+        self.assertEqual(layout["regions"][TOOLBAR][0], 1408)
+        self.assertEqual(layout["atlas"], (1408 + 720, 1008 + 128))
+        # 小さくしても、ランチャー (880px) より左の列は狭くしない
+        self.assertEqual(computeVrLayout(600, 400)["regions"][POPUP][0], 908)
+
+    def _overlay(self):
+        overlay = Overlay({PANEL: {}, LAUNCHER: {}})
+        overlay.handle = {PANEL: 10, LAUNCHER: 11}
+        overlay.overlay = MagicMock()
+        overlay.gl = {"GL": MagicMock(), "texture": 1, "vr_texture": MagicMock(), "size": None}
+        overlay.panel_hwnd = 123
+        return overlay
+
+    def test_resize_updates_the_window_and_waits_for_a_matching_frame(self):
+        from PIL import Image
+
+        from models.overlay.overlay import computeVrLayout
+
+        overlay = self._overlay()
+        layouts = []
+        overlay.layout_callback = layouts.append
+        with patch("models.overlay.overlay.window_capture") as wc:
+            wc.isWindow.return_value = True
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)
+            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            overlay.updatePanel()
+            self.assertIs(overlay.layout_applied, overlay.layout)
+            overlay.overlay.setOverlayTextureBounds.reset_mock()
+
+            overlay.setPanelSize(1200, 800)
+            new_atlas = computeVrLayout(1200, 800)["atlas"]
+            self.assertEqual(layouts[-1]["atlas"], new_atlas)  # VR画面へ知らせる
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()  # ウィンドウはまだ古い縦横比
+            wc.resizeClient.assert_called_with(123, *new_atlas)
+            overlay.overlay.setOverlayTextureBounds.assert_not_called()
+
+            wc.captureWindowRaw.return_value = (b"new", None, (0, 0) + new_atlas)
+            wc.imageFromCapture.return_value = Image.new("RGBA", new_atlas)
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()  # ウィンドウは新しい大きさでも、VR画面がまだ古い並びで描いている
+            overlay.overlay.setOverlayTextureBounds.assert_not_called()
+
+            overlay.setLayoutRendered([1200, 800])
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()  # 新しい並びで描かれ、その大きさで撮れた → 表示範囲を切り替える
+        self.assertIs(overlay.layout_applied, overlay.layout)
+        self.assertEqual(overlay.overlay.setOverlayTextureBounds.call_count, 2)  # ログとランチャー
+
+    def test_smaller_log_with_the_same_window_size_waits_for_the_new_layout(self):
+        """ログを縮めても VR画面全体の大きさが変わらないことがある。その場合も描き直しを待ってから切り替える。"""
+        from PIL import Image
+
+        overlay = self._overlay()
+        with patch("models.overlay.overlay.window_capture") as wc:
+            wc.isWindow.return_value = True
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)
+            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            overlay.updatePanel()
+            overlay.overlay.setOverlayTextureBounds.reset_mock()
+            overlay.setPanelSize(700, 700)
+            self.assertEqual(overlay.layout["atlas"], VR_ATLAS_SIZE)  # 全体の大きさは同じ
+            wc.captureWindowRaw.return_value = (b"new", None, (0, 0) + VR_ATLAS_SIZE)
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()
+            overlay.overlay.setOverlayTextureBounds.assert_not_called()  # まだ古い並びで描いている
+            overlay.setLayoutRendered([700, 700])
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()
+        self.assertIs(overlay.layout_applied, overlay.layout)
+
+    def test_saved_size_is_kept_while_waiting_for_the_first_layout(self):
+        """起動時に保存した大きさがあると、VR画面がその並びで描くまで待つ (既定の大きさへ戻さない)。"""
+        from PIL import Image
+
+        from models.overlay.overlay import computeVrLayout
+
+        overlay = self._overlay()
+        overlay.settings[PANEL]["width"], overlay.settings[PANEL]["height"] = 1200, 800
+        overlay.layout = computeVrLayout(1200, 800)
+        overlay.layout_applied = None
+        overlay.layout_requested_at = 0.0  # 起動したとき (撮影を始める前) のまま
+        new_atlas = overlay.layout["atlas"]
+        with patch("models.overlay.overlay.window_capture") as wc, patch("models.overlay.overlay.time.monotonic") as clock:
+            wc.isWindow.return_value = True
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"new", None, (0, 0) + new_atlas)
+            wc.imageFromCapture.return_value = Image.new("RGBA", new_atlas)
+            for t in (100.0, 110.0):  # 設定が届くまで時間がかかっても
+                clock.return_value = t
+                overlay.panel_last_capture = 0.0
+                overlay.updatePanel()
+            self.assertEqual(overlay.layout["regions"][PANEL][2:], (1200, 800))  # 戻さない
+            overlay.setLayoutRendered([1200, 800])
+            clock.return_value = 110.5
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()
+        self.assertIs(overlay.layout_applied, overlay.layout)
+        self.assertEqual(overlay.settings[PANEL]["width"], 1200)
+
+    def test_window_resized_while_shown_is_fitted_again(self):
+        """表示中にウィンドウの大きさが変わったら (DPIの変更など)、そのフレームは使わずに合わせ直す。"""
+        from PIL import Image
+
+        overlay = self._overlay()
+        with patch("models.overlay.overlay.window_capture") as wc:
+            wc.isWindow.return_value = True
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)
+            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            overlay.updatePanel()
+            overlay.overlay.setOverlayTexture.reset_mock()
+            wc.captureWindowRaw.return_value = (b"odd", None, (0, 0, 1630, 836))  # 縦横比はほぼ同じでも大きさが違う
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()
+            overlay.overlay.setOverlayTexture.assert_not_called()
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()
+        self.assertEqual(wc.resizeClient.call_count, 2)  # 起動時と、合わせ直し
+
+    def test_size_is_kept_in_range(self):
+        overlay = self._overlay()
+        overlay.setPanelSize(100, 5000)
+        self.assertEqual(overlay.layout["regions"][PANEL][2:], (600, 1000))
+
+    def test_window_that_cannot_be_resized_is_retried_and_then_reverted(self):
+        """VR画面のウィンドウが新しい大きさにならないと、1秒後にやり直し、3秒後に元の大きさへ戻す (固まらない)。"""
+        from PIL import Image
+
+        overlay = self._overlay()
+        with patch("models.overlay.overlay.window_capture") as wc, patch("models.overlay.overlay.time.monotonic") as clock:
+            wc.isWindow.return_value = True
+            wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+            wc.captureWindowRaw.return_value = (b"old", None, (0, 0) + VR_ATLAS_SIZE)  # ずっと古い大きさのまま
+            wc.imageFromCapture.return_value = Image.new("RGBA", VR_ATLAS_SIZE)
+            clock.return_value = 10.0
+            overlay.updatePanel()
+            overlay.setPanelSize(1200, 800)
+            for t in (10.5, 11.2, 11.3, 13.5):
+                clock.return_value = t
+                overlay.panel_last_capture = 0.0
+                overlay.updatePanel()
+            self.assertEqual(wc.resizeClient.call_count, 3)  # 起動時、変えたとき、やり直し
+            self.assertEqual(overlay.layout["regions"][PANEL][2:], (900, 700))  # 元の大きさへ戻した
+            clock.return_value = 13.6
+            overlay.panel_last_capture = 0.0
+            overlay.updatePanel()
+        self.assertIs(overlay.layout_applied, overlay.layout)
+
+
+class PanelResizeTest(unittest.TestCase):
+    """ログの角を掴んで大きさを変える。空間固定で正面1mに、1px = 1mm (900x700px = 0.9x0.7m) で置いたログ。"""
+
+    def _overlay(self):
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=0.9, z_pos=1.0, width=900, height=700)
+        overlay = Overlay({PANEL: settings})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.overlay_system = MagicMock()
+        overlay.handle = {PANEL: 10}
+        overlay.layout_applied = overlay.layout
+        overlay.position_changed_callback = MagicMock()
+        return overlay
+
+    def _hand(self, x, y):
+        """原点から (x, y) だけずらした位置で、正面 (-Z) を指している手。"""
+        pose = np.eye(4)
+        pose[0, 3], pose[1, 3] = x, y
+        return pose
+
+    def test_corner_zone_includes_outside_and_skips_the_close_button(self):
+        overlay = self._overlay()
+        pose_of = lambda index: np.eye(4)  # noqa: E731
+
+        def corner(x, y):
+            found = overlay.panelCornerAt(1, self._hand(x, y), pose_of)
+            return found and found[:2]
+
+        self.assertEqual(corner(0.44, -0.34), (1, -1))  # 右下の内側
+        self.assertEqual(corner(0.47, -0.36), (1, -1))  # 右下の外側 (透明な角・枠の外でも掴める)
+        self.assertEqual(corner(-0.44, 0.34), (-1, 1))  # 左上
+        self.assertIsNone(corner(0.44, 0.34))  # 右上の内側は閉じるボタン
+        self.assertEqual(corner(0.47, 0.36), (1, 1))  # 右上は外側だけ
+        self.assertIsNone(corner(0.0, 0.0))
+        self.assertIsNone(corner(0.60, -0.50))  # 離れすぎ
+        overlay.panel_locked = True
+        self.assertIsNone(corner(0.44, -0.34))  # ロック中は伸ばせない
+
+    def _drag(self, overlay, corner, to_xy):
+        hand = 1
+        pose_of = lambda index: self._hand(*to_xy) if index == hand else np.eye(4)  # noqa: E731
+        overlay.startResize(hand, corner, lambda index: np.eye(4))
+        gripping = MagicMock(ulButtonPressed=1 << __import__("openvr").k_EButton_Grip)
+        overlay.updateResize(pose_of, lambda index: gripping, 0.0)
+        return pose_of
+
+    def test_opposite_corner_stays_and_size_is_saved_on_release(self):
+        overlay = self._overlay()
+        pose_of = self._drag(overlay, (1, -1), (0.55, -0.45))  # 右下の角を右下へ 0.1m ずつ
+        self.assertEqual(overlay.resizing["size"], (1000, 800))
+        np.testing.assert_allclose(overlay.resizing["center"], (0.05, -0.05))  # 左上の角 (-0.45, 0.35) は動かない
+        released = MagicMock(ulButtonPressed=0)
+        overlay.updateResize(pose_of, lambda index: released, 0.1)
+        self.assertIsNone(overlay.resizing)
+        s = overlay.settings[PANEL]
+        self.assertEqual((s["width"], s["height"]), (1000, 800))
+        self.assertAlmostEqual(s["ui_scaling"], 1.0)  # 1px の長さは変えない (文字の大きさはそのまま)
+        self.assertEqual(overlay.layout["regions"][PANEL][2:], (1000, 800))
+        _, saved = overlay.position_changed_callback.call_args.args
+        self.assertEqual((saved["width"], saved["height"]), (1000, 800))
+        self.assertAlmostEqual(saved["x_pos"], 0.05, places=4)
+        self.assertAlmostEqual(saved["y_pos"], -0.05, places=4)
+
+    def test_invisible_log_cannot_be_resized(self):
+        overlay = self._overlay()
+        overlay.settings[PANEL]["opacity"] = 0.0
+        self.assertIsNone(overlay.panelCornerAt(1, self._hand(0.44, -0.34), lambda index: np.eye(4)))
+
+    def test_hiding_the_log_cancels_resizing(self):
+        overlay = self._overlay()
+        self._drag(overlay, (1, -1), (0.55, -0.45))
+        overlay.setVrWindows(log=False, popup=False)
+        overlay.applyVrWindows(lambda index: np.eye(4))
+        self.assertIsNone(overlay.resizing)
+        self.assertEqual(overlay.settings[PANEL]["width"], 900)  # 保存しない
+
+    def test_log_on_a_hand_follows_the_hand_while_resizing(self):
+        """手に付けたログは、伸ばしている間に手が動いても、放した位置で跳ばない。"""
+        overlay = self._overlay()
+        overlay.settings[PANEL]["tracker"] = "LeftHand"
+        overlay.settings[PANEL]["z_pos"] = 0.0
+        left, right = 1, 2
+        overlay.overlay_system.getTrackedDeviceIndexForControllerRole.return_value = left
+        before = overlay.panelRelative()
+        hand_at = {"x": 0.0}
+
+        def pose_of(index):
+            pose = np.eye(4)
+            if index == left:
+                pose[0, 3] = hand_at["x"]  # 左手 (ログの固定先) が横へ動く
+            return pose
+
+        overlay.startResize(right, (1, -1), pose_of)
+        hand_at["x"] = 0.3
+        released = MagicMock(ulButtonPressed=0)
+        overlay.updateResize(pose_of, lambda index: released, 0.1)
+        np.testing.assert_allclose(overlay.panelRelative()[:, 3], before[:, 3], atol=1e-4)  # 手から見た位置は変わらない
+
+    def test_revert_also_restores_the_position(self):
+        """新しい大きさにできず元に戻すときは、伸ばす前の位置と幅にも戻す (跳ばない)。"""
+        overlay = self._overlay()
+        pose_of = self._drag(overlay, (1, -1), (0.55, -0.45))
+        overlay.updateResize(pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)
+        self.assertAlmostEqual(overlay.settings[PANEL]["x_pos"], 0.05, places=4)
+        overlay.retryOrRevertLayout(overlay.layout_requested_at + 5.0)
+        s = overlay.settings[PANEL]
+        self.assertEqual((s["width"], s["height"]), (900, 700))
+        self.assertEqual((s["x_pos"], s["y_pos"], s["ui_scaling"]), (0.0, 0.0, 0.9))
+        _, saved = overlay.position_changed_callback.call_args.args
+        self.assertEqual((saved["x_pos"], saved["width"]), (0.0, 900))
+
+    def test_ghost_is_hidden_when_the_vr_ui_is_turned_off_after_release(self):
+        overlay = self._overlay()
+        overlay.ghost_handle = 20
+        pose_of = self._drag(overlay, (1, -1), (0.55, -0.45))
+        overlay.updateResize(pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)  # 放して、切り替え待ち
+        overlay.overlay.hideOverlay.reset_mock()
+        overlay.vr_panel_enabled = False
+        overlay.applyVrWindows(lambda index: np.eye(4))
+        overlay.overlay.hideOverlay.assert_any_call(20)
+
+    def test_moving_after_release_is_kept_when_the_size_is_reverted(self):
+        """伸ばして放した後に動かした位置は、大きさを元に戻しても残す。"""
+        overlay = self._overlay()
+        pose_of = self._drag(overlay, (1, -1), (0.55, -0.45))
+        overlay.updateResize(pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)
+        moved = overlay.panelRelative()
+        moved[0, 3] += 0.2
+        overlay.commitPosition(PANEL, moved)  # 切り替え待ちの間に掴んで動かした
+        x_after_move = overlay.settings[PANEL]["x_pos"]
+        overlay.retryOrRevertLayout(overlay.layout_requested_at + 5.0)
+        self.assertEqual(overlay.settings[PANEL]["width"], 900)
+        self.assertEqual(overlay.settings[PANEL]["x_pos"], x_after_move)
+
+    def test_error_while_resizing_stops_resizing(self):
+        """伸ばしている処理で例外が出たら伸ばすのをやめる (毎フレーム同じ例外で操作できなくならない)。"""
+        overlay = self._overlay()
+        overlay.ghost_handle = 20
+        self._drag(overlay, (1, -1), (0.55, -0.45))
+        with patch("models.overlay.overlay.errorLogging"):
+            overlay.onGrabError(RuntimeError("GL"))
+        self.assertIsNone(overlay.resizing)
+        overlay.overlay.hideOverlay.assert_any_call(20)
+
+    def test_corner_handle_position(self):
+        overlay = self._overlay()
+        self.assertEqual(overlay.cornerHandleXY((-1, 1)), (34, 34))  # 左上
+        self.assertEqual(overlay.cornerHandleXY((1, -1)), (866, 666))  # 右下
+        self.assertIsNone(overlay.cornerHandleXY((1, 1)))  # 右上は閉じるボタン
+
+    def test_size_stops_at_the_limits(self):
+        overlay = self._overlay()
+        self._drag(overlay, (1, -1), (2.0, 0.2))  # 右へ大きく、上へ (高さはほぼ0)
+        self.assertEqual(overlay.resizing["size"], (1400, 400))
+
+
+class PanelInputReentryTest(unittest.TestCase):
+    def test_leaving_while_pressed_does_not_press_again_on_return(self):
+        """トリガーを押したまま外れて戻ってきても、押し直したことにしない (離すまで無視する)。"""
+        overlay = Overlay({})
+        overlay.panel_hwnd = 123
+        overlay.panel_image_size = (900, 836)
+        state = MagicMock()
+        state.rAxis[0].y = 0.0
+        state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
+        with patch("models.overlay.overlay.window_capture") as wc:
+            overlay.handlePanelInput(1, (450, 350), state)
+            overlay.handlePanelInput(1, None, state)  # 押したまま外れた
+            overlay.handlePanelInput(1, (450, 350), state)  # 押したまま戻ってきた
+            self.assertEqual(wc.mouseDown.call_count, 1)
+            state.ulButtonPressed = 0
+            overlay.handlePanelInput(1, (450, 350), state)  # 離した
+            state.ulButtonPressed = 1 << openvr.k_EButton_SteamVR_Trigger
+            overlay.handlePanelInput(1, (450, 350), state)  # 押し直した
+        self.assertEqual(wc.mouseDown.call_count, 2)
 
 
 class NotifyPointerTest(unittest.TestCase):
@@ -867,6 +1402,36 @@ class RecallPanelTest(unittest.TestCase):
         self.overlay.setVrWindows(log=True, popup=False)
         self.overlay.applyVrWindows(self.pose_of)
         self.assertInFront()
+
+    def test_recall_while_looking_down_ends_up_in_view(self):
+        """手首のランチャーを見下ろしながら呼び戻しても、呼び戻したログは視線から外れない。"""
+        from models.overlay.overlay import isOutOfView, recallPose
+
+        c, s_ = np.cos(np.radians(-60)), np.sin(np.radians(-60))
+        self.head[:3, :3] = np.array([[1, 0, 0], [0, c, -s_], [0, s_, c]])  # 60°見下ろしている
+        pose = recallPose(self.head)
+        self.assertFalse(isOutOfView(self.head, pose[:3, 3], was_out=True))
+
+    def test_recall_waits_for_the_log_to_open(self):
+        """ランチャーの長押し: 閉じているログを開くのと同時に頼まれたら、開いてから呼び戻す。"""
+        self.overlay.settings[PANEL]["tracker"] = "LeftHand"  # 手に付けていても呼び戻せる
+        self.overlay.setVrWindows(log=False, popup=False)
+        self.overlay.applyVrWindows(self.pose_of)
+        self.overlay.requestRecallPanel()
+        self.overlay.applyVrWindows(self.pose_of)  # まだ開いていない
+        self.assertEqual(self.saved, [])
+        self.overlay.setVrWindows(log=True, popup=False)
+        self.overlay.applyVrWindows(self.pose_of)
+        self.assertInFront()
+
+    def test_recall_is_dropped_if_the_log_does_not_open(self):
+        self.overlay.setVrWindows(log=False, popup=False)
+        self.overlay.applyVrWindows(self.pose_of)
+        with patch("models.overlay.overlay.time.monotonic", return_value=100.0):
+            self.overlay.requestRecallPanel()
+        with patch("models.overlay.overlay.time.monotonic", return_value=102.0):
+            self.overlay.applyVrWindows(self.pose_of)
+        self.assertIsNone(self.overlay.vr_recall_requested)
 
     def test_panel_on_a_hand_is_left_alone(self):
         self.overlay.settings[PANEL]["tracker"] = "LeftHand"
