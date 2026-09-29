@@ -285,3 +285,19 @@ def test_vr_refuses_stale_or_changed_renderer_without_fallback():
     with pytest.raises(sources.CaptureUnavailable, match="new frame"):
         source._capture_vr()
     source._mirror.read.assert_not_called()
+
+
+def test_osc_message_encoding():
+    assert collector.osc_message("/input/Jump", 1) == b"/input/Jump\0,i\0\0\0\0\0\1"
+    assert collector.osc_message("/input/Vertical", 1.0) == b"/input/Vertical\0,f\0\0?\x80\0\0"
+
+
+def test_wanderer_leaves_axes_neutral_on_stop():
+    sent = []
+    wanderer = collector.Wanderer(send=lambda address, value: sent.append((address, value)))
+    wanderer.start()
+    time.sleep(0.05)
+    wanderer.stop()
+    assert not wanderer.thread.is_alive()
+    assert ("/input/Vertical", 1.0) in sent
+    assert sent[-3:] == [("/input/Vertical", 0.0), ("/input/LookHorizontal", 0.0), ("/input/Jump", 0)]

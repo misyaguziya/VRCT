@@ -24,7 +24,7 @@ a = Analysis(
         ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/'),
         ('./../.venv/Lib/site-packages/rapidocr', 'rapidocr/'),
         ],
-    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'OpenGL', 'glfw', 'models.ocr'],
+    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

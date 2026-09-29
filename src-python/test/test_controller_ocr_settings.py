@@ -73,5 +73,35 @@ class TestOtherOcrSettersReachTheRunningPipeline(unittest.TestCase):
             update.assert_called_once_with()
 
 
+class TestOcrSettersRejectInvalidValues(unittest.TestCase):
+    """他の設定 (項目24) と同じく、不正な値は VALIDATION_CONFIG_VALUE_INVALID で
+    拒否し、値も実行中のパイプラインも変えない。以前は範囲外を黙って丸めて200を返していた。"""
+
+    def setUp(self) -> None:
+        self.controller = Controller.__new__(Controller)
+        for name in ("OCR_WINDOW_TITLE", "OCR_POLL_INTERVAL_MS", "OCR_MIN_CONFIDENCE",
+                     "OCR_BUBBLE_MIN_TEXT_LENGTH"):
+            self.addCleanup(setattr, config, name, getattr(config, name))
+
+    def test_out_of_range_or_wrong_type_is_rejected(self) -> None:
+        cases = [
+            (self.controller.setOcrWindowTitle, "OCR_WINDOW_TITLE", "   "),
+            (self.controller.setOcrPollIntervalMs, "OCR_POLL_INTERVAL_MS", 99),
+            (self.controller.setOcrPollIntervalMs, "OCR_POLL_INTERVAL_MS", 5001),
+            (self.controller.setOcrPollIntervalMs, "OCR_POLL_INTERVAL_MS", "750"),
+            (self.controller.setOcrMinConfidence, "OCR_MIN_CONFIDENCE", 1.0),
+            (self.controller.setOcrBubbleMinTextLength, "OCR_BUBBLE_MIN_TEXT_LENGTH", 0),
+        ]
+        for setter, attr, value in cases:
+            before = getattr(config, attr)
+            with patch("controller.model.updateOCRCaptureSettings") as update:
+                response = setter(value)
+
+            self.assertEqual(response["status"], 400, (setter.__name__, value))
+            self.assertEqual(response["result"]["error_code"], "VALIDATION_CONFIG_VALUE_INVALID")
+            self.assertEqual(getattr(config, attr), before)
+            update.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
