@@ -84,6 +84,10 @@ _RECALL_OUT_OF_VIEW_DISTANCE_M = (3.0, 2.7)
 _RECALL_DISTANCE_M = 0.7
 _RECALL_BELOW_EYE_M = 0.1
 _PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
+# 操作していない間 (ポインタがVR UIに無く、画面が変わっていない) は撮影を減らす。
+# 画面が変わってからこの秒数は、スクロールやホバーの動きを滑らかにするため元の間隔に戻す
+_PANEL_IDLE_CAPTURE_INTERVAL_SEC = 1 / 4
+_PANEL_ACTIVE_HOLD_SEC = 1.0
 _PANEL_FIND_INTERVAL_SEC = 2.0
 # 各領域の角丸の半径 (論理px)。撮影した画像の領域の外と四隅を透明にする
 _PANEL_CORNER_RADIUS_PX = 24
@@ -350,6 +354,9 @@ class Overlay:
         self.panel_hwnd: Optional[int] = None
         self.panel_last_find: float = 0.0
         self.panel_last_capture: float = 0.0
+        # 前回転送した撮影の生データと、画面が最後に変わった時刻。変わっていなければ転送しない
+        self.panel_last_raw: Optional[bytes] = None
+        self.panel_last_change: float = 0.0
         self.panel_image_size: Optional[tuple] = None
         # 手ごとの (トリガーを押しているか, 最後に送った座標)
         self.panel_input: Dict[int, tuple] = {}
@@ -500,6 +507,7 @@ class Overlay:
             bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = regionBounds(size)
             self.overlay.setOverlayTextureBounds(self.handle[size], bounds)
         self.gl = {"glfw": glfw, "GL": GL, "window": window, "texture": texture, "vr_texture": vr_texture, "size": None}
+        self.panel_last_raw = None  # 作り直したテクスチャには必ず転送する
 
     def vrRegionSizes(self) -> list:
         return [size for size in VR_REGIONS if size in self.settings]
@@ -517,7 +525,7 @@ class Overlay:
     def updatePanel(self) -> None:
         """VRパネルのウィンドウを撮影してオーバーレイへ転送する。"""
         now = time.monotonic()
-        if not self.vr_panel_enabled or self.gl is None or now - self.panel_last_capture < _PANEL_CAPTURE_INTERVAL_SEC:
+        if not self.vr_panel_enabled or self.gl is None or now - self.panel_last_capture < self.panelCaptureInterval(now):
             return
         self.panel_last_capture = now
         if self.panel_hwnd is None or not window_capture.isWindow(self.panel_hwnd):
@@ -528,9 +536,15 @@ class Overlay:
             self.panel_hwnd = window_capture.findWindow()
             if self.panel_hwnd is None:
                 return
-        img = window_capture.captureWindow(self.panel_hwnd)
-        if img is None:
+        capture = window_capture.captureWindowRaw(self.panel_hwnd)
+        if capture is None:
             return
+        # 前回と同じなら、変換・転送をすべて省く (オーバーレイは前回のテクスチャを表示し続ける)
+        if capture[0] == self.panel_last_raw:
+            return
+        self.panel_last_raw = capture[0]
+        self.panel_last_change = now
+        img = window_capture.imageFromCapture(capture)
         img.putalpha(atlasMask(img.size))
         # 当たり判定 (hasContentAt) 用。updateImage を通らないのでここで記録する
         for size in self.vrRegionSizes():
@@ -549,6 +563,15 @@ class Overlay:
         for size in self.vrRegionSizes():
             self.overlay.setOverlayTexture(self.handle[size], self.gl["vr_texture"])
         self.panel_image_size = img.size
+
+    def panelCaptureInterval(self, now: float) -> float:
+        """撮影の間隔。ポインタがVR UIにあるか、画面が変わった直後は短く、それ以外は長くする。"""
+        is_active = (
+            self.pointer_notified is not None
+            or self.grabbing is not None
+            or now - self.panel_last_change < _PANEL_ACTIVE_HOLD_SEC
+        )
+        return _PANEL_CAPTURE_INTERVAL_SEC if is_active else _PANEL_IDLE_CAPTURE_INTERVAL_SEC
 
     def handlePanelInput(self, hand: int, xy: Optional[tuple], state: Optional[Any]) -> None:
         """レーザーが当たっている位置 (撮影画像上のピクセル、外れていれば None) へマウス入力を送る。
@@ -969,6 +992,7 @@ class Overlay:
                     self.placePopup(poseOf)
                 self.vr_windows_hidden.discard(size)
                 self.overlay.showOverlay(self.handle[size])
+                self.panel_last_raw = None  # 念のため、表示し直したウィンドウには画面を送り直す
                 if size == PANEL:
                     s = self.settings[PANEL]
                     self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], PANEL)
