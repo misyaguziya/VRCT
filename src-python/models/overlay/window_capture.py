@@ -9,7 +9,7 @@ import ctypes
 from ctypes import wintypes
 from typing import Optional
 
-from PIL import Image
+import numpy as np
 
 VR_PANEL_TITLE = "VRCT VR Panel"
 
@@ -99,12 +99,14 @@ def resizeClient(hwnd: int, width: int, height: int) -> tuple:
     return (target_w, target_h)
 
 
-def imageFromCapture(capture: tuple) -> Image.Image:
-    """captureWindowRaw の結果をクライアント領域のRGBA画像にする。"""
-    raw, size, box = capture
-    img = Image.frombuffer("RGBX", size, raw, "raw", "BGRX", 0, 1).crop(box)
-    # PrintWindowのアルファは不定なので不透明として扱う
-    return img.convert("RGBA")
+def bgraFromCapture(capture: tuple) -> np.ndarray:
+    """captureWindowRaw の結果から、クライアント領域の画素 (高さ, 幅, BGRA) を切り出す (書き換えてよい複製)。
+
+    色の並べ替えはせず、OpenGL へは BGRA のまま渡す (PIL で RGBA に変換すると1枚30〜40msかかっていた)。
+    アルファは不定なので、呼び出し側で決める。
+    """
+    raw, (width, height), (x0, y0, x1, y1) = capture
+    return np.frombuffer(raw, np.uint8).reshape(height, width, 4)[y0:y1, x0:x1].copy()
 
 
 def _lparam(x: int, y: int) -> int:

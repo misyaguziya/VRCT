@@ -154,7 +154,8 @@ _RECALL_BELOW_EYE_M = 0.1
 _RECALL_PITCH_RANGE_DEG = (-45.0, 20.0)
 # 閉じているログを開くのと同時に呼び戻しを頼まれたとき (ランチャーの長押し)、開くのをこの秒数まで待つ
 _RECALL_PENDING_SEC = 1.0
-_PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
+# 操作している間の撮影の間隔。ホバーやクリックの反応がこの分だけ遅れて見える
+_PANEL_CAPTURE_INTERVAL_SEC = 1 / 20
 # 操作していない間 (ポインタがVR UIに無く、画面が変わっていない) は撮影を減らす。
 # 画面が変わってからこの秒数は、スクロールやホバーの動きを滑らかにするため元の間隔に戻す
 _PANEL_IDLE_CAPTURE_INTERVAL_SEC = 1 / 4
@@ -234,6 +235,16 @@ def _atlasMask(image_size: tuple, atlas: tuple, regions: tuple) -> Image.Image:
         x0, y0, x1, y1 = regionRect(size, image_size, layout)
         draw.rounded_rectangle((x0, y0, x1 - 1, y1 - 1), radius=round(_PANEL_CORNER_RADIUS_PX * scale), fill=255)
     return mask
+
+
+def atlasMaskArray(image_size: tuple, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> np.ndarray:
+    """atlasMask を numpy の配列 (高さ, 幅) にしたもの。撮影画像のアルファにそのまま入れる。"""
+    return _atlasMaskArray(image_size, layout["atlas"], tuple(sorted(layout["regions"].items())))
+
+
+@lru_cache(maxsize=4)
+def _atlasMaskArray(image_size: tuple, atlas: tuple, regions: tuple) -> np.ndarray:
+    return np.asarray(_atlasMask(image_size, atlas, regions))
 
 
 def rayPlaneHit(ray_pose: np.ndarray, plane_pose: np.ndarray) -> Optional[tuple]:
@@ -950,24 +961,26 @@ class Overlay:
             return
         self.panel_last_raw = capture[0]
         self.panel_last_change = now
-        img = window_capture.imageFromCapture(capture)
-        img.putalpha(atlasMask(img.size, self.layout))
+        pixels = window_capture.bgraFromCapture(capture)
+        size = (pixels.shape[1], pixels.shape[0])
+        # 各領域だけを角丸で残し、それ以外は透明にする (PrintWindow のアルファは不定)
+        pixels[..., 3] = atlasMaskArray(size, self.layout)
         GL = self.prepareGl()
         texture_size = self.gl["size"]
-        if texture_size is None or img.size[0] > texture_size[0] or img.size[1] > texture_size[1]:
+        if texture_size is None or size[0] > texture_size[0] or size[1] > texture_size[1]:
             # 最大の並びが入る大きさで作る (撮影は論理px x DPI倍率の大きさ)。以後は大きさを変えない
-            scale = img.size[0] / self.layout["atlas"][0]
+            scale = size[0] / self.layout["atlas"][0]
             max_w, max_h = MAX_LAYOUT["atlas"]
-            self.newPanelTexture(GL, (max(round(max_w * scale), img.size[0]), max(round(max_h * scale), img.size[1])))
-        # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す。撮影画像はテクスチャの左上に書く
+            self.newPanelTexture(GL, (max(round(max_w * scale), size[0]), max(round(max_h * scale), size[1])))
+        # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す。撮影画像はテクスチャの左上に BGRA のまま書く
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.gl["texture"])
-        GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, img.size[0], img.size[1], GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, img.tobytes())
+        GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, size[0], size[1], GL.GL_BGRA, GL.GL_UNSIGNED_BYTE, pixels)
         GL.glFinish()
         # 1枚のテクスチャを全領域のオーバーレイに渡す。表示される範囲は各オーバーレイの bounds で決まる
         for handle in self.vrRegionHandles().values():
             self.overlay.setOverlayTexture(handle, self.gl["vr_texture"])
-        image_size_changed = img.size != self.panel_image_size
-        self.panel_image_size = img.size
+        image_size_changed = size != self.panel_image_size
+        self.panel_image_size = size
         # 表示範囲はテクスチャの中の撮影画像の大きさで決まるので、並びか撮影の大きさが変わったら当て直す
         if self.layout_applied is not self.layout or image_size_changed:
             self.applyLayout()
@@ -1990,19 +2003,24 @@ class Overlay:
                 self.retryPendingPositions()
             except Exception:
                 errorLogging()
-            try:
-                self.updatePanel()
-                self.panel_errors = 0
-            except Exception as e:
-                self.onPanelError(e)
+            # 先にレーザー (ポインタ・ホバー) を処理してから撮影する (レーザーの反応を撮影の分だけ待たせない)
             try:
                 self.updateGrab()
                 self.grab_error = None
             except Exception as e:
                 self.onGrabError(e)
-            # 掴んでいる間・伸ばしている間・向き直している間は、滑らかにするため更新頻度を上げる
-            is_moving = self.grabbing is not None or self.resizing is not None
-            interval = (1 / 60) if is_moving else (1 / 16)
+            try:
+                self.updatePanel()
+                self.panel_errors = 0
+            except Exception as e:
+                self.onPanelError(e)
+            # 掴んでいる間・伸ばしている間は滑らかにするため、VR UI を指している間は反応を早くするため更新頻度を上げる
+            if self.grabbing is not None or self.resizing is not None:
+                interval = 1 / 60
+            elif self.pointer_notified is not None:
+                interval = 1 / 30
+            else:
+                interval = 1 / 16
             sleepTime = interval - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
