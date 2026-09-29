@@ -1,4 +1,5 @@
 import { createAtomWithHook } from "@store";
+import vr_layout from "../../../views/vr/vr_layout.json";
 
 import {
     ctranslate2_weight_type_status,
@@ -687,6 +688,16 @@ export const SETTINGS_ARRAY = [
         ui_template_id: "slider",
         logics_template_id: "get_set",
         base_endpoint_name: "overlay_vr_panel_font_size",
+    },
+    {
+        // VR画面の並び (ログの大きさで変わる)。Python (models/overlay) が決めて知らせる。既定は vr_layout.json
+        Category: "Vr",
+        Base_Name: "VrPanelLayout",
+        default_value: vr_layout,
+        ui_template_id: "object",
+        logics_template_id: "get_only",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "vr_panel_layout",
     },
     {
         // VR UIのランチャーを付ける手 (LeftHand / RightHand)。VR設定で変える

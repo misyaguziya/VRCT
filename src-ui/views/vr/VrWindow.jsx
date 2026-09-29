@@ -10,12 +10,14 @@ import styles from "./VrWindow.module.scss";
 // ロックは本文だけを覆い、閉じる操作は残す (状態を変えないため)。
 // VR設定ウィンドウは設定画面そのものなのでロックしない (is_lockable=false)。
 // is_grab_locked: 操作バーのロック中 (掴めない)。タイトルバーに錠と「ロック中」を出す
-export const VrWindow = ({ Icon, title, onClose, is_lockable = true, is_grab_locked = false, children }) => {
+// is_resizable: 角を掴んで大きさを変えられる (ログ)。指している間だけ角に取っ手を出す。
+// 当たり判定と大きさの変更は Python 側 (models/overlay/overlay.py panelCornerAt)。右上は閉じるボタンなので出さない
+export const VrWindow = ({ Icon, title, onClose, is_lockable = true, is_grab_locked = false, is_resizable = false, children }) => {
     const { t } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
 
     return (
-        <div className={styles.window}>
+        <div className={styles.window} data-vr-hoverable={is_resizable ? "" : undefined}>
             <div className={styles.title_bar}>
                 <Icon className={styles.title_icon} />
                 <p className={styles.title}>{title}</p>
@@ -40,6 +42,9 @@ export const VrWindow = ({ Icon, title, onClose, is_lockable = true, is_grab_loc
                     </div>
                 )}
             </div>
+            {is_resizable && !is_grab_locked && ["top_left", "bottom_left", "bottom_right"].map(corner => (
+                <span key={corner} className={`${styles.resize_handle} ${styles[corner]}`} data-vr-hoverable="" />
+            ))}
         </div>
     );
 };

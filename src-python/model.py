@@ -2386,6 +2386,21 @@ class Model:
         self.ensure_initialized()
         self.overlay.requestRecallPanel()
 
+    def setVrPanelLayoutRendered(self, panel_size: list) -> None:
+        """VR画面が新しい並びで描き終えたことをオーバーレイに伝える。
+
+        初期化中にも届く (取りこぼすと表示が切り替わらない) ので、ここで初期化はしない。
+        オーバーレイがまだ無ければ捨ててよい (作られるときは既定の並びで、VR画面も既定の並びで描いている)。
+        """
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.setLayoutRendered(panel_size)
+
+    def setOverlayLayoutCallback(self, fn: Optional[Callable[[dict], None]]) -> None:
+        """VR画面の並び (ログの大きさで変わる) が変わったときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.layout_callback = fn
+
     def setOverlayPanelOutOfViewCallback(self, fn: Optional[Callable[[bool], None]]) -> None:
         """VR UIのログウィンドウが視線から外れた・戻ったときに呼ぶ関数を登録する。"""
         self.ensure_initialized()

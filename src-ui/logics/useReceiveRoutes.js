@@ -23,6 +23,7 @@ export const STATIC_ROUTE_META_LIST = [
     // ログウィンドウが視線から外れた・戻った / 呼び戻しの応答
     { endpoint: "/run/vr_panel_log_out_of_view", ns: common, hook_name: "useVrPanelLogOutOfView", method_name: "updateVrPanelLogOutOfView" },
     { endpoint: "/run/vr_panel_recall_log", ns: null, hook_name: null, method_name: null },
+    { endpoint: "/run/vr_panel_layout_rendered", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
 
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },

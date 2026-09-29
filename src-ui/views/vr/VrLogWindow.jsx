@@ -13,7 +13,7 @@ export const VrLogWindow = ({ onClose }) => {
     const { currentOverlayVrPanelLocked, currentOverlayVrPanelFontSize } = useVr();
     return (
         <VrWindow Icon={CopyThinSvg} title={t("vr_panel.window_log")} onClose={onClose}
-            is_grab_locked={currentOverlayVrPanelLocked.data === true}>
+            is_grab_locked={currentOverlayVrPanelLocked.data === true} is_resizable={true}>
             <div className={styles.log_box_wrapper} style={{ "--vr_log_font_size": `${currentOverlayVrPanelFontSize.data}px` }}>
                 <LogBox />
             </div>

@@ -4,6 +4,7 @@ import ctypes
 import time
 from psutil import process_iter
 from threading import Thread
+from types import SimpleNamespace
 from typing import Any, Callable, Dict, Optional, Sequence
 
 import openvr
@@ -59,6 +60,8 @@ _GRAB_SMOOTH_MAX_SPEED_M = 0.3
 # 水平ではなく頭の傾きに合わせる。頭にこれより近いウィンドウは向き直さない
 _FACE_USER_HEAD_ROLL_DEG = 30.0
 _FACE_USER_MIN_DISTANCE_M = 0.3
+# 向き直すときは、この秒数をかけてなめらかに回す (いきなり向きが変わると驚くため)
+_FACE_USER_TURN_SEC = 0.2
 # ランチャーを手首を見たときだけ出す (XSOverlay と同じ)。
 # 出す: ランチャーの面が顔の方を向き (hide_angle 以内)、視線からも近い (_LAUNCHER_GAZE_SHOW_DEG 以内) 状態が続いたら。
 # 消す: 面の角度が hide_angle + _LAUNCHER_HIDE_MARGIN_DEG を超えるか、視線から大きく外れた状態が続いたら。
@@ -90,15 +93,57 @@ LAUNCHER = "launcher"
 POPUP = "popup"
 # ログウィンドウの下の操作バー (XSOverlay と同じ位置)。settings には入れない (位置はログに付いて動き、保存もしない)
 TOOLBAR = "toolbar"
-# 撮影するウィンドウの大きさと各領域 (x, y, w, h)。論理px。
-# src-ui/views/vr/vr_layout.json と一致させる (test_overlay_grab_move で確認)
-VR_ATLAS_SIZE = (1628, 836)
-VR_REGIONS = {
-    PANEL: (0, 0, 900, 700),
-    LAUNCHER: (10, 708, 880, 128),
-    POPUP: (908, 0, 720, 640),
-    TOOLBAR: (908, 656, 720, 96),
-}
+# ログウィンドウの大きさ (論理px)。角を掴んで伸ばせる範囲と既定
+PANEL_DEFAULT_SIZE = (900, 700)
+PANEL_SIZE_RANGE = ((600, 400), (1400, 1000))
+# 大きさを変えたのに VR画面のウィンドウがその大きさにならないとき: この秒数で大きさの変更をやり直し、
+# それでも合わなければ最後に表示できていた大きさへ戻す (ログが固まったままにならないように)
+_LAYOUT_RETRY_SEC = 1.0
+_LAYOUT_GIVE_UP_SEC = 3.0
+# 角を掴む当たり判定 (ログの論理px)。角から内側・外側にこの幅。右上は閉じるボタンがあるので外側だけ
+_CORNER_INSIDE_PX = 56
+_CORNER_OUTSIDE_PX = 32
+# 角の取っ手の中心の、ログの端からの距離 (src-ui/views/vr/VrWindow.module.scss の .resize_handle: 端から6px、56px角)
+_CORNER_HANDLE_CENTER_PX = 34
+# 伸ばしている間に出す枠の色 (RGBA)。最小・最大に達したら注意の色
+_GHOST_COLOR = (0xB7, 0xDE, 0xD8, 255)
+_GHOST_LIMIT_COLOR = (0xCB, 0x94, 0x4F, 255)
+_GHOST_FILL = (0x61, 0xB4, 0xA7, 40)
+# 点線の枠はログの面からこの距離だけ手前に出す (同じ面だと、どちらが前に描かれるかが揺れてちらつく)
+_GHOST_FRONT_M = 0.004
+# 点線の枠のテクスチャの大きさ (最大のログ 1400x1000 の 1/4 が入る)。大きさを変えずに一部だけ使う
+_GHOST_TEXTURE_SIZE = (352, 256)
+
+
+def computeVrLayout(width: int, height: int) -> Dict[str, Any]:
+    """撮影するウィンドウ (VR画面) の大きさと各領域 (x, y, w, h)。論理px。
+
+    ログ (左上) の大きさで変わり、ランチャーはログの下、一時ウィンドウと操作バーはログの右に並べる。
+    VR画面 (React) はこの結果を受け取って描く。既定の大きさでは src-ui/views/vr/vr_layout.json と一致する
+    (test_overlay_grab_move で確認)。
+    """
+    right_x = max(width, 900) + 8
+    return {
+        "atlas": (right_x + 720, max(height + 8 + 128, 656 + 96)),
+        "regions": {
+            PANEL: (0, 0, width, height),
+            LAUNCHER: (10, height + 8, 880, 128),
+            POPUP: (right_x, 0, 720, 640),
+            TOOLBAR: (right_x, 656, 720, 96),
+        },
+    }
+
+
+def clampPanelSize(width: float, height: float) -> tuple:
+    (min_w, min_h), (max_w, max_h) = PANEL_SIZE_RANGE
+    return (round(min(max(width, min_w), max_w)), round(min(max(height, min_h), max_h)))
+
+
+DEFAULT_LAYOUT = computeVrLayout(*PANEL_DEFAULT_SIZE)
+# ログを最大にしたときの並び。VR画面のテクスチャはこれが入る大きさで作る
+MAX_LAYOUT = computeVrLayout(*PANEL_SIZE_RANGE[1])
+VR_ATLAS_SIZE = DEFAULT_LAYOUT["atlas"]
+VR_REGIONS = DEFAULT_LAYOUT["regions"]
 # 一時ウィンドウを出す位置: ランチャーの中心から上へ、頭との水平距離をこの範囲に収める
 _POPUP_ABOVE_LAUNCHER_M = 0.18
 _POPUP_DISTANCE_RANGE_M = (0.45, 0.65)
@@ -109,12 +154,18 @@ _RECALL_OUT_OF_VIEW_DISTANCE_M = (3.0, 2.7)
 # 呼び戻す位置: 頭の正面 (水平方向) にこの距離、目の高さからこれだけ下
 _RECALL_DISTANCE_M = 0.7
 _RECALL_BELOW_EYE_M = 0.1
+# 呼び戻す向きの上下の範囲 (度、上が正)。手首のランチャーを見下ろしながら呼び戻しても視線の先に出す
+_RECALL_PITCH_RANGE_DEG = (-45.0, 20.0)
+# 閉じているログを開くのと同時に呼び戻しを頼まれたとき (ランチャーの長押し)、開くのをこの秒数まで待つ
+_RECALL_PENDING_SEC = 1.0
 _PANEL_CAPTURE_INTERVAL_SEC = 1 / 15
 # 操作していない間 (ポインタがVR UIに無く、画面が変わっていない) は撮影を減らす。
 # 画面が変わってからこの秒数は、スクロールやホバーの動きを滑らかにするため元の間隔に戻す
 _PANEL_IDLE_CAPTURE_INTERVAL_SEC = 1 / 4
 _PANEL_ACTIVE_HOLD_SEC = 1.0
 _PANEL_FIND_INTERVAL_SEC = 2.0
+# VR画面の撮影・転送でこの回数続けて失敗したら、ログを埋めないよう撮影をやめる (1回の失敗ではやめない)
+_PANEL_ERROR_LIMIT = 30
 # 各領域の角丸の半径 (論理px)。撮影した画像の領域の外と四隅を透明にする
 _PANEL_CORNER_RADIUS_PX = 24
 
@@ -122,7 +173,7 @@ _PANEL_CORNER_RADIUS_PX = 24
 # 回転はワールド側が動くので、空間に固定したオーバーレイはアバターと一緒についてくる
 PLAYSPACE = "Playspace"
 _PLAYSPACE_INDEX = -1
-# パネル下の追従先切り替えボタン。押すたびにこの順で切り替わる
+# ログウィンドウの固定先 (操作バーのボタンと同じ並び)
 PANEL_ANCHORS = (PLAYSPACE, "LeftHand", "RightHand", "HMD")
 # 操作バーの実際の大きさはログの拡大縮小によらず固定する (ランチャーと同じ。ボタン64pxで約28mm)
 _TOOLBAR_M_PER_PX = 0.4 / 900
@@ -153,35 +204,82 @@ def uvToPixel(u: float, v: float, width: int, height: int) -> tuple:
     return (min(max(int(x), 0), width - 1), min(max(int(y), 0), height - 1))
 
 
-def regionRect(size: str, image_size: tuple) -> tuple:
+def regionRect(size: str, image_size: tuple, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> tuple:
     """撮影した画像 (DPIで論理pxより大きいことがある) 上での領域 (x0, y0, x1, y1)。"""
-    scale = image_size[0] / VR_ATLAS_SIZE[0]
-    x, y, w, h = VR_REGIONS[size]
+    scale = image_size[0] / layout["atlas"][0]
+    x, y, w, h = layout["regions"][size]
     return (round(x * scale), round(y * scale), round((x + w) * scale), round((y + h) * scale))
 
 
-def regionBounds(size: str) -> tuple:
+def regionBounds(size: str, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> tuple:
     """setOverlayTextureBounds の (uMin, uMax, vMin, vMax)。
 
     OpenGLのテクスチャでは、画像の上から y 行目は v = 1 - y/H として扱われる
     (画像全体なら vMin=1, vMax=0 で正しい向きになることを実機で確認済み)。
     vMin が表示の上端、vMax が下端に対応する。
     """
-    W, H = VR_ATLAS_SIZE
-    x, y, w, h = VR_REGIONS[size]
+    W, H = layout["atlas"]
+    x, y, w, h = layout["regions"][size]
     return (x / W, (x + w) / W, 1 - y / H, 1 - (y + h) / H)
 
 
-@lru_cache(maxsize=4)
-def atlasMask(image_size: tuple) -> Image.Image:
+def atlasMask(image_size: tuple, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> Image.Image:
     """各領域だけを角丸で残し、それ以外を透明にするマスク。"""
-    scale = image_size[0] / VR_ATLAS_SIZE[0]
+    return _atlasMask(image_size, layout["atlas"], tuple(sorted(layout["regions"].items())))
+
+
+@lru_cache(maxsize=4)
+def _atlasMask(image_size: tuple, atlas: tuple, regions: tuple) -> Image.Image:
+    layout = {"atlas": atlas, "regions": dict(regions)}
+    scale = image_size[0] / atlas[0]
     mask = Image.new("L", image_size, 0)
     draw = ImageDraw.Draw(mask)
-    for size in VR_REGIONS:
-        x0, y0, x1, y1 = regionRect(size, image_size)
+    for size in layout["regions"]:
+        x0, y0, x1, y1 = regionRect(size, image_size, layout)
         draw.rounded_rectangle((x0, y0, x1 - 1, y1 - 1), radius=round(_PANEL_CORNER_RADIUS_PX * scale), fill=255)
     return mask
+
+
+def rayPlaneHit(ray_pose: np.ndarray, plane_pose: np.ndarray) -> Optional[tuple]:
+    """コントローラの前方 (-Z) へのレーザーと、オーバーレイの面との交点。
+
+    戻り値: (面の中心から見た x, y (m), 交点 (空間座標), 距離)。当たらなければ None。
+    OpenVR の当たり判定と違い、オーバーレイの外側や透明な角でも計算できる (角を掴むため)。
+    """
+    origin = ray_pose[:3, 3]
+    direction = -ray_pose[:3, 2]
+    normal = plane_pose[:3, 2]
+    denom = float(np.dot(direction, normal))
+    if abs(denom) < 1e-6:
+        return None
+    distance = float(np.dot(plane_pose[:3, 3] - origin, normal)) / denom
+    if distance <= 0:
+        return None
+    point = origin + direction * distance
+    local = np.linalg.inv(plane_pose) @ np.append(point, 1.0)
+    return float(local[0]), float(local[1]), point, distance
+
+
+def pointerHit(point: np.ndarray, normal: np.ndarray, distance: float) -> Any:
+    """showPointer に渡せる、computeOverlayIntersection の結果と同じ形のもの。"""
+    return SimpleNamespace(vPoint=SimpleNamespace(v=list(point)), vNormal=SimpleNamespace(v=list(normal)), fDistance=distance)
+
+
+def createGhostImage(width: int, height: int, at_limit: bool) -> Image.Image:
+    """角を掴んで伸ばしている間の枠 (縦横比は新しい大きさ、1/4 の解像度)。"""
+    size = (max(round(width / 4), 8), max(round(height / 4), 8))
+    img = Image.new("RGBA", size, (0, 0, 0, 0))
+    ImageDraw.Draw(img).rounded_rectangle(
+        (1, 1, size[0] - 2, size[1] - 2), radius=6, fill=_GHOST_FILL,
+        outline=_GHOST_LIMIT_COLOR if at_limit else _GHOST_COLOR, width=3,
+    )
+    return img
+
+
+def captureSize(capture: tuple) -> tuple:
+    """撮影したクライアント領域の大きさ (物理px)。"""
+    x0, y0, x1, y1 = capture[2]
+    return (x1 - x0, y1 - y0)
 
 
 def popupPoseFacing(position: np.ndarray, target: np.ndarray, up: Optional[np.ndarray] = None) -> np.ndarray:
@@ -217,15 +315,23 @@ def isOutOfView(head: np.ndarray, position: np.ndarray, was_out: bool = False) -
 
 
 def recallPose(head: np.ndarray) -> np.ndarray:
-    """頭の正面 (上下の向きは無視) の少し下に置き、頭の方を向けた姿勢。"""
+    """視線の先 (上下は _RECALL_PITCH_RANGE_DEG の範囲) の少し下に置き、頭の方を向けた姿勢。
+
+    上下の向きを無視して水平の正面に置くと、手首のランチャーを見下ろしながら呼び戻したとき
+    視線から外れたままになり、何度押しても「呼び戻す」のままだった (実機)。
+    """
     head_pos = head[:3, 3]
-    forward = -head[:3, 2].copy()
+    gaze = -head[:3, 2]
+    forward = gaze.copy()
     forward[1] = 0.0
     if np.linalg.norm(forward) < 1e-6:  # 真上・真下を向いているときは頭の上方向を正面にする
         forward = head[:3, 1].copy()
         forward[1] = 0.0
     forward = forward / (np.linalg.norm(forward) or 1.0)
-    position = head_pos + forward * _RECALL_DISTANCE_M - np.array([0.0, _RECALL_BELOW_EYE_M, 0.0])
+    low, high = _RECALL_PITCH_RANGE_DEG
+    pitch = np.radians(min(max(np.degrees(np.arcsin(np.clip(gaze[1], -1.0, 1.0))), low), high))
+    direction = forward * np.cos(pitch) + np.array([0.0, np.sin(pitch), 0.0])
+    position = head_pos + direction * _RECALL_DISTANCE_M - np.array([0.0, _RECALL_BELOW_EYE_M, 0.0])
     return popupPoseFacing(position, head_pos)
 
 
@@ -250,6 +356,23 @@ def pushPull(hand_to_overlay: np.ndarray, state: Optional[Any], dt: float) -> np
     result = hand_to_overlay.copy()
     result[:3, 3] = offset / distance * moved
     return result
+
+
+def interpolatePose(start: np.ndarray, end: np.ndarray, t: float) -> np.ndarray:
+    """3x4 の姿勢の間 (t=0 で start、1 で end)。位置は直線で、向きは同じ軸まわりに一定の速さで回す。"""
+    r0, r1 = start[:, :3], end[:, :3]
+    delta = r0.T @ r1
+    angle = float(np.arccos(np.clip((np.trace(delta) - 1) / 2, -1.0, 1.0)))
+    if angle < 1e-6:
+        rotation = r1
+    elif np.pi - angle < 1e-3:
+        rotation = r0 if t < 0.5 else r1  # ちょうど裏返し: 回す軸が決まらないので途中で切り替える
+    else:
+        axis = np.array([delta[2, 1] - delta[1, 2], delta[0, 2] - delta[2, 0], delta[1, 0] - delta[0, 1]]) / (2 * np.sin(angle))
+        k = np.array([[0.0, -axis[2], axis[1]], [axis[2], 0.0, -axis[0]], [-axis[1], axis[0], 0.0]])
+        a = angle * t
+        rotation = r0 @ (np.eye(3) + np.sin(a) * k + (1 - np.cos(a)) * (k @ k))
+    return np.hstack([rotation, (start[:, 3] + (end[:, 3] - start[:, 3]) * t).reshape(3, 1)])
 
 
 def mirrorHandPosition(position: Dict[str, Any]) -> Dict[str, Any]:
@@ -380,7 +503,6 @@ class Overlay:
         # 押したままレーザーがオーバーレイに入っても掴まない (VRChatで物を持っている時など)
         self.grip_prev: Dict[int, bool] = {}
         self.grab_started: float = 0.0
-        # パネル下の追従先切り替えボタン。追従先ごとに別オーバーレイにして表示を切り替える
         # 操作バー (VR画面の TOOLBAR 領域を表示するオーバーレイ)。指している間だけ出す
         self.toolbar_handle: Optional[int] = None
         self.toolbar_visible = False
@@ -415,6 +537,8 @@ class Overlay:
         self.grab_prev_time: float = 0.0
         self.grab_smoothed: Optional[np.ndarray] = None
         self.grab_prev_target: Optional[np.ndarray] = None
+        # 放したあと自分の方へ向き直している途中 (size, 追従先, 放した姿勢, 向き直した姿勢, 始めた時刻)
+        self.settling: Optional[tuple] = None
         # 当たり判定で透明部分を除くため、最後に貼った画像を覚えておく
         self.images: Dict[str, Image.Image] = {}
         self.grab_error: Optional[str] = None
@@ -431,6 +555,35 @@ class Overlay:
         self.panel_last_raw: Optional[bytes] = None
         self.panel_last_change: float = 0.0
         self.panel_image_size: Optional[tuple] = None
+        # 撮影・転送の失敗が続いている回数と、最後に記録した失敗 (同じ失敗はログに1回だけ出す)
+        self.panel_errors = 0
+        self.panel_error: Optional[str] = None
+        # SteamVR が OpenGL に残したエラーを見つけたことをログに出したか (1回だけ出す)
+        self.gl_error_logged = False
+        # VR画面の並び (ログの大きさで変わる)。layout_applied は今のテクスチャと表示範囲 (bounds) が合っている並び。
+        # 大きさを変えたら、VR画面のウィンドウを合わせ、新しい並びで撮れた最初のフレームで表示範囲を切り替える
+        self.layout: Dict[str, Any] = computeVrLayout(*self.panelSize())
+        self.layout_applied: Optional[Dict[str, Any]] = None
+        self.window_fitted_layout: Optional[Dict[str, Any]] = None
+        # 並びが変わったときに VR画面へ知らせる (並びを描くのは React)
+        self.layout_callback: Optional[Callable[[Dict[str, Any]], None]] = None
+        # VR画面が描き終えた並びのログの大きさ (VR画面から届く)。これと撮影の縦横比が合ってから表示を切り替える。
+        # 並びはログの大きさだけで決まる (全体の大きさは同じでもログの大きさが違うことがあるので、ログの大きさで見る)
+        self.layout_rendered: Optional[tuple] = PANEL_DEFAULT_SIZE  # VR画面は起動時に既定の並びで描く
+        self.layout_requested_at = 0.0
+        self.layout_retried = False
+        # VR画面のウィンドウを合わせた大きさ (物理px。resizeClient の結果)。撮影がこの大きさになってから表示を切り替える
+        self.window_size: Optional[tuple] = None
+        # 大きさの切り替えの各段階を、並びごとに1回だけログに出す (実機での切り分け用)
+        self.layout_logged: set = set()
+        # 伸ばして放したときの、伸ばす前の位置と幅。新しい大きさにできず元に戻すときに使う
+        self.resize_undo: Optional[Dict[str, Any]] = None
+        # 角を掴んで大きさを変えている間の状態 (startResize)。手ごとに前のフレームで指していた角
+        self.resizing: Optional[Dict[str, Any]] = None
+        self.corner_prev: Dict[int, Optional[tuple]] = {}
+        # 伸ばしている間に出す枠のオーバーレイと、今の枠の画像の (幅/4, 高さ/4, 限界か)
+        self.ghost_handle: Optional[int] = None
+        self.ghost_key: Optional[tuple] = None
         # 手ごとの (トリガーを押しているか, 最後に送った座標)
         self.panel_input: Dict[int, tuple] = {}
         # 掴み終えた時点でトリガーを押したままだった手。一度離すまでトリガーを無視する
@@ -452,7 +605,8 @@ class Overlay:
         # ログウィンドウを見失ったとき用。VR画面が呼び戻しを頼む (どのスレッドからでもよい) と、
         # オーバーレイのスレッドが頭の正面へ置き直す。見えなくなった・見えるようになったときに
         # panel_out_of_view_callback(bool) で知らせ、ランチャーのボタンを「呼び戻す」に変える
-        self.vr_recall_requested = False
+        # 呼び戻しを頼まれた時刻 (頼まれていなければ None)
+        self.vr_recall_requested: Optional[float] = None
         self.panel_out_of_view = False
         self.panel_out_of_view_callback: Optional[Callable[[bool], None]] = None
         # 手ごとの (grip, hit) 。変化したときだけログに出す(実機での切り分け用)
@@ -489,6 +643,10 @@ class Overlay:
                 self.overlay.setOverlayWidthInMeters(self.toolbar_handle, self.regionWidthM(TOOLBAR))
                 self.overlay.hideOverlay(self.toolbar_handle)
                 self.toolbar_visible = False
+                self.ghost_handle = self.overlay.createOverlay("VRCT_resize_ghost", "VRCT_resize_ghost")
+                self.overlay.setOverlaySortOrder(self.ghost_handle, 50)
+                self.overlay.hideOverlay(self.ghost_handle)
+                self.ghost_key = None
             if any(size in self.settings for size in VR_REGIONS):
                 try:
                     self.initPanelTexture()
@@ -577,12 +735,112 @@ class Overlay:
         vr_texture.handle = int(texture)
         vr_texture.eType = openvr.TextureType_OpenGL
         vr_texture.eColorSpace = openvr.ColorSpace_Auto
-        for size, handle in self.vrRegionHandles().items():
-            bounds = openvr.VRTextureBounds_t()
-            bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = regionBounds(size)
-            self.overlay.setOverlayTextureBounds(handle, bounds)
-        self.gl = {"glfw": glfw, "GL": GL, "window": window, "texture": texture, "vr_texture": vr_texture, "size": None}
+        ghost_texture = GL.glGenTextures(1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, ghost_texture)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+        GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA8, *_GHOST_TEXTURE_SIZE, 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
+        ghost_vr_texture = openvr.Texture_t()
+        ghost_vr_texture.handle = int(ghost_texture)
+        ghost_vr_texture.eType = openvr.TextureType_OpenGL
+        ghost_vr_texture.eColorSpace = openvr.ColorSpace_Auto
+        self.gl = {
+            "glfw": glfw, "GL": GL, "window": window, "texture": texture, "vr_texture": vr_texture, "size": None,
+            "ghost_texture": ghost_texture, "ghost_vr_texture": ghost_vr_texture,
+            # 大きさが変わって使わなくなったテクスチャ。SteamVR が覚えているかもしれないので、接続を閉じた後に消す
+            "old_textures": [],
+        }
         self.panel_last_raw = None  # 作り直したテクスチャには必ず転送する
+        self.layout_applied = None  # 最初に撮れたフレームで表示範囲を設定する
+        self.window_fitted_layout = None
+        # 大きさを合わせるのを待つ時間は、撮影を始めたときから測る (起動直後に元の大きさへ戻さないように)
+        self.layout_requested_at = time.monotonic()
+        self.layout_retried = False
+
+    def panelSize(self) -> tuple:
+        """ログウィンドウの大きさ (論理px)。"""
+        s = self.settings.get(PANEL, {})
+        return clampPanelSize(s.get("width", PANEL_DEFAULT_SIZE[0]), s.get("height", PANEL_DEFAULT_SIZE[1]))
+
+    def setLayoutRendered(self, panel_size: Sequence[int]) -> None:
+        """VR画面が描き終えた並びのログの大きさ [幅, 高さ] を受け取る (どのスレッドからでもよい)。"""
+        self.layout_rendered = tuple(panel_size)
+
+    def setPanelSize(self, width: float, height: float) -> None:
+        """ログウィンドウの大きさを変える。VR画面の並びを変え、新しい並びで撮れたら表示を切り替える。"""
+        width, height = clampPanelSize(width, height)
+        if PANEL in self.settings:
+            self.settings[PANEL]["width"], self.settings[PANEL]["height"] = width, height
+        layout = computeVrLayout(width, height)
+        if layout == self.layout:
+            return
+        self.layout = layout
+        self.panel_last_raw = None
+        self.layout_requested_at = time.monotonic()
+        self.layout_retried = False
+        self.layout_logged = set()
+        if self.layout_callback is not None:
+            try:
+                self.layout_callback(layout)
+            except Exception:
+                errorLogging()
+
+    def logLayout(self, event: str, data: Dict[str, Any]) -> None:
+        """大きさの切り替えの段階を、今の並びにつき1回だけログに出す (実機での切り分け用)。"""
+        if event in self.layout_logged:
+            return
+        self.layout_logged.add(event)
+        printLog(f"overlay layout: {event}", {"atlas": self.layout["atlas"], **data})
+
+    def retryOrRevertLayout(self, now: float) -> None:
+        """新しい並びで撮れないまま時間が経ったら、大きさの変更をやり直し、それでもだめなら元に戻す。"""
+        if self.layout_applied is self.layout:
+            return
+        waited = now - self.layout_requested_at
+        if waited >= _LAYOUT_GIVE_UP_SEC:
+            fallback = self.layout_applied["regions"][PANEL][2:] if self.layout_applied is not None else PANEL_DEFAULT_SIZE
+            printLog("overlay: VR画面が新しい大きさにならないので元に戻します", {"wanted": self.layout["atlas"], "back_to": fallback})
+            if self.resize_undo is not None:
+                # 伸ばす前の位置と幅に戻す (伸ばした後の位置のままだと、元の大きさで跳んで見える)
+                self.settings[PANEL].update(self.resize_undo)
+                self.resize_undo = None
+            elif PANEL in self.settings and "ui_scaling" in self.settings[PANEL]:
+                # 1px の長さは変えない
+                self.settings[PANEL]["ui_scaling"] *= fallback[0] / self.layout["regions"][PANEL][2]
+            self.setPanelSize(*fallback)
+            self.layout_requested_at = now + 3600  # 戻した大きさでも合わなければ、もう繰り返さない
+            if PANEL in self.settings and "x_pos" in self.settings[PANEL]:
+                self.notifyPosition(PANEL)
+        elif waited >= _LAYOUT_RETRY_SEC and not self.layout_retried:
+            self.layout_retried = True
+            self.window_fitted_layout = None
+
+    def applyLayout(self) -> None:
+        """今の並びに合わせて、各領域の表示範囲 (bounds) とログの大きさ・位置をオーバーレイに反映する。"""
+        # 撮影画像はテクスチャの左上の一部 (newPanelTexture)。その割合で表示範囲を縮める
+        fu, fv = 1.0, 1.0
+        if self.gl is not None and self.gl.get("size") and self.panel_image_size is not None:
+            fu = self.panel_image_size[0] / self.gl["size"][0]
+            fv = self.panel_image_size[1] / self.gl["size"][1]
+        for size, handle in self.vrRegionHandles().items():
+            u_min, u_max, v_min, v_max = regionBounds(size, self.layout)
+            bounds = openvr.VRTextureBounds_t()
+            bounds.uMin, bounds.uMax = u_min * fu, u_max * fu
+            bounds.vMin, bounds.vMax = 1 - (1 - v_min) * fv, 1 - (1 - v_max) * fv
+            self.overlay.setOverlayTextureBounds(handle, bounds)
+        if self.initialized is True and PANEL in self.settings:
+            s = self.settings[PANEL]
+            self.updateUiScaling(s["ui_scaling"], PANEL)
+            self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], PANEL)
+        self.layout_applied = self.layout
+        self.resize_undo = None
+        self.logLayout("applied", {
+            "image": self.panel_image_size,
+            "texture": None if self.gl is None else self.gl.get("texture"),
+            "ui_scaling": self.settings.get(PANEL, {}).get("ui_scaling"),
+        })
+        if self.resizing is None:
+            self.hideResizeGhost()
 
     def vrRegionSizes(self) -> list:
         return [size for size in VR_REGIONS if size in self.settings]
@@ -594,10 +852,43 @@ class Overlay:
             handles[TOOLBAR] = self.toolbar_handle
         return handles
 
+    def prepareGl(self) -> Any:
+        """OpenGL を使う前に、このスレッドのコンテキストを確かにし、前から残っているエラーを捨てる。
+
+        SteamVR にテクスチャを渡す処理 (setOverlayTexture) はこちらのコンテキストで OpenGL を使うが、
+        そのエラーは確かめないので、残ったエラーが次の自分の処理のエラーとして見つかってしまう
+        (実機で、テクスチャを選ぶだけの glBindTexture が GL_INVALID_VALUE になった)。
+        """
+        GL = self.gl["GL"]
+        glfw = self.gl.get("glfw")
+        if glfw is not None:
+            glfw.make_context_current(self.gl["window"])
+        left = []
+        for _ in range(8):
+            error = GL.glGetError()
+            if error == GL.GL_NO_ERROR:
+                break
+            left.append(error)
+        if left and not self.gl_error_logged:
+            self.gl_error_logged = True
+            printLog("overlay: OpenGL に前の処理のエラーが残っていたので捨てました", {"errors": [str(e) for e in left]})
+        return GL
+
     def shutdownPanelTexture(self) -> None:
         if self.gl is None:
             return
+        # SteamVR にテクスチャを渡したまま OpenGL の環境を消すと、後で SteamVR との接続を閉じるときに
+        # 落ちる (実機で access violation)。先にオーバーレイからテクスチャを外す
+        if self.overlay is not None:
+            try:
+                handles = [*self.vrRegionHandles().values(), *([self.ghost_handle] if self.ghost_handle is not None else [])]
+                for handle in handles:
+                    self.overlay.clearOverlayTexture(handle)
+            except Exception:
+                errorLogging()
         try:
+            if self.gl.get("old_textures"):
+                self.gl["GL"].glDeleteTextures(self.gl["old_textures"])
             self.gl["glfw"].destroy_window(self.gl["window"])
             self.gl["glfw"].terminate()
         except Exception:
@@ -618,8 +909,29 @@ class Overlay:
             self.panel_hwnd = window_capture.findWindow()
             if self.panel_hwnd is None:
                 return
+            self.window_fitted_layout = None  # 見つけ直したウィンドウは既定の大きさで作られている
+        # VR画面のウィンドウの大きさを並びに合わせる (ログの大きさを変えたとき・起動したとき)
+        if self.window_fitted_layout is not self.layout:
+            self.window_size = window_capture.resizeClient(self.panel_hwnd, *self.layout["atlas"])
+            self.window_fitted_layout = self.layout
+            self.logLayout("resize", {"target": self.window_size})
         capture = window_capture.captureWindowRaw(self.panel_hwnd)
         if capture is None:
+            self.logLayout("no capture", {})
+            return
+        # 大きさを変えている途中 (ウィンドウがまだ新しい大きさでない、または VR画面がまだ古い並びで描いている)
+        # のフレームは使わない。やり直し・元に戻すのはウィンドウの大きさが合わないときだけ
+        # (VR画面の描き終わりは必ず届くので待つ。起動直後は設定が届くまで既定の並びで描いている)
+        window_fits = captureSize(capture) == self.window_size
+        if not window_fits:
+            self.logLayout("window size differs", {"capture": captureSize(capture), "target": self.window_size})
+        elif self.layout_rendered != self.layout["regions"][PANEL][2:]:
+            self.logLayout("waiting for render", {"rendered": self.layout_rendered})
+        if not window_fits or self.layout_rendered != self.layout["regions"][PANEL][2:]:
+            if not window_fits and self.layout_applied is self.layout:
+                self.window_fitted_layout = None  # 表示中に大きさが変わった (DPIの変更など): 合わせ直す
+            elif not window_fits:
+                self.retryOrRevertLayout(now)
             return
         # 前回と同じなら、変換・転送をすべて省く (オーバーレイは前回のテクスチャを表示し続ける)
         if capture[0] == self.panel_last_raw:
@@ -627,27 +939,56 @@ class Overlay:
         self.panel_last_raw = capture[0]
         self.panel_last_change = now
         img = window_capture.imageFromCapture(capture)
-        img.putalpha(atlasMask(img.size))
-        GL = self.gl["GL"]
-        raw = img.tobytes()
-        # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す
+        img.putalpha(atlasMask(img.size, self.layout))
+        GL = self.prepareGl()
+        texture_size = self.gl["size"]
+        if texture_size is None or img.size[0] > texture_size[0] or img.size[1] > texture_size[1]:
+            # 最大の並びが入る大きさで作る (撮影は論理px x DPI倍率の大きさ)。以後は大きさを変えない
+            scale = img.size[0] / self.layout["atlas"][0]
+            max_w, max_h = MAX_LAYOUT["atlas"]
+            self.newPanelTexture(GL, (max(round(max_w * scale), img.size[0]), max(round(max_h * scale), img.size[1])))
+        # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す。撮影画像はテクスチャの左上に書く
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.gl["texture"])
-        if self.gl["size"] != img.size:
-            self.gl["size"] = img.size
-            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA8, img.size[0], img.size[1], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, raw)
-        else:
-            GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, img.size[0], img.size[1], GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, raw)
+        GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, img.size[0], img.size[1], GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, img.tobytes())
         GL.glFinish()
         # 1枚のテクスチャを全領域のオーバーレイに渡す。表示される範囲は各オーバーレイの bounds で決まる
         for handle in self.vrRegionHandles().values():
             self.overlay.setOverlayTexture(handle, self.gl["vr_texture"])
+        image_size_changed = img.size != self.panel_image_size
         self.panel_image_size = img.size
+        # 表示範囲はテクスチャの中の撮影画像の大きさで決まるので、並びか撮影の大きさが変わったら当て直す
+        if self.layout_applied is not self.layout or image_size_changed:
+            self.applyLayout()
+
+    def newPanelTexture(self, GL: Any, size: tuple) -> None:
+        """VR画面のテクスチャの大きさを決める (中身は後で左上に書く)。
+
+        SteamVR は最初に渡されたテクスチャの大きさのまま受け取り続け、大きさの違うテクスチャを渡すと
+        OpenGL のエラーを残して前の画像を映し続けた (実機で、ログを縮めると前の大きな画像の一部が
+        新しい表示範囲で切り出され、見切れた。同じ名前で大きさを変えても、別の名前にしても同じ)。
+        そのため最大の並びが入る大きさで1回だけ作り、表示範囲 (bounds) で使う部分を決める。
+        最初の1回は initPanelTexture で作ったものをそのまま使う。DPI が上がって入らなくなったときだけ作り直す。
+        """
+        if self.gl["size"] is not None:
+            printLog("overlay: VR画面のテクスチャを大きくします", {"from": self.gl["size"], "to": size})
+            # 古いテクスチャは SteamVR が持っているかもしれないので、接続を閉じた後に消す
+            self.gl.setdefault("old_textures", []).append(self.gl["texture"])
+            texture = GL.glGenTextures(1)
+            GL.glBindTexture(GL.GL_TEXTURE_2D, texture)
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+            self.gl["texture"] = texture
+            self.gl["vr_texture"].handle = int(texture)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.gl["texture"])
+        GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA8, size[0], size[1], 0, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, None)
+        self.gl["size"] = size
 
     def panelCaptureInterval(self, now: float) -> float:
         """撮影の間隔。ポインタがVR UIにあるか、画面が変わった直後は短く、それ以外は長くする。"""
         is_active = (
             self.pointer_notified is not None
             or self.grabbing is not None
+            or self.resizing is not None
             or now - self.panel_last_change < _PANEL_ACTIVE_HOLD_SEC
         )
         return _PANEL_CAPTURE_INTERVAL_SEC if is_active else _PANEL_IDLE_CAPTURE_INTERVAL_SEC
@@ -673,6 +1014,8 @@ class Overlay:
                 window_capture.mouseMove(self.panel_hwnd, *_OUTSIDE_XY, pressed=last_pressed)
                 if last_pressed:
                     window_capture.mouseUp(self.panel_hwnd, *_OUTSIDE_XY)
+                    # 押したまま戻ってきても押し直したことにしない (長押しが何度も起きないように)
+                    self.trigger_blocked.add(hand)
             self.panel_input.pop(hand, None)
             return
         if xy != last_xy:
@@ -757,8 +1100,8 @@ class Overlay:
 
     def placeToolbar(self, tracker_index: int, panel_relative: np.ndarray) -> None:
         """操作バーをログの下に置く。出すのは指している間だけ (updateToolbarVisibility)。"""
-        _, _, panel_w, panel_h = VR_REGIONS[PANEL]
-        _, _, bar_w, bar_h = VR_REGIONS[TOOLBAR]
+        _, _, panel_w, panel_h = self.layout["regions"][PANEL]
+        _, _, bar_w, bar_h = self.layout["regions"][TOOLBAR]
         panel_height_m = self.settings[PANEL]["ui_scaling"] * panel_h / panel_w
         bar_height_m = self.regionWidthM(TOOLBAR) * bar_h / bar_w
         offset = np.eye(4)
@@ -841,12 +1184,12 @@ class Overlay:
         """
         point = np.array([results.vPoint.v[0], results.vPoint.v[1], results.vPoint.v[2], 1.0])
         local = np.linalg.inv(overlay_pose) @ point
-        _, _, region_w, region_h = VR_REGIONS[size]
+        _, _, region_w, region_h = self.layout["regions"][size]
         width_m = self.regionWidthM(size)
         height_m = width_m * region_h / region_w
         fx = min(max(local[0] / width_m + 0.5, 0.0), 1.0)
         fy = min(max(0.5 - local[1] / height_m, 0.0), 1.0)
-        x0, y0, x1, y1 = regionRect(size, self.panel_image_size)
+        x0, y0, x1, y1 = regionRect(size, self.panel_image_size, self.layout)
         return (min(x0 + int(fx * (x1 - x0)), x1 - 1), min(y0 + int(fy * (y1 - y0)), y1 - 1))
 
     def requestAnchor(self, anchor: str) -> None:
@@ -931,11 +1274,29 @@ class Overlay:
         r = _HIT_MARGIN_PX
         return img.crop((x - r, y - r, x + r + 1, y + r + 1)).getchannel("A").getextrema()[1] > 0
 
-    def pointingOverlay(self, pose: np.ndarray) -> tuple:
+    def hitInsideRegion(self, size: str, results: Any, poseOf: Callable[[int], Optional[np.ndarray]]) -> bool:
+        """VR UI の領域に当たった点が、その領域の見えている範囲の中か。
+
+        切り出したオーバーレイの SteamVR の当たり判定は、見えている範囲からはみ出すことがある
+        (実機で、ログの下の操作バーを指しているのに、ログにも当たったと返り、どちらになるかが揺れた)。
+        """
+        if size not in (PANEL, LAUNCHER, POPUP, TOOLBAR):
+            return True
+        pose = self.regionWorldPose(size, poseOf)
+        if pose is None:
+            return True
+        local = np.linalg.inv(pose) @ np.array([results.vPoint.v[0], results.vPoint.v[1], results.vPoint.v[2], 1.0])
+        _, _, region_w, region_h = self.layout["regions"][size]
+        width_m = self.regionWidthM(size)
+        height_m = width_m * region_h / region_w
+        margin = 0.001
+        return abs(local[0]) <= width_m / 2 + margin and abs(local[1]) <= height_m / 2 + margin
+
+    def pointingOverlay(self, pose: np.ndarray, poseOf: Optional[Callable[[int], Optional[np.ndarray]]] = None) -> tuple:
         """Return (size, intersection results) of the overlay the controller ray hits, or (None, None).
 
         フェードアウトした(見えない)オーバーレイも対象にする: グリップで起こして掴めるように。
-        画像の透明な部分は対象にしない。
+        画像の透明な部分と、VR UI の領域の見えている範囲の外 (poseOf があるとき) は対象にしない。
         """
         best = (None, None)
         for size in self.settings.keys():
@@ -945,6 +1306,8 @@ class Overlay:
                 continue
             results = self.intersect(pose, size)
             if results is None or not self.hasContentAt(size, results):
+                continue
+            if poseOf is not None and not self.hitInsideRegion(size, results, poseOf):
                 continue
             if best[1] is None or results.fDistance < best[1].fDistance:
                 best = (size, results)
@@ -1013,6 +1376,11 @@ class Overlay:
         now = time.monotonic()
         self.applyVrWindows(poseOf)
         self.updateLauncherVisibility(poseOf, now)
+        self.updateSettle(now)
+
+        if self.resizing is not None:
+            self.updateResize(poseOf, controllerState, now)
+            return
 
         if self.grabbing is not None:
             size, hand, hand_to_overlay = self.grabbing
@@ -1066,9 +1434,11 @@ class Overlay:
                 if trigger:
                     self.trigger_blocked.add(hand)
                 # 放した位置は、ならした後の位置 (放した瞬間に跳ねないように)。空間固定なら自分の方へ向け直す
-                relative = self.faceUserOnRelease(size, relative, tracker_pose, poseOf)
+                faced = self.faceUserOnRelease(size, relative, tracker_pose, poseOf)
                 self.setTransform(size, tracker_index, relative)
-                self.commitPosition(size, relative)
+                self.commitPosition(size, faced)  # 保存するのは向き直した位置
+                if faced is not relative:
+                    self.settling = (size, tracker_index, relative, faced, now)
             return
 
         pointer = None  # (results, color[, scale])
@@ -1079,8 +1449,10 @@ class Overlay:
             hand = self.overlay_system.getTrackedDeviceIndexForControllerRole(role)
             hand_pose = poseOf(hand)
             grip = hand_pose is not None and gripPressed(hand)
-            size, results = (None, None) if hand_pose is None else self.pointingOverlay(hand_pose)
+            size, results = (None, None) if hand_pose is None else self.pointingOverlay(hand_pose, poseOf)
             toolbar = self.intersectToolbar(hand_pose) if hand_pose is not None else None
+            if toolbar is not None and not self.hitInsideRegion(TOOLBAR, toolbar, poseOf):
+                toolbar = None
             if toolbar is not None and (results is None or toolbar.fDistance < results.fDistance):
                 size, results = TOOLBAR, toolbar
             # 自分の手に付いているオーバーレイはその手では動かせない(手と一緒に動くだけ)。操作バーはログと同じ
@@ -1088,6 +1460,21 @@ class Overlay:
             if tracker is not None and self.getTracker(tracker)[1] == hand:
                 size, results = None, None
             pointing_log = pointing_log or size in (PANEL, TOOLBAR)
+            corner = self.panelCornerAt(hand, hand_pose, poseOf) if hand_pose is not None else None
+            if corner is not None and size not in (None, PANEL):
+                # ログ以外のウィンドウ (操作バーなど) を指しているときは、そちらを優先する。
+                # 角の当たり判定はログの外側まで広げてあり、同じ面にある操作バーの端と重なるため
+                corner = None
+            corner_before = self.corner_prev.get(hand)
+            self.corner_prev[hand] = corner[:2] if corner is not None else None
+            if corner is not None:
+                pointing_log = True
+            # 握った瞬間のレーザーのぶれで外れないよう、前のフレームで指していた角を優先する
+            grip_corner = corner_before if corner_before is not None else (corner[:2] if corner is not None else None)
+            if grip and not self.grip_prev.get(hand, False) and grip_corner is not None:
+                self.grip_prev[hand] = True
+                self.startResize(hand, grip_corner, poseOf)
+                return
             pointing_launcher = pointing_launcher or size == LAUNCHER
 
             debug_state = (grip, size)
@@ -1097,14 +1484,27 @@ class Overlay:
 
             if hand_pose is not None and not grip:
                 xy = None
-                if size in VR_REGIONS and self.panel_image_size is not None:
+                # 大きさの切り替え中は、表示 (古い並び) と VR画面 (新しい並び) が合っていないので入力を送らない
+                # (押した位置が別のボタンに当たることがある)
+                if size in VR_REGIONS and self.panel_image_size is not None and self.layout_applied is self.layout:
                     overlay_pose = self.regionWorldPose(size, poseOf)
                     if overlay_pose is not None:
                         xy = self.regionPixel(size, results, overlay_pose)
-                self.handlePanelInput(hand, xy, controllerState(hand))
-                if xy is not None and hover_xy is None:
-                    scale = self.panel_image_size[0] / VR_ATLAS_SIZE[0]
+                # 角 (取っ手) ではクリック・スクロールを送らない。ホバー (取っ手を明るくする) だけ
+                self.handlePanelInput(hand, None if corner is not None else xy, controllerState(hand))
+                handle_xy = self.cornerHandleXY(corner[:2]) if corner is not None else None
+                if hover_xy is None and handle_xy is not None:
+                    hover_xy = handle_xy  # 角の取っ手を明るくする (ウィンドウの外側を指しているときも)
+                elif hover_xy is None and xy is not None:
+                    scale = self.panel_image_size[0] / self.layout["atlas"][0]
                     hover_xy = (round(xy[0] / scale), round(xy[1] / scale))
+
+            # 角を指している (ウィンドウの外側を含む): ポインタを出し、グリップで大きさを変える (上で処理)
+            if corner is not None and size != TOOLBAR:
+                self.grip_prev[hand] = grip
+                if pointer is None:
+                    pointer = (corner[2], _COLOR_POINTER)
+                continue
 
             # 操作バーは掴めない (ログに付いて動くだけ)。ボタンは VR画面へのクリックで押す
             if size == TOOLBAR:
@@ -1126,6 +1526,7 @@ class Overlay:
             if overlay_pose is None:
                 continue
             self.wakeOverlay(size)  # フェード済みでもグリップで起こす
+            self.settling = None
             self.grabbing = (size, hand, np.linalg.inv(hand_pose) @ overlay_pose)
             self.grab_last_relative = None
             self.grab_started = now
@@ -1140,6 +1541,17 @@ class Overlay:
         self.notifyPointer(hover_xy)
         self.updateToolbarVisibility(now, pointing_log)
         self.launcher_pointed = pointing_launcher
+
+    def updateSettle(self, now: float) -> None:
+        """放したあと、自分の方へ向き直す途中の姿勢を置く。"""
+        if self.settling is None:
+            return
+        size, tracker_index, start, end, started = self.settling
+        t = min((now - started) / _FACE_USER_TURN_SEC, 1.0)
+        eased = t * t * (3 - 2 * t)
+        self.setTransform(size, tracker_index, interpolatePose(start, end, eased))
+        if t >= 1.0:
+            self.settling = None
 
     def updateLauncherVisibility(self, poseOf: Callable[[int], Optional[np.ndarray]], now: float) -> None:
         """手首を見たときだけランチャーを出す。レーザーを当てている間は消さない。"""
@@ -1207,27 +1619,37 @@ class Overlay:
                 self.overlay.hideOverlay(self.handle[size])
                 if size == PANEL:
                     self.setToolbarVisible(False)
+                    self.hideResizeGhost()  # 放した後、新しい大きさへの切り替えを待っている枠も消す
+                    if self.resizing is not None:
+                        self.resizing = None
+                        self.setHighlight(None, _COLOR_NORMAL)
+                        self.showPointer(None, _COLOR_NORMAL)
                 if self.grabbing is not None and self.grabbing[0] == size:
                     self.grabbing = None
                     self.grab_scale = None
                     self.setHighlight(None, _COLOR_NORMAL)
                     self.showPointer(None, _COLOR_NORMAL)
         # 掴んでいる間は動かさない (掴み処理が同じフレームで位置を上書きする)。呼び戻しは離してから行う
-        if self.grabbing is not None:
+        if self.grabbing is not None or self.resizing is not None:
             return
         if self.requested_anchor is not None:
             anchor, self.requested_anchor = self.requested_anchor, None
             if PANEL in self.handle:
                 self.setAnchor(poseOf, anchor)
-        if self.vr_recall_requested:
-            self.vr_recall_requested = False
+        if self.vr_recall_requested is not None:
             if PANEL in self.handle and PANEL not in self.vr_windows_hidden:
+                self.vr_recall_requested = None
                 self.recallPanel(poseOf)
+            elif time.monotonic() - self.vr_recall_requested > _RECALL_PENDING_SEC:
+                self.vr_recall_requested = None  # ログが開かれなかった
         self.notifyPanelOutOfView(PANEL in self.handle and self.isPanelOutOfView(poseOf))
 
     def requestRecallPanel(self) -> None:
-        """ログウィンドウを目の前へ呼び戻すよう頼む (どのスレッドからでもよい)。"""
-        self.vr_recall_requested = True
+        """ログウィンドウを目の前へ呼び戻すよう頼む (どのスレッドからでもよい)。
+
+        固定先によらず、頭の正面に空間固定で置き直す。閉じていれば、開かれるのを少し待つ。
+        """
+        self.vr_recall_requested = time.monotonic()
 
     def isPanelOutOfView(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> bool:
         """ログウィンドウが開いていて、視線から外れているか。
@@ -1319,6 +1741,144 @@ class Overlay:
         kind = "plus" if pushed > _SCALE_ICON_THRESHOLD_M else "minus" if pushed < -_SCALE_ICON_THRESHOLD_M else "dot"
         self.showPointer(self.intersect(hand_pose, size), _COLOR_POINTER, kind=kind)
 
+    def panelCornerAt(self, hand: int, hand_pose: np.ndarray, poseOf: Callable[[int], Optional[np.ndarray]]) -> Optional[tuple]:
+        """レーザーがログの角 (伸ばすための取っ手) を指しているか。指していれば (x向き, y向き, 当たり)。
+
+        x向き・y向きは +1 が右・上。ロック中・隠れているとき・大きさの切り替え中は判定しない。
+        """
+        if PANEL not in self.handle or PANEL in self.vr_windows_hidden or not self.vr_panel_enabled:
+            return None
+        if self.panel_locked or self.layout_applied is not self.layout or not self.isVisible(PANEL):
+            return None
+        if self.getTracker(self.settings[PANEL]["tracker"])[1] == hand:
+            return None  # 自分の手に付けたログは、その手では伸ばせない
+        pose = self.overlayWorldPose(PANEL, poseOf)
+        if pose is None:
+            return None
+        hit = rayPlaneHit(hand_pose, pose)
+        if hit is None:
+            return None
+        x, y, point, distance = hit
+        _, _, width_px, height_px = self.layout["regions"][PANEL]
+        m_per_px = self.settings[PANEL]["ui_scaling"] / width_px
+        half_w, half_h = width_px * m_per_px / 2, height_px * m_per_px / 2
+        inside, outside = _CORNER_INSIDE_PX * m_per_px, _CORNER_OUTSIDE_PX * m_per_px
+        for sx in (1, -1):
+            for sy in (1, -1):
+                dx, dy = sx * x - half_w, sy * y - half_h  # 正なら枠の外
+                if not (-inside <= dx <= outside and -inside <= dy <= outside):
+                    continue
+                if (sx, sy) == (1, 1) and dx <= 0 and dy <= 0:
+                    continue  # 右上の内側は閉じるボタン
+                return sx, sy, pointerHit(point, pose[:3, 2], distance)
+        return None
+
+    def cornerHandleXY(self, corner: tuple) -> Optional[tuple]:
+        """角の取っ手の中心 (VR画面の論理px)。右上は閉じるボタンなので取っ手がない (None)。"""
+        if corner == (1, 1):
+            return None
+        _, _, width_px, height_px = self.layout["regions"][PANEL]
+        sx, sy = corner
+        return (
+            _CORNER_HANDLE_CENTER_PX if sx < 0 else width_px - _CORNER_HANDLE_CENTER_PX,
+            _CORNER_HANDLE_CENTER_PX if sy > 0 else height_px - _CORNER_HANDLE_CENTER_PX,
+        )
+
+    def startResize(self, hand: int, corner: tuple, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
+        """角を掴む。反対の角を動かさず、掴んだ角だけを動かして大きさを変える。"""
+        tracker_index = self.getTracker(self.settings[PANEL]["tracker"])[1]
+        tracker_pose = poseOf(tracker_index)
+        pose = self.overlayWorldPose(PANEL, poseOf)
+        if pose is None or tracker_pose is None:
+            return
+        _, _, width_px, height_px = self.layout["regions"][PANEL]
+        m_per_px = self.settings[PANEL]["ui_scaling"] / width_px
+        sx, sy = corner
+        self.resizing = {
+            "hand": hand, "corner": corner, "m_per_px": m_per_px,
+            "tracker_index": tracker_index, "relative": np.linalg.inv(tracker_pose) @ pose, "pose": pose,
+            "fixed": (-sx * width_px * m_per_px / 2, -sy * height_px * m_per_px / 2),
+            "size": (width_px, height_px), "center": (0.0, 0.0),
+        }
+        self.settling = None
+        self.setToolbarVisible(False)
+        self.notifyPointer(None)
+        self.setHighlight(PANEL, _COLOR_GRABBING)
+
+    def updateResize(self, poseOf: Callable[[int], Optional[np.ndarray]], controllerState: Callable[[int], Optional[Any]], now: float) -> None:
+        """掴んだ角をレーザーの先に合わせる。中身は描き直さず、新しい大きさの枠だけを動かす。"""
+        r = self.resizing
+        hand_pose = poseOf(r["hand"])
+        state = controllerState(r["hand"])
+        if hand_pose is None or state is None or not (state.ulButtonPressed & _GRIP_MASK):
+            self.finishResize(poseOf)
+            return
+        tracker_pose = poseOf(r["tracker_index"])
+        if tracker_pose is not None:
+            r["pose"] = tracker_pose @ r["relative"]
+        hit = rayPlaneHit(hand_pose, r["pose"])
+        if hit is None:
+            return
+        x, y, point, distance = hit
+        sx, sy = r["corner"]
+        fixed_x, fixed_y = r["fixed"]
+        m_per_px = r["m_per_px"]
+        wanted = (sx * (x - fixed_x) / m_per_px, sy * (y - fixed_y) / m_per_px)
+        width_px, height_px = clampPanelSize(*wanted)
+        at_limit = abs(width_px - wanted[0]) > 1 or abs(height_px - wanted[1]) > 1
+        r["size"] = (width_px, height_px)
+        r["center"] = (fixed_x + sx * width_px * m_per_px / 2, fixed_y + sy * height_px * m_per_px / 2)
+        self.showPointer(pointerHit(point, r["pose"][:3, 2], distance), _COLOR_POINTER)
+        self.showResizeGhost(at_limit)
+
+    def finishResize(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
+        """放したら大きさと位置を確定して保存する。表示は新しい大きさで撮れてから切り替わる (applyLayout)。"""
+        r, self.resizing = self.resizing, None
+        self.setHighlight(None, _COLOR_NORMAL)
+        self.showPointer(None, _COLOR_NORMAL)
+        s = self.settings[PANEL]
+        width_px, height_px = r["size"]
+        center = np.eye(4)
+        center[0, 3], center[1, 3] = r["center"]
+        undo = {k: s[k] for k in ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation", "ui_scaling", "tracker")}
+        # 1px の実際の長さは変えない (横に伸ばすと1行の文字数が増え、文字の大きさは変わらない)
+        s["ui_scaling"] = r["m_per_px"] * width_px
+        self.setPanelSize(width_px, height_px)
+        self.commitPosition(PANEL, (r["relative"] @ center)[:3, :])
+        self.resize_undo = undo if self.layout_applied is not self.layout else None
+        if self.layout_applied is self.layout:
+            self.hideResizeGhost()  # 大きさが変わらなかった
+
+    def showResizeGhost(self, at_limit: bool) -> None:
+        if self.ghost_handle is None or self.gl is None:
+            return
+        r = self.resizing
+        width_px, height_px = r["size"]
+        key = (width_px // 4, height_px // 4, at_limit)
+        if key != self.ghost_key:
+            self.ghost_key = key
+            img = createGhostImage(width_px, height_px, at_limit)
+            GL = self.prepareGl()
+            GL.glBindTexture(GL.GL_TEXTURE_2D, self.gl["ghost_texture"])
+            # テクスチャの大きさは変えない (newPanelTexture と同じ理由)。左上の一部だけを使う
+            GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, img.size[0], img.size[1], GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, img.tobytes())
+            GL.glFinish()
+            tex_w, tex_h = _GHOST_TEXTURE_SIZE
+            bounds = openvr.VRTextureBounds_t()
+            bounds.uMin, bounds.uMax, bounds.vMin, bounds.vMax = 0.0, img.size[0] / tex_w, 1.0, 1.0 - img.size[1] / tex_h
+            self.overlay.setOverlayTextureBounds(self.ghost_handle, bounds)
+            self.overlay.setOverlayTexture(self.ghost_handle, self.gl["ghost_vr_texture"])
+        center = np.eye(4)
+        center[0, 3], center[1, 3] = r["center"]
+        center[2, 3] = _GHOST_FRONT_M  # ログの表 (+Z) 側
+        self.overlay.setOverlayTransformAbsolute(self.ghost_handle, openvr.TrackingUniverseStanding, mat34Id((r["pose"] @ center)[:3, :]))
+        self.overlay.setOverlayWidthInMeters(self.ghost_handle, width_px * r["m_per_px"])
+        self.overlay.showOverlay(self.ghost_handle)
+
+    def hideResizeGhost(self) -> None:
+        if self.ghost_handle is not None and self.overlay is not None:
+            self.overlay.hideOverlay(self.ghost_handle)
+
     def smoothGrab(self, target: np.ndarray, dt: float) -> np.ndarray:
         """掴んで動かしている位置をならす (追従先から見た空間で。手に付けたウィンドウでも遅れて揺れないように)。
 
@@ -1360,6 +1920,13 @@ class Overlay:
         keys = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")
         for key, value in zip(keys, utils.matrix_to_position(base_matrix, relative)):
             self.settings[size][key] = round(value, 4)
+        if size == PANEL:
+            # 伸ばした後に動かした・固定先を変えた・呼び戻した位置を、大きさを元に戻すときに消さない
+            # (伸ばして放したときは finishResize がこの後で記録し直す)
+            self.resize_undo = None
+        # 向き直しの途中なら終わりにする (放したときは、この後で始め直す)
+        if self.settling is not None and self.settling[0] == size:
+            self.settling = None
         self.notifyPosition(size)
 
     def notifyPosition(self, size: str) -> None:
@@ -1373,6 +1940,8 @@ class Overlay:
                 **{k: self.settings[size][k] for k in keys},
                 "ui_scaling": self.settings[size]["ui_scaling"],
                 "tracker": self.settings[size]["tracker"],
+                # ログウィンドウの大きさ (論理px)。角を掴んで伸ばしたとき
+                **({k: self.settings[size][k] for k in ("width", "height") if k in self.settings[size]}),
             })
         except Exception:
             errorLogging()
@@ -1426,28 +1995,106 @@ class Overlay:
                 errorLogging()
             try:
                 self.updatePanel()
-            except Exception:
-                # 失敗し続けてもログを埋めないよう、パネルを止める
-                errorLogging()
-                self.shutdownPanelTexture()
+                self.panel_errors = 0
+            except Exception as e:
+                self.onPanelError(e)
             try:
                 self.updateGrab()
                 self.grab_error = None
             except Exception as e:
-                self.grabbing = None
-                # 毎フレーム呼ばれるため、同じ例外が続く間はログを1回だけにする
-                if repr(e) != self.grab_error:
-                    self.grab_error = repr(e)
-                    errorLogging()
-            # 掴んでいる間は追従を滑らかにするため更新頻度を上げる
-            interval = (1 / 60) if self.grabbing is not None else (1 / 16)
+                self.onGrabError(e)
+            # 掴んでいる間・伸ばしている間・向き直している間は、滑らかにするため更新頻度を上げる
+            is_moving = self.grabbing is not None or self.resizing is not None or self.settling is not None
+            interval = (1 / 60) if is_moving else (1 / 16)
             sleepTime = interval - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
-        # GLコンテキストは作ったスレッドでしか破棄できない
-        self.shutdownPanelTexture()
+        self.teardown()
         # 止まったあとは「見失っている」表示を残さない
         self.notifyPanelOutOfView(False)
+
+    def teardown(self) -> None:
+        """オーバーレイを消して SteamVR との接続を閉じ、最後に OpenGL の環境を消す (オーバーレイのスレッドで呼ぶ)。
+
+        OpenGL のテクスチャを渡したあと、ON/OFF を処理するスレッド (OpenGL の環境が無い) から
+        接続を閉じると、SteamVR の中で落ちた (実機で access violation。テクスチャを外してからでも同じ)。
+        OpenGL の環境を作ったこのスレッドで、環境を今のものにしたまま閉じる。
+        GL コンテキストは作ったスレッドでしか破棄できないので、それも最後にここで行う。
+        """
+        if self.gl is not None:
+            try:
+                self.gl["glfw"].make_context_current(self.gl["window"])
+            except Exception:
+                errorLogging()
+        self.destroyOverlays()
+        self.releaseSession()
+        self.shutdownPanelTexture()
+
+    def destroyOverlays(self) -> None:
+        """作ったオーバーレイをすべて消す。消した後は何もしない。"""
+        if not isinstance(self.overlay, openvr.IVROverlay):
+            return
+        try:
+            for size in self.settings.keys():
+                if isinstance(self.handle.get(size), int):
+                    self.overlay.destroyOverlay(self.handle[size])
+            for handle in [*self.pointer_handles.values(), *[h for h in (self.toolbar_handle, self.ghost_handle) if h is not None]]:
+                self.overlay.destroyOverlay(handle)
+        except Exception:
+            errorLogging()
+        self.pointer_handles = {}
+        self.toolbar_handle = None
+        self.toolbar_visible = False
+        self.ghost_handle = None
+        self.resizing = None
+        self.settling = None
+        self.overlay = None
+
+    def releaseSession(self) -> None:
+        """SteamVR との接続の参照を返す。閉じるのに失敗しても、次に ON にしたとき作り直せるようにする。"""
+        if not isinstance(self.system, openvr.IVRSystem):
+            return
+        try:
+            # Only releases our reference; the real openvr.shutdown()
+            # only runs once every other holder (e.g. Clipboard) has
+            # released theirs too.
+            openvr_session.release()
+        except Exception:
+            errorLogging()
+        finally:
+            self.system = None
+
+    def onPanelError(self, e: Exception) -> None:
+        """撮影・転送で例外が出た。1回ではやめず次のフレームでやり直し、続くときだけ撮影をやめる。"""
+        self.panel_errors += 1
+        # 毎フレーム呼ばれるため、同じ例外が続く間はログを1回だけにする
+        if repr(e) != self.panel_error:
+            self.panel_error = repr(e)
+            errorLogging()
+        if self.panel_errors >= _PANEL_ERROR_LIMIT:
+            printLog("overlay: VR画面の撮影が続けて失敗したので止めます", {"errors": self.panel_errors})
+            self.shutdownPanelTexture()
+
+    def onGrabError(self, e: Exception) -> None:
+        """掴み・伸ばす処理で例外が出たら、その操作をやめる (同じ例外で毎フレーム止まり続けないように)。"""
+        self.grabbing = None
+        self.settling = None
+        if self.resizing is not None:
+            self.resizing = None
+            try:
+                self.hideResizeGhost()
+            except Exception:
+                errorLogging()
+        # 掴んでいる印 (色とポインタ) を残さない
+        try:
+            self.setHighlight(None, _COLOR_NORMAL)
+            self.showPointer(None, _COLOR_NORMAL)
+        except Exception:
+            errorLogging()
+        # 毎フレーム呼ばれるため、同じ例外が続く間はログを1回だけにする
+        if repr(e) != self.grab_error:
+            self.grab_error = repr(e)
+            errorLogging()
 
     def main(self) -> None:
         while self.checkSteamvrRunning() is False:
@@ -1491,23 +2138,12 @@ class Overlay:
                     self.initialized = False
                     return
                 self.thread_overlay = None
-            if isinstance(self.overlay, openvr.IVROverlay):
-                for size in self.settings.keys():
-                    if isinstance(self.handle[size], int):
-                        self.overlay.destroyOverlay(self.handle[size])
-                for handle in [*self.pointer_handles.values(), *([self.toolbar_handle] if self.toolbar_handle is not None else [])]:
-                    self.overlay.destroyOverlay(handle)
-                self.pointer_handles = {}
-                self.toolbar_handle = None
-                self.toolbar_visible = False
-                self.overlay = None
-            if isinstance(self.system, openvr.IVRSystem):
-                # Only releases our reference; the real openvr.shutdown()
-                # only runs once every other holder (e.g. Clipboard) has
-                # released theirs too.
-                openvr_session.release()
-                self.system = None
-            self.initialized = False
+            # ふつうはオーバーレイのスレッドが終わるときに済ませている (teardown)。残っていれば片付ける
+            try:
+                self.destroyOverlays()
+                self.releaseSession()
+            finally:
+                self.initialized = False
 
     def reStartOverlay(self) -> None:
         self.shutdownOverlay()

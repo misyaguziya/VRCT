@@ -512,7 +512,7 @@ def _validate_overlay_vr_window(val, current):
             new[key] = v
         elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation','opacity','ui_scaling'] and isinstance(v,(int,float)):
             new[key] = float(v)
-        elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
+        elif key in ['display_duration','fadeout_duration','width','height'] and isinstance(v,int) and not isinstance(v,bool):
             new[key] = v
     return new
 
@@ -1311,6 +1311,9 @@ class Config:
         self._OVERLAY_VR_LAUNCHER_AUTO_HIDE = True
         self._OVERLAY_VR_LAUNCHER_HIDE_ANGLE = 45
         self._OVERLAY_VR_PANEL_SETTINGS = {
+            # ログウィンドウの大きさ (論理px)。角を掴んで伸ばす (600x400〜1400x1000)
+            "width": 900,
+            "height": 700,
             "x_pos": 0.0,
             "y_pos": 0.3,
             "z_pos": 0.0,

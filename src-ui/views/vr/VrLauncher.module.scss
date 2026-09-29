@@ -105,6 +105,14 @@
     background-color: var(--primary_300_color);
 }
 
+// 長押し中 (離さずに押し続けると呼び戻す)。撮影が遅いのでアニメーションせず、名前を「呼び戻す」にして知らせる
+.window_button.is_holding {
+    box-shadow: inset 0 0 0 3px var(--warning_color);
+    .label {
+        color: var(--warning_color);
+    }
+}
+
 // 開いているのに視線から外れているログウィンドウ: 押すと呼び戻す。
 // 下端の帯と文字を警告色にする (枠はホバー表示に使うので変えない)
 .window_button.is_attention {

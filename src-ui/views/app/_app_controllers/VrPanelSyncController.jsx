@@ -23,6 +23,7 @@ const WINDOW_REQUEST_PATHS = [
     "/set/disable/overlay_vr_panel_locked",
     "/set/data/overlay_vr_panel_opacity",
     "/set/data/overlay_vr_panel_font_size",
+    "/run/vr_panel_layout_rendered",
 ];
 
 const atomEntries = () => Object.entries(dynamicStoreRegistry)
