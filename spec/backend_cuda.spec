@@ -28,7 +28,7 @@ a = Analysis(
     # へ収集させる (2026-09-18 に torch を落とすまでは、torch が同梱していた
     # 同じDLL群が torch 経由で収集されていた)。実行時のDLL検索パス登録は
     # src-python/utils.py の _registerBundledCudaLibraries が行う。
-    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr',
+    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr', 'windows_capture',
                    'nvidia.cublas', 'nvidia.cudnn'],
     hookspath=[],
     hooksconfig={},

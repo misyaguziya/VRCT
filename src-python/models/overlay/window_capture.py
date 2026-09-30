@@ -1,7 +1,8 @@
 """VRパネル用: Tauriの "VRCT VR Panel" ウィンドウを撮影し、マウス入力を送る (Windows専用)。
 
-ウィンドウは画面外に置かれ、隠れていても PrintWindow(PW_RENDERFULLCONTENT) で撮影できる
-(最小化中は不可)。入力はOSのカーソルを動かさないよう PostMessage で送る。
+ウィンドウは画面外に置かれている。撮影は WindowStream (Windows.Graphics.Capture、windows-capture) を使い、
+使えないときは PrintWindow(PW_RENDERFULLCONTENT) で撮る (どちらも隠れていても撮れる。最小化中は不可)。
+入力はOSのカーソルを動かさないよう PostMessage で送る。
 描画側のChromiumが隠れたウィンドウの描画を止めないよう、Tauri側で起動引数を指定している
 (src-tauri/src/lib.rs の BROWSER_ARGS)。
 """
@@ -25,8 +26,18 @@ _SWP_NOACTIVATE = 0x0010
 # 相手 (VRCT の画面) の応答を待たずに戻る。画面が固まっていると、待つ間オーバーレイの処理が止まる
 _SWP_ASYNCWINDOWPOS = 0x4000
 
+_DWMWA_EXTENDED_FRAME_BOUNDS = 9
+_DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
+# 画面キャプチャの画像を受け取る最短の間隔 (ms)。受け取るたびに1枚 (約5MB) を複製する
+_STREAM_MIN_INTERVAL_MS = 33
+
 _user32 = ctypes.windll.user32 if hasattr(ctypes, "windll") else None
 _gdi32 = ctypes.windll.gdi32 if hasattr(ctypes, "windll") else None
+_dwmapi = ctypes.windll.dwmapi if hasattr(ctypes, "windll") else None
+if _user32 is not None:
+    # DPI_AWARENESS_CONTEXT はポインタの大きさ (既定の int では上位が欠ける)
+    _user32.SetThreadDpiAwarenessContext.restype = ctypes.c_void_p
+    _user32.SetThreadDpiAwarenessContext.argtypes = [ctypes.c_void_p]
 
 
 class _BITMAPINFOHEADER(ctypes.Structure):
@@ -83,6 +94,77 @@ def captureWindowRaw(hwnd: int) -> Optional[tuple]:
     _user32.ClientToScreen(hwnd, ctypes.byref(origin))
     left, top = origin.x - rect.left, origin.y - rect.top
     return buf.raw, (width, height), (left, top, left + client.right, top + client.bottom)
+
+
+class WindowStream:
+    """Windows.Graphics.Capture でウィンドウを撮り続け、最新の1枚を持つ (windows-capture が必要)。
+
+    PrintWindow と違い、相手 (VRCT の画面) に描き直させず、応答も待たない。画面が変わってから
+    画像が届くまで約30ms (PrintWindow では約90ms。実機で測定)。画像はライブラリのスレッドから届く。
+    """
+
+    def __init__(self, hwnd: int) -> None:
+        from windows_capture import WindowsCapture  # 任意の依存。無ければ呼び出し側が PrintWindow に戻す
+
+        self.hwnd = hwnd
+        self.latest: Optional[tuple] = None
+        self.window_closed = False
+        # 最新の画像が今のウィンドウの大きさと違う (take が None を返した理由)
+        self.stale = False
+        capture = WindowsCapture(cursor_capture=False, draw_border=False,
+                                 minimum_update_interval=_STREAM_MIN_INTERVAL_MS, window_hwnd=hwnd)
+
+        def on_frame_arrived(frame, control):
+            # 画像は呼び出しの間しか使えないので複製する
+            self.latest = (frame.frame_buffer.tobytes(), (frame.width, frame.height))
+
+        def on_closed():
+            self.window_closed = True
+
+        capture.event(on_frame_arrived)
+        capture.event(on_closed)
+        self.control = capture.start_free_threaded()
+
+    @property
+    def closed(self) -> bool:
+        """止まった (ウィンドウが閉じた、または撮影のスレッドが終わった)。止まると最後の画像を返し続けるので確かめる。"""
+        return self.window_closed or self.control.is_finished()
+
+    def take(self) -> Optional[tuple]:
+        """届いた最新の画像を captureWindowRaw と同じ形で返す。まだ無ければ None。
+
+        画面が変わらないと新しい画像は届かないので、同じ画像を何度でも返す (変わったかは呼び出し側が比べる)。
+        古い大きさの画像は使わない (stale)。大きさを変えても、画面の中身が次に変わるまで新しい大きさの画像は
+        届かない (実機で最大40秒) ので、その間は呼び出し側が PrintWindow で撮る。
+        """
+        latest = self.latest
+        self.stale = False
+        if latest is None:
+            return None
+        raw, size = latest
+        bounds = _frameClientBox(self.hwnd)
+        if bounds is None or bounds[0] != size:
+            self.stale = True
+            return None
+        return raw, size, bounds[1]
+
+    def close(self) -> None:
+        self.control.stop()
+
+
+def _frameClientBox(hwnd: int) -> Optional[tuple]:
+    """画面キャプチャの画像の大きさ (ウィンドウの見た目の枠) と、その中のクライアント領域 (物理px)。"""
+    old = _user32.SetThreadDpiAwarenessContext(_DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
+    try:
+        frame, client, origin = wintypes.RECT(), wintypes.RECT(), wintypes.POINT(0, 0)
+        if _dwmapi.DwmGetWindowAttribute(hwnd, _DWMWA_EXTENDED_FRAME_BOUNDS, ctypes.byref(frame), ctypes.sizeof(frame)) != 0:
+            return None
+        _user32.GetClientRect(hwnd, ctypes.byref(client))
+        _user32.ClientToScreen(hwnd, ctypes.byref(origin))
+    finally:
+        _user32.SetThreadDpiAwarenessContext(old)
+    left, top = origin.x - frame.left, origin.y - frame.top
+    return (frame.right - frame.left, frame.bottom - frame.top), (left, top, left + client.right, top + client.bottom)
 
 
 def resizeClient(hwnd: int, width: int, height: int) -> tuple:

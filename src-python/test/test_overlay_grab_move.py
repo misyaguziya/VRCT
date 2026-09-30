@@ -22,17 +22,20 @@ from models.overlay.overlay import (
     getRightHandBaseMatrix,
 )
 
-# 撮影は使い捨てのスレッドで行うが、このファイルのテストでは同じスレッドですぐ終わらせる
-# (撮影を別スレッドにしたことのテストは CaptureJobTest で、本物のスレッドで確かめる)
+# このファイルのテストは PrintWindow で撮り (画面キャプチャは PanelStreamTest で確かめる)、
+# 撮影の使い捨てスレッドは同じスレッドですぐ終わらせる (別スレッドのことは CaptureJobTest で確かめる)
 _sync_capture = patch.object(Overlay, "startCaptureJob", lambda self, job: Overlay.runCaptureJob(job))
+_no_stream = patch.object(Overlay, "panelStream", lambda self: None)
 
 
 def setUpModule():
     _sync_capture.start()
+    _no_stream.start()
 
 
 def tearDownModule():
     _sync_capture.stop()
+    _no_stream.stop()
 
 
 def pytest_approx(value):
@@ -949,8 +952,9 @@ class CaptureJobTest(unittest.TestCase):
         self.overlay.gl = {"GL": MagicMock(), "texture": 1, "vr_texture": MagicMock(), "size": None}
         self.overlay.panel_hwnd = 123
         self.overlay.layout_rendered = self.overlay.layout["regions"][PANEL][2:]
-        wc = patch("models.overlay.overlay.window_capture").start()
-        self.addCleanup(patch.stopall)
+        patcher = patch("models.overlay.overlay.window_capture")  # patch.stopall はモジュールの差し替えまで止める
+        wc = patcher.start()
+        self.addCleanup(patcher.stop)
         wc.isWindow.return_value = True
         wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
         wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
@@ -1075,6 +1079,142 @@ class CaptureJobTest(unittest.TestCase):
             self.overlay.initPanelTexture()  # OFF→ON で作り直した
         self.assertIsNone(self.overlay.capture_job)
         self.release.set()
+
+
+class WindowStreamTakeTest(unittest.TestCase):
+    """画面キャプチャの画像から、クライアント領域を切り出す範囲を付けて返す。"""
+
+    def _stream(self, latest):
+        from models.overlay.window_capture import WindowStream
+
+        stream = WindowStream.__new__(WindowStream)  # ライブラリを使わずに作る
+        stream.hwnd, stream.latest, stream.window_closed = 123, latest, False
+        stream.control = MagicMock()
+        stream.control.is_finished.return_value = False
+        return stream
+
+    def test_dead_capture_thread_counts_as_closed(self):
+        """撮影のスレッドが終わると最後の画像を返し続けるので、止まったとみなす (PrintWindow に戻す)。"""
+        stream = self._stream((b"x", (1630, 754)))
+        self.assertFalse(stream.closed)
+        stream.control.is_finished.return_value = True
+        self.assertTrue(stream.closed)
+
+    def test_frame_gets_the_client_box(self):
+        stream = self._stream((b"x", (1630, 754)))
+        with patch("models.overlay.window_capture._frameClientBox", return_value=((1630, 754), (1, 1, 1629, 753))):
+            self.assertEqual(stream.take(), (b"x", (1630, 754), (1, 1, 1629, 753)))
+            self.assertIsNotNone(stream.take())  # 変わらなければ同じ画像をまた返す
+
+    def test_frame_of_the_old_size_is_not_used(self):
+        stream = self._stream((b"x", (1630, 838)))  # 大きさを変える前の画像
+        with patch("models.overlay.window_capture._frameClientBox", return_value=((1630, 754), (1, 1, 1629, 753))):
+            self.assertIsNone(stream.take())
+        self.assertTrue(stream.stale)
+
+    def test_no_frame_yet(self):
+        self.assertIsNone(self._stream(None).take())
+
+
+class PanelStreamTest(unittest.TestCase):
+    """画面キャプチャ (WindowStream) で撮り続け、使えなければ PrintWindow に戻す。"""
+
+    def setUp(self):
+        _no_stream.stop()
+        self.addCleanup(_no_stream.start)
+        self.overlay = Overlay({PANEL: {}, LAUNCHER: {}})
+        self.overlay.handle = {PANEL: 10, LAUNCHER: 11}
+        self.overlay.overlay = MagicMock()
+        self.overlay.gl = {"GL": MagicMock(), "texture": 1, "vr_texture": MagicMock(), "size": None}
+        self.overlay.panel_hwnd = 123
+        self.overlay.layout_rendered = self.overlay.layout["regions"][PANEL][2:]
+        patcher = patch("models.overlay.overlay.window_capture")
+        self.wc = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.wc.isWindow.return_value = True
+        self.wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+        self.wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
+        self.stream = self.wc.WindowStream.return_value
+        self.stream.hwnd, self.stream.closed, self.stream.stale = 123, False, False
+        self.stream.take.return_value = (b"frame", None, (0, 0) + VR_ATLAS_SIZE)
+        self.wc.captureWindowRaw.return_value = (b"printed", None, (0, 0) + VR_ATLAS_SIZE)
+
+    def test_frames_come_from_the_stream_without_printwindow(self):
+        self.overlay.updatePanel()
+        self.wc.WindowStream.assert_called_once_with(123)
+        self.wc.captureWindowRaw.assert_not_called()
+        self.overlay.overlay.setOverlayTexture.assert_called()
+
+    def test_old_size_frame_is_replaced_by_printwindow(self):
+        """大きさを変えた後、新しい大きさの画像が届かない間は PrintWindow で撮る (届くのは画面が変わったとき)。"""
+        self.stream.take.return_value = None
+        self.stream.stale = True
+        self.overlay.updatePanel()
+        self.wc.captureWindowRaw.assert_called_once_with(123)
+        self.overlay.overlay.setOverlayTexture.assert_called()
+
+    def test_no_frame_yet_waits(self):
+        self.stream.take.return_value = None
+        self.stream.stale = False
+        self.overlay.updatePanel()
+        self.overlay.overlay.setOverlayTexture.assert_not_called()
+        self.assertIsNone(self.overlay.capture_job)
+
+    def test_falls_back_to_printwindow_when_unavailable(self):
+        self.wc.WindowStream.side_effect = ImportError("windows_capture")
+        self.overlay.updatePanel()
+        self.overlay.panel_last_capture = 0.0
+        self.overlay.updatePanel()
+        self.assertTrue(self.overlay.stream_missing)
+        self.assertEqual(self.wc.WindowStream.call_count, 1)  # 何度も作り直さない
+        self.wc.captureWindowRaw.assert_called()
+        self.overlay.overlay.setOverlayTexture.assert_called()
+
+    def test_failed_start_is_retried_after_turning_on_again(self):
+        """始められなかったとき (ImportError 以外) は、次に ON にしたときにもう一度試す。"""
+        self.wc.WindowStream.side_effect = [OSError("GraphicsCaptureItem"), self.stream]
+        with patch("models.overlay.overlay.errorLogging"):
+            self.overlay.updatePanel()
+        self.assertTrue(self.overlay.stream_unavailable)
+        opengl = MagicMock()
+        with patch.dict("sys.modules", {"glfw": MagicMock(), "OpenGL": opengl, "OpenGL.GL": opengl.GL}):
+            self.overlay.initPanelTexture()  # OFF→ON
+        self.overlay.panel_last_capture = 0.0
+        self.overlay.updatePanel()
+        self.assertIs(self.overlay.panel_stream, self.stream)
+
+    def test_stream_is_stopped_when_the_panel_stops(self):
+        from models.overlay.overlay import _PANEL_ERROR_LIMIT
+
+        self.overlay.updatePanel()
+        with patch("models.overlay.overlay.errorLogging"):
+            for _ in range(_PANEL_ERROR_LIMIT):
+                self.overlay.onPanelError(RuntimeError("GL"))
+        self.stream.close.assert_called_once()
+
+    def test_stopped_stream_for_the_same_window_falls_back(self):
+        self.overlay.updatePanel()
+        self.stream.closed = True
+        self.overlay.panel_last_capture = 0.0
+        self.overlay.updatePanel()
+        self.assertTrue(self.overlay.stream_unavailable)
+        self.stream.close.assert_called_once()
+
+    def test_new_window_gets_a_new_stream(self):
+        self.overlay.updatePanel()
+        self.overlay.panel_hwnd = 456  # OFF/ON などでウィンドウが作り直された
+        self.overlay.panel_last_capture = 0.0
+        self.overlay.updatePanel()
+        self.stream.close.assert_called_once()
+        self.assertEqual(self.wc.WindowStream.call_args_list[-1].args, (456,))
+        self.assertFalse(self.overlay.stream_unavailable)
+
+    def test_teardown_stops_the_stream(self):
+        self.overlay.updatePanel()
+        with patch("models.overlay.overlay.openvr_session"):
+            self.overlay.teardown()
+        self.stream.close.assert_called_once()
+        self.assertIsNone(self.overlay.panel_stream)
 
 
 class PanelLayoutTest(unittest.TestCase):
