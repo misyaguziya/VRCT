@@ -3,6 +3,8 @@
 コントローラ入力やSteamVRを使う updateGrab() 本体は実機でしか検証できない。
 ここでは「掴んで離した後の行列を設定値へ正しく逆算できるか」だけを確かめる。
 """
+import threading
+import time
 import unittest
 from unittest.mock import ANY, MagicMock, patch
 
@@ -19,6 +21,19 @@ from models.overlay.overlay import (
     getLeftHandBaseMatrix,
     getRightHandBaseMatrix,
 )
+
+# 撮影は使い捨てのスレッドで行うが、このファイルのテストでは同じスレッドですぐ終わらせる
+# (撮影を別スレッドにしたことのテストは CaptureJobTest で、本物のスレッドで確かめる)
+_sync_capture = patch.object(Overlay, "startCaptureJob", lambda self, job: Overlay.runCaptureJob(job))
+
+
+def setUpModule():
+    _sync_capture.start()
+
+
+def tearDownModule():
+    _sync_capture.stop()
+
 
 def pytest_approx(value):
     import pytest
@@ -920,6 +935,146 @@ class PanelCaptureLoadTest(unittest.TestCase):
         self.assertEqual(tuple(pixels[0, 0][:3]), (0, 255, 0))  # 緑 (BGR のまま)
         self.assertEqual(tuple(pixels[0, 1][:3]), (0, 0, 255))  # 赤 (BGR のまま)
         pixels[..., 3] = 255  # 書き換えられる (撮影のバッファとは別)
+
+
+class CaptureJobTest(unittest.TestCase):
+    """撮影 (PrintWindow) は VRCT の画面が固まると戻らないので、別スレッドで行い、レーザーの処理を止めない。"""
+
+    def setUp(self):
+        _sync_capture.stop()  # このクラスだけ本物のスレッドで撮影する
+        self.addCleanup(_sync_capture.start)
+        self.overlay = Overlay({PANEL: {}, LAUNCHER: {}})
+        self.overlay.handle = {PANEL: 10, LAUNCHER: 11}
+        self.overlay.overlay = MagicMock()
+        self.overlay.gl = {"GL": MagicMock(), "texture": 1, "vr_texture": MagicMock(), "size": None}
+        self.overlay.panel_hwnd = 123
+        self.overlay.layout_rendered = self.overlay.layout["regions"][PANEL][2:]
+        wc = patch("models.overlay.overlay.window_capture").start()
+        self.addCleanup(patch.stopall)
+        wc.isWindow.return_value = True
+        wc.resizeClient.side_effect = lambda hwnd, w, h: (w, h)
+        wc.bgraFromCapture.return_value = _bgra(VR_ATLAS_SIZE)
+        self.release = threading.Event()
+        self.started = threading.Event()
+
+        def blocked_capture(hwnd):
+            self.started.set()
+            self.release.wait(5)
+            return (b"frame", None, (0, 0) + VR_ATLAS_SIZE)
+
+        wc.captureWindowRaw.side_effect = blocked_capture
+        self.wc = wc
+
+    def _wait_done(self):
+        job = self.overlay.capture_job
+        for _ in range(500):
+            if job.done:
+                return
+            time.sleep(0.01)
+        self.fail("撮影のスレッドが終わらない")
+
+    def test_blocked_capture_does_not_block_the_loop(self):
+        started = time.monotonic()
+        self.overlay.updatePanel()
+        self.assertTrue(self.started.wait(2))
+        for _ in range(3):  # 撮影が戻らない間も、すぐに戻る (その間レーザーの処理が回る)
+            self.overlay.panel_last_capture = 0.0
+            self.overlay.updatePanel()
+        self.assertLess(time.monotonic() - started, 1.0)
+        self.assertEqual(self.wc.captureWindowRaw.call_count, 1)  # 同時に頼むのは1つだけ
+        self.overlay.overlay.setOverlayTexture.assert_not_called()
+        self.release.set()
+        self._wait_done()
+        self.overlay.updatePanel()
+        self.overlay.overlay.setOverlayTexture.assert_called()  # 戻ったら転送する
+
+    def test_frame_taken_for_an_old_layout_is_dropped(self):
+        self.overlay.updatePanel()
+        self.assertTrue(self.started.wait(2))
+        self.overlay.setPanelSize(790, 668)  # 撮っている間にログの大きさを変えた
+        self.release.set()
+        self._wait_done()
+        self.overlay.updatePanel()
+        self.overlay.overlay.setOverlayTexture.assert_not_called()
+        self.wc.bgraFromCapture.assert_not_called()
+
+    def test_capture_error_is_raised_on_the_overlay_thread(self):
+        def failing_capture(hwnd):
+            self.release.wait(5)
+            raise OSError("PrintWindow")
+
+        self.wc.captureWindowRaw.side_effect = failing_capture
+        self.overlay.updatePanel()  # 撮影のスレッドの例外は、ここでは出ない
+        self.release.set()
+        self._wait_done()
+        with self.assertRaises(OSError):  # mainloop の onPanelError が数える
+            self.overlay.updatePanel()
+
+    def test_time_blocked_is_not_counted_as_waiting_for_the_resize(self):
+        """固まっていた時間で「大きさが合わないので元に戻す」が動かないようにする。"""
+        self.overlay.layout_requested_at = 50.0
+        self.overlay.updatePanel()
+        self.overlay.capture_job.started -= 3.0  # 3秒待たされた
+        with patch("models.overlay.overlay.printLog") as logged:
+            self.overlay.updatePanel()  # 戻らないことをログに出す
+            self.assertIn("時間がかかっています", logged.call_args.args[0])
+        self.overlay.setPanelSize(790, 668)  # 固まっている間に大きさを変えた
+        self.release.set()
+        self._wait_done()
+        returned = time.monotonic()
+        self.overlay.updatePanel()
+        self.assertGreaterEqual(self.overlay.layout_requested_at, returned)  # 戻ったときから数え直す
+        with patch("models.overlay.overlay.printLog") as logged:
+            self.overlay.retryOrRevertLayout(returned + 0.1)
+        self.assertEqual(self.overlay.layout["regions"][PANEL][2:], (790, 668))  # 元の大きさに戻していない
+        self.assertFalse(any("元に戻します" in c.args[0] for c in logged.call_args_list))
+
+    def test_normal_capture_time_is_counted_as_waiting_for_the_resize(self):
+        self.overlay.layout_requested_at = 50.0
+        self.overlay.updatePanel()
+        self.assertTrue(self.started.wait(2))
+        self.release.set()
+        self._wait_done()
+        self.overlay.updatePanel()
+        self.assertEqual(self.overlay.layout_requested_at, 50.0)
+
+    def test_next_capture_starts_when_the_result_is_taken(self):
+        """結果を受け取る周で次の撮影も頼む (受け取るだけで1周使うと、撮影の頻度が半分になる)。"""
+        self.overlay.updatePanel()
+        self.assertTrue(self.started.wait(2))
+        self.release.set()
+        self._wait_done()
+        self.overlay.panel_last_capture = 0.0  # 撮影間隔の待ちを飛ばす
+        self.overlay.updatePanel()
+        self.overlay.overlay.setOverlayTexture.assert_called()
+        self.assertIsNotNone(self.overlay.capture_job)  # 次の撮影を頼んである
+
+    def test_repeated_capture_errors_stop_the_panel(self):
+        """撮影が失敗し続けたら、撮っている途中の周をはさんでも数え続けて止める。"""
+        from models.overlay.overlay import _PANEL_ERROR_LIMIT
+
+        self.wc.captureWindowRaw.side_effect = OSError("PrintWindow")
+        with patch("models.overlay.overlay.errorLogging"), patch("models.overlay.overlay.printLog"):
+            for _ in range(_PANEL_ERROR_LIMIT * 4):
+                if self.overlay.panel_stopped:
+                    break
+                self.overlay.panel_last_capture = 0.0
+                try:
+                    self.overlay.updatePanel()
+                except OSError as e:
+                    self.overlay.onPanelError(e)
+                if self.overlay.capture_job is not None:
+                    self._wait_done()
+        self.assertTrue(self.overlay.panel_stopped)
+
+    def test_turning_off_drops_the_pending_capture(self):
+        self.overlay.updatePanel()
+        self.assertTrue(self.started.wait(2))
+        opengl = MagicMock()
+        with patch.dict("sys.modules", {"glfw": MagicMock(), "OpenGL": opengl, "OpenGL.GL": opengl.GL}):
+            self.overlay.initPanelTexture()  # OFF→ON で作り直した
+        self.assertIsNone(self.overlay.capture_job)
+        self.release.set()
 
 
 class PanelLayoutTest(unittest.TestCase):
