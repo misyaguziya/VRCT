@@ -355,9 +355,6 @@ config_page:
         capture_target: "捕获对象"
         language: "语言"
         performance: "性能"
-        enable_ocr_capture:
-            label: "启用 VRChat 聊天读取"
-            desc: "开始后台任务，捕获 VRChat 窗口(SteamVR 运行时为头显镜像画面)并翻译检测到的聊天气泡。"
         window_title:
             label: "窗口名称"
             desc: "与可见窗口标题的部分匹配(不区分大小写)。如果你使用的客户端窗口标题不是 'VRChat'(例如修改版启动器)，请更改此项。"
