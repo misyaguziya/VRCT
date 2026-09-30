@@ -22,6 +22,8 @@ _MK_LBUTTON = 0x0001
 _SWP_NOMOVE = 0x0002
 _SWP_NOZORDER = 0x0004
 _SWP_NOACTIVATE = 0x0010
+# 相手 (VRCT の画面) の応答を待たずに戻る。画面が固まっていると、待つ間オーバーレイの処理が止まる
+_SWP_ASYNCWINDOWPOS = 0x4000
 
 _user32 = ctypes.windll.user32 if hasattr(ctypes, "windll") else None
 _gdi32 = ctypes.windll.gdi32 if hasattr(ctypes, "windll") else None
@@ -47,6 +49,8 @@ def isWindow(hwnd: int) -> bool:
 
 def captureWindowRaw(hwnd: int) -> Optional[tuple]:
     """撮影した生データ (BGRX のバイト列, (幅, 高さ), クライアント領域の切り出し範囲) を返す。
+
+    PrintWindow は相手の画面が描き終えるまで戻らない (画面が固まると数秒)。オーバーレイは別スレッドで呼ぶ。
 
     画像への変換は重い (数ms) ので、前回と同じか (バイト列の比較) を先に確かめられるようにしている。
     最小化中などで撮れなければ None。
@@ -95,7 +99,7 @@ def resizeClient(hwnd: int, width: int, height: int) -> tuple:
         return (target_w, target_h)
     frame_w = (rect.right - rect.left) - client.right
     frame_h = (rect.bottom - rect.top) - client.bottom
-    _user32.SetWindowPos(hwnd, 0, 0, 0, target_w + frame_w, target_h + frame_h, _SWP_NOMOVE | _SWP_NOZORDER | _SWP_NOACTIVATE)
+    _user32.SetWindowPos(hwnd, 0, 0, 0, target_w + frame_w, target_h + frame_h, _SWP_NOMOVE | _SWP_NOZORDER | _SWP_NOACTIVATE | _SWP_ASYNCWINDOWPOS)
     return (target_w, target_h)
 
 

@@ -586,6 +586,8 @@ class Overlay:
         self.panel_hwnd: Optional[int] = None
         self.panel_last_find: float = 0.0
         self.panel_last_capture: float = 0.0
+        # 撮影を頼んだ使い捨てのスレッドの結果 (startCaptureJob)。同時に頼むのは1つだけ
+        self.capture_job: Optional[SimpleNamespace] = None
         # 前回転送した撮影の生データと、画面が最後に変わった時刻。変わっていなければ転送しない
         self.panel_last_raw: Optional[bytes] = None
         self.panel_last_change: float = 0.0
@@ -801,6 +803,7 @@ class Overlay:
         self.layout_requested_at = time.monotonic()
         self.layout_retried = False
         self.layout_logged = set()  # 作り直したら、大きさを合わせる各段階をもう一度ログに出す
+        self.capture_job = None  # 止める前に頼んだ撮影の結果は使わない
 
     def panelSize(self) -> tuple:
         """ログウィンドウの大きさ (論理px)。"""
@@ -943,28 +946,18 @@ class Overlay:
     def updatePanel(self) -> None:
         """VRパネルのウィンドウを撮影してオーバーレイへ転送する。"""
         now = time.monotonic()
-        if not self.vr_panel_enabled or self.gl is None or self.panel_stopped or now - self.panel_last_capture < self.panelCaptureInterval(now):
+        if not self.vr_panel_enabled or self.gl is None or self.panel_stopped:
             return
-        self.panel_last_capture = now
-        if self.panel_hwnd is None or not window_capture.isWindow(self.panel_hwnd):
-            self.panel_hwnd = None
-            if now - self.panel_last_find < _PANEL_FIND_INTERVAL_SEC:
-                return
-            self.panel_last_find = now
-            self.panel_hwnd = window_capture.findWindow()
-            if self.panel_hwnd is None:
-                return
-            self.window_fitted_layout = None  # 見つけ直したウィンドウは既定の大きさで作られている
-        # VR画面のウィンドウの大きさを並びに合わせる (ログの大きさを変えたとき・起動したとき)
-        if self.window_fitted_layout is not self.layout:
-            self.window_size = window_capture.resizeClient(self.panel_hwnd, *self.layout["atlas"])
-            self.window_fitted_layout = self.layout
-            self.logLayout("resize", {"target": self.window_size})
         self.markStep("panel:capture")
-        capture = window_capture.captureWindowRaw(self.panel_hwnd)
+        capture = self.collectCapture(now)
         if capture is None:
-            self.logLayout("no capture", {})
             return
+        self.transferCapture(capture, now)
+        # 撮れた結果を最後まで処理できた (撮影を別スレッドにしたので、撮っている途中の周では数え直さない)
+        self.panel_errors = 0
+
+    def transferCapture(self, capture: tuple, now: float) -> None:
+        """撮影した結果を確かめ、変わっていればテクスチャに書いてオーバーレイへ渡す。"""
         # 大きさを変えている途中 (ウィンドウがまだ新しい大きさでない、または VR画面がまだ古い並びで描いている)
         # のフレームは使わない。やり直し・元に戻すのはウィンドウの大きさが合わないときだけ
         # (VR画面の描き終わりは必ず届くので待つ。起動直後は設定が届くまで既定の並びで描いている)
@@ -1010,6 +1003,78 @@ class Overlay:
         # 表示範囲はテクスチャの中の撮影画像の大きさで決まるので、並びか撮影の大きさが変わったら当て直す
         if self.layout_applied is not self.layout or image_size_changed:
             self.applyLayout()
+
+    def collectCapture(self, now: float) -> Optional[tuple]:
+        """撮影を使い捨てのスレッドに頼み、撮れていればその結果 (captureWindowRaw) を返す。まだなら None。
+
+        PrintWindow は VRCT の画面 (Tauri の UI スレッド) が描き終えるまで戻らず、画面が固まると
+        数秒待たされる (実機で 7.5 秒)。ここで待つとレーザーや掴んだウィンドウも止まるので、撮影だけを
+        別のスレッドで行う。状態を書き換えるのはこのスレッドだけで、撮影のスレッドは結果を job に入れるだけ。
+        """
+        job = self.capture_job
+        started_now = job is None
+        if started_now:
+            self.startCapture(now)
+            job = self.capture_job
+            if job is None or not job.done:
+                return None
+        elif not job.done:
+            if not job.reported and now - job.started >= _STALL_REPORT_SEC:
+                job.reported = True
+                printLog("overlay: VR画面の撮影に時間がかかっています (VRCT の画面が応答していない可能性)", {"sec": round(now - job.started, 1)})
+            return None
+        self.capture_job = None
+        if job.reported:
+            returned = time.monotonic()
+            printLog("overlay: VR画面の撮影が戻りました", {"sec": round(returned - job.started, 1)})
+            # 大きさを合わせる待ち時間は、戻ったときから数え直す (固まっている間に大きさを変えても、
+            # 戻った直後に元の大きさへ戻さないように)。もう繰り返さない印 (now + 3600) は残す
+            self.layout_requested_at = max(self.layout_requested_at, returned)
+        if job.error is not None:
+            raise job.error
+        if not started_now:
+            self.startCapture(now)  # 次の撮影をすぐ頼む (結果を受け取るだけで1周使わない)
+        if job.layout is not self.layout:
+            return None  # 撮っている間に並びが変わった。次の撮影を待つ
+        if job.result is None:
+            self.logLayout("no capture", {})
+        return job.result
+
+    def startCapture(self, now: float) -> None:
+        """撮影の間隔が過ぎていれば、ウィンドウを探して大きさを合わせ、撮影を頼む。"""
+        if now - self.panel_last_capture < self.panelCaptureInterval(now):
+            return
+        self.panel_last_capture = now
+        if self.panel_hwnd is None or not window_capture.isWindow(self.panel_hwnd):
+            self.panel_hwnd = None
+            if now - self.panel_last_find < _PANEL_FIND_INTERVAL_SEC:
+                return
+            self.panel_last_find = now
+            self.panel_hwnd = window_capture.findWindow()
+            if self.panel_hwnd is None:
+                return
+            self.window_fitted_layout = None  # 見つけ直したウィンドウは既定の大きさで作られている
+        # VR画面のウィンドウの大きさを並びに合わせる (ログの大きさを変えたとき・起動したとき)
+        if self.window_fitted_layout is not self.layout:
+            self.window_size = window_capture.resizeClient(self.panel_hwnd, *self.layout["atlas"])
+            self.window_fitted_layout = self.layout
+            self.logLayout("resize", {"target": self.window_size})
+        self.capture_job = SimpleNamespace(hwnd=self.panel_hwnd, layout=self.layout, started=now,
+                                           done=False, result=None, error=None, reported=False)
+        self.startCaptureJob(self.capture_job)
+
+    def startCaptureJob(self, job: SimpleNamespace) -> None:
+        # ponytail: 1回ごとにスレッドを作る (撮影は最大20回/秒)。固まったまま OFF/ON すると1つずつ残るが、戻れば終わる
+        Thread(target=self.runCaptureJob, args=(job,), daemon=True).start()
+
+    @staticmethod
+    def runCaptureJob(job: SimpleNamespace) -> None:
+        """撮影のスレッド。Overlay の状態には触れず、結果を job に入れるだけ。"""
+        try:
+            job.result = window_capture.captureWindowRaw(job.hwnd)
+        except Exception as e:
+            job.error = e
+        job.done = True
 
     def newPanelTexture(self, GL: Any, size: tuple) -> None:
         """VR画面のテクスチャの大きさを決める (中身は後で左上に書く)。
@@ -2049,7 +2114,6 @@ class Overlay:
             self.markStep("panel")
             try:
                 self.updatePanel()
-                self.panel_errors = 0
             except Exception as e:
                 self.onPanelError(e)
             # 掴んでいる間・伸ばしている間は滑らかにするため、VR UI を指している間は反応を早くするため更新頻度を上げる
