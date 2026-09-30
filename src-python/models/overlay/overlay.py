@@ -588,6 +588,12 @@ class Overlay:
         self.panel_last_capture: float = 0.0
         # 撮影を頼んだ使い捨てのスレッドの結果 (startCaptureJob)。同時に頼むのは1つだけ
         self.capture_job: Optional[SimpleNamespace] = None
+        # VR画面を撮り続ける画面キャプチャ (window_capture.WindowStream)。使えなければ PrintWindow で撮る
+        self.panel_stream: Optional[Any] = None
+        # stream_missing は windows-capture が無い (起動し直すまで戻らない)。stream_unavailable は始められない・
+        # 止まった (撮り直しを繰り返さないよう、次に VR UI を ON にするまで PrintWindow で撮る)
+        self.stream_missing = False
+        self.stream_unavailable = False
         # 前回転送した撮影の生データと、画面が最後に変わった時刻。変わっていなければ転送しない
         self.panel_last_raw: Optional[bytes] = None
         self.panel_last_change: float = 0.0
@@ -804,6 +810,8 @@ class Overlay:
         self.layout_retried = False
         self.layout_logged = set()  # 作り直したら、大きさを合わせる各段階をもう一度ログに出す
         self.capture_job = None  # 止める前に頼んだ撮影の結果は使わない
+        self.closePanelStream()
+        self.stream_unavailable = False
 
     def panelSize(self) -> tuple:
         """ログウィンドウの大きさ (論理px)。"""
@@ -1059,9 +1067,55 @@ class Overlay:
             self.window_size = window_capture.resizeClient(self.panel_hwnd, *self.layout["atlas"])
             self.window_fitted_layout = self.layout
             self.logLayout("resize", {"target": self.window_size})
+        stream = self.panelStream()
+        if stream is not None:
+            # 画面キャプチャは撮り続けているので、届いている最新の画像を受け取るだけ (待たない)
+            result = stream.take()
+            if result is not None:
+                self.capture_job = SimpleNamespace(hwnd=self.panel_hwnd, layout=self.layout, started=now,
+                                                   done=True, result=result, error=None, reported=False)
+                return
+            if not stream.stale:
+                return  # まだ1枚も届いていない
+            # 大きさを変えた後の画像がまだ届かない: 届くまでは PrintWindow で撮る
         self.capture_job = SimpleNamespace(hwnd=self.panel_hwnd, layout=self.layout, started=now,
                                            done=False, result=None, error=None, reported=False)
         self.startCaptureJob(self.capture_job)
+
+    def panelStream(self) -> Optional[Any]:
+        """VR画面のウィンドウを撮り続ける画面キャプチャ。使えなければ None (PrintWindow で撮る)。"""
+        if self.stream_missing or self.stream_unavailable:
+            return None
+        stream = self.panel_stream
+        if stream is not None and stream.hwnd == self.panel_hwnd and not stream.closed:
+            return stream
+        if stream is not None and stream.hwnd == self.panel_hwnd:
+            # 同じウィンドウなのに止まった: 撮り直しを繰り返さず PrintWindow に切り替える
+            printLog("overlay: 画面キャプチャが止まったので PrintWindow で撮ります")
+            self.stream_unavailable = True
+            self.closePanelStream()
+            return None
+        self.closePanelStream()  # ウィンドウが作り直された
+        try:
+            self.panel_stream = window_capture.WindowStream(self.panel_hwnd)
+        except ImportError:
+            printLog("overlay: windows-capture が無いので PrintWindow で撮ります")
+            self.stream_missing = True
+            return None
+        except Exception:
+            errorLogging()
+            printLog("overlay: 画面キャプチャを始められないので PrintWindow で撮ります")
+            self.stream_unavailable = True
+            return None
+        return self.panel_stream
+
+    def closePanelStream(self) -> None:
+        stream, self.panel_stream = self.panel_stream, None
+        if stream is not None:
+            try:
+                stream.close()
+            except Exception:
+                errorLogging()
 
     def startCaptureJob(self, job: SimpleNamespace) -> None:
         # ponytail: 1回ごとにスレッドを作る (撮影は最大20回/秒)。固まったまま OFF/ON すると1つずつ残るが、戻れば終わる
@@ -1958,11 +2012,14 @@ class Overlay:
         r["size"] = (width_px, height_px)
         r["center"] = (fixed_x + sx * width_px * m_per_px / 2, fixed_y + sy * height_px * m_per_px / 2)
         self.showPointer(pointerHit(point, r["pose"][:3, 2], distance), _COLOR_POINTER)
+        self.markStep("grab:ghost")  # 実機で角を掴んで伸ばしている間に1.2秒止まった。どこで止まるかを分ける
         self.showResizeGhost(at_limit)
+        self.markStep("grab")
 
     def finishResize(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
         """放したら大きさと位置を確定して保存する。表示は新しい大きさで撮れてから切り替わる (applyLayout)。"""
         r, self.resizing = self.resizing, None
+        self.markStep("grab:finish_resize")
         self.setHighlight(None, _COLOR_NORMAL)
         self.showPointer(None, _COLOR_NORMAL)
         s = self.settings[PANEL]
@@ -2180,6 +2237,7 @@ class Overlay:
                 self.gl["glfw"].make_context_current(self.gl["window"])
             except Exception:
                 errorLogging()
+        self.closePanelStream()
         self.destroyOverlays()
         self.releaseSession()
         self.shutdownPanelTexture()
@@ -2229,6 +2287,7 @@ class Overlay:
             printLog("overlay: VR画面の撮影が続けて失敗したので止めます", {"errors": self.panel_errors})
             # OpenGL の環境はここでは消さない。消した後に SteamVR との接続を閉じると落ちる (teardown 参照)
             self.panel_stopped = True
+            self.closePanelStream()
 
     def onGrabError(self, e: Exception) -> None:
         """掴み・伸ばす処理で例外が出たら、その操作をやめる (同じ例外で毎フレーム止まり続けないように)。"""
