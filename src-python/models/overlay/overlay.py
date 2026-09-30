@@ -1,9 +1,11 @@
 import os
 from functools import lru_cache
 import ctypes
+import sys
 import time
+import traceback
 from psutil import process_iter
-from threading import Thread
+from threading import Lock, Thread, get_ident
 from types import SimpleNamespace
 from typing import Any, Callable, Dict, Optional, Sequence
 
@@ -31,6 +33,14 @@ except ImportError:
 _REINIT_WAIT_TIMEOUT_SEC = 5.0
 _REINIT_WAIT_POLL_INTERVAL_SEC = 0.1
 _SHUTDOWN_JOIN_TIMEOUT_SEC = 5.0
+# SteamVR の起動を待つ間隔と、その間に止められていないかを確かめる間隔
+_STEAMVR_POLL_SEC = 10.0
+_START_CANCEL_POLL_SEC = 0.5
+# オーバーレイの処理がこの秒数進まなかったら、どこで止まっているかをログに出す (実機での切り分け用)
+_STALL_REPORT_SEC = 2.0
+# 各段階の処理時間の最大をこの秒数ごとに確かめ、遅い段階があればログに出す
+_STEP_REPORT_SEC = 10.0
+_STEP_SLOW_SEC = 0.05
 
 # オーバーレイを指したままグリップを押した瞬間に掴む。グリップはVRChatにも
 # 同時に届く(オーバーレイ側で入力を奪えない)ことは既知の制約。
@@ -509,6 +519,11 @@ class Overlay:
         self.initialized: bool = False
         self.loop: bool = False
         self.thread_overlay: Optional[Thread] = None
+        # SteamVR の起動を待っている間 (または作っている間) に止められた。起動しない
+        # (以前は待っている間に OFF にしても、SteamVR が起動するとオーバーレイが出てきた)。
+        # start_cancelled と init_process の読み書きは start_lock で直列にする
+        self.start_cancelled = False
+        self.start_lock = Lock()
 
         self.settings: Dict[str, Dict[str, Any]] = {}
         self.lastUpdate: Dict[str, float] = {}
@@ -580,6 +595,10 @@ class Overlay:
         self.panel_error: Optional[str] = None
         # SteamVR が OpenGL に残したエラーを見つけたことをログに出したか (1回だけ出す)
         self.gl_error_logged = False
+        # 今の処理の段階とその開始時刻、段階ごとの処理時間の最大 (markStep。止まった・遅い段階をログに出す)
+        self.loop_step: tuple = ("idle", time.monotonic())
+        self.step_max: Dict[str, float] = {}
+        self.step_reported_at = time.monotonic()
         # 撮影が続けて失敗したので撮影をやめた (OpenGL の環境は、接続を閉じるまで残す)
         self.panel_stopped = False
         # VR画面の並び (ログの大きさで変わる)。layout_applied は今のテクスチャと表示範囲 (bounds) が合っている並び。
@@ -673,7 +692,7 @@ class Overlay:
                 try:
                     self.initPanelTexture()
                 except Exception:
-                    self.gl = None
+                    self.shutdownPanelTexture()
                     errorLogging()
 
             # 手首を見たときだけ出すなら、見るまでは出さない (起動直後に一度出てから消えないように)
@@ -697,10 +716,12 @@ class Overlay:
                 )
                 self.updateDisplayDuration(self.settings[size]["display_duration"], size)
                 self.updateFadeoutDuration(self.settings[size]["fadeout_duration"], size)
-            self.init_process = False
-
+            printLog("overlay: 起動しました", {"vr_panel": self.gl is not None})
         except Exception:
             errorLogging()
+        finally:
+            # 途中で失敗しても「作っている途中」のままにしない (以後 OFF/ON できなくなる)
+            self.init_process = False
 
     def updateImage(self, img: Image.Image, size: str) -> None:
         if self.initialized is True:
@@ -779,6 +800,7 @@ class Overlay:
         # 大きさを合わせるのを待つ時間は、撮影を始めたときから測る (起動直後に元の大きさへ戻さないように)
         self.layout_requested_at = time.monotonic()
         self.layout_retried = False
+        self.layout_logged = set()  # 作り直したら、大きさを合わせる各段階をもう一度ログに出す
 
     def panelSize(self) -> tuple:
         """ログウィンドウの大きさ (論理px)。"""
@@ -938,6 +960,7 @@ class Overlay:
             self.window_size = window_capture.resizeClient(self.panel_hwnd, *self.layout["atlas"])
             self.window_fitted_layout = self.layout
             self.logLayout("resize", {"target": self.window_size})
+        self.markStep("panel:capture")
         capture = window_capture.captureWindowRaw(self.panel_hwnd)
         if capture is None:
             self.logLayout("no capture", {})
@@ -961,6 +984,7 @@ class Overlay:
             return
         self.panel_last_raw = capture[0]
         self.panel_last_change = now
+        self.markStep("panel:convert")
         pixels = window_capture.bgraFromCapture(capture)
         size = (pixels.shape[1], pixels.shape[0])
         # 各領域だけを角丸で残し、それ以外は透明にする (PrintWindow のアルファは不定)
@@ -973,9 +997,11 @@ class Overlay:
             max_w, max_h = MAX_LAYOUT["atlas"]
             self.newPanelTexture(GL, (max(round(max_w * scale), size[0]), max(round(max_h * scale), size[1])))
         # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す。撮影画像はテクスチャの左上に BGRA のまま書く
+        self.markStep("panel:upload")
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.gl["texture"])
         GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, size[0], size[1], GL.GL_BGRA, GL.GL_UNSIGNED_BYTE, pixels)
         GL.glFinish()
+        self.markStep("panel:set_texture")
         # 1枚のテクスチャを全領域のオーバーレイに渡す。表示される範囲は各オーバーレイの bounds で決まる
         for handle in self.vrRegionHandles().values():
             self.overlay.setOverlayTexture(handle, self.gl["vr_texture"])
@@ -2003,8 +2029,10 @@ class Overlay:
 
     def mainloop(self) -> None:
         self.loop = True
-        while self.checkActive() is True and self.loop is True:
+        Thread(target=self.watchStall, args=(sys._current_frames, get_ident()), daemon=True).start()
+        while self.checkActive() is True and self.loop is True and not self.start_cancelled:
             startTime = time.monotonic()
+            self.markStep("update")
             for size in self.settings.keys():
                 self.update(size)
             try:
@@ -2012,11 +2040,13 @@ class Overlay:
             except Exception:
                 errorLogging()
             # 先にレーザー (ポインタ・ホバー) を処理してから撮影する (レーザーの反応を撮影の分だけ待たせない)
+            self.markStep("grab")
             try:
                 self.updateGrab()
                 self.grab_error = None
             except Exception as e:
                 self.onGrabError(e)
+            self.markStep("panel")
             try:
                 self.updatePanel()
                 self.panel_errors = 0
@@ -2029,12 +2059,49 @@ class Overlay:
                 interval = 1 / 30
             else:
                 interval = 1 / 16
+            self.markStep("sleep")
+            self.reportSlowSteps()
             sleepTime = interval - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
+        self.markStep("teardown")
         self.teardown()
+        self.markStep("idle")
         # 止まったあとは「見失っている」表示を残さない
         self.notifyPanelOutOfView(False)
+
+    def markStep(self, name: str) -> None:
+        """処理の段階が変わった。前の段階にかかった時間の最大を覚える (reportSlowSteps / watchStall)。"""
+        now = time.monotonic()
+        previous, started = self.loop_step
+        took = now - started
+        if previous != "sleep" and took > self.step_max.get(previous, 0.0):
+            self.step_max[previous] = took
+        self.loop_step = (name, now)
+
+    def reportSlowSteps(self) -> None:
+        """_STEP_REPORT_SEC ごとに、遅い段階があれば (_STEP_SLOW_SEC 超え) その最大時間をログに出す。"""
+        now = time.monotonic()
+        if now - self.step_reported_at < _STEP_REPORT_SEC:
+            return
+        slow = {name: round(took * 1000) for name, took in self.step_max.items() if took > _STEP_SLOW_SEC}
+        if slow:
+            printLog("overlay: 処理に時間がかかっています (ms、10秒間の最大)", slow)
+        self.step_max = {}
+        self.step_reported_at = now
+
+    def watchStall(self, current_frames: Callable[[], Dict[int, Any]], thread_id: int) -> None:
+        """オーバーレイのスレッドが同じ段階で _STALL_REPORT_SEC 以上止まったら、どこで止まっているかをログに出す。"""
+        reported = None
+        while self.loop and not self.start_cancelled:
+            time.sleep(0.5)
+            step = self.loop_step
+            if step[0] in ("sleep", "idle") or step is reported or time.monotonic() - step[1] < _STALL_REPORT_SEC:
+                continue
+            reported = step
+            frame = current_frames().get(thread_id)
+            stack = "".join(traceback.format_stack(frame)[-4:]) if frame is not None else ""
+            printLog("overlay: 処理が止まっています", {"step": step[0], "sec": round(time.monotonic() - step[1], 1), "stack": stack})
 
     def teardown(self) -> None:
         """オーバーレイを消して SteamVR との接続を閉じ、最後に OpenGL の環境を消す (オーバーレイのスレッドで呼ぶ)。
@@ -2052,6 +2119,7 @@ class Overlay:
         self.destroyOverlays()
         self.releaseSession()
         self.shutdownPanelTexture()
+        printLog("overlay: 止めました")
 
     def destroyOverlays(self) -> None:
         """作ったオーバーレイをすべて消す。消した後は何もしない。"""
@@ -2119,21 +2187,59 @@ class Overlay:
             errorLogging()
 
     def main(self) -> None:
-        while self.checkSteamvrRunning() is False:
-            time.sleep(10)
-        self.init()
-        if self.initialized is True:
-            self.mainloop()
+        printLog("overlay: SteamVR の起動を確かめています")
+        try:
+            while self.checkSteamvrRunning() is False:
+                if self.waitUnlessCancelled(_STEAMVR_POLL_SEC):
+                    return
+            if self.waitUnlessCancelled(0.0):
+                return
+            self.init()
+            if self.initialized is True:
+                self.mainloop()
+                with self.start_lock:
+                    if self.start_cancelled:
+                        # 作っている間に止められた (mainloop はすぐ終わり、後片付けも済んでいる)
+                        # ponytail: この直後に ON にされる1秒未満の間は取りこぼす。起こるようなら状態を1つにまとめる
+                        self.start_cancelled = False
+                        self.initialized = False
+        except Exception:
+            # スレッドの例外はどこにも残らず、「作っている途中」のままだと以後 ON にしても作り直せない
+            errorLogging()
+            with self.start_lock:
+                self.init_process = False
+
+    def waitUnlessCancelled(self, seconds: float) -> bool:
+        """seconds 秒待つ。その間に止められたら (shutdownOverlay)、起動をやめて True を返す。"""
+        deadline = time.monotonic() + seconds
+        while True:
+            with self.start_lock:
+                if self.start_cancelled:
+                    self.start_cancelled = False
+                    self.init_process = False
+                    return True
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return False
+            time.sleep(min(remaining, _START_CANCEL_POLL_SEC))
 
     def startOverlay(self) -> None:
-        if self.initialized is False and self.init_process is False:
-            self.init_process = True
-            self.thread_overlay = Thread(target=self.main)
-            self.thread_overlay.daemon = True
-            self.thread_overlay.start()
+        with self.start_lock:
+            # 待っている間に OFF→ON された: 取りやめをなくして、そのまま待ち続ける
+            self.start_cancelled = False
+            if self.initialized is False and self.init_process is False:
+                self.init_process = True
+                self.thread_overlay = Thread(target=self.main)
+                self.thread_overlay.daemon = True
+                self.thread_overlay.start()
 
     def shutdownOverlay(self) -> None:
         self.requested_anchor = None
+        with self.start_lock:
+            if self.init_process is True:
+                # SteamVR の起動を待っている (または作っている) 間に止められた: 起動しないようにする
+                self.start_cancelled = True
+                return
         if self.initialized is True and self.init_process is False:
             if isinstance(self.thread_overlay, Thread):
                 self.loop = False
@@ -2174,7 +2280,9 @@ class Overlay:
     @staticmethod
     def checkSteamvrRunning() -> bool:
         _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
-        return _proc_name in (p.name() for p in process_iter())
+        # 名前はまとめて取る。1つずつ p.name() で取ると、途中で終わったプロセスで NoSuchProcess になり、
+        # オーバーレイのスレッドが記録も残さずに止まった (VR UI の OFF→ON で VR画面の WebView が入れ替わるとき)
+        return any(p.info["name"] == _proc_name for p in process_iter(["name"]))
 
 if __name__ == "__main__":
     from overlay_image import OverlayImage

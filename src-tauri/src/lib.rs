@@ -1,4 +1,4 @@
-use tauri::{Manager, PhysicalPosition, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use tauri::{Manager, PhysicalPosition, Runtime, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::{Error, Write};
 use std::path::{Path, PathBuf};
@@ -10,8 +10,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding";
 
 // VRオーバーレイに映す画面。Python側 (models/overlay) がタイトルで見つけて撮影・入力する。
-fn create_vr_panel_window(app: &tauri::App) -> tauri::Result<()> {
-    let window = WebviewWindowBuilder::new(app, "vr_panel", WebviewUrl::App("vr.html".into()))
+// VR UI が ON の間だけ作る (set_vr_panel_window)。OFF の間も動かしておくと、使わない人にも負荷がかかる
+fn create_vr_panel_window<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<()> {
+    let window = WebviewWindowBuilder::new(manager, "vr_panel", WebviewUrl::App("vr.html".into()))
         .title("VRCT VR Panel")
         // 既定の並び (src-ui/views/vr/vr_layout.json の atlas)。ログの大きさを変えると Python が合わせて変える
         .inner_size(1628.0, 836.0)
@@ -71,16 +72,12 @@ pub fn run() {
             }
             startup_log("Main window is ready");
 
-            if let Err(error) = create_vr_panel_window(app) {
-                startup_log(&format!("VR panel window creation failed: {error}"));
-            }
-
             #[cfg(debug_assertions)]
             { main_window.open_devtools(); }
 
             Ok(())
         })
-        // 画面外の vr_panel ウィンドウが残るため「最後のウィンドウが閉じたら終了」に頼れない。
+        // 画面外の vr_panel ウィンドウが残ることがあるため「最後のウィンドウが閉じたら終了」に頼れない。
         // main が閉じたらアプリを終了する。
         .on_window_event(|window, event| {
             if window.label() == "main" && matches!(event, WindowEvent::Destroyed) {
@@ -92,7 +89,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![get_font_list, download_zip_asset])
+        .invoke_handler(tauri::generate_handler![get_font_list, download_zip_asset, set_vr_panel_window])
         .run(tauri::generate_context!());
     match result {
         Ok(()) => startup_log("VRCT event loop ended"),
@@ -100,6 +97,21 @@ pub fn run() {
             startup_log(&format!("VRCT startup failed: {error}"));
             panic!("error while running tauri application: {error}");
         }
+    }
+}
+
+
+// VR UI の ON/OFF に合わせて、VR画面のウィンドウを作る・消す (メイン画面が設定に合わせて呼ぶ)。
+// ウィンドウを作るので async にする (同期コマンドから作ると Windows で固まることがある)
+#[tauri::command]
+async fn set_vr_panel_window(app: tauri::AppHandle, open: bool) -> Result<(), String> {
+    match (open, app.get_webview_window("vr_panel")) {
+        (true, None) => create_vr_panel_window(&app).map_err(|error| {
+            startup_log(&format!("VR panel window creation failed: {error}"));
+            error.to_string()
+        }),
+        (false, Some(window)) => window.destroy().map_err(|error| error.to_string()),
+        _ => Ok(()),
     }
 }
 

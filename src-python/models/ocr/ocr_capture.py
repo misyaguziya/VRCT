@@ -42,7 +42,8 @@ def _isSteamvrRunning() -> bool:
         return False
     proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
     try:
-        return proc_name in (p.name() for p in process_iter())
+        # 名前はまとめて取る (1つずつ p.name() で取ると、途中で終わったプロセスで NoSuchProcess になる)
+        return any(p.info["name"] == proc_name for p in process_iter(["name"]))
     except Exception:
         return False
 

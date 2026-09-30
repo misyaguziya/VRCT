@@ -16,6 +16,7 @@ a = Analysis(
         ('./../src-python/models/ocr/onnx', 'ocr_onnx/'),
         ('./../.venv_cuda/Lib/site-packages/zeroconf', 'zeroconf/'),
         ('./../.venv_cuda/Lib/site-packages/openvr', 'openvr/'),
+        ('./../.venv_cuda/Lib/site-packages/glfw', 'glfw/'),  # glfw3.dll (VR UI overlay texture) is loaded via ctypes, not found by analysis
         ('./../.venv_cuda/Lib/site-packages/faster_whisper', 'faster_whisper/'),
         ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/'),
         ('./../.venv_cuda/Lib/site-packages/rapidocr', 'rapidocr/'),

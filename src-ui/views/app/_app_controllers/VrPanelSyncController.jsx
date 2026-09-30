@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getDefaultStore } from "jotai";
 
 import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useIsOpenedConfigPage } from "@logics_common";
+import { useVr } from "@logics_configs";
 
 // VRパネル (vr_panel ウィンドウ) をこのウィンドウの完全なミラーにする。
 // - 全atomの値をVRパネルへ一方向に同期する (機能が増えても個別の同期コードは不要)
@@ -48,6 +50,14 @@ const emitState = (entries) => {
 export const VrPanelSyncController = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     const { currentIsOpenedConfigPage, setIsOpenedConfigPage } = useIsOpenedConfigPage();
+    const { currentIsEnabledOverlayVrPanel } = useVr();
+
+    // VR画面のウィンドウは VR UI が ON の間だけ作る (OFF の間も動かしておくと、使わない人にも負荷がかかる)。
+    // 作られた VR画面は vr-panel-ready を送ってくるので、状態はそのときに送る
+    const is_vr_panel_enabled = currentIsEnabledOverlayVrPanel.data === true;
+    useEffect(() => {
+        invoke("set_vr_panel_window", { open: is_vr_panel_enabled }).catch(console.error);
+    }, [is_vr_panel_enabled]);
     const isOpenedConfigPageRef = useRef(currentIsOpenedConfigPage.data);
     isOpenedConfigPageRef.current = currentIsOpenedConfigPage.data;
     // VRのVR設定ウィンドウを開いているか (開いている間はVRからの送信を通す)
