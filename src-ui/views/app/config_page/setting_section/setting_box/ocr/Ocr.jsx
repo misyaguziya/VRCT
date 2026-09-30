@@ -5,7 +5,6 @@ import { useOcr } from "@logics_configs";
 import { useSaveButtonLogic } from "@logics_configs";
 
 import {
-    SwitchBoxContainer,
     DropdownMenuContainer,
     EntryWithSaveButtonContainer,
     SliderContainer,
@@ -28,23 +27,8 @@ const Main_Container = () => {
     return (
         <div>
             <SectionLabelComponent label={t("config_page.ocr.section_title")} desc={t("config_page.ocr.section_desc")} />
-            <EnableOcrCapture_Box />
             <OcrSourceLanguage_Box />
         </div>
-    );
-};
-
-const EnableOcrCapture_Box = () => {
-    const { t } = useI18n();
-    const { currentEnableOcrCapture, toggleEnableOcrCapture } = useOcr();
-
-    return (
-        <SwitchBoxContainer
-            label={t("config_page.ocr.enable_ocr_capture.label")}
-            desc={t("config_page.ocr.enable_ocr_capture.desc")}
-            variable={currentEnableOcrCapture}
-            toggleFunction={toggleEnableOcrCapture}
-        />
     );
 };
 
