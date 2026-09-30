@@ -36,7 +36,8 @@ except Exception:
 
 def checkSteamvrRunning() -> bool:
     _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
-    return _proc_name in (p.name() for p in process_iter())
+    # 名前はまとめて取る (1つずつ p.name() で取ると、途中で終わったプロセスで NoSuchProcess になる)
+    return any(p.info["name"] == _proc_name for p in process_iter(["name"]))
 
 # Windows-specific imports via ctypes will be used when focusing windows
 if sys.platform == 'win32':

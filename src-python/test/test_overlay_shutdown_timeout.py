@@ -24,6 +24,7 @@ joinのタイムアウトに関するテスト(バックエンドレビュー �
 
 import threading
 import time
+import sys
 import unittest
 from threading import Thread
 from unittest.mock import MagicMock, patch
@@ -163,3 +164,109 @@ class ShutdownOverlayJoinTimeoutTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StartCancelTest(unittest.TestCase):
+    """SteamVR の起動を待っている間に止められたら、SteamVR が起動してもオーバーレイを出さない。"""
+
+    def _overlay(self):
+        from models.overlay.overlay import Overlay
+
+        overlay = Overlay({})
+        overlay.init = MagicMock()
+        return overlay
+
+    def test_shutdown_while_waiting_for_steamvr_cancels_the_start(self):
+        overlay = self._overlay()
+        with patch("models.overlay.overlay._START_CANCEL_POLL_SEC", 0.01), \
+                patch.object(overlay, "checkSteamvrRunning", return_value=False):
+            overlay.startOverlay()
+            self.assertTrue(overlay.init_process)
+            overlay.shutdownOverlay()
+            overlay.thread_overlay.join(timeout=2.0)
+        self.assertFalse(overlay.thread_overlay.is_alive())
+        overlay.init.assert_not_called()  # SteamVR が起動しても作らない
+        self.assertFalse(overlay.init_process)
+        self.assertFalse(overlay.start_cancelled)
+
+    def test_off_then_on_while_waiting_keeps_waiting(self):
+        overlay = self._overlay()
+        steamvr = {"running": False}
+        with patch("models.overlay.overlay._START_CANCEL_POLL_SEC", 0.01), \
+                patch("models.overlay.overlay._STEAMVR_POLL_SEC", 0.02), \
+                patch.object(overlay, "checkSteamvrRunning", side_effect=lambda: steamvr["running"]):
+            overlay.startOverlay()
+            overlay.shutdownOverlay()
+            overlay.startOverlay()  # すぐ ON に戻した
+            steamvr["running"] = True
+            overlay.thread_overlay.join(timeout=2.0)
+        overlay.init.assert_called_once_with()  # 待ち続けて、SteamVR が起動したら作る
+
+
+class SteamvrCheckTest(unittest.TestCase):
+    def test_process_that_exits_during_the_check_does_not_raise(self):
+        """確かめている途中で終わったプロセス (名前が取れない) があっても、例外にしない。"""
+        from models.overlay.overlay import Overlay
+
+        gone = MagicMock(info={"name": None})
+        steamvr = MagicMock(info={"name": "vrmonitor.exe"})
+        with patch("models.overlay.overlay.process_iter", return_value=[gone, steamvr]) as it, \
+                patch("models.overlay.overlay.os.name", "nt"):
+            self.assertTrue(Overlay.checkSteamvrRunning())
+        it.assert_called_once_with(["name"])
+        with patch("models.overlay.overlay.process_iter", return_value=[gone]), \
+                patch("models.overlay.overlay.os.name", "nt"):
+            self.assertFalse(Overlay.checkSteamvrRunning())
+
+    def test_error_in_the_overlay_thread_allows_starting_again(self):
+        """オーバーレイのスレッドが例外で終わっても記録し、次の ON で作り直せるようにする。"""
+        from models.overlay.overlay import Overlay
+
+        overlay = Overlay({})
+        overlay.init = MagicMock()
+        with patch.object(overlay, "checkSteamvrRunning", side_effect=RuntimeError("boom")), \
+                patch("models.overlay.overlay.errorLogging") as logged:
+            overlay.startOverlay()
+            overlay.thread_overlay.join(timeout=2.0)
+        logged.assert_called_once()
+        self.assertFalse(overlay.init_process)
+        with patch.object(overlay, "checkSteamvrRunning", return_value=True):
+            overlay.startOverlay()  # 作り直せる
+            overlay.thread_overlay.join(timeout=2.0)
+        overlay.init.assert_called_once_with()
+
+
+class StallReportTest(unittest.TestCase):
+    """オーバーレイの処理が止まった・遅いときに、どこかをログに出す (実機での切り分け用)。"""
+
+    def test_slow_step_is_reported(self):
+        from models.overlay.overlay import Overlay
+
+        overlay = Overlay({})
+        with patch("models.overlay.overlay.time.monotonic", side_effect=[100.0, 100.2, 100.3, 111.0]), \
+                patch("models.overlay.overlay.printLog") as log:
+            overlay.step_reported_at = 100.0
+            overlay.loop_step = ("idle", 100.0)
+            overlay.markStep("panel:upload")    # 100.0
+            overlay.markStep("panel:set_texture")  # 100.2 → upload に 0.2秒
+            overlay.markStep("sleep")  # 100.3
+            overlay.reportSlowSteps()  # 111.0 → 10秒たった
+        log.assert_called_once()
+        self.assertEqual(log.call_args.args[1], {"panel:upload": 200, "panel:set_texture": 100})
+
+    def test_stalled_step_is_reported_with_its_stack(self):
+        import threading
+
+        from models.overlay.overlay import Overlay
+
+        overlay = Overlay({})
+        overlay.loop = True
+        overlay.loop_step = ("panel:set_texture", 0.0)  # ずっと前から進んでいない
+        frames = {threading.get_ident(): sys._getframe()}
+        with patch("models.overlay.overlay._STALL_REPORT_SEC", 0.1), \
+                patch("models.overlay.overlay.time.sleep", side_effect=lambda _: setattr(overlay, "loop", overlay.loop and log.call_count == 0)), \
+                patch("models.overlay.overlay.printLog") as log:
+            overlay.watchStall(lambda: frames, threading.get_ident())
+        log.assert_called_once()
+        self.assertEqual(log.call_args.args[1]["step"], "panel:set_texture")
+        self.assertIn("test_stalled_step_is_reported_with_its_stack", log.call_args.args[1]["stack"])
