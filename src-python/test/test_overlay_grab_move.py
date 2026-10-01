@@ -91,6 +91,50 @@ class CommitPositionTest(unittest.TestCase):
         np.testing.assert_allclose([overlay.settings["small"][k] for k in KEYS], target, atol=1e-3)
 
 
+class TipOffsetTest(unittest.TestCase):
+    """コントローラの先端の姿勢を render model から調べ、分からなければ本体の姿勢で指す。"""
+
+    def _overlay(self):
+        overlay = Overlay({PANEL: {}})
+        overlay.overlay_system = MagicMock()
+        overlay.overlay_system.getStringTrackedDeviceProperty.return_value = "oculus_quest_plus_controller_right"
+        overlay.overlay_system.getControllerState.return_value = (True, MagicMock())
+        return overlay
+
+    def test_tip_from_the_render_model_is_cached(self):
+        overlay = self._overlay()
+        component = MagicMock()
+        component.mTrackingToComponentLocal = [[1, 0, 0, -0.017], [0, 0.794, 0.607, -0.025], [0, -0.607, 0.794, 0.025]]
+        with patch("models.overlay.overlay.openvr.VRRenderModels") as models:
+            models.return_value.getComponentState.return_value = (True, component)
+            tip = overlay.tipOffset(2, 0.0)
+            overlay.tipOffset(2, 100.0)
+        self.assertAlmostEqual(tip[1, 2], 0.607)
+        self.assertEqual(models.return_value.getComponentState.call_count, 1)
+
+    def test_unknown_tip_points_with_the_controller_and_retries(self):
+        from models.overlay.overlay import _TIP_RETRY_SEC
+
+        overlay = self._overlay()
+        with patch("models.overlay.overlay.openvr.VRRenderModels") as models, patch("models.overlay.overlay.printLog") as logged:
+            models.return_value.getComponentState.return_value = (False, MagicMock())
+            self.assertTrue(np.array_equal(overlay.tipOffset(2, 0.0), np.eye(4)))
+            overlay.tipOffset(2, 1.0)  # 調べ直すまでは調べない
+            self.assertEqual(models.return_value.getComponentState.call_count, 1)
+            overlay.tipOffset(2, _TIP_RETRY_SEC + 1.0)
+            self.assertEqual(models.return_value.getComponentState.call_count, 2)
+        self.assertEqual(logged.call_count, 1)  # ログは1回だけ
+
+
+class LaserTiltTest(unittest.TestCase):
+    def test_positive_tilt_raises_the_laser(self):
+        from models.overlay.overlay import laserTilt
+
+        direction = laserTilt(30.0)[:3, :3] @ np.array([0.0, 0.0, -1.0])  # 前方は -Z
+        self.assertAlmostEqual(direction[1], 0.5)  # 上 (+Y) に sin 30°
+        self.assertAlmostEqual(direction[2], -np.cos(np.radians(30.0)))
+
+
 class UpdateGrabFlowTest(unittest.TestCase):
     """SteamVRを偽物に差し替え、長押し→掴み→離す→確定の流れを通す。"""
 
@@ -147,6 +191,18 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.overlay.pointer_handles = {"dot": 11, "plus": 12, "minus": 13}
         self.callback = MagicMock()
         self.overlay.position_changed_callback = self.callback
+
+    def test_laser_points_along_the_controller_tip(self):
+        """レーザーは本体の -Z ではなく先端の -Z に出す (Quest のコントローラでは 37° 下向き)。"""
+        angle = np.radians(-37.4)
+        tip = np.eye(4)
+        tip[1, 1], tip[1, 2], tip[2, 1], tip[2, 2] = np.cos(angle), -np.sin(angle), np.sin(angle), np.cos(angle)
+        with patch.object(Overlay, "tipOffset", return_value=tip):
+            self.overlay.updateGrab()
+        params = self.overlay.overlay.computeOverlayIntersection.call_args.args[1]
+        direction = [params.vDirection.v[i] for i in range(3)]
+        for got, want in zip(direction, (0.0, -0.607, -0.794)):
+            self.assertAlmostEqual(got, want, places=3)
 
     def test_window_on_the_sphere_stays_put_while_the_head_is_lost(self):
         """頭のトラッキングが一瞬切れても、掴んでいる空間固定のウィンドウは跳ばず、放せばその位置で確定する。"""
@@ -1418,7 +1474,7 @@ class PanelResizeTest(unittest.TestCase):
         pose_of = lambda index: self._hand(*to_xy) if index == hand else np.eye(4)  # noqa: E731
         overlay.startResize(hand, corner, lambda index: np.eye(4))
         gripping = MagicMock(ulButtonPressed=1 << __import__("openvr").k_EButton_Grip)
-        overlay.updateResize(pose_of, lambda index: gripping, 0.0)
+        overlay.updateResize(pose_of, pose_of, lambda index: gripping, 0.0)
         return pose_of
 
     def test_opposite_corner_stays_and_size_is_saved_on_release(self):
@@ -1427,7 +1483,7 @@ class PanelResizeTest(unittest.TestCase):
         self.assertEqual(overlay.resizing["size"], (1000, 800))
         np.testing.assert_allclose(overlay.resizing["center"], (0.05, -0.05))  # 左上の角 (-0.45, 0.35) は動かない
         released = MagicMock(ulButtonPressed=0)
-        overlay.updateResize(pose_of, lambda index: released, 0.1)
+        overlay.updateResize(pose_of, pose_of, lambda index: released, 0.1)
         self.assertIsNone(overlay.resizing)
         s = overlay.settings[PANEL]
         self.assertEqual((s["width"], s["height"]), (1000, 800))
@@ -1470,14 +1526,14 @@ class PanelResizeTest(unittest.TestCase):
         overlay.startResize(right, (1, -1), pose_of)
         hand_at["x"] = 0.3
         released = MagicMock(ulButtonPressed=0)
-        overlay.updateResize(pose_of, lambda index: released, 0.1)
+        overlay.updateResize(pose_of, pose_of, lambda index: released, 0.1)
         np.testing.assert_allclose(overlay.panelRelative()[:, 3], before[:, 3], atol=1e-4)  # 手から見た位置は変わらない
 
     def test_revert_also_restores_the_position(self):
         """新しい大きさにできず元に戻すときは、伸ばす前の位置と幅にも戻す (跳ばない)。"""
         overlay = self._overlay()
         pose_of = self._drag(overlay, (1, -1), (0.55, -0.45))
-        overlay.updateResize(pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)
+        overlay.updateResize(pose_of, pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)
         self.assertAlmostEqual(overlay.settings[PANEL]["x_pos"], 0.05, places=4)
         overlay.retryOrRevertLayout(overlay.layout_requested_at + 5.0)
         s = overlay.settings[PANEL]
@@ -1490,7 +1546,7 @@ class PanelResizeTest(unittest.TestCase):
         overlay = self._overlay()
         overlay.ghost_handle = 20
         pose_of = self._drag(overlay, (1, -1), (0.55, -0.45))
-        overlay.updateResize(pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)  # 放して、切り替え待ち
+        overlay.updateResize(pose_of, pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)  # 放して、切り替え待ち
         overlay.overlay.hideOverlay.reset_mock()
         overlay.vr_panel_enabled = False
         overlay.applyVrWindows(lambda index: np.eye(4))
@@ -1500,7 +1556,7 @@ class PanelResizeTest(unittest.TestCase):
         """伸ばして放した後に動かした位置は、大きさを元に戻しても残す。"""
         overlay = self._overlay()
         pose_of = self._drag(overlay, (1, -1), (0.55, -0.45))
-        overlay.updateResize(pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)
+        overlay.updateResize(pose_of, pose_of, lambda index: MagicMock(ulButtonPressed=0), 0.1)
         moved = overlay.panelRelative()
         moved[0, 3] += 0.2
         overlay.commitPosition(PANEL, moved)  # 切り替え待ちの間に掴んで動かした
