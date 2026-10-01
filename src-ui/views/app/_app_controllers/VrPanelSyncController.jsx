@@ -7,6 +7,7 @@ import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useIsOpenedConfigPage } from "@logics_common";
 import { useVr } from "@logics_configs";
+import { isLanguageMutation, rejectLanguageMutation } from "../../../logics/main/languageMutations";
 
 // VRパネル (vr_panel ウィンドウ) をこのウィンドウの完全なミラーにする。
 // - 全atomの値をVRパネルへ一方向に同期する (機能が増えても個別の同期コードは不要)
@@ -85,11 +86,14 @@ export const VrPanelSyncController = () => {
             const is_window_request = WINDOW_REQUEST_PATHS.includes(payload.path);
             const is_allowed = is_window_request || isVrSettingsOpenRef.current === true;
             if (isOpenedConfigPageRef.current === true && !is_allowed) {
+                rejectLanguageMutation(payload.languageRequest, "config-open");
                 // VRパネル側で pending にした表示を元に戻すため、状態を送り直す
                 emitState(atomEntries());
                 return;
             }
-            asyncStdoutToPython(payload.path, payload.value);
+            asyncStdoutToPython(payload.path, payload.value, payload.languageRequest).then(sent => {
+                if (sent === false && isLanguageMutation(payload.path)) emitState(atomEntries());
+            }).catch(console.error);
         });
         const unlistenConfigPage = listen("vr-panel-config-page", ({ payload: is_opened }) => {
             if (is_opened === true) {

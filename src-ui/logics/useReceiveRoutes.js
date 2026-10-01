@@ -3,6 +3,8 @@ import * as main from "@logics_main";
 import * as configs from "@logics_configs";
 import { _useBackendErrorHandling } from "./_useBackendErrorHandling";
 import { SETTINGS_ARRAY } from "./configs/config_page_setter/ui_config_setter";
+import { useStdoutToPython } from "@useStdoutToPython";
+import { receiveLanguageMutation, resetLanguageMutations } from "./main/languageMutations";
 
 export const STATIC_ROUTE_META_LIST = [
     // Common
@@ -129,6 +131,7 @@ export const useReceiveRoutes = () => {
     const { showNotification_Error } = common.useNotificationStatus();
     const { errorHandling_Backend } = _useBackendErrorHandling();
     const { updateIsBackendReady } = common.useIsBackendReady();
+    const { asyncStdoutToPython } = useStdoutToPython();
 
     const ROUTE_META_LIST = buildRouteMetaList();
 
@@ -175,8 +178,11 @@ export const useReceiveRoutes = () => {
                 }
             });
             updateIsBackendReady(true);
+            resetLanguageMutations();
             return;
         }
+
+        if (status !== 200) receiveLanguageMutation(parsed_data, asyncStdoutToPython);
 
         switch (status) {
             case 200:
@@ -185,6 +191,7 @@ export const useReceiveRoutes = () => {
                 } else {
                     handleInvalidEndpoint(parsed_data);
                 }
+                receiveLanguageMutation(parsed_data, asyncStdoutToPython);
                 break;
 
             case 400:

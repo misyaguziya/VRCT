@@ -48,7 +48,7 @@ export const TranslatorSelector = ({selected_id, translation_engines, is_selecte
 
 const TranslatorBox = (props) => {
     const { t } = useI18n();
-    const { setSelectedTranslationEngines} = useLanguageSettings();
+    const { canChangeLanguageSettings, isLanguageSettingsBusy, setSelectedTranslationEngines} = useLanguageSettings();
     const { updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
 
     const box_class_name = clsx(
@@ -62,6 +62,7 @@ const TranslatorBox = (props) => {
     );
 
     const selectTranslator = () => {
+        if (!canChangeLanguageSettings()) return;
         if (props.is_selected === false) {
             setSelectedTranslationEngines(props.id);
         }
@@ -69,7 +70,7 @@ const TranslatorBox = (props) => {
     };
 
     return (
-        <div className={box_class_name} onClick={selectTranslator}>
+        <div className={box_class_name} aria-disabled={isLanguageSettingsBusy} onClick={selectTranslator}>
             <p className={styles.translator_name}>{props.label}</p>
             {props.is_default && <p className={label_default_class_name}>{t("common.default_label")}</p>}
         </div>

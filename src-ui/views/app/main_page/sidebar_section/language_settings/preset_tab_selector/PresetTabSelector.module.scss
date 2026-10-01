@@ -30,3 +30,4 @@
 .tab_number {
     font-size: 1.6rem;
 }
+.tab_container[aria-disabled="true"] { opacity: .55; cursor: wait; }
