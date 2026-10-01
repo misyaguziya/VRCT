@@ -5,7 +5,6 @@ import { useI18n } from "@useI18n";
 import { useIsOpenedConfigPage, useVrPanelLogOutOfView } from "@logics_common";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useMainFunction } from "@logics_main";
-import { useOcr } from "@logics_configs";
 
 import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
@@ -27,8 +26,8 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup }) => {
         toggleTranslation, currentTranslationStatus,
         toggleTranscriptionSend, currentTranscriptionSendStatus,
         toggleTranscriptionReceive, currentTranscriptionReceiveStatus,
+        toggleOcrCapture, currentOcrCaptureStatus,
     } = useMainFunction();
-    const { currentEnableOcrCapture, toggleEnableOcrCapture } = useOcr();
     const { currentVrPanelLogOutOfView } = useVrPanelLogOutOfView();
     const { asyncStdoutToPython } = useStdoutToPython();
     // ログウィンドウを開いたまま見失っているときは、閉じる代わりに目の前へ呼び戻す
@@ -51,7 +50,7 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup }) => {
                 <FunctionButton Svg={HeadphonesSvg} label={t("main_page.transcription_receive")}
                     state={currentTranscriptionReceiveStatus} onClick={toggleTranscriptionReceive} is_locked={is_locked} />
                 <FunctionButton Svg={ChatTranscribeSvg} label={t("main_page.ocr")}
-                    state={currentEnableOcrCapture} onClick={toggleEnableOcrCapture} is_locked={is_locked} />
+                    state={currentOcrCaptureStatus} onClick={toggleOcrCapture} is_locked={is_locked} />
             </div>
             <div className={styles.divider} />
             <div className={styles.group}>
