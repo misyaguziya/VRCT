@@ -202,6 +202,8 @@ _TOOLBAR_GAP_M = 0.012
 # ログか操作バーをこの秒数指し続けたら出し、外れてからこの秒数で消す
 _TOOLBAR_SHOW_AFTER_SEC = 0.3
 _TOOLBAR_HIDE_AFTER_SEC = 2.0
+# 操作バーを出す・消すときに、この秒数で浮かび上がらせる・薄くして消す
+_TOOLBAR_FADE_SEC = 0.25
 # 固定先を手・頭に切り替えたとき、遠すぎる (近すぎる) ウィンドウを寄せる距離 (m)
 _HAND_ANCHOR_MAX_DISTANCE_M = 0.5
 _HMD_ANCHOR_DISTANCE_RANGE_M = (0.4, 1.5)
@@ -554,6 +556,9 @@ class Overlay:
         # 操作バー (VR画面の TOOLBAR 領域を表示するオーバーレイ)。指している間だけ出す
         self.toolbar_handle: Optional[int] = None
         self.toolbar_visible = False
+        # 操作バーの今の濃さ (0〜1) と、最後に濃さを変えた時刻 (updateToolbarFade)
+        self.toolbar_alpha = 0.0
+        self.toolbar_faded_at: Optional[float] = None
         self.toolbar_pointed_since: Optional[float] = None
         self.toolbar_last_pointed = 0.0
         # 操作バーの置き場所 (追従先から見た 3x4) と追従先。当たった位置の計算に使う
@@ -709,6 +714,7 @@ class Overlay:
                 self.overlay.setOverlayWidthInMeters(self.toolbar_handle, self.regionWidthM(TOOLBAR))
                 self.overlay.hideOverlay(self.toolbar_handle)
                 self.toolbar_visible = False
+                self.toolbar_alpha, self.toolbar_faded_at = 0.0, None
                 self.ghost_handle = self.overlay.createOverlay("VRCT_resize_ghost", "VRCT_resize_ghost")
                 self.overlay.setOverlaySortOrder(self.ghost_handle, 50)
                 self.overlay.hideOverlay(self.ghost_handle)
@@ -1318,15 +1324,37 @@ class Overlay:
         self.toolbar_visible = visible
         if visible:
             self.placeToolbar(self.getTracker(self.settings[PANEL]["tracker"])[1], self.panelRelative())
+            self.overlay.setOverlayAlpha(self.toolbar_handle, self.toolbar_alpha)  # 今の濃さから浮かび上がらせる
             self.overlay.showOverlay(self.toolbar_handle)
-        else:
+        # 消すときは updateToolbarFade で薄くしてから隠す (突然消えないように)
+
+    def updateToolbarFade(self, now: float) -> None:
+        """操作バーの濃さを、出す・消すに合わせて _TOOLBAR_FADE_SEC かけて変える。薄くなりきったら隠す。"""
+        if self.toolbar_handle is None:
+            return
+        dt = 0.0 if self.toolbar_faded_at is None else now - self.toolbar_faded_at
+        self.toolbar_faded_at = now
+        target = 1.0 if self.toolbar_visible else 0.0
+        if self.toolbar_alpha == target:
+            return
+        step = dt / _TOOLBAR_FADE_SEC
+        self.toolbar_alpha = min(self.toolbar_alpha + step, target) if target > self.toolbar_alpha else max(self.toolbar_alpha - step, target)
+        self.overlay.setOverlayAlpha(self.toolbar_handle, self.toolbar_alpha)
+        if self.toolbar_alpha == 0.0 and target == 0.0:
+            self.overlay.hideOverlay(self.toolbar_handle)
+
+    def hideToolbarNow(self) -> None:
+        """ログと一緒に消すときは薄くせずにすぐ隠す。"""
+        self.setToolbarVisible(False)
+        if self.toolbar_handle is not None and self.toolbar_alpha > 0.0:
+            self.toolbar_alpha = 0.0
             self.overlay.hideOverlay(self.toolbar_handle)
 
     def updateToolbarVisibility(self, now: float, pointing_log: bool) -> None:
         """ログか操作バーを少し指し続けたら操作バーを出し、外れてしばらくしたら消す。"""
         if PANEL in self.vr_windows_hidden or not self.vr_panel_enabled:
             self.toolbar_pointed_since = None
-            self.setToolbarVisible(False)
+            self.hideToolbarNow()
             return
         if pointing_log:
             if self.toolbar_pointed_since is None:
@@ -1598,6 +1626,7 @@ class Overlay:
 
         self.applyVrWindows(poseOf)
         self.updateLauncherVisibility(poseOf, now)
+        self.updateToolbarFade(now)
 
         if self.resizing is not None:
             self.updateResize(poseOf, rayOf, controllerState, now)
@@ -2309,6 +2338,7 @@ class Overlay:
         self.pointer_handles = {}
         self.toolbar_handle = None
         self.toolbar_visible = False
+        self.toolbar_alpha, self.toolbar_faded_at = 0.0, None
         self.ghost_handle = None
         self.resizing = None
         self.overlay = None
