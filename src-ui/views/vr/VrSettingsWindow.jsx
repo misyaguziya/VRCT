@@ -21,16 +21,16 @@ import { VrWindow } from "./VrWindow";
 import { Picker, SectionLabel, SegmentRow, SelectRow, StepperRow, ThresholdRow, ToggleRow } from "./VrSettingsRows";
 import styles from "./VrSettingsWindow.module.scss";
 
-// 左のカテゴリはデスクトップの設定画面と同じ名前・アイコン。VRでは文字入力が要る項目
+// 左のカテゴリはデスクトップの設定画面と同じ順序・名前・アイコン。VRでは文字入力が要る項目
 // (APIキー、URL、単語フィルターなど) と、モデルのダウンロードは載せない
 const CATEGORIES = [
     { id: "device", Icon: MicSvg },
     { id: "appearance", Icon: AppearanceSvg },
-    { id: "transcription", Icon: GraphicEqSvg },
     { id: "translation", Icon: TranslationSvg },
+    { id: "transcription", Icon: GraphicEqSvg },
+    { id: "ocr", Icon: ChatTranscribeSvg },
     { id: "vr", Icon: HmdSvg },
     { id: "others", Icon: DiscoverTuneSvg },
-    { id: "ocr", Icon: ChatTranscribeSvg },
 ];
 
 // 翻訳のAIのうち、接続済み (モデルの一覧が取れている) ものだけモデルを選べる
@@ -102,11 +102,11 @@ const Category = ({ id, t, openPicker }) => {
     switch (id) {
         case "device": return <DeviceSettings t={t} openPicker={openPicker} />;
         case "appearance": return <AppearanceSettings t={t} openPicker={openPicker} />;
-        case "transcription": return <TranscriptionSettings t={t} openPicker={openPicker} />;
         case "translation": return <TranslationSettings t={t} openPicker={openPicker} />;
+        case "transcription": return <TranscriptionSettings t={t} openPicker={openPicker} />;
+        case "ocr": return <OcrSettings t={t} openPicker={openPicker} />;
         case "vr": return <VrSettings t={t} />;
         case "others": return <OthersSettings t={t} />;
-        case "ocr": return <OcrSettings t={t} openPicker={openPicker} />;
         default: return null;
     }
 };
