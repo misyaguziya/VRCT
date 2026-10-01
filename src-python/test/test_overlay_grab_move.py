@@ -191,6 +191,10 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.overlay.pointer_handles = {"dot": 11, "plus": 12, "minus": 13}
         self.callback = MagicMock()
         self.overlay.position_changed_callback = self.callback
+        # レーザーの上下の調整値 (好みで変える) に左右されないよう、先端の向きのままで確かめる
+        tilt = patch("models.overlay.overlay._LASER_PITCH_UP_DEG", 0.0)
+        tilt.start()
+        self.addCleanup(tilt.stop)
 
     def test_laser_points_along_the_controller_tip(self):
         """レーザーは本体の -Z ではなく先端の -Z に出す (Quest のコントローラでは 37° 下向き)。"""
@@ -835,7 +839,25 @@ class ToolbarTest(unittest.TestCase):
         self.assertTrue(overlay.toolbar_visible)  # 外れてすぐは消さない (バーへ移る間)
         overlay.updateToolbarVisibility(12.4, False)
         self.assertFalse(overlay.toolbar_visible)
-        overlay.overlay.hideOverlay.assert_called_with(20)
+
+    def test_fades_in_and_out(self):
+        """出すときは浮かび上がらせ、消すときは突然消さずに薄くしてから隠す。"""
+        from models.overlay.overlay import _TOOLBAR_FADE_SEC
+
+        overlay = self._overlay()
+        overlay.setToolbarVisible(True)
+        overlay.updateToolbarFade(10.0)
+        overlay.updateToolbarFade(10.0 + _TOOLBAR_FADE_SEC / 2)
+        self.assertAlmostEqual(overlay.toolbar_alpha, 0.5)
+        overlay.updateToolbarFade(10.0 + _TOOLBAR_FADE_SEC)
+        self.assertEqual(overlay.toolbar_alpha, 1.0)
+        overlay.setToolbarVisible(False)
+        overlay.overlay.hideOverlay.assert_not_called()  # まだ隠さない
+        overlay.updateToolbarFade(10.0 + _TOOLBAR_FADE_SEC * 1.5)
+        self.assertAlmostEqual(overlay.overlay.setOverlayAlpha.call_args.args[1], 0.5)
+        overlay.overlay.hideOverlay.assert_not_called()
+        overlay.updateToolbarFade(10.0 + _TOOLBAR_FADE_SEC * 2)
+        overlay.overlay.hideOverlay.assert_called_once_with(20)  # 薄くなりきったら隠す
 
     def test_hidden_with_the_log_window(self):
         from models.overlay.overlay import PANEL
@@ -843,9 +865,12 @@ class ToolbarTest(unittest.TestCase):
         overlay = self._overlay()
         overlay.updateToolbarVisibility(10.0, True)
         overlay.updateToolbarVisibility(10.5, True)
+        overlay.updateToolbarFade(10.5)
+        overlay.updateToolbarFade(11.0)  # 出しきった
         overlay.vr_windows_hidden.add(PANEL)
-        overlay.updateToolbarVisibility(10.6, True)
+        overlay.updateToolbarVisibility(11.1, True)
         self.assertFalse(overlay.toolbar_visible)
+        overlay.overlay.hideOverlay.assert_called_with(20)  # ログと一緒にすぐ隠す
 
     def test_size_is_fixed_and_placed_below_the_log(self):
         """ログを拡大してもバーの大きさは変わらず、ログの下端のすぐ下に付く。"""
