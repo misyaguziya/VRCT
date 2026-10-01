@@ -11,9 +11,6 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/enable_ai_models", ns: common, hook_name: "useIsVrctAvailable", method_name: "handleAiModelsAvailability" },
     { endpoint: "/get/data/compute_mode", ns: common, hook_name: "useComputeMode", method_name: "updateComputeMode" },
 
-    // OCR start-failure rollback push (backend flips the flag back off if the pipeline fails to start)
-    { endpoint: "/run/enable_ocr_capture", ns: configs, hook_name: "useOcr", method_name: "updateFromBackendEnableOcrCapture" },
-
     { endpoint: "/run/update_software", ns: null, hook_name: null, method_name: null },
 
     // VR UI のポインタ位置 (ホバー表示用)。VR ウィンドウへ転送する
@@ -85,6 +82,8 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/set/disable/transcription_send", ns: main, hook_name: "useMainFunction", method_name: "updateTranscriptionSendStatus" },
     { endpoint: "/set/enable/transcription_receive", ns: main, hook_name: "useMainFunction", method_name: "updateTranscriptionReceiveStatus" },
     { endpoint: "/set/disable/transcription_receive", ns: main, hook_name: "useMainFunction", method_name: "updateTranscriptionReceiveStatus" },
+    { endpoint: "/set/enable/ocr_capture", ns: main, hook_name: "useMainFunction", method_name: "updateOcrCaptureStatus" },
+    { endpoint: "/set/disable/ocr_capture", ns: main, hook_name: "useMainFunction", method_name: "updateOcrCaptureStatus" },
 
     // Language Settings
     { endpoint: "/get/data/selected_tab_no", ns: main, hook_name: "useLanguageSettings", method_name: "updateSelectedPresetTabNumber" },

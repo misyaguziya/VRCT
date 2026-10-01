@@ -358,9 +358,6 @@ config_page:
         capture_target: "擷取對象"
         language: "語言"
         performance: "效能"
-        enable_ocr_capture:
-            label: "啟用 VRChat 聊天讀取"
-            desc: "開始背景工作，擷取 VRChat 視窗(SteamVR 執行時為頭戴裝置鏡像畫面)並翻譯偵測到的聊天氣泡。"
         window_title:
             label: "視窗名稱"
             desc: "與可見視窗標題的部分相符(不區分大小寫)。如果你使用的用戶端視窗標題不是「VRChat」(例如修改版啟動器)，請變更此項。"
