@@ -112,6 +112,10 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    &:focus-visible {
+        outline: 3px solid var(--primary_100_color);
+        outline-offset: -3px;
+    }
     // VRのポインタが当たっている (VrApp の VrPointerHover が付ける)。赤はエラー用に残す
     &[data-vr-hover] {
         background-color: var(--dark_750_color);

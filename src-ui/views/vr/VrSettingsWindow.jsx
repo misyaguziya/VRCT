@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import clsx from "clsx";
 
 import { useI18n } from "@useI18n";
 import { useIsOpenedConfigPage, useIsOscAvailable, useVolume } from "@logics_common";
 import { useAppearance, useDevice, useOcr, useOthers, useTranscription, useTranslation, useVr } from "@logics_configs";
-import { useStore_MicVolume, useStore_SpeakerVolume } from "@store";
+import { useStore_MicVolume, useStore_SelectableFontFamilyList, useStore_SpeakerVolume } from "@store";
 import { ui_configs } from "@ui_configs";
 
 import HmdSvg from "@images/mui_head_mounted_device.svg?react";
@@ -18,7 +18,8 @@ import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 import WarningSvg from "@images/warning.svg?react";
 
 import { VrWindow } from "./VrWindow";
-import { Picker, SectionLabel, SegmentRow, SelectRow, StepperRow, ThresholdRow, ToggleRow } from "./VrSettingsRows";
+import { Disclosure, Picker, SectionLabel, SegmentRow, SelectRow, StepperRow, ThresholdRow, ToggleRow } from "./VrSettingsRows";
+import { buildComputeDeviceOptions } from "../app/config_page/setting_section/setting_box/_components/compute_device/computeDeviceOptions";
 import styles from "./VrSettingsWindow.module.scss";
 
 // 左のカテゴリはデスクトップの設定画面と同じ順序・名前・アイコン。VRでは文字入力が要る項目
@@ -57,42 +58,65 @@ export const VrSettingsWindow = ({ onClose }) => {
     const [category, setCategory] = useState("device");
     // 選択肢の一覧を開いているとき: { title, options, selected_id, onPick }
     const [picker, setPicker] = useState(null);
+    const listRef = useRef(null);
+    const pickerRef = useRef(null);
+    const triggerRef = useRef(null);
+    const savedScroll = useRef(0);
+    // Picker 中も設定を保持し、戻ったら元の位置と操作行へ戻す。
+    useLayoutEffect(() => {
+        if (picker) {
+            pickerRef.current?.querySelector("button")?.focus({ preventScroll: true });
+        } else if (listRef.current) {
+            listRef.current.scrollTop = savedScroll.current;
+            if (triggerRef.current) {
+                const trigger = triggerRef.current;
+                const disclosure_button = trigger.closest(`.${styles.disclosure}`)?.querySelector(`.${styles.disclosure_toggle}`);
+                const fallback = listRef.current.contains(disclosure_button) && !disclosure_button.disabled
+                    ? disclosure_button : listRef.current.querySelector("button:not(:disabled)");
+                const can_restore = listRef.current.contains(trigger) && !trigger.disabled;
+                (can_restore ? trigger : fallback)?.focus({ preventScroll: true });
+            }
+        }
+    }, [picker, category]);
 
     // メインが設定画面を開いてメイン機能を止めるまでは操作させない (音量の確認がマイクを奪い合わないように)
     const is_ready = currentIsOpenedConfigPage.data === true;
-    const openPicker = (title, options, selected_id, onPick) => setPicker({ title, options, selected_id, onPick });
+    const openPicker = (title, options, selected_id, onPick) => {
+        savedScroll.current = listRef.current?.scrollTop ?? 0;
+        setPicker({ title, options, selected_id, onPick });
+    };
 
     const category_label = (id) => (id === "vr" ? "VR" : t(`config_page.side_menu_labels.${id}`));
 
     return (
-        <VrWindow Icon={HmdSvg} title={t("vr_panel.window_settings")} onClose={onClose} is_lockable={false}>
+        <VrWindow Icon={HmdSvg} title={t("vr_panel.window_settings")} onClose={onClose} close_label={t("vr_panel.settings.close")} is_lockable={false}>
             <div className={styles.window_body}>
                 <p className={styles.banner}>
-                    <WarningSvg className={styles.banner_icon} />
+                    <WarningSvg className={styles.banner_icon} aria-hidden="true" />
                     {t("vr_panel.paused_while_settings")}
                 </p>
-                <div className={clsx(styles.body, { [styles.is_waiting]: !is_ready })}>
+                <fieldset className={clsx(styles.body, { [styles.is_waiting]: !is_ready })} disabled={!is_ready} aria-label={t("vr_panel.window_settings")} aria-busy={!is_ready}>
                     <div className={styles.side}>
                         {CATEGORIES.map(({ id, Icon }) => (
                             <button key={id}
                                 className={clsx(styles.button, styles.category, { [styles.is_selected]: id === category })}
-                                onClick={() => { setCategory(id); setPicker(null); }}
+                                aria-pressed={id === category}
+                                onClick={() => { savedScroll.current = 0; triggerRef.current = null; setCategory(id); setPicker(null); }}
                             >
-                                <Icon className={styles.category_icon} />
+                                <Icon className={styles.category_icon} aria-hidden="true" />
                                 <span className={styles.category_label}>{category_label(id)}</span>
                             </button>
                         ))}
                     </div>
-                    {/* key でカテゴリを切り替えるたびにスクロール位置を先頭へ戻す */}
-                    <div key={`${category}/${picker?.title ?? ""}`} className={styles.list}>
-                        {picker
-                            ? <Picker {...picker} back_label={t("common.go_back_button_label")}
-                                onPick={(id) => { picker.onPick(id); setPicker(null); }}
-                                onBack={() => setPicker(null)} />
-                            : <Category id={category} t={t} openPicker={openPicker} />
-                        }
+                    <div key={category} ref={listRef} className={styles.list} hidden={Boolean(picker)} data-vr-settings-list="settings"
+                        onClickCapture={(event) => { triggerRef.current = event.target.closest("button"); }}>
+                        <Category id={category} t={t} openPicker={openPicker} />
                     </div>
-                </div>
+                    {picker && <div ref={pickerRef} className={styles.list} data-vr-settings-list="picker" onKeyDown={(event) => { if (event.key === "Escape") setPicker(null); }}>
+                        <Picker {...picker} title={`${category_label(category)} › ${picker.title}`} back_label={t("common.go_back_button_label")}
+                            onPick={(id) => { picker.onPick(id); setPicker(null); }} onBack={() => setPicker(null)} />
+                    </div>}
+                </fieldset>
             </div>
         </VrWindow>
     );
@@ -117,12 +141,16 @@ const DeviceSettings = ({ t, openPicker }) => {
     const { currentMicVolume } = useStore_MicVolume();
     const { currentSpeakerVolume } = useStore_SpeakerVolume();
     // 機器の選択はデスクトップと同じく、自動選択がONの間 (と切り替え中) は押せない
-    const deviceRow = (label, list, selected, setSelected, auto_select) => (
-        <SelectRow label={label} value={list.data?.[selected.data] ?? selected.data}
-            is_pending={selected.state === "pending"}
-            is_disabled={auto_select.data === true || auto_select.state === "pending"}
-            onOpen={() => openPicker(label, toOptions(list.data), selected.data, setSelected)} />
-    );
+    const deviceRow = (label, list, selected, setSelected, auto_select) => {
+        const options = toOptions(list.data);
+        return (
+            <SelectRow label={label} value={list.data?.[selected.data] ?? selected.data}
+                is_pending={selected.state === "pending" || auto_select.state === "pending" || list.state === "pending"}
+                is_disabled={auto_select.data === true || options.length === 0}
+                disabled_reason={t(auto_select.data === true ? "vr_panel.settings.auto_device" : "vr_panel.settings.unavailable")}
+                onOpen={() => openPicker(label, options, selected.data, setSelected)} />
+        );
+    };
     return (
         <>
             <SectionLabel label={t("config_page.device.mic_host_device.label")} />
@@ -154,15 +182,49 @@ const DeviceSettings = ({ t, openPicker }) => {
     );
 };
 
-// UIの言語。デスクトップの設定画面と同じ (VR UIの表示にも使う)
+// UIの言語・フォントはデスクトップと共通 (VR UIの表示にも使う)
 const AppearanceSettings = ({ t, openPicker }) => {
-    const { currentUiLanguage, setUiLanguage } = useAppearance();
+    const { currentUiLanguage, setUiLanguage, currentSelectedFontFamily, setSelectedFontFamily } = useAppearance();
+    const { currentSelectableFontFamilyList } = useStore_SelectableFontFamilyList();
     const languages = ui_configs.selectable_ui_languages;
     const label = t("config_page.appearance.ui_language.label");
+    const font_label = t("config_page.appearance.font_family.label");
+    const fonts = toOptions(currentSelectableFontFamilyList.data);
     return (
-        <SelectRow label={label} value={languages.find(l => l.id === currentUiLanguage.data)?.label ?? currentUiLanguage.data}
-            is_pending={currentUiLanguage.state === "pending"}
-            onOpen={() => openPicker(label, languages, currentUiLanguage.data, setUiLanguage)} />
+        <>
+            <SelectRow label={label} value={languages.find(l => l.id === currentUiLanguage.data)?.label ?? currentUiLanguage.data}
+                is_pending={currentUiLanguage.state === "pending"}
+                onOpen={() => openPicker(label, languages, currentUiLanguage.data, setUiLanguage)} />
+            <SelectRow label={font_label} value={currentSelectedFontFamily.data}
+                is_pending={currentSelectedFontFamily.state === "pending" || currentSelectableFontFamilyList.state === "pending"}
+                is_disabled={fonts.length === 0} disabled_reason={t("vr_panel.settings.fonts_unavailable")}
+                onOpen={() => openPicker(font_label, fonts, currentSelectedFontFamily.data, setSelectedFontFamily)} />
+        </>
+    );
+};
+
+// デバイス/精度のどちらかが切替中なら両方ロックする。デバイス変更後の精度はバックエンドが更新する。
+const ComputeSettings = ({ t, openPicker, device_list, device, setDevice, compute_type, setComputeType, is_pending: is_parent_pending = false }) => {
+    const { device_labels, selected_device_id, compute_type_labels } = buildComputeDeviceOptions(device_list.data, device.data, t);
+    const devices = toOptions(device_labels);
+    const types = toOptions(compute_type_labels);
+    const device_label = t("config_page.common.compute_device.label_device");
+    const type_label = t("config_page.common.compute_device.label_type");
+    const is_pending = is_parent_pending || device.state === "pending" || compute_type.state === "pending" || device_list.state === "pending";
+    const selected_device_label = device_labels[selected_device_id] ?? device.data?.device_name;
+    const selected_type_label = compute_type_labels[compute_type.data] ?? compute_type.data;
+    return (
+        <Disclosure label={t("vr_panel.settings.processing")} summary={[selected_device_label, selected_type_label].filter(Boolean).join(" · ")} is_pending={is_pending}>
+            <SelectRow label={device_label} value={selected_device_label}
+                is_pending={is_pending} is_disabled={devices.length === 0} disabled_reason={t("vr_panel.settings.devices_unavailable")}
+                onOpen={() => openPicker(device_label, devices, String(selected_device_id), (id) => {
+                    const selected = device_list.data?.[id];
+                    if (selected) setDevice(selected);
+                })} />
+            <SelectRow label={type_label} value={selected_type_label}
+                is_pending={is_pending} is_disabled={types.length === 0} disabled_reason={t("vr_panel.settings.types_unavailable")}
+                onOpen={() => openPicker(type_label, types, compute_type.data, setComputeType)} />
+        </Disclosure>
     );
 };
 
@@ -170,6 +232,10 @@ const TranscriptionSettings = ({ t, openPicker }) => {
     const tr = useTranscription();
     const engines = [{ id: "Google", label: "Google" }, { id: "Whisper", label: "Whisper" }];
     const engine_label = t("config_page.transcription.select_transcription_engine.label");
+    const whisper_label = t("config_page.transcription.whisper_weight_type.label");
+    const weights = (tr.currentWhisperWeightTypeStatus.data ?? [])
+        .filter(w => w.is_downloaded)
+        .map(w => ({ id: w.id, label: `${w.id} (${w.capacity})` }));
     // 区切りの秒数は「記録の上限 ≦ 無音で区切る秒数」でないとバックエンドが受け付けない
     const timeoutRows = (prefix, max_words) => {
         const record = tr[`current${prefix}RecordTimeout`];
@@ -192,8 +258,23 @@ const TranscriptionSettings = ({ t, openPicker }) => {
             <SelectRow label={engine_label} value={tr.currentSelectedTranscriptionEngine.data}
                 is_pending={tr.currentSelectedTranscriptionEngine.state === "pending"}
                 onOpen={() => openPicker(engine_label, engines, tr.currentSelectedTranscriptionEngine.data, tr.setSelectedTranscriptionEngine)} />
+            {tr.currentSelectedTranscriptionEngine.data === "Whisper" && (
+                <SelectRow label={whisper_label} value={tr.currentSelectedWhisperWeightType.data}
+                    is_pending={tr.currentSelectedWhisperWeightType.state === "pending" || tr.currentSelectedTranscriptionEngine.state === "pending"}
+                    is_disabled={weights.length === 0} disabled_reason={t("vr_panel.settings.prepare_model")}
+                    onOpen={() => openPicker(whisper_label, weights, tr.currentSelectedWhisperWeightType.data, tr.setSelectedWhisperWeightType)} />
+            )}
             {timeoutRows("Mic", 30)}
-            {timeoutRows("Speaker", 60)}
+            {tr.currentSelectedTranscriptionEngine.data === "Whisper" && (
+                <ComputeSettings t={t} openPicker={openPicker}
+                    device_list={tr.currentSelectableTranscriptionComputeDeviceList}
+                    device={tr.currentSelectedTranscriptionComputeDevice} setDevice={tr.setSelectedTranscriptionComputeDevice}
+                    compute_type={tr.currentSelectedTranscriptionComputeType} setComputeType={tr.setSelectedTranscriptionComputeType}
+                    is_pending={tr.currentSelectedTranscriptionEngine.state === "pending"} />
+            )}
+            <Disclosure label={t("config_page.transcription.section_label_speaker")} summary={t("vr_panel.settings.speaker_adjustments")}>
+                {timeoutRows("Speaker", 60)}
+            </Disclosure>
         </>
     );
 };
@@ -201,7 +282,7 @@ const TranscriptionSettings = ({ t, openPicker }) => {
 const TranslationSettings = ({ t, openPicker }) => {
     const tl = useTranslation();
     // CTranslate2 はダウンロード済みのモデルだけ選べる (ダウンロードはデスクトップで行う)
-    const weights = tl.currentCTranslate2WeightTypeStatus.data
+    const weights = (tl.currentCTranslate2WeightTypeStatus.data ?? [])
         .filter(w => w.is_downloaded)
         .map(w => ({ id: w.id, label: `${w.id} (${w.capacity})` }));
     const ct2_label = t("config_page.translation.ctranslate2_weight_type.label", { ctranslate2: "CTranslate2" });
@@ -209,7 +290,12 @@ const TranslationSettings = ({ t, openPicker }) => {
     return (
         <>
             <SelectRow label={ct2_label} value={selected_weight.data} is_pending={selected_weight.state === "pending"}
+                is_disabled={weights.length === 0} disabled_reason={t("vr_panel.settings.prepare_model")}
                 onOpen={() => openPicker(ct2_label, weights, selected_weight.data, tl.setSelectedCTranslate2WeightType)} />
+            <ComputeSettings t={t} openPicker={openPicker}
+                device_list={tl.currentSelectableTranslationComputeDeviceList}
+                device={tl.currentSelectedTranslationComputeDevice} setDevice={tl.setSelectedTranslationComputeDevice}
+                compute_type={tl.currentSelectedTranslationComputeType} setComputeType={tl.setSelectedTranslationComputeType} />
             {AI_PROVIDERS.map(({ key, i18n }) => {
                 const options = toOptions(tl[`currentSelectable${key}ModelList`].data);
                 if (options.length === 0) return null;
@@ -230,14 +316,17 @@ const VrSettings = ({ t }) => {
     // VR UI 自体のON/OFFはここに置かない (VRの中で消すと戻せなくなる。デスクトップの設定で行う)
     return (
         <>
+            <SectionLabel label={t("vr_panel.settings.ui_log")} />
+            <StepperRow label={t("vr_panel.log_opacity")} variable={opacity} setValue={vr.setOverlayVrPanelOpacity}
+                min={0.2} max={1.0} step={0.1} format={(v) => `${Math.round(v * 100)}%`} />
+            <SectionLabel label={t("vr_panel.settings.subtitle_overlay")} />
             <ToggleRow label={t("vr_panel.overlay_small_log")} variable={vr.currentIsEnabledOverlaySmallLog}
                 onToggle={vr.toggleIsEnabledOverlaySmallLog} />
             <ToggleRow label={t("vr_panel.overlay_large_log")} variable={vr.currentIsEnabledOverlayLargeLog}
                 onToggle={vr.toggleIsEnabledOverlayLargeLog} />
             <ToggleRow label={t("config_page.vr.overlay_show_only_translated_messages.label")}
                 variable={vr.currentOverlayShowOnlyTranslatedMessages} onToggle={vr.toggleOverlayShowOnlyTranslatedMessages} />
-            <StepperRow label={t("vr_panel.log_opacity")} variable={opacity} setValue={vr.setOverlayVrPanelOpacity}
-                min={0.2} max={1.0} step={0.1} format={(v) => `${Math.round(v * 100)}%`} />
+
             <SectionLabel label={t("vr_panel.launcher")} />
             <SegmentRow label={t("vr_panel.launcher_hand")} sub={t("vr_panel.launcher_hand_desc")}
                 variable={vr.currentOverlayVrLauncherHand} onSelect={vr.setOverlayVrLauncherHand}
@@ -267,7 +356,7 @@ const OthersSettings = ({ t }) => {
             <ToggleRow label={t("config_page.others.vrc_mic_mute_sync.label")}
                 variable={o.currentEnableVrcMicMuteSync} onToggle={o.toggleEnableVrcMicMuteSync}
                 is_disabled={is_osc_unavailable}
-                sub={is_osc_unavailable ? t("config_page.common.warning_labels.unable_to_use_osc_query") : null} />
+                disabled_reason={t("config_page.common.warning_labels.unable_to_use_osc_query")} />
             {toggle("ConvertMessageToRomaji", "convert_message_to_romaji")}
             {toggle("ConvertMessageToHiragana", "convert_message_to_hiragana")}
         </>
@@ -286,9 +375,9 @@ const OcrSettings = ({ t, openPicker }) => {
                 is_pending={language.state === "pending"}
                 onOpen={() => openPicker(language_label, toOptions(languages), language.data, ocr.setOcrSourceLanguage)} />
             <StepperRow label={t("config_page.ocr.poll_interval_ms.label")} variable={ocr.currentOcrPollIntervalMs}
-                setValue={ocr.setOcrPollIntervalMs} min={100} max={5000} step={100} format={(v) => `${v} ms`} />
+                setValue={ocr.setOcrPollIntervalMs} min={100} max={5000} step={50} format={(v) => `${v} ms`} />
             <StepperRow label={t("config_page.ocr.min_confidence.label")} variable={ocr.currentOcrMinConfidence}
-                setValue={ocr.setOcrMinConfidence} min={0.1} max={0.99} step={0.05} format={(v) => v.toFixed(2)} />
+                setValue={ocr.setOcrMinConfidence} min={0.1} max={0.99} step={0.01} format={(v) => v.toFixed(2)} />
             <StepperRow label={t("config_page.ocr.bubble_min_text_length.label")} variable={ocr.currentOcrBubbleMinTextLength}
                 setValue={ocr.setOcrBubbleMinTextLength} min={1} max={50} step={1} />
         </>

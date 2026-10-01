@@ -34,3 +34,4 @@
         color: var(--dark_200_color);
     }
 }
+.swap_button_wrapper[aria-disabled="true"] { opacity: .55; cursor: wait; }

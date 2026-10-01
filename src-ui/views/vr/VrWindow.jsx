@@ -12,14 +12,14 @@ import styles from "./VrWindow.module.scss";
 // is_grab_locked: 操作バーのロック中 (掴めない)。タイトルバーに錠と「ロック中」を出す
 // is_resizable: 角を掴んで大きさを変えられる (ログ)。指している間だけ角に取っ手を出す。
 // 当たり判定と大きさの変更は Python 側 (models/overlay/overlay.py panelCornerAt)。右上は閉じるボタンなので出さない
-export const VrWindow = ({ Icon, title, onClose, is_lockable = true, is_grab_locked = false, is_resizable = false, children }) => {
-    const { t } = useI18n();
+export const VrWindow = ({ Icon, title, onClose, close_label, is_lockable = true, is_grab_locked = false, is_resizable = false, children }) => {
+    const { t, i18n } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
 
     return (
-        <div className={styles.window} data-vr-hoverable={is_resizable ? "" : undefined}>
+        <div className={styles.window} lang={i18n.resolvedLanguage || i18n.language || "en"} data-vr-hoverable={is_resizable ? "" : undefined}>
             <div className={styles.title_bar}>
-                <Icon className={styles.title_icon} />
+                <Icon className={styles.title_icon} aria-hidden="true" />
                 <p className={styles.title}>{title}</p>
                 {is_grab_locked && (
                     <span className={styles.grab_locked}>
@@ -29,8 +29,8 @@ export const VrWindow = ({ Icon, title, onClose, is_lockable = true, is_grab_loc
                         {t("vr_panel.locked")}
                     </span>
                 )}
-                <button className={styles.close_button} onClick={onClose}>
-                    <XMarkSvg className={styles.close_icon} />
+                <button className={styles.close_button} onClick={onClose} aria-label={close_label ?? t("common.close_button_label")}>
+                    <XMarkSvg className={styles.close_icon} aria-hidden="true" />
                 </button>
             </div>
             <div className={styles.body}>
