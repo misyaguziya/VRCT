@@ -2356,7 +2356,7 @@ class Model:
     def setVrPanelEnabled(self, enabled: bool) -> None:
         """VR UI (ランチャーと各ウィンドウ) を表示するか。OFFの間は撮影もしない。"""
         self.ensure_initialized()
-        self.overlay.vr_panel_enabled = enabled
+        self.overlay.setVrPanelEnabled(enabled)
 
     def setVrPanelLocked(self, locked: bool) -> None:
         """VR UIのログウィンドウを掴めなくする (操作バーのロック)。"""

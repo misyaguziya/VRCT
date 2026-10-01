@@ -1257,10 +1257,10 @@ class PanelStreamTest(unittest.TestCase):
         with patch("models.overlay.overlay.errorLogging"):
             self.overlay.updatePanel()
         self.assertTrue(self.overlay.stream_unavailable)
-        opengl = MagicMock()
-        with patch.dict("sys.modules", {"glfw": MagicMock(), "OpenGL": opengl, "OpenGL.GL": opengl.GL}):
-            self.overlay.initPanelTexture()  # OFF→ON
-        self.overlay.panel_last_capture = 0.0
+        self.wc.findWindow.return_value = 123
+        self.overlay.setVrPanelEnabled(False)
+        self.overlay.setVrPanelEnabled(True)
+        self.overlay.applyVrPanelEnabled()
         self.overlay.updatePanel()
         self.assertIs(self.overlay.panel_stream, self.stream)
 

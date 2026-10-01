@@ -5,6 +5,7 @@ import sys
 import time
 import traceback
 from psutil import process_iter
+from queue import Empty, Queue
 from threading import Lock, Thread, get_ident
 from types import SimpleNamespace
 from typing import Any, Callable, Dict, Optional, Sequence
@@ -672,6 +673,8 @@ class Overlay:
         # VR UI 全体のON/OFF (設定 OVERLAY_VR_PANEL)。OFFの間はランチャーも含めて隠し、撮影しない。
         # 字幕のオーバーレイだけが動いているときに False になる
         self.vr_panel_enabled = True
+        # OFF/ON の順序を残し、撮影の復旧はオーバーレイスレッドで行う。
+        self.panel_enabled_requests: Queue[bool] = Queue()
         # ログウィンドウを見失ったとき用。VR画面が呼び戻しを頼む (どのスレッドからでもよい) と、
         # オーバーレイのスレッドが頭の正面へ置き直す。見えなくなった・見えるようになったときに
         # panel_out_of_view_callback(bool) で知らせ、ランチャーのボタンを「呼び戻す」に変える
@@ -973,6 +976,45 @@ class Overlay:
         except Exception:
             errorLogging()
         self.gl = None
+
+    def setVrPanelEnabled(self, enabled: bool) -> None:
+        """VR UI の有効状態を要求する。短い OFF/ON も所有スレッドで順番に反映する。"""
+        self.panel_enabled_requests.put(enabled)
+
+    def applyVrPanelEnabled(self) -> None:
+        """有効状態を反映し、再有効化なら撮影だけを復旧する (オーバーレイスレッド)。"""
+        restart_capture = False
+        while True:
+            try:
+                enabled = self.panel_enabled_requests.get_nowait()
+            except Empty:
+                break
+            if enabled and not self.vr_panel_enabled:
+                restart_capture = True
+            self.vr_panel_enabled = enabled
+        if not restart_capture or not self.vr_panel_enabled:
+            return
+
+        # 字幕が ON の間は Overlay 全体を再初期化しないため、撮影の停止/失敗状態をここで解除する。
+        # GL テクスチャと SteamVR のハンドルは維持し、古い WebView の撮影結果は使わない。
+        self.closePanelStream()
+        self.capture_job = None
+        self.panel_hwnd = None
+        self.panel_last_find = 0.0
+        self.panel_last_capture = 0.0
+        self.window_fitted_layout = None
+        self.window_size = None
+        self.panel_stopped = False
+        self.panel_errors = 0
+        self.panel_error = None
+        self.stream_unavailable = False
+        self.panel_last_raw = None
+        now = time.monotonic()
+        self.panel_last_change = now
+        if self.layout_applied is not self.layout:
+            # OFF の間の経過時間だけで、再開直後にリサイズを取り消さない。
+            self.layout_requested_at = max(self.layout_requested_at, now)
+            self.layout_retried = False
 
     def updatePanel(self) -> None:
         """VRパネルのウィンドウを撮影してオーバーレイへ転送する。"""
@@ -2234,6 +2276,7 @@ class Overlay:
         Thread(target=self.watchStall, args=(sys._current_frames, get_ident()), daemon=True).start()
         while self.checkActive() is True and self.loop is True and not self.start_cancelled:
             startTime = time.monotonic()
+            self.applyVrPanelEnabled()
             self.markStep("update")
             for size in self.settings.keys():
                 self.update(size)
