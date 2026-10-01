@@ -171,6 +171,20 @@ _PANEL_CAPTURE_INTERVAL_SEC = 1 / 20
 _PANEL_IDLE_CAPTURE_INTERVAL_SEC = 1 / 4
 _PANEL_ACTIVE_HOLD_SEC = 1.0
 _PANEL_FIND_INTERVAL_SEC = 2.0
+# コントローラの先端の向きが分からなかったとき、もう一度調べるまでの秒数 (それまでは本体の向きで指す)
+_TIP_RETRY_SEC = 5.0
+# レーザーの上下の向きの調整 (度)。コントローラの先端の向き (tipOffset) からこれだけ上に向ける。
+# 負の値で下に向く。0 で先端の向きそのまま、Quest のコントローラでは 37.4 で本体の向き (直す前) と同じ
+_LASER_PITCH_UP_DEG = 12
+
+
+def laserTilt(degrees: float) -> np.ndarray:
+    """先端の姿勢から、レーザーを上に degrees 度向ける回転 (先端の X 軸まわり)。"""
+    angle = np.radians(degrees)
+    tilt = np.eye(4)
+    tilt[1, 1], tilt[1, 2] = np.cos(angle), -np.sin(angle)
+    tilt[2, 1], tilt[2, 2] = np.sin(angle), np.cos(angle)
+    return tilt
 # VR画面の撮影・転送でこの回数続けて失敗したら、ログを埋めないよう撮影をやめる (1回の失敗ではやめない)
 _PANEL_ERROR_LIMIT = 30
 # 各領域の角丸の半径 (論理px)。撮影した画像の領域の外と四隅を透明にする
@@ -586,6 +600,8 @@ class Overlay:
         self.panel_hwnd: Optional[int] = None
         self.panel_last_find: float = 0.0
         self.panel_last_capture: float = 0.0
+        # コントローラごとの先端 (render model の "tip") の、本体の姿勢から見た姿勢と、調べ直す時刻 (tipOffset)
+        self.tip_offsets: Dict[int, tuple] = {}
         # 撮影を頼んだ使い捨てのスレッドの結果 (startCaptureJob)。同時に頼むのは1つだけ
         self.capture_job: Optional[SimpleNamespace] = None
         # VR画面を撮り続ける画面キャプチャ (window_capture.WindowStream)。使えなければ PrintWindow で撮る
@@ -675,6 +691,7 @@ class Overlay:
             self.system = openvr_session.acquire(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
+            self.tip_offsets = {}
             self.handle = {}
             self.vr_windows_hidden = set()
             for i, size in enumerate(self.settings.keys()):
@@ -1519,6 +1536,33 @@ class Overlay:
         for s in self.settings.keys():
             self.overlay.setOverlayColor(self.handle[s], *(color if s == size else _COLOR_NORMAL))
 
+    def tipOffset(self, index: int, now: float) -> np.ndarray:
+        """コントローラの先端 (render model の "tip") の、本体の姿勢から見た姿勢。
+
+        指す向きは本体の姿勢の -Z ではなく先端の -Z。Quest のコントローラでは先端が本体より 37° 下を
+        向いていて、本体の -Z で指すとレーザーが上にずれて見えた (実機)。分からなければ本体の姿勢のまま指し、
+        _TIP_RETRY_SEC 後にもう一度調べる (電源を入れた直後などは分からないことがある)。
+        """
+        cached = self.tip_offsets.get(index)
+        if cached is not None and (cached[1] is None or now < cached[1]):
+            return cached[0]
+        offset, retry_at = np.eye(4), now + _TIP_RETRY_SEC
+        try:
+            name = self.overlay_system.getStringTrackedDeviceProperty(index, openvr.Prop_RenderModelName_String)
+            ok, state = self.overlay_system.getControllerState(index)
+            if name and ok:
+                found, component = openvr.VRRenderModels().getComponentState(name, "tip", state, openvr.RenderModel_ControllerMode_State_t())
+                if found:
+                    m = component.mTrackingToComponentLocal
+                    offset = utils.toHomogeneous(np.array([[m[i][j] for j in range(4)] for i in range(3)]))
+                    retry_at = None
+        except Exception:
+            pass  # 先端が無いコントローラ・まだ繋がっていない: 本体の姿勢で指す
+        if cached is None and retry_at is not None:
+            printLog("overlay: コントローラの先端の向きが分からないので、本体の向きで指します", {"device": index})
+        self.tip_offsets[index] = (offset, retry_at)
+        return offset
+
     def updateGrab(self) -> None:
         """グリップ長押しでオーバーレイを掴み、離したら位置を確定する。
 
@@ -1546,16 +1590,22 @@ class Overlay:
             return state is not None and bool(state.ulButtonPressed & _GRIP_MASK)
 
         now = time.monotonic()
+
+        def rayOf(hand: int) -> Optional[np.ndarray]:
+            """レーザーを出す姿勢 (コントローラの先端)。掴んだウィンドウもこの姿勢に付いて動く。"""
+            pose = poseOf(hand)
+            return None if pose is None else pose @ self.tipOffset(hand, now) @ laserTilt(_LASER_PITCH_UP_DEG)
+
         self.applyVrWindows(poseOf)
         self.updateLauncherVisibility(poseOf, now)
 
         if self.resizing is not None:
-            self.updateResize(poseOf, controllerState, now)
+            self.updateResize(poseOf, rayOf, controllerState, now)
             return
 
         if self.grabbing is not None:
             size, hand, hand_to_overlay = self.grabbing
-            hand_pose = poseOf(hand)
+            hand_pose = rayOf(hand)
             _, tracker_index = self.getTracker(self.settings[size]["tracker"])
             tracker_pose = poseOf(tracker_index)
             if hand_pose is None or tracker_pose is None:
@@ -1638,7 +1688,7 @@ class Overlay:
         pointing_launcher = False
         for role in (openvr.TrackedControllerRole_LeftHand, openvr.TrackedControllerRole_RightHand):
             hand = self.overlay_system.getTrackedDeviceIndexForControllerRole(role)
-            hand_pose = poseOf(hand)
+            hand_pose = rayOf(hand)
             grip = hand_pose is not None and gripPressed(hand)
             size, results = (None, None) if hand_pose is None else self.pointingOverlay(hand_pose, poseOf)
             toolbar = self.intersectToolbar(hand_pose) if hand_pose is not None else None
@@ -1988,10 +2038,11 @@ class Overlay:
         self.notifyPointer(None)
         self.setHighlight(PANEL, _COLOR_GRABBING)
 
-    def updateResize(self, poseOf: Callable[[int], Optional[np.ndarray]], controllerState: Callable[[int], Optional[Any]], now: float) -> None:
+    def updateResize(self, poseOf: Callable[[int], Optional[np.ndarray]], rayOf: Callable[[int], Optional[np.ndarray]],
+                     controllerState: Callable[[int], Optional[Any]], now: float) -> None:
         """掴んだ角をレーザーの先に合わせる。中身は描き直さず、新しい大きさの枠だけを動かす。"""
         r = self.resizing
-        hand_pose = poseOf(r["hand"])
+        hand_pose = rayOf(r["hand"])
         state = controllerState(r["hand"])
         if hand_pose is None or state is None or not (state.ulButtonPressed & _GRIP_MASK):
             self.finishResize(poseOf)
