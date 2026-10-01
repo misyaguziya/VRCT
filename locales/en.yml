@@ -364,9 +364,6 @@ config_page:
         capture_target: "Capture target"
         language: "Language"
         performance: "Performance"
-        enable_ocr_capture:
-            label: "Enable VRChat chat transcribe"
-            desc: "Starts a background loop that captures the VRChat window (or the HMD mirror when SteamVR is running) and translates detected chat bubbles."
         window_title:
             label: "Window name"
             desc: "Substring match (case-insensitive) against visible window titles. Change this if you run a client whose window isn't titled 'VRChat' (e.g. a modified launcher)."

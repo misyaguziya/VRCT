@@ -4,6 +4,7 @@ import {
     useStore_TranslationStatus,
     useStore_TranscriptionSendStatus,
     useStore_TranscriptionReceiveStatus,
+    useStore_OcrCaptureStatus,
     useStore_ForegroundStatus,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
@@ -26,6 +27,11 @@ export const useMainFunction = () => {
         updateTranscriptionReceiveStatus,
         pendingTranscriptionReceiveStatus,
     } = useStore_TranscriptionReceiveStatus();
+    const {
+        currentOcrCaptureStatus,
+        updateOcrCaptureStatus,
+        pendingOcrCaptureStatus,
+    } = useStore_OcrCaptureStatus();
     const {
         currentForegroundStatus,
         updateForegroundStatus,
@@ -70,6 +76,9 @@ export const useMainFunction = () => {
     const { setFn: setTranscriptionReceive, toggleFn: toggleTranscriptionReceive } = createTogglePair(
         pendingTranscriptionReceiveStatus, updateTranscriptionReceiveStatus, "transcription_receive"
     );
+    const { setFn: setOcrCapture, toggleFn: toggleOcrCapture } = createTogglePair(
+        pendingOcrCaptureStatus, updateOcrCaptureStatus, "ocr_capture"
+    );
 
 
     const toggleForeground = async () => {
@@ -103,6 +112,12 @@ export const useMainFunction = () => {
         updateTranscriptionReceiveStatus,
         setTranscriptionReceive,
         pendingTranscriptionReceiveStatus, // Exception.(It shouldn't be used in other function, normally.)
+
+        currentOcrCaptureStatus,
+        toggleOcrCapture,
+        updateOcrCaptureStatus,
+        setOcrCapture,
+        pendingOcrCaptureStatus, // Exception.(It shouldn't be used in other function, normally.)
 
         currentForegroundStatus,
         toggleForeground,

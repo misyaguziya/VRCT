@@ -34,7 +34,7 @@ export const _useBackendErrorHandling = () => {
         updateSpeakerMaxWords,
     } = useTranscription();
 
-    const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus } = useMainFunction();
+    const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus, updateOcrCaptureStatus } = useMainFunction();
 
     const {
         updateDeepLAuthKey,
@@ -130,6 +130,29 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "TRANSCRIPTION_RECEIVE_DISABLED_VRAM":
                 updateTranscriptionReceiveStatus(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+
+            // ============================================================================
+            // OCR関連エラー (OCR_*)  開始できずバックエンドより強制的にOFFへ戻る
+            // ============================================================================
+            case "OCR_DISABLED_ENGINE_UNAVAILABLE":
+                updateOcrCaptureStatus(data);
+                // OCRエンジン、または必要なファイルが見つからないため
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OCR_DISABLED_MODEL_LOAD_FAILED":
+                updateOcrCaptureStatus(data);
+                // モデルの読み込みに失敗したため
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OCR_DISABLED_UNSUPPORTED_LANGUAGE":
+                updateOcrCaptureStatus(data);
+                // 選択中の読み取り言語には対応していないため
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OCR_DISABLED_UNKNOWN":
+                updateOcrCaptureStatus(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
 

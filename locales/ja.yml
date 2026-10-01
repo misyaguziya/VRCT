@@ -364,9 +364,6 @@ config_page:
         capture_target: "キャプチャ対象"
         language: "言語"
         performance: "パフォーマンス"
-        enable_ocr_capture:
-            label: "VRChatチャット読み取りを有効にする"
-            desc: "VRChatのウィンドウ（SteamVR起動中はHMDのミラー映像）をキャプチャし、検出したチャット吹き出しを翻訳するバックグラウンド処理を開始します。"
         window_title:
             label: "ウィンドウ名"
             desc: "表示されているウィンドウタイトルとの部分一致（大文字小文字を区別しません）。「VRChat」というタイトルではないクライアント（改造版ランチャー等）を使用している場合はここを変更してください。"
