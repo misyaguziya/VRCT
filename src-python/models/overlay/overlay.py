@@ -43,6 +43,12 @@ _STALL_REPORT_SEC = 2.0
 # 各段階の処理時間の最大をこの秒数ごとに確かめ、遅い段階があればログに出す
 _STEP_REPORT_SEC = 10.0
 _STEP_SLOW_SEC = 0.05
+# 1秒あたりの処理時間の合計がこの ms 以上のときだけ内訳を出す
+_STEP_BREAKDOWN_MIN_MS = 50
+# オーバーレイのスレッドの優先度 (Windows の THREAD_PRIORITY_ABOVE_NORMAL)。OCR (onnxruntime の複数スレッド) が
+# 動くと、純粋なメモリのコピーまで数倍に遅れた (実機で 1秒あたり 60〜150ms → 300〜600ms。GIL の切り替えを
+# 短くしても変わらなかった)。CPU の取り合いで待たされると見て、少しだけ先に動かす。最大の優先度にはしない
+_THREAD_PRIORITY_ABOVE_NORMAL = 1
 
 # オーバーレイを指したままグリップを押した瞬間に掴む。グリップはVRChatにも
 # 同時に届く(オーバーレイ側で入力を奪えない)ことは既知の制約。
@@ -231,6 +237,19 @@ def uvToPixel(u: float, v: float, width: int, height: int) -> tuple:
     x = u * width
     y = height / 2 - (v - 0.5) * width
     return (min(max(int(x), 0), width - 1), min(max(int(y), 0), height - 1))
+
+
+def raiseThreadPriority() -> None:
+    """このスレッドを通常より少し高い優先度にする (Windows のみ。失敗しても何もしない)。"""
+    if os.name != "nt":
+        return
+    try:
+        kernel32 = ctypes.windll.kernel32
+        kernel32.GetCurrentThread.restype = ctypes.c_void_p
+        kernel32.SetThreadPriority.argtypes = [ctypes.c_void_p, ctypes.c_int]
+        kernel32.SetThreadPriority(kernel32.GetCurrentThread(), _THREAD_PRIORITY_ABOVE_NORMAL)
+    except Exception:
+        errorLogging()
 
 
 def regionRect(size: str, image_size: tuple, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> tuple:
@@ -635,6 +654,8 @@ class Overlay:
         # 今の処理の段階とその開始時刻、段階ごとの処理時間の最大 (markStep。止まった・遅い段階をログに出す)
         self.loop_step: tuple = ("idle", time.monotonic())
         self.step_max: Dict[str, float] = {}
+        self.step_total: Dict[str, float] = {}  # 段階ごとの合計時間 (内訳の記録用)
+        self.step_loops = 0
         self.step_reported_at = time.monotonic()
         # 撮影が続けて失敗したので撮影をやめた (OpenGL の環境は、接続を閉じるまで残す)
         self.panel_stopped = False
@@ -652,6 +673,7 @@ class Overlay:
         self.tooltip_shown = False  # 専用 handle を表示している (隠すとき、すでに隠れていれば OpenVR を呼ばない)
         self.tooltip_manipulating = False
         self.tooltip_handle: int | None = None
+        self.vr_resources_tried = False  # VR UI 用の追加のオーバーレイと OpenGL を作ろうとしたか (init ごとに1回)
         self.layout_callback: Optional[Callable[[Dict[str, Any]], None]] = None
         # VR画面が描き終えた並びのログの大きさ (VR画面から届く)。これと撮影の縦横比が合ってから表示を切り替える。
         # 並びはログの大きさだけで決まる (全体の大きさは同じでもログの大きさが違うことがあるので、ログの大きさで見る)
@@ -728,26 +750,10 @@ class Overlay:
                 raw = img.tobytes()
                 self.overlay.setOverlayRaw(handle, (ctypes.c_char * len(raw)).from_buffer_copy(raw), img.size[0], img.size[1], 4)
                 self.pointer_handles[kind] = handle
-            if PANEL in self.settings:
-                self.toolbar_handle = self.overlay.createOverlay("VRCT_toolbar", "VRCT_toolbar")
-                self.overlay.setOverlayWidthInMeters(self.toolbar_handle, self.regionWidthM(TOOLBAR))
-                self.overlay.hideOverlay(self.toolbar_handle)
-                self.toolbar_visible = False
-                self.toolbar_alpha, self.toolbar_faded_at = 0.0, None
-                self.ghost_handle = self.overlay.createOverlay("VRCT_resize_ghost", "VRCT_resize_ghost")
-                self.overlay.setOverlaySortOrder(self.ghost_handle, 50)
-                self.overlay.hideOverlay(self.ghost_handle)
-                self.ghost_key = None
-            if any(size in self.settings for size in (LAUNCHER, PANEL)):
-                self.tooltip_handle = self.overlay.createOverlay("VRCT_tooltip", "VRCT_tooltip")
-                self.overlay.setOverlaySortOrder(self.tooltip_handle, 70)
-                self.overlay.hideOverlay(self.tooltip_handle)
-            if any(size in self.settings for size in VR_REGIONS):
-                try:
-                    self.initPanelTexture()
-                except Exception:
-                    self.shutdownPanelTexture()
-                    errorLogging()
+            # VR UI 用の追加のオーバーレイと OpenGL は、VR UI が ON のときだけ作る (字幕だけの利用者に
+            # GL コンテキストの作成や GPU の起動を負わせない)。OFF→ON のときは applyVrPanelEnabled が作る
+            self.vr_resources_tried = False
+            self.applyVrPanelEnabled()  # 溜まっている ON/OFF の要求を先に反映する。ON なら initVrResources が作る
 
             # 手首を見たときだけ出すなら、見るまでは出さない (起動直後に一度出てから消えないように)
             self.launcher_shown = not self.launcher_auto_hide
@@ -776,6 +782,32 @@ class Overlay:
         finally:
             # 途中で失敗しても「作っている途中」のままにしない (以後 OFF/ON できなくなる)
             self.init_process = False
+
+    def initVrResources(self) -> None:
+        """VR UI 用の追加のオーバーレイ (操作バー・伸ばす枠・吹き出し) と OpenGL を作る (オーバーレイのスレッドで1回)。"""
+        if self.vr_resources_tried or self.overlay is None:
+            return
+        self.vr_resources_tried = True
+        if PANEL in self.settings:
+            self.toolbar_handle = self.overlay.createOverlay("VRCT_toolbar", "VRCT_toolbar")
+            self.overlay.setOverlayWidthInMeters(self.toolbar_handle, self.regionWidthM(TOOLBAR))
+            self.overlay.hideOverlay(self.toolbar_handle)
+            self.toolbar_visible = False
+            self.toolbar_alpha, self.toolbar_faded_at = 0.0, None
+            self.ghost_handle = self.overlay.createOverlay("VRCT_resize_ghost", "VRCT_resize_ghost")
+            self.overlay.setOverlaySortOrder(self.ghost_handle, 50)
+            self.overlay.hideOverlay(self.ghost_handle)
+            self.ghost_key = None
+        if any(size in self.settings for size in (LAUNCHER, PANEL)):
+            self.tooltip_handle = self.overlay.createOverlay("VRCT_tooltip", "VRCT_tooltip")
+            self.overlay.setOverlaySortOrder(self.tooltip_handle, 70)
+            self.overlay.hideOverlay(self.tooltip_handle)
+        if any(size in self.settings for size in VR_REGIONS):
+            try:
+                self.initPanelTexture()
+            except Exception:
+                self.shutdownPanelTexture()
+                errorLogging()
 
     def updateImage(self, img: Image.Image, size: str) -> None:
         if self.initialized is True:
@@ -1137,6 +1169,8 @@ class Overlay:
             if enabled != self.vr_panel_enabled:
                 self.resetTooltipEpoch()
             self.vr_panel_enabled = enabled
+        if self.vr_panel_enabled:
+            self.initVrResources()  # 初めて ON になったとき (init が VR UI OFF で終わっていた) に作る
         if not restart_capture or not self.vr_panel_enabled:
             return
 
@@ -2450,6 +2484,7 @@ class Overlay:
 
     def mainloop(self) -> None:
         self.loop = True
+        raiseThreadPriority()
         Thread(target=self.watchStall, args=(sys._current_frames, get_ident()), daemon=True).start()
         while self.checkActive() is True and self.loop is True and not self.start_cancelled:
             startTime = time.monotonic()
@@ -2496,8 +2531,12 @@ class Overlay:
         now = time.monotonic()
         previous, started = self.loop_step
         took = now - started
-        if previous != "sleep" and took > self.step_max.get(previous, 0.0):
-            self.step_max[previous] = took
+        if previous != "sleep":
+            if took > self.step_max.get(previous, 0.0):
+                self.step_max[previous] = took
+            self.step_total[previous] = self.step_total.get(previous, 0.0) + took
+        if name == "update":
+            self.step_loops += 1
         self.loop_step = (name, now)
 
     def reportSlowSteps(self) -> None:
@@ -2508,7 +2547,14 @@ class Overlay:
         slow = {name: round(took * 1000) for name, took in self.step_max.items() if took > _STEP_SLOW_SEC}
         if slow:
             printLog("overlay: 処理に時間がかかっています (ms、10秒間の最大)", slow)
+        # 内訳 (1秒あたりの ms)。何もしていない間 (合計が少ない) は出さない。負荷の切り分け用
+        elapsed = now - self.step_reported_at
+        per_second = {name: round(total * 1000 / elapsed) for name, total in self.step_total.items() if total * 1000 / elapsed >= 2}
+        if sum(per_second.values()) >= _STEP_BREAKDOWN_MIN_MS:
+            printLog("overlay: 処理時間の内訳 (ms/秒)", {"loops_per_sec": round(self.step_loops / elapsed, 1), **per_second})
         self.step_max = {}
+        self.step_total = {}
+        self.step_loops = 0
         self.step_reported_at = now
 
     def watchStall(self, current_frames: Callable[[], Dict[int, Any]], thread_id: int) -> None:

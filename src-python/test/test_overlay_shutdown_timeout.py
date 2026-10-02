@@ -270,3 +270,60 @@ class StallReportTest(unittest.TestCase):
         log.assert_called_once()
         self.assertEqual(log.call_args.args[1]["step"], "panel:set_texture")
         self.assertIn("test_stalled_step_is_reported_with_its_stack", log.call_args.args[1]["stack"])
+
+
+class StepBreakdownTest(unittest.TestCase):
+    def test_breakdown_is_logged_per_second_only_when_busy(self):
+        from unittest.mock import patch
+
+        from models.overlay.overlay import Overlay
+
+        overlay = Overlay({})
+        overlay.step_reported_at = 0.0
+        overlay.step_total = {"panel:upload": 5.0, "grab": 1.0, "panel:convert": 0.001}
+        overlay.step_loops = 100
+        with patch("models.overlay.overlay.time.monotonic", return_value=10.0), patch("models.overlay.overlay.printLog") as logged:
+            overlay.reportSlowSteps()
+        data = logged.call_args.args[1]
+        self.assertEqual(data["panel:upload"], 500)  # 5 秒 / 10 秒 = 500 ms/秒
+        self.assertEqual(data["grab"], 100)
+        self.assertEqual(data["loops_per_sec"], 10.0)
+        self.assertNotIn("panel:convert", data)  # 2 ms/秒に満たない段階は出さない
+        overlay.step_reported_at = 0.0
+        overlay.step_total = {"grab": 0.01}
+        with patch("models.overlay.overlay.time.monotonic", return_value=10.0), patch("models.overlay.overlay.printLog") as logged:
+            overlay.reportSlowSteps()
+        logged.assert_not_called()  # 暇なときは出さない
+
+
+class ThreadPriorityTest(unittest.TestCase):
+    def test_mainloop_raises_the_thread_priority(self):
+        from unittest.mock import patch
+
+        from models.overlay.overlay import Overlay
+
+        overlay = Overlay({})
+        overlay.loop = False
+        with patch("models.overlay.overlay.raiseThreadPriority") as raised, patch.object(Overlay, "checkActive", return_value=False),                 patch.object(Overlay, "teardown"), patch.object(Overlay, "notifyPanelOutOfView"), patch("models.overlay.overlay.Thread"):
+            overlay.mainloop()
+        raised.assert_called_once_with()
+
+    @unittest.skipUnless(__import__("os").name == "nt", "Windows only")
+    def test_priority_is_really_raised_and_restored(self):
+        import ctypes
+        import threading
+
+        from models.overlay.overlay import raiseThreadPriority
+
+        result = {}
+
+        def run():
+            kernel32 = ctypes.windll.kernel32
+            kernel32.GetCurrentThread.restype = ctypes.c_void_p
+            raiseThreadPriority()
+            result["priority"] = kernel32.GetThreadPriority(ctypes.c_void_p(kernel32.GetCurrentThread()))
+
+        thread = threading.Thread(target=run)
+        thread.start()
+        thread.join()
+        self.assertEqual(result["priority"], 1)

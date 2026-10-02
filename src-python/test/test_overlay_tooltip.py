@@ -42,6 +42,7 @@ def overlay_fixture():
     overlay.overlay = MagicMock(spec=openvr.IVROverlay)
     overlay.overlay_system = MagicMock()
     overlay.tooltip_handle = 90
+    overlay.vr_resources_tried = True  # OpenGL や追加のオーバーレイは作らない (VrResourcesTest で確かめる)
     overlay.handle = {LAUNCHER: 1, PANEL: 2}
     overlay.gl = {"size": overlay.layout["atlas"], "texture": 10, "vr_texture": object(), "GL": MagicMock()}
     overlay.launcher_interactive = True
@@ -308,3 +309,39 @@ class TooltipReviewFixesTest(unittest.TestCase):
         handles = [c.args[0] for c in overlay.overlay.setOverlayTextureBounds.call_args_list]
         self.assertNotIn(overlay.tooltip_handle, handles)
         self.assertIn(TIP, overlay.layout["regions"])
+
+
+class VrResourcesTest(unittest.TestCase):
+    """VR UI 用の追加のオーバーレイと OpenGL は、VR UI が ON になるまで作らない (字幕だけの利用者のため)。"""
+
+    def _overlay(self):
+        settings = {"tracker": "Playspace", "ui_scaling": 0.88, "x_pos": 0, "y_pos": 0,
+                    "z_pos": 0, "x_rotation": 0, "y_rotation": 0, "z_rotation": 0}
+        overlay = Overlay({LAUNCHER: settings.copy(), PANEL: settings.copy()})
+        overlay.overlay = MagicMock()
+        overlay.vr_resources_tried = False
+        return overlay
+
+    def test_nothing_is_created_while_vr_ui_is_off(self):
+        overlay = self._overlay()
+        overlay.setVrPanelEnabled(False)
+        with patch.object(Overlay, "initPanelTexture") as init_gl:
+            overlay.applyVrPanelEnabled()
+        init_gl.assert_not_called()
+        overlay.overlay.createOverlay.assert_not_called()
+        self.assertIsNone(overlay.toolbar_handle)
+        self.assertIsNone(overlay.tooltip_handle)
+
+    def test_created_once_when_vr_ui_is_turned_on(self):
+        overlay = self._overlay()
+        overlay.setVrPanelEnabled(False)
+        overlay.applyVrPanelEnabled()
+        overlay.overlay.createOverlay.side_effect = [101, 102, 103]
+        overlay.setVrPanelEnabled(True)
+        with patch.object(Overlay, "initPanelTexture") as init_gl:
+            overlay.applyVrPanelEnabled()
+            overlay.setVrPanelEnabled(False)
+            overlay.setVrPanelEnabled(True)
+            overlay.applyVrPanelEnabled()  # 2回目の ON では作り直さない
+        init_gl.assert_called_once()
+        self.assertEqual((overlay.toolbar_handle, overlay.ghost_handle, overlay.tooltip_handle), (101, 102, 103))
