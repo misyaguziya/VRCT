@@ -76,7 +76,10 @@ export const VrPanelSyncController = () => {
         }
     }, [currentIsOpenedConfigPage.data]);
 
+    // VR UI がOFFの間は、全atomの同期も VR画面からの要求の受付もしない (VR画面のウィンドウが無く、
+    // ログが数千件に育ってもメッセージごとに全件を直列化して送ることになるため)。ONになったら全状態を送る
     useEffect(() => {
+        if (!is_vr_panel_enabled) return undefined;
         const entries = atomEntries();
         const unsubscribes = entries.map(([name, atom]) =>
             jotai.sub(atom, () => emitState([[name, atom]]))
@@ -121,7 +124,7 @@ export const VrPanelSyncController = () => {
             unlistenStdout.then(f => f());
             unlistenConfigPage.then(f => f());
         };
-    }, []);
+    }, [is_vr_panel_enabled]);
 
     return null;
 };

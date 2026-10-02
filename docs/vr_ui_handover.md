@@ -644,3 +644,10 @@ WGCのbuffered frameはUIの2rAF完了後でも古い内容を返せるため、
 epochは現在のOverlay生成時にrandom47bitで始まり、その同じinstance内で増加する。現実装のModel／sidecarは一度生成され、OFF/ONとSteamVR再起動ではOverlayを再利用する。将来、同じWebViewを保持してbackend／Overlayを新規生成する復旧処理を追加するなら、UIが保持する最大epochのリセットまたはsession順序の設計も合わせて検討する。現行差分の実バグとは確認されていない。
 
 本書の過去の作業ルールは当時の記録として残している。再開時の実際のユーザー依頼、適用される `AGENTS.md` と現在の実行権限を先に確認する。
+
+## 21. 2026-10-02 以降の決定・変更（Claude Code）
+
+- **ログ本文のデザイン**: ユーザー判断で**既存の `LogBox` のまま**にする（Windows 側の UI と揃えるほうが違和感が少ない）。§18 のHTML改修案は採用しない。
+- **吹き出し**: SteamVR 実機で動作確認済み。VR設定の「操作の吹き出し」で ON/OFF できる（`OVERLAY_VR_TOOLTIP`、既定ON、`8f4259d3`）。
+- **VRからの言語変更**: Tauri の emit はオブジェクトのキーを辞書順に並び替えるため、言語変更の stale 判定を順序に依存しない比較にし（`sameSnapshot`）、VR へ渡す状態は `vrPanelWire.js` で挿入順を保つ形にした（`36947061`）。VR⇔メインで値を比較・列挙する処理を足すときは、この往復を通すテストを書くこと。
+- **ログのリサイズ後の重さ**: 実使用では影響なし。再発したら §7 の調査（`grab:ghost` / `grab:finish_resize` の記録）を使う。
