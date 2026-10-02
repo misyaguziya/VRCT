@@ -468,6 +468,8 @@ vr_panel:
     launcher_hand_desc: "用另一只手的激光点击"
     launcher_auto_hide: "仅在看手腕时显示"
     launcher_auto_hide_desc: "仅在把手腕转向脸部时出现"
+    tooltip_enabled: "按钮提示气泡"
+    tooltip_enabled_desc: "指向按钮时显示操作名称和状态"
     locked_by_config_page: "设置已打开。关闭后即可操作。"
     log_opacity: "日志不透明度"
     mic_threshold: "麦克风输入阈值"

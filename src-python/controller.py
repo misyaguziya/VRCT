@@ -251,6 +251,7 @@ _SIMPLE_CONFIG_GETTERS = {
     "getOverlayVrPanelLocked": "OVERLAY_VR_PANEL_LOCKED",
     "getOverlayVrPanelFontSize": "OVERLAY_VR_PANEL_FONT_SIZE",
     "getOverlayVrLauncherAutoHide": "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
+    "getOverlayVrTooltip": "OVERLAY_VR_TOOLTIP",
     "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
     "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
     "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
@@ -4560,6 +4561,17 @@ class Controller:
         config.OVERLAY_VR_LAUNCHER_AUTO_HIDE = False
         model.setVrLauncherAutoHide(False)
         return {"status": 200, "result": config.OVERLAY_VR_LAUNCHER_AUTO_HIDE}
+
+    @staticmethod
+    def setEnableOverlayVrTooltip(*args, **kwargs) -> dict:
+        # 吹き出しを出すかどうかは VR画面 (UI) が決める。ここは保存だけ
+        config.OVERLAY_VR_TOOLTIP = True
+        return {"status": 200, "result": config.OVERLAY_VR_TOOLTIP}
+
+    @staticmethod
+    def setDisableOverlayVrTooltip(*args, **kwargs) -> dict:
+        config.OVERLAY_VR_TOOLTIP = False
+        return {"status": 200, "result": config.OVERLAY_VR_TOOLTIP}
 
     @staticmethod
     def setOverlayVrPanelFontSize(data, *args, **kwargs) -> dict:
