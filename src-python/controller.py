@@ -15,6 +15,7 @@ from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
 from models.translation.translation_providers import TRANSLATION_PROVIDER_REGISTRY, CONNECTION_PROVIDER_REGISTRY
 from models.message_pipeline import MessageDirectionSpec, MIC_MESSAGE_SPEC, SPEAKER_MESSAGE_SPEC, CHAT_MESSAGE_SPEC, OCR_MESSAGE_SPEC
+from models.overlay.overlay_tooltip import validate_tooltip
 from models.overlay.overlay import PANEL_ANCHORS, computeVrLayout, clampPanelSize, mirrorHandPosition
 
 _HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
@@ -37,7 +38,10 @@ _VR_WINDOW_SETTINGS_LOCK = Lock()
 
 def vrLayoutToJson(layout: dict) -> dict:
     """VR画面の並びを UI へ送る形 (リスト) にする。src-ui/views/vr/vr_layout.json と同じ形。"""
-    return {"atlas": list(layout["atlas"]), "regions": {name: list(rect) for name, rect in layout["regions"].items()}}
+    result = {"atlas": list(layout["atlas"]), "regions": {name: list(rect) for name, rect in layout["regions"].items()}}
+    if "tooltip_epoch" in layout:
+        result["tooltip_epoch"] = layout["tooltip_epoch"]
+    return result
 
 # shutdown() が mic/speaker_lifecycle_lock を待つ上限。model.py の
 # TRANSCRIPT_STOP_JOIN_TIMEOUT (15s) + PyAudio open の _MIC_OPEN_TIMEOUT_SEC
@@ -4600,7 +4604,19 @@ class Controller:
     def getVrPanelLayout(*args, **kwargs) -> dict:
         """VR画面の並び (ログの大きさで変わる)。VR画面 (React) はこれに従って各ウィンドウを描く。"""
         s = config.OVERLAY_VR_PANEL_SETTINGS
-        return {"status": 200, "result": vrLayoutToJson(computeVrLayout(*clampPanelSize(s["width"], s["height"])))}
+        overlay = getattr(model, "overlay", None)
+        layout = overlay.getVrLayout() if overlay is not None else {**computeVrLayout(*clampPanelSize(s["width"], s["height"])), "tooltip_epoch": 0}
+        return {"status": 200, "result": vrLayoutToJson(layout)}
+
+    @staticmethod
+    def setVrPanelTooltip(data, *args, **kwargs) -> dict:
+        """Queue the tooltip rendering generation from the VR view."""
+        try:
+            payload = validate_tooltip(data)
+        except ValueError:
+            return VRCTError.create_error_response(ErrorCode.VALIDATION_CONFIG_VALUE_INVALID, data=None)
+        model.setVrPanelTooltip(payload)
+        return {"status": 200, "result": data}
 
     @staticmethod
     def setVrPanelLayoutRendered(data, *args, **kwargs) -> dict:

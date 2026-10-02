@@ -6,11 +6,12 @@ import {
 
 import {
     generateTestConversationData,
-} from "./_test_data.js"
+} from "./_test_data.js";
 
 import {
     translator_status,
 } from "@ui_configs";
+import { keepNewestVrLayout } from "./common/vrPanelTooltip";
 
 export const store = {
     backend_subprocess: null,
@@ -67,6 +68,9 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
                 const updated_data = typeof payload === "function"
                     ? payload(currentValue)
                     : payload;
+
+                if (base_name === "VrPanelLayout" &&
+                    keepNewestVrLayout(currentValue.data, updated_data) === currentValue.data) return currentValue;
 
                 return {
                     state: new_state,

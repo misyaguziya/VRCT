@@ -16,6 +16,8 @@ import { VrLauncher } from "./VrLauncher";
 import { VrLogWindow } from "./VrLogWindow";
 import { VrPopupWindow } from "./VrPopupWindow";
 import { VrToolbar } from "./VrToolbar";
+import { VrTooltip } from "./VrTooltip";
+import { keepNewestVrLayout } from "../../logics/common/vrPanelTooltip";
 
 import styles from "./VrApp.module.scss";
 
@@ -26,13 +28,14 @@ import styles from "./VrApp.module.scss";
 const Region = ({ layout, name, children }) => {
     const [x, y, w, h] = layout.regions[name];
     return (
-        <div className={styles.region} style={{ left: x, top: y, width: w, height: h }}>
+        <div className={styles.region} data-vr-region={name} style={{ left: x, top: y, width: w, height: h }}>
             {children}
         </div>
     );
 };
 
 export const VrApp = () => {
+    const atlas = useRef(null);
     // 並びはログの大きさで変わる (Python が決めて知らせる。models/overlay/overlay.py computeVrLayout)
     const { currentVrPanelLayout } = useVr();
     const layout = currentVrPanelLayout.data;
@@ -83,7 +86,7 @@ export const VrApp = () => {
     const closePopup = () => setWindows(w => ({ ...w, popup: null }));
 
     return (
-        <div className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>
+        <div ref={atlas} className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>
             <VrStateReceiver />
             <VrPointerHover />
             <UiLanguageController />
@@ -93,6 +96,7 @@ export const VrApp = () => {
             <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} /></Region>
             <Region layout={layout} name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
             <Region layout={layout} name="toolbar"><VrToolbar /></Region>
+            <Region layout={layout} name="tooltip"><VrTooltip atlasRef={atlas} layout={layout} /></Region>
         </div>
     );
 };
@@ -123,7 +127,8 @@ const VrStateReceiver = () => {
         const unlisten = listen("vr-panel-state", ({ payload }) => {
             for (const [name, value] of Object.entries(payload)) {
                 const atom = dynamicStoreRegistry[`Atom_${name}`];
-                if (atom) jotai.set(atom, value);
+                if (atom) jotai.set(atom, previous => name === "VrPanelLayout" &&
+                    keepNewestVrLayout(previous.data, value.data) === previous.data ? previous : value);
             }
         });
         // 受信の準備ができてから全状態を要求する (メインが先に起動していた場合)

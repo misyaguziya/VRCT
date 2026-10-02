@@ -475,6 +475,7 @@ mapping = {
 
     "/get/data/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
     # VR UIのウィンドウの開閉 (VR画面からメイン経由で届く)
+    "/run/vr_panel_tooltip": {"status": False, "variable":controller.setVrPanelTooltip},
     "/run/vr_panel_windows": {"status": False, "variable":controller.setVrPanelWindows},
     # 見失ったVR UIのログウィンドウを目の前へ呼び戻す (VR画面からメイン経由で届く)
     "/run/vr_panel_recall_log": {"status": False, "variable":controller.recallVrPanelLog},
