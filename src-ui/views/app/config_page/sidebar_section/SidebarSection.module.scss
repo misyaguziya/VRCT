@@ -1,5 +1,5 @@
 .container {
-    width: 12rem;
+    width: 12.8rem;
     flex-shrink: 0;
     padding: 0;
     position: relative;
@@ -9,7 +9,7 @@
     &.is_small {
         width: 4rem;
         &:hover {
-            width: 12rem;
+            width: 12.8rem;
         }
     }
 }
@@ -33,6 +33,10 @@
     overflow-y: auto;
     flex: 1;
     max-height: 60rem;
+
+    &::-webkit-scrollbar {
+        width: 0.3rem;
+    }
 }
 
 .tabs_wrapper {
