@@ -71,6 +71,7 @@ const MicContainer = () => {
     return (
         <div className={styles.mic_container}>
             <MultiDropdownMenuContainer
+                setting_id="mic_host_device"
                 label={t("config_page.device.mic_host_device.label")}
                 remove_border_bottom={true}
                 dropdown_settings={[
@@ -103,7 +104,7 @@ const MicContainer = () => {
                     }
                 ]}
             />
-            <div className={styles.threshold_container}>
+            <div className={styles.threshold_container} data-setting-id="mic_dynamic_energy_threshold">
                 <div className={styles.threshold_switch_section}>
                     <LabelComponent {...getLabels()} />
                     <SwitchBox
@@ -163,7 +164,7 @@ const SpeakerContainer = () => {
 
     return (
         <div className={styles.speaker_container}>
-            <div className={device_container_class}>
+            <div className={device_container_class} data-setting-id="speaker_device">
                 <LabelComponent label={t("config_page.device.speaker_device.label")} />
                 <div className={styles.device_contents}>
                     <SwitchBox
@@ -183,7 +184,7 @@ const SpeakerContainer = () => {
                     />
                 </div>
             </div>
-            <div className={styles.threshold_container}>
+            <div className={styles.threshold_container} data-setting-id="speaker_dynamic_energy_threshold">
                 <div className={styles.threshold_switch_section}>
                     <LabelComponent {...getLabels()}/>
                     <SwitchBox

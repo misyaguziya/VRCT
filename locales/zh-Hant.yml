@@ -94,6 +94,9 @@ update_modal:
     warn_switch_channel: "將切換至{{channel}}頻道，之後的更新通知也將以{{channel}}為主。"
 
 config_page:
+    search:
+        placeholder: "搜尋設定..."
+        no_results: "未找到相符的設定"
     common:
         version: "版本 {{version}}"
         model_download_button_label: "下載"
