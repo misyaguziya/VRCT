@@ -7,6 +7,7 @@ import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useIsOpenedConfigPage } from "@logics_common";
 import { useVr } from "@logics_configs";
+import { encodeOrdered } from "../../../logics/common/vrPanelWire";
 import { isLanguageMutation, rejectLanguageMutation } from "../../../logics/main/languageMutations";
 
 // VRパネル (vr_panel ウィンドウ) をこのウィンドウの完全なミラーにする。
@@ -41,7 +42,7 @@ const emitState = (entries) => {
         const value = jotai.get(atom);
         try {
             JSON.stringify(value);
-            payload[name] = value;
+            payload[name] = encodeOrdered(value); // emit でキーが辞書順になるので、並びを保つ形で送る
         } catch {
             // DOM参照など、ウィンドウをまたいで送れない値は同期しない
         }

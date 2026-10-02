@@ -18,6 +18,7 @@ import { VrPopupWindow } from "./VrPopupWindow";
 import { VrToolbar } from "./VrToolbar";
 import { VrTooltip } from "./VrTooltip";
 import { keepNewestVrLayout } from "../../logics/common/vrPanelTooltip";
+import { decodeOrdered } from "../../logics/common/vrPanelWire";
 
 import styles from "./VrApp.module.scss";
 
@@ -125,7 +126,8 @@ const VrStateReceiver = () => {
     useEffect(() => {
         const jotai = getDefaultStore();
         const unlisten = listen("vr-panel-state", ({ payload }) => {
-            for (const [name, value] of Object.entries(payload)) {
+            for (const [name, encoded] of Object.entries(payload)) {
+                const value = decodeOrdered(encoded);
                 const atom = dynamicStoreRegistry[`Atom_${name}`];
                 if (atom) jotai.set(atom, previous => name === "VrPanelLayout" &&
                     keepNewestVrLayout(previous.data, value.data) === previous.data ? previous : value);
