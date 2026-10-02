@@ -6,6 +6,8 @@ import {
     useSaveButtonLogic,
 } from "@logics_configs";
 
+import styles from "./Translation.module.scss";
+
 import {
     DownloadModelsContainer,
     AuthKeyContainer,
@@ -13,6 +15,10 @@ import {
     DropdownMenuContainer,
     ConnectionCheckButtonContainer,
 } from "../_templates/Templates";
+
+import {
+    SectionLabelComponent,
+} from "../_components";
 
 import { ComputeDevice } from "../_components/compute_device/ComputeDevice";
 
@@ -29,9 +35,30 @@ import { useLLMConnection } from "@logics_common";
 
 export const Translation = () => {
     return (
-        <>
+        <div className={styles.container}>
+            <AITranslation_Container />
+            <ExternalTranslationAPI_Container />
+            <LocalLLM_Container />
+        </div>
+    );
+};
+
+const AITranslation_Container = () => {
+    const { t } = useI18n();
+    return (
+        <div>
+            <SectionLabelComponent label={t("config_page.translation.section_label_ai_translation")} />
             <CTranslate2WeightType_Box />
             <TranslationComputeDevice_Box />
+        </div>
+    );
+};
+
+const ExternalTranslationAPI_Container = () => {
+    const { t } = useI18n();
+    return (
+        <div>
+            <SectionLabelComponent label={t("config_page.translation.section_label_external_api")} />
 
             <DeepLAuthKey_Box />
 
@@ -49,6 +76,15 @@ export const Translation = () => {
 
             <OpenRouterAuthKey_Box />
             <OpenRouterModelContainer />
+        </div>
+    );
+};
+
+const LocalLLM_Container = () => {
+    const { t } = useI18n();
+    return (
+        <div>
+            <SectionLabelComponent label={t("config_page.translation.section_label_local_llm")} />
 
             <LMStudioConnectionCheck_Box />
             <LMStudioURL_Box />
@@ -60,7 +96,7 @@ export const Translation = () => {
             <OpenAICompatibleURL_Box />
             <OpenAICompatibleAuthKey_Box />
             <OpenAICompatibleModelContainer />
-        </>
+        </div>
     );
 };
 

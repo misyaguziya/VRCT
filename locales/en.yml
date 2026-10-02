@@ -174,6 +174,10 @@ config_page:
             label: "UI Language"
 
     translation:
+        section_label_ai_translation: "AI Translation (Local)"
+        section_label_external_api: "External Translation API"
+        section_label_local_llm: "Local LLM & Compatible Server"
+
         ctranslate2_weight_type:
             label: "{{ctranslate2}} Model"
             desc: "You can choose the translation model when using the {{ctranslate2}} translation engine."
