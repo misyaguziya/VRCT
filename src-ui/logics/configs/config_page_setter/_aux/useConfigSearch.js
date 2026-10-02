@@ -114,8 +114,8 @@ export const useConfigSearch = () => {
                 entries.push({
                     tab,
                     setting_id: key,
-                    label: rawLabel,
-                    desc: rawDesc,
+                    label: cleanTemplateStr(rawLabel),
+                    desc: cleanTemplateStr(rawDesc),
                     tab_label: tabLabel,
                     searchTarget,
                     prereq: PREREQUISITES[key] || null,
