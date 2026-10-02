@@ -179,7 +179,7 @@ config_page:
         section_label_local_llm: "ローカルLLM・互換サーバー"
 
         ctranslate2_weight_type:
-            label: "AI翻訳 {{ctranslate2}} のモデルタイプ"
+            label: "{{ctranslate2}} のモデルタイプ"
             desc: "翻訳エンジン「{{ctranslate2}}」で翻訳する際に、使用する翻訳モデルを選択できます。"
             small: "通常モデル （{{capacity}}）"
             large: "高精度モデル （{{capacity}}）"
