@@ -26,6 +26,7 @@ from typing import Callable, List, Optional
 
 import numpy as np
 
+from ..background_priority import BackgroundThreads, lowerCurrentThread
 from .ocr_bubble_detector import BubbleDetector
 from .ocr_capture import OcrCapture
 from . import ocr_engine_rapidocr as ocr_engine
@@ -168,6 +169,7 @@ class OcrPipeline:
 
         self._stop_event = Event()
         self._thread: Optional[Thread] = None
+        self._background_threads: Optional[BackgroundThreads] = None
         self._capture: Optional[OcrCapture] = None
         self._detector = BubbleDetector()
         self._dedup = _DedupCache()
@@ -200,6 +202,8 @@ class OcrPipeline:
         if spec is None:
             printLog(f"OCR pipeline: language {self._source_language!r} is not supported by the OCR engine")
             raise OcrStartError(ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE)
+        # モデルを読むときに増える onnxruntime のスレッドは、VR UI や VRChat より低い優先度にする
+        self._background_threads = BackgroundThreads()
         self._reader = ocr_engine.getReader(spec)
         if self._reader is None:
             printLog(f"OCR pipeline: OCR engine init failed for {spec.label}")
@@ -212,6 +216,7 @@ class OcrPipeline:
             printLog("OCR pipeline: bubble detector model load failed")
             self.stop()
             raise OcrStartError(ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED)
+        self._background_threads.lower()
         self._thread = Thread(target=self._run, name="ocr_pipeline", daemon=True)
         self._thread.start()
         return True
@@ -312,6 +317,8 @@ class OcrPipeline:
         # Capture backends hold OS resources tied to the creating thread,
         # so construct on this thread rather than the one that called start().
         self._capture = OcrCapture(window_title=self._window_title)
+        lowerCurrentThread()  # OCR を VR UI や VRChat より先に動かさない
+        ticks = 0
         try:
             while not self._stop_event.is_set():
                 start_t = time.monotonic()
@@ -320,6 +327,10 @@ class OcrPipeline:
                     self._tick()
                 except Exception:
                     errorLogging()
+                ticks += 1
+                if ticks <= 2 and self._background_threads is not None:
+                    # 推論を始めてから作られるスレッドもある
+                    self._background_threads.lower()
                 elapsed = time.monotonic() - start_t
                 sleep_for = self._poll_interval - elapsed
                 if sleep_for > 0:
