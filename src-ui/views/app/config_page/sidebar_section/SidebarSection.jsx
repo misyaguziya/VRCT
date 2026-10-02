@@ -64,7 +64,7 @@ export const SidebarSection = () => {
     );
 };
 
-const TabIcon = ({ tab_id, className }) => {
+export const TabIcon = ({ tab_id, className }) => {
     switch (tab_id) {
         case "device": return <MicSvg className={className} />;
         case "appearance": return <AppearanceSvg className={clsx(className, styles.mui_icon)} />;

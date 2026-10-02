@@ -94,6 +94,9 @@ update_modal:
     warn_switch_channel: "You are switching to the {{channel}} channel. Future update notifications will follow {{channel}} releases."
 
 config_page:
+    search:
+        placeholder: "Search settings..."
+        no_results: "No matching settings found"
     common:
         version: "Version {{version}}"
         model_download_button_label: "Download"

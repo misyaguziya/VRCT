@@ -94,6 +94,9 @@ update_modal:
     warn_switch_channel: "{{channel}}チャンネルに切り替わります。次回以降のアップデート通知も{{channel}}が対象になります。"
 
 config_page:
+    search:
+        placeholder: "設定を検索..."
+        no_results: "一致する設定が見つかりませんでした"
     common:
         version: "バージョン {{version}}"
         model_download_button_label: "ダウンロード"
