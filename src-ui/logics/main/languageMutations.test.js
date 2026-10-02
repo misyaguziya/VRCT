@@ -138,3 +138,21 @@ test("a PC rejection is visible without overwriting the VR request result", asyn
         assert.equal(values.LanguageMutation.data.lastVrResult,null);
     } finally {adapter.resetLanguageMutations();}
 });
+
+test("a VR request that went through the emit round trip is accepted by the main adapter", async () => {
+    const { adapter, values } = await setup();
+    // 実データに近い値 (内側のキー順が辞書順でないもの)
+    values.SelectedYourLanguages = { state: "ok", data: { 1: { 1: { language: "Japanese", country: "Japan", enable: true } } } };
+    values.SelectedTargetLanguages = { state: "ok", data: { 1: { 1: { language: "English", country: "United States", enable: true },
+        2: { language: "English", country: "United States", enable: false } } } };
+    values.SelectedTranslationEngines = { state: "ok", data: { 1: "CTranslate2", 2: "Google" } };
+    const sortKeysDeep = value => Array.isArray(value) ? value.map(sortKeysDeep)
+        : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, sortKeysDeep(value[key])])) : value;
+    const viaEmit = value => JSON.parse(JSON.stringify(sortKeysDeep(value)));
+    const request = { requestId: "vr-emit", source: "vr", endpoint: "/set/data/selected_target_languages",
+        expectedSnapshot: adapter.getLanguageSnapshot() };
+    assert.equal(adapter.beginLanguageMutation(viaEmit(request)), true); // 内容が同じなら受け付ける
+    adapter.resetLanguageMutations();
+    const stale = viaEmit({ ...request, requestId: "vr-stale", expectedSnapshot: { ...request.expectedSnapshot, tab: "2" } });
+    assert.equal(adapter.beginLanguageMutation(stale), false); // 内容が違えば断る
+});

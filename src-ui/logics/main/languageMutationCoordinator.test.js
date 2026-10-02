@@ -88,3 +88,15 @@ test("definitely unsent operations can release the guard", () => {
     assert.equal(coordinator.getState().inFlight, null);
     assert.equal(coordinator.getState().lastVrResult.kind, "failure");
 });
+
+test("a snapshot whose keys were reordered by the Tauri emit round trip is the same snapshot", () => {
+    // VR -> main の emit では、キーが辞書順 (最上位も内側も) に並び替わって届く
+    const sorted = value => value && typeof value === "object" && !Array.isArray(value)
+        ? Object.fromEntries(Object.keys(value).sort().map(key => [key, sorted(value[key])])) : value;
+    const main = { tab: "1", your: { 1: { language: "Japanese", country: "Japan", enable: true } },
+        target: { 1: { language: "English", country: "United States", enable: true } }, selectedEngines: { 1: "CTranslate2" } };
+    const coordinator = setup();
+    const write = { ...request("vr-order"), expectedSnapshot: sorted(main) };
+    assert.notEqual(JSON.stringify(write.expectedSnapshot), JSON.stringify(main)); // 素の比較では食い違う
+    assert.equal(coordinator.begin(write, main), true);
+});
