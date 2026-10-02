@@ -1,0 +1,16 @@
+@import "@scss_mixins";
+
+.toggle_switch_container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    @include toggle_control_styles;
+
+    &.is_pending {
+        pointer-events: none;
+    }
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, right, -4rem);
+}
