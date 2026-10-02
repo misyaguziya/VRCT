@@ -16,7 +16,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from .ocr_languages import OcrModelSpec
+from .ocr_languages import OcrModelSpec, ocr_onnx_threads
 
 try:
     from utils import errorLogging, printLog
@@ -70,6 +70,9 @@ def getReader(spec: OcrModelSpec) -> Optional[object]:
                 "Det.model_type": ModelType(spec.model_type),
                 "Rec.model_type": ModelType(spec.model_type),
                 "Det.limit_side_len": DET_LIMIT_SIDE_LEN,
+                # 全コアを使い切らない (ocr_onnx_threads 参照)
+                "EngineConfig.onnxruntime.intra_op_num_threads": ocr_onnx_threads(),
+                "EngineConfig.onnxruntime.inter_op_num_threads": 1,
             }
             if spec.lang_rec:
                 params["Rec.lang_type"] = LangRec(spec.lang_rec)

@@ -26,6 +26,8 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
+from .ocr_languages import ocr_onnx_threads
+
 try:
     from utils import errorLogging
 except Exception:  # pragma: no cover
@@ -138,6 +140,8 @@ class BubbleDetector:
             if self._session is None:
                 options = ort.SessionOptions()
                 options.log_severity_level = 3
+                options.intra_op_num_threads = ocr_onnx_threads()
+                options.inter_op_num_threads = 1
                 session = ort.InferenceSession(
                     self.model_path, options, providers=["CPUExecutionProvider"])
                 self._input_name = session.get_inputs()[0].name
