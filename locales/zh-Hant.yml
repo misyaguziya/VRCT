@@ -468,6 +468,8 @@ vr_panel:
     launcher_hand_desc: "用另一隻手的雷射點擊"
     launcher_auto_hide: "僅在看手腕時顯示"
     launcher_auto_hide_desc: "僅在把手腕轉向臉部時出現"
+    tooltip_enabled: "按鈕提示氣泡"
+    tooltip_enabled_desc: "指向按鈕時顯示操作名稱和狀態"
     locked_by_config_page: "設定已開啟。關閉後即可操作。"
     log_opacity: "日誌不透明度"
     mic_threshold: "麥克風能量閾值"

@@ -101,3 +101,17 @@ class TestVrLauncher(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestVrTooltipSetting(unittest.TestCase):
+    def setUp(self) -> None:
+        self.original = config.OVERLAY_VR_TOOLTIP
+
+    def tearDown(self) -> None:
+        config.OVERLAY_VR_TOOLTIP = self.original
+
+    def test_default_is_on_and_toggles(self) -> None:
+        self.assertIs(Controller.getOverlayVrTooltip()["result"], self.original)
+        self.assertEqual(Controller.setDisableOverlayVrTooltip(), {"status": 200, "result": False})
+        self.assertIs(config.OVERLAY_VR_TOOLTIP, False)
+        self.assertEqual(Controller.setEnableOverlayVrTooltip(), {"status": 200, "result": True})

@@ -474,6 +474,8 @@ vr_panel:
     launcher_hand_desc: "Press it with the laser from your other hand"
     launcher_auto_hide: "Show only when looking at the wrist"
     launcher_auto_hide_desc: "Appears only when you turn your wrist toward your face"
+    tooltip_enabled: "Button tooltips"
+    tooltip_enabled_desc: "Show the name and state of a button while you point at it"
     locked_by_config_page: "Settings are open. Close them to use these controls."
     log_opacity: "Log opacity"
     mic_threshold: "Mic sensitivity"

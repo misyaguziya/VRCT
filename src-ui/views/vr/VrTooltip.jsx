@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useStdoutToPython } from "@useStdoutToPython";
+import { useVr } from "@logics_configs";
 import { tooltipGeometry, tooltipMarker } from "../../logics/common/vrPanelTooltip";
 import styles from "./VrTooltip.module.scss";
 
@@ -24,10 +25,12 @@ export const VrTooltip = ({ atlasRef, layout }) => {
     send.current = useStdoutToPython().asyncStdoutToPython;
     const epoch = layout.tooltip_epoch ?? 0;
     const regionKey = JSON.stringify([layout.regions.launcher, layout.regions.toolbar]);
+    // 設定でOFFのときは出さない (出ている途中でOFFにすると、下の cleanup が消す)
+    const enabled = useVr().currentOverlayVrTooltip.data !== false;
 
     useEffect(() => {
         const atlas = atlasRef.current;
-        if (!atlas || !epoch) { setTip(null); return; }
+        if (!atlas || !epoch || !enabled) { setTip(null); return; }
         if (sequence.current.epoch !== epoch) sequence.current = { epoch, revision: 0 };
         let target = null;
         let mode = "hover";
@@ -102,7 +105,7 @@ export const VrTooltip = ({ atlasRef, layout }) => {
             document.removeEventListener("keydown", keydown);
             hide();
         };
-    }, [atlasRef, epoch, regionKey]);
+    }, [atlasRef, epoch, regionKey, enabled]);
 
     useLayoutEffect(() => {
         if (!tip || !body.current) return;

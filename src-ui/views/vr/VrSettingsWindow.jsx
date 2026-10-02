@@ -336,6 +336,8 @@ const VrSettings = ({ t }) => {
                 ]} />
             <ToggleRow label={t("vr_panel.launcher_auto_hide")} sub={t("vr_panel.launcher_auto_hide_desc")}
                 variable={vr.currentOverlayVrLauncherAutoHide} onToggle={vr.toggleOverlayVrLauncherAutoHide} />
+            <ToggleRow label={t("vr_panel.tooltip_enabled")} sub={t("vr_panel.tooltip_enabled_desc")}
+                variable={vr.currentOverlayVrTooltip} onToggle={vr.toggleOverlayVrTooltip} />
         </>
     );
 };

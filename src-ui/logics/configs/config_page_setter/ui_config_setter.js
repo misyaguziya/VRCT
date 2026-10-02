@@ -770,6 +770,15 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_vr_launcher_auto_hide",
     },
     {
+        // VR UIのボタンを指したときの吹き出し (操作名と状態)
+        Category: "Vr",
+        Base_Name: "OverlayVrTooltip",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_tooltip",
+    },
+    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

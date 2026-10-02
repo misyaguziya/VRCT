@@ -960,6 +960,8 @@ class Config:
     OVERLAY_VR_PANEL_FONT_SIZE = ManagedProperty('OVERLAY_VR_PANEL_FONT_SIZE', type_=int)
     # VR UIのランチャーを手首を見たときだけ出すか (出す角度は45°で固定)。付ける手は OVERLAY_VR_LAUNCHER_SETTINGS の tracker
     OVERLAY_VR_LAUNCHER_AUTO_HIDE = ManagedProperty('OVERLAY_VR_LAUNCHER_AUTO_HIDE', type_=bool)
+    # VR UIのボタンを指したときの吹き出し (操作名と状態)。慣れたら消せる
+    OVERLAY_VR_TOOLTIP = ManagedProperty('OVERLAY_VR_TOOLTIP', type_=bool)
     OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = ManagedProperty('OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES', type_=bool)
     SEND_MESSAGE_TO_VRC = ManagedProperty('SEND_MESSAGE_TO_VRC', type_=bool)
     SEND_RECEIVED_MESSAGE_TO_VRC = ManagedProperty('SEND_RECEIVED_MESSAGE_TO_VRC', type_=bool)
@@ -1308,6 +1310,7 @@ class Config:
         self._OVERLAY_VR_PANEL_LOCKED = False
         self._OVERLAY_VR_PANEL_FONT_SIZE = 17
         self._OVERLAY_VR_LAUNCHER_AUTO_HIDE = True
+        self._OVERLAY_VR_TOOLTIP = True
         self._OVERLAY_VR_PANEL_SETTINGS = {
             # ログウィンドウの大きさ (論理px)。角を掴んで伸ばす (600x400〜1400x1000)
             "width": 900,
