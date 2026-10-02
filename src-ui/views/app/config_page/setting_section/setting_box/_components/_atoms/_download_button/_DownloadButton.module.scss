@@ -71,3 +71,16 @@
         background-color: var(--primary_500_color);
     }
 }
+
+.default_badge {
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.2rem;
+    background-color: var(--dark_875_color);
+    outline: 0.1rem solid var(--dark_800_color);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
