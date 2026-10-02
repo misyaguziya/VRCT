@@ -927,9 +927,9 @@ class VrLayoutTest(unittest.TestCase):
 
         u0, _u1, v0, v1 = regionBounds(LAUNCHER)
         self.assertAlmostEqual(u0, 10 / 1628)
-        self.assertAlmostEqual(v0, 1 - 708 / 836)  # 表示の上端 = 画像の708行目
-        self.assertAlmostEqual(v1, 0.0)  # 表示の下端 = 画像の最下行
-        self.assertEqual(regionBounds(PANEL)[2:], (1.0, 1 - 700 / 836))  # ログは画像の上側
+        self.assertAlmostEqual(v0, 1 - 708 / 880)  # 表示の上端 = 画像の708行目
+        self.assertAlmostEqual(v1, 1 - 836 / 880)  # ランチャーの下端
+        self.assertEqual(regionBounds(PANEL)[2:], (1.0, 1 - 700 / 880))  # ログは画像の上側
         # レーザーの当たった点 (空間座標) → 撮影画像上のピクセル。空間固定・原点に置いたランチャー
         overlay = Overlay({LAUNCHER: {k: 0.0 for k in KEYS} | {"tracker": "Playspace", "ui_scaling": 0.28}})
         overlay.panel_image_size = (2442, 1254)  # DPI 150%

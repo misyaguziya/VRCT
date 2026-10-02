@@ -1,99 +1,16 @@
-// 操作バー (vr_layout.json の toolbar: 720x96)。VR内の大きさはログの拡大縮小によらず固定
-// (1px = 約0.44mm。ボタン 68x72px = 約30x32mm、ランチャーのウィンドウボタンより1割ほど小さい)。
-
-.bar {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    // 720px に収める: ボタン 68x7 + A−/A＋ 56x2 + 数字 36 + 区切り 8x3 + 間隔 4x12 + 余白 8x2 = 712px
-    gap: 4px;
-    padding: 0 8px;
-    border-radius: 24px;
-    background-color: var(--dark_900_color);
-    box-shadow: inset 0 0 0 3px var(--dark_825_color);
+.bar { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 2px 12px; border-radius: 24px; background: var(--dark_888_color); box-shadow: inset 0 0 0 4px var(--dark_750_color); }
+.group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.button { position: relative; height: 72px; flex-direction: column; gap: 4px; padding: 2px;
+    &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
+    &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+    &.is_disabled { background: var(--dark_900_color); color: var(--dark_450_color); cursor: default; }
 }
-
-// まとまりの区切り (ランチャーと同じ縦線)
-.separator {
-    width: 4px;
-    height: 40px;
-    margin: 0 2px;
-    border-radius: 2px;
-    background-color: var(--dark_750_color);
-    flex-shrink: 0;
-}
-
-.button {
-    // reset.css が button の text-align を継承 (左寄せ) にするので中央へ寄せ直す
-    width: 68px;
-    height: 72px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border-radius: 12px;
-    background-color: var(--dark_825_color);
-    color: var(--dark_basic_text_color);
-    cursor: pointer;
-    // VRのポインタが当たっている (VrApp の VrPointerHover が付ける)
-    &[data-vr-hover] {
-        box-shadow: inset 0 0 0 3px var(--primary_300_color);
-    }
-    // 今の固定先・ロック中は塗る (既存の「ONは塗り」)
-    &.is_on {
-        background-color: var(--primary_700_color);
-    }
-    &.is_pending {
-        opacity: 0.55;
-    }
-    &.is_disabled {
-        opacity: 0.35;
-        cursor: default;
-        &[data-vr-hover] {
-            box-shadow: none;
-        }
-    }
-}
-
-// A−／A＋
-.text_button {
-    width: 56px;
-    font-size: 24px;
-    font-weight: 700;
-}
-
-// 文字の大きさの今の値 (押せない)
-.value {
-    width: 36px;
-    flex-shrink: 0;
-    text-align: center;
-    font-size: 21px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--dark_basic_text_color);
-}
-
-.icon {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.label {
-    max-width: 66px;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+.anchor_button { width: 62px; }
+.recall_button { width: 72px; }
+.lock_button { width: 64px; }
+.font_button { width: 56px; font-size: 26px; font-weight: 700; }
+.opacity_button { width: 80px; .icon { width: 26px; height: 26px; } }
+.icon { width: 36px; height: 36px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hand_side { position: absolute; right: 7px; bottom: 5px; font-size: 14px; font-weight: 700; }
+.value { width: 32px; font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; color: var(--dark_basic_text_color); }
+.opacity_value { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }

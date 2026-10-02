@@ -2384,6 +2384,12 @@ class Model:
         self.ensure_initialized()
         self.overlay.requestRecallPanel()
 
+    def setVrPanelTooltip(self, data: dict) -> None:
+        """Forward without initializing heavy backend resources."""
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.setTooltip(data)
+
     def setVrPanelLayoutRendered(self, panel_size: list) -> None:
         """VR画面が新しい並びで描き終えたことをオーバーレイに伝える。
 
@@ -2398,6 +2404,8 @@ class Model:
         """VR画面の並び (ログの大きさで変わる) が変わったときに呼ぶ関数を登録する。"""
         self.ensure_initialized()
         self.overlay.layout_callback = fn
+        if fn is not None:
+            fn(self.overlay.getVrLayout())
 
     def setOverlayPanelOutOfViewCallback(self, fn: Optional[Callable[[bool], None]]) -> None:
         """VR UIのログウィンドウが視線から外れた・戻ったときに呼ぶ関数を登録する。"""

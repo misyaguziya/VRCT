@@ -1,125 +1,15 @@
-// 880x128px の帯 (vr_layout.json の launcher)。VR内の幅 0.28m で高さ約4cm。
-// 機能ボタン 124px x4、ウィンドウボタン 96px x3 (余白・区切りと合わせて 876px)。
-// 撮影は約15fpsなので、アニメーション・影・1pxの線は使わない。
-
-.container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    background-color: var(--dark_900_color);
-}
-
-.group {
-    display: flex;
-    gap: 8px;
-}
-
-.divider {
-    width: 4px;
-    height: 72px;
-    margin: 0 4px;
-    border-radius: 2px;
-    background-color: var(--dark_750_color);
-}
-
+.container { width: 100%; height: 100%; display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--dark_888_color); border-radius: 24px; box-shadow: inset 0 0 0 4px var(--dark_750_color); }
+.group { display: flex; gap: 8px; }
+.divider { flex-shrink: 0; width: 4px; height: 72px; margin: 0 4px; border-radius: 2px; background: var(--dark_650_color); }
 .button {
-    position: relative;
-    width: 124px;
-    height: 104px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 6px;
-    border-radius: 14px;
-    background-color: var(--dark_825_color);
-    color: var(--dark_450_color);
-    cursor: pointer;
-
-    // VRのポインタが当たっている (VrApp の VrPointerHover が付ける)
-    &[data-vr-hover] {
-        box-shadow: inset 0 0 0 3px var(--primary_300_color);
-    }
+    position: relative; width: 124px; height: 104px; flex-direction: column; gap: 8px; padding: 6px;
+    &:not([aria-pressed="true"]) { background: var(--dark_850_color); color: var(--dark_400_color); }
+    &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
+    &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+    &.is_disabled { background: var(--dark_900_color); color: var(--dark_450_color); cursor: default; }
 }
-
-.icon {
-    width: 36px;
-    height: 36px;
-    flex-shrink: 0;
-    color: var(--dark_450_color);
-    fill: var(--dark_450_color);
-}
-
-// 単語の途中で折り返さない (英語の "Voice2Chatbox" などが崩れるため)。収まらなければ省略
-.label {
-    max-width: 100%;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.2;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.window_button {
-    width: 96px;
-}
-
-// ON は塗り (--primary_700 に白文字でコントラスト約5:1)
-.is_on {
-    background-color: var(--primary_700_color);
-    color: var(--dark_basic_text_color);
-    .icon {
-        color: var(--dark_basic_text_color);
-        fill: var(--dark_basic_text_color);
-    }
-}
-
-.is_pending {
-    opacity: 0.55;
-    cursor: default;
-}
-
-.is_disabled {
-    opacity: 0.35;
-    cursor: default;
-    &[data-vr-hover] {
-        box-shadow: none;
-    }
-}
-
-// 開いているウィンドウは下端の帯で示す (ONの塗りとは区別する)
-.window_button.is_open::after {
-    content: "";
-    position: absolute;
-    left: 16px;
-    right: 16px;
-    bottom: 6px;
-    height: 4px;
-    border-radius: 2px;
-    background-color: var(--primary_300_color);
-}
-
-// 長押し中 (離さずに押し続けると呼び戻す)。撮影が遅いのでアニメーションせず、名前を「呼び戻す」にして知らせる
-.window_button.is_holding {
-    box-shadow: inset 0 0 0 3px var(--warning_color);
-    .label {
-        color: var(--warning_color);
-    }
-}
-
-// 開いているのに視線から外れているログウィンドウ: 押すと呼び戻す。
-// 下端の帯と文字を警告色にする (枠はホバー表示に使うので変えない)
-.window_button.is_attention {
-    .label {
-        color: var(--warning_color);
-    }
-    &::after {
-        background-color: var(--warning_color);
-    }
-}
+.icon { width: 40px; height: 40px; flex-shrink: 0; color: currentColor; fill: currentColor; }
+.label { max-width: 100%; font-size: 19px; font-weight: 600; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.window_button { width: 96px; .icon { width: 36px; height: 36px; } &.is_attention { background: var(--dark_950_color); color: var(--warning_color); } &.is_holding { box-shadow: inset 0 0 0 3px var(--warning_color); } }
+.state_mark { position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; padding: 2px; border-radius: 6px; background: var(--dark_950_color); color: var(--dark_350_color); display: flex; svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; } }
+.is_pending .state_mark { color: var(--primary_100_color); }

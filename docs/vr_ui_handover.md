@@ -4,6 +4,22 @@
 - ブランチ: `feature/overlay-vr-panel`（初回記録は 79976b3b 時点、以降の変更は各追記節に記録）
 - 対象: 手首のランチャー + ログ / 言語 / VR設定ウィンドウ。VR 内で掴んで動かし、機能の ON/OFF とログ閲覧ができる。
 
+## 再開時の入口（2026-10-02・Claude Codeへ引き継ぎ）
+
+**最初にこの節と末尾の§20を読む。** §1〜19は時点ごとの履歴であり、§18の「本体未反映」は当時の記録。現在は§19の実装へ進んでいる。実装・検証の詳細は§19、次の作業と再現手順は§20を参照する。
+
+| 対象 | 現在の状態 |
+|---|---|
+| VR設定・言語UI | デザイン確定・本体実装済み。HEAD `f1210854` にコミット済み |
+| ランチャー・ログ下の操作パネル | 承認案を本体へ反映済み。今回ユーザーが「OK」と確認。未コミット |
+| 別オーバーレイの吹き出し | 本体実装・ソフトウェア検証・独立レビュー済み。SteamVR/HMD実機確認は未完了。未コミット |
+| ログ本文のデザイン | §18のHTML改修案のみ。本体の `VrLogWindow` はまだ既存 `LogBox` を使用 |
+
+- 作業場所: `D:/WORKSPACE/WORK/VRChatProject/VRCT`。ブランチ `feature/overlay-vr-panel`、追跡先より3コミット先行。push未実施。
+- 今回のユーザー依頼は、残りをClaude Codeへ引き継ぐためのドキュメント更新。追加の製品実装・commit・push・リリースはこの引き継ぎ更新では行っていない。
+- 再開時は `git status --short --branch` と `git diff --stat` を照合する。未コミット・未追跡の実装があるため、HEADだけを読んで実装をやり直したり、作業ツリーを戻したりしない。
+- 新しい吹き出しの実機確認は、§6の以前の撮影復旧テストの成功とは別。全体のruff成功、HMD目視、GPU/WGC実処理、実設定保存の成功は今回の検証結果に含めない。
+
 ## 1. 構成
 
 ```
@@ -13,10 +29,11 @@ Tauri (src-tauri/src/lib.rs)
 Python (src-python/models/overlay/)
   ├─ overlay.py        Overlay クラス (1 本の mainloop)
   ├─ window_capture.py ウィンドウ撮影 + マウス入力 (PostMessage)
-  └─ overlay_utils.py  行列ユーティリティ
+  ├─ overlay_utils.py  行列ユーティリティ
+  └─ overlay_tooltip.py 吹き出しの入力検証・世代marker・透明マスク (§19で追加)
 ```
 
-- VR 画面は **1 枚の画面外 WebView に全領域を並べて描き、1 回撮影して** `setOverlayTexture` を各オーバーレイ (log / launcher / popup / toolbar) に渡し、`setOverlayTextureBounds` で切り出す。並びは `src-ui/views/vr/vr_layout.json` と `computeVrLayout` (overlay.py)。
+- VR 画面は **1 枚の画面外 WebView に全領域を並べて描き、1 回撮影して** `setOverlayTexture` を各オーバーレイ (log / launcher / popup / toolbar / tooltip) に渡し、`setOverlayTextureBounds` で切り出す。並びは `src-ui/views/vr/vr_layout.json` と `computeVrLayout` (overlay.py)。tooltipは非入力の別handle。既定atlasは1628×880。
 - VR ウィンドウは VR UI が **ON の間だけ** 作る（Tauri コマンド `set_vr_panel_window`、`VrPanelSyncController` から呼ぶ）。
 - 入力は WebView 内部の `Chrome_RenderWidgetHostHWND` へ PostMessage（OS のカーソルは動かさない）。
 
@@ -434,3 +451,196 @@ npm run vite-build
 - 途中push・送信完了後も候補画面に留まり、遅い200で元操作だけを完了することを確認。400後はA一覧末尾の候補を表示・focus維持。部分適用→500→GET新値でも候補／失敗を保持。再同期も失敗した場合は保存を止め、再取得成功後に候補／失敗を維持して編集へ復帰した。
 - 操作・UI、実装境界、transport／再同期の3人が独立レビューし、修正後 **LGTM、未解消のhigh / mediumなし**。
 - **未検証**: 実Tauri WebViewとsidecar間の配送・設定保存、SteamVR/HMDでの可読性・レーザー操作、スクリーンリーダー実読み上げ。今回Python/Rustは変更していない。実機では言語追加／置換、プリセット、失敗後復旧、PC同時操作を確認する。
+
+## 18. 残りのVR UI改修案（2026-10-02）
+
+ユーザーの依頼により、§13〜17の設定・言語UI実装と比較用HTMLを `f1210854`（`feat(vr): align settings and language UI with approved designs`）にコミットした。pushはしていない。未追跡の `AGENTS.md` はコミット対象から除外して保持した。その後、ランチャー・ログ・ログ下の操作パネルの改修案を作成。ここからの変更は確認用HTMLと本記録のみで、本体UIへの反映は未実施。
+
+### 案の方針と既存契約
+
+- 設定・言語の確定実装を基準にする。共通の `VrWindow` と設定画面のbutton / is_onを直接再利用。通常ボタンdark_750、ログの面dark_850、選択primary_700、角丸12px、hover / focusの3px枠。
+- ランチャーは880×128、機能124×104を4つ、画面96×104を3つのまま。機能名を反映中も残し、ON/OFFと設定中の理由を表示。画面の表示中は下端の帯で区別。ログに600ms長押しの説明、見失った場合は即クリックで呼び戻せる説明を付けた。注意状態の背景をdark_950にしてwarning文字のコントラストを6.12:1にした。
+- ログは既定900×700、最小600×400、最大1400×1000、タイトル56pxを維持。送信右／受信左を維持し、会話を面でまとめる。時刻・原文を明るくし、長文URL・改行を折り返す。原文は設定値14〜28px、訳文は1.4倍。原文のみ・複数訳文・ルビ・システム・処理中を保持。追従状態は補足表示のみで、新しい送信／コピー／削除／検索操作は追加しない。
+- 操作パネルは720×96、操作高72pxを維持。固定先4つ、位置操作、文字サイズ、不透明度を見出しで区分。固定先の4つはワンタッチのまま。範囲端はaria-disabled＋ガードで焦点を保持。反映中も現在の不透明度を表示する。
+- 呼び戻しはPlayspaceへ切替、長押し時間600ms、掴む／3角のリサイズ当たり判定を変更しない。位置ロックは移動／リサイズだけを止める。設定中も画面開閉と操作パネルは現行の許可リストに沿って操作可能。
+- 操作パネルはログを0.3秒指して表示、外れて2秒で隠す現行仕様を維持する。HTMLでは見た目確認のため常時表示し、その旨を画面外に明記した。
+
+### HTMLと再生成
+
+- リポジトリ保存先: `docs/vr_ui_remaining_proposal.html`（standalone、外部依存不要）。
+- 表示URL: `http://127.0.0.1:8768/remaining-ui/vr-remaining-ui-proposal.html`。
+- 編集用JSX／SCSS、モック、ビルダー、検証JSONと画像: `C:/Users/misyaguzi/.codex/visualizations/2026/10/01/01a0f64c-b1e5-7762-afc4-3bb47707198f/vr-settings-design/remaining-ui/`。
+- 再生成: 同ディレクトリの `node build-preview.mjs`。現在のcheckoutの既存Vite／React／SVG／YAML依存を絶対パスで使い、作業用・リポジトリ用HTMLを同時に更新する。新依存・worktreeへの依存リンクは追加していない。
+- 「現行」は本体のLauncher / Toolbar / LogWindow / LogBox / MessageContainerとログスクロールhookを直接ビルド。「改修案」は別コンポーネント。ログ内容・ウィンドウ状態・setter応答は模擬値で、Tauriや実バックエンドへ要求を送らない。5言語の短い文言はHTML用で、製品localeは変更していない。
+
+### 検証・レビュー
+
+- HTMLビルド: **PASS、59 modules**。製品JS／SCSS／locale／Python／Rustには今回の改修案を反映していないため、前回成功した製品ビルド・15件の言語テストは再実行していない。
+- ブラウザーで5言語×通常／反映中／設定中／長文: **PASS**。3領域のoffset寸法とscroll寸法一致、ボタン内ラベルのはみ出し0、最小操作高56px。長文は5言語×最小／最大ログでも横スクロール0、翻訳キー漏れ0。
+- 模擬操作: **PASS**。機能の反映中連打、pendingの固定先／文字／不透明度への強制クリックを遮断。設定中の機能要求0件、画面開閉可能。文字14／28で元ボタンの焦点を保持し追加要求を拒否。不透明度100→80→60→40→100。28px原文／39.2px訳文は最小ログでも横溢れなし。
+- ログの履歴閲覧で追従停止、状態更新・閉じる／再表示後もscrollTop維持。見失ったログのクリック呼び戻し、固定先反映待ち中の呼び戻し後にPlayspaceを維持。空ログ・ルビ／ローマ字・複数訳文を確認。
+- 操作、既存契約、視覚／5言語／アクセシビリティの3人で独立レビュー。範囲端での焦点、見失い時の説明、グループ名の翻訳、模擬固定先更新のタイマーを修正後、全員 **LGTM、未解消のhigh / mediumなし**。
+- **未検証**: HMD内の視認性・レーザー操作・600ms長押しの実入力、実Tauri／Python保存、スクリーンリーダー実読み上げ。今回はデザイン案の提示まで。本体実装に進む場合は共有LogBoxをPCへ影響させず、VR内の表示だけに適用する。
+
+### 文字を減らす調整（同日）
+
+ユーザーの「色の有無でON/OFFを判断し、VR空間では文字を減らしたい」に合わせ、HTML案のランチャーを更新した。上記の常時ON/OFF文字はこの調整で撤去。機能名は維持し、ONはprimary_700の塗り＋24pxのチェック、OFFはdark_850の面と控えめなアイコン。反映中は静的砂時計、設定中は錠のバッジを優先し、ARIAのpressed / busy / disabledと説明を保持。通常の機能アイコンを40pxへ拡大した。
+
+画面ボタンの「開く／表示中」も撤去し、下端の帯で表示中を示す。長押し案内は領域を保持したまま通常は非表示、pointer / keyboard focus / 押下中 / 見失い時にだけ表示する。製品コードには未反映。
+
+HTMLビルド59 modules、5言語×通常／反映中／設定中の15画面の880×128寸法・ラベル収まり、バッジ形状と配色、pending／設定中の要求0件、通常時の案内非表示とTab焦点時の案内表示を確認。独立レビューで新規high / mediumなし。24pxバッジ・13px案内のHMD内での判別は未検証。証拠は同ディレクトリの `launcher-color-final.png`、例外状態の `launcher-color-{pending,config,lost}.png`、`color-measurements.json`。
+
+### チェック・見出しを吹き出しへ移す調整（同日）
+
+ユーザーの追加指示に合わせ、通常ONのチェックと画面ボタンの下端帯を撤去。ON／表示中は緑、OFF／非表示は暗い面で統一した。機能名は残し、反映中の砂時計・設定中の錠だけを例外として維持。操作パネルの「固定先／位置操作／文字サイズ／不透明度」の見出しと個別操作名も撤去し、アイコン、左右のL/R、A−／現在値／A＋、不透明度の現在値で操作する案にした。
+
+操作名・現在の状態・操作結果や長押しの説明は、約300msポインタを止めた時の吹き出しへ移した。VR用の `data-vr-hover` とキーボードfocusに対応し、最後に操作した側の対象を表示。Escapeで閉じ、同じ対象の状態が更新されても勝手に再表示しない。吹き出しは操作本体の上に出し、左右端を領域内へ収め、pointer-events:noneで操作を遮らない。設定中の機能も理由を表示できるようHTMLではaria-disabled＋click guardを使う。
+
+HTMLビルド **PASS、60 modules**。5言語×通常／反映中／設定中×ランチャー両端の30件と、5言語×操作パネル全9操作の45件で、吹き出しの収まり・ボタンとの非重複・当たり判定なしを確認。pending／設定中の強制クリックは要求0件。通常ON→反映中→OFF、Escape後の状態更新で非表示維持、ポインタ離脱で非表示、hoverを残したまま別ボタンへTab移動して説明が追従、見失ったログの呼び戻し後の状態更新も確認した。独立の操作／コード・視覚レビューを実施。証拠は `launcher-tooltip.png`、`toolbar-tooltip.png`、`tooltip-measurements.json`、`toolbar-tooltip-measurements.json`。
+
+**本体未反映・VR実機未検証。** 操作本体880×128／720×96とボタンサイズは維持し、HTMLでは上部112pxを吹き出しの確認領域として追加した。現行VRではReactのoverflow制限・texture crop・alpha maskにより、この領域は切れる。実装時には描画領域／atlas、透明マスク、位置補正と透明部分の当たり判定の調整が必要。CSSの透明背景だけでは、現行の固定alpha maskによって余白が黒い帯になる点にも注意する。製品locale・Python・Rust・UIソースは今回も変更していない。
+
+## 19. 別オーバーレイの吹き出し実装（2026-10-02）
+
+ユーザーの「別オーバーレイで考えている」「やってみましょうか」を受け、§18の最終ランチャー／操作パネル案と吹き出しを本体へ反映した。ログ本文のデザインは引き続きHTML案の段階。今回の変更は未コミット・未push。
+
+### 描画・入力の契約
+
+- 共有atlasにtooltip領域 `[right_x, 760, 360, 120]` を予約し、最小atlasを1628×880へ変更。Python・既定JSON・Rustの初期寸法を一致させた。新規の撮影スレッドや依存は追加していない。
+- SteamVRの専用handle `VRCT_tooltip` を1つ追加。同じGL textureを共有し、対象ボタンの上12px相当／親の前4mmへ配置する。launcherとtoolbarの固定先・実寸へ追従。sort orderは70、pointerは100。入力／掴み／リサイズの候補に含めない。
+- `/run/vr_panel_tooltip` は `{epoch, revision, visible, region, button:[x,y,w,h], size:[360,body_h], arrow_x, mode}` を受ける。非表示は `{epoch,revision,visible:false}` のみ。modeはhover（既定）／focus。Controllerで検証し、Modelは重い初期化をせず転送、OverlayはQueueで所有スレッドへ渡す。既存endpointは維持。
+- epoch48bitとrevision32bitを80個の白黒4×8pxセルで描く。epochはOverlay内で単調増加、layoutの追加metadata `tooltip_epoch` で通知。bodyはy=8、高さ104px以内、下向き矢印6px。撮影画像のmarker一致を確認してから透明マスク／upload／bounds／位置を更新し表示する。markerは常時透明。古いWGC frameや同一rawの再利用に対応する。
+- VR OFF/ONの各遷移、親非表示、launcher auto-hide、toolbar hide、grab／resize、layout変更、HWND交換・capture再作成で取消。UIは古いlayout metadataを拒否し、古い2rAF通知も取消。destroy時に専用handleを破棄する。
+- 通常ONのcheck、画面表示中の下端帯、toolbarの見出し／操作名を撤去。ON／表示中は設定画面と同じprimary_700、OFFは暗い面。例外の砂時計／錠、L/R、文字サイズ／不透明度の現在値を保持。ARIAの名前・状態・説明、pending／設定中／範囲端のclick guard、ログ600ms長押しは維持。
+- hover約300ms、keyboard focus即時、離脱／Escapeで非表示。同じ対象の状態変更は説明を更新する。Escapeで閉じた同じ対象は状態変更だけでは再表示しない。pointer clickがfocusを移してもhover表示を維持する。5言語に34キーを追加。
+
+### 確認用HTML・検証
+
+- `docs/vr_ui_tooltip_implementation.html` と `http://127.0.0.1:8768/tooltip-implementation/vr-tooltip-preview.html`。製品のLauncher／Toolbar／Tooltipと翻訳を直接ビルドし、VR上の別handle配置だけをHTMLで模擬表示する。実設定は変更しない。
+- 編集・再生成: `C:/Users/misyaguzi/.codex/visualizations/2026/10/01/01a0f64c-b1e5-7762-afc4-3bb47707198f/vr-settings-design/tooltip-implementation/` の `node build-preview.mjs`。50 modules PASS。検証JSON／launcher-implementation.png／toolbar-implementation.pngを同じ場所へ保存。
+- Python: unittestの対象5パターン（tooltip、grab/move、capture recovery、controller toolbar、shutdown timeout）147件PASS。実config保存は実行時にno-opにして保護した。pytest全体は実行せず、AGENTSのunittest fallbackを使用。
+- Node: tooltip契約3件＋既存言語mutation15件、計18件PASS。`npm run vite-build`、`cargo check --manifest-path src-tauri/Cargo.toml`、UI対象ESLint、5言語のキー整合性、`git diff --check` PASS。UIの既存unused警告2件は残存。
+- `.venv`にruffがないため既存system ruff 0.16.4を使用。新helper／test直接check PASS。変更Python7ファイルのHEAD比較は新規違反0、既存407件は残存。全project lint成功とは扱わない。依存追加なし。
+- 実ブラウザー: 5言語×通常／pending／設定中×ランチャー3対象45件、5言語×通常／pending×操作パネル全9対象90件で高さ104px以内・本文の収まり・親幅内・非重複・pointer-events:noneを確認。設定中4機能／pending7操作の強制クリックは要求0件。クリック後の状態更新、focus前Escape、pointerとkeyboardの切替、復旧epoch更新後の再表示を確認した。実DOMの80bit markerと14件のfrontend通知はPython validation契約とも一致。
+- backend／frontendの独立レビューは最終LGTM、未解消high／mediumなし。frontendのpointer click後のfocus切替、focus前Escapeの2件を修正して再検証した。
+
+**実機確認は未完了。** この作業時点でSteamVRのvrserver／vrmonitorは起動していなかった。最新版の開発版で、(1) 手首／toolbar各端へのhoverとクリック貫通、(2) 左右の手・HMD・空間への追従、(3) grab／resize／auto-hide／OFF→ON／SteamVR再接続時に旧説明が残らないこと、(4) Windows DPI125%／150%の文字・marker・矢印の見え方、を確認する必要がある。HMD視認性・GPU/OpenVR/WGCの実処理・実config保存を成功したとは報告していない。
+
+## 20. Claude Code向けの作業引き継ぎ（2026-10-02）
+
+### 合意と次の作業
+
+ユーザーは§19の実装確認後に「OKです。残りはClaudeコードに引き継ぎます。ドキュメント等を更新してください」と依頼した。本節は次の担当者がチャット履歴なしで再開するための現在状態と作業候補を記録する。
+
+1. **現在の未コミット差分を確認する。** HEADは `f1210854`。その前は `aaca2de0`（設定タブ順・不足項目の整理）、`a394f180`（撮影の再有効化・復旧）。今回のtooltip／launcher／toolbarは作業ツリーにあり、HEADの実装とは異なる。
+2. **新しい吹き出しをSteamVR実機で確認する。** ソースを読む最新版の開発版を用意し、下記の実機項目を確認する。`vite-build` と `cargo check` の成功だけでは、稼働中の配布exeが更新されているとは判断できない。
+3. **残っているログ本文のデザインを進める。** `docs/vr_ui_remaining_proposal.html` の「改修案」／外部ソースの `ProposalLog` を参照し、確定した設定・言語画面の面色・角丸・文字へ合わせる。PCと共用する `LogBox` を変更する場合はPC側も検証する。VR用ラッパーや既存のVR条件で適用できる範囲を先に調べる。
+4. 変更した範囲の検証と独立レビューを行い、実機確認の結果を本書へ追記する。commit／push／配布は、実際のユーザー依頼と現行 `AGENTS.md` に沿って行う。今回の引き継ぎ更新では実施していない。
+
+設定画面はユーザーがfixしたデザインを基準としている。通常のON／表示中はprimary_700の面、OFF／非表示は暗い面、通常checkなし。操作パネルの可視見出し・操作名は省略し、説明は吹き出しで確認する。機能名、L/R、文字サイズと不透明度の現在値は残す。
+
+### 差分の入口・未追跡ファイル
+
+| 役割 | 確認するファイル |
+|---|---|
+| 吹き出しの表示・入力切り替え | `src-ui/views/vr/VrTooltip.jsx`、`VrTooltip.module.scss` |
+| epoch・marker・座標、Nodeテスト | `src-ui/logics/common/vrPanelTooltip.js`、`vrPanelTooltip.test.js` |
+| ランチャー・操作パネルの承認案 | `src-ui/views/vr/VrLauncher.jsx`、`VrToolbar.jsx` と各SCSS |
+| 領域と世代metadataの受信・古いsnapshot棄却 | `src-ui/views/vr/VrApp.jsx`、`src-ui/logics/store.js` |
+| メインへの送信許可・応答route | `src-ui/views/app/_app_controllers/VrPanelSyncController.jsx`、`src-ui/logics/useReceiveRoutes.js` |
+| endpoint・検証・重い初期化を避ける転送 | `src-python/mainloop.py`、`controller.py`、`model.py` |
+| OpenVR handle・撮影・Queue・破棄 | `src-python/models/overlay/overlay.py` |
+| 入力validation・実画像marker・alpha | `src-python/models/overlay/overlay_tooltip.py` |
+| 回帰テスト | `src-python/test/test_overlay_tooltip.py`、`test_overlay_grab_move.py` |
+| atlasの寸法 | `src-ui/views/vr/vr_layout.json`、`computeVrLayout()`、`src-tauri/src/lib.rs` の初期window寸法 |
+| 翻訳 | `locales/{ja,en,ko,zh-Hans,zh-Hant}.yml` の `vr_panel.tooltip`（各34キー） |
+| 未実装のログ本文 | `src-ui/views/vr/VrLogWindow.jsx`、`VrWindow.module.scss`、`src-ui/views/app/main_page/main_section/message_container/log_box/LogBox.jsx` と配下の `message_container/MessageContainer.jsx`／SCSS |
+
+引き継ぎ時点の未追跡の製品ソースは、`VrTooltip.jsx`／SCSS、`vrPanelTooltip.js`／test、`overlay_tooltip.py`、`test_overlay_tooltip.py` の6ファイル。コミット対象を確認する際に、tracked diffだけを見てこれらを落とさないこと。`docs/vr_ui_remaining_proposal.html`、`docs/vr_ui_tooltip_implementation.html` も未追跡。`AGENTS.md` は既存の未追跡ファイルとして保持し、今回の製品差分と一括で扱わない。その他のユーザー変更は再開時のstatusに従う。
+
+### 実機確認の項目と判断基準
+
+- ランチャーとtoolbarの左端／右端を約300ms指すと、対象上に正しい操作名・現在状態を表示する。外すと消え、クリック後も更新した状態へ追従する。通常ONのcheckや下端の表示帯が再び出ていないこと。
+- 吹き出し自体を指しても入力／grab候補にならず、ボタンのクリック・長押し・スクロールを遮らないこと。ログ600ms長押し・見失ったログの単クリック呼び戻し、pendingの二度押し抑止を確認する。
+- ランチャー左右手、ログの空間／左右手／HMD固定先、移動・拡大縮小で親に追従すること。親auto-hide、toolbar hide、grab／resize開始で説明が残らないこと。
+- VR UI OFF→ON、短いOFF→ON、WebView/HWND再作成、SteamVR再接続、WGC利用不可→PrintWindow→再開で旧説明や黒い余白が残らないこと。画像が更新できない間は旧説明を表示せず、再開後の新markerで表示すること。
+- Windows DPI100%／125%／150%、既定／最小／最大ログ、5言語で領域切れ・矢印・文字・ボタンとの間隔を確認する。設定・言語画面にも実機の可読性／レーザー操作の未検証が残る（§13・17）。
+- 再現時はDPI、UI言語、固定先、panel寸法、WGC／PrintWindowの別、OFF/ON・再接続の順、発生時刻と `process.log` の関連箇所を記録する。HMD目視、endpoint配送、設定保存、GPU/OpenVR画像転送のどこまで確認したかを分けて報告する。
+
+以前から残っているログresize時のVRChat／PC全体の停止調査、Windows10 WGC、配布ビルド、VR内入力の候補は§7を参照。今回解決したとは扱わない。
+
+### 再検証コマンドと環境
+
+ルートで実行するソフトウェア検証は以下。直前の実装検証ではNode18件、UI／Rustビルドが成功している。本ドキュメント更新では製品を変更しておらず、それらを再実行していない。
+
+```powershell
+node --test src-ui/logics/common/vrPanelTooltip.test.js src-ui/logics/main/languageMutationCoordinator.test.js src-ui/logics/main/languageMutations.test.js
+npm run vite-build
+cargo check --manifest-path src-tauri/Cargo.toml
+git diff --check
+```
+
+`.venv` はpytest9.1.1を持つがruffは未導入で、`requirements-dev.txt` のpytest8.4.2／ruff0.14.4と一致しない。前回は既存unittestに限定して検証した。`config.py` はimport時に `Config()` を生成して設定を保存し、既存controllerテストもsetterを使うため、テスト開始前から保存を止める必要がある。以下は前回と同じ保護方式を再現する例。実保存処理の検証にはならない。
+
+```powershell
+@'
+import builtins
+import sys
+import unittest
+
+sys.path.insert(0, "src-python")
+original_build_class = builtins.__build_class__
+
+def protect_config(func, name, *bases, **kwargs):
+    cls = original_build_class(func, name, *bases, **kwargs)
+    if name == "Config" and func.__globals__.get("__name__") == "config":
+        cls.saveConfigToFile = lambda self: None
+    return cls
+
+try:
+    builtins.__build_class__ = protect_config
+    import config
+finally:
+    builtins.__build_class__ = original_build_class
+
+loader = unittest.TestLoader()
+suite = unittest.TestSuite()
+for pattern in (
+    "test_overlay_tooltip.py",
+    "test_overlay_grab_move.py",
+    "test_vr_panel_capture_recovery.py",
+    "test_controller_vr_panel_toolbar.py",
+    "test_overlay_shutdown_timeout.py",
+):
+    suite.addTests(loader.discover("src-python/test", pattern=pattern))
+result = unittest.TextTestRunner(verbosity=1).run(suite)
+raise SystemExit(0 if result.wasSuccessful() else 1)
+'@ | .\.venv\Scripts\python.exe -
+```
+
+前回の対象5パターンは147件PASS。`test.test_*` のmodule指定はPythonの標準 `test` namespaceと衝突するためdiscoverを使用した。手動の `test_endpoints.py`／`test_client.py` は収集しない。GPU・音声・外部APIのテストを通ったことにしない。
+
+既存system ruffは `C:/Users/misyaguzi/AppData/Local/Programs/Python/Python311/Scripts/ruff.exe`、前回version0.16.4。新helper／testの直接checkはPASS、変更Python7ファイルのHEAD比較は新規違反0／既存407件。全project checkは未実施であり、この既存件数は7ファイルの比較結果に限る。UI ESLintは9系と既存 `.eslintrc.json` の互換性・parser不足に対応して、既存React設定／rulesをESLint APIのflat configへ移して対象限定で実行した。既存unused warning2件は残る。`npm run lint` scriptはない。
+
+```powershell
+& 'C:/Users/misyaguzi/AppData/Local/Programs/Python/Python311/Scripts/ruff.exe' check src-python/models/overlay/overlay_tooltip.py src-python/test/test_overlay_tooltip.py
+```
+
+### HTML・証拠の場所
+
+- 本体のtooltip確認: `docs/vr_ui_tooltip_implementation.html`。ログ案を含む比較: `docs/vr_ui_remaining_proposal.html`。どちらもstandaloneなので、サーバーなしでファイルを開ける。前者の配置と状態は模擬値であり、SteamVR実機の結果ではない。
+- 編集・ビルダー・モックは `C:/Users/misyaguzi/.codex/visualizations/2026/10/01/01a0f64c-b1e5-7762-afc4-3bb47707198f/vr-settings-design/`。`tooltip-implementation/` が本体実装版、`remaining-ui/` がログを含む提案版。`remaining-ui/ProposalComponents.jsx` の `ProposalLog` がログ案のソース。ビルダーはこのcheckoutの既存node_modulesを絶対パスで参照する。
+- `tooltip-implementation/verification.json` にランチャー45／toolbar90条件の実DOM測定とmarker／通知の記録。`launcher-implementation.png`、`toolbar-implementation.png` が最終表示の画像。ファイルの存在を今回再確認した。
+- ローカルURLは `http://127.0.0.1:8768/tooltip-implementation/vr-tooltip-preview.html` と `http://127.0.0.1:8768/remaining-ui/vr-remaining-ui-proposal.html`。引き継ぎ更新時の確認では8768のlistenerは見つからなかったため、ブラウザーに残ったページとサーバーの稼働を区別する。必要なら次で開始する（ターミナルを開いている間だけ稼働）。
+
+```powershell
+.\.venv\Scripts\python.exe -u -m http.server 8768 --bind 127.0.0.1 --directory 'C:/Users/misyaguzi/.codex/visualizations/2026/10/01/01a0f64c-b1e5-7762-afc4-3bb47707198f/vr-settings-design'
+```
+
+### 実装を調整するときの注意
+
+WGCのbuffered frameはUIの2rAF完了後でも古い内容を返せるため、撮影画像内のepoch／revision markerによる照合が必要。透明mask・bounds・実寸・位置を揃え、marker行を表示しない。OpenVR／GLをendpoint workerから直接操作せず、同じQueueと所有スレッドを使用する。
+
+epochは現在のOverlay生成時にrandom47bitで始まり、その同じinstance内で増加する。現実装のModel／sidecarは一度生成され、OFF/ONとSteamVR再起動ではOverlayを再利用する。将来、同じWebViewを保持してbackend／Overlayを新規生成する復旧処理を追加するなら、UIが保持する最大epochのリセットまたはsession順序の設計も合わせて検討する。現行差分の実バグとは確認されていない。
+
+本書の過去の作業ルールは当時の記録として残している。再開時の実際のユーザー依頼、適用される `AGENTS.md` と現在の実行権限を先に確認する。

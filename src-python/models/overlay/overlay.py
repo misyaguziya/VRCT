@@ -1,4 +1,5 @@
 import os
+import secrets
 from functools import lru_cache
 import ctypes
 import sys
@@ -87,9 +88,11 @@ _COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
 try:
     from . import overlay_utils as utils
     from . import window_capture
+    from .overlay_tooltip import marker_matches, tooltip_mask, validate_tooltip
 except ImportError:
     import overlay_utils as utils
     import window_capture
+    from overlay_tooltip import marker_matches, tooltip_mask, validate_tooltip
 
 # VR UI: Tauriの "VRCT VR Panel" ウィンドウ1枚に複数のウィンドウ (ログ・ランチャー) を並べて描き、
 # 1回だけ撮影して、オーバーレイごとにその一部 (領域) を切り出して表示する。
@@ -100,6 +103,7 @@ LAUNCHER = "launcher"
 POPUP = "popup"
 # ログウィンドウの下の操作バー (XSOverlay と同じ位置)。settings には入れない (位置はログに付いて動き、保存もしない)
 TOOLBAR = "toolbar"
+TOOLTIP = "tooltip"
 # ログウィンドウの大きさ (論理px)。角を掴んで伸ばせる範囲と既定
 PANEL_DEFAULT_SIZE = (900, 700)
 PANEL_SIZE_RANGE = ((600, 400), (1400, 1000))
@@ -131,12 +135,13 @@ def computeVrLayout(width: int, height: int) -> Dict[str, Any]:
     """
     right_x = max(width, 900) + 8
     return {
-        "atlas": (right_x + 720, max(height + 8 + 128, 656 + 96)),
+        "atlas": (right_x + 720, max(height + 8 + 128, 880)),
         "regions": {
             PANEL: (0, 0, width, height),
             LAUNCHER: (10, height + 8, 880, 128),
             POPUP: (right_x, 0, 720, 640),
             TOOLBAR: (right_x, 656, 720, 96),
+            TOOLTIP: (right_x, 760, 360, 120),
         },
     }
 
@@ -255,6 +260,8 @@ def _atlasMask(image_size: tuple, atlas: tuple, regions: tuple) -> Image.Image:
     mask = Image.new("L", image_size, 0)
     draw = ImageDraw.Draw(mask)
     for size in layout["regions"]:
+        if size == TOOLTIP:
+            continue
         x0, y0, x1, y1 = regionRect(size, image_size, layout)
         draw.rounded_rectangle((x0, y0, x1 - 1, y1 - 1), radius=round(_PANEL_CORNER_RADIUS_PX * scale), fill=255)
     return mask
@@ -637,6 +644,14 @@ class Overlay:
         self.layout_applied: Optional[Dict[str, Any]] = None
         self.window_fitted_layout: Optional[Dict[str, Any]] = None
         # 並びが変わったときに VR画面へ知らせる (並びを描くのは React)
+        self.tooltip_epoch = secrets.randbelow((1 << 47) - 1) + 1
+        self.tooltip_revision = 0
+        self.tooltip_requests: Queue = Queue()
+        self.tooltip_state: dict | None = None
+        self.tooltip_ready = False
+        self.tooltip_shown = False  # 専用 handle を表示している (隠すとき、すでに隠れていれば OpenVR を呼ばない)
+        self.tooltip_manipulating = False
+        self.tooltip_handle: int | None = None
         self.layout_callback: Optional[Callable[[Dict[str, Any]], None]] = None
         # VR画面が描き終えた並びのログの大きさ (VR画面から届く)。これと撮影の縦横比が合ってから表示を切り替える。
         # 並びはログの大きさだけで決まる (全体の大きさは同じでもログの大きさが違うことがあるので、ログの大きさで見る)
@@ -699,6 +714,7 @@ class Overlay:
             self.system = openvr_session.acquire(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
+            self.resetTooltipEpoch()
             self.tip_offsets = {}
             self.handle = {}
             self.vr_windows_hidden = set()
@@ -722,6 +738,10 @@ class Overlay:
                 self.overlay.setOverlaySortOrder(self.ghost_handle, 50)
                 self.overlay.hideOverlay(self.ghost_handle)
                 self.ghost_key = None
+            if any(size in self.settings for size in (LAUNCHER, PANEL)):
+                self.tooltip_handle = self.overlay.createOverlay("VRCT_tooltip", "VRCT_tooltip")
+                self.overlay.setOverlaySortOrder(self.tooltip_handle, 70)
+                self.overlay.hideOverlay(self.tooltip_handle)
             if any(size in self.settings for size in VR_REGIONS):
                 try:
                     self.initPanelTexture()
@@ -827,6 +847,7 @@ class Overlay:
             # 大きさが変わって使わなくなったテクスチャ。SteamVR が覚えているかもしれないので、接続を閉じた後に消す
             "old_textures": [],
         }
+        self.resetTooltipEpoch()
         self.panel_last_raw = None  # 作り直したテクスチャには必ず転送する
         self.panel_stopped = False
         self.layout_applied = None  # 最初に撮れたフレームで表示範囲を設定する
@@ -838,6 +859,123 @@ class Overlay:
         self.capture_job = None  # 止める前に頼んだ撮影の結果は使わない
         self.closePanelStream()
         self.stream_unavailable = False
+
+    def getVrLayout(self) -> dict:
+        """Include the capture generation without changing the static layout."""
+        return {**self.layout, "tooltip_epoch": self.tooltip_epoch}
+
+    def resetTooltipEpoch(self, notify: bool = True) -> None:
+        self.hideTooltip()
+        self.tooltip_epoch += 1
+        self.tooltip_revision = 0
+        if notify and self.layout_callback is not None:
+            try:
+                self.layout_callback(self.getVrLayout())
+            except Exception:  # noqa: BLE001 - keep overlay running when a UI callback fails.
+                errorLogging()
+
+    def setTooltip(self, data: dict) -> None:
+        """Validate and enqueue only; OpenVR is owned by the overlay loop."""
+        self.tooltip_requests.put(validate_tooltip(data))
+
+    def hideTooltip(self) -> None:
+        self.tooltip_state = None
+        self.tooltip_ready = False
+        self.panel_last_raw = None
+        self.hideTooltipOverlay()
+
+    def hideTooltipOverlay(self) -> None:
+        """吹き出しの handle を隠す。装飾なので、失敗してもオーバーレイ全体は止めない。"""
+        if not self.tooltip_shown or self.tooltip_handle is None or self.overlay is None:
+            return
+        self.tooltip_shown = False
+        try:
+            self.overlay.hideOverlay(self.tooltip_handle)
+        except Exception:  # noqa: BLE001
+            errorLogging()
+
+    def safeUpdateTooltip(self, apply_requests: bool = False) -> None:
+        """吹き出しの処理。例外は撮影の失敗として数えない (数えると、続いたときにVR画面の撮影ごと止まる)。"""
+        try:
+            if apply_requests:
+                self.applyTooltipRequests()
+            self.updateTooltip()
+        except Exception:  # noqa: BLE001
+            errorLogging()
+            self.tooltip_state = None
+            self.tooltip_ready = False
+
+    def applyTooltipRequests(self) -> None:
+        while True:
+            try:
+                state = self.tooltip_requests.get_nowait()
+            except Empty:
+                break
+            if state["epoch"] != self.tooltip_epoch or state["revision"] <= self.tooltip_revision:
+                continue
+            self.tooltip_revision = state["revision"]
+            self.hideTooltip()
+            if state["visible"]:
+                self.tooltip_state = state
+
+    def tooltipTargetMatches(self, xy: tuple | None) -> bool:
+        state = self.tooltip_state
+        if state is None:
+            return False
+        if state["mode"] == "focus":
+            return True
+        if xy is None:
+            return False
+        rx, ry, _, _ = self.layout["regions"][state["region"]]
+        x, y, w, h = state["button"]
+        return rx + x <= xy[0] < rx + x + w and ry + y <= xy[1] < ry + y + h
+
+    def updateTooltip(self) -> None:
+        state = self.tooltip_state
+        if state is None:
+            return
+        parent = state["region"]
+        available = parent in self.settings if parent == LAUNCHER else PANEL in self.settings
+        visible = self.launcher_interactive if parent == LAUNCHER else self.toolbar_visible
+        if (not available or not visible or not self.vr_panel_enabled or self.gl is None or self.panel_stopped
+                or parent in self.vr_windows_hidden or (parent == TOOLBAR and PANEL in self.vr_windows_hidden)
+                or self.grabbing is not None or self.resizing is not None or self.layout_applied is not self.layout
+                or not self.tooltipTargetMatches(self.pointer_notified)):
+            self.hideTooltip()
+            return
+        if not self.tooltip_ready or self.tooltip_handle is None:
+            return
+        if parent == TOOLBAR:
+            relative, tracker = self.toolbar_relative, self.toolbar_tracker_index
+        else:
+            s = self.settings[parent]
+            base, tracker = self.getTracker(s["tracker"])
+            relative = utils.transform_matrix(base, (s["x_pos"], s["y_pos"], -s["z_pos"]), (s["x_rotation"], s["y_rotation"], s["z_rotation"]))
+        if relative is None or tracker == openvr.k_unTrackedDeviceIndexInvalid or (PANEL if parent == TOOLBAR else parent) in self.position_pending:
+            self.hideTooltip()
+            return
+        _, _, pw, ph = self.layout["regions"][parent]
+        mpp = self.regionWidthM(parent) / pw
+        x, y, w, _ = state["button"]
+        bw, bh = state["size"]
+        center_x = min(max(x + w / 2, bw / 2 + 12), pw - bw / 2 - 12)
+        offset = np.eye(4)
+        offset[:3, 3] = ((center_x - pw / 2) * mpp, (ph / 2 - y + 12 + (bh + 6) / 2) * mpp, 0.004)
+        pose = (utils.toHomogeneous(relative) @ offset)[:3, :]
+        if tracker == _PLAYSPACE_INDEX:
+            self.overlay.setOverlayTransformAbsolute(self.tooltip_handle, openvr.TrackingUniverseStanding, mat34Id(pose))
+        else:
+            self.overlay.setOverlayTransformTrackedDeviceRelative(self.tooltip_handle, tracker, mat34Id(pose))
+        self.overlay.setOverlayWidthInMeters(self.tooltip_handle, bw * mpp)
+        tx, ty, _, _ = self.layout["regions"][TOOLTIP]
+        scale = self.panel_image_size[0] / self.layout["atlas"][0]
+        tw, th = self.gl["size"]
+        bounds = openvr.VRTextureBounds_t()
+        bounds.uMin, bounds.uMax = tx * scale / tw, (tx + bw) * scale / tw
+        bounds.vMin, bounds.vMax = 1 - (ty + 8) * scale / th, 1 - (ty + 8 + bh + 6) * scale / th
+        self.overlay.setOverlayTextureBounds(self.tooltip_handle, bounds)
+        self.overlay.showOverlay(self.tooltip_handle)
+        self.tooltip_shown = True
 
     def panelSize(self) -> tuple:
         """ログウィンドウの大きさ (論理px)。"""
@@ -857,13 +995,14 @@ class Overlay:
         if layout == self.layout:
             return
         self.layout = layout
+        self.resetTooltipEpoch(notify=False)
         self.panel_last_raw = None
         self.layout_requested_at = time.monotonic()
         self.layout_retried = False
         self.layout_logged = set()
         if self.layout_callback is not None:
             try:
-                self.layout_callback(layout)
+                self.layout_callback(self.getVrLayout())
             except Exception:
                 errorLogging()
 
@@ -905,6 +1044,8 @@ class Overlay:
             fu = self.panel_image_size[0] / self.gl["size"][0]
             fv = self.panel_image_size[1] / self.gl["size"][1]
         for size, handle in self.vrRegionHandles().items():
+            if size == TOOLTIP:
+                continue  # 吹き出しの表示範囲は updateTooltip が決める
             u_min, u_max, v_min, v_max = regionBounds(size, self.layout)
             bounds = openvr.VRTextureBounds_t()
             bounds.uMin, bounds.uMax = u_min * fu, u_max * fu
@@ -932,6 +1073,8 @@ class Overlay:
         handles = {size: self.handle[size] for size in self.vrRegionSizes()}
         if self.toolbar_handle is not None:
             handles[TOOLBAR] = self.toolbar_handle
+        if self.tooltip_handle is not None:
+            handles[TOOLTIP] = self.tooltip_handle
         return handles
 
     def prepareGl(self) -> Any:
@@ -991,6 +1134,8 @@ class Overlay:
                 break
             if enabled and not self.vr_panel_enabled:
                 restart_capture = True
+            if enabled != self.vr_panel_enabled:
+                self.resetTooltipEpoch()
             self.vr_panel_enabled = enabled
         if not restart_capture or not self.vr_panel_enabled:
             return
@@ -1019,7 +1164,13 @@ class Overlay:
     def updatePanel(self) -> None:
         """VRパネルのウィンドウを撮影してオーバーレイへ転送する。"""
         now = time.monotonic()
+        manipulating = self.grabbing is not None or self.resizing is not None
+        if manipulating and not self.tooltip_manipulating:
+            self.resetTooltipEpoch()
+        self.tooltip_manipulating = manipulating
+        self.safeUpdateTooltip(apply_requests=True)
         if not self.vr_panel_enabled or self.gl is None or self.panel_stopped:
+            self.hideTooltip()
             return
         self.markStep("panel:capture")
         capture = self.collectCapture(now)
@@ -1054,7 +1205,14 @@ class Overlay:
         pixels = window_capture.bgraFromCapture(capture)
         size = (pixels.shape[1], pixels.shape[0])
         # 各領域だけを角丸で残し、それ以外は透明にする (PrintWindow のアルファは不定)
-        pixels[..., 3] = atlasMaskArray(size, self.layout)
+        mask = atlasMaskArray(size, self.layout)
+        tooltip_matches = self.tooltip_state is not None and marker_matches(pixels, self.layout, self.tooltip_state)
+        if tooltip_matches:
+            mask = tooltip_mask(size, self.layout, self.tooltip_state, mask)
+        else:
+            self.tooltip_ready = False
+            self.hideTooltipOverlay()
+        pixels[..., 3] = mask
         GL = self.prepareGl()
         texture_size = self.gl["size"]
         if texture_size is None or size[0] > texture_size[0] or size[1] > texture_size[1]:
@@ -1076,6 +1234,8 @@ class Overlay:
         # 表示範囲はテクスチャの中の撮影画像の大きさで決まるので、並びか撮影の大きさが変わったら当て直す
         if self.layout_applied is not self.layout or image_size_changed:
             self.applyLayout()
+        self.tooltip_ready = tooltip_matches
+        self.safeUpdateTooltip()
 
     def collectCapture(self, now: float) -> Optional[tuple]:
         """撮影を使い捨てのスレッドに頼み、撮れていればその結果 (captureWindowRaw) を返す。まだなら None。
@@ -1119,11 +1279,15 @@ class Overlay:
             return
         self.panel_last_capture = now
         if self.panel_hwnd is None or not window_capture.isWindow(self.panel_hwnd):
+            if self.panel_hwnd is not None:
+                self.resetTooltipEpoch()
             self.panel_hwnd = None
             if now - self.panel_last_find < _PANEL_FIND_INTERVAL_SEC:
                 return
             self.panel_last_find = now
             self.panel_hwnd = window_capture.findWindow()
+            if self.panel_hwnd is not None:
+                self.resetTooltipEpoch()
             if self.panel_hwnd is None:
                 return
             self.window_fitted_layout = None  # 見つけ直したウィンドウは既定の大きさで作られている
@@ -1158,8 +1322,10 @@ class Overlay:
             # 同じウィンドウなのに止まった: 撮り直しを繰り返さず PrintWindow に切り替える
             printLog("overlay: 画面キャプチャが止まったので PrintWindow で撮ります")
             self.stream_unavailable = True
+            self.resetTooltipEpoch()
             self.closePanelStream()
             return None
+        self.resetTooltipEpoch()
         self.closePanelStream()  # ウィンドウが作り直された
         try:
             self.panel_stream = window_capture.WindowStream(self.panel_hwnd)
@@ -1363,6 +1529,8 @@ class Overlay:
             return
         if visible and PANEL in self.position_pending:
             return
+        if not visible:
+            self.resetTooltipEpoch()
         self.toolbar_visible = visible
         if visible:
             self.placeToolbar(self.getTracker(self.settings[PANEL]["tracker"])[1], self.panelRelative())
@@ -1893,7 +2061,11 @@ class Overlay:
         target = 1.0 if self.launcher_shown else 0.0
         step = dt / _LAUNCHER_FADE_SEC
         self.launcher_alpha = min(self.launcher_alpha + step, target) if target > self.launcher_alpha else max(self.launcher_alpha - step, target)
+        was_interactive = self.launcher_interactive
         self.launcher_interactive = self.launcher_alpha >= 1.0 and (not self.launcher_auto_hide or now - self.launcher_shown_at >= _LAUNCHER_INPUT_DELAY_SEC)
+
+        if was_interactive and not self.launcher_interactive:
+            self.resetTooltipEpoch()
 
     def setVrWindows(self, log: bool, popup: bool) -> None:
         """VR UIのウィンドウの表示・非表示を指定する (どのスレッドからでもよい)。"""
@@ -1920,6 +2092,8 @@ class Overlay:
                     if self.isPanelOutOfView(poseOf):
                         self.recallPanel(poseOf)
             elif not wanted and not hidden:
+                if size in (PANEL, LAUNCHER):
+                    self.resetTooltipEpoch()
                 self.vr_windows_hidden.add(size)
                 self.overlay.hideOverlay(self.handle[size])
                 if size == PANEL:
@@ -2022,6 +2196,9 @@ class Overlay:
         ):
             return
         self.pointer_notified = xy
+        # 吹き出しの照合は updateTooltip と同じ「通知済みの位置」で行う (現在位置で見ると、縁で不一致が繰り返される)
+        if self.tooltip_state is not None and not self.tooltipTargetMatches(xy):
+            self.resetTooltipEpoch()
         if self.pointer_callback is not None:
             try:
                 self.pointer_callback(xy)
@@ -2374,7 +2551,7 @@ class Overlay:
             for size in self.settings.keys():
                 if isinstance(self.handle.get(size), int):
                     self.overlay.destroyOverlay(self.handle[size])
-            for handle in [*self.pointer_handles.values(), *[h for h in (self.toolbar_handle, self.ghost_handle) if h is not None]]:
+            for handle in [*self.pointer_handles.values(), *[h for h in (self.toolbar_handle, self.ghost_handle, self.tooltip_handle) if h is not None]]:
                 self.overlay.destroyOverlay(handle)
         except Exception:
             errorLogging()
@@ -2382,6 +2559,10 @@ class Overlay:
         self.toolbar_handle = None
         self.toolbar_visible = False
         self.toolbar_alpha, self.toolbar_faded_at = 0.0, None
+        self.tooltip_handle = None
+        self.tooltip_state = None
+        self.tooltip_ready = False
+        self.tooltip_shown = False
         self.ghost_handle = None
         self.resizing = None
         self.overlay = None
@@ -2410,6 +2591,7 @@ class Overlay:
         if self.panel_errors >= _PANEL_ERROR_LIMIT and not self.panel_stopped:
             printLog("overlay: VR画面の撮影が続けて失敗したので止めます", {"errors": self.panel_errors})
             # OpenGL の環境はここでは消さない。消した後に SteamVR との接続を閉じると落ちる (teardown 参照)
+            self.resetTooltipEpoch()
             self.panel_stopped = True
             self.closePanelStream()
 
