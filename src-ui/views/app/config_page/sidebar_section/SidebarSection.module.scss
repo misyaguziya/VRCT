@@ -21,6 +21,7 @@
     height: 100%;
     width: 100%;
     background-color: var(--dark_900_color);
+    padding-top: var(--config_page_content_padding_top);
     padding-bottom: 0.8rem;
     overflow: hidden;
 }
@@ -31,7 +32,6 @@
     justify-content: space-between;
     overflow-y: auto;
     flex: 1;
-    padding-top: var(--config_page_content_padding_top);
     max-height: 60rem;
 }
 
