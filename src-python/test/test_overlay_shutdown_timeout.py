@@ -208,14 +208,10 @@ class SteamvrCheckTest(unittest.TestCase):
         """確かめている途中で終わったプロセス (名前が取れない) があっても、例外にしない。"""
         from models.overlay.overlay import Overlay
 
-        gone = MagicMock(info={"name": None})
-        steamvr = MagicMock(info={"name": "vrmonitor.exe"})
-        with patch("models.overlay.overlay.process_iter", return_value=[gone, steamvr]) as it, \
-                patch("models.overlay.overlay.os.name", "nt"):
+        with patch("models.overlay.overlay.isProcessRunning", return_value=True) as check,                 patch("models.overlay.overlay.os.name", "nt"):
             self.assertTrue(Overlay.checkSteamvrRunning())
-        it.assert_called_once_with(["name"])
-        with patch("models.overlay.overlay.process_iter", return_value=[gone]), \
-                patch("models.overlay.overlay.os.name", "nt"):
+        check.assert_called_once_with("vrmonitor.exe")
+        with patch("models.overlay.overlay.isProcessRunning", return_value=False),                 patch("models.overlay.overlay.os.name", "nt"):
             self.assertFalse(Overlay.checkSteamvrRunning())
 
     def test_error_in_the_overlay_thread_allows_starting_again(self):

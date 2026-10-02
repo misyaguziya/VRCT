@@ -5,7 +5,7 @@ import ctypes
 import sys
 import time
 import traceback
-from psutil import process_iter
+from models.process_check import isProcessRunning
 from queue import Empty, Queue
 from threading import Lock, Thread, get_ident
 from types import SimpleNamespace
@@ -2754,10 +2754,7 @@ class Overlay:
 
     @staticmethod
     def checkSteamvrRunning() -> bool:
-        _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
-        # 名前はまとめて取る。1つずつ p.name() で取ると、途中で終わったプロセスで NoSuchProcess になり、
-        # オーバーレイのスレッドが記録も残さずに止まった (VR UI の OFF→ON で VR画面の WebView が入れ替わるとき)
-        return any(p.info["name"] == _proc_name for p in process_iter(["name"]))
+        return isProcessRunning("vrmonitor.exe" if os.name == "nt" else "vrmonitor")
 
 if __name__ == "__main__":
     from overlay_image import OverlayImage
