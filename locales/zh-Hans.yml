@@ -174,6 +174,10 @@ config_page:
             label: "界面语言"
 
     translation:
+        section_label_ai_translation: "AI 翻译 (本地)"
+        section_label_external_api: "外部翻译 API"
+        section_label_local_llm: "本地 LLM / 兼容服务器"
+
         ctranslate2_weight_type:
             label: "选择离线翻译模型"
             desc: "可以选择用于离线翻译的翻译模型"
