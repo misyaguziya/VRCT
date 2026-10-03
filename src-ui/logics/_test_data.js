@@ -44,7 +44,7 @@ export const generateTestConversationData = (num) => {
         "Please, help me out.",
         "Good job today, let's do our best again tomorrow.",
     ];
-    const statuses = ["sent", "received"];
+    const types = ["sent", "received", "ocr"];
 
     for (let i = 0; i < num; i++) {
         const uuid = crypto.randomUUID();
@@ -53,17 +53,27 @@ export const generateTestConversationData = (num) => {
             { hour12: false, hour: "2-digit", minute: "2-digit" }
         );
         const messageIndex = Math.floor(Math.random() * messagesJa.length);
-        const status = statuses[Math.floor(Math.random() * statuses.length)];
+        const type = types[Math.floor(Math.random() * types.length)];
+
+        const isSent = type === "sent";
+        const isOcr = type === "ocr";
 
         const testData = {
             id: uuid,
-            category: status,
-            status: status,
+            category: isSent ? "sent" : "received",
+            status: isSent ? "sent" : "received",
+            source: isOcr ? "ocr" : undefined,
             created_at: date,
             messages: {
-                original: messagesJa[messageIndex],
-                translated: [
-                    messagesEn[messageIndex],
+                original: {
+                    message: isSent ? messagesJa[messageIndex] : messagesEn[messageIndex],
+                    transliteration: [],
+                },
+                translations: [
+                    {
+                        message: isSent ? messagesEn[messageIndex] : messagesJa[messageIndex],
+                        transliteration: [],
+                    },
                 ],
             },
         };

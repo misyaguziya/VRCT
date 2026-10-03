@@ -49,7 +49,7 @@ export const MessageContainer = ({ messages, status, category, created_at, sourc
         : is_system_message
         ? t("main_page.message_log.system")
         : is_ocr_message
-        ? t("main_page.message_log.received_ocr")
+        ? t("main_page.message_log.received_ocr", { ocr: t("main_page.ocr") })
         : t("main_page.message_log.received");
 
     const message_type_class_name = clsx({
