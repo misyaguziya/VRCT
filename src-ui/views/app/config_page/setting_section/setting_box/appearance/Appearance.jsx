@@ -41,6 +41,7 @@ const UiLanguageContainer = () => {
     const is_not_en_lang = currentUiLanguage.data !== "en" && currentUiLanguage.data !== undefined;
     return (
         <RadioButtonContainer
+            setting_id="ui_language"
             label={is_not_en_lang ? "UI Language" : t("config_page.appearance.ui_language.label")}
             desc={is_not_en_lang ? t("config_page.appearance.ui_language.label") : false}
             selectFunction={setUiLanguage}
@@ -58,6 +59,7 @@ const UiScalingContainer = () => {
 
     return (
         <SliderContainer
+            setting_id="ui_size"
             label={t("config_page.appearance.ui_size.label")}
             valueLabelFormat="value %"
             variable={currentUiScaling.data}
@@ -78,6 +80,7 @@ export const MessageLogUiScalingContainer = () => {
 
     return (
         <SliderContainer
+            setting_id="textbox_ui_size"
             label={t("config_page.appearance.textbox_ui_size.label")}
             valueLabelFormat="value %"
             variable={currentMessageLogUiScaling.data}
@@ -96,6 +99,7 @@ const SendMessageButtonTypeContainer = () => {
 
     return (
         <RadioButtonContainer
+            setting_id="send_message_button_type"
             label={t("config_page.appearance.send_message_button_type.label")}
             selectFunction={setSendMessageButtonType}
             name="send_message_button_type"
@@ -116,6 +120,7 @@ const ShowResendButtonContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="show_resend_button"
             label={t("config_page.appearance.show_resend_button.label")}
             desc={t("config_page.appearance.show_resend_button.desc")}
             variable={currentShowResendButton}
@@ -135,6 +140,7 @@ const FontFamilyContainer = () => {
 
     return (
         <DropdownMenuContainer
+            setting_id="font_family"
             dropdown_id="font_family"
             label={t("config_page.appearance.font_family.label")}
             selected_id={currentSelectedFontFamily.data}
@@ -151,6 +157,7 @@ const TransparencyContainer = () => {
 
     return (
         <SliderContainer
+            setting_id="transparency"
             label={t("config_page.appearance.transparency.label")}
             valueLabelFormat="value %"
             variable={currentTransparency.data}

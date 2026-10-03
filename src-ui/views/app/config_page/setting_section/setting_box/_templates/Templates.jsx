@@ -49,6 +49,9 @@ const TemplatesContainerWrapper = ({
     add_break_point = true,
     flex_column = false,
     remove_border_bottom = false,
+    setting_id,
+    label,
+    ...rest
 }) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
@@ -58,8 +61,15 @@ const TemplatesContainerWrapper = ({
         [styles.remove_border_bottom]: remove_border_bottom,
     });
 
+    const target_setting_id = setting_id ?? rest.dropdown_id ?? rest.hotkey_id ?? rest.name ?? rest.id;
+    const target_label = typeof label === "string" ? label : undefined;
+
     return (
-        <div className={container_class}>
+        <div
+            className={container_class}
+            data-setting-id={target_setting_id || undefined}
+            data-setting-label={target_label || undefined}
+        >
             {children}
         </div>
     );
@@ -71,14 +81,19 @@ const CommonContainer = ({
     flex_column = false,
     remove_border_bottom = false,
     Component,
+    setting_id,
     ...props
 }) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
+
+    const target_setting_id = setting_id ?? props.setting_id ?? props.hotkey_id ?? props.dropdown_id ?? props.name ?? props.id;
 
     const container_wrapper_props = {
         add_break_point: add_break_point,
         flex_column: flex_column,
         remove_border_bottom: remove_border_bottom,
+        setting_id: target_setting_id,
+        label: props.label,
     };
 
     if (label_type === "label_component") {
@@ -155,7 +170,7 @@ export const ActionButtonContainer = (props) => (
 
 export const WordFilterContainer = (props) => {
     return (
-        <>
+        <div data-setting-id={props.setting_id || "mic_word_filter"}>
             <CommonContainer
                 Component={WordFilterListToggleComponent}
                 remove_border_bottom={true}
@@ -166,7 +181,7 @@ export const WordFilterContainer = (props) => {
                 label_type="no_label"
                 {...props}
             />
-        </>
+        </div>
     );
 };
 
@@ -180,7 +195,7 @@ export const ConnectionCheckButtonContainer = (props) => (
 
 export const MessageFormatContainer = (props) => {
     return (
-        <>
+        <div data-setting-id={props.setting_id}>
             <CommonContainer
                 remove_border_bottom={true}
                 label_type="label_only"
@@ -191,6 +206,6 @@ export const MessageFormatContainer = (props) => {
                 label_type="no_label"
                 {...props}
             />
-        </>
+        </div>
     );
 };

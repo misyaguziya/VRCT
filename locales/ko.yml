@@ -94,6 +94,9 @@ update_modal:
     warn_switch_channel: "{{channel}} 채널로 전환됩니다. 이후 업데이트 알림도 {{channel}}을 기준으로 합니다."
 
 config_page:
+    search:
+        placeholder: "설정 검색..."
+        no_results: "일치하는 설정이 없습니다"
     common:
         version: "버전 {{version}}"
         model_download_button_label: "다운로드"
@@ -171,6 +174,10 @@ config_page:
             label: "UI 언어"
 
     translation:
+        section_label_ai_translation: "AI 번역 (로컬)"
+        section_label_external_api: "외부 번역 API"
+        section_label_local_llm: "로컬 LLM / 호환 서버"
+
         ctranslate2_weight_type:
             label: "번역 모델"
             desc: "오프라인 번역 시의 번역 모델을 변경합니다."

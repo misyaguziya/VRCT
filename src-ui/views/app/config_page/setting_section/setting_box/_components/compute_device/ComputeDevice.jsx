@@ -147,6 +147,7 @@ export const ComputeDevice = ({
 
     return (
         <MultiDropdownMenuContainer
+            setting_id={`${dropdownIdPrefix}_compute_device`}
             label={label}
             desc={t("config_page.common.compute_device.desc")}
             dropdown_settings={[

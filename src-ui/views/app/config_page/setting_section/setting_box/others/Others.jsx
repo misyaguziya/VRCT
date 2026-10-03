@@ -67,6 +67,7 @@ const AutoClearMessageInputBoxContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="auto_clear_the_message_box"
             label={t("config_page.others.auto_clear_the_message_box.label")}
             variable={currentEnableAutoClearMessageInputBox}
             toggleFunction={toggleEnableAutoClearMessageInputBox}
@@ -79,6 +80,7 @@ const SendOnlyTranslatedMessagesContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="send_only_translated_messages"
             label={t("config_page.others.send_only_translated_messages.label")}
             variable={currentEnableSendOnlyTranslatedMessages}
             toggleFunction={toggleEnableSendOnlyTranslatedMessages}
@@ -91,7 +93,7 @@ const AutoExportMessageLogsContainer = () => {
     const { openFolder_MessageLogs } = useOpenFolder();
 
     return (
-        <div className={styles.auto_export_message_logs_container}>
+        <div className={styles.auto_export_message_logs_container} data-setting-id="auto_export_message_logs">
             <LabelComponent
                 label={t("config_page.others.auto_export_message_logs.label")}
                 desc={t("config_page.others.auto_export_message_logs.desc")}
@@ -126,6 +128,7 @@ export const VrcMicMuteSyncContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="vrc_mic_mute_sync"
             label={t("config_page.others.vrc_mic_mute_sync.label")}
             desc={t("config_page.others.vrc_mic_mute_sync.desc")}
             variable={currentEnableVrcMicMuteSync}
@@ -141,6 +144,7 @@ const SendMessageToVrcContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="send_message_to_vrc"
             label={t("config_page.others.send_message_to_vrc.label")}
             desc={t("config_page.others.send_message_to_vrc.desc")}
             variable={currentEnableSendMessageToVrc}
@@ -156,6 +160,7 @@ const EnableNotificationVrcSfxContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="notification_vrc_sfx"
             label={t("config_page.others.notification_vrc_sfx.label")}
             desc={t("config_page.others.notification_vrc_sfx.desc")}
             variable={currentEnableNotificationVrcSfx}
@@ -170,6 +175,7 @@ const SendReceivedMessageToVrcContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="send_received_message_to_vrc"
             label={t("config_page.others.send_received_message_to_vrc.label")}
             desc={t("config_page.others.send_received_message_to_vrc.desc")}
             variable={currentEnableSendReceivedMessageToVrc}
@@ -187,6 +193,7 @@ const SendMessageFormatPartsContainer = () => {
 
     return (
         <MessageFormatContainer
+            setting_id="send_message_format"
             label={t("config_page.others.send_message_format.label")}
             desc={t("config_page.others.send_message_format.desc")}
             variable={currentSendMessageFormatParts}
@@ -205,6 +212,7 @@ const ReceivedMessageFormatPartsContainer = () => {
 
     return (
         <MessageFormatContainer
+            setting_id="received_message_format"
             label={t("config_page.others.received_message_format.label")}
             desc={t("config_page.others.received_message_format.desc")}
             variable={currentReceivedMessageFormatParts}
@@ -228,6 +236,7 @@ const ConvertMessageToRomajiContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="convert_message_to_romaji"
             label={t("config_page.others.convert_message_to_romaji.label")}
             desc={desc}
             variable={currentConvertMessageToRomaji}
@@ -246,6 +255,7 @@ const ConvertMessageToHiraganaContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="convert_message_to_hiragana"
             label={t("config_page.others.convert_message_to_hiragana.label")}
             desc={desc}
             variable={currentConvertMessageToHiragana}
@@ -260,6 +270,7 @@ const TelemetryContainer = () => {
 
     return (
         <CheckboxContainer
+            setting_id="telemetry"
             label={t("config_page.others.telemetry.label")}
             webpage_url="https://aptabase.com/legal/privacy"
             open_webpage_label={t("config_page.others.telemetry.aptabase_privacy_policy_label")}

@@ -36,6 +36,12 @@ export const _DownloadButton = ({option, ...props}) => {
                         <p className={styles.download_button_label}>{t("config_page.common.model_download_button_label")}</p>
                     </button>
                 );
+            case option.is_default:
+                return (
+                    <span className={styles.default_badge}>
+                        {t("common.default_label")}
+                    </span>
+                );
             case option.update_button:
                 return (
                     <button
