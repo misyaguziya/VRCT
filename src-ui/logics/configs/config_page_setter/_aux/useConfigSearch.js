@@ -10,9 +10,9 @@ const VALID_TABS = [
     "translation",
     "transcription",
     "ocr",
-    "vr",
+    // "vr",
     "others",
-    "hotkeys",
+    // "hotkeys",
     "advanced_settings",
 ];
 
@@ -21,11 +21,11 @@ const TAB_LABEL_KEYS = {
     appearance: "config_page.side_menu_labels.appearance",
     translation: "config_page.side_menu_labels.translation",
     transcription: "config_page.side_menu_labels.transcription",
-    others: "config_page.side_menu_labels.others",
-    vr: "config_page.side_menu_labels.vr",
-    hotkeys: "config_page.side_menu_labels.hotkeys",
-    advanced_settings: "config_page.side_menu_labels.advanced_settings",
     ocr: "config_page.side_menu_labels.ocr",
+    others: "config_page.side_menu_labels.others",
+    // vr: "config_page.side_menu_labels.vr",
+    // hotkeys: "config_page.side_menu_labels.hotkeys",
+    advanced_settings: "config_page.side_menu_labels.advanced_settings",
 };
 
 // 親項目（前提条件）の依存関係
