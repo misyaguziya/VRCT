@@ -137,6 +137,7 @@ run_mapping = {
     "overlay_small_log_settings":"/run/overlay_small_log_settings",
     "vr_panel_pointer":"/run/vr_panel_pointer",
     "vr_panel_log_out_of_view":"/run/vr_panel_log_out_of_view",
+    "vr_panel_launcher_intro":"/run/vr_panel_launcher_intro",
     "overlay_vr_panel_anchor":"/run/overlay_vr_panel_anchor",
     "vr_panel_layout":"/run/vr_panel_layout",
     "overlay_large_log_settings":"/run/overlay_large_log_settings",

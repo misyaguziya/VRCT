@@ -1,4 +1,4 @@
-.container { width: 100%; height: 100%; display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--dark_888_color); border-radius: 24px; box-shadow: inset 0 0 0 4px var(--dark_750_color); }
+.container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--dark_888_color); border-radius: 24px; box-shadow: inset 0 0 0 4px var(--dark_750_color); }
 .group { display: flex; gap: 8px; }
 .divider { flex-shrink: 0; width: 4px; height: 72px; margin: 0 4px; border-radius: 2px; background: var(--dark_650_color); }
 .button {
@@ -13,3 +13,34 @@
 .window_button { width: 96px; .icon { width: 36px; height: 36px; } &.is_attention { background: var(--dark_950_color); color: var(--warning_color); } &.is_holding { box-shadow: inset 0 0 0 3px var(--warning_color); } }
 .state_mark { position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; padding: 2px; border-radius: 6px; background: var(--dark_950_color); color: var(--dark_350_color); display: flex; svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; } }
 .is_pending .state_mark { color: var(--primary_100_color); }
+
+// ---- 起動演出: VR UI をONにして最初に出したときだけ (カプセルにロゴが現れ、横に開いてボタンが並ぶ) ----
+// カプセルの外側は VR画面の背景色 (--dark_1000_color) のまま残す。Python (overlay.py introKeyAlpha) がこの色を透明にする。
+// 最初に出すまでは中身を出さず ("pending")、出したら Python が "playing" にして、約2.4秒で通常の表示になる。
+$intro-radius: 24px;
+.is_intro_pending { opacity: 0; }
+.is_intro_playing {
+    animation: intro_panel 2.4s both;
+    .button, .divider { opacity: 0; animation: intro_rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .divider { animation-delay: 1.95s; }
+    // 機能4つ → 画面3つの順に 70ms ずつずらす
+    @for $i from 1 through 4 { .group:first-of-type > :nth-child(#{$i}) { animation-delay: 1.7s + ($i - 1) * 0.07s; } }
+    @for $i from 1 through 3 { .group:last-of-type > :nth-child(#{$i}) { animation-delay: 1.7s + ($i + 3) * 0.07s; } }
+}
+.intro_logo {
+    position: absolute; left: 50%; top: 50%; width: 264px; translate: -50% -50%; pointer-events: none;
+    opacity: 0; animation: intro_logo 1.55s 0.2s both;
+}
+@keyframes intro_panel {
+    0% { opacity: 0; clip-path: inset(0 31% 0 31% round $intro-radius); }
+    9% { opacity: 1; clip-path: inset(0 31% 0 31% round $intro-radius); }
+    50% { opacity: 1; clip-path: inset(0 31% 0 31% round $intro-radius); animation-timing-function: cubic-bezier(0.7, 0, 0.2, 1); }
+    84%, 100% { opacity: 1; clip-path: inset(0 0 0 0 round $intro-radius); }
+}
+@keyframes intro_logo {
+    0% { opacity: 0; filter: blur(14px); transform: scale(1.1); }
+    30% { opacity: 1; filter: blur(0); transform: scale(1); }
+    64% { opacity: 1; filter: blur(0); transform: scale(1); }
+    100% { opacity: 0; filter: blur(4px); transform: scale(0.97); }
+}
+@keyframes intro_rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }

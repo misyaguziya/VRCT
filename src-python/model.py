@@ -2412,6 +2412,13 @@ class Model:
         self.ensure_initialized()
         self.overlay.panel_out_of_view_callback = fn
 
+    def setOverlayLauncherIntroCallback(self, fn: Optional[Callable[[str], None]]) -> None:
+        """VR UIの起動演出の状態 (idle/pending/playing) が変わったときに呼ぶ関数を登録する。登録時に今の状態も渡す。"""
+        self.ensure_initialized()
+        self.overlay.launcher_intro_callback = fn
+        if fn is not None:
+            fn(self.overlay.launcher_intro_state)
+
     def updateOverlayVrPanelOpacity(self) -> None:
         """VR UIのログウィンドウの不透明度を反映する (オーバーレイのスレッドが毎フレーム settings から適用する)。"""
         self.ensure_initialized()

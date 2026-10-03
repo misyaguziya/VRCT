@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useI18n } from "@useI18n";
-import { useIsOpenedConfigPage, useVrPanelLogOutOfView } from "@logics_common";
+import { useIsOpenedConfigPage, useVrPanelLogOutOfView, useVrPanelLauncherIntro } from "@logics_common";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useMainFunction } from "@logics_main";
 import TranslationSvg from "@images/translation.svg?react";
@@ -10,6 +10,7 @@ import HeadphonesSvg from "@images/headphones.svg?react";
 import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 import CopyThinSvg from "@images/copy_thin.svg?react";
 import HmdSvg from "@images/mui_head_mounted_device.svg?react";
+import vrct_logo from "@images/vrct_logo_for_dark_mode.png";
 import { VrTooltipButton } from "./VrTooltip";
 import shared from "./VrSettingsWindow.module.scss";
 import styles from "./VrLauncher.module.scss";
@@ -22,10 +23,13 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup }) => {
         toggleTranscriptionReceive, currentTranscriptionReceiveStatus, toggleOcrCapture, currentOcrCaptureStatus } = useMainFunction();
     const { currentVrPanelLogOutOfView } = useVrPanelLogOutOfView();
     const { asyncStdoutToPython } = useStdoutToPython();
+    const { currentVrPanelLauncherIntro } = useVrPanelLauncherIntro();
+    const intro = currentVrPanelLauncherIntro.data;
     const is_log_lost = windows.log && currentVrPanelLogOutOfView.data === true;
     const is_locked = currentIsOpenedConfigPage.data === true;
     const recallLog = () => { openLog(); asyncStdoutToPython("/run/vr_panel_recall_log"); };
-    return <div className={styles.container}>
+    return <div className={clsx(styles.container, { [styles.is_intro_pending]: intro === "pending", [styles.is_intro_playing]: intro === "playing" })}>
+        {intro === "playing" && <img className={styles.intro_logo} src={vrct_logo} alt="" aria-hidden="true" />}
         <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.functions_group")}>
             <FunctionButton Svg={TranslationSvg} label={t("vr_panel.tooltip.translate")} name={t("main_page.translation")}
                 state={currentTranslationStatus} onClick={toggleTranslation} is_locked={is_locked} />

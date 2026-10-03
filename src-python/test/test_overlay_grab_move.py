@@ -782,6 +782,93 @@ class LauncherHandTest(unittest.TestCase):
         overlay.updateLauncherVisibility(away, 13.0)
         self.assertTrue(overlay.launcher_shown)
 
+    def test_launcher_intro_waits_for_first_look_then_holds_and_blocks_input(self):
+        overlay = self._launcher_overlay()
+        states = []
+        overlay.launcher_intro_callback = states.append
+        overlay.launcher_shown, overlay.launcher_alpha, overlay.launcher_interactive = False, 0.0, False
+        overlay.panel_last_raw = b"frame"
+        overlay.setLauncherIntro("pending")
+        looking = lambda index: self._head(True) if index == 0 else np.eye(4)  # noqa: E731
+        away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        overlay.updateLauncherVisibility(away, 10.0)
+        overlay.updateLauncherVisibility(away, 10.5)
+        self.assertEqual(overlay.launcher_intro_state, "pending")  # 見るまでは始めない
+        overlay.updateLauncherVisibility(looking, 11.0)
+        overlay.updateLauncherVisibility(looking, 11.25)
+        self.assertEqual(overlay.launcher_intro_state, "playing")
+        for t in (11.35, 11.45, 11.55, 11.65):
+            overlay.updateLauncherVisibility(looking, t)
+        self.assertFalse(overlay.launcher_interactive)  # 演出中は押せない
+        overlay.updateLauncherVisibility(away, 12.0)
+        overlay.updateLauncherVisibility(away, 12.5)
+        self.assertTrue(overlay.launcher_shown)  # 目をそらしても演出が終わるまで出し続ける
+        overlay.updateLauncherVisibility(looking, 11.25 + 2.7)
+        self.assertEqual(overlay.launcher_intro_state, "playing")  # 期限の直前はまだ演出中
+        overlay.updateLauncherVisibility(looking, 11.25 + 2.9)
+        self.assertEqual(overlay.launcher_intro_state, "idle")
+        self.assertEqual(states, ["pending", "playing", "idle"])  # 状態は変わったときだけ知らせる
+
+    def test_launcher_intro_keeps_state_when_the_callback_raises(self):
+        overlay = self._launcher_overlay()
+        overlay.launcher_intro_callback = MagicMock(side_effect=RuntimeError("boom"))
+        with patch("models.overlay.overlay.errorLogging"):
+            overlay.setLauncherIntro("pending")
+        self.assertEqual(overlay.launcher_intro_state, "pending")  # 通知に失敗しても、状態は進める
+
+    def test_launcher_intro_waits_for_a_captured_frame_and_resets_when_disabled(self):
+        overlay = self._launcher_overlay()
+        overlay.launcher_auto_hide = False  # 常に出す設定でも、画面が撮れるまでは始めない
+        overlay.setLauncherIntro("pending")
+        away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        overlay.updateLauncherVisibility(away, 10.0)
+        self.assertEqual(overlay.launcher_intro_state, "pending")
+        self.assertFalse(overlay.launcher_interactive)  # 中身がまだ見えない間は押せない
+        overlay.panel_last_raw = b"frame"
+        overlay.updateLauncherVisibility(away, 10.1)
+        self.assertEqual(overlay.launcher_intro_state, "playing")
+        overlay.panel_enabled_requests.put(False)
+        overlay.vr_panel_enabled = True
+        overlay.initVrResources = MagicMock()
+        overlay.applyVrPanelEnabled()
+        self.assertEqual(overlay.launcher_intro_state, "idle")  # OFF にしたら演出は終わり
+        overlay.panel_enabled_requests.put(True)
+        overlay.applyVrPanelEnabled()
+        self.assertEqual(overlay.launcher_intro_state, "pending")  # ON にし直したら、また最初に出すのを待つ
+
+
+class IntroKeyAlphaTest(unittest.TestCase):
+    """起動演出の間は、カプセルの外側 (背景色) だけを透明にする。"""
+
+    def test_background_becomes_transparent_and_the_capsule_stays_opaque(self):
+        from models.overlay.overlay import introKeyAlpha
+
+        pixels = np.zeros((20, 40, 4), dtype=np.uint8)
+        pixels[..., :3] = (0x1B, 0x19, 0x19)  # 撮影で少しずれた背景色 (BGR)。左上の角の色を背景として使う
+        pixels[..., 3] = 255
+        pixels[:, 15:25, :3] = (0x32, 0x2F, 0x2E)  # カプセル (#2e2f32)
+        pixels[:, 14, :3] = (0x25, 0x22, 0x21)  # 縁 (背景とカプセルの中間)
+        pixels[5:8, 18:22, :3] = (0xF2, 0xF2, 0xF2)  # 白いロゴ・文字 (背景との差が大きいほど、計算が桁あふれしやすい)
+        key, ratio = introKeyAlpha(pixels, (0, 0, 40, 20))
+        self.assertEqual(key, (0x1B, 0x19, 0x19))
+        self.assertGreater(ratio, 0.5)
+        self.assertTrue((pixels[:, :10, 3] == 0).all())  # 外側は透明
+        self.assertTrue((pixels[:, :10, :3] == 0).all())  # 透明な部分の色も 0 (黒く足されない)
+        self.assertTrue((pixels[:, 15:25, 3] == 255).all())  # カプセルは不透明
+        self.assertTrue((pixels[5:8, 18:22, 3] == 255).all())  # 白い文字も不透明
+        edge = int(pixels[0, 14, 3])
+        self.assertTrue(0 < edge < 255)  # 縁は滑らかにつなぐ
+
+    def test_only_the_given_region_is_touched(self):
+        from models.overlay.overlay import introKeyAlpha
+
+        pixels = np.zeros((10, 20, 4), dtype=np.uint8)
+        pixels[..., :3] = (0x17, 0x15, 0x15)
+        pixels[..., 3] = 255
+        introKeyAlpha(pixels, (0, 0, 10, 10))
+        self.assertTrue((pixels[:, :10, 3] == 0).all())
+        self.assertTrue((pixels[:, 10:, 3] == 255).all())  # 領域の外 (ログなど) は触らない
+
 
 class PanelLockTest(unittest.TestCase):
     """ロック中のログウィンドウはグリップしても掴めない。"""

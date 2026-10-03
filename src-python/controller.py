@@ -4488,6 +4488,7 @@ class Controller:
             self._model.setOverlayPositionChangedCallback(self._onOverlayPositionChanged)
             self._model.setOverlayPointerCallback(self._onVrPanelPointer)
             self._model.setOverlayPanelOutOfViewCallback(self._onVrPanelLogOutOfView)
+            self._model.setOverlayLauncherIntroCallback(self._onVrPanelLauncherIntro)
             self._model.setOverlayLayoutCallback(self._onVrPanelLayout)
         except Exception:
             errorLogging()
@@ -4645,6 +4646,10 @@ class Controller:
     def _onVrPanelLogOutOfView(self, out_of_view: bool) -> None:
         """ログウィンドウが視線から外れた・戻ったことをUIへ送る (オーバーレイスレッドから呼ばれる)。"""
         self.run(200, self.run_mapping["vr_panel_log_out_of_view"], out_of_view)
+
+    def _onVrPanelLauncherIntro(self, state: str) -> None:
+        """ランチャーの起動演出の状態 (idle/pending/playing) をUIへ送る (オーバーレイスレッドから呼ばれる)。"""
+        self.run(200, self.run_mapping["vr_panel_launcher_intro"], state)
 
     def _onOverlayPositionChanged(self, size: str, position: dict) -> None:
         """VR内の掴み移動・拡大縮小で確定した位置と大きさを保存し、UIへ通知する (オーバーレイスレッドから呼ばれる)。

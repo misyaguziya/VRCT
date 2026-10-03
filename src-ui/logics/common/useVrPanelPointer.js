@@ -1,5 +1,5 @@
 import { emit } from "@tauri-apps/api/event";
-import { useStore_VrPanelLogOutOfView } from "@store";
+import { useStore_VrPanelLogOutOfView, useStore_VrPanelLauncherIntro } from "@store";
 
 // バックエンドから届く VR UI 上のポインタ位置 ({x, y} または null) を VR ウィンドウへ転送する。
 // VR ウィンドウはバックエンドと直接つながっていないため、メインウィンドウが中継する。
@@ -14,4 +14,10 @@ export const useVrPanelPointer = () => {
 export const useVrPanelLogOutOfView = () => {
     const { currentVrPanelLogOutOfView, updateVrPanelLogOutOfView } = useStore_VrPanelLogOutOfView();
     return { currentVrPanelLogOutOfView, updateVrPanelLogOutOfView };
+};
+
+// ランチャーの起動演出の状態 ("idle" / "pending" / "playing")。バックエンドが変わったときだけ送る
+export const useVrPanelLauncherIntro = () => {
+    const { currentVrPanelLauncherIntro, updateVrPanelLauncherIntro } = useStore_VrPanelLauncherIntro();
+    return { currentVrPanelLauncherIntro, updateVrPanelLauncherIntro };
 };
