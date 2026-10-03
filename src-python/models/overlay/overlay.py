@@ -674,6 +674,8 @@ class Overlay:
         self.tooltip_manipulating = False
         self.tooltip_handle: int | None = None
         self.vr_resources_tried = False  # VR UI 用の追加のオーバーレイと OpenGL を作ろうとしたか (init ごとに1回)
+        self.connect_failed = False  # init が SteamVR に接続できなかった (main が確かめ直す)
+        self.connect_failure_logged = False
         self.layout_callback: Optional[Callable[[Dict[str, Any]], None]] = None
         # VR画面が描き終えた並びのログの大きさ (VR画面から届く)。これと撮影の縦横比が合ってから表示を切り替える。
         # 並びはログの大きさだけで決まる (全体の大きさは同じでもログの大きさが違うことがあるので、ログの大きさで見る)
@@ -733,7 +735,19 @@ class Overlay:
             # instead of calling openvr.init() directly: Clipboard uses
             # the same session, and openvr.shutdown() tears down the
             # whole process's VR connection, not just this caller's.
-            self.system = openvr_session.acquire(openvr.VRApplication_Background)
+            self.connect_failed = False
+            try:
+                self.system = openvr_session.acquire(openvr.VRApplication_Background)
+            except Exception:
+                # SteamVR は動いているが HMD がまだ見つからない (Init_HmdNotFound など)。main が確かめ直す。
+                # 確かめ直すたびにトレースバックを残さないよう、最初の1回だけ記録する
+                self.connect_failed = True
+                if not self.connect_failure_logged:
+                    self.connect_failure_logged = True
+                    errorLogging()
+                    printLog("overlay: SteamVR につながりません。つながるまで確かめ直します")
+                return
+            self.connect_failure_logged = False
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
             self.resetTooltipEpoch()
@@ -2664,20 +2678,29 @@ class Overlay:
     def main(self) -> None:
         printLog("overlay: SteamVR の起動を確かめています")
         try:
-            while self.checkSteamvrRunning() is False:
+            while True:
+                while self.checkSteamvrRunning() is False:
+                    if self.waitUnlessCancelled(_STEAMVR_POLL_SEC):
+                        return
+                if self.waitUnlessCancelled(0.0):
+                    return
+                self.init()
+                if self.initialized is True:
+                    self.mainloop()
+                    with self.start_lock:
+                        if self.start_cancelled:
+                            # 作っている間に止められた (mainloop はすぐ終わり、後片付けも済んでいる)
+                            # ponytail: この直後に ON にされる1秒未満の間は取りこぼす。起こるようなら状態を1つにまとめる
+                            self.start_cancelled = False
+                            self.initialized = False
+                    return
+                if not self.connect_failed:
+                    return  # 接続以外の失敗は確かめ直さない (途中まで作ったものが残るため)
+                # SteamVR にまだつながらない (HMD が見つからないなど)。「作っている途中」のまま待って確かめ直す
+                with self.start_lock:
+                    self.init_process = True
                 if self.waitUnlessCancelled(_STEAMVR_POLL_SEC):
                     return
-            if self.waitUnlessCancelled(0.0):
-                return
-            self.init()
-            if self.initialized is True:
-                self.mainloop()
-                with self.start_lock:
-                    if self.start_cancelled:
-                        # 作っている間に止められた (mainloop はすぐ終わり、後片付けも済んでいる)
-                        # ponytail: この直後に ON にされる1秒未満の間は取りこぼす。起こるようなら状態を1つにまとめる
-                        self.start_cancelled = False
-                        self.initialized = False
         except Exception:
             # スレッドの例外はどこにも残らず、「作っている途中」のままだと以後 ON にしても作り直せない
             errorLogging()
