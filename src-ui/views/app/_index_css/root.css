@@ -61,3 +61,31 @@ input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
 }
+
+/* 設定検索ヒット時のハイライトアニメーション */
+@keyframes search_target_pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(72, 164, 149, 0);
+        background-color: transparent;
+    }
+    15% {
+        box-shadow: 0 0 0 0.3rem rgba(72, 164, 149, 0.7), 0 0 1.6rem rgba(72, 164, 149, 0.35);
+        background-color: rgba(72, 164, 149, 0.16);
+        border-radius: 0.6rem;
+    }
+    45% {
+        box-shadow: 0 0 0 0.5rem rgba(72, 164, 149, 0.45), 0 0 1.2rem rgba(72, 164, 149, 0.25);
+        background-color: rgba(72, 164, 149, 0.12);
+        border-radius: 0.6rem;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(72, 164, 149, 0);
+        background-color: transparent;
+        border-radius: 0.6rem;
+    }
+}
+
+.search_target_highlight {
+    animation: search_target_pulse 2.2s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: background-color 0.5s ease;
+}

@@ -94,6 +94,9 @@ update_modal:
     warn_switch_channel: "{{channel}}チャンネルに切り替わります。次回以降のアップデート通知も{{channel}}が対象になります。"
 
 config_page:
+    search:
+        placeholder: "設定を検索..."
+        no_results: "一致する設定が見つかりませんでした"
     common:
         version: "バージョン {{version}}"
         model_download_button_label: "ダウンロード"
@@ -171,8 +174,12 @@ config_page:
             label: "UIの言語"
 
     translation:
+        section_label_ai_translation: "AI翻訳（ローカル）"
+        section_label_external_api: "外部翻訳API"
+        section_label_local_llm: "ローカルLLM・互換サーバー"
+
         ctranslate2_weight_type:
-            label: "AI翻訳 {{ctranslate2}} のモデルタイプ"
+            label: "{{ctranslate2}} のモデルタイプ"
             desc: "翻訳エンジン「{{ctranslate2}}」で翻訳する際に、使用する翻訳モデルを選択できます。"
             small: "通常モデル （{{capacity}}）"
             large: "高精度モデル （{{capacity}}）"

@@ -94,6 +94,9 @@ update_modal:
     warn_switch_channel: "將切換至{{channel}}頻道，之後的更新通知也將以{{channel}}為主。"
 
 config_page:
+    search:
+        placeholder: "搜尋設定..."
+        no_results: "未找到相符的設定"
     common:
         version: "版本 {{version}}"
         model_download_button_label: "下載"
@@ -171,6 +174,10 @@ config_page:
             label: "介面語言"
 
     translation:
+        section_label_ai_translation: "AI 翻譯 (本地)"
+        section_label_external_api: "外部翻譯 API"
+        section_label_local_llm: "本地 LLM / 相容伺服器"
+
         ctranslate2_weight_type:
             label: "選擇離線翻譯模型"
             desc: "你可以選擇用於離線翻譯引擎的翻譯模型。"
