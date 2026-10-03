@@ -20,3 +20,12 @@ export const decodeOrdered = (value) => {
     }
     return value;
 };
+
+// VR画面がメイン経由でバックエンドへ頼める操作の範囲。VR画面はローカルの資産だけを読むが、
+// アプリの終了・更新・ファイルを開く・モデルのダウンロード・認証キーの変更は VR からは頼めない
+const BLOCKED_RELAY_PATHS = ["/run/shutdown", "/run/update_software", "/run/open_filepath_logs", "/run/open_filepath_config_file"];
+export const isRelayAllowed = (path) => typeof path === "string"
+    && /^\/(get|set|run)\//.test(path)
+    && !BLOCKED_RELAY_PATHS.includes(path)
+    && !path.startsWith("/run/download_")
+    && !/auth_key|auth_token/.test(path);

@@ -323,3 +323,74 @@ class ThreadPriorityTest(unittest.TestCase):
         thread.start()
         thread.join()
         self.assertEqual(result["priority"], 1)
+
+
+class SteamvrConnectRetryTest(unittest.TestCase):
+    """SteamVR は動いているが HMD がまだ見つからないときは、あきらめず確かめ直す。"""
+
+    def _overlay(self):
+        from models.overlay.overlay import Overlay
+
+        overlay = Overlay({})
+        overlay.init_process = True
+        return overlay
+
+    def test_connection_failure_is_logged_once_and_marks_the_retry(self):
+        from unittest.mock import patch
+
+        overlay = self._overlay()
+        with patch("models.overlay.overlay.openvr_session.acquire", side_effect=RuntimeError("Init_HmdNotFound")), \
+                patch("models.overlay.overlay.errorLogging") as logged, patch("models.overlay.overlay.printLog"):
+            overlay.init()
+            overlay.init()
+        self.assertTrue(overlay.connect_failed)
+        self.assertEqual(logged.call_count, 1)  # 確かめ直すたびに記録しない
+        self.assertFalse(overlay.initialized)
+
+    def test_main_retries_until_connected_and_keeps_the_start_guard(self):
+        from unittest.mock import patch
+
+        overlay = self._overlay()
+        attempts = []
+
+        def fake_init():
+            attempts.append(overlay.init_process)
+            overlay.connect_failed = len(attempts) < 3
+            overlay.initialized = len(attempts) >= 3
+            overlay.init_process = False  # init の finally と同じ
+
+        with patch.object(overlay, "checkSteamvrRunning", return_value=True), patch.object(overlay, "init", side_effect=fake_init), \
+                patch.object(overlay, "mainloop") as mainloop, patch.object(overlay, "waitUnlessCancelled", return_value=False) as waited:
+            overlay.main()
+        self.assertEqual(len(attempts), 3)
+        self.assertEqual(attempts[1:], [True, True])  # 確かめ直す間も「作っている途中」のまま (二重起動させない)
+        mainloop.assert_called_once()
+        self.assertEqual(waited.call_count, 3 + 2)  # 起動前の確認 3回 + 確かめ直しの待ち 2回
+
+    def test_cancel_while_retrying_stops(self):
+        from unittest.mock import patch
+
+        overlay = self._overlay()
+
+        def fake_init():
+            overlay.connect_failed = True
+            overlay.init_process = False
+
+        with patch.object(overlay, "checkSteamvrRunning", return_value=True), patch.object(overlay, "init", side_effect=fake_init) as init, \
+                patch.object(overlay, "waitUnlessCancelled", side_effect=[False, True]):
+            overlay.main()  # 1回目の確認は通り、確かめ直しの待ちで OFF にされた
+        init.assert_called_once()
+
+    def test_other_failures_are_not_retried(self):
+        from unittest.mock import patch
+
+        overlay = self._overlay()
+
+        def fake_init():
+            overlay.connect_failed = False
+            overlay.init_process = False
+
+        with patch.object(overlay, "checkSteamvrRunning", return_value=True), patch.object(overlay, "init", side_effect=fake_init) as init, \
+                patch.object(overlay, "waitUnlessCancelled", return_value=False):
+            overlay.main()
+        init.assert_called_once()

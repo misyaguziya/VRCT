@@ -7,7 +7,7 @@ import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useIsOpenedConfigPage } from "@logics_common";
 import { useVr } from "@logics_configs";
-import { encodeOrdered } from "../../../logics/common/vrPanelWire";
+import { encodeOrdered, isRelayAllowed } from "../../../logics/common/vrPanelWire";
 import { isLanguageMutation, rejectLanguageMutation } from "../../../logics/main/languageMutations";
 
 // VRパネル (vr_panel ウィンドウ) をこのウィンドウの完全なミラーにする。
@@ -86,6 +86,11 @@ export const VrPanelSyncController = () => {
         );
         const unlistenReady = listen("vr-panel-ready", () => emitState(atomEntries()));
         const unlistenStdout = listen("vr-panel-stdout", ({ payload }) => {
+            if (!isRelayAllowed(payload.path)) {
+                console.warn("[vr-panel] blocked request from the VR panel:", payload.path);
+                rejectLanguageMutation(payload.languageRequest, "blocked");
+                return;
+            }
             // ウィンドウの開閉・呼び戻しと、ログの操作バー (固定先・ロック・不透明度) はメイン機能と関係ないので、
             // 設定画面を開いている間も通す
             const is_window_request = WINDOW_REQUEST_PATHS.includes(payload.path);

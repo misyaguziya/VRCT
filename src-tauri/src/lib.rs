@@ -103,14 +103,33 @@ pub fn run() {
 
 // VR UI の ON/OFF に合わせて、VR画面のウィンドウを作る・消す (メイン画面が設定に合わせて呼ぶ)。
 // ウィンドウを作るので async にする (同期コマンドから作ると Windows で固まることがある)
+//
+// OFF→ON を素早く繰り返すと、destroy を頼んだ直後はラベルが残っていて、ON が「もうある」と見なされて
+// 何もせず、そのあとウィンドウが消えて無い状態になる。呼び出しを1つずつにし (VR_PANEL_LOCK)、
+// destroy はウィンドウが消えるのを待ってから戻る。
+static VR_PANEL_LOCK: tauri::async_runtime::Mutex<()> = tauri::async_runtime::Mutex::const_new(());
+
 #[tauri::command]
 async fn set_vr_panel_window(app: tauri::AppHandle, open: bool) -> Result<(), String> {
+    let _guard = VR_PANEL_LOCK.lock().await;
     match (open, app.get_webview_window("vr_panel")) {
         (true, None) => create_vr_panel_window(&app).map_err(|error| {
             startup_log(&format!("VR panel window creation failed: {error}"));
             error.to_string()
         }),
-        (false, Some(window)) => window.destroy().map_err(|error| error.to_string()),
+        (false, Some(window)) => {
+            window.destroy().map_err(|error| error.to_string())?;
+            // 消えるのを待つ (最大2秒)。待たずに戻ると、次の ON がまだ残っているウィンドウを見てしまう
+            for _ in 0..40 {
+                if app.get_webview_window("vr_panel").is_none() {
+                    break;
+                }
+                tauri::async_runtime::spawn_blocking(|| std::thread::sleep(std::time::Duration::from_millis(50)))
+                    .await
+                    .map_err(|error| error.to_string())?;
+            }
+            Ok(())
+        }
         _ => Ok(()),
     }
 }
