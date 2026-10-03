@@ -218,6 +218,8 @@ export const { atomInstance: Atom_SpeakerVolume, useHook: useStore_SpeakerVolume
 export const { atomInstance: Atom_MicThresholdCheckStatus, useHook: useStore_MicThresholdCheckStatus } = createAtomWithHook(false, "MicThresholdCheckStatus", {is_state_ok: true});
 // VR UI のログウィンドウが視線から外れているか (ランチャーのボタンを「呼び戻す」にする)
 export const { atomInstance: Atom_VrPanelLogOutOfView, useHook: useStore_VrPanelLogOutOfView } = createAtomWithHook(false, "VrPanelLogOutOfView", {is_state_ok: true});
+// VR UI のランチャーの起動演出 ("idle" 通常 / "pending" 最初に出すのを待つ / "playing" 演出中)。atom なので VR ウィンドウへも同期される
+export const { atomInstance: Atom_VrPanelLauncherIntro, useHook: useStore_VrPanelLauncherIntro } = createAtomWithHook("idle", "VrPanelLauncherIntro", {is_state_ok: true});
 export const { atomInstance: Atom_SpeakerThresholdCheckStatus, useHook: useStore_SpeakerThresholdCheckStatus } = createAtomWithHook(false, "SpeakerThresholdCheckStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_SelectableFontFamilyList, useHook: useStore_SelectableFontFamilyList } = createAtomWithHook({}, "SelectableFontFamilyList");

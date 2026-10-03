@@ -87,6 +87,7 @@ _LAUNCHER_SHOW_AFTER_SEC = 0.05
 _LAUNCHER_HIDE_AFTER_SEC = 0.3
 _LAUNCHER_FADE_SEC = 0.1
 _LAUNCHER_INPUT_DELAY_SEC = 0.2  # 出始めは押せない (手首を返した勢いで押さないように)
+_LAUNCHER_INTRO_SEC = 2.8  # 起動演出 (VR画面のCSS 約2.4秒) が終わるまで出し続け、押せないようにする
 _COLOR_NORMAL = (1.0, 1.0, 1.0)
 _COLOR_POINTER = (0x61 / 255, 0xB4 / 255, 0xA7 / 255)
 _COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
@@ -284,6 +285,28 @@ def _atlasMask(image_size: tuple, atlas: tuple, regions: tuple) -> Image.Image:
         x0, y0, x1, y1 = regionRect(size, image_size, layout)
         draw.rounded_rectangle((x0, y0, x1 - 1, y1 - 1), radius=round(_PANEL_CORNER_RADIUS_PX * scale), fill=255)
     return mask
+
+
+_INTRO_KEY_SOFT = (4, 20)  # 背景色との差がこれ以下なら透明、これ以上なら不透明。間は滑らかにつなぐ (カプセルの縁の縮れ防止)
+
+
+def introKeyAlpha(pixels: np.ndarray, rect: tuple) -> tuple:
+    """起動演出の間、ランチャーの領域のうち背景色のところを透明にする (撮影画像をその場で書き換える)。
+
+    VR画面は不透明な背景で描かれるので、カプセルの外側だけを透明にするには、背景色を抜く (クロマキー) しかない。
+    背景色は領域の左上の角のピクセルから取る (角はランチャーの角丸の外側なので、必ず背景。撮影での色のずれにも合う)。
+    透明にした部分は色も 0 にする (透明な部分の色が足し合わされて、黒く残ることがないように)。
+    戻り値: (背景色 BGR, 透明にした割合)。
+    """
+    x0, y0, x1, y1 = rect
+    region = pixels[y0:y1, x0:x1]
+    key = region[0, 0, :3].astype(np.int32)  # int16 だと、下の (diff - low) * 255 が桁あふれして、明るい色が透明になる
+    diff = np.abs(region[..., :3].astype(np.int32) - key).max(axis=2)
+    low, high = _INTRO_KEY_SOFT
+    keyed = np.clip((diff - low) * 255 // (high - low), 0, 255).astype(np.uint8)
+    region[..., 3] = np.minimum(region[..., 3], keyed)
+    region[region[..., 3] == 0, :3] = 0
+    return tuple(int(v) for v in key), float(np.mean(region[..., 3] == 0))
 
 
 def atlasMaskArray(image_size: tuple, layout: Dict[str, Any] = DEFAULT_LAYOUT) -> np.ndarray:
@@ -604,6 +627,12 @@ class Overlay:
         self.launcher_shown_at = 0.0
         self.launcher_pointed = False
         self.launcher_prev_time: Optional[float] = None
+        # 起動演出 (VR UI をONにして最初にランチャーを出したときだけ)。"idle" 演出なし / "pending" 最初に出すのを待つ /
+        # "playing" 演出中 (目をそらしても出し続ける)。変わったら launcher_intro_callback(state) で知らせる
+        self.launcher_intro_state = "idle"
+        self.launcher_intro_until = 0.0
+        self.launcher_intro_logged: set = set()  # 実機での切り分け用に、状態ごとに最初の1回だけログに出す
+        self.launcher_intro_callback: Optional[Callable[[str], None]] = None
         # grabbing: (size, 手のindex, 手から見たオーバーレイの4x4行列)
         self.grabbing: Optional[tuple] = None
         self.grab_last_relative: Optional[np.ndarray] = None
@@ -768,11 +797,12 @@ class Overlay:
             # GL コンテキストの作成や GPU の起動を負わせない)。OFF→ON のときは applyVrPanelEnabled が作る
             self.vr_resources_tried = False
             self.applyVrPanelEnabled()  # 溜まっている ON/OFF の要求を先に反映する。ON なら initVrResources が作る
+            self.setLauncherIntro("pending" if self.vr_panel_enabled else "idle")
 
             # 手首を見たときだけ出すなら、見るまでは出さない (起動直後に一度出てから消えないように)
             self.launcher_shown = not self.launcher_auto_hide
             self.launcher_alpha = 1.0 if self.launcher_shown else 0.0
-            self.launcher_interactive = self.launcher_shown
+            self.launcher_interactive = self.launcher_shown and self.launcher_intro_state == "idle"
             for size in self.settings.keys():
                 self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
                 self.updateColor([1, 1, 1], size)
@@ -1182,6 +1212,7 @@ class Overlay:
                 restart_capture = True
             if enabled != self.vr_panel_enabled:
                 self.resetTooltipEpoch()
+                self.setLauncherIntro("pending" if enabled else "idle")
             self.vr_panel_enabled = enabled
         if self.vr_panel_enabled:
             self.initVrResources()  # 初めて ON になったとき (init が VR UI OFF で終わっていた) に作る
@@ -1261,6 +1292,11 @@ class Overlay:
             self.tooltip_ready = False
             self.hideTooltipOverlay()
         pixels[..., 3] = mask
+        if self.launcher_intro_state != "idle" and LAUNCHER in self.layout["regions"]:
+            key, ratio = introKeyAlpha(pixels, regionRect(LAUNCHER, size, self.layout))  # 起動演出の間は、カプセルの外側を透明にする
+            if self.launcher_intro_state not in self.launcher_intro_logged:
+                self.launcher_intro_logged.add(self.launcher_intro_state)
+                printLog(f"overlay: launcher intro {self.launcher_intro_state}: key BGR={key}, transparent={ratio:.0%}")
         GL = self.prepareGl()
         texture_size = self.gl["size"]
         if texture_size is None or size[0] > texture_size[0] or size[1] > texture_size[1]:
@@ -2080,6 +2116,8 @@ class Overlay:
         self.launcher_prev_time = now
         if LAUNCHER not in self.handle:
             return
+        if self.launcher_intro_state == "playing" and now >= self.launcher_intro_until:
+            self.setLauncherIntro("idle")
         if not self.launcher_auto_hide:
             want = True
         elif self.launcher_pointed or (self.grabbing is not None and self.grabbing[0] == LAUNCHER):
@@ -2093,6 +2131,8 @@ class Overlay:
                 want = launcherLooksVisible(launcher, head, _LAUNCHER_FACE_DEG + _LAUNCHER_HIDE_MARGIN_DEG, _LAUNCHER_GAZE_HIDE_DEG)
             else:
                 want = launcherLooksVisible(launcher, head, _LAUNCHER_FACE_DEG, _LAUNCHER_GAZE_SHOW_DEG)
+        if self.launcher_intro_state == "playing":
+            want = True  # 演出の間は目をそらしても出し続ける
         # 出す・消すは、その状態が少し続いてから (設定で OFF にしたときはすぐ出す)
         if want == self.launcher_shown:
             self.launcher_change_since = None
@@ -2106,11 +2146,18 @@ class Overlay:
                 self.launcher_shown, self.launcher_change_since = want, None
                 if want:
                     self.launcher_shown_at = now
+        if self.launcher_intro_state == "pending" and self.launcher_shown and self.panel_last_raw is not None:
+            # 画面が一度撮れてから始める (撮れる前に始めると、演出を見逃す)。
+            # ponytail: panel_last_raw は転送の重複排除用の値で、転送の成功や VR画面が playing を受け取ったことまでは
+            # 保証しない。届くのが約0.4秒 (_LAUNCHER_INTRO_SEC - CSS の長さ) より遅いと演出の末尾が欠ける。実機で問題なら専用のフラグにする
+            self.launcher_intro_until = now + _LAUNCHER_INTRO_SEC
+            self.setLauncherIntro("playing")
         target = 1.0 if self.launcher_shown else 0.0
         step = dt / _LAUNCHER_FADE_SEC
         self.launcher_alpha = min(self.launcher_alpha + step, target) if target > self.launcher_alpha else max(self.launcher_alpha - step, target)
         was_interactive = self.launcher_interactive
-        self.launcher_interactive = self.launcher_alpha >= 1.0 and (not self.launcher_auto_hide or now - self.launcher_shown_at >= _LAUNCHER_INPUT_DELAY_SEC)
+        self.launcher_interactive = (self.launcher_alpha >= 1.0 and self.launcher_intro_state == "idle"
+                                     and (not self.launcher_auto_hide or now - self.launcher_shown_at >= _LAUNCHER_INPUT_DELAY_SEC))
 
         if was_interactive and not self.launcher_interactive:
             self.resetTooltipEpoch()
@@ -2200,6 +2247,19 @@ class Overlay:
         self.commitPosition(PANEL, recallPose(head)[:3, :])
         s = self.settings[PANEL]
         self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], PLAYSPACE, PANEL)
+
+    def setLauncherIntro(self, state: str) -> None:
+        """起動演出の状態を変え、変わったときだけ UI へ知らせる (オーバーレイスレッドから呼ぶ)。"""
+        if state == self.launcher_intro_state:
+            return
+        self.launcher_intro_state = state
+        if state == "pending":
+            self.launcher_intro_logged.clear()
+        if self.launcher_intro_callback is not None:
+            try:
+                self.launcher_intro_callback(state)
+            except Exception:
+                errorLogging()
 
     def notifyPanelOutOfView(self, out_of_view: bool) -> None:
         """ログウィンドウが見えなくなった・見えるようになったときだけ知らせる。"""
