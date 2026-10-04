@@ -688,6 +688,64 @@ if robust_overlay.safeStartOverlay():
     robust_overlay.base_overlay.showOverlay(overlay_img, "small")
 ```
 
+## VR UI（手首のランチャーとウィンドウ）
+
+字幕のオーバーレイとは別に、VR 内で操作できる画面（ログ・言語・設定のウィンドウ、機能の ON/OFF を並べたランチャー）を出す機能。設定 `OVERLAY_VR_PANEL` が ON の間だけ動く。OFF の間は、ランチャーも含めて隠し、撮影しない。GL と、ツールバー・枠・吹き出しなどの追加のオーバーレイは、初めて ON になったときに作る。作業の経緯・実機で確かめた罠は `docs/vr_ui_handover.md` に残している。
+
+### 構成
+
+```
+Tauri (src-tauri/src/lib.rs)  set_vr_panel_window
+  └─ "VRCT VR Panel" ウィンドウ (画面外 / vr.html / src-ui/views/vr/)   … VR UI が ON の間だけ作る
+        ↑ 状態は VrPanelSyncController.jsx が全 atom を一方向に同期（メイン → VR）
+Python (src-python/models/overlay/)
+  ├─ overlay.py          Overlay クラス (1 本の mainloop スレッドが全オーバーレイを動かす)
+  ├─ window_capture.py   ウィンドウ撮影 (Windows.Graphics.Capture) と入力 (PostMessage)
+  ├─ overlay_utils.py    行列ユーティリティ
+  └─ overlay_tooltip.py  吹き出しの入力検証・世代 marker・透明マスク
+```
+
+- **1 枚の画面に全領域を並べて、1 回だけ撮影する**。領域は panel(ログ) / launcher / popup / toolbar / tooltip。撮った画像を 1 つの OpenGL テクスチャに書き、各領域のオーバーレイへ `setOverlayTexture` で渡して `setOverlayTextureBounds` で切り出す。並びは `vr_layout.json` と `computeVrLayout`（ログの大きさで変わる）。
+- SteamVR の GL テクスチャは**最初の大きさで固定**される。最大の並び (`MAX_LAYOUT`) が入る大きさで 1 回だけ作り、以後は bounds で縮める。GL コンテキスト（glfw の非表示ウィンドウ）は作ったスレッドで使い、片付けも overlay スレッドで行う。依存: glfw / PyOpenGL / windows-capture。
+- **撮影**: 既定は `WindowStream`（WGC。届いた最新の画像を受け取るだけ）。使えない・止まったときは PrintWindow に戻る。PrintWindow は相手の UI スレッドを待つので**使い捨てスレッド**で行い、結果は overlay スレッドだけが処理する。
+- **入力**: WebView 内の `Chrome_RenderWidgetHostHWND` へ PostMessage（OS のカーソルは動かさない）。WebView2 は本物のカーソルでしかホバーを判定しないので、ポインタ位置（`/run/vr_panel_pointer`）から `data-vr-hover` を付けて代用する。
+- 画面の拡大率（DPI）が違っても同じに見えるよう、撮影画像の大きさ／論理 px の比で各領域の位置を計算する。
+
+### 通信と安全
+
+- メイン → VR: 全 atom を `vr-panel-state` で同期する。Tauri の `emit` はオブジェクトのキーを辞書順に並べ替えるため、順序に意味のある値は順序つきの形 (`encodeOrdered`) で送り、VR とメインの比較に `JSON.stringify` を使わない。
+- VR → バックエンド: VR 画面から直接は送らず、メインウィンドウが代理で送る。送れるのは `/get|set|run/` だけで、`/run/shutdown`、更新、設定ファイル・ログを開く、モデルのダウンロード、認証キー系は拒否する (`isRelayAllowed`)。設定画面を開いている間は、ウィンドウの開閉などを除いて拒否する。
+
+### ランチャー
+
+- 手首（左右は設定）に付く。`launcher_auto_hide` が ON なら、手首を見たときだけ出る（面の向き 45° 以内かつ視線 40° 以内が 0.05 秒続いたら出す。外れて 0.3 秒で消す。0.1 秒でフェード）。レーザーを当てている間は消さない。出始めの 0.2 秒は押せない。
+- ログボタンの 600ms 長押しで、見失ったログを目の前へ呼び戻す (`/run/vr_panel_recall_log`)。
+- **操作の吹き出し**（`OVERLAY_VR_TOOLTIP`、既定 ON）: 別のオーバーレイ（`VRCT_tooltip`）。VR 画面が描いた吹き出しを撮影し、画像に埋めた世代 marker（epoch 48bit / revision 32bit の 80 セル）が現在の要求と一致したときだけ表示する（古い撮影結果が混ざらないため）。
+
+### 起動演出（`launcher_intro_state`）
+
+VR UI を ON にして**最初に**ランチャーを出すときだけ再生する。状態は Python が持つ（idle / pending / playing）。変わったら `/run/vr_panel_launcher_intro` で UI へ送る。状態を送る形（イベントではなく状態）なので、再接続や遅れで古い演出を再生しない。
+
+1. VR UI が ON になる（init / OFF→ON）と pending。中身は出さない。
+2. 画面が一度撮れた (`panel_last_raw`) 時点で、ヘッドセットを着けていれば (`headsetWorn`)、頭の正面（視線の先 0.7m）にランチャーのオーバーレイごと出して playing にする。着用が分からない・手首を見たほうが先なら、手首でそのまま playing にする（どちらでも、ランチャーが出なくなることがないように）。
+3. 正面（1.0 秒）では視線に追従し、飛び始める位置で固定する。VR 画面は VRCT のアイコンだけを大きく出す（手首の大きさの 7.5 倍。領域は高さ約 128px なので、大きいほど荒い）。
+4. 手首（0.6 秒）へだんだん速く吸い寄せ、掛け算で縮める（`introFlightPose`。向きは slerp）。手首が追跡できないときは今の場所で待ち、時間切れで通常の位置へ戻す。
+5. 着いたらロゴ入りのカプセルが現れ、横に開いてボタンが並ぶ（VR 画面の CSS）。全体で約 3.2 秒。この間 (`_LAUNCHER_INTRO_SEC`=3.7 秒) は出し続け、押せない。
+
+- 演出中は、領域の外側（VR 画面の背景色 `#151517`）を透明にする (`introKeyAlpha`)。領域の左上の角のピクセルを背景色として使う。VR 画面は不透明にしか描けないため。色との差が小さいほど透明にし、透明にした部分は色も 0 にする。
+- 時間は Python (`_INTRO_FRONT_SEC` など) と `VrLauncher.module.scss` の `intro_*` を**一緒に**変える。
+
+### スレッドと負荷
+
+- overlay スレッドは優先度を上げ (ABOVE_NORMAL)、OCR のスレッドと ONNX の作業スレッドは下げる (BELOW_NORMAL。`BackgroundThreads`)。ONNX のスレッド数は `ocr_onnx_threads()`（最大 4）。
+- SteamVR の起動確認は Toolhelp（約 15ms）。`psutil.process_iter` は約 2 秒かかり、OCR 中に VR UI が遅れる原因だった。
+- SteamVR につながらないときは 10 秒ごとに確かめ直す（ログは最初の 1 回だけ）。OFF にすると止まる。
+- 診断ログ: `overlay: 処理に時間がかかっています`（10 秒ごとの最大 ms）、`処理が止まっています`、`VR画面の撮影に時間がかかっています`、`overlay layout: ...`。段階は `markStep` で記録する。
+
+### 実機でしか確認できないこと
+
+HMD の見え方、WGC の滑らかさ（約 16fps）、DPI 125/150%、Windows 10 での WGC、機種ごとの着用判定（`getTrackedDeviceActivityLevel`）、配布ビルドに `glfw3.dll` などが入ること。テストは偽の OpenVR で状態遷移を確かめるまで。
+
 ## 依存関係・システム要件
 
 ### 必須依存関係
