@@ -788,6 +788,7 @@ class LauncherHandTest(unittest.TestCase):
         overlay.launcher_intro_callback = states.append
         overlay.launcher_shown, overlay.launcher_alpha, overlay.launcher_interactive = False, 0.0, False
         overlay.panel_last_raw = b"frame"
+        overlay.overlay_system.getTrackedDeviceActivityLevel.return_value = 0  # ヘッドセットは着けていない
         overlay.setLauncherIntro("pending")
         looking = lambda index: self._head(True) if index == 0 else np.eye(4)  # noqa: E731
         away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
@@ -803,11 +804,118 @@ class LauncherHandTest(unittest.TestCase):
         overlay.updateLauncherVisibility(away, 12.0)
         overlay.updateLauncherVisibility(away, 12.5)
         self.assertTrue(overlay.launcher_shown)  # 目をそらしても演出が終わるまで出し続ける
-        overlay.updateLauncherVisibility(looking, 11.25 + 2.7)
+        overlay.updateLauncherVisibility(looking, 11.25 + 3.6)
         self.assertEqual(overlay.launcher_intro_state, "playing")  # 期限の直前はまだ演出中
-        overlay.updateLauncherVisibility(looking, 11.25 + 2.9)
+        overlay.updateLauncherVisibility(looking, 11.25 + 3.8)
         self.assertEqual(overlay.launcher_intro_state, "idle")
         self.assertEqual(states, ["pending", "playing", "idle"])  # 状態は変わったときだけ知らせる
+
+    def test_launcher_intro_starts_in_front_of_the_head_and_flies_to_the_wrist(self):
+        from models.overlay.overlay import LAUNCHER
+
+        overlay = self._launcher_overlay()
+        overlay.initialized = True
+        overlay.launcher_shown, overlay.launcher_alpha, overlay.launcher_interactive = False, 0.0, False
+        overlay.panel_last_raw = b"frame"
+        overlay.overlay_system.getTrackedDeviceActivityLevel.return_value = 1  # ヘッドセットを着けている
+        overlay.setLauncherIntro("pending")
+        away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        overlay.updateLauncherVisibility(away, 10.0)  # 手首を見ていなくても始まる
+        self.assertEqual(overlay.launcher_intro_state, "playing")
+        self.assertIsNotNone(overlay.launcher_intro_front)
+        move, width = overlay.overlay.setOverlayTransformAbsolute, overlay.overlay.setOverlayWidthInMeters
+        overlay.updateLauncherIntroFlight(away, 10.0)
+        start = np.array(move.call_args[0][2].m)
+        np.testing.assert_allclose(start[:, 3], overlay.launcher_intro_front[:3, 3], atol=1e-6)  # 最初は正面の位置
+        wrist_width = overlay.settings[LAUNCHER]["ui_scaling"]
+        self.assertAlmostEqual(width.call_args[0][1], wrist_width * 7.5)  # 正面では大きめに出す
+        overlay.updateLauncherIntroFlight(away, 10.0 + 1.0 + 0.3)
+        self.assertLess(width.call_args[0][1], wrist_width * 7.5)  # 飛んでいる途中
+        self.assertGreater(width.call_args[0][1], wrist_width)
+        calls = move.call_count
+        overlay.updateLauncherIntroFlight(away, 10.0 + 1.0 + 0.6 + 0.01)
+        self.assertIsNone(overlay.launcher_intro_front)  # 着いたら通常の位置と大きさへ戻す
+        self.assertGreater(move.call_count, calls)
+        self.assertAlmostEqual(width.call_args[0][1], wrist_width)
+        self.assertEqual(overlay.launcher_intro_state, "playing")  # 演出 (カプセルが開く) はまだ続く
+
+    def test_launcher_intro_front_follows_the_gaze_then_stays_when_it_starts_flying(self):
+        from models.overlay.overlay import introFrontPose
+
+        overlay = self._launcher_overlay()
+        overlay.initialized = True
+        overlay.launcher_shown, overlay.launcher_interactive = False, False
+        overlay.panel_last_raw = b"frame"
+        overlay.overlay_system.getTrackedDeviceActivityLevel.return_value = 1
+        overlay.setLauncherIntro("pending")
+        first = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        overlay.updateLauncherVisibility(first, 10.0)
+        turned_head = np.eye(4)
+        turned_head[:3, 3] = (1.0, 1.6, 2.0)  # 開始後に頭を動かした
+        turned = lambda index: turned_head if index == 0 else np.eye(4)  # noqa: E731
+        overlay.updateLauncherIntroFlight(turned, 10.0)
+        overlay.updateLauncherIntroFlight(turned, 10.6)  # 正面にいる間は、今の視線の正面へ追いつく
+        np.testing.assert_allclose(overlay.launcher_intro_front[:3, 3], introFrontPose(turned_head)[:3, 3], atol=0.02)
+        overlay.updateLauncherIntroFlight(turned, 10.9)
+        frozen = overlay.launcher_intro_front.copy()
+        moved_again = np.eye(4)
+        moved_again[:3, 3] = (-2.0, 1.0, 0.0)
+        overlay.updateLauncherIntroFlight(lambda index: moved_again if index == 0 else np.eye(4), 11.1)  # 飛び始めたら追従しない
+        np.testing.assert_allclose(overlay.launcher_intro_front, frozen)
+
+    def test_headset_worn_check_falls_back_to_worn_when_unknown(self):
+        overlay = self._launcher_overlay()
+        activity = overlay.overlay_system.getTrackedDeviceActivityLevel
+        for level, worn in ((1, True), (2, True), (-1, True), (0, False), (3, False), (4, False)):
+            activity.return_value = level
+            self.assertEqual(overlay.headsetWorn(), worn, level)
+        activity.side_effect = RuntimeError("no sensor")
+        self.assertTrue(overlay.headsetWorn())  # 取れないときは、着けているとみなす
+
+    def test_launcher_intro_flight_ends_when_disabled_or_wrist_is_lost(self):
+        overlay = self._launcher_overlay()
+        overlay.initialized = True
+        overlay.launcher_shown, overlay.launcher_interactive = False, False
+        overlay.panel_last_raw = b"frame"
+        overlay.overlay_system.getTrackedDeviceActivityLevel.return_value = 1
+        overlay.setLauncherIntro("pending")
+        away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        overlay.updateLauncherVisibility(away, 10.0)
+        self.assertIsNotNone(overlay.launcher_intro_front)
+        overlay.setLauncherIntro("idle")  # VR UI を OFF にした
+        self.assertIsNone(overlay.launcher_intro_front)
+        overlay.setLauncherIntro("pending")
+        overlay.updateLauncherVisibility(away, 20.0)
+        lost = lambda index: self._head(False) if index == 0 else None  # noqa: E731
+        overlay.updateLauncherIntroFlight(lost, 20.1)  # 手首が追跡できない間は、今の場所で待つ
+        self.assertIsNotNone(overlay.launcher_intro_front)
+        overlay.updateLauncherIntroFlight(lost, 20.0 + 2.4)  # 戻ってこなければ時間切れで終わる
+        self.assertIsNone(overlay.launcher_intro_front)
+
+    def test_launcher_intro_hides_when_the_wrist_controller_is_not_connected(self):
+        from models.overlay.overlay import LAUNCHER
+
+        overlay = self._launcher_overlay()
+        overlay.initialized = True
+        overlay.settings[LAUNCHER]["tracker"] = "LeftHand"  # Playspace 以外 (コントローラ) に付ける
+        overlay.overlay_system.isTrackedDeviceConnected.return_value = False
+        overlay.launcher_shown, overlay.launcher_alpha, overlay.launcher_interactive = True, 1.0, False
+        overlay.launcher_intro_front = np.eye(4)
+        overlay.launcher_intro_state = "playing"
+        overlay.endLauncherIntroFlight()
+        self.assertIn(LAUNCHER, overlay.position_pending)
+        self.assertFalse(overlay.launcher_shown)  # 位置を戻せないので、正面に取り残さず隠す
+        self.assertEqual(overlay.launcher_intro_state, "idle")
+
+    def test_launcher_intro_flight_errors_do_not_escape(self):
+        overlay = self._launcher_overlay()
+        overlay.launcher_intro_front = np.eye(4)
+        overlay.launcher_intro_started = 10.0
+        overlay.overlay.setOverlayTransformAbsolute.side_effect = RuntimeError("openvr")
+        away = lambda index: self._head(False) if index == 0 else np.eye(4)  # noqa: E731
+        with patch("models.overlay.overlay.errorLogging"):
+            overlay.updateLauncherIntroFlight(away, 10.5)  # 例外を外へ出さない
+        self.assertIsNone(overlay.launcher_intro_front)  # 毎フレーム失敗し続けないよう、飛ばすのをやめる
 
     def test_launcher_intro_keeps_state_when_the_callback_raises(self):
         overlay = self._launcher_overlay()
@@ -835,6 +943,40 @@ class LauncherHandTest(unittest.TestCase):
         overlay.panel_enabled_requests.put(True)
         overlay.applyVrPanelEnabled()
         self.assertEqual(overlay.launcher_intro_state, "pending")  # ON にし直したら、また最初に出すのを待つ
+
+
+class IntroFlightPoseTest(unittest.TestCase):
+    def test_ends_match_and_the_rotation_stays_valid(self):
+        from models.overlay.overlay import introFlightPose
+
+        front = np.eye(4)
+        front[:3, 3] = (0.0, 1.5, -0.7)
+        c, s_ = np.cos(np.radians(70)), np.sin(np.radians(70))
+        target = np.eye(4)
+        target[:3, :3] = np.array([[1, 0, 0], [0, c, -s_], [0, s_, c]])
+        target[:3, 3] = (0.3, 1.0, -0.2)
+        np.testing.assert_allclose(introFlightPose(front, target, 0.0), front, atol=1e-9)
+        np.testing.assert_allclose(introFlightPose(front, target, 1.0), target, atol=1e-9)
+        middle = introFlightPose(front, target, 0.5)
+        np.testing.assert_allclose(middle[:3, 3], (0.15, 1.25, -0.45))
+        np.testing.assert_allclose(middle[:3, :3] @ middle[:3, :3].T, np.eye(3), atol=1e-9)
+        self.assertAlmostEqual(float(np.linalg.det(middle[:3, :3])), 1.0)
+
+    def test_rotation_is_continuous_even_when_the_orientations_are_almost_opposite(self):
+        from models.overlay.overlay import introFlightPose
+
+        for degrees in (150, 179, 179.9, 180):
+            c, s_ = np.cos(np.radians(degrees)), np.sin(np.radians(degrees))
+            target = np.eye(4)
+            target[:3, :3] = np.array([[c, 0, s_], [0, 1, 0], [-s_, 0, c]])  # 縦軸の回りに degrees 回す
+            previous, steps = np.eye(3), np.linspace(0.0, 1.0, 201)
+            worst = 0.0
+            for progress in steps:
+                rotation = introFlightPose(np.eye(4), target, float(progress))[:3, :3]
+                angle = np.degrees(np.arccos(np.clip((np.trace(previous.T @ rotation) - 1) / 2, -1, 1)))
+                worst = max(worst, angle)
+                previous = rotation
+            self.assertLess(worst, degrees / 200 * 1.05 + 0.1, degrees)  # 1ステップの回転が、一定の速さ (角度 / 200) を超えない
 
 
 class IntroKeyAlphaTest(unittest.TestCase):
