@@ -1,4 +1,5 @@
 import { createAtomWithHook } from "@store";
+import vr_layout from "../../../views/vr/vr_layout.json";
 
 import {
     ctranslate2_weight_type_status,
@@ -674,6 +675,7 @@ export const SETTINGS_ARRAY = [
         default_value: ui_configs.overlay_small_log_default_settings,
         ui_template_id: "object",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_small_log_settings",
     },
     {
@@ -690,6 +692,7 @@ export const SETTINGS_ARRAY = [
         default_value: ui_configs.overlay_large_log_default_settings,
         ui_template_id: "object",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_large_log_settings",
     },
     {
@@ -699,6 +702,90 @@ export const SETTINGS_ARRAY = [
         ui_template_id: "toggle",
         logics_template_id: "toggle_enable_disable",
         base_endpoint_name: "overlay_show_only_translated_messages",
+    },
+    {
+        // VR UI (手首のランチャーと各ウィンドウ)。字幕のオーバーレイとは別にON/OFFする
+        Category: "Vr",
+        Base_Name: "IsEnabledOverlayVrPanel",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_panel",
+    },
+    {
+        // VR UIのログウィンドウの固定先 (Playspace / LeftHand / RightHand / HMD)。操作バーで変える。
+        // 掴みや呼び戻しで変わったときもバックエンドから届く
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelAnchor",
+        default_value: "LeftHand",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "overlay_vr_panel_anchor",
+    },
+    {
+        // VR UIのログウィンドウのロック (掴めなくする)。操作バーで変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelLocked",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_panel_locked",
+    },
+    {
+        // VR UIのログの文字の大きさ (14〜28px)。操作バーの A−／A＋ で変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelFontSize",
+        default_value: 17,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_panel_font_size",
+    },
+    {
+        // VR画面の並び (ログの大きさで変わる)。Python (models/overlay) が決めて知らせる。既定は vr_layout.json
+        Category: "Vr",
+        Base_Name: "VrPanelLayout",
+        default_value: vr_layout,
+        ui_template_id: "object",
+        logics_template_id: "get_only",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "vr_panel_layout",
+    },
+    {
+        // VR UIのランチャーを付ける手 (LeftHand / RightHand)。VR設定で変える
+        Category: "Vr",
+        Base_Name: "OverlayVrLauncherHand",
+        default_value: "LeftHand",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_launcher_hand",
+    },
+    {
+        // VR UIのランチャーを手首を見たときだけ出す
+        Category: "Vr",
+        Base_Name: "OverlayVrLauncherAutoHide",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_launcher_auto_hide",
+    },
+    {
+        // VR UIのボタンを指したときの吹き出し (操作名と状態)
+        Category: "Vr",
+        Base_Name: "OverlayVrTooltip",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_tooltip",
+    },
+    {
+        // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelOpacity",
+        default_value: 1.0,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_panel_opacity",
     },
     {
         Category: "Vr",

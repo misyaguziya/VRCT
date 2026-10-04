@@ -58,8 +58,11 @@ def release() -> None:
             return
         _ref_count -= 1
         if _ref_count == 0:
-            openvr.shutdown()
-            _system = None
+            try:
+                openvr.shutdown()
+            finally:
+                # 閉じるのに失敗しても、次の acquire() で作り直せるようにする
+                _system = None
 
 
 def is_active() -> bool:

@@ -134,6 +134,14 @@ run_mapping = {
     "selectable_deepgram_model_list":"/run/selectable_deepgram_model_list",
     "selected_deepgram_model":"/run/selected_deepgram_model",
 
+    "overlay_small_log_settings":"/run/overlay_small_log_settings",
+    "vr_panel_pointer":"/run/vr_panel_pointer",
+    "vr_panel_log_out_of_view":"/run/vr_panel_log_out_of_view",
+    "vr_panel_launcher_intro":"/run/vr_panel_launcher_intro",
+    "overlay_vr_panel_anchor":"/run/overlay_vr_panel_anchor",
+    "vr_panel_layout":"/run/vr_panel_layout",
+    "overlay_large_log_settings":"/run/overlay_large_log_settings",
+
     "selectable_mic_host_list":"/run/selectable_mic_host_list",
     "selectable_mic_device_list":"/run/selectable_mic_device_list",
     "selectable_speaker_device_list":"/run/selectable_speaker_device_list",
@@ -467,9 +475,41 @@ mapping = {
     "/set/disable/overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
 
     "/get/data/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
+    # VR UIのウィンドウの開閉 (VR画面からメイン経由で届く)
+    "/run/vr_panel_tooltip": {"status": False, "variable":controller.setVrPanelTooltip},
+    "/run/vr_panel_windows": {"status": False, "variable":controller.setVrPanelWindows},
+    # 見失ったVR UIのログウィンドウを目の前へ呼び戻す (VR画面からメイン経由で届く)
+    "/run/vr_panel_recall_log": {"status": False, "variable":controller.recallVrPanelLog},
+    # VR UIのログウィンドウの不透明度 (VR設定ウィンドウから)
+    "/get/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.getOverlayVrPanelOpacity},
+    # VR UIのログウィンドウの操作バー (固定先・ロック)
+    "/get/data/overlay_vr_panel_anchor": {"status": True, "variable":controller.getOverlayVrPanelAnchor},
+    # VR画面の並び (ログの大きさで変わる。変わったら /run/vr_panel_layout で通知)
+    "/get/data/vr_panel_layout": {"status": True, "variable":controller.getVrPanelLayout},
+    # 初期化中にも受け付ける (起動時の設定を受けて描き直した知らせを取りこぼすと、ログの表示が切り替わらない)
+    "/run/vr_panel_layout_rendered": {"status": True, "variable":controller.setVrPanelLayoutRendered},
+    "/set/data/overlay_vr_panel_anchor": {"status": True, "variable":controller.setOverlayVrPanelAnchor},
+    "/get/data/overlay_vr_panel_locked": {"status": True, "variable":controller.getOverlayVrPanelLocked},
+    "/get/data/overlay_vr_panel_font_size": {"status": True, "variable":controller.getOverlayVrPanelFontSize},
+    # VR UIのランチャー (付ける手・手首を見たときだけ出す)
+    "/get/data/overlay_vr_launcher_hand": {"status": True, "variable":controller.getOverlayVrLauncherHand},
+    "/set/data/overlay_vr_launcher_hand": {"status": True, "variable":controller.setOverlayVrLauncherHand},
+    "/get/data/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.getOverlayVrLauncherAutoHide},
+    "/set/enable/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.setEnableOverlayVrLauncherAutoHide},
+    "/set/disable/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.setDisableOverlayVrLauncherAutoHide},
+    "/get/data/overlay_vr_tooltip": {"status": True, "variable":controller.getOverlayVrTooltip},
+    "/set/enable/overlay_vr_tooltip": {"status": True, "variable":controller.setEnableOverlayVrTooltip},
+    "/set/disable/overlay_vr_tooltip": {"status": True, "variable":controller.setDisableOverlayVrTooltip},
+    "/set/data/overlay_vr_panel_font_size": {"status": True, "variable":controller.setOverlayVrPanelFontSize},
+    "/set/enable/overlay_vr_panel_locked": {"status": True, "variable":controller.setEnableOverlayVrPanelLocked},
+    "/set/disable/overlay_vr_panel_locked": {"status": True, "variable":controller.setDisableOverlayVrPanelLocked},
+    "/set/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.setOverlayVrPanelOpacity},
     "/set/data/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
 
     "/get/data/overlay_large_log": {"status": True, "variable":controller.getOverlayLargeLog},
+    "/get/data/overlay_vr_panel": {"status": True, "variable":controller.getOverlayVrPanel},
+    "/set/enable/overlay_vr_panel": {"status": True, "variable":controller.setEnableOverlayVrPanel},
+    "/set/disable/overlay_vr_panel": {"status": True, "variable":controller.setDisableOverlayVrPanel},
     "/set/enable/overlay_large_log": {"status": True, "variable":controller.setEnableOverlayLargeLog},
     "/set/disable/overlay_large_log": {"status": True, "variable":controller.setDisableOverlayLargeLog},
 

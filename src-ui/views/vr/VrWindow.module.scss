@@ -1,0 +1,183 @@
+// VR UIのウィンドウ共通の様式 (ログ・言語・VR設定)。
+// タイトルバー56px、角丸24px (撮影後に Python 側で切り抜く)、外枠4px。
+
+.window {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+    background-color: var(--dark_888_color);
+    box-shadow: inset 0 0 0 4px var(--dark_750_color);
+}
+
+// 角を掴んで大きさを変える取っ手 (L字)。撮影後に角が丸く切り抜かれるので、枠の内側に描く。
+// ウィンドウを指している間だけ出し、取っ手そのものを指したら明るく太くする
+.resize_handle {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border: 0 solid var(--primary_300_color);
+    opacity: 0;
+    pointer-events: auto;
+    &.top_left {
+        left: 6px;
+        top: 6px;
+        border-left-width: 8px;
+        border-top-width: 8px;
+        border-top-left-radius: 20px;
+    }
+    &.bottom_left {
+        left: 6px;
+        bottom: 6px;
+        border-left-width: 8px;
+        border-bottom-width: 8px;
+        border-bottom-left-radius: 20px;
+    }
+    &.bottom_right {
+        right: 6px;
+        bottom: 6px;
+        border-right-width: 8px;
+        border-bottom-width: 8px;
+        border-bottom-right-radius: 20px;
+    }
+    &[data-vr-hover] {
+        opacity: 1;
+        border-color: var(--primary_100_color);
+        border-width: 0;
+        &.top_left { border-left-width: 10px; border-top-width: 10px; }
+        &.bottom_left { border-left-width: 10px; border-bottom-width: 10px; }
+        &.bottom_right { border-right-width: 10px; border-bottom-width: 10px; }
+    }
+}
+
+// ウィンドウの中のボタンを指しているときも出す
+.window[data-vr-hover] > .resize_handle,
+.window:has([data-vr-hover]) > .resize_handle {
+    opacity: 1;
+}
+
+.title_bar {
+    flex-shrink: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 16px;
+    background-color: var(--dark_950_color);
+}
+
+.title_icon {
+    width: 28px;
+    height: 28px;
+    color: var(--dark_350_color);
+    fill: var(--dark_350_color);
+}
+
+.title {
+    flex: 1;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--dark_basic_text_color);
+}
+
+// 操作バーでロック中 (掴めない)
+.grab_locked {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--dark_400_color);
+    white-space: nowrap;
+}
+
+.grab_locked_icon {
+    width: 28px;
+    height: 28px;
+    fill: none;
+    stroke: var(--dark_350_color);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.close_button {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    &:focus-visible {
+        outline: 3px solid var(--primary_100_color);
+        outline-offset: -3px;
+    }
+    // VRのポインタが当たっている (VrApp の VrPointerHover が付ける)。赤はエラー用に残す
+    &[data-vr-hover] {
+        background-color: var(--dark_750_color);
+    }
+}
+
+.close_icon {
+    width: 24px;
+    height: 24px;
+    color: var(--dark_400_color);
+    fill: var(--dark_400_color);
+}
+
+.body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.log_box_wrapper {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    padding: 12px 16px 16px;
+
+    // VRではスクロール位置が分かるよう、スクロールバーを太く明るくする
+    :global(#log_container)::-webkit-scrollbar {
+        width: 16px;
+    }
+    :global(#log_container)::-webkit-scrollbar-thumb {
+        background-color: var(--dark_600_color);
+        border-radius: 8px;
+    }
+    // ログの文字の基準 (既定17pxで訳文が約24px = 1.4em)。操作バーの A−／A＋ で変える。
+    // デスクトップのログ文字サイズ設定 (#log_container に直接書かれる) はVRでは使わない
+    :global(#log_container) {
+        // 保存値を手で書き換えられても 14〜28px に収める (バックエンドの検証と同じ範囲)
+        font-size: clamp(14px, var(--vr_log_font_size, 17px), 28px) !important;
+    }
+}
+
+// 設定画面を開いている間: 本文だけを覆う (タイトルバーの閉じる・掴むは使える)
+.locked {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 32px;
+    text-align: center;
+    font-size: 22px;
+    color: var(--dark_basic_text_color);
+    background-color: var(--dark_1000_color_dd);
+}
+
+.locked_icon {
+    width: 48px;
+    height: 48px;
+    color: var(--warning_color);
+    fill: var(--warning_color);
+}

@@ -495,6 +495,27 @@ def _overlay_small_validator(val, inst):
             new[key] = float(v)
     return new
 
+def _make_overlay_vr_window_validator(name):
+    """VR UIのウィンドウ (ログ・ランチャー) の位置設定用。VR内で掴んで動かした結果だけが保存される。"""
+    def validator(val, inst):
+        return _validate_overlay_vr_window(val, getattr(inst, name))
+    return validator
+
+def _validate_overlay_vr_window(val, current):
+    # 足りないキーは今の値で補う (項目を増やしても、以前に保存した位置を捨てないため)。知らないキーは受け付けない
+    if not (isinstance(val, dict) and set(val.keys()) <= set(current.keys())):
+        return None
+    new = dict(current)
+    for key, v in val.items():
+        # Playspace: SteamVRの空間に固定 (VR UIのウィンドウだけが選べる)
+        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand', 'Playspace']:
+            new[key] = v
+        elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation','opacity','ui_scaling'] and isinstance(v,(int,float)):
+            new[key] = float(v)
+        elif key in ['display_duration','fadeout_duration','width','height'] and isinstance(v,int) and not isinstance(v,bool):
+            new[key] = v
+    return new
+
 def _overlay_large_validator(val, inst):
     if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_LARGE_LOG_SETTINGS.keys())):
         return None
@@ -914,6 +935,10 @@ class Config:
     # --- Overlay settings ---
     OVERLAY_SMALL_LOG_SETTINGS = ValidatedProperty('OVERLAY_SMALL_LOG_SETTINGS', _overlay_small_validator)
     OVERLAY_LARGE_LOG_SETTINGS = ValidatedProperty('OVERLAY_LARGE_LOG_SETTINGS', _overlay_large_validator)
+    # VRパネルの位置。UIからは設定せず、VR内で掴んで動かした位置だけが保存される。
+    OVERLAY_VR_PANEL_SETTINGS = ValidatedProperty('OVERLAY_VR_PANEL_SETTINGS', _make_overlay_vr_window_validator('OVERLAY_VR_PANEL_SETTINGS'))
+    # VR UIのランチャー (手首の帯) の位置。OVERLAY_VR_PANEL_SETTINGS はログウィンドウの位置。
+    OVERLAY_VR_LAUNCHER_SETTINGS = ValidatedProperty('OVERLAY_VR_LAUNCHER_SETTINGS', _make_overlay_vr_window_validator('OVERLAY_VR_LAUNCHER_SETTINGS'))
 
     # --- Message format settings ---
     SEND_MESSAGE_FORMAT_PARTS = ValidatedProperty('SEND_MESSAGE_FORMAT_PARTS', _format_validator_send)
@@ -927,6 +952,16 @@ class Config:
     SEND_ONLY_TRANSLATED_MESSAGES = ManagedProperty('SEND_ONLY_TRANSLATED_MESSAGES', type_=bool)
     OVERLAY_SMALL_LOG = ManagedProperty('OVERLAY_SMALL_LOG', type_=bool)
     OVERLAY_LARGE_LOG = ManagedProperty('OVERLAY_LARGE_LOG', type_=bool)
+    # VR UI (手首のランチャーとログ・言語・VR設定のウィンドウ)。字幕のオーバーレイとは別にON/OFFする
+    OVERLAY_VR_PANEL = ManagedProperty('OVERLAY_VR_PANEL', type_=bool)
+    # VR UIのログウィンドウを掴めなくする (操作バーのロック)
+    OVERLAY_VR_PANEL_LOCKED = ManagedProperty('OVERLAY_VR_PANEL_LOCKED', type_=bool)
+    # VR UIのログの文字の大きさ (px、訳文はこの約1.4倍)。デスクトップのログの文字サイズとは別
+    OVERLAY_VR_PANEL_FONT_SIZE = ManagedProperty('OVERLAY_VR_PANEL_FONT_SIZE', type_=int)
+    # VR UIのランチャーを手首を見たときだけ出すか (出す角度は45°で固定)。付ける手は OVERLAY_VR_LAUNCHER_SETTINGS の tracker
+    OVERLAY_VR_LAUNCHER_AUTO_HIDE = ManagedProperty('OVERLAY_VR_LAUNCHER_AUTO_HIDE', type_=bool)
+    # VR UIのボタンを指したときの吹き出し (操作名と状態)。慣れたら消せる
+    OVERLAY_VR_TOOLTIP = ManagedProperty('OVERLAY_VR_TOOLTIP', type_=bool)
     OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = ManagedProperty('OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES', type_=bool)
     SEND_MESSAGE_TO_VRC = ManagedProperty('SEND_MESSAGE_TO_VRC', type_=bool)
     SEND_RECEIVED_MESSAGE_TO_VRC = ManagedProperty('SEND_RECEIVED_MESSAGE_TO_VRC', type_=bool)
@@ -1256,6 +1291,40 @@ class Config:
             "fadeout_duration": 2,
             "opacity": 1.0,
             "ui_scaling": 1.0,
+            "tracker": "LeftHand",
+        }
+        self._OVERLAY_VR_LAUNCHER_SETTINGS = {
+            "x_pos": 0.0,
+            "y_pos": 0.0,
+            "z_pos": 0.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
+            "display_duration": 5,
+            "fadeout_duration": 0,  # 常に表示
+            "opacity": 1.0,
+            "ui_scaling": 0.28,  # 横幅(m)。880x128px の帯で高さ約4cm
+            "tracker": "LeftHand",
+        }
+        self._OVERLAY_VR_PANEL = False
+        self._OVERLAY_VR_PANEL_LOCKED = False
+        self._OVERLAY_VR_PANEL_FONT_SIZE = 17
+        self._OVERLAY_VR_LAUNCHER_AUTO_HIDE = True
+        self._OVERLAY_VR_TOOLTIP = True
+        self._OVERLAY_VR_PANEL_SETTINGS = {
+            # ログウィンドウの大きさ (論理px)。角を掴んで伸ばす (600x400〜1400x1000)
+            "width": 900,
+            "height": 700,
+            "x_pos": 0.0,
+            "y_pos": 0.3,
+            "z_pos": 0.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
+            "display_duration": 5,
+            "fadeout_duration": 0,  # パネルはフェードさせない
+            "opacity": 1.0,
+            "ui_scaling": 0.4,  # 横幅(m)
             "tracker": "LeftHand",
         }
         self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False

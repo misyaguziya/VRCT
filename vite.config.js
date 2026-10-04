@@ -54,6 +54,7 @@ export default defineConfig(() => {
             rollupOptions: {
                 input: {
                     main: path.resolve(__dirname, "index.html"),
+                    vr: path.resolve(__dirname, "vr.html"),
                 },
             },
             sourcemap: true,

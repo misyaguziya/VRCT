@@ -15,10 +15,7 @@ from typing import Optional
 
 import numpy as np
 
-try:
-    from psutil import process_iter
-except Exception:  # pragma: no cover
-    process_iter = None  # type: ignore
+from ..process_check import isProcessRunning
 
 from .ocr_capture_hwnd import HwndCapture, isFrameBlank
 from .ocr_capture_openvr import OpenVRMirrorCapture
@@ -38,13 +35,7 @@ _STEAMVR_RECHECK_INTERVAL_SEC = 5.0
 
 
 def _isSteamvrRunning() -> bool:
-    if process_iter is None:
-        return False
-    proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
-    try:
-        return proc_name in (p.name() for p in process_iter())
-    except Exception:
-        return False
+    return isProcessRunning("vrmonitor.exe" if os.name == "nt" else "vrmonitor")
 
 
 class OcrCapture:

@@ -16,6 +16,15 @@ pyinstaller==6.10.0
 numpy==1.26.4
 sentencepiece==0.2.1  # PYSEC-2026-1909 fixed in 0.2.1
 openvr==1.26.701
+# VR UI overlay texture (models/overlay/overlay.py). Were imported but not
+# declared here; pinned to the versions already verified working in .venv.
+glfw==2.7.0
+PyOpenGL==3.1.7
+# VR UI window capture (Windows.Graphics.Capture). Like rapidocr it requires
+# opencv-python, so it is installed with --no-deps (see bat/install.bat);
+# numpy and cv2 (opencv-python-headless) are listed elsewhere in this file.
+# Optional at runtime: without it the overlay falls back to PrintWindow.
+windows-capture==2.0.1
 pydub==0.25.1
 psutil==5.9.8
 pycaw==20240210
