@@ -1,0 +1,18 @@
+// root.css の角丸 (html/body) は透過ウィンドウのメイン画面向け。VR UIは不透明な
+// ウィンドウを撮影するため、角の外側がWebViewの白い背景として映ってしまう
+:global(html), :global(body) {
+    border-radius: 0;
+    background-color: var(--dark_1000_color);
+}
+
+// 各領域の外は Python 側で透明にするので、ここの背景は映らない
+.atlas {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--dark_1000_color);
+}
+
+.region {
+    position: absolute;
+    overflow: hidden;
+}

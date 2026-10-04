@@ -13,8 +13,19 @@ PP-OCRv6 small は1つのモデルに日本語・英語・中国語(簡繁)と�
   ハングル・キリル・タイは v5 のスクリプト別モデルでのみ読めた (CER 0.12 / 0.08 / 0.00)
 """
 
+import os
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
+
+
+def ocr_onnx_threads() -> int:
+    """OCR (YOLOX と RapidOCR の onnxruntime) が使うスレッド数。
+
+    既定は全コア。VRChat・SteamVR・VR UI のオーバーレイと同じPCで動かすと、OCR が全コアを使い切って
+    他が止まる (実機で、OCRをONにするとVR UIの撮影・転送・レーザーの処理が数百ms遅れた)。
+    コアの半分 (最大4) に抑え、残りを他のために空けておく。
+    """
+    return max(1, min(4, (os.cpu_count() or 2) // 2))
 
 
 @dataclass(frozen=True)

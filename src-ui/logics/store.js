@@ -6,11 +6,12 @@ import {
 
 import {
     generateTestConversationData,
-} from "./_test_data.js"
+} from "./_test_data.js";
 
 import {
     translator_status,
 } from "@ui_configs";
+import { keepNewestVrLayout } from "./common/vrPanelTooltip";
 
 export const store = {
     backend_subprocess: null,
@@ -67,6 +68,9 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
                 const updated_data = typeof payload === "function"
                     ? payload(currentValue)
                     : payload;
+
+                if (base_name === "VrPanelLayout" &&
+                    keepNewestVrLayout(currentValue.data, updated_data) === currentValue.data) return currentValue;
 
                 return {
                     state: new_state,
@@ -175,6 +179,9 @@ export const { atomInstance: Atom_OcrCaptureStatus, useHook: useStore_OcrCapture
 export const { atomInstance: Atom_ForegroundStatus, useHook: useStore_ForegroundStatus } = createAtomWithHook(false, "ForegroundStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_SelectedPresetTabNumber, useHook: useStore_SelectedPresetTabNumber } = createAtomWithHook("1", "SelectedPresetTabNumber");
+export const { atomInstance: Atom_LanguageMutation, useHook: useStore_LanguageMutation } = createAtomWithHook(
+    { inFlight: null, lastVrResult: null, isResyncing: false }, "LanguageMutation", { is_state_ok: true }
+);
 export const { atomInstance: Atom_SelectedYourLanguages, useHook: useStore_SelectedYourLanguages } = createAtomWithHook({}, "SelectedYourLanguages");
 export const { atomInstance: Atom_SelectedTargetLanguages, useHook: useStore_SelectedTargetLanguages } = createAtomWithHook({}, "SelectedTargetLanguages");
 
@@ -209,6 +216,10 @@ export const { atomInstance: Atom_MicVolume, useHook: useStore_MicVolume } = cre
 export const { atomInstance: Atom_SpeakerVolume, useHook: useStore_SpeakerVolume } = createAtomWithHook(0, "SpeakerVolume");
 
 export const { atomInstance: Atom_MicThresholdCheckStatus, useHook: useStore_MicThresholdCheckStatus } = createAtomWithHook(false, "MicThresholdCheckStatus", {is_state_ok: true});
+// VR UI のログウィンドウが視線から外れているか (ランチャーのボタンを「呼び戻す」にする)
+export const { atomInstance: Atom_VrPanelLogOutOfView, useHook: useStore_VrPanelLogOutOfView } = createAtomWithHook(false, "VrPanelLogOutOfView", {is_state_ok: true});
+// VR UI のランチャーの起動演出 ("idle" 通常 / "pending" 最初に出すのを待つ / "playing" 演出中)。atom なので VR ウィンドウへも同期される
+export const { atomInstance: Atom_VrPanelLauncherIntro, useHook: useStore_VrPanelLauncherIntro } = createAtomWithHook("idle", "VrPanelLauncherIntro", {is_state_ok: true});
 export const { atomInstance: Atom_SpeakerThresholdCheckStatus, useHook: useStore_SpeakerThresholdCheckStatus } = createAtomWithHook(false, "SpeakerThresholdCheckStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_SelectableFontFamilyList, useHook: useStore_SelectableFontFamilyList } = createAtomWithHook({}, "SelectableFontFamilyList");

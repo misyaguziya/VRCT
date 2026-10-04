@@ -3,6 +3,8 @@ import * as main from "@logics_main";
 import * as configs from "@logics_configs";
 import { _useBackendErrorHandling } from "./_useBackendErrorHandling";
 import { SETTINGS_ARRAY } from "./configs/config_page_setter/ui_config_setter";
+import { useStdoutToPython } from "@useStdoutToPython";
+import { receiveLanguageMutation, resetLanguageMutations } from "./main/languageMutations";
 
 export const STATIC_ROUTE_META_LIST = [
     // Common
@@ -12,6 +14,17 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/get/data/compute_mode", ns: common, hook_name: "useComputeMode", method_name: "updateComputeMode" },
 
     { endpoint: "/run/update_software", ns: null, hook_name: null, method_name: null },
+
+    // VR UI のポインタ位置 (ホバー表示用)。VR ウィンドウへ転送する
+    { endpoint: "/run/vr_panel_pointer", ns: common, hook_name: "useVrPanelPointer", method_name: "forwardVrPanelPointer" },
+    // VR UI のウィンドウ開閉の応答 (VR画面が状態を持つので受け取るだけ)
+    { endpoint: "/run/vr_panel_windows", ns: null, hook_name: null, method_name: null },
+    // ログウィンドウが視線から外れた・戻った / 呼び戻しの応答
+    { endpoint: "/run/vr_panel_log_out_of_view", ns: common, hook_name: "useVrPanelLogOutOfView", method_name: "updateVrPanelLogOutOfView" },
+    { endpoint: "/run/vr_panel_launcher_intro", ns: common, hook_name: "useVrPanelLauncherIntro", method_name: "updateVrPanelLauncherIntro" },
+    { endpoint: "/run/vr_panel_recall_log", ns: null, hook_name: null, method_name: null },
+    { endpoint: "/run/vr_panel_layout_rendered", ns: null, hook_name: null, method_name: null },
+    { endpoint: "/run/vr_panel_tooltip", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
 
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },
@@ -120,6 +133,7 @@ export const useReceiveRoutes = () => {
     const { showNotification_Error } = common.useNotificationStatus();
     const { errorHandling_Backend } = _useBackendErrorHandling();
     const { updateIsBackendReady } = common.useIsBackendReady();
+    const { asyncStdoutToPython } = useStdoutToPython();
 
     const ROUTE_META_LIST = buildRouteMetaList();
 
@@ -166,8 +180,11 @@ export const useReceiveRoutes = () => {
                 }
             });
             updateIsBackendReady(true);
+            resetLanguageMutations();
             return;
         }
+
+        if (status !== 200) receiveLanguageMutation(parsed_data, asyncStdoutToPython);
 
         switch (status) {
             case 200:
@@ -176,6 +193,7 @@ export const useReceiveRoutes = () => {
                 } else {
                     handleInvalidEndpoint(parsed_data);
                 }
+                receiveLanguageMutation(parsed_data, asyncStdoutToPython);
                 break;
 
             case 400:

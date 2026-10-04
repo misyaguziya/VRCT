@@ -1,0 +1,53 @@
+.root { position: relative; width: 100%; height: 100%; }
+.container { width: 100%; height: 100%; display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--dark_888_color); border-radius: 24px; box-shadow: inset 0 0 0 4px var(--dark_750_color); }
+.group { display: flex; gap: 8px; }
+.divider { flex-shrink: 0; width: 4px; height: 72px; margin: 0 4px; border-radius: 2px; background: var(--dark_650_color); }
+.button {
+    position: relative; width: 124px; height: 104px; flex-direction: column; gap: 8px; padding: 6px;
+    &:not([aria-pressed="true"]) { background: var(--dark_850_color); color: var(--dark_400_color); }
+    &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
+    &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+    &.is_disabled { background: var(--dark_900_color); color: var(--dark_450_color); cursor: default; }
+}
+.icon { width: 40px; height: 40px; flex-shrink: 0; color: currentColor; fill: currentColor; }
+.label { max-width: 100%; font-size: 19px; font-weight: 600; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.window_button { width: 96px; .icon { width: 36px; height: 36px; } &.is_attention { background: var(--dark_950_color); color: var(--warning_color); } &.is_holding { box-shadow: inset 0 0 0 3px var(--warning_color); } }
+.state_mark { position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; padding: 2px; border-radius: 6px; background: var(--dark_950_color); color: var(--dark_350_color); display: flex; svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; } }
+.is_pending .state_mark { color: var(--primary_100_color); }
+
+// ---- 起動演出: VR UI をONにして最初に出したとき ----
+// 1. 頭の正面に VRCT のアイコンが大きく現れる  2. 手首へ吸い寄せられて小さくなる  3. 着いたらロゴ入りのカプセルが現れ、横に開いてボタンが並ぶ
+// 1〜2 は Python (overlay.py の _INTRO_FRONT_SEC / _INTRO_FLY_SEC) がオーバーレイごと動かす。ここは同じ時間だけアイコンを出して待つ。
+// 領域の外側は VR画面の背景色 (--dark_1000_color) のまま残す。Python (overlay.py introKeyAlpha) がこの色を透明にする。
+// 最初に出すまでは中身を出さず ("pending")、Python が "playing" にしたら始まり、約3.1秒で通常の表示になる。
+$intro-radius: 24px;
+$intro-land: 1.6s; // アイコンが手首に着く時刻 (_INTRO_FRONT_SEC + _INTRO_FLY_SEC)
+.is_intro_pending { opacity: 0; }
+.is_intro_playing {
+    animation: intro_panel 3.2s both;
+    .button, .divider { opacity: 0; animation: intro_rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .divider { animation-delay: 2.55s; }
+    // 機能4つ → 画面3つの順に 50ms ずつずらす
+    @for $i from 1 through 4 { .group:first-of-type > :nth-child(#{$i}) { animation-delay: 2.35s + ($i - 1) * 0.05s; } }
+    @for $i from 1 through 3 { .group:last-of-type > :nth-child(#{$i}) { animation-delay: 2.35s + ($i + 3) * 0.05s; } }
+}
+.intro_icon, .intro_logo { position: absolute; z-index: 1; left: 50%; top: 50%; translate: -50% -50%; pointer-events: none; opacity: 0; } // カプセルの背景より手前に描く
+.intro_icon { height: 112px; animation: intro_icon 1.7s 0.1s both; }
+.intro_logo { width: 264px; animation: intro_logo 0.8s #{$intro-land + 0.1s} both; }
+@keyframes intro_panel {
+    0%, 50% { opacity: 0; clip-path: inset(0 31% 0 31% round $intro-radius); }
+    54.7% { opacity: 1; clip-path: inset(0 31% 0 31% round $intro-radius); }
+    65.6% { opacity: 1; clip-path: inset(0 31% 0 31% round $intro-radius); animation-timing-function: cubic-bezier(0.7, 0, 0.2, 1); }
+    82.8%, 100% { opacity: 1; clip-path: inset(0 0 0 0 round $intro-radius); }
+}
+@keyframes intro_icon {
+    0% { opacity: 0; filter: blur(12px); transform: scale(1.15); }
+    18%, 80% { opacity: 1; filter: blur(0); transform: scale(1); }
+    100% { opacity: 0; filter: blur(0); transform: scale(0.8); }
+}
+@keyframes intro_logo {
+    0% { opacity: 0; filter: blur(14px); transform: scale(1.1); }
+    40%, 62% { opacity: 1; filter: blur(0); transform: scale(1); }
+    100% { opacity: 0; filter: blur(4px); transform: scale(0.97); }
+}
+@keyframes intro_rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }

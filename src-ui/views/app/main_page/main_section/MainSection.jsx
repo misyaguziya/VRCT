@@ -23,6 +23,7 @@ const HandleLanguageSelector = () => {
     const { t } = useI18n();
     const { currentIsOpenedLanguageSelector, updateIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
     const {
+        canChangeLanguageSettings,
         currentSelectedPresetTabNumber,
         currentSelectedYourLanguages,
         setSelectedYourLanguages,
@@ -51,6 +52,7 @@ const HandleLanguageSelector = () => {
 
     if (currentIsOpenedLanguageSelector.data.your_language === true) {
         const onclickFunction_YourLanguage = (payload) => {
+            if (!canChangeLanguageSettings()) return;
             updateIsOpenedLanguageSelector({ your_language: false, target_language: false, target_key: currentIsOpenedLanguageSelector.data.target_key });
             setSelectedYourLanguages({
                 ...payload,
@@ -66,6 +68,7 @@ const HandleLanguageSelector = () => {
         );
     } else if (currentIsOpenedLanguageSelector.data.target_language === true) {
         const onclickFunction_TargetLanguage = (payload) => {
+            if (!canChangeLanguageSettings()) return;
             updateIsOpenedLanguageSelector({ your_language: false, target_language: false, target_key: currentIsOpenedLanguageSelector.data.target_key });
             setSelectedTargetLanguages({
                 ...payload,

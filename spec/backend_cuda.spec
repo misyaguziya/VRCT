@@ -16,6 +16,7 @@ a = Analysis(
         ('./../src-python/models/ocr/onnx', 'ocr_onnx/'),
         ('./../.venv_cuda/Lib/site-packages/zeroconf', 'zeroconf/'),
         ('./../.venv_cuda/Lib/site-packages/openvr', 'openvr/'),
+        ('./../.venv_cuda/Lib/site-packages/glfw', 'glfw/'),  # glfw3.dll (VR UI overlay texture) is loaded via ctypes, not found by analysis
         ('./../.venv_cuda/Lib/site-packages/faster_whisper', 'faster_whisper/'),
         ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/'),
         ('./../.venv_cuda/Lib/site-packages/rapidocr', 'rapidocr/'),
@@ -27,7 +28,7 @@ a = Analysis(
     # へ収集させる (2026-09-18 に torch を落とすまでは、torch が同梱していた
     # 同じDLL群が torch 経由で収集されていた)。実行時のDLL検索パス登録は
     # src-python/utils.py の _registerBundledCudaLibraries が行う。
-    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr',
+    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr', 'windows_capture',
                    'nvidia.cublas', 'nvidia.cudnn'],
     hookspath=[],
     hooksconfig={},

@@ -3,7 +3,7 @@ import time
 import os
 import threading
 from subprocess import Popen, PIPE
-from psutil import process_iter
+from models.process_check import isProcessRunning
 import openvr
 
 try:
@@ -35,8 +35,7 @@ except Exception:
     tk = None  # type: ignore
 
 def checkSteamvrRunning() -> bool:
-    _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
-    return _proc_name in (p.name() for p in process_iter())
+    return isProcessRunning("vrmonitor.exe" if os.name == "nt" else "vrmonitor")
 
 # Windows-specific imports via ctypes will be used when focusing windows
 if sys.platform == 'win32':

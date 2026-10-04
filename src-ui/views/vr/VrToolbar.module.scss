@@ -1,0 +1,16 @@
+.bar { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 2px 12px; border-radius: 24px; background: var(--dark_888_color); box-shadow: inset 0 0 0 4px var(--dark_750_color); }
+.group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.button { position: relative; height: 72px; flex-direction: column; gap: 4px; padding: 2px;
+    &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
+    &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+    &.is_disabled { background: var(--dark_900_color); color: var(--dark_450_color); cursor: default; }
+}
+.anchor_button { width: 62px; }
+.recall_button { width: 72px; }
+.lock_button { width: 64px; }
+.font_button { width: 56px; font-size: 26px; font-weight: 700; }
+.opacity_button { width: 80px; .icon { width: 26px; height: 26px; } }
+.icon { width: 36px; height: 36px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hand_side { position: absolute; right: 7px; bottom: 5px; font-size: 14px; font-weight: 700; }
+.value { width: 32px; font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; color: var(--dark_basic_text_color); }
+.opacity_value { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }

@@ -531,11 +531,19 @@ const CommonSettingsContainer = () => {
         toggleOverlayShowOnlyTranslatedMessages,
         currentVoiceTypingMode,
         toggleVoiceTypingMode,
+        currentIsEnabledOverlayVrPanel,
+        toggleIsEnabledOverlayVrPanel,
     } = useVr();
 
     return (
         <div className={styles.common_container}>
             <SectionLabelComponent label={t("config_page.vr.common_settings")} />
+            <CheckboxContainer
+                label={t("config_page.vr.vr_panel.label")}
+                desc={t("config_page.vr.vr_panel.desc")}
+                variable={currentIsEnabledOverlayVrPanel}
+                toggleFunction={toggleIsEnabledOverlayVrPanel}
+            />
             <CheckboxContainer
                 label={t("config_page.vr.overlay_show_only_translated_messages.label")}
                 variable={currentOverlayShowOnlyTranslatedMessages}

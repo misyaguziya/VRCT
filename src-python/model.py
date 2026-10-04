@@ -48,7 +48,7 @@ from models.transcription.transcription_deepgram import (
     isLanguageSupportedByDeepgramModel,
 )
 from models.transliteration.transliteration_transliterator import Transliterator
-from models.overlay.overlay import Overlay
+from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
@@ -955,6 +955,15 @@ class Model:
         overlay_settings = {
             "small": overlay_small_log_settings,
             "large": overlay_large_log_settings,
+            PANEL: copy.deepcopy(config.OVERLAY_VR_PANEL_SETTINGS),
+            LAUNCHER: copy.deepcopy(config.OVERLAY_VR_LAUNCHER_SETTINGS),
+            # 一時ウィンドウ (言語 / VR設定)。開くたびにランチャーの近くに置き直すので保存しない
+            POPUP: {
+                "x_pos": 0.0, "y_pos": 0.0, "z_pos": 0.0,
+                "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
+                "display_duration": 5, "fadeout_duration": 0, "opacity": 1.0,
+                "ui_scaling": 0.36, "tracker": "Playspace",
+            },
         }
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
@@ -2338,6 +2347,92 @@ class Model:
             self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], size, True)
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
+
+    def setVrPanelWindows(self, log: bool, popup: bool) -> None:
+        """VR UIのログウィンドウと一時ウィンドウの表示・非表示を切り替える。"""
+        self.ensure_initialized()
+        self.overlay.setVrWindows(log, popup)
+
+    def setVrPanelEnabled(self, enabled: bool) -> None:
+        """VR UI (ランチャーと各ウィンドウ) を表示するか。OFFの間は撮影もしない。"""
+        self.ensure_initialized()
+        self.overlay.setVrPanelEnabled(enabled)
+
+    def setVrPanelLocked(self, locked: bool) -> None:
+        """VR UIのログウィンドウを掴めなくする (操作バーのロック)。"""
+        self.ensure_initialized()
+        self.overlay.panel_locked = locked
+
+    def setVrLauncherAutoHide(self, enabled: bool) -> None:
+        """VR UIのランチャーを手首を見たときだけ出すか。"""
+        self.ensure_initialized()
+        self.overlay.launcher_auto_hide = enabled
+
+    def updateVrLauncherPosition(self) -> None:
+        """保存したランチャーの位置と付ける手をオーバーレイに反映する。"""
+        self.ensure_initialized()
+        s = config.OVERLAY_VR_LAUNCHER_SETTINGS
+        self.overlay.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], LAUNCHER)
+
+    def requestVrPanelAnchor(self, anchor: str) -> None:
+        """VR UIのログウィンドウの固定先を切り替える (オーバーレイのスレッドで反映される)。"""
+        self.ensure_initialized()
+        self.overlay.requestAnchor(anchor)
+
+    def recallVrPanelLog(self) -> None:
+        """VR UIのログウィンドウを目の前へ呼び戻す。"""
+        self.ensure_initialized()
+        self.overlay.requestRecallPanel()
+
+    def setVrPanelTooltip(self, data: dict) -> None:
+        """Forward without initializing heavy backend resources."""
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.setTooltip(data)
+
+    def setVrPanelLayoutRendered(self, panel_size: list) -> None:
+        """VR画面が新しい並びで描き終えたことをオーバーレイに伝える。
+
+        初期化中にも届く (取りこぼすと表示が切り替わらない) ので、ここで初期化はしない。
+        オーバーレイがまだ無ければ捨ててよい (作られるときは既定の並びで、VR画面も既定の並びで描いている)。
+        """
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.setLayoutRendered(panel_size)
+
+    def setOverlayLayoutCallback(self, fn: Optional[Callable[[dict], None]]) -> None:
+        """VR画面の並び (ログの大きさで変わる) が変わったときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.layout_callback = fn
+        if fn is not None:
+            fn(self.overlay.getVrLayout())
+
+    def setOverlayPanelOutOfViewCallback(self, fn: Optional[Callable[[bool], None]]) -> None:
+        """VR UIのログウィンドウが視線から外れた・戻ったときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.panel_out_of_view_callback = fn
+
+    def setOverlayLauncherIntroCallback(self, fn: Optional[Callable[[str], None]]) -> None:
+        """VR UIの起動演出の状態 (idle/pending/playing) が変わったときに呼ぶ関数を登録する。登録時に今の状態も渡す。"""
+        self.ensure_initialized()
+        self.overlay.launcher_intro_callback = fn
+        if fn is not None:
+            fn(self.overlay.launcher_intro_state)
+
+    def updateOverlayVrPanelOpacity(self) -> None:
+        """VR UIのログウィンドウの不透明度を反映する (オーバーレイのスレッドが毎フレーム settings から適用する)。"""
+        self.ensure_initialized()
+        self.overlay.settings[PANEL]["opacity"] = config.OVERLAY_VR_PANEL_SETTINGS["opacity"]
+
+    def setOverlayPointerCallback(self, fn: Optional[Callable[[Optional[tuple]], None]]) -> None:
+        """VR UI上のポインタの位置が変わったときに呼ぶ関数を登録する (ホバー表示用)。"""
+        self.ensure_initialized()
+        self.overlay.pointer_callback = fn
+
+    def setOverlayPositionChangedCallback(self, fn: Optional[Callable[[str, dict], None]]) -> None:
+        """VR内でオーバーレイを掴んで動かし、位置が確定したときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.position_changed_callback = fn
 
     def startOverlay(self):
         self.ensure_initialized()
