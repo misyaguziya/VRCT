@@ -110,7 +110,7 @@ npm run vite-build
 4. **Windows 10 での WGC 動作**（`draw_border` / `minimum_update_interval` は Win11 前提の可能性。失敗時は PrintWindow に戻る設計）。
 5. **VRCT の画面が固まっている間も WGC の画像が届き続けるか**（未確認）。
 6. **VR 内日本語入力**（librime + rime-jaroomaji）: Tapi (BOOTH) の構成を調査済み（librime=BSD-3、jaroomaji の辞書は Mozc BSD-3 / JMdict・KANJIDIC2 CC BY-SA 4.0）。試作は未着手。ダウンロードは試験用の別場所でのみ承認済み。VR 内キーボードの設計は Artifact で提案してから。
-7. 詳細設計書 (`src-python/docs/詳細設計書.md`) への VR UI 追記、develop マージ、push。要件メモ: D3D11 を使わないので glfw/PyOpenGL は必要。
+7. develop マージ、push（設計書への VR UI 追記は §22 で済み）。要件メモ: D3D11 を使わないので glfw/PyOpenGL は必要。
 8. 旧字幕オーバーレイ（一行/複数行）は legacy として一定期間残す方針。
 
 ## 8. 作業ルール（このプロジェクトでユーザーが求めたこと）
@@ -651,3 +651,14 @@ epochは現在のOverlay生成時にrandom47bitで始まり、その同じinstan
 - **吹き出し**: SteamVR 実機で動作確認済み。VR設定の「操作の吹き出し」で ON/OFF できる（`OVERLAY_VR_TOOLTIP`、既定ON、`8f4259d3`）。
 - **VRからの言語変更**: Tauri の emit はオブジェクトのキーを辞書順に並び替えるため、言語変更の stale 判定を順序に依存しない比較にし（`sameSnapshot`）、VR へ渡す状態は `vrPanelWire.js` で挿入順を保つ形にした（`36947061`）。VR⇔メインで値を比較・列挙する処理を足すときは、この往復を通すテストを書くこと。
 - **ログのリサイズ後の重さ**: 実使用では影響なし。再発したら §7 の調査（`grab:ghost` / `grab:finish_resize` の記録）を使う。
+
+## 22. 起動演出と設計書の更新（2026-10-04・Claude Code）
+
+- **起動演出**（`18700a27` / `98e923db`）: VR UI を ON にして最初にランチャーを出すとき、頭の正面に VRCT のアイコンを大きく出し、手首へ吸い寄せてから、ロゴ入りのカプセルが開いてランチャーになる（全体で約 3.2 秒）。仕組み・時間・保険（着用が分からないときは手首でそのまま開く）は `src-python/docs/details/overlay.md` の「VR UI」を参照。
+- 実機で確定した罠:
+  - VR 画面は不透明にしか描けない。演出中は背景色（`#151517`）をキーにして領域の外側を透明にする (`introKeyAlpha`)。キー色は領域の左上の角から取る。計算を int16 でやると、白い文字（背景との差が大きい色）が桁あふれで透明になる（int32 にした）。
+  - ランチャーの領域は高さ約 128px。正面で大きく見せるほど荒くなる（`_INTRO_FRONT_SCALE`=7.5）。
+  - 正面の位置は最初の 1 回で固定すると、頭を動かしたとき正面から外れる。正面にいる間は視線に追従し、飛び始めで固定する。
+  - 向きの補間を「行列を混ぜて直交化」にすると、180° 近く違うときに跳ぶ。slerp にした。
+- 実機確認が残る項目: 機種ごとの着用判定（`getTrackedDeviceActivityLevel`）、腕を下げた姿勢での起動、飛行中にコントローラの電源を切ったとき、約 16fps の撮影での見え方。詰めた後（約 3.2 秒）の長さが適切か。
+- 設計書 (`設計書.md` / `詳細設計書.md` / `details/overlay.md` / `details/mainloop.md`) に VR UI を追記した。
