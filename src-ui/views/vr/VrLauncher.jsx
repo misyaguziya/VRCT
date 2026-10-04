@@ -11,6 +11,7 @@ import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 import CopyThinSvg from "@images/copy_thin.svg?react";
 import HmdSvg from "@images/mui_head_mounted_device.svg?react";
 import vrct_logo from "@images/vrct_logo_for_dark_mode.png";
+import vrct_icon from "@images/vrct_icon_for_vr_intro.png";
 import { VrTooltipButton } from "./VrTooltip";
 import shared from "./VrSettingsWindow.module.scss";
 import styles from "./VrLauncher.module.scss";
@@ -28,27 +29,32 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup }) => {
     const is_log_lost = windows.log && currentVrPanelLogOutOfView.data === true;
     const is_locked = currentIsOpenedConfigPage.data === true;
     const recallLog = () => { openLog(); asyncStdoutToPython("/run/vr_panel_recall_log"); };
-    return <div className={clsx(styles.container, { [styles.is_intro_pending]: intro === "pending", [styles.is_intro_playing]: intro === "playing" })}>
-        {intro === "playing" && <img className={styles.intro_logo} src={vrct_logo} alt="" aria-hidden="true" />}
-        <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.functions_group")}>
-            <FunctionButton Svg={TranslationSvg} label={t("vr_panel.tooltip.translate")} name={t("main_page.translation")}
-                state={currentTranslationStatus} onClick={toggleTranslation} is_locked={is_locked} />
-            <FunctionButton Svg={MicSvg} label={t("vr_panel.tooltip.microphone")} name={t("main_page.transcription_send")}
-                state={currentTranscriptionSendStatus} onClick={toggleTranscriptionSend} is_locked={is_locked} />
-            <FunctionButton Svg={HeadphonesSvg} label={t("vr_panel.tooltip.listen")} name={t("main_page.transcription_receive")}
-                state={currentTranscriptionReceiveStatus} onClick={toggleTranscriptionReceive} is_locked={is_locked} />
-            <FunctionButton Svg={ChatTranscribeSvg} label={t("vr_panel.tooltip.chat_detect")} name={t("main_page.ocr")}
-                state={currentOcrCaptureStatus} onClick={toggleOcrCapture} is_locked={is_locked} />
-        </div>
-        <span className={styles.divider} aria-hidden="true" />
-        <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.windows_group")}>
-            <WindowButton Svg={CopyThinSvg} label={is_log_lost ? t("vr_panel.recall_log") : t("vr_panel.window_log")}
-                name={t("vr_panel.window_log")} is_open={windows.log} is_attention={is_log_lost}
-                onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog} onLongPress={recallLog} />
-            <WindowButton Svg={TranslationSvg} label={t("vr_panel.window_language")}
-                is_open={windows.popup === "language"} onClick={() => togglePopup("language")} />
-            <WindowButton Svg={HmdSvg} label={t("vr_panel.window_settings")}
-                is_open={windows.popup === "settings"} onClick={() => togglePopup("settings")} />
+    return <div className={styles.root}>
+        {intro === "playing" && <>
+            <img className={styles.intro_icon} src={vrct_icon} alt="" aria-hidden="true" />
+            <img className={styles.intro_logo} src={vrct_logo} alt="" aria-hidden="true" />
+        </>}
+        <div className={clsx(styles.container, { [styles.is_intro_pending]: intro === "pending", [styles.is_intro_playing]: intro === "playing" })}>
+            <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.functions_group")}>
+                <FunctionButton Svg={TranslationSvg} label={t("vr_panel.tooltip.translate")} name={t("main_page.translation")}
+                    state={currentTranslationStatus} onClick={toggleTranslation} is_locked={is_locked} />
+                <FunctionButton Svg={MicSvg} label={t("vr_panel.tooltip.microphone")} name={t("main_page.transcription_send")}
+                    state={currentTranscriptionSendStatus} onClick={toggleTranscriptionSend} is_locked={is_locked} />
+                <FunctionButton Svg={HeadphonesSvg} label={t("vr_panel.tooltip.listen")} name={t("main_page.transcription_receive")}
+                    state={currentTranscriptionReceiveStatus} onClick={toggleTranscriptionReceive} is_locked={is_locked} />
+                <FunctionButton Svg={ChatTranscribeSvg} label={t("vr_panel.tooltip.chat_detect")} name={t("main_page.ocr")}
+                    state={currentOcrCaptureStatus} onClick={toggleOcrCapture} is_locked={is_locked} />
+            </div>
+            <span className={styles.divider} aria-hidden="true" />
+            <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.windows_group")}>
+                <WindowButton Svg={CopyThinSvg} label={is_log_lost ? t("vr_panel.recall_log") : t("vr_panel.window_log")}
+                    name={t("vr_panel.window_log")} is_open={windows.log} is_attention={is_log_lost}
+                    onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog} onLongPress={recallLog} />
+                <WindowButton Svg={TranslationSvg} label={t("vr_panel.window_language")}
+                    is_open={windows.popup === "language"} onClick={() => togglePopup("language")} />
+                <WindowButton Svg={HmdSvg} label={t("vr_panel.window_settings")}
+                    is_open={windows.popup === "settings"} onClick={() => togglePopup("settings")} />
+            </div>
         </div>
     </div>;
 };

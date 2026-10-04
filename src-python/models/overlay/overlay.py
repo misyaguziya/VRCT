@@ -87,7 +87,17 @@ _LAUNCHER_SHOW_AFTER_SEC = 0.05
 _LAUNCHER_HIDE_AFTER_SEC = 0.3
 _LAUNCHER_FADE_SEC = 0.1
 _LAUNCHER_INPUT_DELAY_SEC = 0.2  # 出始めは押せない (手首を返した勢いで押さないように)
-_LAUNCHER_INTRO_SEC = 2.8  # 起動演出 (VR画面のCSS 約2.4秒) が終わるまで出し続け、押せないようにする
+# 起動演出: ランチャーのオーバーレイごと頭の正面に出し (_INTRO_FRONT_SEC。VR画面はこの間 VRCT のアイコンだけを出す)、
+# 手首へ吸い寄せ (_INTRO_FLY_SEC)、着いたらロゴ入りのカプセルが開く (VR画面のCSS。src-ui/views/vr/VrLauncher.module.scss の intro_* と時間を合わせる)。
+# _LAUNCHER_INTRO_SEC は演出が終わるまで出し続け、押せなくする長さ (CSS の長さ + 状態がVR画面に届くまでの余裕)
+_INTRO_FRONT_SEC = 1.0
+_INTRO_FLY_SEC = 0.6
+# 正面では、手首のときの大きさの何倍で出すか (VRCTのアイコンだけを大きく見せる)。大きいほど荒くなる
+# (VR画面の領域は高さ約128pxなので、アイコンの絵はその高さまでしかない)
+_INTRO_FRONT_SCALE = 7.5
+_INTRO_FRONT_DISTANCE_M = 0.7  # 正面に出す距離 (目から)
+_INTRO_FRONT_FOLLOW_PER_SEC = 8.0  # 正面にいる間、視線へ追いつく速さ (大きいほど速い。1/秒)
+_LAUNCHER_INTRO_SEC = 3.7
 _COLOR_NORMAL = (1.0, 1.0, 1.0)
 _COLOR_POINTER = (0x61 / 255, 0xB4 / 255, 0xA7 / 255)
 _COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
@@ -443,6 +453,58 @@ def recallPose(head: np.ndarray) -> np.ndarray:
     return faceHead(position, head)
 
 
+def _quaternionOf(m: np.ndarray) -> np.ndarray:
+    """回転行列 (3x3) → 単位クォータニオン (w, x, y, z)。"""
+    trace = float(np.trace(m))
+    if trace > 0:
+        s = 2.0 * np.sqrt(trace + 1.0)
+        q = np.array([0.25 * s, (m[2, 1] - m[1, 2]) / s, (m[0, 2] - m[2, 0]) / s, (m[1, 0] - m[0, 1]) / s])
+    else:
+        i = int(np.argmax(np.diag(m)))
+        j, k = (i + 1) % 3, (i + 2) % 3
+        s = 2.0 * np.sqrt(m[i, i] - m[j, j] - m[k, k] + 1.0)
+        q = np.zeros(4)
+        q[0] = (m[k, j] - m[j, k]) / s
+        q[1 + i] = 0.25 * s
+        q[1 + j] = (m[j, i] + m[i, j]) / s
+        q[1 + k] = (m[k, i] + m[i, k]) / s
+    return q / np.linalg.norm(q)
+
+
+def _matrixOf(q: np.ndarray) -> np.ndarray:
+    w, x, y, z = q
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+    ])
+
+
+def introFrontPose(head: np.ndarray) -> np.ndarray:
+    """頭の正面 (視線の先) に置き、頭の方を向けた姿勢。上下も視線のとおりにする (呼び戻しと違い、範囲で丸めない)。"""
+    return faceHead(head[:3, 3] - head[:3, 2] * _INTRO_FRONT_DISTANCE_M, head)
+
+
+def introFlightPose(front: np.ndarray, target: np.ndarray, progress: float) -> np.ndarray:
+    """front から target (どちらも4x4) へ progress (0〜1) だけ進んだ姿勢。位置は直線、向きは近いほうの回りで球面線形補間 (slerp)。
+
+    行列を混ぜて直交化する方法は、向きが 180° 近く違うと不安定で、ランチャーが一瞬で回ってしまう。
+    """
+    a, b = _quaternionOf(front[:3, :3]), _quaternionOf(target[:3, :3])
+    dot = float(np.dot(a, b))
+    if dot < 0:  # 遠回りにならないように
+        b, dot = -b, -dot
+    if dot > 0.9995:  # ほぼ同じ向き
+        q = a * (1.0 - progress) + b * progress
+    else:
+        theta = np.arccos(dot)
+        q = (np.sin((1.0 - progress) * theta) * a + np.sin(progress * theta) * b) / np.sin(theta)
+    pose = np.eye(4)
+    pose[:3, :3] = _matrixOf(q / np.linalg.norm(q))
+    pose[:3, 3] = front[:3, 3] * (1.0 - progress) + target[:3, 3] * progress
+    return pose
+
+
 def pushPullDistance(distance: float, state: Optional[Any], dt: float) -> float:
     """掴んでいる手のスティックの上下で、距離を伸ばす (上)・縮める (下)。
 
@@ -631,6 +693,9 @@ class Overlay:
         # "playing" 演出中 (目をそらしても出し続ける)。変わったら launcher_intro_callback(state) で知らせる
         self.launcher_intro_state = "idle"
         self.launcher_intro_until = 0.0
+        self.launcher_intro_started = 0.0
+        self.launcher_intro_tick = 0.0  # 正面で視線に追従するときの、前回の時刻
+        self.launcher_intro_front: Optional[np.ndarray] = None  # 正面から手首へ飛ばしている間の、正面の姿勢 (飛ばさないときは None)
         self.launcher_intro_logged: set = set()  # 実機での切り分け用に、状態ごとに最初の1回だけログに出す
         self.launcher_intro_callback: Optional[Callable[[str], None]] = None
         # grabbing: (size, 手のindex, 手から見たオーバーレイの4x4行列)
@@ -1920,6 +1985,7 @@ class Overlay:
 
         self.applyVrWindows(poseOf)
         self.updateLauncherVisibility(poseOf, now)
+        self.updateLauncherIntroFlight(poseOf, now)
         self.updateToolbarFade(now)
 
         if self.resizing is not None:
@@ -2146,12 +2212,19 @@ class Overlay:
                 self.launcher_shown, self.launcher_change_since = want, None
                 if want:
                     self.launcher_shown_at = now
-        if self.launcher_intro_state == "pending" and self.launcher_shown and self.panel_last_raw is not None:
+        if self.launcher_intro_state == "pending" and self.panel_last_raw is not None:
             # 画面が一度撮れてから始める (撮れる前に始めると、演出を見逃す)。
+            # ヘッドセットを着けていれば、頭の正面に出して手首へ飛ばす。着けているか分からない・手首を見たほうが先なら、
+            # その場 (手首) で始める (どちらの条件も満たさないまま、ランチャーが出なくなることがないように)。
             # ponytail: panel_last_raw は転送の重複排除用の値で、転送の成功や VR画面が playing を受け取ったことまでは
-            # 保証しない。届くのが約0.4秒 (_LAUNCHER_INTRO_SEC - CSS の長さ) より遅いと演出の末尾が欠ける。実機で問題なら専用のフラグにする
-            self.launcher_intro_until = now + _LAUNCHER_INTRO_SEC
-            self.setLauncherIntro("playing")
+            # 保証しない。届くのが約0.5秒 (_LAUNCHER_INTRO_SEC - CSS の長さ) より遅いと演出の末尾が欠ける。実機で問題なら専用のフラグにする
+            head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+            if head is not None and self.headsetWorn():
+                self.launcher_intro_front = introFrontPose(head)
+            if self.launcher_intro_front is not None or self.launcher_shown:
+                self.launcher_intro_started = self.launcher_intro_tick = now
+                self.launcher_intro_until = now + _LAUNCHER_INTRO_SEC
+                self.setLauncherIntro("playing")
         target = 1.0 if self.launcher_shown else 0.0
         step = dt / _LAUNCHER_FADE_SEC
         self.launcher_alpha = min(self.launcher_alpha + step, target) if target > self.launcher_alpha else max(self.launcher_alpha - step, target)
@@ -2248,6 +2321,64 @@ class Overlay:
         s = self.settings[PANEL]
         self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], PLAYSPACE, PANEL)
 
+    def headsetWorn(self) -> bool:
+        """ヘッドセットを着けているか。分からないとき (取得に失敗したとき) は着けているとみなす。"""
+        try:
+            level = int(self.overlay_system.getTrackedDeviceActivityLevel(openvr.k_unTrackedDeviceIndex_Hmd))
+        except Exception:
+            return True
+        return level in (openvr.k_EDeviceActivityLevel_Unknown, openvr.k_EDeviceActivityLevel_UserInteraction,
+                         openvr.k_EDeviceActivityLevel_UserInteraction_Timeout)
+
+    def updateLauncherIntroFlight(self, poseOf: Callable[[int], Optional[np.ndarray]], now: float) -> None:
+        """起動演出の間、ランチャーを頭の正面に置き、少し経ったら手首へ飛ばす (空間に固定した位置で動かす)。"""
+        front = self.launcher_intro_front
+        if front is None or LAUNCHER not in self.handle:
+            return
+        try:
+            elapsed = now - self.launcher_intro_started
+            if elapsed >= _INTRO_FRONT_SEC + _INTRO_FLY_SEC:
+                self.endLauncherIntroFlight()
+                return
+            if elapsed < _INTRO_FRONT_SEC:
+                # 正面にいる間は視線に追従する (飛び始める位置で止める)。急に動かさないよう、少し遅れてついていく
+                head = poseOf(openvr.k_unTrackedDeviceIndex_Hmd)
+                if head is not None:
+                    follow = 1.0 - np.exp(-_INTRO_FRONT_FOLLOW_PER_SEC * max(now - self.launcher_intro_tick, 0.0))
+                    front = self.launcher_intro_front = introFlightPose(front, introFrontPose(head), float(follow))
+                self.launcher_intro_tick = now
+            target = self.overlayWorldPose(LAUNCHER, poseOf)
+            if target is None:  # 手首が追跡できない間は、今の場所で待つ (戻ってこなければ、上の時間切れで通常の位置へ戻す)
+                return
+            progress = min(max((elapsed - _INTRO_FRONT_SEC) / _INTRO_FLY_SEC, 0.0), 1.0)
+            progress = progress * progress  # だんだん速く (吸い寄せられる)
+            pose = introFlightPose(front, target, progress)
+            handle = self.handle[LAUNCHER]
+            self.overlay.setOverlayTransformAbsolute(handle, openvr.TrackingUniverseStanding, mat34Id(pose[:3, :]))
+            self.overlay.setOverlayWidthInMeters(handle, self.regionWidthM(LAUNCHER) * _INTRO_FRONT_SCALE ** (1.0 - progress))  # 倍率は掛け算で縮める (線形だと、終わり際だけ急に小さくなる)
+        except Exception:
+            errorLogging()
+            self.endLauncherIntroFlight()  # 毎フレーム失敗し続けて、掴み・ポインタの処理まで止めないように、飛ばすのをやめる
+
+    def endLauncherIntroFlight(self) -> None:
+        """飛ばすのをやめ、ランチャーを手首の位置と通常の大きさへ戻す (失敗しても、呼び出し元の処理は止めない)。"""
+        if self.launcher_intro_front is None:
+            return
+        self.launcher_intro_front = None
+        if LAUNCHER not in self.handle:
+            return
+        try:
+            s = self.settings[LAUNCHER]
+            self.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], LAUNCHER)
+            self.updateUiScaling(s["ui_scaling"], LAUNCHER)
+            if LAUNCHER in self.position_pending:
+                # 手首 (コントローラ) がまだ繋がっていないと、位置を戻せず正面に取り残されるので、繋がるまで隠す
+                self.launcher_shown, self.launcher_alpha = False, 0.0
+                if self.launcher_intro_state == "playing":
+                    self.setLauncherIntro("idle")  # このまま演出を続けると、また正面に出てしまう
+        except Exception:
+            errorLogging()
+
     def setLauncherIntro(self, state: str) -> None:
         """起動演出の状態を変え、変わったときだけ UI へ知らせる (オーバーレイスレッドから呼ぶ)。"""
         if state == self.launcher_intro_state:
@@ -2255,6 +2386,8 @@ class Overlay:
         self.launcher_intro_state = state
         if state == "pending":
             self.launcher_intro_logged.clear()
+        if state != "playing":
+            self.endLauncherIntroFlight()
         if self.launcher_intro_callback is not None:
             try:
                 self.launcher_intro_callback(state)
