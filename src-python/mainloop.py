@@ -10,6 +10,12 @@ from queue import Queue, Empty
 import logging
 import warnings
 
+# torch を同梱しないので transformers が import 時に「PyTorch/TensorFlow/Flax が
+# ありません」という助言警告を stderr に出す。UI は stderr の非 Warning 行を
+# 致命的エラー通知にするため、トークナイザしか使わない VRCT では抑制する。
+# transformers を import するより前に設定する必要がある。
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
 # google-auth 2.42.0 以降は google/auth/transport/grpc.py の import 時に
 # 「grpcio < 1.83.0 は Post-Quantum Cryptography 非対応」という FutureWarning を
 # 出す。requirements では grpcio>=1.83.0 に更新済みなので通常は発火しないが、
