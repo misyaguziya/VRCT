@@ -36,7 +36,7 @@ def marked_pixels(layout, state, scale=1):
 
 
 def overlay_fixture():
-    settings = {"tracker": "Playspace", "ui_scaling": 0.88, "x_pos": 0, "y_pos": 0,
+    settings = {"tracker": "Playspace", "ui_scaling": 0.952, "x_pos": 0, "y_pos": 0,
                 "z_pos": 0, "x_rotation": 0, "y_rotation": 0, "z_rotation": 0}
     overlay = Overlay({LAUNCHER: settings.copy(), PANEL: settings.copy()})
     overlay.overlay = MagicMock(spec=openvr.IVROverlay)
@@ -62,11 +62,16 @@ class TooltipValidationTest(unittest.TestCase):
         self.assertEqual(validated["mode"], "hover")
         self.assertEqual(validate_tooltip({"epoch": 1, "revision": 1, "visible": False})["visible"], False)
 
+    def test_launcher_button_may_reach_the_right_edge_but_not_cross_it(self):
+        validate_tooltip(payload(button=[950, 0, 2, 1]))  # 952px 幅のランチャーの右端ちょうど
+        with self.assertRaises(ValueError):
+            validate_tooltip(payload(button=[951, 0, 2, 1]))
+
     def test_invalid_values(self):
         changes = [{"epoch": True}, {"epoch": 0}, {"epoch": 1 << 48}, {"revision": 1 << 32},
                    {"revision": 1.0}, {"visible": 1}, {"region": PANEL}, {"mode": "other"},
                    {"button": [float("nan"), 0, 1, 1]}, {"button": [0, True, 1, 1]},
-                   {"button": [0, 0, -1, 1]}, {"button": [879, 0, 2, 1]}, {"button": [10**1000, 0, 1, 1]},
+                   {"button": [0, 0, -1, 1]}, {"button": [951, 0, 2, 1]}, {"button": [10**1000, 0, 1, 1]},
                    {"size": [359, 20]}, {"size": [360, 105]}, {"size": [360, float("inf")]},
                    {"arrow_x": True}, {"arrow_x": 349}, {"unknown": 1}]
         for change in changes:
@@ -183,7 +188,7 @@ class TooltipLifecycleTest(unittest.TestCase):
         overlay.overlay.setOverlayWidthInMeters.assert_called_with(90, 0.36)
         call = overlay.overlay.setOverlayTransformAbsolute.call_args.args
         pose = call[2]
-        self.assertAlmostEqual(pose[0][3], -0.248)
+        self.assertAlmostEqual(pose[0][3], -0.284)  # (192 - 952 / 2) px × 1mm
         self.assertAlmostEqual(pose[1][3], 0.089)
         self.assertAlmostEqual(pose[2][3], 0.004)
         self.assertNotIn(TOOLTIP, overlay.vrRegionSizes())
@@ -315,7 +320,7 @@ class VrResourcesTest(unittest.TestCase):
     """VR UI 用の追加のオーバーレイと OpenGL は、VR UI が ON になるまで作らない (字幕だけの利用者のため)。"""
 
     def _overlay(self):
-        settings = {"tracker": "Playspace", "ui_scaling": 0.88, "x_pos": 0, "y_pos": 0,
+        settings = {"tracker": "Playspace", "ui_scaling": 0.952, "x_pos": 0, "y_pos": 0,
                     "z_pos": 0, "x_rotation": 0, "y_rotation": 0, "z_rotation": 0}
         overlay = Overlay({LAUNCHER: settings.copy(), PANEL: settings.copy()})
         overlay.overlay = MagicMock()

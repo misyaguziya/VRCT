@@ -1303,7 +1303,7 @@ class Config:
             "display_duration": 5,
             "fadeout_duration": 0,  # 常に表示
             "opacity": 1.0,
-            "ui_scaling": 0.28,  # 横幅(m)。880x128px の帯で高さ約4cm
+            "ui_scaling": 0.303,  # 横幅(m)。952x128px の帯 (左端のマーク込み) で高さ約4cm。ボタンの大きさは 880px 幅で 0.28m のときと同じ
             "tracker": "LeftHand",
         }
         self._OVERLAY_VR_PANEL = False

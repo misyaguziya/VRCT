@@ -29,12 +29,13 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup }) => {
     const is_log_lost = windows.log && currentVrPanelLogOutOfView.data === true;
     const is_locked = currentIsOpenedConfigPage.data === true;
     const recallLog = () => { openLog(); asyncStdoutToPython("/run/vr_panel_recall_log"); };
-    return <div className={styles.root}>
+    return <div className={styles.root} style={{ "--vrct-logo": `url("${vrct_logo}")` }}>
         {intro === "playing" && <>
             <img className={styles.intro_icon} src={vrct_icon} alt="" aria-hidden="true" />
-            <img className={styles.intro_logo} src={vrct_logo} alt="" aria-hidden="true" />
+            <div className={styles.intro_logo} aria-hidden="true"><div className={styles.intro_text} /><div className={styles.intro_mark} /></div>
         </>}
         <div className={clsx(styles.container, { [styles.is_intro_pending]: intro === "pending", [styles.is_intro_playing]: intro === "playing" })}>
+            <span className={styles.mark} aria-hidden="true" />
             <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.functions_group")}>
                 <FunctionButton Svg={TranslationSvg} label={t("vr_panel.tooltip.translate")} name={t("main_page.translation")}
                     state={currentTranslationStatus} onClick={toggleTranslation} is_locked={is_locked} />

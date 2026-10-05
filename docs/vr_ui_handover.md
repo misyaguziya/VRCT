@@ -33,7 +33,7 @@ Python (src-python/models/overlay/)
   └─ overlay_tooltip.py 吹き出しの入力検証・世代marker・透明マスク (§19で追加)
 ```
 
-- VR 画面は **1 枚の画面外 WebView に全領域を並べて描き、1 回撮影して** `setOverlayTexture` を各オーバーレイ (log / launcher / popup / toolbar / tooltip) に渡し、`setOverlayTextureBounds` で切り出す。並びは `src-ui/views/vr/vr_layout.json` と `computeVrLayout` (overlay.py)。tooltipは非入力の別handle。既定atlasは1628×880。
+- VR 画面は **1 枚の画面外 WebView に全領域を並べて描き、1 回撮影して** `setOverlayTexture` を各オーバーレイ (log / launcher / popup / toolbar / tooltip) に渡し、`setOverlayTextureBounds` で切り出す。並びは `src-ui/views/vr/vr_layout.json` と `computeVrLayout` (overlay.py)。tooltipは非入力の別handle。既定atlasは1690×880。
 - VR ウィンドウは VR UI が **ON の間だけ** 作る（Tauri コマンド `set_vr_panel_window`、`VrPanelSyncController` から呼ぶ）。
 - 入力は WebView 内部の `Chrome_RenderWidgetHostHWND` へ PostMessage（OS のカーソルは動かさない）。
 
@@ -506,7 +506,7 @@ HTMLビルド **PASS、60 modules**。5言語×通常／反映中／設定中×�
 
 ### 描画・入力の契約
 
-- 共有atlasにtooltip領域 `[right_x, 760, 360, 120]` を予約し、最小atlasを1628×880へ変更。Python・既定JSON・Rustの初期寸法を一致させた。新規の撮影スレッドや依存は追加していない。
+- 共有atlasにtooltip領域 `[right_x, 760, 360, 120]` を予約し、最小atlasを1628×880へ変更。Python・既定JSON・Rustの初期寸法を一致させた（その後ランチャーが 952px 幅になり、atlas は 1690×880。Rust は `src-tauri/src/lib.rs` の `inner_size`）。新規の撮影スレッドや依存は追加していない。
 - SteamVRの専用handle `VRCT_tooltip` を1つ追加。同じGL textureを共有し、対象ボタンの上12px相当／親の前4mmへ配置する。launcherとtoolbarの固定先・実寸へ追従。sort orderは70、pointerは100。入力／掴み／リサイズの候補に含めない。
 - `/run/vr_panel_tooltip` は `{epoch, revision, visible, region, button:[x,y,w,h], size:[360,body_h], arrow_x, mode}` を受ける。非表示は `{epoch,revision,visible:false}` のみ。modeはhover（既定）／focus。Controllerで検証し、Modelは重い初期化をせず転送、OverlayはQueueで所有スレッドへ渡す。既存endpointは維持。
 - epoch48bitとrevision32bitを80個の白黒4×8pxセルで描く。epochはOverlay内で単調増加、layoutの追加metadata `tooltip_epoch` で通知。bodyはy=8、高さ104px以内、下向き矢印6px。撮影画像のmarker一致を確認してから透明マスク／upload／bounds／位置を更新し表示する。markerは常時透明。古いWGC frameや同一rawの再利用に対応する。
