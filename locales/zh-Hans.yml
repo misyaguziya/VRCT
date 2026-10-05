@@ -293,6 +293,7 @@ config_page:
         display_duration: "显示持续时间"
         fadeout_duration: "渐隐持续时间"
         common_settings: "通用设置"
+        vr_ui_beta: "VR UI（测试版）"
         tracker: "显示追踪器的位置"
         hmd: "HMD"
         left_hand: "左手"
@@ -302,6 +303,9 @@ config_page:
         vr_panel:
             label: "显示VR UI"
             desc: "在VR中显示手腕启动器和窗口，可切换功能开关、查看日志、更改语言和设置。可独立于字幕叠加层使用。"
+        reset_launcher:
+            label: "重置启动器的位置和大小"
+            desc: "在VR中找不到启动器时使用。它会回到左手手腕上的默认位置和大小。"
         voice_typing_mode:
             label:
             desc:

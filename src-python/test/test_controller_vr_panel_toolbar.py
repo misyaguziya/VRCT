@@ -84,6 +84,30 @@ class TestVrLauncher(unittest.TestCase):
         self.assertEqual(config.OVERLAY_VR_LAUNCHER_SETTINGS["y_rotation"], -10.0)
         model.updateVrLauncherPosition.assert_called_once_with()
 
+    def test_reset_returns_the_launcher_to_the_default_left_hand(self) -> None:
+        from config import DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
+
+        config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, "tracker": "RightHand", "x_pos": 5.0, "ui_scaling": 0.01}
+        controller = Controller()
+        controller.run_mapping = {"overlay_vr_launcher_hand": "/run/overlay_vr_launcher_hand"}
+        with patch("controller.model") as model, patch.object(controller, "run") as run:
+            response = controller.resetVrLauncher()
+        self.assertEqual(response, {"status": 200, "result": True})
+        self.assertEqual(config.OVERLAY_VR_LAUNCHER_SETTINGS, DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)  # 左手・初期の位置と大きさ
+        model.resetVrLauncher.assert_called_once_with()  # VR につながっていれば、手首へ吸い寄せて戻る
+        run.assert_called_once_with(200, controller.run_mapping["overlay_vr_launcher_hand"], "LeftHand")  # UI の手の表示も戻す
+        config.OVERLAY_VR_LAUNCHER_SETTINGS["x_pos"] = 1.0  # 初期値の元の dict を書き換えない
+        self.assertEqual(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS["x_pos"], 0.0)
+
+    def test_a_changed_launcher_position_is_saved_and_the_hand_is_pushed_to_the_ui(self) -> None:
+        controller = Controller()
+        controller.run_mapping = {"overlay_vr_launcher_hand": "/run/overlay_vr_launcher_hand"}
+        position = {**{k: 0.0 for k in ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")}, "ui_scaling": 0.303, "tracker": "LeftHand"}
+        with patch.object(controller, "run") as run:
+            controller._onOverlayPositionChanged("launcher", position)
+        self.assertEqual(config.OVERLAY_VR_LAUNCHER_SETTINGS["tracker"], "LeftHand")
+        run.assert_called_once_with(200, "/run/overlay_vr_launcher_hand", "LeftHand")
+
     def test_same_hand_or_unknown_value_does_not_move(self) -> None:
         config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, "tracker": "LeftHand"}
         with patch("controller.model") as model:
