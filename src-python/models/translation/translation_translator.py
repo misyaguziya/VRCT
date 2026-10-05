@@ -15,18 +15,23 @@ except Exception:
 from utils import errorLogging, getBestComputeType
 
 try:
-    # Bing の認証情報パース (parse_bing_credentials) は monkey-patch を
-    # やめ、フォーク本体の Bing.get_tk へ取り込んだ。
-    from translators import translate_text as other_web_Translator
+    # GPL の translators から、MIT 互換の自前実装に置き換えた
+    # (translator_engines)。Bing の認証情報パースはそちらに内蔵済み。
+    # Rust 製のビルド済み拡張 (src-python/translator_engines.pyd) を同梱している。
+    # ライセンスにより VRCT 以外への流用は不可 (translator_engines.LICENSE.txt)。
+    # translators と違い import 時に通信しないので、オフライン起動でも
+    # ENABLE_TRANSLATORS が False に落ちない。
+    from translator_engines import translate_text as other_web_Translator
     ENABLE_TRANSLATORS = True
 except Exception:
     other_web_Translator = None  # type: ignore
     ENABLE_TRANSLATORS = False
 
-# translators 経由 (Google/Bing/Papago) の HTTP タイムアウト。
-# ライブラリ既定は timeout=None = 無制限で、応答が返らないと呼び出し元の
-# スレッドが永久に止まる。VRCT のパイプラインは単一スレッドなので、
-# 翻訳のハングは文字起こしごと停止させ、最終的に watchdog が発火する。
+# Google/Bing/Papago の HTTP タイムアウト。応答が返らないと呼び出し元の
+# スレッドが止まる。VRCT のパイプラインは単一スレッドなので、翻訳のハングは
+# 文字起こしごと停止させ、最終的に watchdog が発火する。
+# NOTE: これは 1 リクエストあたりの値。Bing は認証ページの取得と翻訳、
+# さらにトークン失効時の 1 回のリトライで最大 4 リクエストを発行しうる。
 _WEB_TRANSLATOR_TIMEOUT_SECONDS = 10
 
 import warnings
@@ -568,7 +573,14 @@ class Translator:
             if source_language == target_language:
                 return message
 
-            result: Any = ""
+            # False, not "": every `case` below is guarded (engine disabled,
+            # client not authenticated, library missing), and an unknown
+            # translator_name matches no case at all. Any of those leaves this
+            # initial value untouched, and the caller decides success with
+            # `isinstance(translation, str)` - so "" would report an empty
+            # translation as a success, skipping the CTranslate2 fallback and
+            # the error log. False routes it through the fallback instead.
+            result: Any = False
             source_language, target_language = self.getLanguageCode(translator_name, weight_type, target_country, source_language, target_language)
             match translator_name:
                 case "DeepL_API":
