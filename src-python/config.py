@@ -281,6 +281,21 @@ class ManagedList(list):
         self._save()
 
 
+# VR UIのランチャーの初期値 (位置は手首の基準からの差。「ランチャーを初期に戻す」でもこの値に戻す)
+DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS = {
+    "x_pos": 0.0,
+    "y_pos": 0.0,
+    "z_pos": 0.0,
+    "x_rotation": 0.0,
+    "y_rotation": 0.0,
+    "z_rotation": 0.0,
+    "display_duration": 5,
+    "fadeout_duration": 0,  # 常に表示
+    "opacity": 1.0,
+    "ui_scaling": 0.303,  # 横幅(m)。952x128px の帯 (左端のマーク込み) で高さ約4cm。ボタンの大きさは 880px 幅で 0.28m のときと同じ
+    "tracker": "LeftHand",
+}
+
 class ConfigValidationError(Exception):
     """`ManagedProperty`/`ValidatedProperty` が値を拒否した際に送出する
     (フェーズ3項目24)。
@@ -1293,19 +1308,7 @@ class Config:
             "ui_scaling": 1.0,
             "tracker": "LeftHand",
         }
-        self._OVERLAY_VR_LAUNCHER_SETTINGS = {
-            "x_pos": 0.0,
-            "y_pos": 0.0,
-            "z_pos": 0.0,
-            "x_rotation": 0.0,
-            "y_rotation": 0.0,
-            "z_rotation": 0.0,
-            "display_duration": 5,
-            "fadeout_duration": 0,  # 常に表示
-            "opacity": 1.0,
-            "ui_scaling": 0.303,  # 横幅(m)。952x128px の帯 (左端のマーク込み) で高さ約4cm。ボタンの大きさは 880px 幅で 0.28m のときと同じ
-            "tracker": "LeftHand",
-        }
+        self._OVERLAY_VR_LAUNCHER_SETTINGS = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
         self._OVERLAY_VR_PANEL = False
         self._OVERLAY_VR_PANEL_LOCKED = False
         self._OVERLAY_VR_PANEL_FONT_SIZE = 17

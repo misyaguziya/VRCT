@@ -137,6 +137,7 @@ run_mapping = {
     "overlay_small_log_settings":"/run/overlay_small_log_settings",
     "vr_panel_pointer":"/run/vr_panel_pointer",
     "vr_panel_log_out_of_view":"/run/vr_panel_log_out_of_view",
+    "overlay_vr_launcher_hand":"/run/overlay_vr_launcher_hand",
     "vr_panel_launcher_intro":"/run/vr_panel_launcher_intro",
     "overlay_vr_panel_anchor":"/run/overlay_vr_panel_anchor",
     "vr_panel_layout":"/run/vr_panel_layout",
@@ -480,6 +481,7 @@ mapping = {
     "/run/vr_panel_windows": {"status": False, "variable":controller.setVrPanelWindows},
     # 見失ったVR UIのログウィンドウを目の前へ呼び戻す (VR画面からメイン経由で届く)
     "/run/vr_panel_recall_log": {"status": False, "variable":controller.recallVrPanelLog},
+    "/run/vr_launcher_reset": {"status": False, "variable":controller.resetVrLauncher},
     # VR UIのログウィンドウの不透明度 (VR設定ウィンドウから)
     "/get/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.getOverlayVrPanelOpacity},
     # VR UIのログウィンドウの操作バー (固定先・ロック)

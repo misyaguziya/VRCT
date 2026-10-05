@@ -8,7 +8,7 @@ import functools
 import re
 import time
 from device_manager import device_manager
-from config import config, ConfigValidationError
+from config import config, ConfigValidationError, DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, OcrStartError, VRCTError
@@ -4510,6 +4510,14 @@ class Controller:
         model.recallVrPanelLog()
         return {"status": 200, "result": True}
 
+    def resetVrLauncher(self, *args, **kwargs) -> dict:
+        """VR UIのランチャーの位置・向き・大きさ・手を初期 (左手) に戻す。見失って戻せなくなったときの手段 (PC側の設定から)。"""
+        with _VR_WINDOW_SETTINGS_LOCK:
+            config.OVERLAY_VR_LAUNCHER_SETTINGS = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
+        model.resetVrLauncher()  # VR につながっていれば、手首へ吸い寄せて戻る
+        self.run(200, self.run_mapping["overlay_vr_launcher_hand"], config.OVERLAY_VR_LAUNCHER_SETTINGS["tracker"])
+        return {"status": 200, "result": True}
+
     @staticmethod
     def getOverlayVrPanelAnchor(*args, **kwargs) -> dict:
         return {"status": 200, "result": config.OVERLAY_VR_PANEL_SETTINGS["tracker"]}
@@ -4679,6 +4687,8 @@ class Controller:
         elif size == "launcher":
             with _VR_WINDOW_SETTINGS_LOCK:
                 config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS, **position}
+            # 初期に戻したときなど、付ける手が変わることがあるので UI へ知らせる
+            self.run(200, self.run_mapping["overlay_vr_launcher_hand"], position["tracker"])
 
     def init(self, *args, **kwargs) -> None:
         removeLog()

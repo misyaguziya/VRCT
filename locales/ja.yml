@@ -299,6 +299,7 @@ config_page:
         display_duration: "表示時間"
         fadeout_duration: "フェードアウト時間"
         common_settings: "共通設定"
+        vr_ui_beta: "VR UI（β版機能）"
         tracker: "表示するトラッカーの位置"
         hmd: "HMD"
         left_hand: "左手"
@@ -308,6 +309,9 @@ config_page:
         vr_panel:
             label: "VR UIを表示する"
             desc: "VRの中に、機能のON/OFFやログ・言語・設定を操作できる手首のランチャーとウィンドウを表示します。字幕のオーバーレイとは別に使えます。"
+        reset_launcher:
+            label: "ランチャーの位置と大きさを初期に戻す"
+            desc: "VRの中でランチャーが見つからなくなったときに使います。左手の手首に、初期の位置と大きさで戻ります。"
         voice_typing_mode:
             label: "音声タイピングモード"
             desc: "文字起こしされたテキストを、アクティブな入力欄へと自動的に貼り付けます。\n※Windows標準のクリップボード機能を利用しています。"
