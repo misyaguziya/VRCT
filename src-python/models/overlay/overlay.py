@@ -105,11 +105,11 @@ _COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
 try:
     from . import overlay_utils as utils
     from . import window_capture
-    from .overlay_tooltip import marker_matches, tooltip_mask, validate_tooltip
+    from .overlay_tooltip import LAUNCHER_WIDTH_PX, marker_matches, tooltip_mask, validate_tooltip
 except ImportError:
     import overlay_utils as utils
     import window_capture
-    from overlay_tooltip import marker_matches, tooltip_mask, validate_tooltip
+    from overlay_tooltip import LAUNCHER_WIDTH_PX, marker_matches, tooltip_mask, validate_tooltip
 
 # VR UI: Tauriの "VRCT VR Panel" ウィンドウ1枚に複数のウィンドウ (ログ・ランチャー) を並べて描き、
 # 1回だけ撮影して、オーバーレイごとにその一部 (領域) を切り出して表示する。
@@ -150,12 +150,12 @@ def computeVrLayout(width: int, height: int) -> Dict[str, Any]:
     VR画面 (React) はこの結果を受け取って描く。既定の大きさでは src-ui/views/vr/vr_layout.json と一致する
     (test_overlay_grab_move で確認)。
     """
-    right_x = max(width, 900) + 8
+    right_x = max(width, LAUNCHER_WIDTH_PX + 10) + 8  # ログの右の列は、ランチャーより右に置く
     return {
         "atlas": (right_x + 720, max(height + 8 + 128, 880)),
         "regions": {
             PANEL: (0, 0, width, height),
-            LAUNCHER: (10, height + 8, 880, 128),
+            LAUNCHER: (10, height + 8, LAUNCHER_WIDTH_PX, 128),
             POPUP: (right_x, 0, 720, 640),
             TOOLBAR: (right_x, 656, 720, 96),
             TOOLTIP: (right_x, 760, 360, 120),

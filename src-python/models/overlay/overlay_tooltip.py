@@ -5,6 +5,11 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 
+# ランチャーの横幅 (論理px)。吹き出しの押す位置の範囲と、VR画面の並び (overlay.py computeVrLayout / vr_layout.json) の基準。
+# 左端に VRCT のマーク (60px + 隙間) を置く分、機能ボタンの大きさを変えずに 880px から広げた
+LAUNCHER_WIDTH_PX = 952
+
+
 def _finite_number(value: object) -> bool:
     return type(value) in (int, float) and -1e6 <= value <= 1e6 and math.isfinite(value)
 
@@ -36,7 +41,7 @@ def validate_tooltip(data: object) -> dict:
             raise ValueError(key)
         result[key] = list(values)
     x, y, w, h = result["button"]
-    parent_w, parent_h = (880, 128) if region == "launcher" else (720, 96)
+    parent_w, parent_h = (LAUNCHER_WIDTH_PX, 128) if region == "launcher" else (720, 96)
     if x < 0 or y < 0 or w <= 0 or h <= 0 or x + w > parent_w or y + h > parent_h:
         raise ValueError("button bounds")
     if result["size"][0] != 360 or not 1 <= result["size"][1] <= 104:
