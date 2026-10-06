@@ -85,6 +85,18 @@ jobs:
             exit 1
           }
 
+      - name: Generate telemetry keys
+        env:
+          TELEMETRY_KEY_STABLE: ${{ secrets.TELEMETRY_KEY_STABLE }}
+          TELEMETRY_KEY_BETA: ${{ secrets.TELEMETRY_KEY_BETA }}
+        shell: pwsh
+        run: |
+          if (-not $env:TELEMETRY_KEY_STABLE -or -not $env:TELEMETRY_KEY_BETA) {
+            Write-Host "::error::TELEMETRY_KEY_STABLE / TELEMETRY_KEY_BETA secrets are not set."
+            exit 1
+          }
+          Set-Content -Path src-python/telemetry_keys.py -Encoding utf8 -Value "APP_KEYS = {'stable': '$env:TELEMETRY_KEY_STABLE', 'beta': '$env:TELEMETRY_KEY_BETA'}"
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:

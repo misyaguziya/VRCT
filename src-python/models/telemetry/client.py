@@ -20,23 +20,30 @@ except ImportError:
     from build_channel import BUILD_CHANNEL
 
 
+# APP_KEY はリポジトリに含めない。fork が公式プロジェクトへ送信してしまうのを防ぐため、
+# 公式ビルド時だけ gitignore 済みの telemetry_keys.py（CI が secrets から生成）を同梱する。
+# このファイルが無い（fork・ローカル開発）場合は APP_KEY=None となり、送信しない。
+try:
+    from telemetry_keys import APP_KEYS
+except ImportError:
+    APP_KEYS = {}
+
+
 class AptabaseWrapper:
     # stable/beta で別の Aptabase プロジェクトを使う。どちらを使うかは
     # build_channel.BUILD_CHANNEL の1行だけで切り替える（マージ時の
     # APP_KEY 取り違えを防ぐため）。
-    APP_KEYS = {
-        "stable": "A-US-3414271507",
-        "beta": "A-US-6044063021",
-    }
-    APP_KEY = APP_KEYS[BUILD_CHANNEL]
+    APP_KEY = APP_KEYS.get(BUILD_CHANNEL)
 
     def __init__(self):
         self.client = None
         # Suppress noisy logs from the Aptabase SDK (only CRITICAL allowed)
         logging.getLogger("aptabase").setLevel(logging.CRITICAL)
-    
+
     async def start(self, app_version: str = "1.0.0"):
         """Aptabase クライアント開始"""
+        if not self.APP_KEY:
+            return  # キー未配布のビルド: 何も送らない（self.client は None のまま）
         if Aptabase is None:
             raise ImportError("aptabase library not installed")
         try:
