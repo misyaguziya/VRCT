@@ -291,6 +291,97 @@ class TestModelUpdate(unittest.TestCase):
         os_exit.assert_called_once_with(0)
 
 
+class TestPinnedVersionDownload(unittest.TestCase):
+    """バージョンを指定した更新 (旧版への戻しなど) は、その版の setup.exe を取る。
+
+    main は常に最新版なので、そこから取った setup.exe を指定版の .sha256 で
+    検証すると、最新版以外では必ず不一致になって更新が中止された (2026-10-06、
+    beta.2 から beta.1 を選んだとき)。
+    """
+
+    def setUp(self) -> None:
+        self.payload = b"data" * 300_000
+        self.sha256 = hashlib.sha256(self.payload).hexdigest()
+        # 現在のチャンネル (stable) と、指定する版 (beta) が違う場合を使う
+        channel_patcher = patch.object(type(config), "SELECTED_RELEASE_CHANNEL", "stable")
+        channel_patcher.start()
+        self.addCleanup(channel_patcher.stop)
+
+    def test_setup_download_url_follows_the_target_version(self) -> None:
+        self.assertEqual(
+            config.setupDownloadUrl("3.5.1-beta.1"),
+            "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.5.1-beta.1/VRCT_setup.exe",
+        )
+        self.assertEqual(
+            config.setupDownloadUrl("3.5.0"),
+            "https://huggingface.co/ms-software/VRCT/resolve/v3.5.0/VRCT_setup.exe",
+        )
+
+    def test_setup_download_url_without_version_is_latest_of_current_channel(self) -> None:
+        self.assertEqual(
+            config.setupDownloadUrl(),
+            "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe",
+        )
+
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_installs_older_version_from_its_own_tag(
+        self,
+        requests_get: Mock,
+        popen: Mock,
+        psutil_process: Mock,
+        os_exit: Mock,
+    ) -> None:
+        sha_url = "https://example.invalid/VRCT_3.5.1-beta.1_x64-setup.exe.sha256"
+        target = "3.5.1-beta.1"
+        requested = []
+
+        def fake_get(url, *args, **kwargs):
+            requested.append(url)
+            if url == config.GITHUB_RELEASES_LIST_URL:
+                return _make_json_response([
+                    {"name": "3.5.1-beta.2", "tag_name": "v3.5.1-beta.2", "assets": []},
+                    {
+                        "name": target,
+                        "tag_name": "v3.5.1-beta.1",
+                        "assets": [{
+                            "name": "VRCT_3.5.1-beta.1_x64-setup.exe.sha256",
+                            "browser_download_url": sha_url,
+                        }],
+                    },
+                ])
+            if url == sha_url:
+                return _make_text_response(self.sha256)
+            if url == config.setupDownloadUrl(target):
+                return _make_download_response(self.payload)
+            # main (= 最新版) など、指定版以外の setup.exe は別物
+            return _make_download_response(b"other" * 300_000)
+
+        requests_get.side_effect = fake_get
+
+        self.assertTrue(Model.updateSoftware(target))
+
+        self.assertIn(config.setupDownloadUrl(target), requested)
+        self.assertNotIn("https://huggingface.co/ms-software/VRCT-beta/resolve/main/VRCT_setup.exe", requested)
+        popen.assert_called_once()
+        self.assertIn(f"/VERSION={target}", popen.call_args.args[0])
+
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_returns_false_and_launches_nothing_when_download_fails(
+        self, requests_get: Mock, popen: Mock
+    ) -> None:
+        requests_get.side_effect = Exception("network error")
+
+        with patch("model.errorLogging"):
+            self.assertIs(Model.updateSoftware("3.5.1-beta.1"), False)
+            self.assertIs(Model.updateCudaSoftware("3.5.1-beta.1"), False)
+
+        popen.assert_not_called()
+
+
 class TestCheckSoftwareUpdatedBetaChannel(unittest.TestCase):
     """Beta-channel latest-version detection must stay within beta releases.
 

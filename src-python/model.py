@@ -1872,7 +1872,7 @@ class Model:
         return None
 
     @staticmethod
-    def _downloadSetup(expected_sha256: Optional[str] = None) -> bool:
+    def _downloadSetup(expected_sha256: Optional[str] = None, target_version: Optional[str] = None) -> bool:
         # try to download at most 5 times
         program_name = "VRCT_setup.exe"
         current_directory = config.PATH_LOCAL
@@ -1882,7 +1882,7 @@ class Model:
         min_valid_size = 1024 * 1024
         for _ in range(5):
             try:
-                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True, timeout=_HTTP_TIMEOUT)
+                res = requests_get(config.setupDownloadUrl(target_version), stream=True, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
                 downloaded_size = 0
                 hasher = hashlib.sha256()
@@ -1947,14 +1947,16 @@ class Model:
                 "Setup file SHA-256 could not be verified (no .sha256 asset found for "
                 f"{target_version or 'the latest release'}); falling back to size-only validation"
             )
-        return Model._downloadSetup(expected_sha256)
+        return Model._downloadSetup(expected_sha256, target_version)
 
     @staticmethod
-    def updateSoftware(target_version: Optional[str] = None):
+    def updateSoftware(target_version: Optional[str] = None) -> bool:
+        # 起動して終了する (_quitApp) ので、戻れるのは失敗したときだけ (False)。
+        # 呼び出し側 (Controller) が UI へ失敗を知らせる。
         if target_version is not None and not Model._isVersionSupported(target_version):
-            return
+            return False
         if not Model._downloadVerifiedSetup(target_version):
-            return
+            return False
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
         # target_version when the user picked a specific release to install;
         # carry over the current UI language so the installer chrome and the
@@ -1966,13 +1968,16 @@ class Model:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)
         Model._quitApp()
+        return True
 
     @staticmethod
-    def updateCudaSoftware(target_version: Optional[str] = None):
+    def updateCudaSoftware(target_version: Optional[str] = None) -> bool:
+        # 起動して終了する (_quitApp) ので、戻れるのは失敗したときだけ (False)。
+        # 呼び出し側 (Controller) が UI へ失敗を知らせる。
         if target_version is not None and not Model._isVersionSupported(target_version):
-            return
+            return False
         if not Model._downloadVerifiedSetup(target_version):
-            return
+            return False
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
         # target_version when the user picked a specific release to install;
         # carry over the current UI language so the installer chrome and the
@@ -1984,6 +1989,7 @@ class Model:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)
         Model._quitApp()
+        return True
 
     @staticmethod
     def _quitApp():

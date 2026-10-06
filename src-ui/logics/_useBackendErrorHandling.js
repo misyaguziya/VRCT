@@ -3,6 +3,7 @@ import { useI18n } from "@useI18n";
 import {
     useNotificationStatus,
     useLLMConnection,
+    useIsSoftwareUpdating,
 } from "@logics_common";
 
 import {
@@ -23,6 +24,7 @@ import { ui_configs } from "./ui_configs";
 export const _useBackendErrorHandling = () => {
     const { t } = useI18n();
     const { showNotification_Error } = useNotificationStatus();
+    const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
 
     const {
         updateMicRecordTimeout,
@@ -164,6 +166,15 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "WEIGHT_WHISPER_DOWNLOAD":
                 showNotification_Error(t("common_error.failed_download_weight_whisper"), { category_id: error_code });
+                return;
+
+            // ============================================================================
+            // ソフトウェア更新関連エラー (UPDATE_*)
+            // ============================================================================
+            case "UPDATE_SOFTWARE_DOWNLOAD":
+                // インストーラを起動できなかった。更新中の表示のまま待ち続けないよう戻す
+                updateIsSoftwareUpdating(false);
+                showNotification_Error(t("common_error.failed_update_software"), { category_id: error_code });
                 return;
 
             // ============================================================================

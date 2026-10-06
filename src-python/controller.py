@@ -3518,16 +3518,27 @@ class Controller:
                 }
             }
 
+    def _runSoftwareUpdate(self, update: Callable[[Optional[str]], bool], endpoint: str, target_version: Optional[str]) -> None:
+        """setup.exe を取得してインストーラを起動する。起動すればアプリは終了する。
+        戻ってきたら失敗なので、UI へ知らせる (UI は更新中の表示のまま待っている)。"""
+        try:
+            if update(target_version) is not False:
+                return
+        except Exception:
+            errorLogging()
+        error_response = VRCTError.create_error_response(ErrorCode.UPDATE_SOFTWARE_DOWNLOAD, data=target_version)
+        self.run(error_response["status"], endpoint, error_response["result"])
+
     def updateSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
         target_version = str(data) if data else None
-        th_start_update_software = Thread(target=model.updateSoftware, args=(target_version,))
+        th_start_update_software = Thread(target=self._runSoftwareUpdate, args=(model.updateSoftware, self.run_mapping["update_software"], target_version))
         th_start_update_software.daemon = True
         th_start_update_software.start()
         return {"status":200, "result":True}
 
     def updateCudaSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
         target_version = str(data) if data else None
-        th_start_update_cuda_software = Thread(target=model.updateCudaSoftware, args=(target_version,))
+        th_start_update_cuda_software = Thread(target=self._runSoftwareUpdate, args=(model.updateCudaSoftware, self.run_mapping["update_cuda_software"], target_version))
         th_start_update_cuda_software.daemon = True
         th_start_update_cuda_software.start()
         return {"status":200, "result":True}
