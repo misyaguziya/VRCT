@@ -293,6 +293,7 @@ config_page:
         display_duration: "표시 시간"
         fadeout_duration: "페이드 아웃 시간"
         common_settings: "공통 설정"
+        vr_ui_beta: "VR UI (베타)"
         tracker: "표시할 트래커의 위치"
         hmd: "HMD"
         left_hand: "왼손"
@@ -302,6 +303,9 @@ config_page:
         vr_panel:
             label: "VR UI 표시"
             desc: "VR 안에 기능 켜기/끄기, 로그, 언어, 설정을 조작할 수 있는 손목 런처와 창을 표시합니다. 자막 오버레이와 별도로 사용할 수 있습니다."
+        reset_launcher:
+            label: "런처 위치와 크기 초기화"
+            desc: "VR에서 런처를 찾을 수 없을 때 사용하세요. 왼쪽 손목의 기본 위치와 크기로 돌아옵니다."
         voice_typing_mode:
             label:
             desc:

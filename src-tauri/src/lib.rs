@@ -15,7 +15,7 @@ fn create_vr_panel_window<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Resu
     let window = WebviewWindowBuilder::new(manager, "vr_panel", WebviewUrl::App("vr.html".into()))
         .title("VRCT VR Panel")
         // 既定の並び (src-ui/views/vr/vr_layout.json の atlas)。ログの大きさを変えると Python が合わせて変える
-        .inner_size(1628.0, 880.0)
+        .inner_size(1690.0, 880.0)
         .decorations(false)
         .resizable(false)
         .skip_taskbar(true)
