@@ -90,14 +90,14 @@ _LAUNCHER_INPUT_DELAY_SEC = 0.2  # 出始めは押せない (手首を返した�
 # 起動演出: ランチャーのオーバーレイごと頭の正面に出し (_INTRO_FRONT_SEC。VR画面はこの間 VRCT のアイコンだけを出す)、
 # 手首へ吸い寄せ (_INTRO_FLY_SEC)、着いたらロゴ入りのカプセルが開く (VR画面のCSS。src-ui/views/vr/VrLauncher.module.scss の intro_* と時間を合わせる)。
 # _LAUNCHER_INTRO_SEC は演出が終わるまで出し続け、押せなくする長さ (CSS の長さ + 状態がVR画面に届くまでの余裕)
-_INTRO_FRONT_SEC = 1.0
-_INTRO_FLY_SEC = 0.6
+_INTRO_FRONT_SEC = 1.3
+_INTRO_FLY_SEC = 0.8
 # 正面では、手首のときの大きさの何倍で出すか (VRCTのアイコンだけを大きく見せる)。大きいほど荒くなる
 # (VR画面の領域は高さ約128pxなので、アイコンの絵はその高さまでしかない)
-_INTRO_FRONT_SCALE = 7.5
+_INTRO_FRONT_SCALE = 5.0
 _INTRO_FRONT_DISTANCE_M = 0.7  # 正面に出す距離 (目から)
 _INTRO_FRONT_FOLLOW_PER_SEC = 8.0  # 正面にいる間、視線へ追いつく速さ (大きいほど速い。1/秒)
-_LAUNCHER_INTRO_SEC = 3.7
+_LAUNCHER_INTRO_SEC = 4.8
 # ランチャーを見失わないための限度。手首から離れすぎたり、小さすぎ・大きすぎにしたりして放すと、手首へ吸い寄せて初期の位置と大きさに戻す。
 # 位置は手首の基準からの差 (m)。大きさは横幅 (m)。初期値は 0.303 (src-python/config.py の DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
 _LAUNCHER_REACH_M = 1.2
@@ -865,9 +865,15 @@ class Overlay:
             self.tip_offsets = {}
             self.handle = {}
             self.vr_windows_hidden = set()
+            self.panel_image_size = None  # 新しく作るテクスチャには、まだ画像が無い
             for i, size in enumerate(self.settings.keys()):
                 self.handle[size] = self.overlay.createOverlay(f"VRCT{i}", f"VRCT{i}")
-                self.overlay.showOverlay(self.handle[size])
+                if size in VR_REGIONS:
+                    # VR UI のウィンドウは、画面が一度撮れてから applyVrWindows が出す (まだ画像が無いまま出すと、
+                    # 手首に白い板が一瞬見える)
+                    self.vr_windows_hidden.add(size)
+                else:
+                    self.overlay.showOverlay(self.handle[size])
             self.initialized = True
             for kind, img in createPointerImages().items():
                 handle = self.overlay.createOverlay(f"VRCT_pointer_{kind}", f"VRCT_pointer_{kind}")
@@ -2264,6 +2270,8 @@ class Overlay:
             if size not in self.handle:
                 continue
             wanted = wanted and self.vr_panel_enabled
+            if wanted and self.panel_image_size is None:
+                continue  # 画面がまだ一度も撮れていない: 画像の無い板を出さない
             hidden = size in self.vr_windows_hidden
             if wanted and hidden:
                 if size == POPUP:
