@@ -40,7 +40,7 @@ export const Updater = () => {
 
     const { currentSoftwareVersion, currentLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { currentComputeMode } = useComputeMode();
-    const { currentReleaseChannel, setReleaseChannel } = useUpdater();
+    const { currentReleaseChannel } = useUpdater();
     const { currentAvailableReleases, getAvailableReleases } = useAvailableReleases();
     const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
     const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
@@ -132,9 +132,8 @@ export const Updater = () => {
 
     const onClickInstall = () => {
         if (!is_ready_to_install) return;
-        if (target_channel !== currentReleaseChannel.data) {
-            setReleaseChannel(target_channel);
-        }
+        // チャンネルはここで保存しない。インストーラは指定バージョンのチャンネルで入れ、
+        // 起動時にバージョンから決め直す。保存すると、失敗や中止のあとも変わったまま残る
         updateIsSoftwareUpdating(true);
         if (target_compute_mode === "cpu") {
             updateSoftware(target_version);

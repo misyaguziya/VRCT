@@ -96,6 +96,9 @@ class ErrorCode(str, Enum):
     # ============================================================================
     # setup.exe を取得・検証できず、インストーラを起動しなかった。
     UPDATE_SOFTWARE_DOWNLOAD = "UPDATE_SOFTWARE_DOWNLOAD"
+    # 取得はできたが、公開されているハッシュと一致しない (または取得できない)。
+    # 再試行しても直らず、改ざんの疑いがあるので通信エラーと分ける。
+    UPDATE_SOFTWARE_VERIFY = "UPDATE_SOFTWARE_VERIFY"
 
     # ============================================================================
     # バリデーションエラー (VALIDATION_*)
@@ -433,6 +436,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
     ErrorCode.UPDATE_SOFTWARE_DOWNLOAD: {
         "category": ErrorCategory.GENERAL,
         "message": "Software update download error",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.UPDATE_SOFTWARE_VERIFY: {
+        "category": ErrorCategory.GENERAL,
+        "message": "Software update verification error",
         "severity": "error",
         "user_action_required": True,
     },

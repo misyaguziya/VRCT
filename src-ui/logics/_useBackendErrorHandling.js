@@ -176,6 +176,10 @@ export const _useBackendErrorHandling = () => {
                 updateIsSoftwareUpdating(false);
                 showNotification_Error(t("common_error.failed_update_software"), { category_id: error_code });
                 return;
+            case "UPDATE_SOFTWARE_VERIFY":
+                updateIsSoftwareUpdating(false);
+                showNotification_Error(t("common_error.failed_update_software_verify"), { category_id: error_code });
+                return;
 
             // ============================================================================
             // バリデーションエラー (VALIDATION_*)

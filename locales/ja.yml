@@ -16,6 +16,7 @@ common_error:
     failed_download_weight_ctranslate2: "CTranslate2 モデルのダウンロードに失敗しました。"
     failed_download_weight_whisper: "Whisper モデルのダウンロードに失敗しました。"
     failed_update_software: "インストーラのダウンロードに失敗しました。しばらくしてからもう一度お試しください。"
+    failed_update_software_verify: "ダウンロードしたインストーラが公開されているチェックサムと一致しなかったため、更新を中止しました。"
     translation_limit: "翻訳エンジンの使用制限に達したか、一時的に利用制限がかけられています。"
     deepl_auth_key_invalid_length: "APIキーの文字数が間違っています。"
     deepl_auth_key_failed_authentication: "APIキーが間違っているか、API使用制限が上限に達しています。"
