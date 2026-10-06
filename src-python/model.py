@@ -48,7 +48,7 @@ from models.transcription.transcription_deepgram import (
     isLanguageSupportedByDeepgramModel,
 )
 from models.transliteration.transliteration_transliterator import Transliterator
-from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay, launcherOutOfReach
+from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay, launcherNearestInReach, launcherOutOfReach
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
@@ -953,9 +953,11 @@ class Model:
         overlay_large_log_settings = copy.deepcopy(config.OVERLAY_LARGE_LOG_SETTINGS)
         overlay_large_log_settings["ui_scaling"] = overlay_large_log_settings["ui_scaling"] * 0.25
         if launcherOutOfReach(config.OVERLAY_VR_LAUNCHER_SETTINGS):
-            # 保存されたランチャーが手首から遠すぎる、または小さすぎ・大きすぎて、見失うので初期に戻す
-            printLog("overlay: ランチャーの位置か大きさが範囲の外だったので、初期に戻します")
-            config.OVERLAY_VR_LAUNCHER_SETTINGS = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
+            # 保存されたランチャーが手首から遠すぎる、または小さすぎ・大きすぎて、見失う
+            printLog("overlay: ランチャーの位置か大きさが範囲の外だったので、手首の近くへ寄せます")
+            # 初期には戻さず、手首から一番近い限度の内側へ寄せる (向き・付ける手は変えない)
+            config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS,
+                                                   **launcherNearestInReach(config.OVERLAY_VR_LAUNCHER_SETTINGS)}
         overlay_settings = {
             "small": overlay_small_log_settings,
             "large": overlay_large_log_settings,
