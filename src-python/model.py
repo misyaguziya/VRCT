@@ -922,6 +922,13 @@ class Model:
         # stopWatchdog() の isinstance チェックが AttributeError にならないよう
         # ここで宣言しておく。
         self.th_watchdog = None
+        # watchdog は init() の先頭で作る。フロントエンドは spawn 直後から
+        # /run/feed_watchdog を送り続け、ハンドラワーカーは init() の実行中でも
+        # feedWatchdog() を処理する。ensure_initialized() は _init_failed
+        # のため init() を再実行せず素通りするので、ここより後 (Overlay や
+        # オーディオ初期化の後) で作ると、遅い環境 (ビルド版) で
+        # 'Model' object has no attribute 'watchdog' になる。
+        self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         # マイク/スピーカーそれぞれの文字起こし・エナジー計測は
         # _AudioDeviceSession (MicSession/SpeakerSession) に集約されている。
         # 1 物理デバイスにつき Recorder (= PyAudio Microphone) が常に
@@ -977,7 +984,6 @@ class Model:
         # 直接使うフォールバックとする。
         self.mic_mute_status_change_callback: Optional[Callable[[], None]] = None
         self.transliterator = None
-        self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
         self.websocket_server = None
         self.websocket_server_loop = False
