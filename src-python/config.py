@@ -746,10 +746,19 @@ class Config:
     GROQ_WHISPER_BASE_URL = "https://api.groq.com/openai/v1"
     OPENAI_WHISPER_BASE_URL = "https://api.openai.com/v1"
 
-    @property
-    def SETUP_DOWNLOAD_URL(self) -> str:
-        repo = self._HF_REPO_BETA if self.SELECTED_RELEASE_CHANNEL == "beta" else self._HF_REPO_STABLE
-        return f"https://huggingface.co/{repo}/resolve/main/VRCT_setup.exe"
+    def setupDownloadUrl(self, target_version: Optional[str] = None) -> str:
+        """setup.exe のダウンロード URL。
+
+        target_version を指定すると、そのリリースのタグ (release.yml が Hugging Face
+        のリポジトリへ GitHub のタグと同じ名前で付ける) を指す。リポジトリもその
+        バージョンのチャンネルで決める。main は常に最新版なので、指定バージョンの
+        ハッシュで検証する setup.exe を main から取ると、最新版以外では必ず不一致になる。
+        指定が無ければ、いまのチャンネルの最新版 (main)。
+        """
+        channel = self._channelForVersion(target_version) if target_version else self.SELECTED_RELEASE_CHANNEL
+        repo = self._HF_REPO_BETA if channel == "beta" else self._HF_REPO_STABLE
+        revision = f"v{target_version}" if target_version else "main"
+        return f"https://huggingface.co/{repo}/resolve/{revision}/VRCT_setup.exe"
 
     def __new__(cls):
         if cls._instance is None:

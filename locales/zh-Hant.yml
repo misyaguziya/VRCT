@@ -15,6 +15,7 @@ common_error:
     threshold_invalid_value: "可以設置 {{min}} 到 {{max}} 之間的值。"
     failed_download_weight_ctranslate2: "CTranslate2 模型下載失敗。"
     failed_download_weight_whisper: "Whisper 模型下載失敗。"
+    failed_update_software: "安裝程式下載失敗。請稍後再試。"
     translation_limit: "已達到翻譯引擎使用限制或臨時受到使用限制。"
     deepl_auth_key_invalid_length: "API 金鑰字元數錯誤。"
     deepl_auth_key_failed_authentication: "API 金鑰錯誤或已達 API 使用上限。"

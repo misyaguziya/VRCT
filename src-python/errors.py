@@ -90,7 +90,13 @@ class ErrorCode(str, Enum):
     # ============================================================================
     WEIGHT_CTRANSLATE2_DOWNLOAD = "WEIGHT_CTRANSLATE2_DOWNLOAD"
     WEIGHT_WHISPER_DOWNLOAD = "WEIGHT_WHISPER_DOWNLOAD"
-    
+
+    # ============================================================================
+    # ソフトウェア更新関連エラー (UPDATE_*)
+    # ============================================================================
+    # setup.exe を取得・検証できず、インストーラを起動しなかった。
+    UPDATE_SOFTWARE_DOWNLOAD = "UPDATE_SOFTWARE_DOWNLOAD"
+
     # ============================================================================
     # バリデーションエラー (VALIDATION_*)
     # ============================================================================
@@ -419,6 +425,14 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
     ErrorCode.WEIGHT_WHISPER_DOWNLOAD: {
         "category": ErrorCategory.WEIGHT,
         "message": "Whisper weight download error",
+        "severity": "error",
+        "user_action_required": True,
+    },
+
+    # ソフトウェア更新エラー
+    ErrorCode.UPDATE_SOFTWARE_DOWNLOAD: {
+        "category": ErrorCategory.GENERAL,
+        "message": "Software update download error",
         "severity": "error",
         "user_action_required": True,
     },
