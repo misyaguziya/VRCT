@@ -2,7 +2,7 @@ import hashlib
 import unittest
 from unittest.mock import Mock, patch
 
-from model import Model
+from model import Model, SETUP_DOWNLOAD_FAILED, SETUP_LAUNCHED, SETUP_VERIFY_FAILED
 from config import config
 
 
@@ -299,6 +299,9 @@ class TestPinnedVersionDownload(unittest.TestCase):
     beta.2 から beta.1 を選んだとき)。
     """
 
+    BETA_MAIN = "https://huggingface.co/ms-software/VRCT-beta/resolve/main/VRCT_setup.exe"
+    STABLE_MAIN = "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe"
+
     def setUp(self) -> None:
         self.payload = b"data" * 300_000
         self.sha256 = hashlib.sha256(self.payload).hexdigest()
@@ -307,77 +310,172 @@ class TestPinnedVersionDownload(unittest.TestCase):
         channel_patcher.start()
         self.addCleanup(channel_patcher.stop)
 
+    def _release(self, version: str, tag: str, with_sidecar: bool) -> dict:
+        assets = []
+        if with_sidecar:
+            assets.append({
+                "name": f"VRCT_{version}_x64-setup.exe.sha256",
+                "browser_download_url": f"https://example.invalid/{version}.sha256",
+            })
+        return {"name": version, "tag_name": tag, "assets": assets}
+
+    def _fake_get(self, releases: list, responses: dict, requested: list):
+        """GitHub のリリース一覧・.sha256・setup.exe を URL で出し分ける。
+        responses に無い URL は 404 (raise_for_status が例外)。"""
+        def fake_get(url, *args, **kwargs):
+            requested.append(url)
+            if url == config.GITHUB_RELEASES_LIST_URL:
+                return _make_json_response(releases)
+            if url not in responses:
+                response = Mock()
+                response.raise_for_status.side_effect = Exception("404")
+                return response
+            return responses[url]
+        return fake_get
+
     def test_setup_download_url_follows_the_target_version(self) -> None:
         self.assertEqual(
-            config.setupDownloadUrl("3.5.1-beta.1"),
+            config.setupDownloadUrl("3.5.1-beta.1", tag="v3.5.1-beta.1"),
             "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.5.1-beta.1/VRCT_setup.exe",
         )
         self.assertEqual(
-            config.setupDownloadUrl("3.5.0"),
+            config.setupDownloadUrl("3.5.0", tag="v3.5.0"),
             "https://huggingface.co/ms-software/VRCT/resolve/v3.5.0/VRCT_setup.exe",
         )
 
-    def test_setup_download_url_without_version_is_latest_of_current_channel(self) -> None:
-        self.assertEqual(
-            config.setupDownloadUrl(),
-            "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe",
-        )
+    def test_setup_download_url_without_tag_is_main_of_the_versions_channel(self) -> None:
+        self.assertEqual(config.setupDownloadUrl(), self.STABLE_MAIN)
+        self.assertEqual(config.setupDownloadUrl("3.5.1-beta.1"), self.BETA_MAIN)
+        self.assertEqual(config.setupDownloadUrl("3.5.1-rc.1"), self.BETA_MAIN)
 
     @patch("model.os_exit")
     @patch("model.psutil_Process")
     @patch("model.Popen")
     @patch("model.requests_get")
     def test_installs_older_version_from_its_own_tag(
-        self,
-        requests_get: Mock,
-        popen: Mock,
-        psutil_process: Mock,
-        os_exit: Mock,
+        self, requests_get: Mock, popen: Mock, psutil_process: Mock, os_exit: Mock
     ) -> None:
-        sha_url = "https://example.invalid/VRCT_3.5.1-beta.1_x64-setup.exe.sha256"
         target = "3.5.1-beta.1"
-        requested = []
+        # tag_name は GitHub が返したものをそのまま使う ("v"+version と決め打ちしない)
+        tag = "v3.5.1-beta.1-custom"
+        tag_url = config.setupDownloadUrl(target, tag=tag)
+        requested: list = []
+        requests_get.side_effect = self._fake_get(
+            [self._release("3.5.1-beta.2", "v3.5.1-beta.2", False), self._release(target, tag, True)],
+            {
+                f"https://example.invalid/{target}.sha256": _make_text_response(self.sha256),
+                tag_url: _make_download_response(self.payload),
+                # main (= 最新版) の setup.exe は指定版とは別物
+                self.BETA_MAIN: _make_download_response(b"other" * 300_000),
+            },
+            requested,
+        )
 
-        def fake_get(url, *args, **kwargs):
-            requested.append(url)
-            if url == config.GITHUB_RELEASES_LIST_URL:
-                return _make_json_response([
-                    {"name": "3.5.1-beta.2", "tag_name": "v3.5.1-beta.2", "assets": []},
-                    {
-                        "name": target,
-                        "tag_name": "v3.5.1-beta.1",
-                        "assets": [{
-                            "name": "VRCT_3.5.1-beta.1_x64-setup.exe.sha256",
-                            "browser_download_url": sha_url,
-                        }],
-                    },
-                ])
-            if url == sha_url:
-                return _make_text_response(self.sha256)
-            if url == config.setupDownloadUrl(target):
-                return _make_download_response(self.payload)
-            # main (= 最新版) など、指定版以外の setup.exe は別物
-            return _make_download_response(b"other" * 300_000)
+        self.assertEqual(Model.updateSoftware(target), SETUP_LAUNCHED)
 
-        requests_get.side_effect = fake_get
-
-        self.assertTrue(Model.updateSoftware(target))
-
-        self.assertIn(config.setupDownloadUrl(target), requested)
-        self.assertNotIn("https://huggingface.co/ms-software/VRCT-beta/resolve/main/VRCT_setup.exe", requested)
+        self.assertIn(tag_url, requested)
+        self.assertNotIn(self.BETA_MAIN, requested)
         popen.assert_called_once()
+        args = popen.call_args.args[0]
+        self.assertIn(f"/VERSION={target}", args)
+        # 現在のチャンネルは stable でも、入れる版のチャンネルを渡す
+        self.assertIn("/CHANNEL=beta", args)
+
+    @patch("model.os_exit")
+    @patch("model.psutil_Process")
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_legacy_release_without_tagged_setup_falls_back_to_latest_installer(
+        self, requests_get: Mock, popen: Mock, psutil_process: Mock, os_exit: Mock
+    ) -> None:
+        # 3.4.3 には .sha256 も HF のタグ上の setup.exe も無い。インストーラは
+        # /VERSION で入れる版を決めるので、main のものを (サイズ検証だけで) 使う
+        target = "3.4.3"
+        requested: list = []
+        requests_get.side_effect = self._fake_get(
+            [self._release(target, "v3.4.3", False)],
+            {self.STABLE_MAIN: _make_download_response(self.payload)},
+            requested,
+        )
+
+        with patch("model.errorLogging"):
+            self.assertEqual(Model.updateSoftware(target), SETUP_LAUNCHED)
+
+        self.assertIn(config.setupDownloadUrl(target, tag="v3.4.3"), requested)
+        self.assertIn(self.STABLE_MAIN, requested)
         self.assertIn(f"/VERSION={target}", popen.call_args.args[0])
 
     @patch("model.Popen")
     @patch("model.requests_get")
-    def test_returns_false_and_launches_nothing_when_download_fails(
+    def test_verified_release_never_falls_back_to_main(
+        self, requests_get: Mock, popen: Mock
+    ) -> None:
+        # .sha256 が公開されている版でタグ上の setup.exe が取れないとき、main
+        # (別の版) を取ってくるとハッシュが合わない。検証できるものを黙って
+        # 差し替えない
+        target = "3.5.1-beta.1"
+        requested: list = []
+        requests_get.side_effect = self._fake_get(
+            [self._release(target, "v3.5.1-beta.1", True)],
+            {
+                f"https://example.invalid/{target}.sha256": _make_text_response(self.sha256),
+                self.BETA_MAIN: _make_download_response(self.payload),
+            },
+            requested,
+        )
+
+        with patch("model.errorLogging"):
+            self.assertEqual(Model.updateSoftware(target), SETUP_DOWNLOAD_FAILED)
+
+        self.assertNotIn(self.BETA_MAIN, requested)
+        popen.assert_not_called()
+
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_hash_mismatch_is_reported_as_verify_failure(
+        self, requests_get: Mock, popen: Mock
+    ) -> None:
+        target = "3.5.1-beta.1"
+        tag_url = config.setupDownloadUrl(target, tag="v3.5.1-beta.1")
+        requests_get.side_effect = self._fake_get(
+            [self._release(target, "v3.5.1-beta.1", True)],
+            {
+                f"https://example.invalid/{target}.sha256": _make_text_response("0" * 64),
+                tag_url: _make_download_response(self.payload),
+            },
+            [],
+        )
+
+        with patch("model.printLog"):
+            self.assertEqual(Model.updateCudaSoftware(target), SETUP_VERIFY_FAILED)
+
+        popen.assert_not_called()
+
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_unreadable_published_sidecar_is_reported_as_verify_failure(
+        self, requests_get: Mock, popen: Mock
+    ) -> None:
+        target = "3.5.1-beta.1"
+        requests_get.side_effect = self._fake_get(
+            [self._release(target, "v3.5.1-beta.1", True)], {}, [],
+        )
+
+        with patch("model.errorLogging"), patch("model.printLog"):
+            self.assertEqual(Model.updateSoftware(target), SETUP_VERIFY_FAILED)
+
+        popen.assert_not_called()
+
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_launches_nothing_when_download_fails(
         self, requests_get: Mock, popen: Mock
     ) -> None:
         requests_get.side_effect = Exception("network error")
 
         with patch("model.errorLogging"):
-            self.assertIs(Model.updateSoftware("3.5.1-beta.1"), False)
-            self.assertIs(Model.updateCudaSoftware("3.5.1-beta.1"), False)
+            self.assertEqual(Model.updateSoftware("3.5.1-beta.1"), SETUP_DOWNLOAD_FAILED)
+            self.assertEqual(Model.updateCudaSoftware("3.5.1-beta.1"), SETUP_DOWNLOAD_FAILED)
 
         popen.assert_not_called()
 
