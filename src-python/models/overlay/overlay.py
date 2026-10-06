@@ -100,9 +100,10 @@ _INTRO_FRONT_FOLLOW_PER_SEC = 8.0  # 正面にいる間、視線へ追いつく�
 _LAUNCHER_INTRO_SEC = 4.8
 # ランチャーを見失わないための限度。手首から離れすぎたり、小さすぎ・大きすぎにしたりして放すと、手首へ吸い寄せて初期の位置と大きさに戻す。
 # 位置は手首の基準からの差 (m)。大きさは横幅 (m)。初期値は 0.303 (src-python/config.py の DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
-_LAUNCHER_REACH_M = 1.2
+_LAUNCHER_REACH_M = 0.15
 _LAUNCHER_WIDTH_RANGE_M = (0.12, 1.0)
-_LAUNCHER_RETURN_SEC = 0.7  # 吸い寄せて戻る長さ
+_LAUNCHER_RETURN_SEC = 0.3  # 吸い寄せて戻る長さ
+_FIRST_FRAME_WARN_SEC = 10.0  # 画面がこの秒数撮れないままなら、ログに残す
 _LAUNCHER_RESET_KEYS = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation", "ui_scaling", "tracker")
 _COLOR_NORMAL = (1.0, 1.0, 1.0)
 _COLOR_POINTER = (0x61 / 255, 0xB4 / 255, 0xA7 / 255)
@@ -493,6 +494,19 @@ def launcherOutOfReach(settings: Dict[str, Any]) -> bool:
     return not (distance <= _LAUNCHER_REACH_M and low <= settings["ui_scaling"] <= high)
 
 
+def launcherNearestInReach(settings: Dict[str, Any]) -> Dict[str, float]:
+    """手首から遠すぎるランチャーを、手首を中心にした限度の球の、一番近い点へ寄せた位置と、範囲に収めた大きさ。
+
+    手首と今の位置を結ぶ線上で、限度の内側の点を選ぶ (方向は変えない)。向き・付ける手・範囲内の大きさは変えない。
+    """
+    x, y, z = settings["x_pos"], settings["y_pos"], settings["z_pos"]
+    distance = float(np.linalg.norm([x, y, z]))
+    shrink = _LAUNCHER_REACH_M / distance if distance > _LAUNCHER_REACH_M else 1.0
+    low, high = _LAUNCHER_WIDTH_RANGE_M
+    return {"x_pos": round(x * shrink, 4), "y_pos": round(y * shrink, 4), "z_pos": round(z * shrink, 4),
+            "ui_scaling": min(max(settings["ui_scaling"], low), high)}
+
+
 def introFrontPose(head: np.ndarray) -> np.ndarray:
     """頭の正面 (視線の先) に置き、頭の方を向けた姿勢。上下も視線のとおりにする (呼び戻しと違い、範囲で丸めない)。"""
     return faceHead(head[:3, 3] - head[:3, 2] * _INTRO_FRONT_DISTANCE_M, head)
@@ -709,6 +723,10 @@ class Overlay:
         # 初期の位置・大きさ・手 (Model が config の初期値を入れる)。「初期に戻す」と、見失いそうなときの吸い寄せ戻しで使う
         self.launcher_defaults: Optional[Dict[str, Any]] = None
         self.launcher_reset_requested = False
+        self.launcher_reset_keep_hand = False  # 自動の復旧は、付けている手を変えない (ボタンの「初期に戻す」だけ左手へ戻す)
+        # 画面が一度も撮れないまま待っている時間の記録 (撮れないとランチャーも出ないので、原因をログに残す)
+        self.first_frame_wait_since: Optional[float] = None
+        self.first_frame_wait_logged = False
         self.launcher_return: Optional[Dict[str, Any]] = None  # 吸い寄せて戻している間の、始めの姿勢・幅・時刻
         self.launcher_intro_started = 0.0
         self.launcher_intro_tick = 0.0  # 正面で視線に追従するときの、前回の時刻
@@ -866,6 +884,11 @@ class Overlay:
             self.handle = {}
             self.vr_windows_hidden = set()
             self.panel_image_size = None  # 新しく作るテクスチャには、まだ画像が無い
+            self.first_frame_wait_since, self.first_frame_wait_logged = None, False
+            if self.launcher_reset_requested and self.launcher_defaults and LAUNCHER in self.settings:
+                # つながっていない間に「初期に戻す」が頼まれていた (設定は overlay スレッドのここで戻す)
+                self.applyLauncherDefaults(self.launcher_reset_keep_hand)
+                self.launcher_reset_requested = self.launcher_reset_keep_hand = False
             for i, size in enumerate(self.settings.keys()):
                 self.handle[size] = self.overlay.createOverlay(f"VRCT{i}", f"VRCT{i}")
                 if size in VR_REGIONS:
@@ -1381,7 +1404,13 @@ class Overlay:
             self.hideTooltipOverlay()
         pixels[..., 3] = mask
         if self.launcher_intro_state != "idle" and LAUNCHER in self.layout["regions"]:
-            key, ratio = introKeyAlpha(pixels, regionRect(LAUNCHER, size, self.layout))  # 起動演出の間は、カプセルの外側を透明にする
+            x0, y0, x1, y1 = regionRect(LAUNCHER, size, self.layout)
+            if self.launcher_intro_state == "pending":
+                # 演出の前は、中身を出さない。VR画面が「待機」を受け取る前の数フレームに、完全なランチャーが映っても、ここで消す
+                pixels[y0:y1, x0:x1] = 0
+                key, ratio = (0, 0, 0), 1.0
+            else:
+                key, ratio = introKeyAlpha(pixels, (x0, y0, x1, y1))  # 起動演出の間は、カプセルの外側を透明にする
             if self.launcher_intro_state not in self.launcher_intro_logged:
                 self.launcher_intro_logged.add(self.launcher_intro_state)
                 printLog(f"overlay: launcher intro {self.launcher_intro_state}: key BGR={key}, transparent={ratio:.0%}")
@@ -2266,12 +2295,21 @@ class Overlay:
     def applyVrWindows(self, poseOf: Callable[[int], Optional[np.ndarray]]) -> None:
         """指定された表示・非表示をオーバーレイに反映する (オーバーレイのスレッドで呼ぶ)。"""
         wanted_windows = {**self.vr_windows_wanted, LAUNCHER: True}
+        if not self.vr_panel_enabled:
+            self.first_frame_wait_since = None  # OFF の間は、画面を待つ時間に数えない
         for size, wanted in wanted_windows.items():
             if size not in self.handle:
                 continue
             wanted = wanted and self.vr_panel_enabled
             if wanted and self.panel_image_size is None:
-                continue  # 画面がまだ一度も撮れていない: 画像の無い板を出さない
+                # 画面がまだ一度も撮れていない: 画像の無い板を出さない。長く撮れないままなら、原因の手がかりをログに残す
+                now = time.monotonic()
+                if self.first_frame_wait_since is None:
+                    self.first_frame_wait_since = now
+                elif not self.first_frame_wait_logged and now - self.first_frame_wait_since > _FIRST_FRAME_WARN_SEC:
+                    self.first_frame_wait_logged = True
+                    printLog("overlay: VR画面がまだ一度も撮れていないので、ランチャーを出せません", {"error": str(self.panel_error)})
+                continue
             hidden = size in self.vr_windows_hidden
             if wanted and hidden:
                 if size == POPUP:
@@ -2386,20 +2424,25 @@ class Overlay:
             errorLogging()
             self.endLauncherIntroFlight()  # 毎フレーム失敗し続けて、掴み・ポインタの処理まで止めないように、飛ばすのをやめる
 
-    def requestLauncherReset(self) -> None:
-        """ランチャーを初期の位置・大きさ・手 (左手) へ戻すよう頼む (どのスレッドからでもよい)。
+    def requestLauncherReset(self, keep_hand: bool = False) -> None:
+        """ランチャーを初期の位置・大きさへ戻すよう頼む (どのスレッドからでもよい)。keep_hand でなければ、手も左手へ戻す。
 
-        SteamVR につながっていない間は動かせないので、設定だけ戻す。つながっていれば、手首へ吸い寄せて戻す。
+        設定を書き換えるのは overlay スレッドだけにする。つながっていれば手首へ吸い寄せて戻し、
+        つながっていない間は、次に init が走るときに初期へ戻す。
         """
         if not self.launcher_defaults:
             printLog("overlay: ランチャーの初期値が未設定なので、初期に戻せません")
             return
-        if self.initialized is True and LAUNCHER in self.handle:
-            self.launcher_reset_requested = True
-        else:
-            self.applyLauncherDefaults()
+        # すでに頼まれていて、手も戻す頼みなら、その頼みを弱めない
+        self.launcher_reset_keep_hand = keep_hand and (self.launcher_reset_keep_hand or not self.launcher_reset_requested)
+        self.launcher_reset_requested = True
 
-    def applyLauncherDefaults(self) -> None:
+    def applyLauncherDefaults(self, keep_hand: bool = False) -> None:
+        """初期の位置・向き・大きさ・手にする。keep_hand (自動の復旧) は、初期には戻さず、手首から一番近い限度の内側の点へ寄せる
+        (向き・付けている手・範囲内の大きさは変えない)。"""
+        if keep_hand:
+            self.settings[LAUNCHER].update(launcherNearestInReach(self.settings[LAUNCHER]))
+            return
         for key in _LAUNCHER_RESET_KEYS:
             self.settings[LAUNCHER][key] = self.launcher_defaults[key]
 
@@ -2410,12 +2453,19 @@ class Overlay:
             can_start = self.grabbing is None and self.resizing is None and self.launcher_intro_front is None
             if self.launcher_reset_requested and can_start:
                 self.launcher_reset_requested = False
-                if self.launcher_return is None:  # 吸い寄せている最中の再依頼は、そのまま続ける (始めからやり直すと、手首へ跳ぶ)
+                keep_hand, self.launcher_reset_keep_hand = self.launcher_reset_keep_hand, False
+                if self.launcher_return is not None:
+                    # 吸い寄せている最中の再依頼は、始めからやり直さず (手首へ跳ぶ)、そのまま続ける。
+                    # ただし、手を左手へ戻す依頼 (ボタン) は、設定だけ先に戻す。目標は毎フレーム設定から求めるので、飛びながら左手へ向かう
+                    # (捨てると、終わったときに今の手の値が保存されて、ボタンの結果が消える)
+                    if not keep_hand:
+                        self.applyLauncherDefaults(False)
+                else:
                     start = None
                     if LAUNCHER in self.handle and self.vr_panel_enabled:
                         start = self.overlayWorldPose(LAUNCHER, poseOf)  # 初期値を入れる前の、今の姿勢
                     width = self.regionWidthM(LAUNCHER)
-                    self.applyLauncherDefaults()
+                    self.applyLauncherDefaults(keep_hand)
                     if start is None:
                         self.finishLauncherReturn()
                         return
@@ -2723,8 +2773,12 @@ class Overlay:
         keys = ("x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation")
         for key, value in zip(keys, utils.matrix_to_position(base_matrix, relative)):
             self.settings[size][key] = round(value, 4)
+        if size == LAUNCHER:
+            s = self.settings[LAUNCHER]
+            printLog("overlay: ランチャーを放しました", {"distance_m": round(float(np.linalg.norm([s["x_pos"], s["y_pos"], s["z_pos"]])), 2),
+                                                      "width_m": round(s["ui_scaling"], 3), "limit_m": _LAUNCHER_REACH_M})
         if size == LAUNCHER and self.launcher_defaults and launcherOutOfReach(self.settings[LAUNCHER]):
-            self.launcher_reset_requested = True  # 遠くへ置きすぎた・小さすぎ・大きすぎ: 放したら手首へ吸い寄せて戻す
+            self.requestLauncherReset(keep_hand=True)  # 遠くへ置きすぎた・小さすぎ・大きすぎ: 放したら、今の手の手首へ吸い寄せて戻す
         if size == PANEL:
             # 伸ばした後に動かした・固定先を変えた・呼び戻した位置を、大きさを元に戻すときに消さない
             # (伸ばして放したときは finishResize がこの後で記録し直す)

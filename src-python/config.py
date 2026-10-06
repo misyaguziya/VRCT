@@ -1319,8 +1319,8 @@ class Config:
             "width": 900,
             "height": 700,
             "x_pos": 0.0,
-            "y_pos": 0.3,
-            "z_pos": 0.0,
+            "y_pos": 1.4,  # ワールド固定の初期位置 (部屋の中心の少し前、目の高さ)
+            "z_pos": 0.7,
             "x_rotation": 0.0,
             "y_rotation": 0.0,
             "z_rotation": 0.0,
@@ -1328,7 +1328,7 @@ class Config:
             "fadeout_duration": 0,  # パネルはフェードさせない
             "opacity": 1.0,
             "ui_scaling": 0.4,  # 横幅(m)
-            "tracker": "LeftHand",
+            "tracker": "Playspace",  # 初めは、ワールドに固定する (開いたとき、視線の外なら目の前へ置き直す)
         }
         self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_TO_VRC = True
