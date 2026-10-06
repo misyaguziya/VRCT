@@ -14,8 +14,9 @@ from os import stat as os_stat
 from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
-from queue import Queue
-from threading import Thread
+from queue import Queue, Empty
+from threading import Thread, Lock, current_thread
+from concurrent.futures import ThreadPoolExecutor
 from requests import get as requests_get
 from typing import Callable, Optional, cast
 from packaging.version import parse
@@ -24,25 +25,40 @@ from dataclasses import dataclass
 from flashtext import KeywordProcessor
 
 from device_manager import device_manager
-from config import config
+from config import config, DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
 
 from models.translation.translation_translator import Translator
 from models.osc.osc import OSCHandler
-from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
+from models.transcription.transcription_recorder import (
+    SelectedMicEnergyAndAudioRecorder,
+    SelectedSpeakerEnergyAndAudioRecorder,
+    SelectedMicVadRecorder,
+    SelectedSpeakerVadRecorder,
+)
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer, backwardCompatibleRenameWeightsDir
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
+from models.transcription.transcription_openai_compatible import checkTranscriptionApiKey, getAvailableTranscriptionModels
+from models.transcription.transcription_deepgram import (
+    checkDeepgramApiKey,
+    getAvailableDeepgramModels,
+    getAvailableDeepgramModelsDetailed,
+    isLanguageSupportedByDeepgramModel,
+)
 from models.transliteration.transliteration_transliterator import Transliterator
-from models.overlay.overlay import Overlay
+from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay, launcherNearestInReach, launcherOutOfReach
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
+from models.ocr import OcrPipeline
+from models.ocr.ocr_languages import isSupported as isSupportedOcrLanguage
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger, printLog
+from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode, OcrStartError
 
 TRANSCRIPT_STOP_JOIN_TIMEOUT = 15
 
@@ -70,6 +86,11 @@ _HTTP_TIMEOUT = (10, 60)
 _freeze_trace_path = "freeze_trace.log"
 _freeze_trace_file = open(_freeze_trace_path, "a", encoding="utf-8")
 _FREEZE_DUMP_MARGIN_SEC = 15
+# watchdog スレッドの join 上限。Watchdog.start() 末尾の
+# time.sleep(interval) (既定20秒) は中断できないため、ここを無期限にすると
+# shutdown() が最大 interval 秒待たされる。daemon thread なので待ちきれ
+# なくても実害はない (stopWatchdog のコメント参照)。
+_WATCHDOG_JOIN_TIMEOUT_SEC = 1.0
 
 
 def _cleanupFreezeTraceIfEmpty() -> None:
@@ -93,6 +114,41 @@ class ReleaseInfo:
     version: str
     is_prerelease: bool
     published_at: str
+
+
+class SetupSha256Unavailable(Exception):
+    """setup.exe の ".sha256" サイドカーアセットが GitHub Release に存在する
+    のに、その中身をリトライしても取得/パースできなかったことを表す。
+
+    ".sha256" アセットがそもそも無い古い Release (この検証より前に公開された
+    もの) は「検証対象が無い」だけなのでサイズチェックのみへフォールバック
+    してよい。一方こちらは「チェックサムが公開されているのに入手できな
+    かった」状態であり、配布物がすり替えられている可能性を排除できない。
+    呼び出し側はサイズチェックへ格下げせず、更新自体を中止する。
+    """
+
+
+# audio_queue の有界化 (フェーズ3項目20)。文字起こしが実時間に追いつけ
+# ない状況 (例: CPUでWhisper large-v3) で無制限に溜まると、drain時に
+# last_sample がまとめて連結されて音声が長くなり、推論がさらに遅くなって
+# もっと溜まる、という正のフィードバックループになる
+# (transcription_transcriber.py 側の last_sample 長上限とあわせて対応)。
+# 1チャンクは最大 record_timeout 秒 (UI 設定上限30秒) なので、理論上の
+# 最悪ケースでは 20 チャンク × 30秒 = 最大600秒分の生音声をキュー自体が
+# 保持しうる (last_sample 側の安全マージンより大きい)。ただしこれに
+# 到達するには単発の推論呼び出しが10分近く返らない必要があり非現実的
+# なため、値はそのまま維持する (レビューで指摘・検討済み)。20 は
+# 「文字起こしが実時間の何倍も遅れた」状態のみで発動する余裕を持たせた値。
+_AUDIO_QUEUE_MAXSIZE = 20
+
+# 2026-09-07: Google (無料/非公式エンドポイント) に限り VadSegmenter の
+# max_speech_frames を3秒 (v3.5.0のRECORD_TIMEOUT相当) に短縮する対策を
+# 一度試したが、実機検証で「処理が悪化した」(呼び出し頻度が上がり過ぎ、
+# 無料/非公式エンドポイント側で暗黙のスロットリング等が起きている
+# 可能性がある) と判明したため撤回した。BaseVadAndAudioRecorder /
+# SelectedMic・SpeakerVadRecorder の max_speech_seconds 引数自体は
+# 汎用の上書き機構として残しているが、model.py からは既定値 (7秒、
+# PuriPuly-heart 参考値) を上書きしない。
 
 
 class _DiscardQueue(Queue):
@@ -122,18 +178,11 @@ class threadFnc(Thread):
         self.fnc = fnc
         self.end_fnc = end_fnc
         self.loop = True
-        self._pause = False
         self._args = args
         self._kwargs = kwargs
 
     def stop(self) -> None:
         self.loop = False
-
-    def pause(self) -> None:
-        self._pause = True
-
-    def resume(self) -> None:
-        self._pause = False
 
     def run(self) -> None:
         try:
@@ -143,8 +192,6 @@ class threadFnc(Thread):
                 except Exception:
                     # Protect the thread from terminating on user exceptions
                     errorLogging()
-                while self._pause:
-                    sleep(0.1)
         finally:
             if callable(self.end_fnc):
                 try:
@@ -166,19 +213,95 @@ class AudioLifecycleWorker:
     ここに enqueue することで monitoring スレッドは即座に呼び出しから
     戻れる。関数は FIFO で 1 つずつ実行されるため、
     Before → (デバイス列挙) → After の順序自体は保たれる。
+
+    フェーズ3項目21: 以前は mic/speaker が同じ1インスタンスを共有して
+    おり、片方の重い処理 (最大 TRANSCRIPT_STOP_JOIN_TIMEOUT +
+    _MIC_OPEN_TIMEOUT_SEC 秒) の間、無関係なもう片方の操作まで
+    無駄に足止めされていた (mic/speaker_lifecycle_lock を分けた意味が
+    薄れる)。呼び出し側 (model.py) で mic 用・speaker 用にそれぞれ
+    別インスタンスを持つことでこれを解消する。なお実際の PortAudio
+    呼び出し自体は pyaudio_op_lock で元々プロセス全体で直列化されて
+    いるため、この分離はドライバ競合対策ではなく、待つ必要のない
+    処理を無駄に待たせないための変更。
+
+    coalesce_key を指定すると、同じ key でまだ実行開始していない項目が
+    既にキューにある間は新規投入をスキップする。ActiveEndpointTracker
+    (250ms周期) からの reconfigure 要求のように、常に「現在の状態」を
+    読むだけの冪等な処理が実行速度を上回るペースで積み上がり、既に
+    古くなった内容を何度も無駄に実行し続ける (1回あたり最大20秒超)
+    のを防ぐ。実行が始まった項目の key は直ちにキューから外すため、
+    実行中に新しい要求が来れば改めて1件だけキューされる。
+    coalesce_key に渡す関数は、この「まだ実行開始していない重複は
+    捨てられる」性質上、引数を持たず常にその時点の「現在の状態」を
+    読むだけの冪等な処理である必要がある (呼び出し時点の特定の値を
+    クロージャで捕まえた関数を渡すと、後続の重複投入で握り潰される
+    可能性がある)。
+
+    enqueue()/stop() は同じロックで保護しており、「stop() 済みなのに
+    enqueue() がキューに積んでしまい、専用スレッドは既に終了していて
+    誰も処理しない」という取りこぼしが起きないようにしている
+    (コードレビュー指摘)。
     """
 
+    _STOP_SENTINEL = object()
+
     def __init__(self) -> None:
-        self._queue: "Queue[Callable[[], None]]" = Queue()
+        self._queue: "Queue[tuple]" = Queue()
+        self._pending_keys: set = set()
+        self._lock = Lock()
+        self._stopped = False
         self._thread = Thread(target=self._run, daemon=True)
         self._thread.start()
 
-    def enqueue(self, fn: Callable[[], None]) -> None:
-        self._queue.put(fn)
+    def enqueue(self, fn: Callable[[], None], coalesce_key: Optional[str] = None) -> bool:
+        """fn を専用スレッドで実行するようキューに積む。
+
+        coalesce_key を指定した場合、まだ実行開始していない同じ key の
+        項目が既にキューにあれば新規投入をスキップする (クラスの
+        docstring 参照。fn は引数を持たず常に現在の状態を読む冪等な
+        処理であること)。
+
+        Returns:
+            実際にキューへ積んだ場合は True。stop() 済み、または
+            coalesce_key が示す重複が既に保留中でスキップした場合は
+            False。
+        """
+        with self._lock:
+            if self._stopped:
+                return False
+            if coalesce_key is not None:
+                if coalesce_key in self._pending_keys:
+                    return False
+                self._pending_keys.add(coalesce_key)
+            self._queue.put((coalesce_key, fn))
+            return True
+
+    def stop(self, timeout: Optional[float] = None) -> None:
+        """新規 enqueue を以後無視し、専用スレッドを止める。
+
+        シャットダウン中に古いデバイス通知やミュート同期の再送が届いて
+        リソース解放と競合するのを防ぐために呼ぶ。enqueue() と同じ
+        ロックの下でフラグを立てて sentinel を積むため、「enqueue() が
+        stop() 済みでないことを確認した直後に stop() が完了してしまい、
+        その後に積んだ項目を誰も処理しない」という競合が起きない
+        (どちらか一方が先にロックを取り、その時点の状態で結果が
+        確定する)。
+        """
+        with self._lock:
+            if self._stopped:
+                return
+            self._stopped = True
+            self._queue.put((None, self._STOP_SENTINEL))
+        self._thread.join(timeout=timeout)
 
     def _run(self) -> None:
         while True:
-            fn = self._queue.get()
+            coalesce_key, fn = self._queue.get()
+            if fn is self._STOP_SENTINEL:
+                return
+            if coalesce_key is not None:
+                with self._lock:
+                    self._pending_keys.discard(coalesce_key)
             try:
                 fn()
             except Exception:
@@ -215,6 +338,10 @@ class _AudioDeviceSession:
         self._energy_progressbar: Optional[threadFnc] = None
         self.transcript_fnc: Optional[Callable[[dict], None]] = None
         self.energy_fnc: Callable[[float], None] = lambda v: None
+        self._stop_lock = Lock()
+        self._pipeline_error_lock = Lock()
+        self._pipeline_error_started = False
+        self._pipeline_error_notified = False
         # 現在 Recorder が開いているデバイス (dict) を保持し、
         # reconfigure() で「同一デバイスかつ features 変化なし」なら no-op
         # にするために使う。
@@ -245,6 +372,45 @@ class _AudioDeviceSession:
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
         raise NotImplementedError
+
+    @staticmethod
+    def _resolve_api_transcription_kwargs() -> dict:
+        """Groq/OpenAI/カスタムサーバー選択時のみ、対応する認証キー/URL/
+        モデルを config から解決して `AudioTranscriber` へ渡す kwargs を
+        作る。Google/ローカル Whisper 選択時は空の dict を返す (それらの
+        引数は `AudioTranscriber` 側で None がデフォルトのため無視される)。
+        """
+        engine = config.SELECTED_TRANSCRIPTION_ENGINE
+        if engine == "Groq_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Groq_Whisper"),
+                "base_url": config.GROQ_WHISPER_BASE_URL,
+                "api_model": config.SELECTED_GROQ_WHISPER_MODEL,
+            }
+        if engine == "OpenAI_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("OpenAI_Whisper"),
+                "base_url": config.OPENAI_WHISPER_BASE_URL,
+                "api_model": config.SELECTED_OPENAI_WHISPER_MODEL,
+            }
+        if engine == "Custom_Whisper":
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Custom_Whisper"),
+                "base_url": config.TRANSCRIPTION_CUSTOM_URL,
+                "api_model": config.SELECTED_CUSTOM_WHISPER_MODEL,
+            }
+        if engine == "Deepgram":
+            # Deepgram はエンドポイントが固定 (base_url入力欄が無い) ため
+            # base_urlは渡さない。api_model_languagesは、選択中モデルが
+            # 実際に対応していると申告している言語コード一覧
+            # (DeepgramProvider が候補言語1つに確定している場合に、
+            # 自動検出の代わりに明示的な language= を解決するために使う)。
+            return {
+                "api_key": config.TRANSCRIPTION_AUTH_KEYS.get("Deepgram"),
+                "api_model": config.SELECTED_DEEPGRAM_MODEL,
+                "api_model_languages": config.DEEPGRAM_MODEL_LANGUAGES.get(config.SELECTED_DEEPGRAM_MODEL, []),
+            }
+        return {}
 
     # --- 公開 API ---------------------------------------------------------
 
@@ -302,15 +468,84 @@ class _AudioDeviceSession:
             self._recorder.pause()
 
     def resume(self) -> None:
+        # 以前は while not empty(): get() という non-atomic な
+        # チェック→ブロッキングgetだったため、_print_transcript
+        # スレッド (transcribeAudioQueue) が同時に同じキューを
+        # drainしていると、resume() が empty()==False を見た直後に
+        # その最後の1件を向こうに取られてしまい、後続のブロッキング
+        # get() が (もう誰も put しないため) 永久に返らずハングし、
+        # self._recorder.resume() が一生呼ばれなくなるバグがあった
+        # (レビューで指摘、実機ではVRChatの素早いミュート/アンミュート
+        # 切り替えで再現しうる)。get_nowait() のみを使えば、他スレッド
+        # と競合しても即座に Empty を返すだけでブロックし得ない。
         if isinstance(self._audio_queue, Queue):
-            while not self._audio_queue.empty():
-                self._audio_queue.get()
+            while True:
+                try:
+                    self._audio_queue.get_nowait()
+                except Empty:
+                    break
         if self._recorder is not None and callable(self._recorder.resume):
             self._recorder.resume()
 
     @property
     def device_error_event(self):
         return self._recorder.device_error_event if self._recorder is not None else None
+
+    def _make_pipeline_failure(
+        self,
+        error_code: ErrorCode,
+        stage: str,
+        error: Optional[Exception] = None,
+    ) -> AudioPipelineFailure:
+        if error is not None:
+            errorLogging()
+        return AudioPipelineFailure(
+            error_code=error_code,
+            stage=stage,
+            source=self._kind,
+            message=ERROR_METADATA[error_code]["message"],
+            exception_type=type(error).__name__ if error is not None else None,
+        )
+
+    def _notify_pipeline_error(self, failure: AudioPipelineFailure) -> None:
+        with self._pipeline_error_lock:
+            if self._pipeline_error_notified:
+                return
+            self._pipeline_error_notified = True
+        if callable(self.transcript_fnc):
+            try:
+                self.transcript_fnc(failure.to_notification())
+            except Exception:
+                errorLogging()
+
+    def _handle_pipeline_error(self, failure: AudioPipelineFailure) -> None:
+        """録音ワーカーからの異常を一度だけ停止・通知する。"""
+        with self._pipeline_error_lock:
+            if self._pipeline_error_started:
+                return
+            self._pipeline_error_started = True
+
+        # 自分自身を join できないため、現在の worker は先にループを
+        # 終了させ、停止・後始末・通知は別スレッドで行う。
+        worker = self._print_transcript
+        if worker is not None and worker is current_thread():
+            worker.stop()
+
+        def cleanup_and_notify() -> None:
+            cleanup_timed_out = self._stop()
+            if cleanup_timed_out:
+                failure_to_notify = self._make_pipeline_failure(
+                    ErrorCode.CLEANUP_TIMEOUT, "cleanup"
+                )
+            else:
+                failure_to_notify = failure
+            self._notify_pipeline_error(failure_to_notify)
+
+        Thread(
+            target=cleanup_and_notify,
+            daemon=True,
+            name=f"{self._kind}-transcription-error-cleanup",
+        ).start()
 
     # --- 内部実装 ---------------------------------------------------------
 
@@ -331,57 +566,102 @@ class _AudioDeviceSession:
         # 現在開いているデバイスを記録 (reconfigure での差分検知に使用)
         self._active_device = device
 
-        try:
-            self._recorder = self._create_recorder(device)
+        with self._pipeline_error_lock:
+            self._pipeline_error_started = False
+            self._pipeline_error_notified = False
 
-            audio_queue = Queue() if "transcript" in self.features else _DiscardQueue()
-            energy_queue: Optional[Queue] = Queue() if "energy" in self.features else None
+        start_failure: Optional[AudioPipelineFailure] = None
+        try:
+            try:
+                self._recorder = self._create_recorder(device)
+            except Exception as error:  # noqa: BLE001 - convert to safe UI error
+                start_failure = self._make_pipeline_failure(
+                    ErrorCode.AUDIO_OPEN_ERROR,
+                    "recording",
+                    error,
+                )
+                raise
+
+            audio_queue = Queue(maxsize=_AUDIO_QUEUE_MAXSIZE) if "transcript" in self.features else _DiscardQueue()
+            # energy_queue はメーター表示用で直近の値のみ意味を持つため、
+            # audio_queue と同じ理由 (レビュー指摘、フェーズ3項目20) で
+            # 有界化する。maxsize=1 で「最新の未読み取り値のみ保持」にする。
+            energy_queue: Optional[Queue] = Queue(maxsize=1) if "energy" in self.features else None
             self._audio_queue = audio_queue
             self._recorder.recordIntoQueue(audio_queue, energy_queue)
+            if "transcript" in self.features:
+                try:
+                    self._transcriber = self._create_transcriber()
+                except Exception as error:  # noqa: BLE001 - initialization failure
+                    start_failure = self._make_pipeline_failure(
+                        ErrorCode.TRANSCRIBER_INIT_ERROR,
+                        "asr",
+                        error,
+                    )
+                    raise
         except Exception:
-            # デバイスが処理中に切断される (実機で OSError: device gone を
-            # 確認済み) 等で Recorder の生成/listener 起動が途中失敗すると、
-            # 以前は self._recorder が非 None のまま残り、reconfigure() の
-            # already_running 判定が「起動済み」と誤認してしまっていた
-            # (P0-2)。ユーザーが文字起こしを OFF→ON しても永久に復帰しない
-            # 原因だったため、自分が触った内部状態を全て「何も起動していない」
-            # 状態へ巻き戻してから再送出する。
-            #
-            # features も合わせてリセットする: reconfigure() は _start() を
-            # 呼ぶ前に self.features = new_features を代入済みだが、実際には
-            # 何も起動できていないため、ここでリセットしないと
-            # self._mic_session.features 等を直接参照する呼び出し元
-            # (例: startMicTranscript) が「起動できた」と誤認しうる。
-            self._recorder = None
-            self._transcriber = None
-            self._audio_queue = None
-            self._active_device = None
-            self.features = set()
+            # Recorder open/listener または Transcriber 初期化が失敗した場合も、
+            # 開始済みのリソースを同じ停止経路で回収してから UI へ通知する。
+            if start_failure is None:
+                start_failure = getattr(self._recorder, "device_error_info", None)
+            if start_failure is None:
+                start_failure = self._make_pipeline_failure(
+                    ErrorCode.AUDIO_READ_ERROR,
+                    "recording",
+                )
+            cleanup_timed_out = self._stop()
+            if cleanup_timed_out:
+                start_failure = self._make_pipeline_failure(ErrorCode.CLEANUP_TIMEOUT, "cleanup")
+            if start_failure is not None:
+                self._notify_pipeline_error(start_failure)
             raise
 
         if "transcript" in self.features:
-            self._transcriber = self._create_transcriber()
             transcriber = self._transcriber
             recorder = self._recorder
 
             def sendTranscript() -> None:
+                if recorder.device_error_event.is_set():
+                    failure = getattr(recorder, "device_error_info", None)
+                    recorder.device_error_event.clear()
+                    if failure is None:
+                        failure = self._make_pipeline_failure(
+                            ErrorCode.AUDIO_READ_ERROR,
+                            "recording",
+                        )
+                    self._handle_pipeline_error(failure)
+                    return
                 try:
-                    if recorder.device_error_event.is_set():
-                        recorder.device_error_event.clear()
-                        if callable(self.transcript_fnc):
-                            self.transcript_fnc({"text": False, "language": None})
-                        return
-                    if self._transcribe(transcriber, audio_queue) and callable(self.transcript_fnc):
-                        result = transcriber.getTranscript()
-                        result["recognition_error"] = transcriber.last_recognition_error
-                        self.transcript_fnc(result)
-                except Exception:
-                    errorLogging()
+                    self._transcribe(transcriber, audio_queue)
+                    # 溜まっている分を全て配信する。1回の transcribeAudioQueue()
+                    # が複数件を積むことがある (Google の interim_send は
+                    # キューから取り出したチャンクごとに走る) のに対し、
+                    # 以前はここで1件しか取り出しておらず、残りは「次に ASR が
+                    # 成功した時」まで配信されなかった。発話が止まるとそのまま
+                    # 埋もれ、max_phrases を超えると古い順に無言で捨てられて
+                    # いた (実機ログで ASR 成功4件に対し配信1件を確認)。
+                    # _transcribe の戻り値で分岐しないのは、前回の呼び出しが
+                    # 残した分もここで確実に吐き出すため。
+                    if callable(self.transcript_fnc):
+                        while transcriber.hasTranscript():
+                            result = transcriber.getTranscript()
+                            result["recognition_error"] = transcriber.last_recognition_error
+                            self.transcript_fnc(result)
+                except AudioPipelineError as error:
+                    self._handle_pipeline_error(error.failure)
+                except Exception as error:  # noqa: BLE001 - fail closed at ASR boundary
+                    failure = self._make_pipeline_failure(ErrorCode.ASR_ERROR, "asr", error)
+                    self._handle_pipeline_error(failure)
 
             def endTranscript() -> None:
                 while not audio_queue.empty():
                     audio_queue.get()
-                self._transcriber = None
+                # A timed-out old worker may finish after reconfigure() has
+                # already installed a new transcriber. Only clear the object
+                # owned by this worker; otherwise the late cleanup can make
+                # the new transcription pipeline fail with None.
+                if self._transcriber is transcriber:
+                    self._transcriber = None
                 # 明示 gc.collect() は呼ばない: ActiveEndpointTracker が別スレッド
                 # (CoInitialize 済み apartment) で保持している comtypes の COM
                 # ポインタが、この _print_transcript スレッド (CoInitialize
@@ -407,30 +687,71 @@ class _AudioDeviceSession:
             self._energy_progressbar.daemon = True
             self._energy_progressbar.start()
 
-    def _stop(self) -> None:
-        if isinstance(self._print_transcript, threadFnc):
-            self._print_transcript.stop()
-            self._print_transcript.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
-            if self._print_transcript.is_alive():
-                printLog(f"{self._kind.capitalize()} transcription thread did not terminate within timeout")
-            self._print_transcript = None
-        if isinstance(self._energy_progressbar, threadFnc):
-            self._energy_progressbar.stop()
-            self._energy_progressbar.join()
-            self._energy_progressbar = None
-        if self._recorder is not None:
-            # _start() のロールバックにより通常はここに来ないはずだが、
-            # 万一 recordIntoQueue() が listener 起動前に失敗した Recorder
-            # (resume/stop がまだ None のまま) が渡ってきても TypeError で
-            # _stop() 自体を失敗させないよう callable() で防御する。
-            if callable(self._recorder.resume):
-                self._recorder.resume()
-            if callable(self._recorder.stop):
-                self._recorder.stop()
-            self._recorder = None
-        self._transcriber = None
-        self._audio_queue = None
-        self._active_device = None
+    def _stop(self) -> bool:
+        """停止とリソース解放を行い、完了できなければ True を返す。"""
+        cleanup_timed_out = False
+        with self._stop_lock:
+            transcript_thread = self._print_transcript
+            if isinstance(transcript_thread, threadFnc):
+                transcript_thread.stop()
+                if transcript_thread is not current_thread():
+                    transcript_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if transcript_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} transcription thread did not terminate within timeout"
+                        )
+                self._print_transcript = None
+
+            energy_thread = self._energy_progressbar
+            if isinstance(energy_thread, threadFnc):
+                energy_thread.stop()
+                if energy_thread is not current_thread():
+                    energy_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if energy_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} energy thread did not terminate within timeout"
+                        )
+                self._energy_progressbar = None
+
+            recorder = self._recorder
+            if recorder is not None:
+                # stop() 内部の listener join が予期せず長引いても、UI 操作や
+                # エラー通知を無期限にブロックしないよう別スレッドで待つ。
+                try:
+                    if callable(recorder.resume):
+                        recorder.resume()
+                except Exception:
+                    errorLogging()
+
+                if callable(recorder.stop):
+                    stop_thread = Thread(
+                        target=recorder.stop,
+                        kwargs={"wait_for_stop": True},
+                        daemon=True,
+                        name=f"{self._kind}-recorder-stop",
+                    )
+                    stop_thread.start()
+                    stop_thread.join(timeout=TRANSCRIPT_STOP_JOIN_TIMEOUT)
+                    if stop_thread.is_alive():
+                        cleanup_timed_out = True
+                        printLog(
+                            f"{self._kind.capitalize()} recorder did not stop within timeout"
+                        )
+                self._recorder = None
+
+            if isinstance(self._audio_queue, Queue):
+                while True:
+                    try:
+                        self._audio_queue.get_nowait()
+                    except Empty:
+                        break
+            self._transcriber = None
+            self._audio_queue = None
+            self._active_device = None
+            self.features = set()
+        return cleanup_timed_out
 
 
 class MicSession(_AudioDeviceSession):
@@ -455,6 +776,8 @@ class MicSession(_AudioDeviceSession):
         phrase_timeout = config.MIC_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
+        if config.MIC_ENABLE_VAD is True:
+            return SelectedMicVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedMicEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.MIC_THRESHOLD,
@@ -476,6 +799,9 @@ class MicSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            vad_segmented=config.MIC_ENABLE_VAD is True,
+            source_label="mic",
+            **self._resolve_api_transcription_kwargs(),
         )
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
@@ -512,6 +838,8 @@ class SpeakerSession(_AudioDeviceSession):
         phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phrase_timeout:
             record_timeout = phrase_timeout
+        if config.SPEAKER_ENABLE_VAD is True:
+            return SelectedSpeakerVadRecorder(device=device, record_timeout=record_timeout)
         return SelectedSpeakerEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.SPEAKER_THRESHOLD,
@@ -533,6 +861,9 @@ class SpeakerSession(_AudioDeviceSession):
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
             compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+            vad_segmented=config.SPEAKER_ENABLE_VAD is True,
+            source_label="speaker",
+            **self._resolve_api_transcription_kwargs(),
         )
 
     def _transcribe(self, transcriber: AudioTranscriber, queue: Queue) -> bool:
@@ -559,6 +890,7 @@ class Model:
             # Callers should call `model.init()` explicitly or rely on
             # `ensure_initialized()` which will lazy-initialize on demand.
             cls._instance._inited = False
+            cls._instance._init_failed = False
         return cls._instance
 
     def init(self):
@@ -568,11 +900,35 @@ class Model:
         and is intentionally not called at import time. Call explicitly
         or let `ensure_initialized()` call it lazily.
         """
-        if getattr(self, '_inited', False):
+        if getattr(self, '_inited', False) or getattr(self, '_init_failed', False):
             return
+
+        # 「成功が証明されるまで失敗扱い」にしておく。init() は途中で
+        # AudioLifecycleWorker (コンストラクタが即 daemon thread を起動する)
+        # や Clipboard / Telemetry を生成するため、後半で例外が出たときに
+        # 再実行を許すと、そのたびに新しいスレッドが生成され、前回分は
+        # 誰からも参照されないまま生き残る。ensure_initialized() は
+        # 例外を握りつぶして続行するので、public メソッドが呼ばれるたびに
+        # これが繰り返されスレッドが際限なく増える。shutdown() が停止
+        # できるのは最新の 1 組だけなので、終了時に古いワーカーが
+        # PyAudio 操作の途中でプロセス終了に巻き込まれる経路も残る。
+        # 壊れたインストールや SteamVR 異常で OverlayImage/Clipboard の
+        # 生成が失敗するケースは再試行しても直らないため、1 回で諦める。
+        self._init_failed = True
 
         self.logger = None
         self.th_check_device = None
+        # startWatchdog() より前に shutdown() が走る経路 (init 失敗時など) で
+        # stopWatchdog() の isinstance チェックが AttributeError にならないよう
+        # ここで宣言しておく。
+        self.th_watchdog = None
+        # watchdog は init() の先頭で作る。フロントエンドは spawn 直後から
+        # /run/feed_watchdog を送り続け、ハンドラワーカーは init() の実行中でも
+        # feedWatchdog() を処理する。ensure_initialized() は _init_failed
+        # のため init() を再実行せず素通りするので、ここより後 (Overlay や
+        # オーディオ初期化の後) で作ると、遅い環境 (ビルド版) で
+        # 'Model' object has no attribute 'watchdog' になる。
+        self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         # マイク/スピーカーそれぞれの文字起こし・エナジー計測は
         # _AudioDeviceSession (MicSession/SpeakerSession) に集約されている。
         # 1 物理デバイスにつき Recorder (= PyAudio Microphone) が常に
@@ -580,10 +936,22 @@ class Model:
         # session が管理する。
         self._mic_session = MicSession()
         self._speaker_session = SpeakerSession()
-        self.audio_lifecycle_worker = AudioLifecycleWorker()
+        # mic/speaker で別インスタンスにする理由は AudioLifecycleWorker の
+        # docstring 参照 (フェーズ3項目21)。
+        self.mic_lifecycle_worker = AudioLifecycleWorker()
+        self.speaker_lifecycle_worker = AudioLifecycleWorker()
 
         self.previous_send_message = ""
         self.previous_receive_message = ""
+        # getInputTranslate() がターゲット言語ごとの翻訳を並列化するための
+        # 常設プール。使い捨てにすると、translators 側のスレッドローカルな
+        # セッションが毎回作り直され、ウォームアップ (ホストGET + 言語マップ
+        # 取得) のコストを毎回払うことになる。ワーカー数はターゲット言語の
+        # スロット数 (SELECTED_TAB_TARGET_LANGUAGES_NO_LIST) が上限。
+        self._translation_executor = ThreadPoolExecutor(
+            max_workers=len(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST),
+            thread_name_prefix="vrct-translate",
+        )
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.translation_history: list[dict] = []
@@ -591,11 +959,27 @@ class Model:
         overlay_small_log_settings = copy.deepcopy(config.OVERLAY_SMALL_LOG_SETTINGS)
         overlay_large_log_settings = copy.deepcopy(config.OVERLAY_LARGE_LOG_SETTINGS)
         overlay_large_log_settings["ui_scaling"] = overlay_large_log_settings["ui_scaling"] * 0.25
+        if launcherOutOfReach(config.OVERLAY_VR_LAUNCHER_SETTINGS):
+            # 保存されたランチャーが手首から遠すぎる、または小さすぎ・大きすぎて、見失う
+            printLog("overlay: ランチャーの位置か大きさが範囲の外だったので、手首の近くへ寄せます")
+            # 初期には戻さず、手首から一番近い限度の内側へ寄せる (向き・付ける手は変えない)
+            config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS,
+                                                   **launcherNearestInReach(config.OVERLAY_VR_LAUNCHER_SETTINGS)}
         overlay_settings = {
             "small": overlay_small_log_settings,
             "large": overlay_large_log_settings,
+            PANEL: copy.deepcopy(config.OVERLAY_VR_PANEL_SETTINGS),
+            LAUNCHER: copy.deepcopy(config.OVERLAY_VR_LAUNCHER_SETTINGS),
+            # 一時ウィンドウ (言語 / VR設定)。開くたびにランチャーの近くに置き直すので保存しない
+            POPUP: {
+                "x_pos": 0.0, "y_pos": 0.0, "z_pos": 0.0,
+                "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
+                "display_duration": 5, "fadeout_duration": 0, "opacity": 1.0,
+                "ui_scaling": 0.36, "tracker": "Playspace",
+            },
         }
         self.overlay = Overlay(overlay_settings)
+        self.overlay.launcher_defaults = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_mute_status = None
         # OSC ミュート同期 (changeHandlerMute) が実行する pause()/resume() を
@@ -607,17 +991,27 @@ class Model:
         # 直接使うフォールバックとする。
         self.mic_mute_status_change_callback: Optional[Callable[[], None]] = None
         self.transliterator = None
-        self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
         self.websocket_server = None
         self.websocket_server_loop = False
         self.websocket_server_alive = False
         self.th_websocket_server = None
+        # start/stopWebSocketServer()のcheck-then-set(TOCTOU)を防ぐ。
+        # 以前は無ロックだったため、2本の別エンドポイント
+        # (/set/enable/websocket_server と /set/enable/obs_browser_source、
+        # 両方ともstartWebSocketServer()を呼びうる)がほぼ同時に呼ばれると
+        # 両方とも「未起動」を観測して同じポートへの2本目のbindを試み、
+        # 後勝ちのth_websocket_server代入で先に起動した方のスレッド参照が
+        # 失われ二度と停止できなくなり得た(バックエンドレビュー
+        # フェーズ4項目32)。
+        self._websocket_lifecycle_lock = Lock()
         self.obs_browser_source_server = None
         self.clipboard = Clipboard()
+        self.ocr_pipeline: Optional[OcrPipeline] = None
         self.telemetry = Telemetry()
 
         self._inited = True
+        self._init_failed = False
 
     def ensure_initialized(self) -> None:
         """Ensure the model has been initialized. This is safe to call from
@@ -669,6 +1063,22 @@ class Model:
 
     def downloadWhisperModelWeight(self, weight_type, callback=None, end_callback=None):
         return downloadWhisperWeight(config.PATH_LOCAL, weight_type, callback, end_callback)
+
+    def authenticationTranscriptionApiKey(self, api_key: str, base_url: str) -> bool:
+        return checkTranscriptionApiKey(api_key, base_url)
+
+    def getTranscriptionApiModelList(self, api_key: str, base_url: str, keyword_filter: Optional[list[str]] = None) -> list[str]:
+        return getAvailableTranscriptionModels(api_key, base_url, keyword_filter=keyword_filter)
+
+    def authenticationDeepgramApiKey(self, api_key: str) -> bool:
+        return checkDeepgramApiKey(api_key)
+
+    def getDeepgramModelList(self, api_key: str) -> list[str]:
+        return getAvailableDeepgramModels(api_key)
+
+    def getDeepgramModelListDetailed(self, api_key: str) -> list[dict]:
+        """モデル名と対応言語コード一覧つきで返す (UI向けメタデータ)。"""
+        return getAvailableDeepgramModelsDetailed(api_key)
 
     def resetKeywordProcessor(self):
         self.ensure_initialized()
@@ -838,14 +1248,25 @@ class Model:
     def getListLanguageAndCountry(self):
         """List every language any translation engine supports for the UI.
 
-        Deliberately NOT filtered to the currently selected engine: a user
-        should be able to pick any language up front, and if the selected
+        Deliberately NOT filtered by translation engine: a user should be
+        able to pick any language up front, and if the selected translation
         engine doesn't support it, the engine falls back instead (see
         Controller.updateTranslationEngineAndEngineList()). Filtering this
-        list by engine instead forces users to switch to a
+        list by translation engine instead forces users to switch to a
         broadly-compatible engine first, pick the language, then switch
         back - exactly the friction this list avoids.
+
+        This list IS filtered by the current TRANSCRIPTION engine, though
+        (see isLanguageSupportedByTranscriptionEngine()): transcription runs
+        before translation in the pipeline, so a language the transcription
+        engine can't recognize at all is useless to offer regardless of
+        translation engine support. Historically every entry in
+        transcription_lang was supported by both local engines (Google/
+        Whisper), so this filter was a no-op; Deepgram's language coverage
+        genuinely varies by model, so it's the first engine where this
+        matters.
         """
+        engine = config.SELECTED_TRANSCRIPTION_ENGINE
         transcription_langs = list(transcription_lang.keys())
         translation_langs = []
         for tl_key in translation_lang.keys():
@@ -856,6 +1277,8 @@ class Model:
         languages = []
         for language in supported_langs:
             for country in transcription_lang[language]:
+                if not self.isLanguageSupportedByTranscriptionEngine(engine, language, country):
+                    continue
                 languages.append(
                     {
                         "language" : language,
@@ -864,6 +1287,47 @@ class Model:
                 )
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
+
+    def isLanguageSupportedByTranscriptionEngine(self, engine: str, language: str, country: str) -> bool:
+        """VRCT の (Language, Country) を、指定した文字起こしエンジンが
+        対応しているかどうかを返す。
+
+        Google/Whisper/Groq_Whisper/OpenAI_Whisper/Custom_Whisper は
+        transcription_lang の全エントリを網羅しているため常に True
+        (Groq/OpenAI/カスタムサーバーはローカルWhisperと同じ言語コードを
+        使うため)。Deepgram だけは選択中のモデルが実際に申告する対応言語
+        一覧と動的に突き合わせる (isLanguageSupportedByDeepgramModel 参照)。
+        """
+        if language not in transcription_lang or country not in transcription_lang[language]:
+            return False
+        if engine == "Deepgram":
+            model_languages = config.DEEPGRAM_MODEL_LANGUAGES.get(config.SELECTED_DEEPGRAM_MODEL, [])
+            return isLanguageSupportedByDeepgramModel(language, country, model_languages)
+        return True
+
+    def getTranscriptionLanguagesForEngine(self, engine: str) -> list:
+        """指定した文字起こしエンジンが対応する (Language, Country) の一覧。"""
+        return [
+            {"language": language, "country": country}
+            for language, countries in transcription_lang.items()
+            for country in countries
+            if self.isLanguageSupportedByTranscriptionEngine(engine, language, country)
+        ]
+
+    def pickDefaultLanguageAndCountryForTranscriptionEngine(self, engine: str, avoid_languages) -> Optional[dict]:
+        """文字起こしエンジンが対応する言語を、日本語→英語の優先順で選ぶ
+        (翻訳側の pickDefaultLanguageForEngine と同じ考え方)。`avoid_languages`
+        に含まれる言語は避け、他のスロットとの衝突を防ぐ。
+        """
+        avoid_languages = set(avoid_languages)
+        for language, country in (("Japanese", "Japan"), ("English", "United States")):
+            if language not in avoid_languages and self.isLanguageSupportedByTranscriptionEngine(engine, language, country):
+                return {"language": language, "country": country}
+        for entry in self.getTranscriptionLanguagesForEngine(engine):
+            if entry["language"] not in avoid_languages:
+                return entry
+        # このエンジンが対応する言語が既に他スロットで使われている
+        return None
 
     def getTranslationLanguagesForEngine(self, engine: str) -> list[str]:
         """Friendly language names `engine` supports as a source language."""
@@ -912,7 +1376,7 @@ class Model:
         """Add a message to translation context history.
         
         Args:
-            source: "chat" | "mic" | "speaker"
+            source: "chat" | "mic" | "speaker" | "ocr"
             text: message content
         """
         self.ensure_initialized()
@@ -986,6 +1450,19 @@ class Model:
                     break
                 if translation is None:
                     break  # CTranslate2もこの言語ペア未対応。リトライしても変わらない
+                if not self.translator.isLoadedCTranslate2Model():
+                    # 重みが未ロード (未ダウンロード・ロード失敗・切替直後など)。
+                    # translateCTranslate2() はこの場合ロックを取った上で即 False を
+                    # 返すだけなので、待っても状況は変わらない。ここで抜けないと
+                    # 1メッセージあたり 2 秒 (0.1s × 20) を純粋な sleep で捨てる。
+                    # getInputTranslate() はターゲット言語ごとにこれを呼ぶため
+                    # 3言語で最悪6秒になり、その間パイプラインは単一スレッド
+                    # 構造のため文字起こしも止まる。
+                    # なお「ロード中」は translateCTranslate2() 側が
+                    # _ctranslate2_lock で待たされ、ロード完了後の値を見るため
+                    # ここには到達しない (changeCTranslate2Model はロック内で
+                    # is_loaded_ctranslate2_model を True にしてから解放する)。
+                    break
                 sleep(0.1)
             if isinstance(translation, str):
                 success_flag = True
@@ -1007,24 +1484,51 @@ class Model:
             source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
-        translations = []
-        success_flags = []
+        targets = []
         for value in target_languages.values():
             if value["enable"] is True:
                 target_language = value["language"]
                 target_country = value["country"]
                 if target_language is not None or target_country is not None:
-                    translation, success_flag = self.getTranslate(
-                        translator_name,
-                        source_language,
-                        target_language,
-                        target_country,
-                        message
-                        )
-                    translations.append(translation)
-                    success_flags.append(success_flag)
+                    targets.append((target_language, target_country))
 
-        return translations, success_flags
+        if not targets:
+            return [], []
+
+        if len(targets) == 1:
+            translation, success_flag = self.getTranslate(
+                translator_name, source_language, targets[0][0], targets[0][1], message
+            )
+            return [translation], [success_flag]
+
+        # ターゲット言語ごとの翻訳を常設スレッドプールで並列化する。
+        # 逐次ループだった頃は3言語有効時に実機で約3.9秒 (1言語あたり
+        # 約1.3秒 × 3) かかっていた。翻訳はクラウドエンジンなら
+        # ネットワークI/O待ちが支配的なので、概ね1言語分の時間で済む。
+        #
+        # 1度目の並列化 (73366d0a) は実機でフリーズを起こし取り消した。
+        # 原因は translators ライブラリが requests.Session をシングルトンで
+        # 使い回しており、スレッドセーフでなかったこと。フォーク側で
+        # Tse.session を threading.local() へ分離して解消した
+        # (misyaguziya/translators f3697bd)。requirements のpin も追従済み。
+        #
+        # 使い捨てではなく常設プールなのは、スレッドローカルのセッションを
+        # 再利用するため。呼び出しごとにスレッドを作り直すと、毎回
+        # ウォームアップ (ホストGET + 言語マップ取得) が走り逆に遅くなる。
+        #
+        # 添字はターゲット言語スロットに対応するので、完了順ではなく
+        # 投入順に結果を取る。例外は最初の1件をそのまま送出する
+        # (呼び出し元の _processMessage が VRAM不足エラーを検出する契約)。
+        futures = [
+            self._translation_executor.submit(
+                self.getTranslate,
+                translator_name, source_language, target_language, target_country, message,
+            )
+            for target_language, target_country in targets
+        ]
+        results = [future.result() for future in futures]
+
+        return [r[0] for r in results], [r[1] for r in results]
 
     def getOutputTranslate(self, message, source_language=None):
         self.ensure_initialized()
@@ -1117,6 +1621,18 @@ class Model:
         self.ensure_initialized()
         self.mic_mute_status = self.osc_handler.getOSCParameterMuteSelf()
 
+    def watchForVrchatOscQueryConnection(self, on_found: Callable[[], None]) -> None:
+        """VRCTがVRChatより先に起動した場合でも、VRChatのOSCQueryサービスが
+        後から現れた瞬間に `on_found` を呼べるようにする (mDNSのイベント通知)。
+
+        `setMuteSelfStatus()` はその場限りの一発勝負のクエリなので、
+        VRChat未起動時に呼んでも `mic_mute_status` は `None` のままになる。
+        Controller.init() 側は、この監視を使って「見つかったら
+        setMuteSelfStatus() を再試行する」コールバックを登録する。
+        """
+        self.ensure_initialized()
+        self.osc_handler.waitForVrchatOscQueryConnectionAsync(on_found)
+
     def setMicMuteStatusChangeCallback(self, fn: Optional[Callable[[], None]]) -> None:
         """OSC ミュート同期が pause()/resume() を実行する際に呼ぶ関数を登録する。
 
@@ -1139,7 +1655,7 @@ class Model:
             # start/stop 系 (_stop()/_start() を実行中) と
             # _mic_session.pause()/resume() が無ロックで交錯し得る
             # (ミュート連打中にデバイスが切り替わると壊れた Recorder に
-            # 触れる)。audio_lifecycle_worker.enqueue() で Auto Select の
+            # 触れる)。mic_lifecycle_worker.enqueue() で Auto Select の
             # 他のデバイス操作と同じ FIFO キューに直列化しつつ、実行される
             # 関数自体は mic_mute_status_change_callback (= Controller の
             # mic_lifecycle_lock 付きラッパー) にすることで、ロックを直接
@@ -1147,12 +1663,12 @@ class Model:
             if config.VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mic_mute_status is False:
                     self.mic_mute_status = osc_arguments
-                    self.audio_lifecycle_worker.enqueue(
+                    self.mic_lifecycle_worker.enqueue(
                         self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
                     )
                 elif osc_arguments is False and self.mic_mute_status is True:
                     self.mic_mute_status = osc_arguments
-                    self.audio_lifecycle_worker.enqueue(
+                    self.mic_lifecycle_worker.enqueue(
                         self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
                     )
 
@@ -1163,6 +1679,17 @@ class Model:
         self.osc_handler.receiveOscParameters()
 
     def stopReceiveOSC(self):
+        """OSC受信サーバ(UDP + OSCQuery HTTP + zeroconf監視)を停止する。
+
+        アプリ終了時(Controller.shutdown())専用の呼び出し口。
+        setOscIpAddress()/setOscPort()は再起動のため内部で直接
+        osc_handler.oscServerStop()を呼んでおり、このメソッドは経由しない。
+        以前はアプリ終了時にこれらを止める経路が無く(フェーズ3項目21で一度
+        「未使用」と判断され削除された`stopReceiveOSC`とは別の、実際に
+        呼ばれる経路として再設置)、OSCQueryのzeroconfサービス広告が
+        `close()`されないままプロセスが終了していた(バックエンドレビュー
+        フェーズ4項目30)。
+        """
         self.ensure_initialized()
         self.osc_handler.oscServerStop()
 
@@ -1199,9 +1726,14 @@ class Model:
         version = ""
         try:
             if config.SELECTED_RELEASE_CHANNEL == "beta":
+                # beta を使っている間は beta 同士でのみ最新判定する。
+                # ここで prerelease を絞らないと、GitHub の公開順(作成日時順)
+                # によっては後から出た stable 版が候補[0]に来てしまい、
+                # betaユーザーにstableへの「更新あり」通知が出てしまう。
                 candidates = [
                     r["name"] for r in Model._fetchGithubReleases()
                     if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                    and r.get("prerelease", False)
                 ]
                 version = candidates[0] if candidates else None
             else:
@@ -1247,6 +1779,10 @@ class Model:
     # サフィックス。release.yml 側で <installer名>.sha256 という名前で
     # 追加アップロードしている前提。
     _SHA256_ASSET_SUFFIX = ".sha256"
+    # ".sha256" サイドカー (数十バイトの小さなファイル) の取得リトライ回数。
+    # これ1つの一時的な通信失敗で更新全体を止めてしまわないための保険。
+    # setup.exe 本体の _downloadSetup (5回) より軽い処理なので控えめに3回。
+    _SHA256_SIDECAR_ATTEMPTS = 3
 
     @staticmethod
     def _resolveReleaseForVersion(target_version: Optional[str] = None) -> Optional[dict]:
@@ -1262,9 +1798,11 @@ class Model:
                         return r
                 return None
             if config.SELECTED_RELEASE_CHANNEL == "beta":
+                # checkSoftwareUpdated() と同じ理由で prerelease のみに限定。
                 candidates = [
                     r for r in Model._fetchGithubReleases()
                     if isinstance(r.get("name"), str) and Model._isVersionSupported(r["name"])
+                    and r.get("prerelease", False)
                 ]
                 return candidates[0] if candidates else None
             response = requests_get(config.GITHUB_URL, timeout=_HTTP_TIMEOUT)
@@ -1279,25 +1817,50 @@ class Model:
     def _fetchExpectedSha256(release: Optional[dict]) -> Optional[str]:
         # release の assets から "<setup.exe名>.sha256" というサイドカー
         # アセットを探し、中身 (16進ダイジェスト文字列) を取得して返す。
-        # release.yml が SHA-256 を公開するようになる前の古いリリースには
-        # このアセットが存在しないため、その場合は None を返す。呼び出し側
-        # はこれを「検証不能」として扱い、サイズチェックのみへフォール
-        # バックする (古いバージョンの再インストール/ダウングレードが
-        # 完全にできなくなるのを避けるため)。
+        #
+        # 戻り値の意味:
+        #   - digest 文字列 : 期待する SHA-256 が取れた
+        #   - None          : この release には ".sha256" アセットが存在しない
+        #                     (この検証より前に公開された古い release)。呼び出し
+        #                     側はサイズチェックのみへフォールバックしてよい。
+        #                     古いバージョンの再インストール/ダウングレードを
+        #                     壊さないための措置。
+        # 例外 SetupSha256Unavailable:
+        #   ".sha256" アセットは存在するのに、リトライしても有効なダイジェスト
+        #   を取得できなかった。「検証対象が無い」のとは異なり、すり替えの
+        #   可能性を排除できないため、呼び出し側は更新を中止する。
         if not isinstance(release, dict):
             return None
         assets = release.get("assets")
         if not isinstance(assets, list):
             return None
-        for asset in assets:
-            if not isinstance(asset, dict):
-                continue
-            name = asset.get("name")
-            if not isinstance(name, str) or not name.endswith(Model._SHA256_ASSET_SUFFIX):
-                continue
-            url = asset.get("browser_download_url")
-            if not isinstance(url, str):
-                continue
+        sidecar_urls = [
+            asset["browser_download_url"]
+            for asset in assets
+            if isinstance(asset, dict)
+            and isinstance(asset.get("name"), str)
+            and asset["name"].endswith(Model._SHA256_ASSET_SUFFIX)
+            and isinstance(asset.get("browser_download_url"), str)
+        ]
+        if not sidecar_urls:
+            return None
+        for url in sidecar_urls:
+            digest = Model._fetchSha256Digest(url)
+            if digest is not None:
+                return digest
+        raise SetupSha256Unavailable(
+            f"{len(sidecar_urls)} '.sha256' sidecar asset(s) present on the "
+            "release but none yielded a valid SHA-256 digest after retrying"
+        )
+
+    @staticmethod
+    def _fetchSha256Digest(url: str) -> Optional[str]:
+        # ".sha256" は数十バイトの小さなファイルだが、これ1つの一時的な
+        # 取得失敗で更新全体を止めてしまわないよう _SHA256_SIDECAR_ATTEMPTS
+        # 回リトライする。有効な16進ダイジェスト (64桁) が取れなければ None。
+        # レスポンスは得られたが中身がチェックサムでない (空 / 途中で切れた /
+        # HTML エラーページ等) 場合も失敗扱いでリトライする。
+        for _ in range(Model._SHA256_SIDECAR_ATTEMPTS):
             try:
                 res = requests_get(url, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
@@ -1358,17 +1921,39 @@ class Model:
         return False
 
     @staticmethod
-    def updateSoftware(target_version: Optional[str] = None):
-        if target_version is not None and not Model._isVersionSupported(target_version):
-            return
+    def _downloadVerifiedSetup(target_version: Optional[str]) -> bool:
+        # GitHub Release を解決して期待する SHA-256 を求め、setup.exe を
+        # ダウンロード & 検証する。updateSoftware()/updateCudaSoftware() の
+        # 共通前処理。
+        #
+        # 戻り値 True  : VRCT_setup.exe がディスク上にあり起動して問題ない
+        # 戻り値 False : 呼び出し側は何も起動せず中止すること。内訳は
+        #   - ダウンロード or ハッシュ検証に失敗した (_downloadSetup が False)
+        #   - ".sha256" が公開されているのに取得できなかった
+        #     (SetupSha256Unavailable)。サイズチェックのみへは格下げしない。
         release = Model._resolveReleaseForVersion(target_version)
-        expected_sha256 = Model._fetchExpectedSha256(release)
+        try:
+            expected_sha256 = Model._fetchExpectedSha256(release)
+        except SetupSha256Unavailable:
+            printLog(
+                "Setup file SHA-256 sidecar was published for "
+                f"{target_version or 'the latest release'} but could not be "
+                "retrieved; aborting update (not falling back to size-only "
+                "validation)"
+            )
+            return False
         if expected_sha256 is None:
             printLog(
                 "Setup file SHA-256 could not be verified (no .sha256 asset found for "
                 f"{target_version or 'the latest release'}); falling back to size-only validation"
             )
-        if Model._downloadSetup(expected_sha256) is False:
+        return Model._downloadSetup(expected_sha256)
+
+    @staticmethod
+    def updateSoftware(target_version: Optional[str] = None):
+        if target_version is not None and not Model._isVersionSupported(target_version):
+            return
+        if not Model._downloadVerifiedSetup(target_version):
             return
         # run the NSIS setup wizard, preselecting the CPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1386,14 +1971,7 @@ class Model:
     def updateCudaSoftware(target_version: Optional[str] = None):
         if target_version is not None and not Model._isVersionSupported(target_version):
             return
-        release = Model._resolveReleaseForVersion(target_version)
-        expected_sha256 = Model._fetchExpectedSha256(release)
-        if expected_sha256 is None:
-            printLog(
-                "Setup file SHA-256 could not be verified (no .sha256 asset found for "
-                f"{target_version or 'the latest release'}); falling back to size-only validation"
-            )
-        if Model._downloadSetup(expected_sha256) is False:
+        if not Model._downloadVerifiedSetup(target_version):
             return
         # run the NSIS setup wizard, preselecting the GPU edition; pin to
         # target_version when the user picked a specific release to install;
@@ -1460,12 +2038,14 @@ class Model:
             result = ["NoDevice"]
         return result
 
-    def startMicTranscript(self, fnc):
+    def startMicTranscript(self, fnc) -> bool:
         self.ensure_initialized()
         self._mic_session.transcript_fnc = fnc
         self._mic_session.reconfigure(transcript=True)
         if "transcript" in self._mic_session.features:
             self.changeMicTranscriptStatus()
+            return True
+        return False
 
     def resumeMicTranscript(self):
         self.ensure_initialized()
@@ -1514,14 +2094,88 @@ class Model:
         self.ensure_initialized()
         self._mic_session.reconfigure(energy=False)
 
-    def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> None:
+    def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> bool:
         self.ensure_initialized()
         self._speaker_session.transcript_fnc = fnc
         self._speaker_session.reconfigure(transcript=True)
+        return "transcript" in self._speaker_session.features
 
     def stopSpeakerTranscript(self):
         self.ensure_initialized()
         self._speaker_session.reconfigure(transcript=False)
+
+    def startOCRCapture(self, fnc: Callable[[dict], None]) -> bool:
+        """Start the VRChat chat-bubble OCR pipeline.
+
+        The callback receives dicts shaped like mic/speaker transcripts so
+        Controller.ocrMessage can share the mic/speaker translation path.
+        Returns True once the pipeline started (models loaded). Raises
+        OcrStartError carrying the OCR_DISABLED_* reason when it cannot start.
+        """
+        self.ensure_initialized()
+        if isinstance(self.ocr_pipeline, OcrPipeline):
+            # Already running.
+            return True
+
+        # 読み取る言語の扱いは models/ocr/ocr_languages.py を参照。
+        # "auto" は PP-OCRv6 small (日英中+ラテン文字系を1モデル) を使い、
+        # ハングル・キリル・タイ・アラビア・デーヴァナーガリーだけ明示選択で
+        # PP-OCRv5 のスクリプト別モデルへ切り替える。未対応なら起動しない。
+        # 以前 auto を SELECTED_TARGET_LANGUAGES から解決していた頃は、
+        # 日本語話者が英語へ翻訳する設定だと日本語の吹き出しが読めなかった。
+        source_language = config.OCR_SOURCE_LANGUAGE
+        if not isSupportedOcrLanguage(source_language):
+            printLog(f"OCR: source language {source_language!r} is not selected or not supported, refusing to start")
+            raise OcrStartError(ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE)
+
+        try:
+            self.ocr_pipeline = OcrPipeline(
+                callback=fnc,
+                source_language=source_language,
+                window_title=config.OCR_WINDOW_TITLE,
+                poll_interval_ms=config.OCR_POLL_INTERVAL_MS,
+                min_confidence=config.OCR_MIN_CONFIDENCE,
+                min_text_length=config.OCR_BUBBLE_MIN_TEXT_LENGTH,
+            )
+            return self.ocr_pipeline.start()
+        except Exception:
+            self.ocr_pipeline = None
+            raise
+
+    def updateOCRCaptureSettings(self) -> None:
+        """設定変更を実行中のOCRパイプラインへ渡す。停止中なら何もしない。
+
+        OFF→ONを挟まずに言語やしきい値を切り替えられるようにするための経路。
+        """
+        pipeline = self.ocr_pipeline
+        if not isinstance(pipeline, OcrPipeline):
+            return
+        try:
+            pipeline.applyConfig({
+                "source_language": config.OCR_SOURCE_LANGUAGE,
+                "window_title": config.OCR_WINDOW_TITLE,
+                "poll_interval_ms": config.OCR_POLL_INTERVAL_MS,
+                "min_confidence": config.OCR_MIN_CONFIDENCE,
+                "min_text_length": config.OCR_BUBBLE_MIN_TEXT_LENGTH,
+            })
+        except Exception:
+            errorLogging()
+
+    def stopOCRCapture(self) -> None:
+        self.ensure_initialized()
+        pipeline = self.ocr_pipeline
+        if isinstance(pipeline, OcrPipeline):
+            try:
+                pipeline.stop()
+            except Exception:
+                errorLogging()
+        self.ocr_pipeline = None
+        # 明示 gc.collect() は呼ばない: この関数は Controller から別スレッドで
+        # 呼ばれる。同じ理由 (comtypes の COM ポインタが CoInitialize していない
+        # スレッドで Release され access violation になる、_print_transcript の
+        # コメント参照) で禁止している。gc は import されておらず、ここは
+        # NameError になって stopOcrCapture スレッドが毎回落ちていた
+        # (2026-09-18 実機のstderrで発覚)。
 
     def startCheckSpeakerEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
         self.ensure_initialized()
@@ -1541,11 +2195,11 @@ class Model:
         config (SELECTED_MIC_HOST/DEVICE) から解決する。Session 内部で
         差分検知するため、同一デバイスなら no-op になる。
 
-        Auto 追跡中は device_manager 側の ActiveEndpointTracker が 250ms
-        周期で COM ポーリングしており、Recorder の open/close と並行実行
-        されると WASAPI がデッドロックする (実測確認済み)。reconfigure の
-        前後で tracker を pause/resume することで並行アクセスを排除する。
-        Auto OFF 時は tracker が存在しないので pause/resume は no-op。
+        マイク側は ActiveEndpointTracker (peak 追従) を使わないため
+        (device_manager.setMicAutoActive の docstring 参照)、
+        pauseMicEndpointTracker/resumeMicEndpointTracker は現状常に no-op。
+        speaker 側との対称性のため呼び出しは残す (将来マイク peak 追従を
+        復活させた場合の COM デッドロック回避策として機能する)。
         """
         self.ensure_initialized()
         device_manager.pauseMicEndpointTracker()
@@ -1555,8 +2209,15 @@ class Model:
             device_manager.resumeMicEndpointTracker()
 
     def reconfigureSpeakerDevice(self, device: Optional[dict] = None) -> None:
-        """稼働中の Speaker Session を新デバイスに差し替える。詳細は
-        reconfigureMicDevice のドキュメント参照。"""
+        """稼働中の Speaker Session を新デバイスに差し替える。
+        features / device 解決 / 差分検知の扱いは reconfigureMicDevice と同じ。
+
+        Auto Speaker 追跡中は device_manager 側の ActiveEndpointTracker が
+        250ms 周期で COM ポーリングしており、Recorder の open/close と並行
+        実行されると WASAPI がデッドロックする (実測確認済み)。reconfigure の
+        前後で tracker を pause/resume することで並行アクセスを排除する。
+        Auto OFF 時は tracker が存在しないので pause/resume は no-op。
+        """
         self.ensure_initialized()
         device_manager.pauseSpeakerEndpointTracker()
         try:
@@ -1700,6 +2361,98 @@ class Model:
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
 
+    def setVrPanelWindows(self, log: bool, popup: bool) -> None:
+        """VR UIのログウィンドウと一時ウィンドウの表示・非表示を切り替える。"""
+        self.ensure_initialized()
+        self.overlay.setVrWindows(log, popup)
+
+    def setVrPanelEnabled(self, enabled: bool) -> None:
+        """VR UI (ランチャーと各ウィンドウ) を表示するか。OFFの間は撮影もしない。"""
+        self.ensure_initialized()
+        self.overlay.setVrPanelEnabled(enabled)
+
+    def setVrPanelLocked(self, locked: bool) -> None:
+        """VR UIのログウィンドウを掴めなくする (操作バーのロック)。"""
+        self.ensure_initialized()
+        self.overlay.panel_locked = locked
+
+    def setVrLauncherAutoHide(self, enabled: bool) -> None:
+        """VR UIのランチャーを手首を見たときだけ出すか。"""
+        self.ensure_initialized()
+        self.overlay.launcher_auto_hide = enabled
+
+    def resetVrLauncher(self) -> None:
+        """ランチャーを初期の位置・大きさ・手 (左手) へ戻す。VR につながっていれば、手首へ吸い寄せて戻る。"""
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.requestLauncherReset()
+
+    def updateVrLauncherPosition(self) -> None:
+        """保存したランチャーの位置と付ける手をオーバーレイに反映する。"""
+        self.ensure_initialized()
+        s = config.OVERLAY_VR_LAUNCHER_SETTINGS
+        self.overlay.updatePosition(s["x_pos"], s["y_pos"], s["z_pos"], s["x_rotation"], s["y_rotation"], s["z_rotation"], s["tracker"], LAUNCHER)
+
+    def requestVrPanelAnchor(self, anchor: str) -> None:
+        """VR UIのログウィンドウの固定先を切り替える (オーバーレイのスレッドで反映される)。"""
+        self.ensure_initialized()
+        self.overlay.requestAnchor(anchor)
+
+    def recallVrPanelLog(self) -> None:
+        """VR UIのログウィンドウを目の前へ呼び戻す。"""
+        self.ensure_initialized()
+        self.overlay.requestRecallPanel()
+
+    def setVrPanelTooltip(self, data: dict) -> None:
+        """Forward without initializing heavy backend resources."""
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.setTooltip(data)
+
+    def setVrPanelLayoutRendered(self, panel_size: list) -> None:
+        """VR画面が新しい並びで描き終えたことをオーバーレイに伝える。
+
+        初期化中にも届く (取りこぼすと表示が切り替わらない) ので、ここで初期化はしない。
+        オーバーレイがまだ無ければ捨ててよい (作られるときは既定の並びで、VR画面も既定の並びで描いている)。
+        """
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.setLayoutRendered(panel_size)
+
+    def setOverlayLayoutCallback(self, fn: Optional[Callable[[dict], None]]) -> None:
+        """VR画面の並び (ログの大きさで変わる) が変わったときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.layout_callback = fn
+        if fn is not None:
+            fn(self.overlay.getVrLayout())
+
+    def setOverlayPanelOutOfViewCallback(self, fn: Optional[Callable[[bool], None]]) -> None:
+        """VR UIのログウィンドウが視線から外れた・戻ったときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.panel_out_of_view_callback = fn
+
+    def setOverlayLauncherIntroCallback(self, fn: Optional[Callable[[str], None]]) -> None:
+        """VR UIの起動演出の状態 (idle/pending/playing) が変わったときに呼ぶ関数を登録する。登録時に今の状態も渡す。"""
+        self.ensure_initialized()
+        self.overlay.launcher_intro_callback = fn
+        if fn is not None:
+            fn(self.overlay.launcher_intro_state)
+
+    def updateOverlayVrPanelOpacity(self) -> None:
+        """VR UIのログウィンドウの不透明度を反映する (オーバーレイのスレッドが毎フレーム settings から適用する)。"""
+        self.ensure_initialized()
+        self.overlay.settings[PANEL]["opacity"] = config.OVERLAY_VR_PANEL_SETTINGS["opacity"]
+
+    def setOverlayPointerCallback(self, fn: Optional[Callable[[Optional[tuple]], None]]) -> None:
+        """VR UI上のポインタの位置が変わったときに呼ぶ関数を登録する (ホバー表示用)。"""
+        self.ensure_initialized()
+        self.overlay.pointer_callback = fn
+
+    def setOverlayPositionChangedCallback(self, fn: Optional[Callable[[str, dict], None]]) -> None:
+        """VR内でオーバーレイを掴んで動かし、位置が確定したときに呼ぶ関数を登録する。"""
+        self.ensure_initialized()
+        self.overlay.position_changed_callback = fn
+
     def startOverlay(self):
         self.ensure_initialized()
         self.overlay.startOverlay()
@@ -1737,16 +2490,62 @@ class Model:
         self.ensure_initialized()
         self.watchdog.setCallback(callback)
 
+    def stopTranslationExecutor(self):
+        """getInputTranslate() の並列化に使う常設プールを止める。
+
+        ThreadPoolExecutor のワーカーは非デーモンスレッドで、インタプリタ
+        終了時に atexit (concurrent.futures.thread._python_exit) で join
+        される。翻訳が詰まったままだと終了がそこで止まるため、shutdown()
+        から明示的に停止する。待たない (wait=False) のは、詰まっている
+        呼び出しに shutdown() を道連れにさせないため。
+
+        注意: shutdown(wait=False) が捨てるのは**まだ開始していない**
+        タスクだけで、既に実行中のワーカーは止まらない。つまりこの関数は
+        すぐ返るが、**プロセスが消えるのは実行中の呼び出しが返るまで
+        遅れうる**。その上限はエンジンによって違う:
+
+        - Google / Bing / Papago: _WEB_TRANSLATOR_TIMEOUT_SECONDS (10秒)
+        - LMStudio / Ollama / OpenRouter: 各プロバイダで timeout 指定あり
+        - OpenAI / OpenAI互換 / Groq / Gemini / Plamo: **明示指定なし**。
+          SDK の既定に従う (openai は read=600秒 × max_retries=2) ので
+          分単位になりうる
+
+        実機では終了遅延を観測していない。executor を使うのは
+        getInputTranslate (mic/chat のみ。speaker は getOutputTranslate の
+        同期呼び出しで通らない) で、shutdown() は先に文字起こしを止めて
+        いるため、停止の瞬間に翻訳が飛んでいる必要があるから。
+        なお watchdog エスカレーション経由の終了 (mainloop.py の
+        os._exit) は atexit を飛ばすのでこの経路に当たらない。
+
+        ここで安易に wait=True + タイムアウト付き join を足すと、
+        P-4 の初回修正と同じ「新たな終了遅延を作り込む」形になる。
+        実機で終了遅延が実際に出てから、上限の無いエンジン側に timeout を
+        入れる方向で直すこと。
+        """
+        executor = getattr(self, '_translation_executor', None)
+        if executor is not None:
+            executor.shutdown(wait=False, cancel_futures=True)
+
     def stopWatchdog(self):
         self.ensure_initialized()
-        if isinstance(self.th_watchdog, threadFnc):
-            self.th_watchdog.stop()
-            self.th_watchdog.join()
-            self.th_watchdog = None
+        # ダンプタイマーの解除を必ず先に行う。Watchdog.start() は末尾で
+        # time.sleep(self.interval) する (既定20秒) 一方、threadFnc.stop() は
+        # loop フラグを降ろすだけでこの sleep を中断できないため、join は
+        # 最大 interval 秒ブロックする。以前はこの解除が join の後ろにあり、
+        # shutdown() 側の _stopServiceForShutdown が5秒で諦めた時点で
+        # 一度も実行されず、「正常終了なのに freeze_trace.log へダンプが出る」
+        # という当初直したかった現象がそのまま残っていた (実機ログで確認)。
+        # 解除自体はスレッドと独立した faulthandler の操作なので先に行える。
         try:
             faulthandler.cancel_dump_traceback_later()
         except Exception:
             errorLogging()
+        if isinstance(self.th_watchdog, threadFnc):
+            self.th_watchdog.stop()
+            # 上記のとおり sleep は中断できないので join は無期限にしない。
+            # daemon thread なので、起きそこねてもプロセス終了時に破棄される。
+            self.th_watchdog.join(timeout=_WATCHDOG_JOIN_TIMEOUT_SEC)
+            self.th_watchdog = None
 
     def message_handler(self, websocket, message):
         """WebSocketメッセージ受信時の処理"""
@@ -1755,64 +2554,71 @@ class Model:
     def startWebSocketServer(self, host, port):
         """WebSocketサーバーを起動し、別スレッドで実行する"""
         self.ensure_initialized()
-        if self.websocket_server_alive is True:
-            # サーバーが既に起動している場合は何もしない
-            return
+        with self._websocket_lifecycle_lock:
+            if self.websocket_server_alive is True:
+                # サーバーが既に起動している場合は何もしない
+                return
 
-        self.websocket_server_loop = True
-        self.websocket_server_alive = False  # 初期状態を明示
+            self.websocket_server_loop = True
+            self.websocket_server_alive = False  # 初期状態を明示
 
-        async def WebSocketServerMain():
-            try:
-                self.websocket_server = WebSocketServer(
-                    host=host,
-                    port=port,
-                    token=config.WEBSOCKET_AUTH_TOKEN,
-                )
-                self.websocket_server.set_message_handler(self.message_handler)
-                self.websocket_server.start()
-                self.websocket_server_alive = True
+            async def WebSocketServerMain():
+                try:
+                    self.websocket_server = WebSocketServer(
+                        host=host,
+                        port=port,
+                        token=config.WEBSOCKET_AUTH_TOKEN,
+                    )
+                    self.websocket_server.set_message_handler(self.message_handler)
+                    self.websocket_server.start()
+                    self.websocket_server_alive = True
 
-                # イベントループが終了するまで待機
-                while self.websocket_server_loop:
-                    # self.websocket_server.send("Server is running...")
-                    await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
+                    # イベントループが終了するまで待機
+                    while self.websocket_server_loop:
+                        # self.websocket_server.send("Server is running...")
+                        await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
 
-            except Exception:
-                errorLogging()
-                # 具体的なエラー内容をログに残す場合
-                # self.logger.error(f"WebSocket server error: {str(e)}")
-            finally:
-                # 確実にサーバーを停止
-                if hasattr(self, 'websocket_server') and self.websocket_server:
-                    self.websocket_server.stop()
-                self.websocket_server_alive = False
+                except Exception:
+                    errorLogging()
+                    # 具体的なエラー内容をログに残す場合
+                    # self.logger.error(f"WebSocket server error: {str(e)}")
+                finally:
+                    # 確実にサーバーを停止
+                    if hasattr(self, 'websocket_server') and self.websocket_server:
+                        self.websocket_server.stop()
+                    self.websocket_server_alive = False
 
-        self.th_websocket_server = Thread(target=lambda: asyncio.run(WebSocketServerMain()))
-        self.th_websocket_server.daemon = True
-        self.th_websocket_server.start()
+            self.th_websocket_server = Thread(target=lambda: asyncio.run(WebSocketServerMain()))
+            self.th_websocket_server.daemon = True
+            self.th_websocket_server.start()
 
     def stopWebSocketServer(self):
         """WebSocketサーバーを停止する"""
         self.ensure_initialized()
-        if not hasattr(self, 'th_websocket_server') or self.th_websocket_server is None:
-            return
+        with self._websocket_lifecycle_lock:
+            if not hasattr(self, 'th_websocket_server') or self.th_websocket_server is None:
+                return
 
-        self.websocket_server_loop = False
+            self.websocket_server_loop = False
 
-        try:
-            # 一定時間待機してからタイムアウト
-            self.th_websocket_server.join(timeout=2.0)
+            try:
+                # 一定時間待機してからタイムアウト
+                self.th_websocket_server.join(timeout=2.0)
 
-            if self.th_websocket_server.is_alive():
-                # タイムアウト後もスレッドが生きている場合の処理
-                self.logger.warning("WebSocket server thread did not terminate properly")
-        except Exception:
-            errorLogging()
-        finally:
-            self.th_websocket_server = None
-            self.websocket_server = None
-            self.websocket_server_alive = False
+                if self.th_websocket_server.is_alive():
+                    # タイムアウト後もスレッドが生きている場合の処理。
+                    # 以前はself.logger.warning(...)だったが、self.loggerは
+                    # LOGGER_FEATURE無効時(既定)はNoneのため、この警告経路
+                    # 自体がAttributeErrorになり本来のメッセージが記録され
+                    # ずに失われていた(バックエンドレビュー フェーズ4
+                    # 項目32)。self.loggerに依存しないprintLogに変更。
+                    printLog("WebSocket server thread did not terminate properly")
+            except Exception:
+                errorLogging()
+            finally:
+                self.th_websocket_server = None
+                self.websocket_server = None
+                self.websocket_server_alive = False
 
     def checkWebSocketServerAlive(self):
         """WebSocketサーバーの稼働状態を確認する"""

@@ -4,17 +4,20 @@
 # =================================
 
 common:
+    close_button_label: "閉じる"
     go_back_button_label: "戻る"
+    default_label: "デフォルト"
 
 common_error:
     no_device_mic: "マイクデバイスが検出されませんでした。"
     no_device_speaker: "スピーカーデバイスが検出されませんでした。"
+    copy_to_clipboard_failed: "クリップボードへのコピーに失敗しました。"
     threshold_invalid_value: "{{min}} から {{max}} までの数値で設定できます。"
     failed_download_weight_ctranslate2: "CTranslate2 モデルのダウンロードに失敗しました。"
     failed_download_weight_whisper: "Whisper モデルのダウンロードに失敗しました。"
     translation_limit: "翻訳エンジンの使用制限に達したか、一時的に利用制限がかけられています。"
-    deepl_auth_key_invalid_length: "認証キーの文字数が間違っています。"
-    deepl_auth_key_failed_authentication: "認証キーが間違っているか、API使用制限が上限に達しています。"
+    deepl_auth_key_invalid_length: "APIキーの文字数が間違っています。"
+    deepl_auth_key_failed_authentication: "APIキーが間違っているか、API使用制限が上限に達しています。"
 
     invalid_value_mic_record_timeout: "0 以上で 「{{mic_phrase_timeout_label}}」 より大きくすることはできません。"
     invalid_value_mic_phrase_timeout: "0 以上で 「{{mic_record_timeout_label}}」 より小さくすることはできません。"
@@ -24,6 +27,8 @@ common_error:
     invalid_value_speaker_phrase_timeout: "0 以上で 「{{speaker_record_timeout_label}}」 より小さくすることはできません。"
     invalid_value_speaker_max_phrase: "0 以上の数値を設定できます。"
 
+    invalid_hex_color: "有効なHEXカラーコード（例: {{brand_color_hex}}）形式で入力してください。"
+
 common_warning:
     unable_to_use_osc_query: "OSC IP Address の設定によりOSCデータの受信ができないため、以下の機能が自動的に無効になっています。"
 
@@ -31,6 +36,7 @@ main_page:
     translation: "翻訳"
     transcription_send: "マイク入力"
     transcription_receive: "聞き取り"
+    ocr: "チャット読み取り"
     foreground: "最前面固定"
 
     language_settings: "言語設定"
@@ -48,6 +54,7 @@ main_page:
         all: "全て"
         sent: "送信"
         received: "受信"
+        received_ocr: "受信 ({{ocr}})"
         system: "システム"
 
         resend_button_on_hover_desc: "長押しで送信"
@@ -63,54 +70,42 @@ main_page:
     updating: "アップデート中..."
 
 update_modal:
-    # 旧キー(他画面から引き続き参照)
-    cpu_desc: "処理デバイスとしてCPUのみを使用"
-    cuda_desc: "処理デバイスとしてCPUとNVIDIA製のGPUを選択可能"
-    cuda_compare_cpu_desc: "GPU選択時、CPUと比べて処理が高速"
-    cuda_disk_space_desc: "約{{size}}のディスク容量が必要"
-    close_modal: "閉じる"
-    download_latest_and_restart: "最新版がダウンロードされ、\nアプリは自動的に再起動します。"
-    is_latest_version_already: "すでに最新版を使用中"
-    is_current_compute_device: "現在使用中のバージョン"
-    # 新UpdateModal (旧Updaterタブと統合)
     title: "アップデート"
-    hero_update_available: "アップデートあり"
-    hero_up_to_date: "最新版"
-    hero_up_to_date_desc: "最新版を使用中です。アップデートの必要はありません。"
-    hero_custom_pending: "この設定でインストール"
-    current_prefix: "現在: "
+    summary_up_to_date_desc: "最新版を使用中です。アップデートの必要はありません。"
     channel_stable: "安定版"
-    channel_beta: "β版"
+    channel_beta: "Beta版"
     compute_mode_cpu: "CPU版"
-    compute_mode_gpu: "GPU版 (CUDA)"
-    beta_suffix: "β版"
-    latest_suffix: "最新"
-    install_latest_button: "今すぐ更新"
-    install_button: "この設定で更新"
-    close_button: "閉じる"
+    compute_mode_cuda: "GPU版 (CUDA)"
+    latest_label: "最新"
+    install_latest_button: "最新バージョンへ更新"
+    install_button: "この設定で再インストール"
     section_pick_variant: "別のバージョン・構成を選ぶ"
-    refresh_button: "再取得"
-    refresh_button_title: "最新の一覧を取得"
+    refresh_button: "更新を確認"
     channel_label: "リリースチャンネル"
-    channel_desc: "β版は新機能を先取りできますが、動作が不安定な場合があります。"
+    channel_desc: "Beta版は新機能を先取りできますが、動作が不安定な場合があります。"
     compute_mode_label: "デバイス構成"
-    compute_mode_desc: "GPU版はNVIDIA GPUで高速に動作しますが、約 5GB 大きくなります。"
+    compute_mode_desc: "GPU版はNVIDIA GPUで高速に動作しますが、約 5GB のディスク容量が必要です。"
     version_label: "インストールするバージョン"
     version_desc: "選択したチャンネルで公開されているリリースから選べます。"
     no_versions_available: "選択中のチャンネルには利用可能なバージョンがありません。"
     change_col_current: "現在"
     change_col_after: "インストール後"
     warn_downgrade: "{{from}} から {{to}} へのダウングレードになります。設定ファイルの互換性は保証されません。"
-    warn_gpu_extra_size: "GPU版は約 5GB の追加ダウンロードが必要です。"
-    warn_switch_to_beta: "β版チャンネルに切り替わります。次回以降のアップデート通知もβ版が対象になります。"
-    warn_switch_to_stable: "安定版チャンネルに切り替わります。次回以降のアップデート通知も安定版が対象になります。"
+    warn_cuda_extra_size: "GPU版は約 5GB の追加ダウンロードが必要です。"
+    warn_switch_channel: "{{channel}}チャンネルに切り替わります。次回以降のアップデート通知も{{channel}}が対象になります。"
 
 config_page:
+    search:
+        placeholder: "設定を検索..."
+        no_results: "一致する設定が見つかりませんでした"
     common:
         version: "バージョン {{version}}"
         model_download_button_label: "ダウンロード"
-        correct_auth_key_required: "正しい認証キーが必要"
-        open_auth_key_webpage: "認証キー管理ページを開く"
+        save_button_label: "保存"
+        edit_button_label: "編集"
+        correct_auth_key_required: "正しいAPIキーが必要"
+        open_auth_key_webpage: "APIキー管理ページを開く"
+        auth_key_success: "APIキーの更新が完了しました。"
         connection_check:
             button_label: "接続確認"
             checking: "確認中..."
@@ -133,9 +128,9 @@ config_page:
         transcription: "音声認識"
         others: "その他"
         hotkeys: "ホットキー"
-        plugins: "プラグイン"
         advanced_settings: "高度な設定"
         updater: "アップデート"
+        ocr: "チャット読み取り"
 
     device:
         check_volume: "音量チェック"
@@ -180,8 +175,12 @@ config_page:
             label: "UIの言語"
 
     translation:
+        section_label_ai_translation: "AI翻訳（ローカル）"
+        section_label_external_api: "外部翻訳API"
+        section_label_local_llm: "ローカルLLM・互換サーバー"
+
         ctranslate2_weight_type:
-            label: "AI翻訳 {{ctranslate2}} のモデルタイプ"
+            label: "{{ctranslate2}} のモデルタイプ"
             desc: "翻訳エンジン「{{ctranslate2}}」で翻訳する際に、使用する翻訳モデルを選択できます。"
             small: "通常モデル （{{capacity}}）"
             large: "高精度モデル （{{capacity}}）"
@@ -191,33 +190,29 @@ config_page:
         deepl_auth_key:
             label: "DeepL APIキーの登録"
             desc: "使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
-            open_auth_key_webpage: "DeepLアカウントページを開く"
-            save: "保存"
-            edit: "編集"
-            auth_key_success: "認証キーの更新が完了しました。"
 
         plamo_auth_key:
-            label: "Plamo 認証キー"
+            label: "Plamo APIキー"
         select_plamo_model:
             label: "Plamo モデルを選択"
 
         gemini_auth_key:
-            label: "Gemini 認証キー"
+            label: "Gemini APIキー"
         select_gemini_model:
             label: "Gemini モデルを選択"
 
         openai_auth_key:
-            label: "OpenAI 認証キー"
+            label: "OpenAI APIキー"
         select_openai_model:
             label: "OpenAI モデルを選択"
 
         groq_auth_key:
-            label: "Groq 認証キー"
+            label: "Groq APIキー"
         select_groq_model:
             label: "Groq モデルを選択"
 
         openrouter_auth_key:
-            label: "OpenRouter 認証キー"
+            label: "OpenRouter APIキー"
         select_openrouter_model:
             label: "OpenRouter モデルを選択"
 
@@ -231,7 +226,7 @@ config_page:
             label: "OpenAI 互換エンドポイント URL"
             desc: "公式 OpenAI 以外を指定した場合は、料金・セキュリティ・モデル互換性を自己責任で確認してください。"
         openai_compatible_auth_key:
-            label: "OpenAI 互換 認証キー"
+            label: "OpenAI 互換 APIキー"
         select_openai_compatible_model:
             label: "OpenAI 互換モデルを選択"
 
@@ -279,8 +274,6 @@ config_page:
         whisper_weight_type:
             label: "Whisperモデルのタイプ"
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
-            model_template: "{{model_name}} モデル （{{capacity}}）"
-            recommended_model_template: "{{model_name}} モデル （{{capacity}}） [推奨]"
         transcription_compute_device:
             label: "AI音声認識で使用する処理デバイス"
 
@@ -306,12 +299,19 @@ config_page:
         display_duration: "表示時間"
         fadeout_duration: "フェードアウト時間"
         common_settings: "共通設定"
+        vr_ui_beta: "VR UI（β版機能）"
         tracker: "表示するトラッカーの位置"
         hmd: "HMD"
         left_hand: "左手"
         right_hand: "右手"
         overlay_show_only_translated_messages:
             label: "翻訳後のメッセージのみ表示する"
+        vr_panel:
+            label: "VR UIを表示する"
+            desc: "VRの中に、機能のON/OFFやログ・言語・設定を操作できる手首のランチャーとウィンドウを表示します。字幕のオーバーレイとは別に使えます。"
+        reset_launcher:
+            label: "ランチャーの位置と大きさを初期に戻す"
+            desc: "VRの中でランチャーが見つからなくなったときに使います。左手の手首に、初期の位置と大きさで戻ります。"
         voice_typing_mode:
             label: "音声タイピングモード"
             desc: "文字起こしされたテキストを、アクティブな入力欄へと自動的に貼り付けます。\n※Windows標準のクリップボード機能を利用しています。"
@@ -370,6 +370,28 @@ config_page:
             desc: "開発者が「みんな使ってくれてるんだな～」ってにやにやしながら機能改善するための使用状況データを送信します。\n※会話内容など個人情報は一切送信しません。"
             aptabase_privacy_policy_label: "Aptabase プライバシーポリシー"
 
+    ocr:
+        section_title: "VRChatチャット読み取り"
+        section_desc: "画面に表示されるVRChatのチャット吹き出しを読み取り、既存の翻訳パイプラインに送ります。結果はメインのメッセージログとSteamVRオーバーレイに表示されます。VRChatのOSCチャットボックスへは送信されません。"
+        capture_target: "キャプチャ対象"
+        language: "言語"
+        performance: "パフォーマンス"
+        window_title:
+            label: "ウィンドウ名"
+            desc: "表示されているウィンドウタイトルとの部分一致（大文字小文字を区別しません）。「VRChat」というタイトルではないクライアント（改造版ランチャー等）を使用している場合はここを変更してください。"
+        source_language:
+            label: "読み取り言語"
+            desc: "キャプチャする吹き出しに書かれている言語です。「auto」は日本語・英語・中国語とラテン文字系の言語を1つのモデルで自動認識します。ハングル・キリル文字・タイ文字・アラビア文字・デーヴァナーガリーは別モデルが必要なため、その文字体系を選んでください。読み取りの実行中に変更してもそのまま切り替わります。アラビア文字は現状精度が低めです。"
+        poll_interval_ms:
+            label: "キャプチャ間隔（ミリ秒）"
+            desc: "読み取りループが新しいフレームを取得する頻度です。小さいほど反応が早くなりますが、CPU/GPU負荷が高くなります。既定値: 750。"
+        min_confidence:
+            label: "読み取り信頼度の下限"
+            desc: "この信頼度スコアを下回る単語は破棄されます。誤検出を減らすには上げ、薄い吹き出しも拾うには下げてください。既定値: 0.85。"
+        bubble_min_text_length:
+            label: "最小文字数"
+            desc: "この文字数未満の吹き出しは無視されます。既定値: 2。"
+
     updater:
         install_panel:
             section_label: "バージョン・構成の選択"
@@ -390,6 +412,10 @@ config_page:
             reinstall_button: "この設定で再インストール"
 
     hotkeys:
+        input_placeholder: "キーの組み合わせを入力"
+        disabled_notice: "※設定画面を開いている間は、キーの誤作動を防ぐためホットキー機能が一時的に無効化されます。"
+        error_in_use: "「{{action_name}}」のホットキー（{{hotkey}}）は他で使用されているため登録できません。"
+        error_failed_to_register_at_launch: "「{{action_name}}」のホットキー（{{hotkey}}）は他のアプリケーションで使用されているため利用できません。"
         toggle_vrct_visibility:
             label: "VRCTの最小化/アクティブ化の切り替え"
         toggle_translation:
@@ -398,18 +424,6 @@ config_page:
             label: "「{{transcription_send}}」 オン/オフの切り替え"
         toggle_transcription_receive:
             label: "「{{transcription_receive}}」 オン/オフの切り替え"
-
-    plugins:
-        downloaded_version: "ダウンロード済バージョン: {{downloaded_version}}"
-        latest_version: "最新バージョン: {{latest_version}}"
-        available_after_updating: "最新版にアップデート後 利用可能"
-        unavailable_downloaded: "現在利用不可 使用中VRCTバージョンとの互換性なし"
-        no_latest_info: "最新情報が取得できません"
-        using_latest_version: "最新版を使用中"
-        available_latest_version: "最新版を利用可能"
-        unavailable_latest_version: "最新版は現在利用不可"
-        available_in_latest_vrct_version: "VRCT最新版で利用可能"
-        unavailable_not_downloaded: "現在利用不可"
 
     advanced_settings:
         osc_ip_address:
@@ -453,18 +467,123 @@ config_page:
 
     notifications:
         save_success: "設定を保存しました。"
+        opened_folder: "フォルダを開きました。"
 
-plugin_notifications:
-    downloading: "プラグインをダウンロード中。"
-    downloaded_success: "プラグインのダウンロードが完了しました。"
-    downloaded_error: "プラグインのダウンロードに失敗しました。"
-
-    updating: "プラグインをアップデート中。"
-    updated_success: "プラグインのアップデートが完了しました。"
-    updated_error: "プラグインのアップデートに失敗しました。"
-
-    disabled_out_of_support: "現在のバージョンとの互換性がありません。プラグインを無効にしました。"
-    disabled_due_to_an_error: "プラグイン実行中にエラーを検知しました。プラグイン開発者に報告してください。"
-
-    is_enabled: "プラグインを有効にしました。"
-    is_disabled: "プラグインを無効にしました。"
+vr_panel:
+    window_log: "ログ"
+    window_language: "言語"
+    window_settings: "VR設定"
+    recall_log: "呼び戻す"
+    anchor_playspace: "空間"
+    anchor_left_hand: "左手"
+    anchor_right_hand: "右手"
+    anchor_head: "頭"
+    lock: "ロック"
+    locked: "ロック中"
+    launcher: "ランチャー"
+    launcher_hand: "ランチャーを付ける手"
+    launcher_hand_desc: "もう片方の手のレーザーで押します"
+    launcher_auto_hide: "手首を見たときだけ表示"
+    launcher_auto_hide_desc: "手首を顔に向けたときだけ出ます"
+    tooltip_enabled: "操作の吹き出し"
+    tooltip_enabled_desc: "ボタンを指したときに、操作名と状態を表示します"
+    locked_by_config_page: "設定を開いています。閉じると操作できます。"
+    log_opacity: "ログの不透明度"
+    mic_threshold: "マイクの入力感度"
+    speaker_threshold: "スピーカーの入力感度"
+    automatic: "自動"
+    paused_while_settings: "設定中は翻訳と文字起こしを止めています。閉じると再開します。"
+    overlay_small_log: "字幕（一行）"
+    overlay_large_log: "字幕（複数行）"
+    tooltip:
+        translate: "翻訳"
+        microphone: "マイク入力"
+        listen: "聞き取り"
+        chat_detect: "Chat検出"
+        functions_group: "機能のON/OFF"
+        windows_group: "ウィンドウ"
+        controls_group: "ログの操作"
+        config_open: "設定中"
+        busy_help: "反映が終わるまでお待ちください"
+        enable: "押すとONにします"
+        disable: "押すとOFFにします"
+        open: "表示中"
+        hidden: "非表示"
+        lost: "見失い中"
+        holding: "押し続けて 呼び戻す"
+        holding_help: "そのまま押し続けてください"
+        click_recall: "押すと呼び戻します"
+        log_help: "押すと開閉 · 長押しで呼び戻す"
+        close_view: "押すと閉じます"
+        open_view: "押すと開きます"
+        anchor: "固定先"
+        position: "位置操作"
+        current: "現在"
+        choose_anchor: "押すと固定先を変更します"
+        recall_help: "呼び戻し後は空間に固定されます"
+        unlocked: "移動可能"
+        lock_help: "押すと移動を固定します"
+        unlock_help: "押すと移動固定を解除します"
+        font: "文字サイズ"
+        smaller: "文字を小さく"
+        larger: "文字を大きく"
+        font_limit: "変更できる範囲は14〜28です"
+        font_help: "原文のサイズ · 訳文も一緒に変わります"
+        opacity_help: "押すごとに100 → 80 → 60 → 40% → 100%"
+    settings:
+        processing: "処理設定"
+        changing: "変更を反映中…"
+        changing_short: "反映中…"
+        auto_device: "自動選択が ON です。OFF にすると変更できます。"
+        fonts_unavailable: "フォント一覧を取得できません。PC の設定を確認してください。"
+        devices_unavailable: "利用できる処理デバイスがありません。PC の設定を確認してください。"
+        types_unavailable: "利用できる処理タイプがありません。デバイスを確認してください。"
+        prepare_model: "モデル未準備。PC の設定でダウンロードしてください。"
+        unavailable: "利用できません。PC の設定を確認してください。"
+        speaker_adjustments: "区切りと保持する単語数を調整"
+        ui_log: "VR UI のログウィンドウ"
+        subtitle_overlay: "字幕オーバーレイ（一行・複数行）"
+        decrease: "{{label}}を減らす"
+        increase: "{{label}}を増やす"
+        volume_check: "音量を確認"
+        collapse: "閉じる"
+        expand: "開く"
+        close: "設定を閉じて翻訳・文字起こしを再開"
+    language:
+        preset_number: "プリセット {{n}}"
+        swap: "入れ替え"
+        swap_hint: "相手の1番と"
+        swap_name: "あなたの言語と相手の1番を入れ替える"
+        range: "1〜3言語"
+        required: "必須"
+        min_reason: "相手の言語は最低1つ必要です"
+        remove: "相手の{{n}}番、{{language}}（{{country}}）を外す"
+        change_target: "相手の{{n}}番を変更"
+        add: "言語を追加"
+        add_title: "相手の言語を追加"
+        edit_your: "あなたの言語を変更"
+        all_languages: "すべての言語から選ぶ"
+        saved: "保存済み候補"
+        saved_hint: "全プリセットに保存した言語です"
+        letters_title: "言語の頭文字を選ぶ"
+        letter_title: "{{letter}} の言語"
+        selected: "選択中"
+        selected_slots: "相手 {{n}}番"
+        available: "利用できるエンジン"
+        unavailable: "利用できないエンジン"
+        unavailable_hint: "この言語や現在の設定では利用できません。必要な設定をPC側で確認できます。"
+        same_reason: "あなたと相手に同じ言語があるため、CTranslate2のみ利用できます。国が違う場合も同じです。"
+        full: "3 / 3 選択中 · 言語の変更は各行から"
+        busy_hint: "反映中はこの画面でお待ちください。"
+        success: "変更を反映しました"
+        external: "プリセット{{n}}に切替"
+        sync: "言語の設定を同期しています…"
+        error: "反映できませんでした。もう一度選んでください。"
+        same_short: "同じ言語"
+        duplicate: "重複あり"
+        selected_count: "相手の言語は{{n}} / 3枠選択中です"
+        unconfirmed: "応答を確認できません。設定の同期を待っています。"
+        settings_updated: "言語設定が変更されたため、主画面に戻りました。"
+        pc_retry: "変更を受け付けられませんでした。現在の言語設定を確認し、もう一度選んでください。"
+        sync_error: "設定を同期できません。再取得してから変更してください。"
+        retry_sync: "言語設定を再取得"

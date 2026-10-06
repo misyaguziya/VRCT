@@ -28,20 +28,10 @@
         "fs:allow-resource-read-recursive",
         "fs:allow-resource-meta-recursive",
         {
-            "identifier": "fs:scope",
-            "allow": [
-                { "path": "$RESOURCE/plugins/**" },
-                { "path": "src-tauri/target/debug/plugins/**" }
-            ]
-        },
-
-        {
             "identifier": "http:default",
             "allow": [
                 { "url": "https://api.github.com/repos/**" },
-                { "url": "https://github.com/**" },
-                { "url": "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/vrct_plugins_list.json" },
-                { "url": "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/dev_vrct_plugins_list.json" }
+                { "url": "https://github.com/**" }
             ]
         },
 

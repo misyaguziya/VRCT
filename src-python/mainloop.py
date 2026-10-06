@@ -5,9 +5,30 @@ import json
 import time
 import faulthandler
 from typing import Any, Tuple
-from threading import Thread, Event, Lock
+from threading import Thread, Event, Lock, Timer
 from queue import Queue, Empty
 import logging
+import warnings
+
+# torch を同梱しないので transformers が import 時に「PyTorch/TensorFlow/Flax が
+# ありません」という助言警告を stderr に出す。UI は stderr の非 Warning 行を
+# 致命的エラー通知にするため、トークナイザしか使わない VRCT では抑制する。
+# transformers を import するより前に設定する必要がある。
+os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
+
+# google-auth 2.42.0 以降は google/auth/transport/grpc.py の import 時に
+# 「grpcio < 1.83.0 は Post-Quantum Cryptography 非対応」という FutureWarning を
+# 出す。requirements では grpcio>=1.83.0 に更新済みなので通常は発火しないが、
+# 古い grpcio が残った開発環境向けのフォールバックとして残す。warnings.warn は
+# 既定で stderr に書かれ、フロントの StartPythonController が sidecar の stderr
+# 出力を致命的エラー通知に昇格させるため、良性の警告が「An error occurred」
+# ダイアログに化けてしまう。どの google import よりも前にフィルタを設定する。
+warnings.filterwarnings(
+    "ignore",
+    message=r"grpcio < 1\.83\.0 does not support Post-Quantum Cryptography.*",
+    category=FutureWarning,
+)
+
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
 
@@ -46,12 +67,18 @@ run_mapping = {
     "enable_translation":"/run/enable_translation",
     "enable_transcription_send":"/run/enable_transcription_send",
     "enable_transcription_receive":"/run/enable_transcription_receive",
+    "disable_transcription_send":"/set/disable/transcription_send",
+    "disable_transcription_receive":"/set/disable/transcription_receive",
+    "disable_check_mic_threshold":"/set/disable/check_mic_threshold",
+    "disable_check_speaker_threshold":"/set/disable/check_speaker_threshold",
 
     "connected_network":"/run/connected_network",
     "enable_ai_models":"/run/enable_ai_models",
 
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
+    "transcription_ocr":"/run/transcription_ocr_message",
+    "enable_ocr_capture":"/run/enable_ocr_capture",
 
     "check_mic_volume":"/run/check_mic_volume",
     "check_speaker_volume":"/run/check_speaker_volume",
@@ -83,6 +110,7 @@ run_mapping = {
     "translation_engines":"/run/translation_engines",
     "selected_your_languages":"/run/selected_your_languages",
     "selected_target_languages":"/run/selected_target_languages",
+    "selectable_language_list":"/run/selectable_language_list",
 
     "selected_translation_compute_type":"/run/selected_translation_compute_type",
     "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
@@ -103,6 +131,23 @@ run_mapping = {
     "selected_openai_compatible_model":"/run/selected_openai_compatible_model",
     "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
     "selected_ollama_model":"/run/selected_ollama_model",
+    "selectable_groq_whisper_model_list":"/run/selectable_groq_whisper_model_list",
+    "selected_groq_whisper_model":"/run/selected_groq_whisper_model",
+    "selectable_openai_whisper_model_list":"/run/selectable_openai_whisper_model_list",
+    "selected_openai_whisper_model":"/run/selected_openai_whisper_model",
+    "selectable_custom_whisper_model_list":"/run/selectable_custom_whisper_model_list",
+    "selected_custom_whisper_model":"/run/selected_custom_whisper_model",
+    "selectable_deepgram_model_list":"/run/selectable_deepgram_model_list",
+    "selected_deepgram_model":"/run/selected_deepgram_model",
+
+    "overlay_small_log_settings":"/run/overlay_small_log_settings",
+    "vr_panel_pointer":"/run/vr_panel_pointer",
+    "vr_panel_log_out_of_view":"/run/vr_panel_log_out_of_view",
+    "overlay_vr_launcher_hand":"/run/overlay_vr_launcher_hand",
+    "vr_panel_launcher_intro":"/run/vr_panel_launcher_intro",
+    "overlay_vr_panel_anchor":"/run/overlay_vr_panel_anchor",
+    "vr_panel_layout":"/run/vr_panel_layout",
+    "overlay_large_log_settings":"/run/overlay_large_log_settings",
 
     "selectable_mic_host_list":"/run/selectable_mic_host_list",
     "selectable_mic_device_list":"/run/selectable_mic_device_list",
@@ -134,6 +179,10 @@ mapping = {
     "/set/enable/transcription_receive": {"status": False, "variable":controller.setEnableTranscriptionReceive},
     "/set/disable/transcription_receive": {"status": False, "variable":controller.setDisableTranscriptionReceive},
 
+    # 翻訳と同じメイン機能。起動時は常にOFF (保存しない) なので /get/data は無い。
+    "/set/enable/ocr_capture": {"status": False, "variable":controller.setEnableOcrCapture},
+    "/set/disable/ocr_capture": {"status": False, "variable":controller.setDisableOcrCapture},
+
     "/set/enable/foreground": {"status": True, "variable":controller.setEnableForeground},
     "/set/disable/foreground": {"status": True, "variable":controller.setDisableForeground},
 
@@ -159,6 +208,36 @@ mapping = {
     "/get/data/selectable_transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
     "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
+
+    "/get/data/groq_whisper_auth_key": {"status": True, "variable":controller.getGroqWhisperAuthKey},
+    "/set/data/groq_whisper_auth_key": {"status": True, "variable":controller.setGroqWhisperAuthKey},
+    "/delete/data/groq_whisper_auth_key": {"status": True, "variable":controller.delGroqWhisperAuthKey},
+    "/get/data/selectable_groq_whisper_model_list": {"status": True, "variable":controller.getGroqWhisperModelList},
+    "/get/data/selected_groq_whisper_model": {"status": True, "variable":controller.getGroqWhisperModel},
+    "/set/data/selected_groq_whisper_model": {"status": True, "variable":controller.setGroqWhisperModel},
+
+    "/get/data/openai_whisper_auth_key": {"status": True, "variable":controller.getOpenAIWhisperAuthKey},
+    "/set/data/openai_whisper_auth_key": {"status": True, "variable":controller.setOpenAIWhisperAuthKey},
+    "/delete/data/openai_whisper_auth_key": {"status": True, "variable":controller.delOpenAIWhisperAuthKey},
+    "/get/data/selectable_openai_whisper_model_list": {"status": True, "variable":controller.getOpenAIWhisperModelList},
+    "/get/data/selected_openai_whisper_model": {"status": True, "variable":controller.getOpenAIWhisperModel},
+    "/set/data/selected_openai_whisper_model": {"status": True, "variable":controller.setOpenAIWhisperModel},
+
+    "/get/data/custom_whisper_auth_key": {"status": True, "variable":controller.getCustomWhisperAuthKey},
+    "/set/data/custom_whisper_auth_key": {"status": True, "variable":controller.setCustomWhisperAuthKey},
+    "/delete/data/custom_whisper_auth_key": {"status": True, "variable":controller.delCustomWhisperAuthKey},
+    "/get/data/custom_whisper_url": {"status": True, "variable":controller.getCustomWhisperURL},
+    "/set/data/custom_whisper_url": {"status": True, "variable":controller.setCustomWhisperURL},
+    "/get/data/selectable_custom_whisper_model_list": {"status": True, "variable":controller.getCustomWhisperModelList},
+    "/get/data/selected_custom_whisper_model": {"status": True, "variable":controller.getCustomWhisperModel},
+    "/set/data/selected_custom_whisper_model": {"status": True, "variable":controller.setCustomWhisperModel},
+
+    "/get/data/deepgram_auth_key": {"status": True, "variable":controller.getDeepgramAuthKey},
+    "/set/data/deepgram_auth_key": {"status": True, "variable":controller.setDeepgramAuthKey},
+    "/delete/data/deepgram_auth_key": {"status": True, "variable":controller.delDeepgramAuthKey},
+    "/get/data/selectable_deepgram_model_list": {"status": True, "variable":controller.getDeepgramModelList},
+    "/get/data/selected_deepgram_model": {"status": True, "variable":controller.getDeepgramModel},
+    "/set/data/selected_deepgram_model": {"status": True, "variable":controller.setDeepgramModel},
 
     "/get/data/selectable_release_channels": {"status": True, "variable":controller.getSelectableReleaseChannels},
     "/get/data/release_channel": {"status": True, "variable":controller.getSelectedReleaseChannel},
@@ -274,7 +353,7 @@ mapping = {
 
     "/get/data/connected_lmstudio": {"status": True, "variable":controller.getTranslatorLMStudioConnection},
     "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
-    "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
+    "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLMStudioModelList},
     "/get/data/selected_lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
     "/set/data/selected_lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
     "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
@@ -341,9 +420,6 @@ mapping = {
     "/get/data/hotkeys": {"status": True, "variable":controller.getHotkeys},
     "/set/data/hotkeys": {"status": True, "variable":controller.setHotkeys},
 
-    "/get/data/plugins_status": {"status": True, "variable":controller.getPluginsStatus},
-    "/set/data/plugins_status": {"status": True, "variable":controller.setPluginsStatus},
-
     "/get/data/mic_avg_logprob": {"status": True, "variable":controller.getMicAvgLogprob},
     "/set/data/mic_avg_logprob": {"status": True, "variable":controller.setMicAvgLogprob},
 
@@ -406,9 +482,42 @@ mapping = {
     "/set/disable/overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
 
     "/get/data/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
+    # VR UIのウィンドウの開閉 (VR画面からメイン経由で届く)
+    "/run/vr_panel_tooltip": {"status": False, "variable":controller.setVrPanelTooltip},
+    "/run/vr_panel_windows": {"status": False, "variable":controller.setVrPanelWindows},
+    # 見失ったVR UIのログウィンドウを目の前へ呼び戻す (VR画面からメイン経由で届く)
+    "/run/vr_panel_recall_log": {"status": False, "variable":controller.recallVrPanelLog},
+    "/run/vr_launcher_reset": {"status": False, "variable":controller.resetVrLauncher},
+    # VR UIのログウィンドウの不透明度 (VR設定ウィンドウから)
+    "/get/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.getOverlayVrPanelOpacity},
+    # VR UIのログウィンドウの操作バー (固定先・ロック)
+    "/get/data/overlay_vr_panel_anchor": {"status": True, "variable":controller.getOverlayVrPanelAnchor},
+    # VR画面の並び (ログの大きさで変わる。変わったら /run/vr_panel_layout で通知)
+    "/get/data/vr_panel_layout": {"status": True, "variable":controller.getVrPanelLayout},
+    # 初期化中にも受け付ける (起動時の設定を受けて描き直した知らせを取りこぼすと、ログの表示が切り替わらない)
+    "/run/vr_panel_layout_rendered": {"status": True, "variable":controller.setVrPanelLayoutRendered},
+    "/set/data/overlay_vr_panel_anchor": {"status": True, "variable":controller.setOverlayVrPanelAnchor},
+    "/get/data/overlay_vr_panel_locked": {"status": True, "variable":controller.getOverlayVrPanelLocked},
+    "/get/data/overlay_vr_panel_font_size": {"status": True, "variable":controller.getOverlayVrPanelFontSize},
+    # VR UIのランチャー (付ける手・手首を見たときだけ出す)
+    "/get/data/overlay_vr_launcher_hand": {"status": True, "variable":controller.getOverlayVrLauncherHand},
+    "/set/data/overlay_vr_launcher_hand": {"status": True, "variable":controller.setOverlayVrLauncherHand},
+    "/get/data/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.getOverlayVrLauncherAutoHide},
+    "/set/enable/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.setEnableOverlayVrLauncherAutoHide},
+    "/set/disable/overlay_vr_launcher_auto_hide": {"status": True, "variable":controller.setDisableOverlayVrLauncherAutoHide},
+    "/get/data/overlay_vr_tooltip": {"status": True, "variable":controller.getOverlayVrTooltip},
+    "/set/enable/overlay_vr_tooltip": {"status": True, "variable":controller.setEnableOverlayVrTooltip},
+    "/set/disable/overlay_vr_tooltip": {"status": True, "variable":controller.setDisableOverlayVrTooltip},
+    "/set/data/overlay_vr_panel_font_size": {"status": True, "variable":controller.setOverlayVrPanelFontSize},
+    "/set/enable/overlay_vr_panel_locked": {"status": True, "variable":controller.setEnableOverlayVrPanelLocked},
+    "/set/disable/overlay_vr_panel_locked": {"status": True, "variable":controller.setDisableOverlayVrPanelLocked},
+    "/set/data/overlay_vr_panel_opacity": {"status": True, "variable":controller.setOverlayVrPanelOpacity},
     "/set/data/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
 
     "/get/data/overlay_large_log": {"status": True, "variable":controller.getOverlayLargeLog},
+    "/get/data/overlay_vr_panel": {"status": True, "variable":controller.getOverlayVrPanel},
+    "/set/enable/overlay_vr_panel": {"status": True, "variable":controller.setEnableOverlayVrPanel},
+    "/set/disable/overlay_vr_panel": {"status": True, "variable":controller.setDisableOverlayVrPanel},
     "/set/enable/overlay_large_log": {"status": True, "variable":controller.setEnableOverlayLargeLog},
     "/set/disable/overlay_large_log": {"status": True, "variable":controller.setDisableOverlayLargeLog},
 
@@ -487,6 +596,19 @@ mapping = {
     "/set/enable/clipboard": {"status": True, "variable":controller.setEnableClipboard},
     "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
 
+    # VRChat chat-bubble OCR settings (ON/OFF is a main function, see Main Window)
+    "/get/data/selectable_ocr_source_languages": {"status": True, "variable":controller.getSelectableOcrSourceLanguages},
+    "/get/data/ocr_source_language": {"status": True, "variable":controller.getOcrSourceLanguage},
+    "/set/data/ocr_source_language": {"status": True, "variable":controller.setOcrSourceLanguage},
+    "/get/data/ocr_window_title": {"status": True, "variable":controller.getOcrWindowTitle},
+    "/set/data/ocr_window_title": {"status": True, "variable":controller.setOcrWindowTitle},
+    "/get/data/ocr_poll_interval_ms": {"status": True, "variable":controller.getOcrPollIntervalMs},
+    "/set/data/ocr_poll_interval_ms": {"status": True, "variable":controller.setOcrPollIntervalMs},
+    "/get/data/ocr_min_confidence": {"status": True, "variable":controller.getOcrMinConfidence},
+    "/set/data/ocr_min_confidence": {"status": True, "variable":controller.setOcrMinConfidence},
+    "/get/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.getOcrBubbleMinTextLength},
+    "/set/data/ocr_bubble_min_text_length": {"status": True, "variable":controller.setOcrBubbleMinTextLength},
+
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
     "/set/data/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
@@ -505,7 +627,21 @@ mapping = {
     # "/run/stop_watchdog": {"status": True, "variable":controller.stopWatchdog},
 }
 
-init_mapping = {key:value for key, value in mapping.items() if key.startswith("/get/data/")}
+# 起動時の一括取得 (updateConfigSettings) から除外するエンドポイント。
+# init_mapping を舐め終えてから /run/initialization_complete を送る = UIの
+# ローディング解除がここの合計時間で決まるため、ネットワークI/Oを伴うものを
+# 入れてはいけない。available_releases は GitHub API への同期リクエスト
+# (timeout (10, 60)) で、起動を最大70秒遅らせうる。UI側は Updater.jsx の
+# マウント時に自分で /get/data/available_releases を叩くので、ここから
+# 外しても取得経路は失われない。
+_INIT_MAPPING_EXCLUDED_ENDPOINTS = frozenset({
+    "/get/data/available_releases",
+})
+
+init_mapping = {
+    key: value for key, value in mapping.items()
+    if key.startswith("/get/data/") and key not in _INIT_MAPPING_EXCLUDED_ENDPOINTS
+}
 controller.setInitMapping(init_mapping)
 
 DEFAULT_WORKER_COUNT = 3  # 必要なら増やす
@@ -522,6 +658,17 @@ _LOCK_BUSY_MAX_RETRIES = 400  # 0.05s × 400 ≈ 20s (同一ロックの処理�
 _ENDPOINT_LOCKED_RETRY_INTERVAL_SEC = 0.1
 _ENDPOINT_LOCKED_MAX_RETRIES = 300  # 0.1s × 300 ≈ 30s (初期化完了を待つ上限)
 
+# watchdog タイムアウト (フロントエンドからの feed 途絶) 検知後、
+# グレースフルな Main.stop() が完了しなくても確実にプロセスを終了させる
+# までの猶予秒数 (フェーズ3項目19)。Main.stop() 自体は理論上
+# 最大80秒近くかかりうる (mic/speaker_lifecycle_worker の並行stop()が
+# 最大20秒 [フェーズ3項目21] + mic/speaker 停止×2 + energy 停止×2 が
+# それぞれ最大15秒の join タイムアウトを持つため) が、フリーズ検知後は
+# グレースフルさより「必ず終わる」ことを優先する。この見積もりを超える
+# 場合でもプロセスは30秒で確実に終了するが、config保存やtelemetry送信
+# が間に合わない可能性がある。
+_WATCHDOG_GRACE_PERIOD_SEC = 30
+
 class Main:
     def __init__(self, controller_instance: Controller, mapping_data: dict, worker_count: int = DEFAULT_WORKER_COUNT) -> None:
         self.queue: "Queue[Tuple[str, Any, int]]" = Queue()
@@ -530,6 +677,10 @@ class Main:
         self.mapping = mapping_data
         self._threads: list[Thread] = []
         self._worker_count = worker_count
+
+        # watchdog エスカレーション (項目19) の二重発火防止用。
+        self._watchdog_escalation_lock: Lock = Lock()
+        self._watchdog_escalation_started: bool = False
 
         # エンドポイントごとの排他制御用 Lock を作成
         # enable/disable ペアは同じロックキーに正規化する
@@ -586,6 +737,18 @@ class Main:
         self._threads.append(th_receiver)
 
     def _call_handler(self, endpoint: str, data: Any = None) -> tuple:
+        # 2026-08-27のバックエンドレビュー(フェーズ4項目29)で撤去した
+        # `time.sleep(0.2)`がここにあった。エンドポイントロックを保持した
+        # ままの待機で、ワーカー3本×5req/s=最大15req/sにスループットを
+        # 固定していた(起動時の`updateConfigSettings()`が近い100個の
+        # `/get/data/*`を舐めるため無視できない遅延だった)。コメントは
+        # 「処理の安定化のために少し待機」とあるだけで具体的な根拠は
+        # 無く、レビューア2名から「本来直すべき競合を隠している疑いが
+        # 強い」と指摘されていた。実際、当時無ロックだったOSCミュート同期
+        # (フェーズ1項目6)・Auto Select(項目7)・CTranslate2
+        # translator/tokenizer(項目10)はいずれもこの待機がたまたま時間差
+        # で競合を回避していた可能性があったが、フェーズ1〜3で全て専用の
+        # ロックが入ったため、この待機は撤去して問題ないと判断した。
         result = None
         status = 500
         handler = self.mapping.get(endpoint)
@@ -600,7 +763,6 @@ class Main:
                 response = handler["variable"](data)
                 status = response.get("status", 500)
                 result = response.get("result", None)
-                time.sleep(0.2)
             except Exception:
                 errorLogging()
                 result = "Internal error"
@@ -695,6 +857,40 @@ class Main:
             remaining = max(0.0, wait - (time.time() - start))
             th.join(timeout=remaining)
 
+    def escalateShutdown(self) -> None:
+        """watchdog タイムアウト (フロントエンドからの feed 途絶) 用の
+        コールバック (フェーズ3項目19)。
+
+        `stop()`(→ `controller.shutdown()`)がロック等で永久にブロック
+        し続けても、`_WATCHDOG_GRACE_PERIOD_SEC` 秒後には必ずプロセスを
+        終了させる。ハードデッドライン用の `Timer` は他のロックに一切
+        触れないため、グレースフルな停止処理が何に詰まっていても影響
+        されず、確実に発火する。
+
+        watchdog のバックグラウンドスレッドは feed が来ない限りこの
+        コールバックを interval (既定20秒) ごとに呼び続けるため、
+        二重に停止処理・タイマーを積み上げないよう一度だけ実行する。
+        """
+        with self._watchdog_escalation_lock:
+            if self._watchdog_escalation_started:
+                return
+            self._watchdog_escalation_started = True
+
+        hard_deadline = Timer(_WATCHDOG_GRACE_PERIOD_SEC, os._exit, args=(1,))
+        hard_deadline.daemon = True
+        hard_deadline.start()
+
+        def _gracefulShutdownThenExit() -> None:
+            try:
+                self.stop()
+            except Exception:
+                errorLogging()
+            finally:
+                hard_deadline.cancel()
+                os._exit(0)
+
+        Thread(target=_gracefulShutdownThenExit, name="WatchdogEscalatedShutdown", daemon=True).start()
+
 # 外部から参照可能なインスタンスを提供
 main_instance = Main(controller_instance=controller, mapping_data=mapping)
 
@@ -702,7 +898,7 @@ if __name__ == "__main__":
     main_instance.startReceiver()
     main_instance.startHandler()
 
-    main_instance.controller.setWatchdogCallback(main_instance.stop)
+    main_instance.controller.setWatchdogCallback(main_instance.escalateShutdown)
     main_instance.controller.init()
 
     # mappingのすべてのstatusをTrueにする

@@ -8,6 +8,7 @@ import {
     RadioButtonContainer,
     SwitchBoxContainer,
     CheckboxContainer,
+    ActionButtonContainer,
 } from "../_templates/Templates";
 
 import {
@@ -19,7 +20,10 @@ import { ResetButton } from "@common_components";
 import {
     useVr,
 } from "@logics_configs";
+import { useStdoutToPython } from "@useStdoutToPython";
 
+import RedoSvg from "@images/redo.svg?react";
+import CheckMarkSvg from "@images/check_mark.svg?react";
 import SquareSvg from "@images/square.svg?react";
 import TriangleSvg from "@images/triangle.svg?react";
 import { randomIntMinMax } from "@utils";
@@ -80,6 +84,7 @@ export const Vr = () => {
                 )}
             </div>
             <CommonSettingsContainer />
+            <VrUiBetaContainer />
             <button
                 className={styles.restore_default_settings_button}
                 onClick={restoreDefaultSettings}
@@ -546,6 +551,37 @@ const CommonSettingsContainer = () => {
                 desc={t("config_page.vr.voice_typing_mode.desc")}
                 variable={currentVoiceTypingMode}
                 toggleFunction={toggleVoiceTypingMode}
+            />
+        </div>
+    );
+};
+
+
+// 手首のランチャーとウィンドウ (β版機能)。字幕のオーバーレイの設定とは別にまとめる
+const VrUiBetaContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentIsEnabledOverlayVrPanel,
+        toggleIsEnabledOverlayVrPanel,
+    } = useVr();
+    const { asyncStdoutToPython } = useStdoutToPython();
+
+    return (
+        <div className={styles.common_container}>
+            <SectionLabelComponent label={t("config_page.vr.vr_ui_beta")} />
+            <CheckboxContainer
+                label={t("config_page.vr.vr_panel.label")}
+                desc={t("config_page.vr.vr_panel.desc")}
+                variable={currentIsEnabledOverlayVrPanel}
+                toggleFunction={toggleIsEnabledOverlayVrPanel}
+            />
+            <ActionButtonContainer
+                label={t("config_page.vr.reset_launcher.label")}
+                desc={t("config_page.vr.reset_launcher.desc")}
+                IconComponent={RedoSvg}
+                ClickedIconComponent={CheckMarkSvg}
+                clicked_duration={1000}
+                onclickFunction={() => asyncStdoutToPython("/run/vr_launcher_reset")}
             />
         </div>
     );

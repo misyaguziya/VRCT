@@ -374,7 +374,7 @@ config.saveConfig("ENABLE_TRANSLATION", True, immediate_save=True)
 
 ### オプション依存関係
 - `device_manager`: デバイス情報取得
-- `torch`: CUDA計算デバイス情報
+- `utils.getComputeDeviceList`: CUDA計算デバイス情報 (`COMPUTE_MODE` もこの結果から導出)
 - 各種モデルモジュール: 言語・エンジン情報
 
 ## エラーハンドリング

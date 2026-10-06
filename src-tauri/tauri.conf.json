@@ -21,7 +21,8 @@
                 "minHeight": 200,
                 "transparent": true,
                 "decorations": false,
-                "shadow": false
+                "shadow": false,
+                "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
             }
         ],
         "security": {
@@ -50,8 +51,7 @@
             "bin/VRCT-sidecar"
         ],
         "resources": {
-            "bin/_internal": "_internal",
-            "plugins": "plugins"
+            "bin/_internal": "_internal"
         },
         "windows": {
             "nsis": {

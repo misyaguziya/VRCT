@@ -359,19 +359,32 @@ def getOverlaySmallLog(*args, **kwargs) -> dict:
 @staticmethod
 def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
     if config.OVERLAY_SMALL_LOG is False:
-        if config.OVERLAY_LARGE_LOG is False:
-            model.startOverlay()  # 副作用: オーバーレイシステムを起動
         config.OVERLAY_SMALL_LOG = True
+        Controller.syncOverlayRunning()  # 副作用: 必要ならオーバーレイシステムを起動
     return {"status": 200, "result": config.OVERLAY_SMALL_LOG}
 
 @staticmethod
 def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
     if config.OVERLAY_SMALL_LOG is True:
         model.clearOverlayImageSmallLog()
-        if config.OVERLAY_LARGE_LOG is False:
-            model.shutdownOverlay()  # 副作用: オーバーレイシステムを停止
         config.OVERLAY_SMALL_LOG = False
+        Controller.syncOverlayRunning()  # 副作用: 全部OFFならオーバーレイシステムを停止
     return {"status": 200, "result": config.OVERLAY_SMALL_LOG}
+```
+
+オーバーレイシステムは、字幕 (小ログ `OVERLAY_SMALL_LOG` / 大ログ `OVERLAY_LARGE_LOG`) と
+VR UI (`OVERLAY_VR_PANEL`) のどれかがONの間だけ動く。起動・停止の判断は
+`syncOverlayRunning()` の1か所にまとめており、各トグルは設定を書いてからこれを呼ぶ。
+VR UI がOFFの間は、オーバーレイが動いていてもランチャーと各ウィンドウを隠し、撮影もしない。
+
+```python
+@staticmethod
+def syncOverlayRunning() -> None:
+    model.setVrPanelEnabled(config.OVERLAY_VR_PANEL)
+    if config.OVERLAY_SMALL_LOG or config.OVERLAY_LARGE_LOG or config.OVERLAY_VR_PANEL:
+        model.startOverlay()
+    else:
+        model.shutdownOverlay()
 ```
 
 #### パターン3: バリデーション付き設定
@@ -1048,8 +1061,7 @@ if config.AUTO_SPEAKER_SELECT:
 
 **9. オーバーレイと WebSocket の起動**
 ```python
-if config.OVERLAY_SMALL_LOG or config.OVERLAY_LARGE_LOG:
-    model.startOverlay()
+self.syncOverlayRunning()  # 字幕 / VR UI のどれかがONならオーバーレイを起動
 
 if config.WEBSOCKET_SERVER:
     if isAvailableWebSocketServer(...):

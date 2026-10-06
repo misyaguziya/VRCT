@@ -733,3 +733,30 @@ transcription_lang = {
     #     },
     # },
 }
+
+# Whisper系のAPIエンジン (Groq_Whisper/OpenAI_Whisper/Custom_Whisper) は、
+# ローカルの "Whisper" (faster-whisper/CTranslate2) と全く同じ ISO 639-1
+# 言語コード規約 (ロケール非依存の "en"/"ja" 等) を使う。ホストが違う
+# だけでモデル自体は同じ Whisper なので、既存の "Whisper" エントリを
+# 手作業で複製する代わりにここで機械的にコピーする
+# (700行超のテーブルを4倍に手打ちすると更新漏れの温床になるため)。
+_WHISPER_API_ENGINES = ("Groq_Whisper", "OpenAI_Whisper", "Custom_Whisper")
+
+for _country_map in transcription_lang.values():
+    for _codes in _country_map.values():
+        if "Whisper" in _codes:
+            for _engine in _WHISPER_API_ENGINES:
+                _codes[_engine] = _codes["Whisper"]
+
+# Deepgram は独自の対応言語・言語コード体系を持ち、Whisper系のコードを
+# そのまま流用すると誤ったコードを送りかねない。正確な対応表を用意する
+# コストに見合わないため、DeepgramProvider は v1 では常に
+# detect_language=true (自動検出) を使い、この値は実際には参照しない。
+# 「Deepgram」を選択可能エンジンとして SELECTABLE_TRANSCRIPTION_ENGINE_LIST
+# (transcription_lang から機械的に導出される) に出すためだけにキーを
+# 用意しており、値は将来 force_language に対応する際の叩き台として
+# "Whisper" のコードを仮置きしている。
+for _country_map in transcription_lang.values():
+    for _codes in _country_map.values():
+        if "Whisper" in _codes:
+            _codes["Deepgram"] = _codes["Whisper"]

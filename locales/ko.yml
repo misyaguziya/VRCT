@@ -4,17 +4,20 @@
 # =================================
 
 common:
+    close_button_label: "닫기"
     go_back_button_label: "돌아가기"
+    default_label: "기본값"
 
 common_error:
     no_device_mic: "마이크 디바이스를 찾지 못했습니다."
     no_device_speaker: "스피커 디바이스를 찾지 못했습니다."
+    copy_to_clipboard_failed: "클립보드에 복사하지 못했습니다."
     threshold_invalid_value: "{{min}}부터 {{max}}까지의 숫자로 설정할 수 있습니다."
     failed_download_weight_ctranslate2: "CTranslate2 모델 다운로드에 실패했습니다."
     failed_download_weight_whisper: "Whisper 모델 다운로드에 실패했습니다."
     translation_limit: "번역 엔진 사용 제한에 도달했거나 일시적으로 이용 제한이 걸렸습니다."
-    deepl_auth_key_invalid_length: "DeepL 인증 키의 문자 수가 잘못되었습니다."
-    deepl_auth_key_failed_authentication: "인증키가 잘못되었거나 API 사용 제한이 상한에 도달했습니다."
+    deepl_auth_key_invalid_length: "DeepL API 키의 문자 수가 잘못되었습니다."
+    deepl_auth_key_failed_authentication: "API 키가 잘못되었거나 API 사용 제한이 상한에 도달했습니다."
 
     invalid_value_mic_record_timeout: "0 이상에서 '{{mic_phrase_timeout_label}}'보다 클 수 없습니다."
     invalid_value_mic_phrase_timeout: "0 이상에서 '{{mic_record_timeout_label}}'보다 작을 수 없습니다."
@@ -24,6 +27,8 @@ common_error:
     invalid_value_speaker_phrase_timeout: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
     invalid_value_speaker_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
 
+    invalid_hex_color: "유효한 HEX 색상 코드(예: {{brand_color_hex}}) 형식으로 입력해 주세요."
+
 common_warning:
     unable_to_use_osc_query: "OSC IP 주소 설정으로 인해 OSC 데이터 수신이 불가능하므로, 아래 기능이 자동으로 비활성화되었습니다."
 
@@ -31,6 +36,7 @@ main_page:
     translation: "번역"
     transcription_send: "음성인식 (마이크)"
     transcription_receive: "음성인식 (스피커)"
+    ocr: "채팅 읽기"
     foreground: "항상 위로"
 
     language_settings: "언어 설정"
@@ -48,6 +54,7 @@ main_page:
         all: "전체"
         sent: "전송"
         received: "수신"
+        received_ocr: "수신 ({{ocr}})"
         system: "시스템"
 
         resend_button_on_hover_desc: "길게 눌러서 보내기"
@@ -63,52 +70,42 @@ main_page:
     updating: "업데이트 중..."
 
 update_modal:
-    cpu_desc: "처리 장치로 CPU만을 사용합니다."
-    cuda_desc: "처리 장치로 CPU와 NVIDIA GPU를 선택할 수 있습니다."
-    cuda_compare_cpu_desc: "GPU 선택 시, CPU에 비해 처리가 빠릅니다."
-    cuda_disk_space_desc: "약 {{size}}의 디스크 용량이 필요합니다."
-    close_modal: "닫기"
-    download_latest_and_restart: "최신 버전이 다운로드되면 앱이 자동으로 재시작됩니다."
-    is_latest_version_already: "이미 최신 버전을 사용 중입니다."
-    is_current_compute_device: "현재 사용 중인 버전"
     title: "업데이트"
-    hero_update_available: "업데이트 있음"
-    hero_up_to_date: "최신 버전"
-    hero_up_to_date_desc: "최신 버전을 사용 중입니다. 업데이트가 필요하지 않습니다."
-    hero_custom_pending: "이 설정으로 설치"
-    current_prefix: "현재: "
+    summary_up_to_date_desc: "최신 버전을 사용 중입니다. 업데이트가 필요하지 않습니다."
     channel_stable: "정식판"
     channel_beta: "베타판"
     compute_mode_cpu: "CPU 버전"
-    compute_mode_gpu: "GPU 버전 (CUDA)"
-    beta_suffix: "베타"
-    latest_suffix: "최신"
-    install_latest_button: "지금 업데이트"
-    install_button: "이 설정으로 업데이트"
-    close_button: "닫기"
+    compute_mode_cuda: "GPU 버전 (CUDA)"
+    latest_label: "최신"
+    install_latest_button: "최신 버전으로 업데이트"
+    install_button: "이 설정으로 재설치"
     section_pick_variant: "다른 버전 또는 구성 선택"
-    refresh_button: "새로 고침"
-    refresh_button_title: "최신 목록 가져오기"
+    refresh_button: "업데이트 확인"
     channel_label: "릴리스 채널"
     channel_desc: "베타판은 새로운 기능을 먼저 사용할 수 있지만 불안정할 수 있습니다."
     compute_mode_label: "장치 구성"
-    compute_mode_desc: "GPU 버전은 NVIDIA GPU에서 빠르게 동작하지만 약 5GB 더 커집니다."
+    compute_mode_desc: "GPU 버전은 NVIDIA GPU에서 빠르게 동작하지만 약 5GB의 디스크 공간이 필요합니다."
     version_label: "설치할 버전"
     version_desc: "선택한 채널에 공개된 릴리스 중에서 선택할 수 있습니다."
     no_versions_available: "선택한 채널에서 사용할 수 있는 버전이 없습니다."
     change_col_current: "현재"
     change_col_after: "설치 후"
     warn_downgrade: "{{from}}에서 {{to}}로의 다운그레이드입니다. 설정 파일의 호환성은 보장되지 않습니다."
-    warn_gpu_extra_size: "GPU 버전은 약 5GB의 추가 다운로드가 필요합니다."
-    warn_switch_to_beta: "베타 채널로 전환됩니다. 이후 업데이트 알림도 베타판을 기준으로 합니다."
-    warn_switch_to_stable: "정식 채널로 전환됩니다. 이후 업데이트 알림도 정식판을 기준으로 합니다."
+    warn_cuda_extra_size: "GPU 버전은 약 5GB의 추가 다운로드가 필요합니다."
+    warn_switch_channel: "{{channel}} 채널로 전환됩니다. 이후 업데이트 알림도 {{channel}}을 기준으로 합니다."
 
 config_page:
+    search:
+        placeholder: "설정 검색..."
+        no_results: "일치하는 설정이 없습니다"
     common:
         version: "버전 {{version}}"
         model_download_button_label: "다운로드"
-        correct_auth_key_required:
-        open_auth_key_webpage:
+        save_button_label: "저장"
+        edit_button_label: "편집"
+        correct_auth_key_required: "올바른 API 키 필요"
+        open_auth_key_webpage: "API 키 관리 페이지 열기"
+        auth_key_success: "API 키 갱신이 완료되었습니다."
         connection_check:
             button_label:
             checking:
@@ -131,9 +128,9 @@ config_page:
         transcription: "음성인식"
         others: "기타"
         hotkeys: "단축키"
-        plugins: "플러그인"
         advanced_settings: "고급 설정"
         updater: "업데이트"
+        ocr: "채팅 읽기"
 
     device:
         check_volume: "음량 확인"
@@ -178,6 +175,10 @@ config_page:
             label: "UI 언어"
 
     translation:
+        section_label_ai_translation: "AI 번역 (로컬)"
+        section_label_external_api: "외부 번역 API"
+        section_label_local_llm: "로컬 LLM / 호환 서버"
+
         ctranslate2_weight_type:
             label: "번역 모델"
             desc: "오프라인 번역 시의 번역 모델을 변경합니다."
@@ -187,12 +188,8 @@ config_page:
             label: "AI 번역 처리 장치"
 
         deepl_auth_key:
-            label: "DeepL 인증키"
+            label: "DeepL API 키"
             desc: "사용시 메인화면에 있는 {{translator}}를 DeepL_API로 변경해 주세요.\n지원하지 않는 언어도 있습니다."
-            open_auth_key_webpage: "DeepL 계정 페이지 열기"
-            save: "저장"
-            edit: "편집"
-            auth_key_success: "인증키 갱신이 완료되었습니다."
 
         plamo_auth_key:
             label:
@@ -271,8 +268,6 @@ config_page:
         whisper_weight_type:
             label: "Whisper 모델 타입"
             desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. * 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
-            model_template: "{{model_name}} 모델 ({{capacity}})"
-            recommended_model_template: "{{model_name}} 모델 ({{capacity}}) (권장)"
         transcription_compute_device:
             label:
 
@@ -298,12 +293,19 @@ config_page:
         display_duration: "표시 시간"
         fadeout_duration: "페이드 아웃 시간"
         common_settings: "공통 설정"
+        vr_ui_beta: "VR UI (베타)"
         tracker: "표시할 트래커의 위치"
         hmd: "HMD"
         left_hand: "왼손"
         right_hand: "오른손"
         overlay_show_only_translated_messages:
             label: "번역된 메시지만 표시"
+        vr_panel:
+            label: "VR UI 표시"
+            desc: "VR 안에 기능 켜기/끄기, 로그, 언어, 설정을 조작할 수 있는 손목 런처와 창을 표시합니다. 자막 오버레이와 별도로 사용할 수 있습니다."
+        reset_launcher:
+            label: "런처 위치와 크기 초기화"
+            desc: "VR에서 런처를 찾을 수 없을 때 사용하세요. 왼쪽 손목의 기본 위치와 크기로 돌아옵니다."
         voice_typing_mode:
             label:
             desc:
@@ -362,6 +364,28 @@ config_page:
             desc:
             aptabase_privacy_policy_label:
 
+    ocr:
+        section_title: "VRChat 채팅 읽기"
+        section_desc: "화면에 표시되는 VRChat 채팅 말풍선을 읽어 기존 번역 파이프라인으로 전달합니다. 결과는 메인 메시지 로그와 SteamVR 오버레이에 표시됩니다. VRChat의 OSC 채팅박스로는 전송되지 않습니다."
+        capture_target: "캡처 대상"
+        language: "언어"
+        performance: "성능"
+        window_title:
+            label: "창 이름"
+            desc: "표시되는 창 제목과의 부분 일치(대소문자 구분 없음)입니다. 창 제목이 'VRChat'이 아닌 클라이언트(수정된 런처 등)를 사용하는 경우 이 값을 변경하세요."
+        source_language:
+            label: "읽기 언어"
+            desc: "캡처된 말풍선의 언어입니다. 'auto'는 일본어·영어·중국어와 라틴 문자 계열 언어를 하나의 모델로 자동 인식합니다. 한글·키릴 문자·태국 문자·아랍 문자·데바나가리는 별도 모델이 필요하므로 해당 문자 체계를 선택하세요. OCR 실행 중에 변경해도 바로 전환됩니다. 아랍 문자는 현재 정확도가 낮습니다."
+        poll_interval_ms:
+            label: "캡처 간격 (밀리초)"
+            desc: "OCR 루프가 새 프レ임을 가져오는 빈도입니다. 값이 작을수록 반응은 빨라지지만 CPU/GPU 부하가 커집니다. 기본값: 750."
+        min_confidence:
+            label: "최소 신뢰도"
+            desc: "이 OCR 신뢰도 점수보다 낮은 단어는 무시됩니다. 오탐지를 줄이려면 값을 높이고, 흐릿한 말풍선까지 잡으려면 값을 낮추세요. 기본값: 0.85. PP-OCR은 잘못 읽었을 때도 높은 점수를 반환하므로, EasyOCR 시절의 0.55는 사실상 필터가 되지 않습니다."
+        bubble_min_text_length:
+            label: "최소 텍스트 길이"
+            desc: "이 글자 수보다 짧은 말풍선은 무시됩니다. 기본값: 2."
+
     updater:
         install_panel:
             section_label:
@@ -382,6 +406,10 @@ config_page:
             reinstall_button:
 
     hotkeys:
+        input_placeholder: "키 조합을 입력하세요"
+        disabled_notice: "※설정 화면이 열려 있는 동안에는 오작동을 방지하기 위해 단축키 기능이 일시적으로 비활성화됩니다."
+        error_in_use: "\"{{action_name}}\" 단축키({{hotkey}})가 이미 다른 곳에서 사용 중이므로 등록할 수 없습니다."
+        error_failed_to_register_at_launch: "\"{{action_name}}\" 단축키({{hotkey}})가 다른 애플리케이션에서 사용 중이므로 사용할 수 없습니다."
         toggle_vrct_visibility:
             label: "VRCT 최소화/활성화 전환"
         toggle_translation:
@@ -390,18 +418,6 @@ config_page:
             label: "'{{transcription_send}}' 켜기/끄기 전환"
         toggle_transcription_receive:
             label: "'{{transcription_receive}}' 켜기/끄기 전환"
-
-    plugins:
-        downloaded_version: "다운로드된 버전: {{downloaded_version}}"
-        latest_version: "최신 버전: {{latest_version}}"
-        available_after_updating: "최신 버전으로 업데이트 후 이용 가능"
-        unavailable_downloaded: "현재 사용 중인 VRCT 버전과의 호환성 문제로 인해 이용 불가"
-        no_latest_info: "최신 정보를 가져올 수 없습니다"
-        using_latest_version: "최신 버전을 사용 중"
-        available_latest_version: "최신 버전을 이용 가능"
-        unavailable_latest_version: "최신 버전은 현재 이용 불가"
-        available_in_latest_vrct_version: "VRCT 최신 버전에서 이용 가능"
-        unavailable_not_downloaded: "현재 이용 불가"
 
     advanced_settings:
         osc_ip_address:
@@ -445,18 +461,123 @@ config_page:
 
     notifications:
         save_success: "설정을 저장했습니다."
+        opened_folder: "폴더를 열었습니다."
 
-plugin_notifications:
-    downloading: "플러그인을 다운로드 중입니다."
-    downloaded_success: "플러그인 다운로드가 완료되었습니다."
-    downloaded_error: "플러그인 다운로드에 실패했습니다."
-
-    updating: "플러그인을 업데이트 중입니다."
-    updated_success: "플러그인 업데이트가 완료되었습니다."
-    updated_error: "플러그인 업데이트에 실패했습니다."
-
-    disabled_out_of_support: "현재 버전과 호환되지 않습니다. 플러그인을 비활성화했습니다."
-    disabled_due_to_an_error: "플러그인 실행 중 오류를 감지했습니다. 플러그인 개발자에게 보고해 주세요."
-
-    is_enabled: "플러그인을 활성화했습니다."
-    is_disabled: "플러그인을 비활성화했습니다."
+vr_panel:
+    window_log: "로그"
+    window_language: "언어"
+    window_settings: "VR 설정"
+    recall_log: "불러오기"
+    anchor_playspace: "공간"
+    anchor_left_hand: "왼손"
+    anchor_right_hand: "오른손"
+    anchor_head: "머리"
+    lock: "잠금"
+    locked: "잠김"
+    launcher: "런처"
+    launcher_hand: "런처를 달 손"
+    launcher_hand_desc: "다른 손의 레이저로 누릅니다"
+    launcher_auto_hide: "손목을 볼 때만 표시"
+    launcher_auto_hide_desc: "손목을 얼굴 쪽으로 돌렸을 때만 나타납니다"
+    tooltip_enabled: "버튼 말풍선"
+    tooltip_enabled_desc: "버튼을 가리킬 때 조작 이름과 상태를 표시합니다"
+    locked_by_config_page: "설정이 열려 있습니다. 닫으면 조작할 수 있습니다."
+    log_opacity: "로그 불투명도"
+    mic_threshold: "마이크 입력 최소 볼륨"
+    speaker_threshold: "스피커 입력 최소 볼륨"
+    automatic: "자동"
+    paused_while_settings: "설정 중에는 번역과 음성 인식을 멈춥니다. 닫으면 다시 시작합니다."
+    overlay_small_log: "자막 (한 줄)"
+    overlay_large_log: "자막 (여러 줄)"
+    tooltip:
+        translate: "번역"
+        microphone: "마이크 입력"
+        listen: "듣기"
+        chat_detect: "채팅 감지"
+        functions_group: "기능 켜기/끄기"
+        windows_group: "창"
+        controls_group: "로그 조작"
+        config_open: "설정 중"
+        busy_help: "반영이 끝날 때까지 기다려 주세요"
+        enable: "누르면 켭니다"
+        disable: "누르면 끕니다"
+        open: "표시 중"
+        hidden: "숨김"
+        lost: "시야 밖"
+        holding: "계속 눌러 불러오기"
+        holding_help: "계속 눌러 주세요"
+        click_recall: "누르면 불러옵니다"
+        log_help: "누르면 열기/닫기 · 길게 눌러 불러오기"
+        close_view: "누르면 닫습니다"
+        open_view: "누르면 엽니다"
+        anchor: "고정 위치"
+        position: "위치 조작"
+        current: "현재"
+        choose_anchor: "누르면 고정 위치를 바꿉니다"
+        recall_help: "불러오면 공간에 고정됩니다"
+        unlocked: "이동 가능"
+        lock_help: "누르면 이동을 고정합니다"
+        unlock_help: "누르면 이동 고정을 해제합니다"
+        font: "글자 크기"
+        smaller: "글자 작게"
+        larger: "글자 크게"
+        font_limit: "글자 크기 범위: 14~28"
+        font_help: "원문 크기 · 번역문도 함께 바뀝니다"
+        opacity_help: "누를 때마다 100 → 80 → 60 → 40% → 100%"
+    settings:
+        processing: "처리 설정"
+        changing: "변경 적용 중…"
+        changing_short: "적용 중…"
+        auto_device: "자동 선택을 끄면 기기를 변경할 수 있습니다."
+        fonts_unavailable: "글꼴 목록을 불러올 수 없습니다. PC 설정을 확인하세요."
+        devices_unavailable: "처리 기기가 없습니다. PC 설정을 확인하세요."
+        types_unavailable: "처리 유형이 없습니다. 선택한 기기를 확인하세요."
+        prepare_model: "모델이 없습니다. PC 설정에서 다운로드하세요."
+        unavailable: "사용할 수 없습니다. PC 설정을 확인하세요."
+        speaker_adjustments: "구간과 유지할 단어 수 조정"
+        ui_log: "VR UI 로그 창"
+        subtitle_overlay: "자막 오버레이 (한 줄 / 여러 줄)"
+        decrease: "{{label}} 줄이기"
+        increase: "{{label}} 늘리기"
+        volume_check: "음량 확인"
+        collapse: "접기"
+        expand: "펼치기"
+        close: "설정을 닫고 번역 및 음성 인식 재개"
+    language:
+        preset_number: "프리셋 {{n}}"
+        swap: "교체"
+        swap_hint: "상대방 1번과"
+        swap_name: "내 언어와 상대방 1번 언어를 교체"
+        range: "1~3개 언어"
+        required: "필수"
+        min_reason: "상대방 언어는 최소 1개가 필요합니다"
+        remove: "상대방 {{n}}번, {{language}} ({{country}}) 제거"
+        change_target: "상대방 {{n}}번 변경"
+        add: "언어 추가"
+        add_title: "상대방 언어 추가"
+        edit_your: "내 언어 변경"
+        all_languages: "모든 언어에서 선택"
+        saved: "저장된 후보"
+        saved_hint: "모든 프리셋에 저장된 언어입니다"
+        letters_title: "언어의 첫 글자 선택"
+        letter_title: "{{letter}}로 시작하는 언어"
+        selected: "선택됨"
+        selected_slots: "상대방 {{n}}번"
+        available: "사용 가능한 엔진"
+        unavailable: "사용할 수 없는 엔진"
+        unavailable_hint: "현재 언어나 설정에서는 사용할 수 없습니다. 필요한 설정은 PC에서 확인하세요."
+        same_reason: "내 언어와 상대방 언어가 같으면 CTranslate2만 사용할 수 있습니다. 국가가 달라도 동일합니다."
+        full: "3 / 3 선택됨 · 각 행에서 언어를 변경하세요"
+        busy_hint: "변경을 적용하는 동안 이 화면에서 기다려 주세요."
+        success: "변경 적용 완료"
+        external: "프리셋 {{n}}로 전환"
+        sync: "언어 설정 동기화 중…"
+        error: "변경을 적용하지 못했습니다. 다시 선택해 주세요."
+        same_short: "동일한 언어"
+        duplicate: "중복 있음"
+        selected_count: "상대방 언어 슬롯 3개 중 {{n}}개 선택됨"
+        unconfirmed: "응답을 확인할 수 없습니다. 설정 동기화를 기다리는 중입니다."
+        settings_updated: "언어 설정이 변경되어 메인 화면으로 돌아왔습니다."
+        pc_retry: "변경을 적용하지 못했습니다. 현재 언어 설정을 확인하고 다시 선택해 주세요."
+        sync_error: "설정을 동기화하지 못했습니다. 다시 불러온 후 변경해 주세요."
+        retry_sync: "언어 설정 다시 불러오기"

@@ -36,7 +36,12 @@ try:
 except Exception:  # pragma: no cover - optional runtime
     whisper_models = {}  # type: ignore
 
-from utils import errorLogging, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
+try:
+    from models.ocr.ocr_languages import SELECTABLE_LANGUAGES as ocr_selectable_languages
+except Exception:  # pragma: no cover - optional runtime
+    ocr_selectable_languages = ()  # type: ignore
+
+from utils import errorLogging, printLog, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
 
 # NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
 # 対応する migration ヘルパは ADR-0004 でストリーミング/VAD 独自実装を撤退した際に
@@ -148,6 +153,32 @@ class ManagedDict(dict):
         self._save()
         return result
 
+    # dict のプレーンな `for k in d`/`len(d)`/`d == {...}`/`repr(d)` は
+    # dict の C レベル内部ストレージを直接見るため、上のメソッド群と違い
+    # `_get_internal()` を経由しない。プロパティを直接 (`config.X = {...}`)
+    # 一括再代入した後、既にキャッシュ済みの wrapper がこの一括再代入前の
+    # 内容のまま「見た目だけ」古くなる (実際の値は正しく保存されている)
+    # のを防ぐため、ここも明示的に委譲する。
+    def __iter__(self):
+        return iter(self._get_internal())
+
+    def __len__(self):
+        return len(self._get_internal())
+
+    def __eq__(self, other):
+        return self._get_internal() == other
+
+    def __ne__(self, other):
+        return self._get_internal() != other
+
+    def __repr__(self):
+        return repr(self._get_internal())
+
+    def __str__(self):
+        return str(self._get_internal())
+
+    __hash__ = None
+
 
 class ManagedList(list):
     """List wrapper that saves changes back to config."""
@@ -210,6 +241,24 @@ class ManagedList(list):
         super().insert(index, value)
         self._save()
 
+    # `list == [...]`/`repr(list)`/`str(list)` は list の C レベル内部
+    # ストレージを直接見るため (__iter__/__len__/__getitem__ とは違い)
+    # `_get_internal()` を経由しない。ManagedDict.__eq__ 等と同じ理由で
+    # 明示的に委譲する。
+    def __eq__(self, other):
+        return self._get_internal() == other
+
+    def __ne__(self, other):
+        return self._get_internal() != other
+
+    def __repr__(self):
+        return repr(self._get_internal())
+
+    def __str__(self):
+        return str(self._get_internal())
+
+    __hash__ = None
+
     def remove(self, value):
         super().remove(value)
         self._save()
@@ -230,6 +279,45 @@ class ManagedList(list):
     def reverse(self):
         super().reverse()
         self._save()
+
+
+# VR UIのランチャーの初期値 (位置は手首の基準からの差。「ランチャーを初期に戻す」でもこの値に戻す)
+DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS = {
+    "x_pos": 0.0,
+    "y_pos": 0.0,
+    "z_pos": 0.0,
+    "x_rotation": 0.0,
+    "y_rotation": 0.0,
+    "z_rotation": 0.0,
+    "display_duration": 5,
+    "fadeout_duration": 0,  # 常に表示
+    "opacity": 1.0,
+    "ui_scaling": 0.303,  # 横幅(m)。952x128px の帯 (左端のマーク込み) で高さ約4cm。ボタンの大きさは 880px 幅で 0.28m のときと同じ
+    "tracker": "LeftHand",
+}
+
+class ConfigValidationError(Exception):
+    """`ManagedProperty`/`ValidatedProperty` が値を拒否した際に送出する
+    (フェーズ3項目24)。
+
+    以前はディスクリプタが不正な値をサイレントに無視していたため、
+    `/set/data/*` エンドポイントは「値が拒否されても200で成功を返す」
+    という誤った契約になっていた。呼び出し元 (主に controller.py の
+    `_configValidationErrorResponse` デコレータ) がこれを捕まえて
+    `VRCTError` の適切なエラーレスポンスへ変換する。
+
+    `ValidatedProperty` はバリデータが**全体を**拒否した場合 (`None` を
+    返した場合) のみ送出する。多くのバリデータ (`HOTKEYS` や
+    `SELECTED_TRANSLATION_ENGINES` 等) は「キー単位で不正な項目だけ
+    旧値にフォールバックする」設計を意図的に持っており
+    (`test_config_validated_property.py` で検証済み)、その場合は
+    `None` を返さず正常終了するため、この例外は送出されない
+    (=部分的なフォールバックは今まで通り黙って起こる、これは仕様)。
+    """
+    def __init__(self, attr_name: str, value):
+        self.attr_name = attr_name
+        self.value = value
+        super().__init__(f"Invalid value for {attr_name}: {value!r}")
 
 
 # Descriptor for simple managed config properties to reduce repetitive getters/setters.
@@ -280,7 +368,7 @@ class ManagedProperty:
 
         # Type check if requested（Noneは常に許可）
         if self.type_ is not None and value is not None and not isinstance(value, self.type_):
-            return
+            raise ConfigValidationError(self.name, value)
 
         # Allowed-values check: can be an iterable or a callable
         if self.allowed is not None:
@@ -290,16 +378,34 @@ class ManagedProperty:
                 except Exception:
                     ok = False
                 if not ok:
-                    return
+                    raise ConfigValidationError(self.name, value)
             else:
                 if value not in self.allowed:
-                    return
+                    raise ConfigValidationError(self.name, value)
 
         # Deep copy mutable types to prevent external reference issues
         if isinstance(value, (dict, list)):
             value = copy.deepcopy(value)
 
         setattr(instance, self.private_name, value)
+
+        # mutable_tracking の場合、既にキャッシュ済みの ManagedDict/ManagedList
+        # wrapper があれば、その「自分自身の (list/dict 基底クラスの) 内部
+        # ストレージ」は今回の一括再代入で更新されないまま残ってしまう。
+        # __getitem__ 等 (_get_internal() 経由) は生き残った wrapper でも
+        # 正しく新しい値を返すが、その後 wrapper 経由で1件でも変更
+        # (`config.X[key] = value` 等) が起きると、wrapper._save() が
+        # 「wrapper 自身の (古い) 基底ストレージ」を internal storage へ
+        # 書き戻してしまい、今回の一括再代入の内容を丸ごと消してしまう
+        # (単なる表示上の古さではなく実データの巻き戻り)。
+        # 古い wrapper を破棄し、次回アクセス時に今回の新しい値から
+        # 作り直させることでこれを防ぐ。
+        if self.mutable_tracking:
+            try:
+                delattr(instance, self.wrapper_cache_name)
+            except AttributeError:
+                pass
+
         # Persist change
         try:
             if self.serialize:
@@ -312,7 +418,8 @@ class ValidatedProperty:
     """Descriptor for complex validated properties.
 
     validator(value, instance) -> normalized_value | None
-    If returns None (or raises), value is ignored.
+    If it returns None (or raises), `ConfigValidationError` is raised and the
+    value is not stored (フェーズ3項目24; 以前はサイレントに無視していた)。
     """
     def __init__(self, name: str, validator, immediate_save: bool = False, serialize: bool = True):
         self.name = name
@@ -339,12 +446,18 @@ class ValidatedProperty:
         return stored
 
     def __set__(self, instance, value):
+        # NOTE(フェーズ3項目24): 送出するのはバリデータが値を「全体として」
+        # 拒否した場合 (None を返した/例外を送出した場合) のみ。多くの
+        # バリデータは「キー単位で不正な項目だけ旧値にフォールバックする」
+        # 設計を意図的に持っており (test_config_validated_property.py
+        # 参照)、その場合は non-None を返して正常終了するため送出されない
+        # (=部分的なフォールバックはこれまで通り黙って起こる、仕様通り)。
         try:
             normalized = self.validator(value, instance)
-        except Exception:
-            return
+        except Exception as e:
+            raise ConfigValidationError(self.name, value) from e
         if normalized is None:
-            return
+            raise ConfigValidationError(self.name, value)
         # Deep copy mutable types before storing, mirroring ManagedProperty.__set__,
         # so a caller that keeps a reference to the object it passed in (or that a
         # validator returned verbatim) can't mutate config's internal state later.
@@ -397,6 +510,27 @@ def _overlay_small_validator(val, inst):
             new[key] = float(v)
     return new
 
+def _make_overlay_vr_window_validator(name):
+    """VR UIのウィンドウ (ログ・ランチャー) の位置設定用。VR内で掴んで動かした結果だけが保存される。"""
+    def validator(val, inst):
+        return _validate_overlay_vr_window(val, getattr(inst, name))
+    return validator
+
+def _validate_overlay_vr_window(val, current):
+    # 足りないキーは今の値で補う (項目を増やしても、以前に保存した位置を捨てないため)。知らないキーは受け付けない
+    if not (isinstance(val, dict) and set(val.keys()) <= set(current.keys())):
+        return None
+    new = dict(current)
+    for key, v in val.items():
+        # Playspace: SteamVRの空間に固定 (VR UIのウィンドウだけが選べる)
+        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand', 'Playspace']:
+            new[key] = v
+        elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation','opacity','ui_scaling'] and isinstance(v,(int,float)):
+            new[key] = float(v)
+        elif key in ['display_duration','fadeout_duration','width','height'] and isinstance(v,int) and not isinstance(v,bool):
+            new[key] = v
+    return new
+
 def _overlay_large_validator(val, inst):
     if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_LARGE_LOG_SETTINGS.keys())):
         return None
@@ -445,13 +579,6 @@ def _mic_word_filter_validator(val, inst):
             seen.add(item)
             result.append(item)
     return result
-
-def _plugins_status_validator(val, inst):
-    if not isinstance(val, list):
-        return None
-    if not all(isinstance(item, dict) for item in val):
-        return None
-    return [dict(item) for item in val]
 
 def _selected_translation_engines_validator(val, inst):
     if not isinstance(val, dict):
@@ -516,6 +643,11 @@ def _mic_host_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    # デバイスが一時的に存在しない状態を表す永続化用 sentinel。
+    # 実デバイス一覧に含まれない場合でも、抜去後の選択状態を安全に
+    # `NoHost` へ戻せる必要がある。
+    if val == "NoHost":
+        return val
     hosts = list(device_manager.getMicDevices().keys())
     return val if val in hosts else None
 
@@ -524,6 +656,10 @@ def _mic_device_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    # `NoDevice` は「選択中のデバイスなし」を表す sentinel。実デバイス
+    # が残っている一覧にも安全に設定できるよう、一覧検証より先に許可する。
+    if val == "NoDevice":
+        return val
     try:
         devices = device_manager.getMicDevices().get(inst.SELECTED_MIC_HOST, [])
         names = [d.get('name') for d in devices]
@@ -536,6 +672,8 @@ def _speaker_device_validator(val, inst):
         return None
     if not isinstance(val, str):
         return None
+    if val == "NoDevice":
+        return val
     try:
         names = [d.get('name') for d in device_manager.getSpeakerDevices()]
         return val if val in names else None
@@ -585,6 +723,28 @@ class Config:
     # docs/readme_build.md "β版リリース" and .github/workflows/release.yml.
     _HF_REPO_STABLE = "ms-software/VRCT"
     _HF_REPO_BETA = "ms-software/VRCT-beta"
+
+    # VERSION に含まれていれば beta チャンネル扱いとする接尾辞。NSIS
+    # インストーラの .onInit (template.nsi) が ${VERSION} に対して行って
+    # いる "-beta"/"-rc" 判定と同じルール。load_config() が起動のたびに
+    # SELECTED_RELEASE_CHANNEL をこの基準へ再同期する際に使う。
+    _RELEASE_CHANNEL_BETA_MARKERS = ("-beta", "-rc")
+
+    @staticmethod
+    def _channelForVersion(version: str) -> str:
+        """バージョン文字列(例: "3.5.1-beta.1")からリリースチャンネルを
+        機械的に判定する。NSISインストーラの.onInit(template.nsi)が
+        ${VERSION}に対して行う判定と同じルール。"""
+        return (
+            "beta" if any(marker in version for marker in Config._RELEASE_CHANNEL_BETA_MARKERS)
+            else "stable"
+        )
+
+    # Groq/OpenAI 公式の音声書き起こしAPIのエンドポイントは固定 (ユーザー
+    # 編集不可)。カスタムサーバーのみ TRANSCRIPTION_CUSTOM_URL で
+    # ユーザーが指定する (issue #100 のローカル/LANサーバー向け)。
+    GROQ_WHISPER_BASE_URL = "https://api.groq.com/openai/v1"
+    OPENAI_WHISPER_BASE_URL = "https://api.openai.com/v1"
 
     @property
     def SETUP_DOWNLOAD_URL(self) -> str:
@@ -663,6 +823,7 @@ class Config:
     SELECTABLE_TRANSLATION_ENGINE_LIST = ManagedProperty('SELECTABLE_TRANSLATION_ENGINE_LIST', readonly=True, serialize=False)
     SELECTABLE_TRANSCRIPTION_ENGINE_LIST = ManagedProperty('SELECTABLE_TRANSCRIPTION_ENGINE_LIST', readonly=True, serialize=False)
     SELECTABLE_UI_LANGUAGE_LIST = ManagedProperty('SELECTABLE_UI_LANGUAGE_LIST', readonly=True, serialize=False)
+    SELECTABLE_OCR_SOURCE_LANGUAGE_LIST = ManagedProperty('SELECTABLE_OCR_SOURCE_LANGUAGE_LIST', readonly=True, serialize=False)
     COMPUTE_MODE = ManagedProperty('COMPUTE_MODE', readonly=True, serialize=False)
     SELECTABLE_COMPUTE_DEVICE_LIST = ManagedProperty('SELECTABLE_COMPUTE_DEVICE_LIST', readonly=True, serialize=False)
     SEND_MESSAGE_BUTTON_TYPE_LIST = ManagedProperty('SEND_MESSAGE_BUTTON_TYPE_LIST', readonly=True, serialize=False)
@@ -672,6 +833,7 @@ class Config:
     ENABLE_TRANSLATION = ManagedProperty('ENABLE_TRANSLATION', type_=bool, serialize=False)
     ENABLE_TRANSCRIPTION_SEND = ManagedProperty('ENABLE_TRANSCRIPTION_SEND', type_=bool, serialize=False)
     ENABLE_TRANSCRIPTION_RECEIVE = ManagedProperty('ENABLE_TRANSCRIPTION_RECEIVE', type_=bool, serialize=False)
+    ENABLE_OCR_CAPTURE = ManagedProperty('ENABLE_OCR_CAPTURE', type_=bool, serialize=False)
     ENABLE_FOREGROUND = ManagedProperty('ENABLE_FOREGROUND', type_=bool, serialize=False)
     ENABLE_CHECK_ENERGY_SEND = ManagedProperty('ENABLE_CHECK_ENERGY_SEND', type_=bool, serialize=False)
     ENABLE_CHECK_ENERGY_RECEIVE = ManagedProperty('ENABLE_CHECK_ENERGY_RECEIVE', type_=bool, serialize=False)
@@ -690,6 +852,15 @@ class Config:
     SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_GROQ_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENAI_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = ManagedProperty('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_DEEPGRAM_MODEL_LIST = ManagedProperty('SELECTABLE_DEEPGRAM_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    # モデル名 -> 対応言語コード一覧 ({"nova-3": ["en", "ja", ...], ...})。
+    # DeepgramProvider は常に detect_language=true で呼ぶため文字起こし
+    # 処理自体はこの値を参照しないが、UI側で「選択したモデルがどの言語に
+    # 対応しているか」を表示できるようにするためのメタデータ。
+    DEEPGRAM_MODEL_LANGUAGES = ManagedProperty('DEEPGRAM_MODEL_LANGUAGES', type_=dict, serialize=False, mutable_tracking=True)
 
     # --- Save Json Data (ManagedProperty-based) ---
     # More simple boolean flags replaced with ManagedProperty
@@ -735,6 +906,16 @@ class Config:
     SPEAKER_NO_SPEECH_PROB = ManagedProperty('SPEAKER_NO_SPEECH_PROB', type_=(int, float))
     SPEAKER_NO_REPEAT_NGRAM_SIZE = ManagedProperty('SPEAKER_NO_REPEAT_NGRAM_SIZE', type_=int)
 
+    # -- VAD (Silero) によるマイク/スピーカーの発話区間検出 ---
+    # 既定は False (従来通りのエネルギー閾値方式)。過去に2度、この領域
+    # (WASAPI/PyAudio) で挑戦して未完了/リバートに終わっている経緯が
+    # あるため、オプトインとして導入する (フェーズ3、2026-09-06)。
+    # マイク/スピーカーは音声特性(ノイズ、話者数、無音区間の傾向)が
+    # 異なるため、他の MIC_*/SPEAKER_* 設定と同様に個別に切り替え可能と
+    # する (2026-09-07、単一の ENABLE_VAD から分割)。
+    MIC_ENABLE_VAD = ManagedProperty('MIC_ENABLE_VAD', type_=bool)
+    SPEAKER_ENABLE_VAD = ManagedProperty('SPEAKER_ENABLE_VAD', type_=bool)
+
     # --- Auth and API settings ---
     # 旧 config.json との後方互換のため、不足キーは既定値（None）で補完し、余剰キーは無視する。
     AUTH_KEYS = ValidatedProperty('AUTH_KEYS',
@@ -749,12 +930,30 @@ class Config:
     LMSTUDIO_URL = ManagedProperty('LMSTUDIO_URL', type_=str)
     OPENAI_COMPATIBLE_URL = ManagedProperty('OPENAI_COMPATIBLE_URL', type_=str)
 
+    # --- 文字起こし用 API キー・URL (翻訳用の AUTH_KEYS/OPENAI_COMPATIBLE_URL とは
+    # 意図的に別管理にしている。レート制限/クォータの共有を避け、翻訳と
+    # 文字起こしで別々のキー・エンドポイントを使いたいケースに対応するため。
+    TRANSCRIPTION_AUTH_KEYS = ValidatedProperty('TRANSCRIPTION_AUTH_KEYS',
+        validator=lambda val, inst: (
+            {
+                k: (val[k] if (k in val and isinstance(val[k], (str, type(None)))) else inst.TRANSCRIPTION_AUTH_KEYS.get(k))
+                for k in inst.TRANSCRIPTION_AUTH_KEYS.keys()
+            }
+            if isinstance(val, dict) else None
+        )
+    )
+    TRANSCRIPTION_CUSTOM_URL = ManagedProperty('TRANSCRIPTION_CUSTOM_URL', type_=str)
+
     # --- Transcription settings ---
     SELECTED_TRANSCRIPTION_COMPUTE_TYPE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_TYPE', _selected_transcription_compute_type_validator)
 
     # --- Overlay settings ---
     OVERLAY_SMALL_LOG_SETTINGS = ValidatedProperty('OVERLAY_SMALL_LOG_SETTINGS', _overlay_small_validator)
     OVERLAY_LARGE_LOG_SETTINGS = ValidatedProperty('OVERLAY_LARGE_LOG_SETTINGS', _overlay_large_validator)
+    # VRパネルの位置。UIからは設定せず、VR内で掴んで動かした位置だけが保存される。
+    OVERLAY_VR_PANEL_SETTINGS = ValidatedProperty('OVERLAY_VR_PANEL_SETTINGS', _make_overlay_vr_window_validator('OVERLAY_VR_PANEL_SETTINGS'))
+    # VR UIのランチャー (手首の帯) の位置。OVERLAY_VR_PANEL_SETTINGS はログウィンドウの位置。
+    OVERLAY_VR_LAUNCHER_SETTINGS = ValidatedProperty('OVERLAY_VR_LAUNCHER_SETTINGS', _make_overlay_vr_window_validator('OVERLAY_VR_LAUNCHER_SETTINGS'))
 
     # --- Message format settings ---
     SEND_MESSAGE_FORMAT_PARTS = ValidatedProperty('SEND_MESSAGE_FORMAT_PARTS', _format_validator_send)
@@ -768,6 +967,16 @@ class Config:
     SEND_ONLY_TRANSLATED_MESSAGES = ManagedProperty('SEND_ONLY_TRANSLATED_MESSAGES', type_=bool)
     OVERLAY_SMALL_LOG = ManagedProperty('OVERLAY_SMALL_LOG', type_=bool)
     OVERLAY_LARGE_LOG = ManagedProperty('OVERLAY_LARGE_LOG', type_=bool)
+    # VR UI (手首のランチャーとログ・言語・VR設定のウィンドウ)。字幕のオーバーレイとは別にON/OFFする
+    OVERLAY_VR_PANEL = ManagedProperty('OVERLAY_VR_PANEL', type_=bool)
+    # VR UIのログウィンドウを掴めなくする (操作バーのロック)
+    OVERLAY_VR_PANEL_LOCKED = ManagedProperty('OVERLAY_VR_PANEL_LOCKED', type_=bool)
+    # VR UIのログの文字の大きさ (px、訳文はこの約1.4倍)。デスクトップのログの文字サイズとは別
+    OVERLAY_VR_PANEL_FONT_SIZE = ManagedProperty('OVERLAY_VR_PANEL_FONT_SIZE', type_=int)
+    # VR UIのランチャーを手首を見たときだけ出すか (出す角度は45°で固定)。付ける手は OVERLAY_VR_LAUNCHER_SETTINGS の tracker
+    OVERLAY_VR_LAUNCHER_AUTO_HIDE = ManagedProperty('OVERLAY_VR_LAUNCHER_AUTO_HIDE', type_=bool)
+    # VR UIのボタンを指したときの吹き出し (操作名と状態)。慣れたら消せる
+    OVERLAY_VR_TOOLTIP = ManagedProperty('OVERLAY_VR_TOOLTIP', type_=bool)
     OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = ManagedProperty('OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES', type_=bool)
     SEND_MESSAGE_TO_VRC = ManagedProperty('SEND_MESSAGE_TO_VRC', type_=bool)
     SEND_RECEIVED_MESSAGE_TO_VRC = ManagedProperty('SEND_RECEIVED_MESSAGE_TO_VRC', type_=bool)
@@ -813,7 +1022,6 @@ class Config:
     SELECTED_TAB_NO = ManagedProperty('SELECTED_TAB_NO', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TAB_NO_LIST)
     SELECTED_TRANSCRIPTION_ENGINE = ManagedProperty('SELECTED_TRANSCRIPTION_ENGINE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TRANSCRIPTION_ENGINE_LIST)
     SELECTED_RELEASE_CHANNEL = ManagedProperty('SELECTED_RELEASE_CHANNEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_RELEASE_CHANNEL_LIST)
-    USE_EXCLUDE_WORDS = ManagedProperty('USE_EXCLUDE_WORDS', type_=bool)
     CTRANSLATE2_WEIGHT_TYPE = ManagedProperty('CTRANSLATE2_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST)
     WHISPER_WEIGHT_TYPE = ManagedProperty('WHISPER_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST)
     SELECTED_PLAMO_MODEL = ManagedProperty('SELECTED_PLAMO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_PLAMO_MODEL_LIST'))
@@ -824,10 +1032,13 @@ class Config:
     SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
     SELECTED_OPENAI_COMPATIBLE_MODEL = ManagedProperty('SELECTED_OPENAI_COMPATIBLE_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'))
     SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
+    SELECTED_GROQ_WHISPER_MODEL = ManagedProperty('SELECTED_GROQ_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_WHISPER_MODEL_LIST'))
+    SELECTED_OPENAI_WHISPER_MODEL = ManagedProperty('SELECTED_OPENAI_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_WHISPER_MODEL_LIST'))
+    SELECTED_CUSTOM_WHISPER_MODEL = ManagedProperty('SELECTED_CUSTOM_WHISPER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'))
+    SELECTED_DEEPGRAM_MODEL = ManagedProperty('SELECTED_DEEPGRAM_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_DEEPGRAM_MODEL_LIST'))
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
-    PLUGINS_STATUS = ValidatedProperty('PLUGINS_STATUS', _plugins_status_validator, immediate_save=True)
     SELECTED_TRANSLATION_ENGINES = ValidatedProperty('SELECTED_TRANSLATION_ENGINES', _selected_translation_engines_validator)
     SELECTED_YOUR_LANGUAGES = ValidatedProperty('SELECTED_YOUR_LANGUAGES', _selected_your_languages_validator)
     SELECTED_TARGET_LANGUAGES = ValidatedProperty('SELECTED_TARGET_LANGUAGES', _selected_target_languages_validator)
@@ -844,6 +1055,15 @@ class Config:
 
     # -- Clipboard control ---
     ENABLE_CLIPBOARD = ManagedProperty('ENABLE_CLIPBOARD', type_=bool)
+
+    # --- VRChat chat-bubble OCR ---
+    # Target language is intentionally absent: OCR reads other players' chat,
+    # so it always translates into your own language via getOutputTranslate.
+    OCR_SOURCE_LANGUAGE = ManagedProperty('OCR_SOURCE_LANGUAGE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_OCR_SOURCE_LANGUAGE_LIST)
+    OCR_WINDOW_TITLE = ManagedProperty('OCR_WINDOW_TITLE', type_=str, allowed=lambda v, inst: len(v) > 0)
+    OCR_POLL_INTERVAL_MS = ManagedProperty('OCR_POLL_INTERVAL_MS', type_=int, allowed=lambda v, inst: 100 <= v <= 5000)
+    OCR_MIN_CONFIDENCE = ManagedProperty('OCR_MIN_CONFIDENCE', type_=(int, float), allowed=lambda v, inst: 0.1 <= v <= 0.99)
+    OCR_BUBBLE_MIN_TEXT_LENGTH = ManagedProperty('OCR_BUBBLE_MIN_TEXT_LENGTH', type_=int, allowed=lambda v, inst: 1 <= v <= 50)
 
     def init_config(self):
         # Read Only
@@ -881,15 +1101,19 @@ class Config:
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
-        from utils import torch as _torch  # type: ignore
-        self._COMPUTE_MODE = "cuda" if (_torch is not None and _torch.cuda.is_available()) else "cpu"
+        # OCRエンジンが読める言語だけ (VRCTが翻訳できる言語の全てではない)。
+        self._SELECTABLE_OCR_SOURCE_LANGUAGE_LIST = list(ocr_selectable_languages)
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
+        self._COMPUTE_MODE = "cuda" if any(
+            device.get("device") == "cuda" for device in self._SELECTABLE_COMPUTE_DEVICE_LIST
+        ) else "cpu"
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
 
         # Read Write
         self._ENABLE_TRANSLATION = False
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
+        self._ENABLE_OCR_CAPTURE = False
         self._ENABLE_FOREGROUND = False
         self._ENABLE_CHECK_ENERGY_SEND = False
         self._ENABLE_CHECK_ENERGY_RECEIVE = False
@@ -913,6 +1137,11 @@ class Config:
         self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
         self._SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = []
         self._SELECTABLE_OLLAMA_MODEL_LIST = []
+        self._SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = []
+        self._SELECTABLE_DEEPGRAM_MODEL_LIST = []
+        self._DEEPGRAM_MODEL_LANGUAGES = {}
 
         # Save Json Data
         ## Main Window
@@ -988,7 +1217,6 @@ class Config:
             "toggle_transcription_send": None,
             "toggle_transcription_receive": None,
         }
-        self._PLUGINS_STATUS = []
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._MIC_NO_REPEAT_NGRAM_SIZE = 0
@@ -1010,6 +1238,8 @@ class Config:
         self._SPEAKER_AVG_LOGPROB = -0.8
         self._SPEAKER_NO_SPEECH_PROB = 0.6
         self._SPEAKER_NO_REPEAT_NGRAM_SIZE = 0
+        self._MIC_ENABLE_VAD = False
+        self._SPEAKER_ENABLE_VAD = False
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
@@ -1021,7 +1251,13 @@ class Config:
             "Groq_API": None,
             "OpenRouter_API": None,
         }
-        self._USE_EXCLUDE_WORDS = True
+        self._TRANSCRIPTION_AUTH_KEYS = {
+            "Groq_Whisper": None,
+            "OpenAI_Whisper": None,
+            "Custom_Whisper": None,
+            "Deepgram": None,
+        }
+        self._TRANSCRIPTION_CUSTOM_URL = ""
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "nllb-200-distilled-600M-ct2-int8"
@@ -1035,6 +1271,10 @@ class Config:
         self._OPENAI_COMPATIBLE_URL = "https://api.openai.com/v1"
         self._SELECTED_OPENAI_COMPATIBLE_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
+        self._SELECTED_GROQ_WHISPER_MODEL = None
+        self._SELECTED_OPENAI_WHISPER_MODEL = None
+        self._SELECTED_CUSTOM_WHISPER_MODEL = None
+        self._SELECTED_DEEPGRAM_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
@@ -1067,6 +1307,28 @@ class Config:
             "opacity": 1.0,
             "ui_scaling": 1.0,
             "tracker": "LeftHand",
+        }
+        self._OVERLAY_VR_LAUNCHER_SETTINGS = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
+        self._OVERLAY_VR_PANEL = False
+        self._OVERLAY_VR_PANEL_LOCKED = False
+        self._OVERLAY_VR_PANEL_FONT_SIZE = 17
+        self._OVERLAY_VR_LAUNCHER_AUTO_HIDE = True
+        self._OVERLAY_VR_TOOLTIP = True
+        self._OVERLAY_VR_PANEL_SETTINGS = {
+            # ログウィンドウの大きさ (論理px)。角を掴んで伸ばす (600x400〜1400x1000)
+            "width": 900,
+            "height": 700,
+            "x_pos": 0.0,
+            "y_pos": 1.4,  # ワールド固定の初期位置 (部屋の中心の少し前、目の高さ)
+            "z_pos": 0.7,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
+            "display_duration": 5,
+            "fadeout_duration": 0,  # パネルはフェードさせない
+            "opacity": 1.0,
+            "ui_scaling": 0.4,  # 横幅(m)
+            "tracker": "Playspace",  # 初めは、ワールドに固定する (開いたとき、視線の外なら目の前へ置き直す)
         }
         self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_TO_VRC = True
@@ -1120,6 +1382,20 @@ class Config:
         self._ENABLE_CLIPBOARD = False
         self._ENABLE_TELEMETRY = True
 
+        # OCR defaults (VRChat chat-bubble text capture)
+        # PP-OCRv6 small が日英中＋ラテン文字系を1モデルで読むので "auto" が既定。
+        # ハングル・キリル・タイ・アラビア・デーヴァナーガリーは別モデルが要るため
+        # 明示選択する (選択肢は models/ocr/ocr_languages.py)。
+        self._OCR_SOURCE_LANGUAGE = "auto"
+        # Substring match against visible window titles (case-insensitive).
+        self._OCR_WINDOW_TITLE = "VRChat"
+        self._OCR_POLL_INTERVAL_MS = 750
+        # PP-OCRは読めていないときでもスコアが高い (実測: 正解の最小0.87に対し
+        # 誤りの中央値0.91)。0.55では何も落とせず、0.85なら正解を1件も失わずに
+        # 誤りの34%を落とせたのでこの値にしている。
+        self._OCR_MIN_CONFIDENCE = 0.85
+        self._OCR_BUBBLE_MIN_TEXT_LENGTH = 2
+
     def load_config(self):
         self._config_data = {}
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -1146,6 +1422,21 @@ class Config:
                                 continue
                         except Exception:
                             errorLogging()
+
+        # config.json から読み込んだ SELECTED_RELEASE_CHANNEL は、前回起動時に
+        # UI でチャンネルを切り替えた「つもり」の値をそのまま引き継いでいる
+        # 可能性がある。model.updateSoftware()/updateCudaSoftware() は
+        # インストーラ (NSIS) を起動した直後に VRCT を即終了する設計のため、
+        # ユーザーがインストーラをキャンセルしても config.json には新
+        # チャンネルが書き込まれたまま残ってしまう(実際にインストール
+        # されているのは元のバージョンのまま)。起動のたびに、実際に
+        # 動いている VERSION から機械的に再判定して上書きすることで、この
+        # 不整合を自己修復する(NSIS 側の .onInit が ${VERSION} の
+        # "-beta"/"-rc" サフィックスから同じ判定をしているのと同じ
+        # ルール)。UI 経由の明示的な変更 (setSelectedReleaseChannel) 自体は
+        # 今まで通り可能で、これは「起動時だけは実態を優先する」上書きに
+        # すぎない。
+        self.SELECTED_RELEASE_CHANNEL = self._channelForVersion(self.VERSION)
 
         # インストーラ (NSIS) が選択した UI 言語の反映。NSIS 側は config.json
         # を直接 JSON パースせず (UTF-8/非ASCII文字を含む既存ファイルで
@@ -1181,6 +1472,10 @@ class Config:
             ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
             ('SELECTED_OPENAI_COMPATIBLE_MODEL', 'SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST'),
             ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
+            ('SELECTED_GROQ_WHISPER_MODEL', 'SELECTABLE_GROQ_WHISPER_MODEL_LIST'),
+            ('SELECTED_OPENAI_WHISPER_MODEL', 'SELECTABLE_OPENAI_WHISPER_MODEL_LIST'),
+            ('SELECTED_CUSTOM_WHISPER_MODEL', 'SELECTABLE_CUSTOM_WHISPER_MODEL_LIST'),
+            ('SELECTED_DEEPGRAM_MODEL', 'SELECTABLE_DEEPGRAM_MODEL_LIST'),
         ]
         for sel_attr, list_attr in pairs:
             try:

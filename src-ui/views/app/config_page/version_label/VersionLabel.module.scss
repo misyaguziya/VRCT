@@ -1,58 +1,99 @@
 .container {
-    padding: 0.8rem 0 0 1.2rem;
-    font-size: 1rem;
-    color: var(--dark_400_color);
     width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 0 0rem 1.2rem;
+    color: var(--dark_500_color);
+    font-size: 1rem;
+    height: 4.2rem; // 開閉時および全モードで高さを固定し、上のメニューを一切ずらさない
+
     &.is_compact {
-        padding: 0.8rem 0 0 0.6rem;
+        padding: 0 0 0rem 0;
+        align-items: center;
     }
 }
 
 .wrapper {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
     cursor: pointer;
+    width: 100%;
+
     &.is_copied {
         cursor: default;
     }
+
     &.is_compact {
         cursor: default;
         justify-content: center;
     }
 }
 
-.version_text_container {
+// 閉じた時（コンパクト表示）
+.compact_content {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    color: var(--dark_500_color);
-    gap: 0.2rem;
     justify-content: center;
-    &.is_cuda {
-        height: 2rem;
-    }
-    &.is_compact {
-        flex-direction: column;
-        gap: 0;
-    }
+    gap: 0.15rem;
+    width: 100%;
+}
+
+.compact_version_label {
+    font-size: 1.05rem;
+    white-space: nowrap;
+}
+
+.compact_badge {
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+// 開いた時（通常表示）
+.expanded_row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.version_text_block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.15rem;
+    color: var(--dark_500_color);
 }
 
 .version_label {
     font-size: 1.2rem;
+    white-space: nowrap;
 }
 
-.cuda_label {
-    font-size: 0.8rem;
+.inline_cuda {
+    font-size: 0.95rem;
 }
 
-.copy_svg, .check_mark_svg {
-    width: 1.2rem;
+.second_line_cuda {
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.copy_svg,
+.check_mark_svg {
+    width: 1.3rem;
+    aspect-ratio: 1/1;
     flex-shrink: 0;
 }
 
 .copy_svg {
-    color: var(--dark_700_color);
+    color: var(--dark_600_color);
+    transition: color 0.15s;
+
+    .wrapper:hover & {
+        color: var(--dark_350_color);
+    }
 }
 
 .check_mark_svg {

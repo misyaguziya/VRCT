@@ -1,0 +1,74 @@
+.root { position: relative; width: 100%; height: 100%; }
+.container { position: relative; isolation: isolate; width: 100%; height: 100%; display: flex; align-items: center; gap: 8px; padding: 12px; }
+// 枠 (背景と枠線) は別の要素にして、起動演出で幅だけを動かせるようにする (箱を切り落とすと、左右の枠線も切れる)
+.container::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 0; right: 0; border-radius: 24px; background: var(--dark_888_color); box-shadow: inset 0 0 0 4px var(--dark_750_color); }
+.group { display: flex; gap: 8px; }
+.divider { flex-shrink: 0; width: 4px; height: 72px; margin: 0 4px; border-radius: 2px; background: var(--dark_650_color); }
+.button {
+    position: relative; width: 124px; height: 104px; flex-direction: column; gap: 8px; padding: 6px;
+    &:not([aria-pressed="true"]) { background: var(--dark_850_color); color: var(--dark_400_color); }
+    &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
+    &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+    &.is_disabled { background: var(--dark_900_color); color: var(--dark_450_color); cursor: default; }
+}
+.icon { width: 40px; height: 40px; flex-shrink: 0; color: currentColor; fill: currentColor; }
+.label { max-width: 100%; font-size: 19px; font-weight: 600; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.window_button { width: 96px; .icon { width: 36px; height: 36px; } &.is_attention { background: var(--dark_950_color); color: var(--warning_color); } &.is_holding { box-shadow: inset 0 0 0 3px var(--warning_color); } }
+.state_mark { position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; padding: 2px; border-radius: 6px; background: var(--dark_950_color); color: var(--dark_350_color); display: flex; svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; } }
+.is_pending .state_mark { color: var(--primary_100_color); }
+// 左端の VRCT のマーク (吹き出し)。ロゴ画像の左 22.6% (= 吹き出し) だけを 60px 幅で切り出す。ランチャーの幅 (952px) はこの分を含む
+.mark { flex: none; width: 60px; height: 56px; margin-right: 4px; background: var(--vrct-logo) 0 0 / 265px auto no-repeat; }
+// ---- 起動演出: VR UI をONにして最初に出したとき ----
+// 1. 頭の正面に VRCT のアイコンが大きく現れる  2. 手首へ吸い寄せられて小さくなる
+// 3. 着いたらロゴ入りのカプセルが現れ、文字だけが消えて、吹き出しのマークは左端へスライドして残り、カプセルが横に開いてボタンが並ぶ
+// 1〜2 は Python (overlay.py の _INTRO_FRONT_SEC / _INTRO_FLY_SEC) がオーバーレイごと動かす。ここは同じ時間だけアイコンを出して待つ。
+// 領域の外側は VR画面の背景色 (--dark_1000_color) のまま残す。Python (overlay.py introKeyAlpha) がこの色を透明にする。
+// 最初に出すまでは中身を出さず ("pending")、Python が "playing" にしたら始まり、約4.0秒で通常の表示になる。
+// 通常の表示にもどるとき、演出のマーク (.intro_mark) は左端の本物のマーク (.mark) の位置に重なっている。
+$intro-land: 2.1s; // アイコンが手首に着く時刻 (_INTRO_FRONT_SEC + _INTRO_FLY_SEC)
+$intro-mark-dx: -332px; // ロゴの中の吹き出しから、左端のマークの中心までの距離 (ランチャーの幅 952px、ロゴ 264px 幅から)
+$intro-mark-dy: 7px;
+.is_intro_pending { opacity: 0; }
+.is_intro_playing {
+    &::before { animation: intro_frame 4.2s both; }
+    .mark { opacity: 0; }
+    .button, .divider { opacity: 0; animation: intro_rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .divider { animation-delay: 3.3s; }
+    // 機能4つ → 画面3つの順に 50ms ずつずらす
+    @for $i from 1 through 4 { .group:first-of-type > :nth-child(#{$i}) { animation-delay: 3.05s + ($i - 1) * 0.065s; } }
+    @for $i from 1 through 3 { .group:last-of-type > :nth-child(#{$i}) { animation-delay: 3.05s + ($i + 3) * 0.065s; } }
+}
+.intro_icon { position: absolute; z-index: 1; left: 50%; top: 50%; translate: -50% -50%; pointer-events: none; opacity: 0; height: 112px; animation: intro_icon 2.2s 0.13s both; }
+// ロゴ = 吹き出し (マーク) + 文字。同じ画像を2枚に切り分けて重ねる (切る位置は、吹き出しの右端と「V」の間)
+.intro_logo { position: absolute; z-index: 1; left: 50%; top: 50%; width: 264px; aspect-ratio: 3200 / 850; translate: -50% -50%; pointer-events: none; }
+.intro_text, .intro_mark { position: absolute; inset: 0; background: var(--vrct-logo) center / contain no-repeat; opacity: 0; }
+.intro_mark { clip-path: inset(0 76.2% 20.5% 0); animation: intro_mark 1.6s #{$intro-land + 0.13s} both; }
+.intro_text { clip-path: polygon(23.8% 0, 100% 0, 100% 100%, 0 100%, 0 79.5%, 23.8% 79.5%); animation: intro_text 1.6s #{$intro-land + 0.13s} both; }
+// 最終のランチャーの形 (角の丸みも枠線も同じ) を短くした枠が現れ、幅だけが広がる
+@keyframes intro_frame {
+    0%, 50% { opacity: 0; left: 31%; right: 31%; }
+    54.7% { opacity: 1; left: 31%; right: 31%; }
+    65.6% { opacity: 1; left: 31%; right: 31%; animation-timing-function: cubic-bezier(0.7, 0, 0.2, 1); }
+    82.8%, 100% { opacity: 1; left: 0; right: 0; }
+}
+@keyframes intro_icon {
+    0% { opacity: 0; filter: blur(14px); transform: scale(1.1); } // ロゴ (文字・マーク) と同じ、ぼやけて少し大きい状態からピントが合う
+    18%, 80% { opacity: 1; filter: blur(0); transform: scale(1); }
+    100% { opacity: 0; filter: blur(0); transform: scale(0.8); }
+}
+// 現れるとき、文字もマークも、ぼやけて少し大きい状態からピントが合い (25%)、完全に止まる (33% まで)。
+// そのあと、文字は動かずにぼやけながら薄れ、マークだけが左へ滑って、そのまま止まる (弾まない)
+@keyframes intro_text {
+    0% { opacity: 0; filter: blur(14px); transform: scale(1.1); }
+    25%, 33% { opacity: 1; filter: blur(0); transform: none; }
+    62%, 100% { opacity: 0; filter: blur(8px); transform: none; }
+}
+@keyframes intro_mark {
+    0% { opacity: 0; filter: blur(14px); transform: scale(1.1); }
+    25% { opacity: 1; filter: blur(0); transform: none; }
+    // 枠 (intro_frame) と同じ動きの加減速にして、少しだけ遅れてついていく (先に動くと、枠の外へはみ出す)。
+    // 加減速は、値と同じ指定の中に書く (別の指定に分けると効かない)
+    34% { opacity: 1; filter: blur(0); transform: none; animation-timing-function: cubic-bezier(0.7, 0, 0.2, 1); }
+    80%, 100% { opacity: 1; filter: blur(0); transform: translate($intro-mark-dx, $intro-mark-dy); }
+}
+@keyframes intro_rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }

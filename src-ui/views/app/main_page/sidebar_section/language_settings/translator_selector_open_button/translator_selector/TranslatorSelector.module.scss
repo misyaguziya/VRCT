@@ -103,3 +103,4 @@ $box_size: 6.2rem;
     text-align: center;
     text-wrap: balance;
 }
+.box[aria-disabled="true"] { opacity: .55; cursor: wait; }

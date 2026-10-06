@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Any
 from time import sleep
 from threading import Thread, Lock, Event
@@ -45,6 +46,26 @@ _PAUSE_BARRIER_TIMEOUT_SEC = 5.0
 pyaudio_op_lock: Lock = Lock()
 
 
+@dataclass(frozen=True)
+class _DeviceSnapshot:
+    """mic/speakerのデバイス一覧4フィールドをまとめて原子的にスワップする
+    ための不変スナップショット(バックエンドレビュー フェーズ4項目32)。
+
+    以前は DeviceManager.update() 内でこの4つを個別の self.属性へ順に
+    代入していた。列挙処理自体は pyaudio_op_lock 配下で保護されていたが、
+    その後のこの4つの代入は無保護だったため、別スレッド(mainloopワーカー
+    が getMicDevices()/getDefaultMicDevice() 等を連続で呼ぶ経路)から見ると
+    「新しい mic_devices + 古い default_mic_device」のような、新旧が
+    混在した組み合わせを観測しうった。1つのオブジェクトへの単一代入に
+    一本化することで、読み手は常にどちらか一方の完全なスナップショットの
+    みを見るようになる。
+    """
+    mic_devices: Dict[str, List[Dict[str, Any]]]
+    default_mic_device: Dict[str, Any]
+    speaker_devices: List[Dict[str, Any]]
+    default_speaker_device: Dict[str, Any]
+
+
 class Client(MMNotificationClient):
     """Callback client used by pycaw to detect device changes.
 
@@ -90,10 +111,11 @@ class DeviceManager:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DeviceManager, cls).__new__(cls)
-            # do NOT auto-init monitoring-heavy resources on import; require explicit init
-            # Still perform a light-weight init so that callers observing the singleton
-            # do not see uninitialized internal structures (which caused NoDevice to
-            # be seen when import order differed).
+            # 監視スレッドは import では開始しない (startMonitoring を
+            # 明示的に呼ぶ必要がある)。ただし init() はここで呼ぶ:
+            # シングルトンを観測する側が初期化前の内部構造を見てしまい、
+            # import 順によって NoDevice になる問題があったため。
+            # この init() は PyAudio が使えればデバイス列挙まで行う。
             cls._instance._initialized = False
             try:
                 # Call init() to populate internal containers. This will NOT start
@@ -110,16 +132,19 @@ class DeviceManager:
     def init(self) -> None:
         """Initialize internal state. This is intentionally separate from object
         creation so importing the module won't start threads or access OS
-        audio APIs. Call `device_manager.init()` and then
-        `device_manager.startMonitoring()` explicitly when ready.
+        audio APIs. Call `device_manager.init()` and then explicitly enable
+        monitoring with `startMonitoring()` or
+        `setDeviceListMonitoringActive()` when ready.
         """
         if getattr(self, "_initialized", False):
             return
 
-        self.mic_devices: Dict[str, List[Dict[str, Any]]] = {"NoHost": [{"index": -1, "name": "NoDevice"}]}
-        self.default_mic_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
-        self.speaker_devices: List[Dict[str, Any]] = [{"index": -1, "name": "NoDevice"}]
-        self.default_speaker_device: Dict[str, Any] = {"device": {"index": -1, "name": "NoDevice"}}
+        self._device_snapshot = _DeviceSnapshot(
+            mic_devices={"NoHost": [{"index": -1, "name": "NoDevice"}]},
+            default_mic_device={"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}},
+            speaker_devices=[{"index": -1, "name": "NoDevice"}],
+            default_speaker_device={"device": {"index": -1, "name": "NoDevice"}},
+        )
 
         # Initialize previous state trackers
         self.prev_mic_host: List[str] = [host for host in self.mic_devices]
@@ -145,11 +170,11 @@ class DeviceManager:
         self.callback_process_after_update_mic_devices: Optional[Callable[..., None]] = None
         self.callback_process_before_update_speaker_devices: Optional[Callable[..., None]] = None
         self.callback_process_after_update_speaker_devices: Optional[Callable[..., None]] = None
-        # ActiveEndpointTracker がエンドポイント切替を検知したとき、Session の
-        # Recorder 差し替えをトリガするための callback (Auto 経路専用)。
-        # 既存の default_mic_device callback は config 更新 + UI 通知のみで、
-        # Recorder 側の再開はしない設計のため別チャネルにする。
-        self.callback_endpoint_reconfigured_mic: Optional[Callable[..., None]] = None
+        # ActiveEndpointTracker (render) がエンドポイント切替を検知したとき、
+        # Session の Recorder 差し替えをトリガするための callback (Auto Speaker
+        # 経路専用)。既存の default_speaker_device callback は config 更新 +
+        # UI 通知のみで、Recorder 側の再開はしない設計のため別チャネルにする。
+        # マイク側は peak 追従を行わないため対応する callback は無い。
         self.callback_endpoint_reconfigured_speaker: Optional[Callable[..., None]] = None
 
         # Monitoring control
@@ -176,6 +201,11 @@ class DeviceManager:
         # 循環待ちは生じない)。
         self._lifecycle_lock: Lock = Lock()
 
+        # デバイス一覧の監視は Auto Select 状態とは独立して管理する。
+        # Auto Select が両方 OFF でも、抜き差し後の一覧更新は継続する必要が
+        # あるため、一覧監視のライフサイクルを別フラグにする。
+        self._device_list_monitoring_active: bool = False
+
         # Auto Select 状態を mic/speaker で独立管理する。
         # 監視スレッド自体は 1 本 (update() が両方のリストを一括で refresh する
         # ため分けても大きな利点なし) だが、Before/After callback は各サイド
@@ -185,15 +215,20 @@ class DeviceManager:
         self._mic_auto_active: bool = False
         self._speaker_auto_active: bool = False
 
-        # 「実使用中エンドポイント」を追跡する tracker。Auto がアクティブな
-        # ときのみ起動する。tracker の on_change コールバックは監視スレッド
-        # (別スレッド) から呼ばれ、内部で updateSelectedMicDevice /
-        # updateSelectedSpeakerDevice 相当の callback を発火する。
-        # tracker が None (無音) を返す場合は既存の Multimedia default 検出
-        # (update() → noticeUpdateDevices → setMicDefaultDevice) が生きているので
-        # 何もしない = 前回選択を維持。
+        # 「実使用中エンドポイント」を追跡する tracker。Auto Speaker Select が
+        # アクティブなときのみ起動する (マイク側は起動しない。理由は
+        # setMicAutoActive の docstring 参照)。tracker の on_change コールバックは
+        # 監視スレッド (別スレッド) から呼ばれ、内部で updateSelectedSpeakerDevice
+        # 相当の callback を発火する。tracker が None (無音) を返す場合は既存の
+        # Multimedia default 検出 (update() → noticeUpdateDevices →
+        # setSpeakerDefaultDevice) が生きているので何もしない = 前回選択を維持。
+        # _mic_endpoint_tracker は常に None のままだが、pause/resume/stop 経路の
+        # 対称性のためフィールドは残す。
         self._mic_endpoint_tracker: Optional[ActiveEndpointTracker] = None
         self._speaker_endpoint_tracker: Optional[ActiveEndpointTracker] = None
+        # stop() が COM 呼び出しの滞留でタイムアウトした場合、旧 tracker の
+        # apartment 終了を待ってから再起動するための回収スレッド。
+        self._speaker_endpoint_tracker_reaper: Optional[Thread] = None
 
         self._initialized = True
 
@@ -213,6 +248,26 @@ class DeviceManager:
             # swallow to avoid breaking initialization
             pass
 
+    # mic_devices/default_mic_device/speaker_devices/default_speaker_device は
+    # _DeviceSnapshot 経由の読み取り専用プロパティ(項目32)。既存の呼び出し
+    # 側 (getMicDevices() 等、_applyDeviceDiffs() 等) は素の属性アクセスと
+    # 見分けが付かないため変更不要。
+    @property
+    def mic_devices(self) -> Dict[str, List[Dict[str, Any]]]:
+        return self._device_snapshot.mic_devices
+
+    @property
+    def default_mic_device(self) -> Dict[str, Any]:
+        return self._device_snapshot.default_mic_device
+
+    @property
+    def speaker_devices(self) -> List[Dict[str, Any]]:
+        return self._device_snapshot.speaker_devices
+
+    @property
+    def default_speaker_device(self) -> Dict[str, Any]:
+        return self._device_snapshot.default_speaker_device
+
     def update(self):
         buffer_mic_devices: Dict[str, List[Dict[str, Any]]] = {}
         buffer_default_mic_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
@@ -221,10 +276,12 @@ class DeviceManager:
 
         if PyAudio is None:
             # PyAudio not available; leave defaults in place
-            self.mic_devices = buffer_mic_devices or {"NoHost": [{"index": -1, "name": "NoDevice"}]}
-            self.default_mic_device = buffer_default_mic_device
-            self.speaker_devices = buffer_speaker_devices or [{"index": -1, "name": "NoDevice"}]
-            self.default_speaker_device = buffer_default_speaker_device
+            self._device_snapshot = _DeviceSnapshot(
+                mic_devices=buffer_mic_devices or {"NoHost": [{"index": -1, "name": "NoDevice"}]},
+                default_mic_device=buffer_default_mic_device,
+                speaker_devices=buffer_speaker_devices or [{"index": -1, "name": "NoDevice"}],
+                default_speaker_device=buffer_default_speaker_device,
+            )
             return
 
         try:
@@ -310,10 +367,12 @@ class DeviceManager:
         except Exception:
             errorLogging()
 
-        self.mic_devices = buffer_mic_devices
-        self.default_mic_device = buffer_default_mic_device
-        self.speaker_devices = buffer_speaker_devices
-        self.default_speaker_device = buffer_default_speaker_device
+        self._device_snapshot = _DeviceSnapshot(
+            mic_devices=buffer_mic_devices,
+            default_mic_device=buffer_default_mic_device,
+            speaker_devices=buffer_speaker_devices,
+            default_speaker_device=buffer_default_speaker_device,
+        )
 
     def _applyDeviceDiffs(self) -> None:
         """update() 後の一覧と prev_* を比較して update_flag_* を立て、
@@ -464,12 +523,24 @@ class DeviceManager:
         """Auto Mic Select の有効/無効を DeviceManager 側で受け取る。
 
         監視スレッドの起動/停止判断はここで完結させ、controller 側が
-        相手側 (speaker) の状態を見て判断する必要を無くす。同時に、
-        アクティブエンドポイント追跡 tracker の起動/停止も切り替える。
+        相手側 (speaker) の状態を見て判断する必要を無くす。
 
-        _lifecycle_lock で flag 更新〜tracker 起動/停止〜monitoring 起動/停止
-        判断までを 1 つの原子操作にする。setMicAutoActive/setSpeakerAutoActive
-        は別々のエンドポイント (mainloop のロック) から並行に呼ばれ得るため、
+        マイク側は speaker と違い ActiveEndpointTracker (peak 追従) を
+        起動しない。Windows の IAudioMeterInformation は capture
+        エンドポイントについて「そのデバイスを能動的に掴んでいる
+        クライアントがいる時」しかピークを返さない
+        (active_endpoint_tracker.py の「既知の制限」参照)。VRCT は選択中の
+        マイク 1 本しか開かないため、非選択マイクは基本ピーク 0 のまま =
+        追従先が無い。逆に VB-Audio Virtual Cable のような「常時他アプリの
+        音が流れている」仮想 capture だけがピークを持ち、Auto ON にした
+        瞬間 OS 既定を無視してそこへ張り替わる誤動作になっていた
+        (Windows 規定とずれる / UI が一瞬既定を表示してすぐ戻る)。
+        マイクの Auto Select は monitoring スレッドによる OS 既定デバイス
+        追従のみとする。
+
+        _lifecycle_lock で flag 更新〜monitoring 起動/停止判断までを 1 つの
+        原子操作にする。setMicAutoActive/setSpeakerAutoActive は別々の
+        エンドポイント (mainloop のロック) から並行に呼ばれ得るため、
         ここでロックしないと (a) 両方が同時に monitoring スレッドを起動して
         2 本走る、(b) 片方が active フラグを書く前にもう片方が
         「両方 inactive」と誤判定して monitoring を止める、といった競合が
@@ -477,10 +548,10 @@ class DeviceManager:
         """
         with self._lifecycle_lock:
             self._mic_auto_active = active
-            if active:
-                self._startMicEndpointTrackerLocked()
-            else:
-                self._stopMicEndpointTrackerLocked()
+            # マイク側 tracker は常に起動しない。過去の経路や将来の変更で
+            # 生き残りがあっても確実に片付けるため stop 側だけ無条件で呼ぶ
+            # (tracker is None なら no-op)。
+            self._stopMicEndpointTrackerLocked()
             self._syncMonitoringLifecycleLocked()
 
     def setSpeakerAutoActive(self, active: bool) -> None:
@@ -494,19 +565,26 @@ class DeviceManager:
                 self._stopSpeakerEndpointTrackerLocked()
             self._syncMonitoringLifecycleLocked()
 
-    def _startMicEndpointTrackerLocked(self) -> None:
-        """_lifecycle_lock を既に保持している前提の内部実装。"""
-        if self._mic_endpoint_tracker is not None:
-            return
-        # pyaudio_op_lock を渡して、tracker の COM 呼び出しと Recorder の
-        # open/close が同じ WASAPI エンドポイント上で並行実行されるのを防ぐ。
-        tracker = ActiveEndpointTracker("capture", com_lock=pyaudio_op_lock)
-        tracker.set_on_change_callback(self._onActiveMicEndpointChanged)
-        tracker.start()
-        self._mic_endpoint_tracker = tracker
+    def setDeviceListMonitoringActive(self, active: bool) -> None:
+        """デバイス一覧監視の有効/無効を設定する。
+
+        デバイスの再接続を検出するための一覧更新は、Auto Select の設定とは
+        独立して動作させる。Auto Select が両方 OFF の場合でもこのフラグが
+        active なら monitoring スレッドを維持し、一覧 callback を発火する。
+        Auto Select の選択変更や endpoint tracker の起動は、従来どおり
+        setMicAutoActive/setSpeakerAutoActive 側のフラグで制御する。
+        """
+        with self._lifecycle_lock:
+            self._device_list_monitoring_active = active
+            self._syncMonitoringLifecycleLocked()
 
     def _stopMicEndpointTrackerLocked(self) -> None:
-        """_lifecycle_lock を既に保持している前提の内部実装。"""
+        """_lifecycle_lock を既に保持している前提の内部実装。
+
+        マイク側は ActiveEndpointTracker を起動しない (setMicAutoActive の
+        docstring 参照) ため通常 `_mic_endpoint_tracker` は常に None。
+        将来マイク peak 追従を復活させる場合や、旧状態が残っていた場合の
+        後片付けとして stop 経路だけ残す。"""
         tracker = self._mic_endpoint_tracker
         self._mic_endpoint_tracker = None
         if tracker is not None:
@@ -515,7 +593,20 @@ class DeviceManager:
     def _startSpeakerEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。"""
         if self._speaker_endpoint_tracker is not None:
-            return
+            tracker = self._speaker_endpoint_tracker
+            is_running = getattr(tracker, "is_running", None)
+            # 古いテスト用スタブなどが is_running() を持たない場合は、
+            # 既存 tracker があること自体を起動済みとして扱う。
+            if not callable(is_running) or is_running():
+                is_stop_requested = getattr(tracker, "is_stop_requested", None)
+                if callable(is_stop_requested) and is_stop_requested():
+                    printLog(
+                        "DeviceManager: speaker endpoint tracker restart deferred "
+                        "until the previous tracker thread has stopped."
+                    )
+                return
+            # timeout 後に保持していた tracker の COM cleanup が完了済み。
+            self._speaker_endpoint_tracker = None
         tracker = ActiveEndpointTracker("render", com_lock=pyaudio_op_lock)
         tracker.set_on_change_callback(self._onActiveSpeakerEndpointChanged)
         tracker.start()
@@ -524,9 +615,45 @@ class DeviceManager:
     def _stopSpeakerEndpointTrackerLocked(self) -> None:
         """_lifecycle_lock を既に保持している前提の内部実装。"""
         tracker = self._speaker_endpoint_tracker
-        self._speaker_endpoint_tracker = None
         if tracker is not None:
-            tracker.stop()
+            stopped = tracker.stop()
+            if stopped is False:
+                # 旧 tracker を参照し続けることで、stop timeout 後の再ONで
+                # 新しい COM tracker が並行起動することを防ぐ。旧スレッドの
+                # 終了後、Auto Select がまだ ON なら一度だけ再起動する。
+                self._scheduleSpeakerEndpointTrackerReaperLocked(tracker)
+            else:
+                self._speaker_endpoint_tracker = None
+
+    def _scheduleSpeakerEndpointTrackerReaperLocked(
+        self, tracker: ActiveEndpointTracker
+    ) -> None:
+        """_lifecycle_lock を保持したまま、tracker の終了待ちを予約する。"""
+        reaper = self._speaker_endpoint_tracker_reaper
+        if reaper is not None and reaper.is_alive():
+            return
+
+        def reap() -> None:
+            wait_until_stopped = getattr(tracker, "wait_until_stopped", None)
+            if not callable(wait_until_stopped):
+                # 実装済み tracker では必ず存在する。互換スタブで存在しない
+                # 場合は、再起動を許可せず旧参照を保持したまま安全側に倒す。
+                return
+            wait_until_stopped()
+            with self._lifecycle_lock:
+                if self._speaker_endpoint_tracker is not tracker:
+                    return
+                self._speaker_endpoint_tracker = None
+                self._speaker_endpoint_tracker_reaper = None
+                if self._speaker_auto_active:
+                    self._startSpeakerEndpointTrackerLocked()
+
+        self._speaker_endpoint_tracker_reaper = Thread(
+            target=reap,
+            daemon=True,
+            name="speaker_endpoint_tracker_reaper",
+        )
+        self._speaker_endpoint_tracker_reaper.start()
 
     def pauseMicEndpointTracker(self) -> None:
         """外部から tracker を一時停止し、進行中の COM 呼び出しが
@@ -580,40 +707,19 @@ class DeviceManager:
         if tracker is not None:
             tracker.resume()
 
-    def _onActiveMicEndpointChanged(self, endpoint_name: Optional[str]) -> None:
-        """Tracker からのコールバック (別スレッド)。
-
-        アクティブな capture エンドポイント名 (FriendlyName) を受け取り、
-        現在のマイクデバイスリストからマッチする (host, device) を検索、
-        以下の 2 段で反映する:
-          1. callback_default_mic_device: config 更新 + UI 通知
-          2. callback_endpoint_reconfigured_mic: Session の Recorder を新デバイスに差し替え
-        マッチが無い場合は何もしない (Multimedia default 追跡が生きる)。
-        """
-        if endpoint_name is None:
-            return
-        try:
-            host, device_name = self._findMicDeviceByName(endpoint_name)
-        except Exception:
-            errorLogging()
-            return
-        if host is None or device_name is None:
-            return
-        if isinstance(self.callback_default_mic_device, Callable):
-            try:
-                self.callback_default_mic_device(host, device_name)
-            except Exception:
-                errorLogging()
-        if isinstance(self.callback_endpoint_reconfigured_mic, Callable):
-            try:
-                self.callback_endpoint_reconfigured_mic()
-            except Exception:
-                errorLogging()
-
     def _onActiveSpeakerEndpointChanged(self, endpoint_name: Optional[str]) -> None:
-        """Tracker からのコールバック (別スレッド)。詳細は
-        _onActiveMicEndpointChanged 参照。スピーカー側は loopback デバイス
-        (末尾 " [Loopback]") とのマッピング調整が必要。
+        """Tracker (render) からのコールバック (別スレッド)。
+
+        アクティブな render エンドポイント名 (FriendlyName) を受け取り、
+        speaker_devices からマッチする loopback デバイス
+        (末尾 " [Loopback]") を検索し、以下の 2 段で反映する:
+          1. callback_default_speaker_device: config 更新 + UI 通知
+          2. callback_endpoint_reconfigured_speaker: Session の Recorder を新デバイスに差し替え
+        マッチが無い場合は何もしない (Multimedia default 追跡が生きる)。
+
+        マイク側に対応する _onActiveMicEndpointChanged は廃止した
+        (setMicAutoActive の docstring 参照: capture 側 peak 追従は
+        WASAPI の仕様上、仮想ケーブルへの誤張り替えしか生まないため)。
         """
         if endpoint_name is None:
             return
@@ -635,44 +741,14 @@ class DeviceManager:
             except Exception:
                 errorLogging()
 
-    def _findMicDeviceByName(self, endpoint_name: str) -> tuple:
-        """FriendlyName に一致するマイクデバイスを (host, device_name) で返す。
-
-        WASAPI ホストを優先する (pycaw の endpoint は WASAPI 世界の名称と
-        1:1 対応、他ホストは名前がトランケートされる可能性)。WASAPI に
-        無ければ全ホストから完全一致を探し、最後に前方一致で救う。
-        比較は両サイドとも strip() 済みの文字列で行う (Realtek 系ドライバ
-        などが device 名に trailing space を含む事例があるため)。
-        """
-        target = endpoint_name.strip()
-        mic_devices = self.mic_devices
-        wasapi_key = next(
-            (host for host in mic_devices.keys() if "WASAPI" in host), None
-        )
-        if wasapi_key is not None:
-            for d in mic_devices[wasapi_key]:
-                if (d.get("name") or "").strip() == target:
-                    return wasapi_key, d["name"]
-        # WASAPI 外の完全一致
-        for host, devs in mic_devices.items():
-            for d in devs:
-                if (d.get("name") or "").strip() == target:
-                    return host, d["name"]
-        # 前方一致 (MME 系はデバイス名が 31 文字で切られるため)
-        for host, devs in mic_devices.items():
-            for d in devs:
-                name = (d.get("name") or "").strip()
-                if name and target.startswith(name):
-                    return host, d["name"]
-        return None, None
-
     def _findSpeakerDeviceByName(self, endpoint_name: str) -> Optional[str]:
         """FriendlyName に一致するスピーカー (loopback) デバイス名を返す。
 
         pyaudiowpatch のスピーカーデバイス名は "<friendly> [Loopback]" 形式。
         pycaw の FriendlyName に " [Loopback]" を付けた候補が
         speaker_devices に存在するかを確認する。比較は両サイドとも
-        strip() 済みで行う (詳細は _findMicDeviceByName 参照)。
+        strip() 済みで行う (Realtek 系ドライバなどが device 名に trailing
+        space を含む事例があるため)。
         """
         target = endpoint_name.strip()
         loopback_target = f"{target} [Loopback]"
@@ -687,13 +763,19 @@ class DeviceManager:
         return None
 
     def _syncMonitoringLifecycleLocked(self) -> None:
-        """mic/speaker の active フラグに応じて monitoring スレッドを起動/停止。
+        """一覧監視または Auto Select の active フラグに応じて monitoring を起動/停止。
 
-        少なくとも 1 サイドが active なら起動、両方 inactive なら停止。
-        個々の設定変更 (setMicAutoActive/setSpeakerAutoActive) の後に呼ぶ。
+        一覧監視または少なくとも 1 サイドの Auto Select が active なら起動し、
+        すべて inactive なら停止する。個々の設定変更
+        (setDeviceListMonitoringActive/setMicAutoActive/setSpeakerAutoActive) の
+        後に呼ぶ。
         _lifecycle_lock を既に保持している前提の内部実装。
         """
-        any_active = self._mic_auto_active or self._speaker_auto_active
+        any_active = (
+            self._device_list_monitoring_active
+            or self._mic_auto_active
+            or self._speaker_auto_active
+        )
         if any_active:
             self._startMonitoringLocked()
         else:
@@ -808,12 +890,6 @@ class DeviceManager:
                 self.callback_process_after_update_speaker_devices()
             except Exception:
                 errorLogging()
-
-    def setCallbackEndpointReconfiguredMic(self, callback):
-        self.callback_endpoint_reconfigured_mic = callback
-
-    def clearCallbackEndpointReconfiguredMic(self):
-        self.callback_endpoint_reconfigured_mic = None
 
     def setCallbackEndpointReconfiguredSpeaker(self, callback):
         self.callback_endpoint_reconfigured_speaker = callback
@@ -933,9 +1009,16 @@ class DeviceManager:
         self.setSpeakerDeviceList()
         self.setSpeakerDefaultDevice()
 
-# Provide a module-level singleton. Call `device_manager.init()` explicitly to
-# initialize audio resources and `device_manager.startMonitoring()` to begin
-# background monitoring. This avoids side-effects during simple imports.
+# Provide a module-level singleton.
+#
+# 注意: import には副作用がある。`DeviceManager.__new__` が `init()` を
+# 呼び、`init()` は PyAudio が使えれば `update()` でデバイスを実際に
+# 列挙する。つまり `import device_manager` しただけで PyAudio の
+# デバイス列挙が走る (これは意図的。import 順によって初期化前の内部構造が
+# 観測され NoDevice になる問題があったため。__new__ のコメント参照)。
+#
+# import 時に走らないのは監視スレッドだけで、これは
+# `device_manager.startMonitoring()` を明示的に呼んだときに開始する。
 device_manager = DeviceManager()
 
 if __name__ == "__main__":

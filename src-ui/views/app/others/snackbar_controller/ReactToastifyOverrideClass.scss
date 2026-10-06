@@ -104,12 +104,25 @@
 }
 
 
+.Toastify__toast--error {
+    user-select: text;
+    -webkit-user-select: text;
+
+    .Toastify__toast-body {
+        user-select: text;
+        -webkit-user-select: text;
+        cursor: text;
+    }
+}
+
 .Toastify__toast-icon {
     width: fit-content;
     max-width: 2.8rem;
     min-width: 2.8rem;
     justify-content: center;
     align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 @keyframes fade_in {

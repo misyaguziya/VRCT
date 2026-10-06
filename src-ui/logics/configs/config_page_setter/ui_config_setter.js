@@ -1,4 +1,5 @@
 import { createAtomWithHook } from "@store";
+import vr_layout from "../../../views/vr/vr_layout.json";
 
 import {
     ctranslate2_weight_type_status,
@@ -607,6 +608,58 @@ export const SETTINGS_ARRAY = [
         logics_template_id: "get_set",
         base_endpoint_name: "speaker_no_speech_prob",
     },
+
+    // OCR
+    {
+        Category: "Ocr",
+        Base_Name: "OcrWindowTitle",
+        default_value: "VRChat",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_window_title",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "SelectableOcrSourceLanguageList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        base_endpoint_name: "selectable_ocr_source_languages",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrSourceLanguage",
+        default_value: "auto",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_source_language",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrPollIntervalMs",
+        default_value: 750,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_poll_interval_ms",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrMinConfidence",
+        default_value: 0.85,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_min_confidence",
+    },
+    {
+        Category: "Ocr",
+        Base_Name: "OcrBubbleMinTextLength",
+        default_value: 2,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ocr_bubble_min_text_length",
+    },
+
     // Vr
     {
         Category: "Vr",
@@ -622,6 +675,7 @@ export const SETTINGS_ARRAY = [
         default_value: ui_configs.overlay_small_log_default_settings,
         ui_template_id: "object",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_small_log_settings",
     },
     {
@@ -638,6 +692,7 @@ export const SETTINGS_ARRAY = [
         default_value: ui_configs.overlay_large_log_default_settings,
         ui_template_id: "object",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_large_log_settings",
     },
     {
@@ -647,6 +702,91 @@ export const SETTINGS_ARRAY = [
         ui_template_id: "toggle",
         logics_template_id: "toggle_enable_disable",
         base_endpoint_name: "overlay_show_only_translated_messages",
+    },
+    {
+        // VR UI (手首のランチャーと各ウィンドウ)。字幕のオーバーレイとは別にON/OFFする
+        Category: "Vr",
+        Base_Name: "IsEnabledOverlayVrPanel",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_panel",
+    },
+    {
+        // VR UIのログウィンドウの固定先 (Playspace / LeftHand / RightHand / HMD)。操作バーで変える。
+        // 掴みや呼び戻しで変わったときもバックエンドから届く
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelAnchor",
+        default_value: "Playspace",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "overlay_vr_panel_anchor",
+    },
+    {
+        // VR UIのログウィンドウのロック (掴めなくする)。操作バーで変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelLocked",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_panel_locked",
+    },
+    {
+        // VR UIのログの文字の大きさ (14〜28px)。操作バーの A−／A＋ で変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelFontSize",
+        default_value: 17,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_panel_font_size",
+    },
+    {
+        // VR画面の並び (ログの大きさで変わる)。Python (models/overlay) が決めて知らせる。既定は vr_layout.json
+        Category: "Vr",
+        Base_Name: "VrPanelLayout",
+        default_value: vr_layout,
+        ui_template_id: "object",
+        logics_template_id: "get_only",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "vr_panel_layout",
+    },
+    {
+        // VR UIのランチャーを付ける手 (LeftHand / RightHand)。VR設定で変える
+        Category: "Vr",
+        Base_Name: "OverlayVrLauncherHand",
+        default_value: "LeftHand",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"], // 「ランチャーを初期に戻す」で左手に戻ったときも届く
+        base_endpoint_name: "overlay_vr_launcher_hand",
+    },
+    {
+        // VR UIのランチャーを手首を見たときだけ出す
+        Category: "Vr",
+        Base_Name: "OverlayVrLauncherAutoHide",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_launcher_auto_hide",
+    },
+    {
+        // VR UIのボタンを指したときの吹き出し (操作名と状態)
+        Category: "Vr",
+        Base_Name: "OverlayVrTooltip",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "overlay_vr_tooltip",
+    },
+    {
+        // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelOpacity",
+        default_value: 1.0,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_panel_opacity",
     },
     {
         Category: "Vr",
@@ -805,15 +945,11 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "websocket_port",
     },
     {
-        // ユーザーが値を変更することはない (バックエンドが生成・永続化する
-        // 接続トークン) が、ObsBrowserSourceUrlContainer と同じ「URL を
-        // 組み立ててコピーする」UI から読み取れるよう get_set テンプレート
-        // に乗せる (set は呼ばれない)。
         Category: "AdvancedSettings",
         Base_Name: "WebsocketAuthToken",
         default_value: "",
         ui_template_id: "input",
-        logics_template_id: "get_set",
+        logics_template_id: "get_only",
         base_endpoint_name: "websocket_auth_token",
     },
     {

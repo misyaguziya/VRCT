@@ -34,7 +34,7 @@ export const _useBackendErrorHandling = () => {
         updateSpeakerMaxWords,
     } = useTranscription();
 
-    const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus } = useMainFunction();
+    const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus, updateOcrCaptureStatus } = useMainFunction();
 
     const {
         updateDeepLAuthKey,
@@ -134,6 +134,29 @@ export const _useBackendErrorHandling = () => {
                 return;
 
             // ============================================================================
+            // OCR関連エラー (OCR_*)  開始できずバックエンドより強制的にOFFへ戻る
+            // ============================================================================
+            case "OCR_DISABLED_ENGINE_UNAVAILABLE":
+                updateOcrCaptureStatus(data);
+                // OCRエンジン、または必要なファイルが見つからないため
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OCR_DISABLED_MODEL_LOAD_FAILED":
+                updateOcrCaptureStatus(data);
+                // モデルの読み込みに失敗したため
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OCR_DISABLED_UNSUPPORTED_LANGUAGE":
+                updateOcrCaptureStatus(data);
+                // 選択中の読み取り言語には対応していないため
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OCR_DISABLED_UNKNOWN":
+                updateOcrCaptureStatus(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+
+            // ============================================================================
             // ウェイトダウンロード関連エラー (WEIGHT_*)
             // ============================================================================
             case "WEIGHT_CTRANSLATE2_DOWNLOAD":
@@ -180,7 +203,7 @@ export const _useBackendErrorHandling = () => {
             case "VALIDATION_CANNOT_SET_IP":
                 if (endpoint === "/set/data/websocket_host") {
                     updateWebsocketHost(data);
-                } else {
+                } else if (endpoint === "/set/data/osc_ip_address") {
                     updateOscIpAddress(data);
                 }
                 showNotification_Error(message, { category_id: error_code });
@@ -338,7 +361,7 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "OBS_BROWSER_SOURCE_FONT_COLOR_INVALID":
                 updateObsBrowserSourceFontColor(data);
-                showNotification_Error(message, { category_id: error_code });
+                showNotification_Error(t("common_error.invalid_hex_color", { brand_color_hex: ui_configs.brand_color_hex }), { category_id: error_code });
                 return;
             case "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS_INVALID":
                 updateObsBrowserSourceFontOutlineThickness(data);
@@ -346,7 +369,7 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID":
                 updateObsBrowserSourceFontOutlineColor(data);
-                showNotification_Error(message, { category_id: error_code });
+                showNotification_Error(t("common_error.invalid_hex_color", { brand_color_hex: ui_configs.brand_color_hex }), { category_id: error_code });
                 return;
 
             // ============================================================================

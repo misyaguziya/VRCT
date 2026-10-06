@@ -184,7 +184,8 @@ except Exception:
 
 ### オプション依存関係
 
-- `torch`: CUDA計算デバイス情報取得
+- `ctranslate2`: GPU台数の取得と計算タイプの列挙
+- `ctypes` + `nvcuda.dll` (CUDA Driver API): GPU名の取得
 - `ctranslate2`: 計算タイプ情報取得
 
 ## デバイス別計算タイプ制約

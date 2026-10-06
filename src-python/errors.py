@@ -5,6 +5,7 @@
 すべてのエラーを一元管理し、エンドポイントとエラーコードの対応を明確にする。
 """
 
+from dataclasses import dataclass
 from typing import Any, Callable, Optional, Dict
 from enum import Enum
 
@@ -29,6 +30,17 @@ def _notify_error_hooks(error_code: str) -> None:
             pass
 
 
+def report_error_code(error_code: str) -> None:
+    """UI 応答を生成せず、登録済みのエラー報告フックだけを呼ぶ。
+
+    デバイス tracker の後始末タイムアウトのように、ユーザー操作を要求する
+    endpoint エラーではないが telemetry で発生頻度を把握したい内部状態に
+    使用する。フックが未登録でも安全に no-op になる。
+    """
+    if error_code:
+        _notify_error_hooks(str(error_code))
+
+
 class ErrorCode(str, Enum):
     """エラーコード定数
     
@@ -39,6 +51,17 @@ class ErrorCode(str, Enum):
     # ============================================================================
     DEVICE_NO_MIC = "DEVICE_NO_MIC"
     DEVICE_NO_SPEAKER = "DEVICE_NO_SPEAKER"
+
+    # 音声入力から文字起こしまでの実行時エラー。これらは通常の
+    # request/response エラーではなく、既存の
+    # /run/transcription_recognition_error 通知で UI に伝える。
+    AUDIO_OPEN_ERROR = "AUDIO_OPEN_ERROR"
+    AUDIO_READ_ERROR = "AUDIO_READ_ERROR"
+    VAD_INFERENCE_ERROR = "VAD_INFERENCE_ERROR"
+    TRANSCRIBER_INIT_ERROR = "TRANSCRIBER_INIT_ERROR"
+    ASR_ERROR = "ASR_ERROR"
+    CLEANUP_TIMEOUT = "CLEANUP_TIMEOUT"
+    AUDIO_TRACKER_STOP_TIMEOUT = "AUDIO_TRACKER_STOP_TIMEOUT"
     
     # ============================================================================
     # 翻訳関連エラー (TRANSLATION_*)
@@ -57,6 +80,10 @@ class ErrorCode(str, Enum):
     TRANSCRIPTION_VRAM_SPEAKER = "TRANSCRIPTION_VRAM_SPEAKER"
     TRANSCRIPTION_SEND_DISABLED_VRAM = "TRANSCRIPTION_SEND_DISABLED_VRAM"
     TRANSCRIPTION_RECEIVE_DISABLED_VRAM = "TRANSCRIPTION_RECEIVE_DISABLED_VRAM"
+    TRANSCRIPTION_API_AUTH_FAILED = "TRANSCRIPTION_API_AUTH_FAILED"
+    TRANSCRIPTION_API_RATE_LIMITED = "TRANSCRIPTION_API_RATE_LIMITED"
+    TRANSCRIPTION_API_TIMEOUT = "TRANSCRIPTION_API_TIMEOUT"
+    TRANSCRIPTION_API_SERVER_ERROR = "TRANSCRIPTION_API_SERVER_ERROR"
     
     # ============================================================================
     # ウェイトダウンロード関連エラー (WEIGHT_*)
@@ -78,7 +105,12 @@ class ErrorCode(str, Enum):
     VALIDATION_INVALID_IP = "VALIDATION_INVALID_IP"
     VALIDATION_CANNOT_SET_IP = "VALIDATION_CANNOT_SET_IP"
     VALIDATION_OSC_PORT_INVALID = "VALIDATION_OSC_PORT_INVALID"
-    
+    # config.py のディスクリプタ (ManagedProperty/ValidatedProperty) が
+    # ConfigValidationError を送出した際の汎用コード (フェーズ3項目24)。
+    # どのフィールドが失敗したかはリクエスト先のエンドポイント自体で
+    # 自明なため、フィールドごとに専用コードを増やさずこれ1つで共有する。
+    VALIDATION_CONFIG_VALUE_INVALID = "VALIDATION_CONFIG_VALUE_INVALID"
+
     # ============================================================================
     # 認証エラー (AUTH_*)
     # ============================================================================
@@ -108,7 +140,12 @@ class ErrorCode(str, Enum):
     MODEL_OPENROUTER_INVALID = "MODEL_OPENROUTER_INVALID"
     MODEL_LMSTUDIO_INVALID = "MODEL_LMSTUDIO_INVALID"
     MODEL_OLLAMA_INVALID = "MODEL_OLLAMA_INVALID"
-    
+    # Groq/OpenAI/カスタムサーバーの文字起こしモデルは全て
+    # OpenAICompatibleTranscriptionProvider の1実装を共有するため、翻訳側の
+    # ようにエンジンごとのコードを分けず1つにまとめる (エラーコード追加は
+    # 最低限にする方針のため)。
+    MODEL_TRANSCRIPTION_INVALID = "MODEL_TRANSCRIPTION_INVALID"
+
     # ============================================================================
     # 接続エラー (CONNECTION_*)
     # ============================================================================
@@ -116,7 +153,8 @@ class ErrorCode(str, Enum):
     CONNECTION_OLLAMA_FAILED = "CONNECTION_OLLAMA_FAILED"
     CONNECTION_LMSTUDIO_URL_INVALID = "CONNECTION_LMSTUDIO_URL_INVALID"
     CONNECTION_OPENAI_COMPATIBLE_URL_INVALID = "CONNECTION_OPENAI_COMPATIBLE_URL_INVALID"
-    
+    CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID = "CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID"
+
     # ============================================================================
     # WebSocketエラー (WEBSOCKET_*)
     # ============================================================================
@@ -143,12 +181,68 @@ class ErrorCode(str, Enum):
     # VRC連携エラー (VRC_*)
     # ============================================================================
     VRC_MIC_MUTE_SYNC_OSC_DISABLED = "VRC_MIC_MUTE_SYNC_OSC_DISABLED"
+
+    # ============================================================================
+    # OCR関連エラー (OCR_*)
+    # OCRを開始できずOFFに戻したときに /run/enable_ocr_capture で通知する。
+    # ============================================================================
+    OCR_DISABLED_ENGINE_UNAVAILABLE = "OCR_DISABLED_ENGINE_UNAVAILABLE"
+    OCR_DISABLED_MODEL_LOAD_FAILED = "OCR_DISABLED_MODEL_LOAD_FAILED"
+    OCR_DISABLED_UNSUPPORTED_LANGUAGE = "OCR_DISABLED_UNSUPPORTED_LANGUAGE"
+    OCR_DISABLED_UNKNOWN = "OCR_DISABLED_UNKNOWN"
     
     # ============================================================================
     # 汎用エラー (GENERAL_*)
     # ============================================================================
     GENERAL_EXCEPTION = "GENERAL_EXCEPTION"
     GENERAL_UNKNOWN = "GENERAL_UNKNOWN"
+
+
+@dataclass(frozen=True)
+class AudioPipelineFailure:
+    """音声パイプラインの UI 通知とログをつなぐ安全なエラー情報。
+
+    `message` は UI に表示してよい概要だけを保持する。元の例外文字列や
+    traceback は呼び出し側で errorLogging() に渡し、通知 payload には含めない。
+    """
+
+    error_code: ErrorCode
+    stage: str
+    source: str
+    message: str
+    exception_type: Optional[str] = None
+
+    def to_notification(self) -> Dict[str, Any]:
+        return {
+            "text": "",
+            "language": None,
+            "recognition_error": True,
+            "error_code": self.error_code.value,
+            "stage": self.stage,
+            "source": self.source,
+            "message": self.message,
+            "recoverable": False,
+        }
+
+
+class AudioPipelineError(RuntimeError):
+    """ASR/VAD など非同期処理からセッション停止を要求する例外。"""
+
+    def __init__(self, failure: AudioPipelineFailure) -> None:
+        super().__init__(failure.message)
+        self.failure = failure
+
+
+class OcrStartError(RuntimeError):
+    """OCRを開始できなかった理由 (OCR_DISABLED_*) を controller へ渡す例外。
+
+    AudioPipelineError と同じく、理由を知っている下位層が ErrorCode を載せて投げ、
+    controller が通知する。
+    """
+
+    def __init__(self, error_code: ErrorCode, message: str = "") -> None:
+        super().__init__(message or error_code.value)
+        self.error_code = error_code
 
 
 class ErrorCategory(str, Enum):
@@ -161,6 +255,7 @@ class ErrorCategory(str, Enum):
     AUTH = "auth"
     MODEL = "model"
     CONNECTION = "connection"
+    OCR = "ocr"
     WEBSOCKET = "websocket"
     OBS_BROWSER_SOURCE = "obs_browser_source"
     VRC = "vrc"
@@ -181,6 +276,48 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "message": "No speaker device detected",
         "severity": "error",
         "user_action_required": True,
+    },
+    ErrorCode.AUDIO_OPEN_ERROR: {
+        "category": ErrorCategory.DEVICE,
+        "message": "Audio device could not be opened",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.AUDIO_READ_ERROR: {
+        "category": ErrorCategory.DEVICE,
+        "message": "Audio capture failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.VAD_INFERENCE_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Voice activity detection failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.TRANSCRIBER_INIT_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Speech recognizer initialization failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.ASR_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Speech recognition failed",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.CLEANUP_TIMEOUT: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Audio transcription cleanup timed out",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.AUDIO_TRACKER_STOP_TIMEOUT: {
+        "category": ErrorCategory.DEVICE,
+        "message": "Audio endpoint tracker cleanup timed out",
+        "severity": "warning",
+        "user_action_required": False,
     },
     
     # 翻訳エラー
@@ -247,7 +384,31 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "critical",
         "user_action_required": True,
     },
-    
+    ErrorCode.TRANSCRIPTION_API_AUTH_FAILED: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API rejected the configured API key",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.TRANSCRIPTION_API_RATE_LIMITED: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API rate limit exceeded",
+        "severity": "warning",
+        "user_action_required": False,
+    },
+    ErrorCode.TRANSCRIPTION_API_TIMEOUT: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API request timed out",
+        "severity": "warning",
+        "user_action_required": False,
+    },
+    ErrorCode.TRANSCRIPTION_API_SERVER_ERROR: {
+        "category": ErrorCategory.TRANSCRIPTION,
+        "message": "Transcription API returned a server error",
+        "severity": "warning",
+        "user_action_required": False,
+    },
+
     # ウェイトダウンロードエラー
     ErrorCode.WEIGHT_CTRANSLATE2_DOWNLOAD: {
         "category": ErrorCategory.WEIGHT,
@@ -326,6 +487,12 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
     ErrorCode.VALIDATION_OSC_PORT_INVALID: {
         "category": ErrorCategory.VALIDATION,
         "message": "OSC port must be a number",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.VALIDATION_CONFIG_VALUE_INVALID: {
+        "category": ErrorCategory.VALIDATION,
+        "message": "The provided value was rejected",
         "severity": "warning",
         "user_action_required": True,
     },
@@ -465,7 +632,13 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "warning",
         "user_action_required": True,
     },
-    
+    ErrorCode.MODEL_TRANSCRIPTION_INVALID: {
+        "category": ErrorCategory.MODEL,
+        "message": "Transcription API model is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # 接続エラー
     ErrorCode.CONNECTION_LMSTUDIO_FAILED: {
         "category": ErrorCategory.CONNECTION,
@@ -491,7 +664,13 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "warning",
         "user_action_required": True,
     },
-    
+    ErrorCode.CONNECTION_TRANSCRIPTION_CUSTOM_URL_INVALID: {
+        "category": ErrorCategory.CONNECTION,
+        "message": "Custom transcription server URL is not valid",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+
     # WebSocketエラー
     ErrorCode.WEBSOCKET_HOST_INVALID: {
         "category": ErrorCategory.WEBSOCKET,
@@ -588,6 +767,32 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "user_action_required": True,
     },
     
+    # OCRエラー
+    ErrorCode.OCR_DISABLED_ENGINE_UNAVAILABLE: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled: OCR engine or its dependencies are unavailable",
+        "severity": "error",
+        "user_action_required": False,
+    },
+    ErrorCode.OCR_DISABLED_MODEL_LOAD_FAILED: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled: failed to load OCR model",
+        "severity": "error",
+        "user_action_required": False,
+    },
+    ErrorCode.OCR_DISABLED_UNSUPPORTED_LANGUAGE: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled: source language is not supported",
+        "severity": "error",
+        "user_action_required": False,
+    },
+    ErrorCode.OCR_DISABLED_UNKNOWN: {
+        "category": ErrorCategory.OCR,
+        "message": "OCR disabled due to an unknown error",
+        "severity": "error",
+        "user_action_required": False,
+    },
+
     # 汎用エラー
     ErrorCode.GENERAL_EXCEPTION: {
         "category": ErrorCategory.GENERAL,

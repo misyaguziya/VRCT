@@ -1,0 +1,183 @@
+{
+  "mixed": [
+    {
+      "text": "こんにちは / Hello / 안녕하세요",
+      "tags": [
+        "mixed"
+      ]
+    },
+    {
+      "text": "ありがとう！ Thank you! 谢谢！",
+      "tags": [
+        "mixed"
+      ]
+    },
+    {
+      "text": "日本語で話します。\nI'll add an English translation here.",
+      "tags": [
+        "mixed",
+        "multiline"
+      ]
+    },
+    {
+      "text": "다음 장소로 이동해요.\n次の場所へ移動しましょう。\nLet's move to the next spot.",
+      "tags": [
+        "mixed",
+        "multiline"
+      ]
+    },
+    {
+      "text": "Bonjour ! Café, crème brûlée et musique tranquille.",
+      "tags": [
+        "diacritics"
+      ]
+    },
+    {
+      "text": "صورة جميلة! Photo 03 / 写真３",
+      "tags": [
+        "mixed",
+        "rtl",
+        "numbers"
+      ]
+    },
+    {
+      "text": "שלום! Meeting point: Gate 2",
+      "tags": [
+        "mixed",
+        "rtl",
+        "numbers"
+      ]
+    },
+    {
+      "text": "10:30 / 23:59 / 2026-09-12\n1,234.56 / １２３４５６７８９０",
+      "tags": [
+        "numbers",
+        "multiline"
+      ]
+    },
+    {
+      "text": "(hello) [world] {photo} <test>\n!?.,:; + - = / \\ | _ ~",
+      "tags": [
+        "punctuation",
+        "multiline"
+      ]
+    },
+    {
+      "text": "「こんにちは」『撮影中』【集合場所】\n（休憩）［案内］！？…・〜",
+      "tags": [
+        "punctuation",
+        "multiline"
+      ]
+    },
+    {
+      "text": "Ready? 🙂 Let's go! 🌸📷✨",
+      "tags": [
+        "emoji"
+      ]
+    },
+    {
+      "text": "🙂🙂🙂\n🌸📷✨\nありがとう！",
+      "tags": [
+        "emoji",
+        "multiline"
+      ]
+    },
+    {
+      "text": "(^_^)  (・ω・)  (≧▽≦)\nThanks for waiting!",
+      "tags": [
+        "kaomoji",
+        "multiline"
+      ]
+    },
+    {
+      "text": "A\nB\nC\nD\nE\nF\nG\nH\nI",
+      "tags": [
+        "synthetic",
+        "nine_lines"
+      ]
+    },
+    {
+      "text": "あ\nい\nう\nえ\nお\nか\nき\nく\nけ",
+      "tags": [
+        "synthetic",
+        "nine_lines"
+      ]
+    },
+    {
+      "text": "上の行\n\n下の行",
+      "tags": [
+        "blank_line",
+        "multiline"
+      ]
+    },
+    {
+      "text": "1. Gather at the bridge.\n2. Take a group photo.\n3. Walk to the garden.\n4. Rest by the lake.",
+      "tags": [
+        "list",
+        "multiline"
+      ]
+    },
+    {
+      "text": "待っています。\n青い扉の前です。\nゆっくりで大丈夫です。\n準備ができたら教えてください。",
+      "tags": [
+        "multiline"
+      ]
+    },
+    {
+      "text": "MMMM WWWW MMMM WWWW MMMM WWWW MMMM WWWW",
+      "tags": [
+        "synthetic",
+        "wide_latin"
+      ]
+    },
+    {
+      "text": "iiii llll iiii llll iiii llll iiii llll",
+      "tags": [
+        "synthetic",
+        "narrow_latin"
+      ]
+    },
+    {
+      "text": "Ready    set    go!\n準備　できました。",
+      "tags": [
+        "spacing",
+        "multiline"
+      ]
+    },
+    {
+      "text": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+      "tags": [
+        "synthetic",
+        "no_spaces"
+      ]
+    },
+    {
+      "text": "The meeting point is beside the old bridge. Please take your time, enjoy the view, and let the group know when you arrive. See you there soon!",
+      "tags": [
+        "near_limit"
+      ]
+    },
+    {
+      "text": "今日は写真を撮ったり、景色を眺めたりしながら、ゆっくりと過ごしたいと思っています。初めて来る人も慣れている人も、それぞれのペースで楽しめるとうれしいです。集合場所が分からなくなったら、入口の青い扉を目印にしてください。誰かが遅れていても急がず、みんなで声をかけ合いながら進みましょう。",
+      "tags": [
+        "near_limit"
+      ]
+    },
+    {
+      "text": "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+      "tags": [
+        "synthetic",
+        "boundary_143",
+        "no_spaces"
+      ]
+    },
+    {
+      "text": "漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢漢",
+      "tags": [
+        "synthetic",
+        "boundary_144",
+        "no_spaces"
+      ]
+    }
+  ]
+}

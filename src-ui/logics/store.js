@@ -6,20 +6,19 @@ import {
 
 import {
     generateTestConversationData,
-} from "./_test_data.js"
+} from "./_test_data.js";
 
 import {
     translator_status,
 } from "@ui_configs";
+import { keepNewestVrLayout } from "./common/vrPanelTooltip";
 
 export const store = {
     backend_subprocess: null,
     setting_box_scroll_container: null,
     log_box_ref: null,
     text_area_ref: null,
-    is_initialized_load_plugin: false,
-    is_fetched_plugins_info_already: false,
-    is_initialized_fetched_plugin_info: false,
+    is_fetched_available_releases_already: false,
     last_executed_time_startTyping: 0,
 };
 
@@ -69,6 +68,9 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
                 const updated_data = typeof payload === "function"
                     ? payload(currentValue)
                     : payload;
+
+                if (base_name === "VrPanelLayout" &&
+                    keepNewestVrLayout(currentValue.data, updated_data) === currentValue.data) return currentValue;
 
                 return {
                     state: new_state,
@@ -141,7 +143,7 @@ export const registerMany = (settingsArray = []) => {
 export const { atomInstance: Atom_IsBackendReady, useHook: useStore_IsBackendReady } = createAtomWithHook(false, "IsBackendReady");
 export const { atomInstance: Atom_IsVrctAvailable, useHook: useStore_IsVrctAvailable } = createAtomWithHook(true, "IsVrctAvailable");
 export const { atomInstance: Atom_IsOscAvailable, useHook: useStore_IsOscAvailable } = createAtomWithHook(true, "IsOscAvailable");
-export const { atomInstance: Atom_ComputeMode, useHook: useStore_ComputeMode } = createAtomWithHook("", "ComputeMode");
+export const { atomInstance: Atom_ComputeMode, useHook: useStore_ComputeMode } = createAtomWithHook("cpu", "ComputeMode");
 export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useStore_IsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
 export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_MainFunctionsStateMemory } = createAtomWithHook({
     transcription_send: false,
@@ -173,9 +175,13 @@ export const { atomInstance: Atom_IsMainPageCompactMode, useHook: useStore_IsMai
 export const { atomInstance: Atom_TranslationStatus, useHook: useStore_TranslationStatus } = createAtomWithHook(false, "TranslationStatus", {is_state_ok: true});
 export const { atomInstance: Atom_TranscriptionSendStatus, useHook: useStore_TranscriptionSendStatus } = createAtomWithHook(false, "TranscriptionSendStatus", {is_state_ok: true});
 export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useStore_TranscriptionReceiveStatus } = createAtomWithHook(false, "TranscriptionReceiveStatus", {is_state_ok: true});
+export const { atomInstance: Atom_OcrCaptureStatus, useHook: useStore_OcrCaptureStatus } = createAtomWithHook(false, "OcrCaptureStatus", {is_state_ok: true});
 export const { atomInstance: Atom_ForegroundStatus, useHook: useStore_ForegroundStatus } = createAtomWithHook(false, "ForegroundStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_SelectedPresetTabNumber, useHook: useStore_SelectedPresetTabNumber } = createAtomWithHook("1", "SelectedPresetTabNumber");
+export const { atomInstance: Atom_LanguageMutation, useHook: useStore_LanguageMutation } = createAtomWithHook(
+    { inFlight: null, lastVrResult: null, isResyncing: false }, "LanguageMutation", { is_state_ok: true }
+);
 export const { atomInstance: Atom_SelectedYourLanguages, useHook: useStore_SelectedYourLanguages } = createAtomWithHook({}, "SelectedYourLanguages");
 export const { atomInstance: Atom_SelectedTargetLanguages, useHook: useStore_SelectedTargetLanguages } = createAtomWithHook({}, "SelectedTargetLanguages");
 
@@ -210,6 +216,10 @@ export const { atomInstance: Atom_MicVolume, useHook: useStore_MicVolume } = cre
 export const { atomInstance: Atom_SpeakerVolume, useHook: useStore_SpeakerVolume } = createAtomWithHook(0, "SpeakerVolume");
 
 export const { atomInstance: Atom_MicThresholdCheckStatus, useHook: useStore_MicThresholdCheckStatus } = createAtomWithHook(false, "MicThresholdCheckStatus", {is_state_ok: true});
+// VR UI のログウィンドウが視線から外れているか (ランチャーのボタンを「呼び戻す」にする)
+export const { atomInstance: Atom_VrPanelLogOutOfView, useHook: useStore_VrPanelLogOutOfView } = createAtomWithHook(false, "VrPanelLogOutOfView", {is_state_ok: true});
+// VR UI のランチャーの起動演出 ("idle" 通常 / "pending" 最初に出すのを待つ / "playing" 演出中)。atom なので VR ウィンドウへも同期される
+export const { atomInstance: Atom_VrPanelLauncherIntro, useHook: useStore_VrPanelLauncherIntro } = createAtomWithHook("idle", "VrPanelLauncherIntro", {is_state_ok: true});
 export const { atomInstance: Atom_SpeakerThresholdCheckStatus, useHook: useStore_SpeakerThresholdCheckStatus } = createAtomWithHook(false, "SpeakerThresholdCheckStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_SelectableFontFamilyList, useHook: useStore_SelectableFontFamilyList } = createAtomWithHook({}, "SelectableFontFamilyList");
@@ -230,12 +240,6 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
     toggle_transcription_send: null,
     toggle_transcription_receive: null,
 }, "Hotkeys");
-
-// Plugins
-export const { atomInstance: Atom_FetchedPluginsInfo, useHook: useStore_FetchedPluginsInfo } = createAtomWithHook([], "FetchedPluginsInfo");
-export const { atomInstance: Atom_LoadedPlugins, useHook: useStore_LoadedPlugins } = createAtomWithHook([], "LoadedPlugins");
-export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([], "SavedPluginsStatus");
-export const { atomInstance: Atom_PluginsData, useHook: useStore_PluginsData } = createAtomWithHook([], "PluginsData");
 
 // Supporters
 export const { atomInstance: Atom_SupportersData, useHook: useStore_SupportersData } = createAtomWithHook(null, "SupportersData", {is_state_ok: true});

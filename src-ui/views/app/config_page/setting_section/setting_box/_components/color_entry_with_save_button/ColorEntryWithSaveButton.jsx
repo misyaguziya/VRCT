@@ -1,10 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
 import styles from "./ColorEntryWithSaveButton.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
-import { CircularProgress } from "@common_components";
-import { useI18n } from "@useI18n";
+import { _SaveButton } from "../_atoms/_save_button/_SaveButton";
 import { clsx } from "clsx";
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
@@ -17,19 +16,14 @@ const remToPx = (rem) => {
 };
 
 export const ColorEntryWithSaveButton = (props) => {
-    const { t } = useI18n();
     const is_disabled = props.state === "pending";
     const [is_open, setIsOpen] = useState(false);
     const [placement, setPlacement] = useState({ open_above: true, align_end: true });
     const popover_ref = useRef(null);
     const swatch_ref = useRef(null);
 
-    const current_color = useMemo(() => {
-        if (typeof props.variable !== "string") return "";
-        return props.variable.trim();
-    }, [props.variable]);
-
-    const is_valid_color = useMemo(() => HEX_COLOR_RE.test(current_color), [current_color]);
+    const current_color = typeof props.variable === "string" ? props.variable.trim() : "";
+    const is_valid_color = HEX_COLOR_RE.test(current_color);
     const swatch_color = is_valid_color ? current_color : "transparent";
     const picker_color = is_valid_color ? current_color : "#FFFFFF";
 
@@ -108,22 +102,24 @@ export const ColorEntryWithSaveButton = (props) => {
         [styles.is_disabled]: is_disabled,
     });
 
-    const save_button_class_names = clsx(styles.save_button, {
-        [styles.is_disabled]: is_disabled,
-    });
+    const popover_paper_class_names = clsx(
+        styles.popover_paper,
+        placement.open_above ? styles.open_above : styles.open_below,
+        placement.align_end ? styles.align_end : styles.align_start,
+    );
 
-    const popover_paper_class_names = clsx(styles.popover_paper, {
-        [styles.open_above]: placement.open_above,
-        [styles.open_below]: !placement.open_above,
-        [styles.align_end]: placement.align_end,
-        [styles.align_start]: !placement.align_end,
-    });
+    const handleEnterPressed = (e) => {
+        if (is_disabled) return;
+        saveFunction();
+        e.target.blur();
+    };
 
     return (
         <div className={styles.container}>
             <_Entry
                 width={props.width}
                 onChange={onChangeFunction}
+                onEnterPressed={handleEnterPressed}
                 ui_variable={props.variable}
                 is_disabled={is_disabled}
             />
@@ -145,13 +141,7 @@ export const ColorEntryWithSaveButton = (props) => {
                     </div>
                 )}
             </div>
-            <button className={save_button_class_names} onClick={saveFunction}>
-                {is_disabled ? (
-                    <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }} />
-                ) : (
-                    <p className={styles.save_button_label}>{t("config_page.translation.deepl_auth_key.save")}</p>
-                )}
-            </button>
+            <_SaveButton onClick={saveFunction} is_disabled={is_disabled} />
         </div>
     );
 };

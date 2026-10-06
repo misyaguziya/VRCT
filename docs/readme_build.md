@@ -54,7 +54,9 @@ npm run setup-python
 - `.venv` (CPU版) の作成と依存関係のインストール
 - `.venv_cuda` (CUDA版) の作成と依存関係のインストール
 
-> **注意**: CUDA版を使用する場合は、NVIDIAのGPUとCUDA Toolkit 12.8が必要です。
+> **注意**: CUDA版を使用する場合は、CUDA 12.8対応のNVIDIA GPUドライバーが必要です。
+> CUDA Toolkit のインストールは不要です。ctranslate2 が使う cuBLAS / cuDNN は
+> `requirements_cuda.txt` の `nvidia-*-cu12` wheel で入り、ビルド時に同梱されます。
 
 ## ビルドの種類
 
@@ -101,15 +103,19 @@ npm run dev-ui
 
 ### 高速開発ビルド（推奨: 日常検証用）
 
-PyInstaller によるバックエンド再パッケージを毎回スキップし、`.venv` の
+PyInstaller によるバックエンド再パッケージを毎回スキップし、仮想環境の
 Python を直接 sidecar として起動する高速ループです。Python コードを
 修正した検証も、プロセス再起動だけで反映されます（数分 → 数秒）。
 
 ```bash
+# 標準環境: .venv/Scripts/python.exe
 npm run dev-fast
+
+# CUDA環境: .venv_cuda/Scripts/python.exe
+npm run dev-cuda-fast
 ```
 
-このコマンドは以下を実行します:
+どちらのコマンドも以下を実行します:
 
 1. 実行中のプロセスを終了 (`task-kill`)
 2. dev 用 sidecar ラッパー（`utils/dev_sidecar/`, Rust 製の薄いバイナリ）を
@@ -118,8 +124,14 @@ npm run dev-fast
 
 前提:
 
-- `npm run setup-python` 済みで `.venv/Scripts/python.exe` が存在すること
+- 選択した仮想環境と依存関係が準備済みであること
+  - `dev-fast`: `.venv/Scripts/python.exe`
+  - `dev-cuda-fast`: `.venv_cuda/Scripts/python.exe`（`.venv` は不要）
 - Rust ツールチェーン (`cargo`) が使えること（既に Tauri で必要）
+
+各コマンドが `VRCT_DEV_VENV` を設定し、Tauri 経由で dev 用 sidecar に
+使用する環境を渡します。選択した環境が存在しない場合はエラーで停止し、
+別の仮想環境への自動切り替えは行いません。環境の有効化（activate）は不要です。
 
 配布 EXE と同一挙動になる根拠:
 
@@ -403,7 +415,7 @@ VRCT/
 │   └── zip.py           # ZIPパッケージング
 ├── package.json          # Node.js設定とバージョン管理
 ├── requirements.txt      # Python依存関係（CPU版）
-└── requirements_cuda.txt # Python依存関係（CUDA版）
+└── requirements_cuda.txt # Python依存関係（CUDA版。requirements.txt + CUDAライブラリ）
 ```
 
 ## トラブルシューティング
@@ -435,9 +447,11 @@ npm run build
 
 ### CUDA版が動作しない
 
-- CUDA Toolkit 12.8がインストールされているか確認
-- NVIDIA GPUドライバーが最新か確認
+- NVIDIA GPUドライバーが最新か確認（CUDA Toolkit のインストールは不要）
 - `requirements_cuda.txt` の依存関係が正しくインストールされているか確認
+- `.venv_cuda/Lib/site-packages/nvidia/{cublas,cudnn}/bin/` にDLLがあるか確認。
+  ctranslate2 はGPU実行時にここの `cublas64_12.dll` / `cudnn64_9.dll` を
+  実行時ロードする。無ければGPUは計算デバイス一覧に出ない
 
 ### プロセスが残っている
 

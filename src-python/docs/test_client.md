@@ -1,4 +1,4 @@
-# test_client.py ドキュメント
+# test/test_client.py ドキュメント
 
 ## 概要
 `test_client.py` は stdin/stdout 経由でバックエンド (`mainloop.py`) と通信し、各種 API エンドポイントを自動 / 半自動でテストするためのクライアントユーティリティ。初期化完了待機、ログ (status=348) 展開表示、サイレントモード、結果エクスポート(JSON/CSV)、Watchdog ハートビート送信 (/run/feed_watchdog) などの補助機能を備える。

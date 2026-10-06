@@ -4,17 +4,20 @@
 # =================================
 
 common:
+    close_button_label: "關閉"
     go_back_button_label: "返回"
+    default_label: "預設"
 
 common_error:
     no_device_mic: "未偵測到麥克風裝置。"
     no_device_speaker: "未偵測到喇叭裝置。"
+    copy_to_clipboard_failed: "複製到剪貼簿失敗。"
     threshold_invalid_value: "可以設置 {{min}} 到 {{max}} 之間的值。"
     failed_download_weight_ctranslate2: "CTranslate2 模型下載失敗。"
     failed_download_weight_whisper: "Whisper 模型下載失敗。"
     translation_limit: "已達到翻譯引擎使用限制或臨時受到使用限制。"
-    deepl_auth_key_invalid_length: "授權金鑰字元數錯誤。"
-    deepl_auth_key_failed_authentication: "授權金鑰錯誤或已達 API 使用上限。"
+    deepl_auth_key_invalid_length: "API 金鑰字元數錯誤。"
+    deepl_auth_key_failed_authentication: "API 金鑰錯誤或已達 API 使用上限。"
 
     invalid_value_mic_record_timeout: "不能大於「{{mic_phrase_timeout_label}}」，應為 0 或更高。"
     invalid_value_mic_phrase_timeout: "不能小於「{{mic_record_timeout_label}}」，應為 0 或更高。"
@@ -24,6 +27,8 @@ common_error:
     invalid_value_speaker_phrase_timeout: "不能小於「{{speaker_record_timeout_label}}」，應為 0 或更高。"
     invalid_value_speaker_max_phrase: "可以設置 0 或更高的數值。"
 
+    invalid_hex_color: "請輸入有效的 HEX 顏色代碼（例：{{brand_color_hex}}）格式。"
+
 common_warning:
     unable_to_use_osc_query: "由於 OSC IP Address 的設定無法接收 OSC 資料，以下功能已自動停用。"
 
@@ -31,6 +36,7 @@ main_page:
     translation: "翻譯"
     transcription_send: "麥克風轉文字"
     transcription_receive: "喇叭轉文字"
+    ocr: "聊天讀取"
     foreground: "最上層顯示"
 
     language_settings: "語言設定"
@@ -48,6 +54,7 @@ main_page:
         all: "全部"
         sent: "已發送"
         received: "已接收"
+        received_ocr: "已接收 ({{ocr}})"
         system: "系統"
 
         resend_button_on_hover_desc: "長按發送"
@@ -63,52 +70,42 @@ main_page:
     updating: "正在更新..."
 
 update_modal:
-    cpu_desc: "僅使用 CPU 作為處理裝置"
-    cuda_desc: "可選擇 CPU 和 NVIDIA GPU 作為處理裝置"
-    cuda_compare_cpu_desc: "選擇 GPU 時，與 CPU 相比處理更快"
-    cuda_disk_space_desc: "需要約 {{size}} 的磁碟空間"
-    close_modal: "關閉"
-    download_latest_and_restart: "將下載最新版本，\n應用程式將自動重新啟動。"
-    is_latest_version_already: "已在使用最新版本"
-    is_current_compute_device: "目前使用的版本"
     title: "更新"
-    hero_update_available: "有可用更新"
-    hero_up_to_date: "最新版本"
-    hero_up_to_date_desc: "您正在使用最新版本，無需更新。"
-    hero_custom_pending: "以此設定安裝"
-    current_prefix: "目前："
+    summary_up_to_date_desc: "您正在使用最新版本，無需更新。"
     channel_stable: "穩定版"
     channel_beta: "測試版"
     compute_mode_cpu: "CPU 版"
-    compute_mode_gpu: "GPU 版 (CUDA)"
-    beta_suffix: "測試版"
-    latest_suffix: "最新"
-    install_latest_button: "立即更新"
-    install_button: "以此設定更新"
-    close_button: "關閉"
+    compute_mode_cuda: "GPU 版 (CUDA)"
+    latest_label: "最新"
+    install_latest_button: "更新至最新版本"
+    install_button: "以此設定重新安裝"
     section_pick_variant: "選擇其他版本或組建"
-    refresh_button: "重新整理"
-    refresh_button_title: "取得最新的版本清單"
+    refresh_button: "檢查更新"
     channel_label: "發布頻道"
     channel_desc: "測試版可搶先體驗新功能，但可能不穩定。"
     compute_mode_label: "裝置組建"
-    compute_mode_desc: "GPU 版可在 NVIDIA GPU 上高速運行，但下載體積約大 5GB。"
+    compute_mode_desc: "GPU 版可在 NVIDIA GPU 上高速運行，但需要約 5GB 的額外磁碟空間。"
     version_label: "要安裝的版本"
     version_desc: "可從所選頻道公開發布的版本中選擇。"
     no_versions_available: "所選頻道暫無可用版本。"
     change_col_current: "目前"
     change_col_after: "安裝後"
     warn_downgrade: "這是從 {{from}} 到 {{to}} 的降級。設定檔的相容性無法保證。"
-    warn_gpu_extra_size: "GPU 版大約需要 5GB 的額外下載。"
-    warn_switch_to_beta: "將切換至測試版頻道，之後的更新通知也將以測試版為主。"
-    warn_switch_to_stable: "將切換至穩定版頻道，之後的更新通知也將以穩定版為主。"
+    warn_cuda_extra_size: "GPU 版大約需要 5GB 的額外下載。"
+    warn_switch_channel: "將切換至{{channel}}頻道，之後的更新通知也將以{{channel}}為主。"
 
 config_page:
+    search:
+        placeholder: "搜尋設定..."
+        no_results: "未找到相符的設定"
     common:
         version: "版本 {{version}}"
         model_download_button_label: "下載"
-        correct_auth_key_required:
-        open_auth_key_webpage:
+        save_button_label: "儲存"
+        edit_button_label: "編輯"
+        correct_auth_key_required: "需要正確的 API 金鑰"
+        open_auth_key_webpage: "打開 API 金鑰管理頁面"
+        auth_key_success: "API 金鑰更新完成。"
         connection_check:
             button_label:
             checking:
@@ -131,9 +128,9 @@ config_page:
         transcription: "語音辨識"
         others: "其他"
         hotkeys: "快捷鍵"
-        plugins: "外掛程式"
         advanced_settings: "進階設定"
         updater: "更新"
+        ocr: "聊天讀取"
 
     device:
         check_volume: "音量檢查"
@@ -178,6 +175,10 @@ config_page:
             label: "介面語言"
 
     translation:
+        section_label_ai_translation: "AI 翻譯 (本地)"
+        section_label_external_api: "外部翻譯 API"
+        section_label_local_llm: "本地 LLM / 相容伺服器"
+
         ctranslate2_weight_type:
             label: "選擇離線翻譯模型"
             desc: "你可以選擇用於離線翻譯引擎的翻譯模型。"
@@ -187,12 +188,8 @@ config_page:
             label: "AI 翻譯的處理裝置"
 
         deepl_auth_key:
-            label: "DeepL 授權金鑰"
+            label: "DeepL API 金鑰"
             desc: "使用 DeepL API 時請在主螢幕選擇 {{translator}}。※可能不支援某些語言。"
-            open_auth_key_webpage: "打開 DeepL 帳號頁面"
-            save: "儲存"
-            edit: "編輯"
-            auth_key_success: "授權金鑰更新完成。"
 
         plamo_auth_key:
             label:
@@ -271,8 +268,6 @@ config_page:
         whisper_weight_type:
             label: "Whisper 模型類型"
             desc: "容量越大的模型精度越高，但會占用更多 CPU/GPU 資源。\n※特別是比 medium 更大的模型，根據 CPU/GPU 效能可能難以使用。"
-            model_template: "{{model_name}}模型（{{capacity}}）"
-            recommended_model_template: "{{model_name}}模型（{{capacity}}）（推薦）"
         transcription_compute_device:
             label: "AI 語音辨識使用的處理裝置"
 
@@ -298,12 +293,19 @@ config_page:
         display_duration: "顯示持續時間"
         fadeout_duration: "淡出持續時間"
         common_settings: "通用設定"
+        vr_ui_beta: "VR UI（測試版）"
         tracker: "顯示追蹤器的位置"
         hmd: "HMD"
         left_hand: "左手"
         right_hand: "右手"
         overlay_show_only_translated_messages:
             label: "僅顯示翻譯後的訊息"
+        vr_panel:
+            label: "顯示VR UI"
+            desc: "在VR中顯示手腕啟動器與視窗，可切換功能開關、查看日誌、變更語言與設定。可獨立於字幕疊加層使用。"
+        reset_launcher:
+            label: "重設啟動器的位置與大小"
+            desc: "在VR中找不到啟動器時使用。它會回到左手手腕上的預設位置與大小。"
         voice_typing_mode:
             label:
             desc:
@@ -362,6 +364,28 @@ config_page:
             desc:
             aptabase_privacy_policy_label:
 
+    ocr:
+        section_title: "VRChat 聊天讀取"
+        section_desc: "讀取畫面上顯示的 VRChat 聊天氣泡文字，並透過現有的翻譯流程處理。結果會顯示在主要訊息記錄和 SteamVR 疊加層中，不會傳送到 VRChat 的 OSC 聊天框。"
+        capture_target: "擷取對象"
+        language: "語言"
+        performance: "效能"
+        window_title:
+            label: "視窗名稱"
+            desc: "與可見視窗標題的部分相符(不區分大小寫)。如果你使用的用戶端視窗標題不是「VRChat」(例如修改版啟動器)，請變更此項。"
+        source_language:
+            label: "讀取語言"
+            desc: "擷取氣泡所使用的語言。「auto」以單一模型自動辨識日文、英文、中文以及拉丁字母系語言。諺文、西里爾字母、泰文、阿拉伯文、天城文需要另外的模型，請選擇對應的文字體系。在執行中變更也會立即切換。阿拉伯文目前精度較低。"
+        poll_interval_ms:
+            label: "擷取間隔 (毫秒)"
+            desc: "迴圈擷取新影格的頻率。數值越低反應越快，但 CPU/GPU 負載越高。預設值：750。"
+        min_confidence:
+            label: "最低信心度"
+            desc: "低於此信心度分數的文字會被捨棄。調高可減少誤判，調低可捕捉較模糊的氣泡。預設值：0.85。"
+        bubble_min_text_length:
+            label: "最小文字長度"
+            desc: "字元數低於此值的氣泡將被忽略。預設值：2。"
+
     updater:
         install_panel:
             section_label:
@@ -382,6 +406,10 @@ config_page:
             reinstall_button:
 
     hotkeys:
+        input_placeholder: "請輸入按鍵組合"
+        disabled_notice: "※開啟設定頁面時，為防止誤操作，快捷鍵功能會暫時停用。"
+        error_in_use: "「{{action_name}}」的快捷鍵（{{hotkey}}）已在其他位置使用，無法註冊。"
+        error_failed_to_register_at_launch: "「{{action_name}}」的快捷鍵（{{hotkey}}）正被其他應用程式使用，無法啟用。"
         toggle_vrct_visibility:
             label: "切換 VRCT 最小化/啟動"
         toggle_translation:
@@ -390,18 +418,6 @@ config_page:
             label: "切換「{{transcription_send}}」開/關"
         toggle_transcription_receive:
             label: "切換「{{transcription_receive}}」開/關"
-
-    plugins:
-        downloaded_version: "已下載版本：{{downloaded_version}}"
-        latest_version: "最新版本：{{latest_version}}"
-        available_after_updating: "更新到最新版後可用"
-        unavailable_downloaded: "目前不可用 與使用中的 VRCT 版本不相容"
-        no_latest_info: "無法取得最新資訊"
-        using_latest_version: "正在使用最新版本"
-        available_latest_version: "最新版本可用"
-        unavailable_latest_version: "最新版本目前不可用"
-        available_in_latest_vrct_version: "可在 VRCT 最新版中使用"
-        unavailable_not_downloaded: "目前不可用"
 
     advanced_settings:
         osc_ip_address:
@@ -445,18 +461,123 @@ config_page:
 
     notifications:
         save_success: "設定已儲存。"
+        opened_folder: "已開啟檔案夾。"
 
-plugin_notifications:
-    downloading: "正在下載外掛程式。"
-    downloaded_success: "外掛程式下載完成。"
-    downloaded_error: "外掛程式下載失敗。"
-
-    updating: "正在更新外掛程式。"
-    updated_success: "外掛程式更新完成。"
-    updated_error: "外掛程式更新失敗。"
-
-    disabled_out_of_support: "與目前版本不相容。已停用外掛程式。"
-    disabled_due_to_an_error: "外掛程式執行時偵測到錯誤。請向外掛程式開發者回報。"
-
-    is_enabled: "外掛程式已啟用。"
-    is_disabled: "外掛程式已停用。"
+vr_panel:
+    window_log: "日誌"
+    window_language: "語言"
+    window_settings: "VR設定"
+    recall_log: "召回"
+    anchor_playspace: "空間"
+    anchor_left_hand: "左手"
+    anchor_right_hand: "右手"
+    anchor_head: "頭部"
+    lock: "鎖定"
+    locked: "已鎖定"
+    launcher: "啟動器"
+    launcher_hand: "啟動器所在的手"
+    launcher_hand_desc: "用另一隻手的雷射點擊"
+    launcher_auto_hide: "僅在看手腕時顯示"
+    launcher_auto_hide_desc: "僅在把手腕轉向臉部時出現"
+    tooltip_enabled: "按鈕提示氣泡"
+    tooltip_enabled_desc: "指向按鈕時顯示操作名稱和狀態"
+    locked_by_config_page: "設定已開啟。關閉後即可操作。"
+    log_opacity: "日誌不透明度"
+    mic_threshold: "麥克風能量閾值"
+    speaker_threshold: "喇叭能量閾值"
+    automatic: "自動"
+    paused_while_settings: "設定期間暫停翻譯與語音辨識。關閉後恢復。"
+    overlay_small_log: "字幕（單行）"
+    overlay_large_log: "字幕（多行）"
+    tooltip:
+        translate: "翻譯"
+        microphone: "麥克風輸入"
+        listen: "聽取"
+        chat_detect: "聊天偵測"
+        functions_group: "功能開關"
+        windows_group: "視窗"
+        controls_group: "日誌操作"
+        config_open: "設定中"
+        busy_help: "請等待套用完成"
+        enable: "按下以開啟"
+        disable: "按下以關閉"
+        open: "顯示中"
+        hidden: "已隱藏"
+        lost: "視野外"
+        holding: "繼續按住 以召回"
+        holding_help: "請繼續按住"
+        click_recall: "按下以召回"
+        log_help: "按下以開啟/關閉 · 長按以召回"
+        close_view: "按下以關閉"
+        open_view: "按下以開啟"
+        anchor: "固定位置"
+        position: "位置操作"
+        current: "目前"
+        choose_anchor: "按下以變更固定位置"
+        recall_help: "召回後將固定在空間中"
+        unlocked: "可移動"
+        lock_help: "按下以鎖定移動"
+        unlock_help: "按下以解除移動鎖定"
+        font: "文字大小"
+        smaller: "縮小文字"
+        larger: "放大文字"
+        font_limit: "文字大小範圍：14～28"
+        font_help: "原文大小 · 譯文也會隨之變化"
+        opacity_help: "每次按下：100 → 80 → 60 → 40% → 100%"
+    settings:
+        processing: "處理設定"
+        changing: "正在套用變更…"
+        changing_short: "套用中…"
+        auto_device: "關閉自動選擇後即可變更裝置。"
+        fonts_unavailable: "無法取得字型清單。請檢查電腦設定。"
+        devices_unavailable: "沒有可用的處理裝置。請檢查電腦設定。"
+        types_unavailable: "沒有可用的處理類型。請檢查所選裝置。"
+        prepare_model: "尚未準備模型。請在電腦設定中下載。"
+        unavailable: "無法使用。請檢查電腦設定。"
+        speaker_adjustments: "調整分段與保留詞數"
+        ui_log: "VR UI 記錄視窗"
+        subtitle_overlay: "字幕浮層（單行／多行）"
+        decrease: "減少{{label}}"
+        increase: "增加{{label}}"
+        volume_check: "檢查音量"
+        collapse: "收合"
+        expand: "展開"
+        close: "關閉設定並恢復翻譯與語音辨識"
+    language:
+        preset_number: "預設 {{n}}"
+        swap: "交換"
+        swap_hint: "與對方第1項"
+        swap_name: "交換您的語言與對方第1項語言"
+        range: "1–3種語言"
+        required: "必選"
+        min_reason: "至少需要一種對方語言"
+        remove: "移除對方第{{n}}項，{{language}}（{{country}}）"
+        change_target: "變更對方第{{n}}項"
+        add: "新增語言"
+        add_title: "新增對方語言"
+        edit_your: "變更您的語言"
+        all_languages: "從全部語言中選擇"
+        saved: "已儲存的候選"
+        saved_hint: "所有預設中儲存的語言"
+        letters_title: "選擇語言的首字母"
+        letter_title: "以{{letter}}開頭的語言"
+        selected: "已選擇"
+        selected_slots: "對方第{{n}}項"
+        available: "可用的引擎"
+        unavailable: "不可用的引擎"
+        unavailable_hint: "目前語言或設定不支援此引擎。請在電腦端查看所需設定。"
+        same_reason: "您的語言與對方語言相同時，僅可使用CTranslate2。國家不同也適用。"
+        full: "已選擇3 / 3項 · 點選對應行變更語言"
+        busy_hint: "套用變更時請留在此頁面。"
+        success: "變更已套用"
+        external: "已切換至預設{{n}}"
+        sync: "正在同步語言設定…"
+        error: "無法套用變更。請重新選擇。"
+        same_short: "相同語言"
+        duplicate: "有重複項"
+        selected_count: "已選擇{{n}} / 3個對方語言項"
+        unconfirmed: "尚未收到回應。正在等待設定同步。"
+        settings_updated: "語言設定已變更，已返回主畫面。"
+        pc_retry: "未能接受變更。請檢查目前的語言設定並重新選擇。"
+        sync_error: "無法同步設定。請重新取得後再變更。"
+        retry_sync: "重新取得語言設定"

@@ -13,12 +13,23 @@ a = Analysis(
         ('./../src-python/models/overlay/fonts', 'fonts/'),
         ('./../src-python/models/translation/translation_settings/prompt', 'translation_settings/prompt/'),
         ('./../src-python/models/translation/translation_settings/languages', 'translation_settings/languages/'),
+        ('./../src-python/models/ocr/onnx', 'ocr_onnx/'),
         ('./../.venv_cuda/Lib/site-packages/zeroconf', 'zeroconf/'),
         ('./../.venv_cuda/Lib/site-packages/openvr', 'openvr/'),
+        ('./../.venv_cuda/Lib/site-packages/glfw', 'glfw/'),  # glfw3.dll (VR UI overlay texture) is loaded via ctypes, not found by analysis
         ('./../.venv_cuda/Lib/site-packages/faster_whisper', 'faster_whisper/'),
-        ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/')
+        ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/'),
+        ('./../.venv_cuda/Lib/site-packages/rapidocr', 'rapidocr/'),
         ],
-    hiddenimports=['faster_whisper.vad', 'models.transcription.audio_pipeline'],
+    # nvidia.cublas / nvidia.cudnn は ctranslate2 が GPU 実行時に
+    # LoadLibrary で遅延ロードするDLLの提供元で、Python からは import
+    # されないので依存解析に掛からない。ここで明示して
+    # pyinstaller-hooks-contrib の hook-nvidia.* に _internal/nvidia/<lib>/bin/
+    # へ収集させる (2026-09-18 に torch を落とすまでは、torch が同梱していた
+    # 同じDLL群が torch 経由で収集されていた)。実行時のDLL検索パス登録は
+    # src-python/utils.py の _registerBundledCudaLibraries が行う。
+    hiddenimports=['telemetry_keys', 'faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr', 'windows_capture',
+                   'nvidia.cublas', 'nvidia.cudnn'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
