@@ -299,6 +299,7 @@ config_page:
         display_duration: "Display Duration"
         fadeout_duration: "Fadeout Duration"
         common_settings: "Common Settings"
+        vr_ui_beta: "VR UI (Beta)"
         tracker: "Tracker"
         hmd: "HMD"
         left_hand: "Left Hand"
@@ -308,6 +309,9 @@ config_page:
         vr_panel:
             label: "Show the VR UI"
             desc: "Shows a wrist launcher and windows in VR for turning features on and off, reading the log, and changing languages and settings. Works independently of the subtitle overlays."
+        reset_launcher:
+            label: "Reset the launcher position and size"
+            desc: "Use this if you lose the launcher in VR. It returns to your left wrist at its default position and size."
         voice_typing_mode:
             label: "Voice Typing Mode"
             desc: "Automatically pastes transcribed text into the active input field.\n*Utilizes standard Windows clipboard functionality."

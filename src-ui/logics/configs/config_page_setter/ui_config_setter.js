@@ -717,7 +717,7 @@ export const SETTINGS_ARRAY = [
         // 掴みや呼び戻しで変わったときもバックエンドから届く
         Category: "Vr",
         Base_Name: "OverlayVrPanelAnchor",
-        default_value: "LeftHand",
+        default_value: "Playspace",
         ui_template_id: "select",
         logics_template_id: "get_set",
         add_endpoint_run_array: ["from_backend"],
@@ -758,6 +758,7 @@ export const SETTINGS_ARRAY = [
         default_value: "LeftHand",
         ui_template_id: "select",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"], // 「ランチャーを初期に戻す」で左手に戻ったときも届く
         base_endpoint_name: "overlay_vr_launcher_hand",
     },
     {

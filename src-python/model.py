@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from flashtext import KeywordProcessor
 
 from device_manager import device_manager
-from config import config
+from config import config, DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
 
 from models.translation.translation_translator import Translator
 from models.osc.osc import OSCHandler
@@ -48,7 +48,7 @@ from models.transcription.transcription_deepgram import (
     isLanguageSupportedByDeepgramModel,
 )
 from models.transliteration.transliteration_transliterator import Transliterator
-from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay
+from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay, launcherNearestInReach, launcherOutOfReach
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
@@ -959,6 +959,12 @@ class Model:
         overlay_small_log_settings = copy.deepcopy(config.OVERLAY_SMALL_LOG_SETTINGS)
         overlay_large_log_settings = copy.deepcopy(config.OVERLAY_LARGE_LOG_SETTINGS)
         overlay_large_log_settings["ui_scaling"] = overlay_large_log_settings["ui_scaling"] * 0.25
+        if launcherOutOfReach(config.OVERLAY_VR_LAUNCHER_SETTINGS):
+            # 保存されたランチャーが手首から遠すぎる、または小さすぎ・大きすぎて、見失う
+            printLog("overlay: ランチャーの位置か大きさが範囲の外だったので、手首の近くへ寄せます")
+            # 初期には戻さず、手首から一番近い限度の内側へ寄せる (向き・付ける手は変えない)
+            config.OVERLAY_VR_LAUNCHER_SETTINGS = {**config.OVERLAY_VR_LAUNCHER_SETTINGS,
+                                                   **launcherNearestInReach(config.OVERLAY_VR_LAUNCHER_SETTINGS)}
         overlay_settings = {
             "small": overlay_small_log_settings,
             "large": overlay_large_log_settings,
@@ -973,6 +979,7 @@ class Model:
             },
         }
         self.overlay = Overlay(overlay_settings)
+        self.overlay.launcher_defaults = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_mute_status = None
         # OSC ミュート同期 (changeHandlerMute) が実行する pause()/resume() を
@@ -2373,6 +2380,12 @@ class Model:
         """VR UIのランチャーを手首を見たときだけ出すか。"""
         self.ensure_initialized()
         self.overlay.launcher_auto_hide = enabled
+
+    def resetVrLauncher(self) -> None:
+        """ランチャーを初期の位置・大きさ・手 (左手) へ戻す。VR につながっていれば、手首へ吸い寄せて戻る。"""
+        overlay = getattr(self, "overlay", None)
+        if overlay is not None:
+            overlay.requestLauncherReset()
 
     def updateVrLauncherPosition(self) -> None:
         """保存したランチャーの位置と付ける手をオーバーレイに反映する。"""

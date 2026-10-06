@@ -127,6 +127,7 @@ class Main:
 - `/set/data/overlay_vr_panel_font_size`: VR UI のログの文字の大きさ (14〜28px)
 - `/get/data/vr_panel_layout`: VR画面の並び (atlas と各領域)。ログの大きさで変わり、変わったら `/run/vr_panel_layout` で通知
 - `/set/data/overlay_vr_launcher_hand`: VR UI のランチャーを付ける手 (LeftHand / RightHand)。手首に対する位置を左右反転して引き継ぐ
+- `/run/vr_launcher_reset`: ランチャーの位置・向き・大きさ・手を初期 (左手) に戻す。見失って戻せなくなったときの手段 (PC 側の設定 > VR > VR UI (β版機能) から)。VR につながっていれば手首へ吸い寄せて戻る。付ける手は `/run/overlay_vr_launcher_hand` で UI へ知らせる
 - `/set/enable/overlay_vr_launcher_auto_hide` / `/set/disable/overlay_vr_launcher_auto_hide`: ランチャーを手首を見たときだけ出す
 - `/run/vr_panel_tooltip`: VR 画面が描いた操作の吹き出しの要求 (VR 画面からメイン経由で届く。世代 marker で撮影結果と照合する)
 - `/get/data/overlay_vr_tooltip` / `/set/enable/overlay_vr_tooltip` / `/set/disable/overlay_vr_tooltip`: 操作の吹き出しの ON/OFF (既定 ON)

@@ -33,7 +33,7 @@ Python (src-python/models/overlay/)
   └─ overlay_tooltip.py 吹き出しの入力検証・世代marker・透明マスク (§19で追加)
 ```
 
-- VR 画面は **1 枚の画面外 WebView に全領域を並べて描き、1 回撮影して** `setOverlayTexture` を各オーバーレイ (log / launcher / popup / toolbar / tooltip) に渡し、`setOverlayTextureBounds` で切り出す。並びは `src-ui/views/vr/vr_layout.json` と `computeVrLayout` (overlay.py)。tooltipは非入力の別handle。既定atlasは1628×880。
+- VR 画面は **1 枚の画面外 WebView に全領域を並べて描き、1 回撮影して** `setOverlayTexture` を各オーバーレイ (log / launcher / popup / toolbar / tooltip) に渡し、`setOverlayTextureBounds` で切り出す。並びは `src-ui/views/vr/vr_layout.json` と `computeVrLayout` (overlay.py)。tooltipは非入力の別handle。既定atlasは1690×880。
 - VR ウィンドウは VR UI が **ON の間だけ** 作る（Tauri コマンド `set_vr_panel_window`、`VrPanelSyncController` から呼ぶ）。
 - 入力は WebView 内部の `Chrome_RenderWidgetHostHWND` へ PostMessage（OS のカーソルは動かさない）。
 
@@ -506,7 +506,7 @@ HTMLビルド **PASS、60 modules**。5言語×通常／反映中／設定中×�
 
 ### 描画・入力の契約
 
-- 共有atlasにtooltip領域 `[right_x, 760, 360, 120]` を予約し、最小atlasを1628×880へ変更。Python・既定JSON・Rustの初期寸法を一致させた。新規の撮影スレッドや依存は追加していない。
+- 共有atlasにtooltip領域 `[right_x, 760, 360, 120]` を予約し、最小atlasを1628×880へ変更。Python・既定JSON・Rustの初期寸法を一致させた（その後ランチャーが 952px 幅になり、atlas は 1690×880。Rust は `src-tauri/src/lib.rs` の `inner_size`）。新規の撮影スレッドや依存は追加していない。
 - SteamVRの専用handle `VRCT_tooltip` を1つ追加。同じGL textureを共有し、対象ボタンの上12px相当／親の前4mmへ配置する。launcherとtoolbarの固定先・実寸へ追従。sort orderは70、pointerは100。入力／掴み／リサイズの候補に含めない。
 - `/run/vr_panel_tooltip` は `{epoch, revision, visible, region, button:[x,y,w,h], size:[360,body_h], arrow_x, mode}` を受ける。非表示は `{epoch,revision,visible:false}` のみ。modeはhover（既定）／focus。Controllerで検証し、Modelは重い初期化をせず転送、OverlayはQueueで所有スレッドへ渡す。既存endpointは維持。
 - epoch48bitとrevision32bitを80個の白黒4×8pxセルで描く。epochはOverlay内で単調増加、layoutの追加metadata `tooltip_epoch` で通知。bodyはy=8、高さ104px以内、下向き矢印6px。撮影画像のmarker一致を確認してから透明マスク／upload／bounds／位置を更新し表示する。markerは常時透明。古いWGC frameや同一rawの再利用に対応する。
@@ -657,8 +657,16 @@ epochは現在のOverlay生成時にrandom47bitで始まり、その同じinstan
 - **起動演出**（`18700a27` / `98e923db`）: VR UI を ON にして最初にランチャーを出すとき、頭の正面に VRCT のアイコンを大きく出し、手首へ吸い寄せてから、ロゴ入りのカプセルが開いてランチャーになる（全体で約 3.2 秒）。仕組み・時間・保険（着用が分からないときは手首でそのまま開く）は `src-python/docs/details/overlay.md` の「VR UI」を参照。
 - 実機で確定した罠:
   - VR 画面は不透明にしか描けない。演出中は背景色（`#151517`）をキーにして領域の外側を透明にする (`introKeyAlpha`)。キー色は領域の左上の角から取る。計算を int16 でやると、白い文字（背景との差が大きい色）が桁あふれで透明になる（int32 にした）。
-  - ランチャーの領域は高さ約 128px。正面で大きく見せるほど荒くなる（`_INTRO_FRONT_SCALE`=7.5）。
+  - ランチャーの領域は高さ約 128px。正面で大きく見せるほど荒くなる（`_INTRO_FRONT_SCALE`=5.0）。
   - 正面の位置は最初の 1 回で固定すると、頭を動かしたとき正面から外れる。正面にいる間は視線に追従し、飛び始めで固定する。
   - 向きの補間を「行列を混ぜて直交化」にすると、180° 近く違うときに跳ぶ。slerp にした。
 - 実機確認が残る項目: 機種ごとの着用判定（`getTrackedDeviceActivityLevel`）、腕を下げた姿勢での起動、飛行中にコントローラの電源を切ったとき、約 16fps の撮影での見え方。詰めた後（約 3.2 秒）の長さが適切か。
 - 設計書 (`設計書.md` / `詳細設計書.md` / `details/overlay.md` / `details/mainloop.md`) に VR UI を追記した。
+
+## 23. ランチャーを見失ったときの復旧（2026-10-05・Claude Code）
+
+- **PC 側の設定 > VR > 「VR UI（β版機能）」セクション**を新設し、「VR UIを表示する」をそこへ移した。その下に「ランチャーの位置と大きさを初期に戻す」ボタン（`/run/vr_launcher_reset`）。手は左手に戻る。見失って config を消すしかない、をなくすため。
+- **自動**: 放した位置が手首から 15cm より遠い、または横幅が 0.12〜1.0m の外なら、手首から一番近い限度の内側の点へ吸い寄せる（方向・向き・手・範囲内の大きさは保つ。PC側のボタンだけが初期の位置・向き・大きさ・左手に戻す）。起動時に保存値が範囲の外なら同じように寄せる。限度は `_LAUNCHER_REACH_M` / `_LAUNCHER_WIDTH_RANGE_M`（実機で使いにくければ調整する）。
+- 戻す限度 (15cm / 0.12〜1.0m) は、掴んで拡大縮小できる範囲 (0.05〜3.0m) より狭い。広げて放すと戻るのは意図どおりだが、掴み中に警告は出ない。違和感が出たら限度を調整する。
+- 掴んでいる・大きさを変えている・起動演出で飛ばしている間の依頼は、終わるまで待つ。吸い寄せ中の再依頼は続ける。手首 (コントローラ) が繋がっていないと位置を戻せないので、繋がるまで隠す。
+- 実機で確認する: 吸い寄せの動きの見え方、掴んで遠くへ置いて放したとき・ボタンで戻したときの両方、右手に付けていたときの戻り先（左手）。

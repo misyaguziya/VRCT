@@ -804,9 +804,9 @@ class LauncherHandTest(unittest.TestCase):
         overlay.updateLauncherVisibility(away, 12.0)
         overlay.updateLauncherVisibility(away, 12.5)
         self.assertTrue(overlay.launcher_shown)  # 目をそらしても演出が終わるまで出し続ける
-        overlay.updateLauncherVisibility(looking, 11.25 + 3.6)
+        overlay.updateLauncherVisibility(looking, 11.25 + 4.7)
         self.assertEqual(overlay.launcher_intro_state, "playing")  # 期限の直前はまだ演出中
-        overlay.updateLauncherVisibility(looking, 11.25 + 3.8)
+        overlay.updateLauncherVisibility(looking, 11.25 + 4.9)
         self.assertEqual(overlay.launcher_intro_state, "idle")
         self.assertEqual(states, ["pending", "playing", "idle"])  # 状態は変わったときだけ知らせる
 
@@ -828,12 +828,12 @@ class LauncherHandTest(unittest.TestCase):
         start = np.array(move.call_args[0][2].m)
         np.testing.assert_allclose(start[:, 3], overlay.launcher_intro_front[:3, 3], atol=1e-6)  # 最初は正面の位置
         wrist_width = overlay.settings[LAUNCHER]["ui_scaling"]
-        self.assertAlmostEqual(width.call_args[0][1], wrist_width * 7.5)  # 正面では大きめに出す
-        overlay.updateLauncherIntroFlight(away, 10.0 + 1.0 + 0.3)
-        self.assertLess(width.call_args[0][1], wrist_width * 7.5)  # 飛んでいる途中
+        self.assertAlmostEqual(width.call_args[0][1], wrist_width * 5.0)  # 正面では大きめに出す
+        overlay.updateLauncherIntroFlight(away, 10.0 + 1.3 + 0.4)
+        self.assertLess(width.call_args[0][1], wrist_width * 5.0)  # 飛んでいる途中
         self.assertGreater(width.call_args[0][1], wrist_width)
         calls = move.call_count
-        overlay.updateLauncherIntroFlight(away, 10.0 + 1.0 + 0.6 + 0.01)
+        overlay.updateLauncherIntroFlight(away, 10.0 + 1.3 + 0.8 + 0.01)
         self.assertIsNone(overlay.launcher_intro_front)  # 着いたら通常の位置と大きさへ戻す
         self.assertGreater(move.call_count, calls)
         self.assertAlmostEqual(width.call_args[0][1], wrist_width)
@@ -854,13 +854,13 @@ class LauncherHandTest(unittest.TestCase):
         turned_head[:3, 3] = (1.0, 1.6, 2.0)  # 開始後に頭を動かした
         turned = lambda index: turned_head if index == 0 else np.eye(4)  # noqa: E731
         overlay.updateLauncherIntroFlight(turned, 10.0)
-        overlay.updateLauncherIntroFlight(turned, 10.6)  # 正面にいる間は、今の視線の正面へ追いつく
+        overlay.updateLauncherIntroFlight(turned, 10.7)  # 正面にいる間は、今の視線の正面へ追いつく
         np.testing.assert_allclose(overlay.launcher_intro_front[:3, 3], introFrontPose(turned_head)[:3, 3], atol=0.02)
-        overlay.updateLauncherIntroFlight(turned, 10.9)
+        overlay.updateLauncherIntroFlight(turned, 11.2)
         frozen = overlay.launcher_intro_front.copy()
         moved_again = np.eye(4)
         moved_again[:3, 3] = (-2.0, 1.0, 0.0)
-        overlay.updateLauncherIntroFlight(lambda index: moved_again if index == 0 else np.eye(4), 11.1)  # 飛び始めたら追従しない
+        overlay.updateLauncherIntroFlight(lambda index: moved_again if index == 0 else np.eye(4), 11.5)  # 飛び始めたら追従しない
         np.testing.assert_allclose(overlay.launcher_intro_front, frozen)
 
     def test_headset_worn_check_falls_back_to_worn_when_unknown(self):
@@ -945,6 +945,232 @@ class LauncherHandTest(unittest.TestCase):
         self.assertEqual(overlay.launcher_intro_state, "pending")  # ON にし直したら、また最初に出すのを待つ
 
 
+class VrWindowsShownAfterFirstFrameTest(unittest.TestCase):
+    """画像がまだ一度も撮れていない間は、VR UI のウィンドウ (手首の白い板) を出さない。"""
+
+    def test_windows_wait_for_the_first_capture(self):
+        from models.overlay.overlay import LAUNCHER, PANEL
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=0.3)
+        overlay = Overlay({LAUNCHER: dict(settings), PANEL: dict(settings)})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.handle = {LAUNCHER: 11, PANEL: 10}
+        overlay.vr_windows_hidden = {LAUNCHER, PANEL}
+        overlay.vr_panel_enabled = True
+        overlay.setVrWindows(log=True, popup=False)
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay.applyVrWindows(pose)
+        overlay.overlay.showOverlay.assert_not_called()  # まだ撮れていない
+        overlay.panel_image_size = (1690, 880)
+        overlay.applyVrWindows(pose)
+        shown = {call.args[0] for call in overlay.overlay.showOverlay.call_args_list}
+        self.assertEqual(shown, {10, 11})  # 撮れたら出す
+
+
+class LauncherReturnTest(unittest.TestCase):
+    """見失いそうなランチャー (遠すぎる・小さすぎ・大きすぎ) と「初期に戻す」は、手首へ吸い寄せて初期の位置・大きさに戻す。"""
+
+    DEFAULTS = {"x_pos": 0.0, "y_pos": 0.0, "z_pos": 0.0, "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
+                "ui_scaling": 0.303, "tracker": "LeftHand"}
+
+    def _overlay(self, **changes):
+        from models.overlay.overlay import LAUNCHER
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=1.0, **changes)
+        overlay = Overlay({LAUNCHER: settings})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.overlay_system = MagicMock()
+        overlay.handle = {LAUNCHER: 11}
+        overlay.launcher_defaults = {**self.DEFAULTS, "tracker": "Playspace"}  # 試験では手ではなく空間に置く
+        overlay.position_changed_callback = MagicMock()
+        return overlay
+
+    def test_out_of_reach_is_far_or_too_small_or_too_big(self):
+        from models.overlay.overlay import launcherOutOfReach
+
+        base = {"x_pos": 0.0, "y_pos": 0.0, "z_pos": 0.0, "ui_scaling": 0.303}
+        self.assertFalse(launcherOutOfReach(base))
+        self.assertFalse(launcherOutOfReach({**base, "x_pos": 0.1, "z_pos": 0.05}))
+        self.assertTrue(launcherOutOfReach({**base, "x_pos": 0.15, "z_pos": 0.15}))  # 0.21m
+        self.assertTrue(launcherOutOfReach({**base, "ui_scaling": 0.05}))
+        self.assertTrue(launcherOutOfReach({**base, "ui_scaling": 2.0}))
+
+    def test_reset_while_not_connected_waits_for_the_overlay_thread(self):
+        from models.overlay.overlay import LAUNCHER
+
+        overlay = self._overlay(x_pos=5.0)
+        overlay.initialized = False
+        overlay.requestLauncherReset()
+        self.assertEqual(overlay.settings[LAUNCHER]["x_pos"], 5.0)  # 呼んだスレッドからは、設定を書き換えない
+        self.assertTrue(overlay.launcher_reset_requested)
+        overlay.applyLauncherDefaults(overlay.launcher_reset_keep_hand)  # init() が overlay スレッドで行うこと
+        self.assertEqual(overlay.settings[LAUNCHER]["x_pos"], 0.0)
+        self.assertEqual(overlay.settings[LAUNCHER]["ui_scaling"], 0.303)
+
+    def test_automatic_recovery_keeps_the_hand_but_the_button_returns_to_left(self):
+        from models.overlay.overlay import LAUNCHER
+
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay = self._overlay(x_pos=5.0, y_pos=5.0, z_pos=5.0)
+        overlay.launcher_defaults = {**self.DEFAULTS, "tracker": "LeftHand"}
+        overlay.settings[LAUNCHER]["tracker"] = "RightHand"
+        far = np.eye(4)
+        far[:3, 3] = (3.0, 0.0, 0.0)
+        overlay.getTracker = lambda name: (np.hstack([np.eye(3), np.zeros((3, 1))]), 99)  # 手の基準は単位行列で足りる
+        overlay.commitPosition(LAUNCHER, far[:3, :])  # 掴んで遠くへ置いた
+        overlay.updateLauncherReturn(pose, 10.0)
+        self.assertEqual(overlay.settings[LAUNCHER]["tracker"], "RightHand")  # 手は変えない
+        self.assertAlmostEqual(overlay.settings[LAUNCHER]["x_pos"], 0.15)  # 初期ではなく、手首から一番近い限度の内側 (15cm)
+        overlay.launcher_return = None
+        overlay.requestLauncherReset()  # ボタン
+        overlay.updateLauncherReturn(pose, 20.0)
+        self.assertEqual(overlay.settings[LAUNCHER]["tracker"], "LeftHand")
+        overlay.launcher_return = None
+        overlay.requestLauncherReset(keep_hand=True)
+        overlay.requestLauncherReset()  # 続けてボタン: 手を戻す頼みは弱めない
+        self.assertFalse(overlay.launcher_reset_keep_hand)
+
+    def test_reset_flies_back_and_then_saves_the_defaults(self):
+        from models.overlay.overlay import LAUNCHER
+
+        overlay = self._overlay(x_pos=1.0, y_pos=1.0, z_pos=1.0)
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay.requestLauncherReset()
+        overlay.updateLauncherReturn(pose, 10.0)
+        self.assertIsNotNone(overlay.launcher_return)
+        self.assertEqual(overlay.settings[LAUNCHER]["x_pos"], 0.0)  # 目標は初期の位置
+        overlay.updateLauncherReturn(pose, 10.2)
+        width = overlay.overlay.setOverlayWidthInMeters.call_args[0][1]
+        self.assertTrue(0.303 < width < 1.0)  # 大きさも途中
+        start = np.array(overlay.overlay.setOverlayTransformAbsolute.call_args[0][2].m)[:, 3]
+        self.assertTrue(0.0 < np.linalg.norm(start) < 1.8)  # 位置も途中 (1.73m の遠くから、手首 (原点) へ)
+        overlay.updateLauncherReturn(pose, 10.4)
+        self.assertIsNone(overlay.launcher_return)  # 着いた
+        self.assertAlmostEqual(overlay.overlay.setOverlayWidthInMeters.call_args[0][1], 0.303)
+        position = overlay.position_changed_callback.call_args[0]
+        self.assertEqual(position[0], LAUNCHER)
+        self.assertEqual(position[1]["x_pos"], 0.0)  # 保存と UI への通知は着いたとき
+
+    def test_launcher_stays_shown_and_not_pressable_while_returning(self):
+        overlay = self._overlay(x_pos=1.0, y_pos=1.0, z_pos=1.0)
+        overlay.launcher_shown, overlay.launcher_alpha, overlay.launcher_interactive = False, 0.0, False
+        away = lambda index: np.eye(4)  # noqa: E731
+        overlay.requestLauncherReset()
+        overlay.updateLauncherReturn(away, 10.0)
+        for t in (10.1, 10.2, 10.3, 10.4):
+            overlay.updateLauncherVisibility(away, t)
+        self.assertTrue(overlay.launcher_shown)
+        self.assertFalse(overlay.launcher_interactive)
+
+    def test_letting_go_too_far_requests_the_return(self):
+        from models.overlay.overlay import LAUNCHER
+
+        overlay = self._overlay()
+        near = np.eye(4)
+        near[:3, 3] = (0.1, 0.0, 0.0)
+        overlay.commitPosition(LAUNCHER, near[:3, :])
+        self.assertFalse(overlay.launcher_reset_requested)
+        far = np.eye(4)
+        far[:3, 3] = (3.0, 0.0, 0.0)
+        overlay.commitPosition(LAUNCHER, far[:3, :])
+        self.assertTrue(overlay.launcher_reset_requested)
+
+    def test_a_second_request_while_returning_keeps_the_flight(self):
+        overlay = self._overlay(x_pos=1.0, y_pos=1.0, z_pos=1.0)
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay.requestLauncherReset()
+        overlay.updateLauncherReturn(pose, 10.0)
+        first = dict(overlay.launcher_return)
+        overlay.requestLauncherReset()  # ボタンの連打
+        overlay.updateLauncherReturn(pose, 10.1)
+        self.assertEqual(overlay.launcher_return["started"], first["started"])  # 手首へ跳ばない
+        np.testing.assert_allclose(overlay.launcher_return["start"], first["start"])
+        self.assertFalse(overlay.launcher_reset_requested)
+
+    def test_request_waits_while_grabbing_or_intro_flying(self):
+        overlay = self._overlay(x_pos=1.0, y_pos=1.0, z_pos=1.0)
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay.requestLauncherReset()
+        overlay.grabbing = ("launcher", 1)  # 掴んでいる
+        overlay.updateLauncherReturn(pose, 10.0)
+        self.assertTrue(overlay.launcher_reset_requested)
+        self.assertIsNone(overlay.launcher_return)
+        overlay.grabbing = None
+        overlay.launcher_intro_front = np.eye(4)  # 起動演出で飛ばしている
+        overlay.updateLauncherReturn(pose, 10.1)
+        self.assertTrue(overlay.launcher_reset_requested)
+        overlay.launcher_intro_front = None
+        overlay.updateLauncherReturn(pose, 10.2)
+        self.assertFalse(overlay.launcher_reset_requested)
+        self.assertIsNotNone(overlay.launcher_return)
+
+    def test_launcher_is_hidden_when_the_destination_hand_is_not_connected(self):
+        from models.overlay.overlay import _PLAYSPACE_INDEX, LAUNCHER
+
+        overlay = self._overlay(x_pos=1.0, y_pos=1.0, z_pos=1.0)
+        overlay.launcher_defaults = {**self.DEFAULTS, "tracker": "LeftHand"}  # 左手に戻す (いま左手は繋がっていない)
+        overlay.overlay_system.isTrackedDeviceConnected.return_value = False
+        overlay.launcher_shown, overlay.launcher_alpha = True, 1.0
+        only_playspace = lambda index: np.eye(4) if index == _PLAYSPACE_INDEX else None  # noqa: E731
+        overlay.requestLauncherReset()
+        overlay.updateLauncherReturn(only_playspace, 10.0)
+        overlay.updateLauncherReturn(only_playspace, 10.1)
+        self.assertIsNone(overlay.launcher_return)
+        self.assertIn(LAUNCHER, overlay.position_pending)  # 手が繋がったら位置を戻す
+        self.assertFalse(overlay.launcher_shown)  # 取り残さず、隠す
+
+    def test_automatic_recovery_moves_to_the_nearest_point_in_reach_and_keeps_rotation_and_scale(self):
+        from models.overlay.overlay import LAUNCHER, launcherNearestInReach
+
+        near = launcherNearestInReach({"x_pos": 1.2, "y_pos": 1.6, "z_pos": 0.0, "ui_scaling": 0.5})  # 手首から 2m
+        self.assertAlmostEqual(near["x_pos"], 0.09)  # 方向 (3:4) を保ち、15cm の位置へ
+        self.assertAlmostEqual(near["y_pos"], 0.12)
+        self.assertEqual(near["ui_scaling"], 0.5)  # 範囲内の大きさは変えない
+        inside = launcherNearestInReach({"x_pos": 0.01, "y_pos": 0.02, "z_pos": 0.0, "ui_scaling": 0.5})
+        self.assertEqual((inside["x_pos"], inside["y_pos"]), (0.01, 0.02))  # すでに内側なら動かさない
+        self.assertEqual(launcherNearestInReach({"x_pos": 0, "y_pos": 0, "z_pos": 0, "ui_scaling": 2.0})["ui_scaling"], 1.0)  # 範囲外の大きさだけ、範囲の端へ
+        overlay = self._overlay(x_pos=1.2, y_pos=1.6, y_rotation=25.0)
+        overlay.settings[LAUNCHER]["ui_scaling"] = 0.5
+        overlay.applyLauncherDefaults(keep_hand=True)
+        self.assertEqual(overlay.settings[LAUNCHER]["y_rotation"], 25.0)  # 向きは変えない
+        self.assertEqual(overlay.settings[LAUNCHER]["ui_scaling"], 0.5)
+        overlay.applyLauncherDefaults()  # ボタン: 位置・向き・大きさを初期に戻す
+        self.assertEqual((overlay.settings[LAUNCHER]["x_pos"], overlay.settings[LAUNCHER]["y_rotation"], overlay.settings[LAUNCHER]["ui_scaling"]), (0.0, 0.0, 0.303))
+
+    def test_button_during_an_automatic_return_still_sets_the_left_hand(self):
+        from models.overlay.overlay import LAUNCHER
+
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay = self._overlay(x_pos=1.0, y_pos=1.0, z_pos=1.0)
+        overlay.launcher_defaults = {**self.DEFAULTS, "tracker": "LeftHand"}
+        overlay.settings[LAUNCHER]["tracker"] = "RightHand"
+        overlay.requestLauncherReset(keep_hand=True)  # 自動の復旧が始まる
+        overlay.updateLauncherReturn(pose, 10.0)
+        self.assertEqual(overlay.settings[LAUNCHER]["tracker"], "RightHand")
+        started = overlay.launcher_return["started"]
+        overlay.requestLauncherReset()  # 吸い寄せ中に、PC のボタン
+        overlay.updateLauncherReturn(pose, 10.2)
+        self.assertEqual(overlay.settings[LAUNCHER]["tracker"], "LeftHand")  # 手の戻しは捨てない
+        self.assertEqual(overlay.launcher_return["started"], started)  # 吸い寄せは続ける (跳ばない)
+        overlay.requestLauncherReset(keep_hand=True)  # 手を保つ依頼は、続けるだけ
+        overlay.updateLauncherReturn(pose, 10.3)
+        self.assertEqual(overlay.settings[LAUNCHER]["tracker"], "LeftHand")
+
+    def test_return_errors_do_not_escape(self):
+        overlay = self._overlay(x_pos=1.0, y_pos=1.0, z_pos=1.0)
+        overlay.overlay.setOverlayTransformAbsolute.side_effect = RuntimeError("openvr")
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay.requestLauncherReset()
+        with patch("models.overlay.overlay.errorLogging"):
+            overlay.updateLauncherReturn(pose, 10.0)
+            overlay.updateLauncherReturn(pose, 10.2)  # 例外を外へ出さず、終わらせる
+        self.assertIsNone(overlay.launcher_return)
+
+
 class IntroFlightPoseTest(unittest.TestCase):
     def test_ends_match_and_the_rotation_stays_valid(self):
         from models.overlay.overlay import introFlightPose
@@ -977,6 +1203,37 @@ class IntroFlightPoseTest(unittest.TestCase):
                 worst = max(worst, angle)
                 previous = rotation
             self.assertLess(worst, degrees / 200 * 1.05 + 0.1, degrees)  # 1ステップの回転が、一定の速さ (角度 / 200) を超えない
+
+
+class PendingLauncherAndFirstFrameTest(unittest.TestCase):
+    def _overlay(self):
+        from models.overlay.overlay import LAUNCHER, PANEL
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=0.3)
+        overlay = Overlay({LAUNCHER: dict(settings), PANEL: dict(settings)})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.handle = {LAUNCHER: 11, PANEL: 10}
+        overlay.vr_windows_hidden = {LAUNCHER, PANEL}
+        overlay.vr_panel_enabled = True
+        overlay.setVrWindows(log=True, popup=False)
+        return overlay
+
+    def test_a_long_wait_for_the_first_frame_is_logged_once(self):
+        overlay = self._overlay()
+        pose = lambda index: np.eye(4)  # noqa: E731
+        clock = [100.0]
+        with patch("models.overlay.overlay.printLog") as log, patch("models.overlay.overlay.time.monotonic", side_effect=lambda: clock[0]):
+            for now in (100.0, 105.0, 111.0, 120.0):
+                clock[0] = now
+                overlay.applyVrWindows(pose)
+        self.assertEqual(log.call_count, 1)  # 10秒を超えたときに1回だけ
+        self.assertIsNotNone(overlay.first_frame_wait_since)
+        overlay.vr_panel_enabled = False
+        overlay.applyVrWindows(pose)
+        self.assertIsNone(overlay.first_frame_wait_since)  # OFF の間は数えない
+        overlay.overlay.showOverlay.assert_not_called()
 
 
 class IntroKeyAlphaTest(unittest.TestCase):
@@ -1155,20 +1412,20 @@ class VrLayoutTest(unittest.TestCase):
         from models.overlay.overlay import regionBounds
 
         u0, _u1, v0, v1 = regionBounds(LAUNCHER)
-        self.assertAlmostEqual(u0, 10 / 1628)
+        self.assertAlmostEqual(u0, 10 / 1690)
         self.assertAlmostEqual(v0, 1 - 708 / 880)  # 表示の上端 = 画像の708行目
         self.assertAlmostEqual(v1, 1 - 836 / 880)  # ランチャーの下端
         self.assertEqual(regionBounds(PANEL)[2:], (1.0, 1 - 700 / 880))  # ログは画像の上側
         # レーザーの当たった点 (空間座標) → 撮影画像上のピクセル。空間固定・原点に置いたランチャー
         overlay = Overlay({LAUNCHER: {k: 0.0 for k in KEYS} | {"tracker": "Playspace", "ui_scaling": 0.28}})
-        overlay.panel_image_size = (2442, 1254)  # DPI 150%
+        overlay.panel_image_size = (2535, 1254)  # DPI 150% (1690 x 1.5)
         pose = overlay.overlayWorldPose(LAUNCHER, lambda index: np.eye(4))
         results = MagicMock()
         results.vPoint.v = [0.0, 0.0, 0.0]  # 中央
         x, y = overlay.regionPixel(LAUNCHER, results, pose)
-        self.assertAlmostEqual(x, (10 + 440) * 1.5, delta=2)
+        self.assertAlmostEqual(x, (10 + 476) * 1.5, delta=2)
         self.assertAlmostEqual(y, (708 + 64) * 1.5, delta=2)
-        results.vPoint.v = [-0.14 + 0.001, 0.28 * 128 / 880 / 2 - 0.001, 0.0]  # 左上の角
+        results.vPoint.v = [-0.14 + 0.001, 0.28 * 128 / 952 / 2 - 0.001, 0.0]  # 左上の角
         x, y = overlay.regionPixel(LAUNCHER, results, pose)
         self.assertAlmostEqual(x, 10 * 1.5, delta=8)
         self.assertAlmostEqual(y, 708 * 1.5, delta=8)
@@ -1535,12 +1792,21 @@ class PanelLayoutTest(unittest.TestCase):
 
         layout = computeVrLayout(1400, 1000)
         self.assertEqual(layout["regions"][PANEL], (0, 0, 1400, 1000))
-        self.assertEqual(layout["regions"][LAUNCHER], (10, 1008, 880, 128))  # ログの下
+        self.assertEqual(layout["regions"][LAUNCHER], (10, 1008, 952, 128))  # ログの下
         self.assertEqual(layout["regions"][POPUP][0], 1408)  # ログの右
         self.assertEqual(layout["regions"][TOOLBAR][0], 1408)
         self.assertEqual(layout["atlas"], (1408 + 720, 1008 + 128))
-        # 小さくしても、ランチャー (880px) より左の列は狭くしない
-        self.assertEqual(computeVrLayout(600, 400)["regions"][POPUP][0], 908)
+        # ランチャーの幅 (吹き出しの押せる範囲の基準と同じ) が、並びの既定と一致する
+        from models.overlay.overlay_tooltip import LAUNCHER_WIDTH_PX
+
+        self.assertEqual(computeVrLayout(900, 700)["regions"][LAUNCHER][2], LAUNCHER_WIDTH_PX)
+        # ログの大きさによらず、ランチャーの右端は右の列 (一時ウィンドウ・操作バー) の左端を超えない
+        for width in (600, 900, 1000, 1400):
+            regions = computeVrLayout(width, 700)["regions"]
+            self.assertLess(regions[LAUNCHER][0] + regions[LAUNCHER][2], regions[POPUP][0])
+            self.assertEqual(regions[TOOLBAR][0], regions[POPUP][0])
+        # 小さくしても、ランチャー (952px) より左の列は狭くしない
+        self.assertEqual(computeVrLayout(600, 400)["regions"][POPUP][0], 970)
 
     def _overlay(self):
         overlay = Overlay({PANEL: {}, LAUNCHER: {}})
@@ -1889,6 +2155,7 @@ class VrWindowsTest(unittest.TestCase):
         overlay.overlay = MagicMock()
         overlay.overlay_system = MagicMock()
         overlay.handle = {PANEL: 10, LAUNCHER: 11, POPUP: 12}
+        overlay.panel_image_size = (1690, 880)  # 画面は一度撮れている
         return overlay, POPUP
 
     def test_hide_and_show_follow_the_requested_state(self):
