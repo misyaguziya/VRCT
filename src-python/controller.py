@@ -9,7 +9,7 @@ import re
 import time
 from device_manager import device_manager
 from config import config, ConfigValidationError, DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
-from model import model
+from model import model, SETUP_LAUNCHED, SETUP_DOWNLOAD_FAILED, SETUP_VERIFY_FAILED
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
@@ -3518,16 +3518,31 @@ class Controller:
                 }
             }
 
+    def _runSoftwareUpdate(self, update: Callable[[Optional[str]], str], endpoint: str, target_version: Optional[str]) -> None:
+        """setup.exe を取得してインストーラを起動する。起動すればアプリは終了する。
+        戻ってきたら失敗なので、UI へ知らせる (UI は更新中の表示のまま待っている)。
+        起動したと確かめられた (SETUP_LAUNCHED) とき以外は、すべて失敗として知らせる。"""
+        result = SETUP_DOWNLOAD_FAILED
+        try:
+            result = update(target_version)
+        except Exception:
+            errorLogging()
+        if result == SETUP_LAUNCHED:
+            return
+        error_code = ErrorCode.UPDATE_SOFTWARE_VERIFY if result == SETUP_VERIFY_FAILED else ErrorCode.UPDATE_SOFTWARE_DOWNLOAD
+        error_response = VRCTError.create_error_response(error_code, data=target_version)
+        self.run(error_response["status"], endpoint, error_response["result"])
+
     def updateSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
         target_version = str(data) if data else None
-        th_start_update_software = Thread(target=model.updateSoftware, args=(target_version,))
+        th_start_update_software = Thread(target=self._runSoftwareUpdate, args=(model.updateSoftware, self.run_mapping["update_software"], target_version))
         th_start_update_software.daemon = True
         th_start_update_software.start()
         return {"status":200, "result":True}
 
     def updateCudaSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
         target_version = str(data) if data else None
-        th_start_update_cuda_software = Thread(target=model.updateCudaSoftware, args=(target_version,))
+        th_start_update_cuda_software = Thread(target=self._runSoftwareUpdate, args=(model.updateCudaSoftware, self.run_mapping["update_cuda_software"], target_version))
         th_start_update_cuda_software.daemon = True
         th_start_update_cuda_software.start()
         return {"status":200, "result":True}
