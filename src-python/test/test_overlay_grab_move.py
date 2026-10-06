@@ -804,9 +804,9 @@ class LauncherHandTest(unittest.TestCase):
         overlay.updateLauncherVisibility(away, 12.0)
         overlay.updateLauncherVisibility(away, 12.5)
         self.assertTrue(overlay.launcher_shown)  # 目をそらしても演出が終わるまで出し続ける
-        overlay.updateLauncherVisibility(looking, 11.25 + 3.6)
+        overlay.updateLauncherVisibility(looking, 11.25 + 4.7)
         self.assertEqual(overlay.launcher_intro_state, "playing")  # 期限の直前はまだ演出中
-        overlay.updateLauncherVisibility(looking, 11.25 + 3.8)
+        overlay.updateLauncherVisibility(looking, 11.25 + 4.9)
         self.assertEqual(overlay.launcher_intro_state, "idle")
         self.assertEqual(states, ["pending", "playing", "idle"])  # 状態は変わったときだけ知らせる
 
@@ -828,12 +828,12 @@ class LauncherHandTest(unittest.TestCase):
         start = np.array(move.call_args[0][2].m)
         np.testing.assert_allclose(start[:, 3], overlay.launcher_intro_front[:3, 3], atol=1e-6)  # 最初は正面の位置
         wrist_width = overlay.settings[LAUNCHER]["ui_scaling"]
-        self.assertAlmostEqual(width.call_args[0][1], wrist_width * 7.5)  # 正面では大きめに出す
-        overlay.updateLauncherIntroFlight(away, 10.0 + 1.0 + 0.3)
-        self.assertLess(width.call_args[0][1], wrist_width * 7.5)  # 飛んでいる途中
+        self.assertAlmostEqual(width.call_args[0][1], wrist_width * 5.0)  # 正面では大きめに出す
+        overlay.updateLauncherIntroFlight(away, 10.0 + 1.3 + 0.4)
+        self.assertLess(width.call_args[0][1], wrist_width * 5.0)  # 飛んでいる途中
         self.assertGreater(width.call_args[0][1], wrist_width)
         calls = move.call_count
-        overlay.updateLauncherIntroFlight(away, 10.0 + 1.0 + 0.6 + 0.01)
+        overlay.updateLauncherIntroFlight(away, 10.0 + 1.3 + 0.8 + 0.01)
         self.assertIsNone(overlay.launcher_intro_front)  # 着いたら通常の位置と大きさへ戻す
         self.assertGreater(move.call_count, calls)
         self.assertAlmostEqual(width.call_args[0][1], wrist_width)
@@ -854,13 +854,13 @@ class LauncherHandTest(unittest.TestCase):
         turned_head[:3, 3] = (1.0, 1.6, 2.0)  # 開始後に頭を動かした
         turned = lambda index: turned_head if index == 0 else np.eye(4)  # noqa: E731
         overlay.updateLauncherIntroFlight(turned, 10.0)
-        overlay.updateLauncherIntroFlight(turned, 10.6)  # 正面にいる間は、今の視線の正面へ追いつく
+        overlay.updateLauncherIntroFlight(turned, 10.7)  # 正面にいる間は、今の視線の正面へ追いつく
         np.testing.assert_allclose(overlay.launcher_intro_front[:3, 3], introFrontPose(turned_head)[:3, 3], atol=0.02)
-        overlay.updateLauncherIntroFlight(turned, 10.9)
+        overlay.updateLauncherIntroFlight(turned, 11.2)
         frozen = overlay.launcher_intro_front.copy()
         moved_again = np.eye(4)
         moved_again[:3, 3] = (-2.0, 1.0, 0.0)
-        overlay.updateLauncherIntroFlight(lambda index: moved_again if index == 0 else np.eye(4), 11.1)  # 飛び始めたら追従しない
+        overlay.updateLauncherIntroFlight(lambda index: moved_again if index == 0 else np.eye(4), 11.5)  # 飛び始めたら追従しない
         np.testing.assert_allclose(overlay.launcher_intro_front, frozen)
 
     def test_headset_worn_check_falls_back_to_worn_when_unknown(self):
@@ -943,6 +943,30 @@ class LauncherHandTest(unittest.TestCase):
         overlay.panel_enabled_requests.put(True)
         overlay.applyVrPanelEnabled()
         self.assertEqual(overlay.launcher_intro_state, "pending")  # ON にし直したら、また最初に出すのを待つ
+
+
+class VrWindowsShownAfterFirstFrameTest(unittest.TestCase):
+    """画像がまだ一度も撮れていない間は、VR UI のウィンドウ (手首の白い板) を出さない。"""
+
+    def test_windows_wait_for_the_first_capture(self):
+        from models.overlay.overlay import LAUNCHER, PANEL
+
+        settings = {k: 0.0 for k in KEYS}
+        settings.update(tracker="Playspace", opacity=1.0, fadeout_duration=0, ui_scaling=0.3)
+        overlay = Overlay({LAUNCHER: dict(settings), PANEL: dict(settings)})
+        overlay.initialized = True
+        overlay.overlay = MagicMock()
+        overlay.handle = {LAUNCHER: 11, PANEL: 10}
+        overlay.vr_windows_hidden = {LAUNCHER, PANEL}
+        overlay.vr_panel_enabled = True
+        overlay.setVrWindows(log=True, popup=False)
+        pose = lambda index: np.eye(4)  # noqa: E731
+        overlay.applyVrWindows(pose)
+        overlay.overlay.showOverlay.assert_not_called()  # まだ撮れていない
+        overlay.panel_image_size = (1690, 880)
+        overlay.applyVrWindows(pose)
+        shown = {call.args[0] for call in overlay.overlay.showOverlay.call_args_list}
+        self.assertEqual(shown, {10, 11})  # 撮れたら出す
 
 
 class LauncherReturnTest(unittest.TestCase):
@@ -2038,6 +2062,7 @@ class VrWindowsTest(unittest.TestCase):
         overlay.overlay = MagicMock()
         overlay.overlay_system = MagicMock()
         overlay.handle = {PANEL: 10, LAUNCHER: 11, POPUP: 12}
+        overlay.panel_image_size = (1690, 880)  # 画面は一度撮れている
         return overlay, POPUP
 
     def test_hide_and_show_follow_the_requested_state(self):
