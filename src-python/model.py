@@ -128,6 +128,14 @@ class SetupSha256Unavailable(Exception):
     """
 
 
+# updateSoftware()/updateCudaSoftware() の結果。インストーラを起動すれば
+# アプリは終了するので、呼び出し側が実際に受け取るのは失敗の2種類。
+SETUP_LAUNCHED = "launched"
+SETUP_DOWNLOAD_FAILED = "download_failed"
+# ハッシュ不一致など。再試行しても直らず、改ざんの疑いがあるので通信エラーと分ける
+SETUP_VERIFY_FAILED = "verify_failed"
+
+
 # audio_queue の有界化 (フェーズ3項目20)。文字起こしが実時間に追いつけ
 # ない状況 (例: CPUでWhisper large-v3) で無制限に溜まると、drain時に
 # last_sample がまとめて連結されて音声が長くなり、推論がさらに遅くなって
@@ -1872,8 +1880,10 @@ class Model:
         return None
 
     @staticmethod
-    def _downloadSetup(expected_sha256: Optional[str] = None) -> bool:
+    def _downloadSetup(expected_sha256: Optional[str] = None, url: Optional[str] = None) -> Optional[str]:
         # try to download at most 5 times
+        # 戻り値: 成功なら None、失敗なら SETUP_DOWNLOAD_FAILED / SETUP_VERIFY_FAILED
+        url = url or config.setupDownloadUrl()
         program_name = "VRCT_setup.exe"
         current_directory = config.PATH_LOCAL
         dest_path = os_path.join(current_directory, program_name)
@@ -1882,7 +1892,7 @@ class Model:
         min_valid_size = 1024 * 1024
         for _ in range(5):
             try:
-                res = requests_get(config.SETUP_DOWNLOAD_URL, stream=True, timeout=_HTTP_TIMEOUT)
+                res = requests_get(url, stream=True, timeout=_HTTP_TIMEOUT)
                 res.raise_for_status()
                 downloaded_size = 0
                 hasher = hashlib.sha256()
@@ -1909,8 +1919,8 @@ class Model:
                             os_remove(dest_path)
                         except Exception:
                             errorLogging()
-                        return False
-                return True
+                        return SETUP_VERIFY_FAILED
+                return None
             except Exception:
                 errorLogging()
                 try:
@@ -1918,19 +1928,20 @@ class Model:
                         os_remove(dest_path)
                 except Exception:
                     errorLogging()
-        return False
+        return SETUP_DOWNLOAD_FAILED
 
     @staticmethod
-    def _downloadVerifiedSetup(target_version: Optional[str]) -> bool:
+    def _downloadVerifiedSetup(target_version: Optional[str]) -> Optional[str]:
         # GitHub Release を解決して期待する SHA-256 を求め、setup.exe を
         # ダウンロード & 検証する。updateSoftware()/updateCudaSoftware() の
         # 共通前処理。
         #
-        # 戻り値 True  : VRCT_setup.exe がディスク上にあり起動して問題ない
-        # 戻り値 False : 呼び出し側は何も起動せず中止すること。内訳は
-        #   - ダウンロード or ハッシュ検証に失敗した (_downloadSetup が False)
-        #   - ".sha256" が公開されているのに取得できなかった
-        #     (SetupSha256Unavailable)。サイズチェックのみへは格下げしない。
+        # 戻り値 None : VRCT_setup.exe がディスク上にあり起動して問題ない
+        # 戻り値 str  : 呼び出し側は何も起動せず中止すること。失敗の種類は
+        #   - SETUP_VERIFY_FAILED   : ハッシュが一致しなかった、または ".sha256" が
+        #     公開されているのに取得できなかった (SetupSha256Unavailable)。
+        #     サイズチェックのみへは格下げしない
+        #   - SETUP_DOWNLOAD_FAILED : 取得できなかった
         release = Model._resolveReleaseForVersion(target_version)
         try:
             expected_sha256 = Model._fetchExpectedSha256(release)
@@ -1941,49 +1952,63 @@ class Model:
                 "retrieved; aborting update (not falling back to size-only "
                 "validation)"
             )
-            return False
+            return SETUP_VERIFY_FAILED
         if expected_sha256 is None:
             printLog(
                 "Setup file SHA-256 could not be verified (no .sha256 asset found for "
                 f"{target_version or 'the latest release'}); falling back to size-only validation"
             )
-        return Model._downloadSetup(expected_sha256)
+
+        # 指定バージョンは、そのリリースの setup.exe (HF の同名タグ) を取る。main は常に
+        # 最新版なので、指定バージョンのハッシュで検証すると最新版以外では必ず不一致になる。
+        urls = [config.setupDownloadUrl()]
+        if target_version:
+            tag = release.get("tag_name") if isinstance(release, dict) else None
+            urls = [config.setupDownloadUrl(target_version, tag=tag or f"v{target_version}")]
+            if expected_sha256 is None:
+                # 古いリリース (3.4.x など) は HF のタグに setup.exe が無い。インストーラは
+                # /VERSION で入れる版を決めるので、検証できない場合に限り最新のものを使う
+                urls.append(config.setupDownloadUrl(target_version))
+        failure = SETUP_DOWNLOAD_FAILED
+        for url in urls:
+            failure = Model._downloadSetup(expected_sha256, url)
+            if failure != SETUP_DOWNLOAD_FAILED:
+                return failure
+        return failure
 
     @staticmethod
-    def updateSoftware(target_version: Optional[str] = None):
+    def _updateAndRestart(edition: str, target_version: Optional[str]) -> str:
+        # 起動して終了する (_quitApp) ので、本番で戻るのは失敗したときだけ。
+        # 呼び出し側 (Controller) が失敗の種類を UI へ知らせる。SETUP_LAUNCHED を
+        # 返すのはテストなどで終了処理を差し替えたとき。
         if target_version is not None and not Model._isVersionSupported(target_version):
-            return
-        if not Model._downloadVerifiedSetup(target_version):
-            return
-        # run the NSIS setup wizard, preselecting the CPU edition; pin to
+            return SETUP_DOWNLOAD_FAILED
+        failure = Model._downloadVerifiedSetup(target_version)
+        if failure is not None:
+            return failure
+        # run the NSIS setup wizard, preselecting the given edition; pin to
         # target_version when the user picked a specific release to install;
         # carry over the current UI language so the installer chrome and the
         # custom "UI Language" page start on the user's chosen language;
-        # carry over the current release channel so the installer's channel
-        # page defaults to what the user already has selected in VRCT.
-        args = ["VRCT_setup.exe", "/EDITION=cpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
+        # the installer's channel page defaults to the channel of the version
+        # being installed (or the current channel when installing the latest).
+        # The channel is not saved to config here: if the installer is cancelled,
+        # VRCT keeps running on its current version and channel.
+        channel = config._channelForVersion(target_version) if target_version else config.SELECTED_RELEASE_CHANNEL
+        args = ["VRCT_setup.exe", f"/EDITION={edition}", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={channel}"]
         if target_version:
             args.append(f"/VERSION={target_version}")
         Popen(args, cwd=config.PATH_LOCAL)
         Model._quitApp()
+        return SETUP_LAUNCHED
 
     @staticmethod
-    def updateCudaSoftware(target_version: Optional[str] = None):
-        if target_version is not None and not Model._isVersionSupported(target_version):
-            return
-        if not Model._downloadVerifiedSetup(target_version):
-            return
-        # run the NSIS setup wizard, preselecting the GPU edition; pin to
-        # target_version when the user picked a specific release to install;
-        # carry over the current UI language so the installer chrome and the
-        # custom "UI Language" page start on the user's chosen language;
-        # carry over the current release channel so the installer's channel
-        # page defaults to what the user already has selected in VRCT.
-        args = ["VRCT_setup.exe", "/EDITION=gpu", f"/UILANG={config.UI_LANGUAGE}", f"/CHANNEL={config.SELECTED_RELEASE_CHANNEL}"]
-        if target_version:
-            args.append(f"/VERSION={target_version}")
-        Popen(args, cwd=config.PATH_LOCAL)
-        Model._quitApp()
+    def updateSoftware(target_version: Optional[str] = None) -> str:
+        return Model._updateAndRestart("cpu", target_version)
+
+    @staticmethod
+    def updateCudaSoftware(target_version: Optional[str] = None) -> str:
+        return Model._updateAndRestart("gpu", target_version)
 
     @staticmethod
     def _quitApp():
