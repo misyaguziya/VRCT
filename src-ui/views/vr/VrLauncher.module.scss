@@ -43,7 +43,7 @@ $intro-mark-dy: 7px;
 .intro_logo { position: absolute; z-index: 1; left: 50%; top: 50%; width: 264px; aspect-ratio: 3200 / 850; translate: -50% -50%; pointer-events: none; }
 .intro_text, .intro_mark { position: absolute; inset: 0; background: var(--vrct-logo) center / contain no-repeat; opacity: 0; }
 .intro_mark { clip-path: inset(0 76.2% 20.5% 0); animation: intro_mark 1.2s #{$intro-land + 0.1s} both; }
-.intro_text { clip-path: polygon(23.8% 0, 100% 0, 100% 100%, 0 100%, 0 79.5%, 23.8% 79.5%); animation: intro_text 0.8s #{$intro-land + 0.1s} both; }
+.intro_text { clip-path: polygon(23.8% 0, 100% 0, 100% 100%, 0 100%, 0 79.5%, 23.8% 79.5%); animation: intro_text 1.2s #{$intro-land + 0.1s} both; }
 // 最終のランチャーの形 (角の丸みも枠線も同じ) を短くした枠が現れ、幅だけが広がる
 @keyframes intro_frame {
     0%, 50% { opacity: 0; left: 31%; right: 31%; }
@@ -56,16 +56,17 @@ $intro-mark-dy: 7px;
     18%, 80% { opacity: 1; filter: blur(0); transform: scale(1); }
     100% { opacity: 0; filter: blur(0); transform: scale(0.8); }
 }
+// 現れるとき、文字もマークも、ぼやけて少し大きい状態からピントが合い (25%)、完全に止まる (33% まで)。
+// そのあと、文字は動かずにぼやけながら薄れ、マークだけが左へ滑って、そのまま止まる (弾まない)
 @keyframes intro_text {
     0% { opacity: 0; filter: blur(14px); transform: scale(1.1); }
-    38%, 50% { opacity: 1; filter: blur(0); transform: scale(1); }
-    100% { opacity: 0; filter: blur(4px); transform: scale(0.97); }
+    25%, 33% { opacity: 1; filter: blur(0); transform: none; }
+    62%, 100% { opacity: 0; filter: blur(8px); transform: none; }
 }
-// ピントが合い、枠が開き始めるのと同時に左端へ滑り、そのまま止まる (弾まない)
 @keyframes intro_mark {
     0% { opacity: 0; filter: blur(14px); transform: scale(1.1); }
-    25% { opacity: 1; filter: blur(0); transform: none; }
-    33% { opacity: 1; transform: none; animation-timing-function: cubic-bezier(0.6, 0, 0.2, 1); }
-    79%, 100% { opacity: 1; transform: translate($intro-mark-dx, $intro-mark-dy); }
+    25%, 33% { opacity: 1; filter: blur(0); transform: none; }
+    33% { animation-timing-function: cubic-bezier(0.6, 0, 0.2, 1); }
+    79%, 100% { opacity: 1; filter: blur(0); transform: translate($intro-mark-dx, $intro-mark-dy); }
 }
 @keyframes intro_rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
