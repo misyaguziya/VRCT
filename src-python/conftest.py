@@ -37,3 +37,15 @@ from config import config as _config
 _config_dir = tempfile.mkdtemp(prefix="vrct-test-config-")
 atexit.register(shutil.rmtree, _config_dir, ignore_errors=True)
 _config._PATH_CONFIG = _os_path.join(_config_dir, "config.json")
+
+# process.log / error.log も同じ。ログのファイル名は実行時の作業ディレクトリからの相対で、init() が
+# removeLog() で process.log を空にするため、テストを実行するたびに、開発中のアプリのログ (起動の
+# 所要時間などの調査に使うもの) が消えて、テストの出力に置き換わっていた。
+import logging
+
+import utils as _utils
+
+_utils.process_logger = _utils.setupLogger("process", _os_path.join(_config_dir, "process.log"), logging.INFO)
+_utils.error_logger = _utils.setupLogger("error", _os_path.join(_config_dir, "error.log"), logging.ERROR)
+# controller は `from utils import removeLog` で import 時に名前を取り込むので、その前に差し替える
+_utils.removeLog = lambda: None
