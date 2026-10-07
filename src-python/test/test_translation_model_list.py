@@ -222,5 +222,65 @@ class ClientAuthFlowTests(unittest.TestCase):
                 self.assertEqual(fetch.call_count, 2, class_name)
 
 
+class _FakeGenaiClient:
+    """google-genai の Client の、破棄の挙動を再現する偽物。
+
+    本物の Client は、破棄されると内部の HTTP クライアントを閉じる。`.models` は Client 自身ではなく
+    その HTTP クライアントだけを持つので、`genai.Client(...).models.list()` のように Client を変数に
+    入れずにつなぐと、`.models` を取った時点で Client が破棄され、`list()` が
+    "Cannot send a request, as the client has been closed." で失敗する (実機で、有効な Gemini の
+    キーが無効扱いになり、設定から消えた)。次のページを取るときも同じ。
+    """
+
+    def __init__(self, api_key):
+        http = SimpleNamespace(closed=False)
+        self._http = http
+        self.models = _FakeGenaiModels(http)
+
+    def __del__(self):
+        self._http.closed = True
+
+
+class _FakeGenaiModels:
+    def __init__(self, http):
+        self._http = http
+
+    def list(self):
+        self._check()
+        return _FakeGenaiPager(self._http)
+
+    def _check(self):
+        if self._http.closed:
+            raise RuntimeError("Cannot send a request, as the client has been closed.")
+
+
+class _FakeGenaiPager:
+    def __init__(self, http):
+        self._http = http
+
+    def __iter__(self):
+        # 次のページを取る (Client が破棄されていれば失敗する)
+        if self._http.closed:
+            raise RuntimeError("Cannot send a request, as the client has been closed.")
+        return iter(_gemini_style("gemini-b", "gemini-a"))
+
+
+class GeminiClientLifetimeTests(unittest.TestCase):
+    def test_gemini_auth_works_when_client_is_closed_on_garbage_collection(self) -> None:
+        from models.translation import translation_gemini
+
+        client = _bare_client(translation_gemini, "GeminiClient", {})
+        with patch.object(translation_gemini.genai, "Client", _FakeGenaiClient):
+            self.assertTrue(client.setAuthKey("key"))
+            # 認証で受け取った応答からたどった一覧が、そのまま使われる (取り直さない)
+            self.assertEqual(client._takeAuthModels(), ["gemini-a", "gemini-b"])
+
+    def test_gemini_model_list_works_when_client_is_closed_on_garbage_collection(self) -> None:
+        from models.translation import translation_gemini
+
+        with patch.object(translation_gemini.genai, "Client", _FakeGenaiClient):
+            self.assertEqual(translation_gemini._get_available_text_models("key"), ["gemini-a", "gemini-b"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -18,9 +18,27 @@ except Exception:
 logger = logging.getLogger("langchain_google_genai")
 logger.setLevel(logging.ERROR)
 
+class _ModelListing:
+    """models.list() の結果と、それを取った Client をひとまとめにしたもの。
+
+    Client は破棄されると内部の HTTP クライアントを閉じる。`.models` は Client 自身ではなく
+    HTTP クライアントだけを持つので、Client を手元に持たないと、`list()` の最中や、次のページを
+    取るとき ("Client has been closed") に失敗する。以前は `genai.Client(...).models.list()` と
+    つないでいたため、有効なキーでも認証が失敗し、キーが無効扱いになって設定から消えた。
+    """
+
+    def __init__(self, client, pager):
+        self.client = client
+        self.pager = pager
+
+    def __iter__(self):
+        return iter(self.pager)
+
+
 def _fetch_models(api_key: str):
     """モデル一覧の最初のページを取得する。成功すればキーは有効 (認証の確認を兼ねる)。失敗は例外。"""
-    return genai.Client(api_key=api_key).models.list()
+    client = genai.Client(api_key=api_key)
+    return _ModelListing(client, client.models.list())
 
 def _text_models(res) -> list[str]:
     """Extract only Gemini models suitable for translation and chat applications
