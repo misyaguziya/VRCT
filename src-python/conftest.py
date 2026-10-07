@@ -18,3 +18,22 @@ collect_ignore = [
     "test/test_endpoints.py",
     "test/test_client.py",
 ]
+
+
+# --- テストが開発者の実際の config.json を書き換えないようにする -------------------------
+# `config` はシングルトンで、import 時に src-python/config.json を読む。テストが
+# `config.AUTH_KEYS = ...` のように代入すると、保存 (saveConfigToFile) が同じ実際のファイルへ
+# 書き込まれ、後始末が追いつかなかった値が残る。実際に、全テストを実行するたびに
+# AUTH_KEYS (翻訳の API キー) がすべて None になり、開発中のアプリのキーが消えた。
+# 読み込みは実際のファイルのまま (既存のテストが前提にしている) にして、保存先だけを
+# このテストセッション限りの一時ファイルへ向ける。
+import atexit
+import shutil
+import tempfile
+from os import path as _os_path
+
+from config import config as _config
+
+_config_dir = tempfile.mkdtemp(prefix="vrct-test-config-")
+atexit.register(shutil.rmtree, _config_dir, ignore_errors=True)
+_config._PATH_CONFIG = _os_path.join(_config_dir, "config.json")
