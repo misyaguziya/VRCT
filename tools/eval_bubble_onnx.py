@@ -7,6 +7,10 @@ python tools/eval_bubble_onnx.py --model src-python/models/ocr/onnx/chatbox_yolo
 onnxruntime だけで動かすので、配布時と同じ経路を通る。--coco-eval を付けると mAP も
 出す(基盤ごとの val スクリプトを比べると実装差が混ざるので、こちらで揃える)。
 pycocotools が要るので、その場合は .venv-yolox から実行する。
+
+--dir dataset_holdout/overlay_test_20261006 のように images/ と annotations/ を持つ
+フォルダを渡すと、split の代わりにその中の全画像で測る。学習に入れていない画面
+(VRCT 自身のオーバーレイなど)での誤検出を、学習し直すたびに確かめるため。
 """
 
 from __future__ import annotations
@@ -77,6 +81,8 @@ def decode(outputs, conf: float, iou: float) -> tuple[np.ndarray, np.ndarray]:
 
 def ground_truth(image_path: Path) -> np.ndarray:
     label = image_path.parents[1] / "labels" / f"{image_path.stem}.txt"
+    if not label.is_file():  # --dir のフォルダは labels/ を持たない
+        label = image_path.parents[1] / "annotations" / f"{image_path.stem}.txt"
     frame_h, frame_w = cv2.imread(str(image_path)).shape[:2]
     boxes = []
     for row in label.read_text(encoding="utf-8").splitlines():
@@ -131,6 +137,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
     parser.add_argument("--split", default="val")
+    parser.add_argument("--dir", type=Path, default=None,
+                        help="images/ と annotations/ を持つフォルダ。指定すると --split の代わりに使う")
     parser.add_argument("--imgsz", default="1280", help="長辺のサイズ(既定1280、実機と同じ可変形状)。H,W を渡すと固定形状")
     parser.add_argument("--conf", type=float, default=0.15)
     parser.add_argument("--iou", type=float, default=0.65, help="NMSの閾値")
@@ -147,8 +155,14 @@ def main() -> None:
     session = ort.InferenceSession(args.model, options, providers=["CPUExecutionProvider"])
     input_name = session.get_inputs()[0].name
 
-    entries = [line.strip() for line in
-               (ROOT / f"{args.split}.txt").read_text(encoding="utf-8").splitlines() if line.strip()]
+    if args.dir and args.coco_eval:
+        raise SystemExit("--coco-eval は --split の COCO JSON を使うので --dir とは併用できない")
+    if args.dir:
+        images = sorted((args.dir / "images").glob("*.png"))
+    else:
+        images = [ROOT / (line.strip()[2:] if line.strip().startswith("./") else line.strip())
+                  for line in (ROOT / f"{args.split}.txt").read_text(encoding="utf-8").splitlines()
+                  if line.strip()]
     matched = missed = extra = 0
     ious: list[float] = []
     latencies: list[float] = []
@@ -156,8 +170,7 @@ def main() -> None:
     detections: list[dict] = []
     per_session: dict[str, list[int]] = {}  # session -> [matched, total, extra]
 
-    for image_id, entry in enumerate(entries, start=1):
-        image_path = ROOT / (entry[2:] if entry.startswith("./") else entry)
+    for image_id, image_path in enumerate(images, start=1):
         frame = cv2.imread(str(image_path))
         tensor, scale = letterbox(frame, imgsz)
         started = perf_counter()
@@ -195,7 +208,7 @@ def main() -> None:
 
     total = matched + missed
     print(f"model    : {args.model}")
-    print(f"conf {args.conf} / imgsz {imgsz}  ({len(entries)} images, {total} boxes)")
+    print(f"conf {args.conf} / imgsz {imgsz}  ({len(images)} images, {total} boxes)")
     print(f"detected : {matched}/{total}   missed: {missed}   extra candidates: {extra}")
     if ious:
         print(f"IoU      : mean {np.mean(ious):.3f}  min {np.min(ious):.3f}")
