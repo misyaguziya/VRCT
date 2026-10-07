@@ -110,6 +110,26 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
 
     @patch("controller.isConnectedNetwork", return_value=True)
     @patch("controller.model")
+    def test_every_engine_is_checked_at_the_same_time(self, mock_model, _) -> None:
+        # 確認は主にネットワーク待ち。並列数がエンジンの数より少ないと、先に遅いエンジンが枠を埋めて、
+        # 後ろのエンジンが待たされる (実機で、最大の確認が 1.53 秒なのに全体が 2.3 秒かかった)
+        from concurrent.futures import ThreadPoolExecutor
+
+        worker_counts = []
+
+        class _RecordingExecutor(ThreadPoolExecutor):
+            def __init__(self, max_workers=None, *args, **kwargs):
+                worker_counts.append(max_workers)
+                super().__init__(max_workers, *args, **kwargs)
+
+        with patch("controller.ThreadPoolExecutor", _RecordingExecutor):
+            self._run_init(mock_model)
+
+        self.assertIn(len(config.SELECTABLE_TRANSLATION_ENGINE_LIST), worker_counts)
+        self.assertIn(len(config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST), worker_counts)
+
+    @patch("controller.isConnectedNetwork", return_value=True)
+    @patch("controller.model")
     def test_engine_with_valid_key_becomes_available_with_models(self, mock_model, _) -> None:
         self._run_init(mock_model)
 
