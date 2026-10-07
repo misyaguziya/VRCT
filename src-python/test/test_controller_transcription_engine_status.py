@@ -110,6 +110,61 @@ class TranscriptionEngineStatusInitTests(unittest.TestCase):
 
     @patch("controller.isConnectedNetwork", return_value=True)
     @patch("controller.model")
+    def test_selected_model_is_set_once_in_a_worker_thread(self, mock_model, _) -> None:
+        # クライアントの生成 (ChatOpenAI など、約0.4秒) は、結果を順に反映するループ (直列) ではなく、
+        # 確認の並列処理の中で行う。ほかのエンジンのネットワーク待ちと重ねて、起動を短くする
+        import threading
+
+        calls = []
+        mock_model.authenticationTranslatorGeminiAuthKey.return_value = True
+        mock_model.getTranslatorGeminiModelList.return_value = ["g-a", "g-b"]
+        mock_model.setTranslatorGeminiModel.side_effect = lambda m: calls.append(("set", m, threading.current_thread().name))
+        mock_model.updateTranslatorGeminiClient.side_effect = lambda: calls.append(("update", None, threading.current_thread().name))
+        original_keys = dict(config.AUTH_KEYS)
+        original_list = list(config.SELECTABLE_GEMINI_MODEL_LIST)
+        original_model = config._SELECTED_GEMINI_MODEL
+
+        def restore() -> None:
+            config.AUTH_KEYS = original_keys
+            config.SELECTABLE_GEMINI_MODEL_LIST = original_list
+            config._SELECTED_GEMINI_MODEL = original_model
+
+        self.addCleanup(restore)
+        config.AUTH_KEYS = {**config.AUTH_KEYS, "Gemini_API": "gm-test"}
+
+        self._run_init(mock_model)
+
+        self.assertEqual([c[0] for c in calls], ["set", "update"])
+        self.assertEqual(calls[0][1], config.SELECTED_GEMINI_MODEL)
+        self.assertNotEqual(calls[0][2], threading.main_thread().name)
+        self.assertNotEqual(calls[1][2], threading.main_thread().name)
+        self.assertTrue(config.SELECTABLE_TRANSLATION_ENGINE_STATUS["Gemini_API"])
+
+    @patch("controller.isConnectedNetwork", return_value=True)
+    @patch("controller.model")
+    def test_failure_preparing_an_engine_makes_it_unavailable_and_init_continues(self, mock_model, _) -> None:
+        mock_model.authenticationTranslatorGeminiAuthKey.return_value = True
+        mock_model.getTranslatorGeminiModelList.return_value = ["g-a", "g-b"]
+        mock_model.updateTranslatorGeminiClient.side_effect = RuntimeError("boom")
+        original_keys = dict(config.AUTH_KEYS)
+        original_list = list(config.SELECTABLE_GEMINI_MODEL_LIST)
+        original_model = config._SELECTED_GEMINI_MODEL
+
+        def restore() -> None:
+            config.AUTH_KEYS = original_keys
+            config.SELECTABLE_GEMINI_MODEL_LIST = original_list
+            config._SELECTED_GEMINI_MODEL = original_model
+
+        self.addCleanup(restore)
+        config.AUTH_KEYS = {**config.AUTH_KEYS, "Gemini_API": "gm-test"}
+
+        with patch("controller.errorLogging"):
+            self._run_init(mock_model)   # センチネルまで進む = 起動は止まらない
+
+        self.assertFalse(config.SELECTABLE_TRANSLATION_ENGINE_STATUS["Gemini_API"])
+
+    @patch("controller.isConnectedNetwork", return_value=True)
+    @patch("controller.model")
     def test_every_engine_is_checked_at_the_same_time(self, mock_model, _) -> None:
         # 確認は主にネットワーク待ち。並列数がエンジンの数より少ないと、先に遅いエンジンが枠を埋めて、
         # 後ろのエンジンが待たされる (実機で、最大の確認が 1.53 秒なのに全体が 2.3 秒かかった)

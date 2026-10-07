@@ -280,6 +280,19 @@ _SIMPLE_CONFIG_GETTERS = {
     "getOcrBubbleMinTextLength": "OCR_BUBBLE_MIN_TEXT_LENGTH",
 }
 
+# 起動時のエンジンの確認で、選んだモデルの設定とクライアントの生成に使う Model のメソッド名 (モデル一覧を持つエンジン)
+_ENGINE_MODEL_CLIENT_CALLS = {
+    "Plamo_API": ("setTranslatorPlamoModel", "updateTranslatorPlamoClient"),
+    "Gemini_API": ("setTranslatorGeminiModel", "updateTranslatorGeminiClient"),
+    "OpenAI_API": ("setTranslatorOpenAIModel", "updateTranslatorOpenAIClient"),
+    "Groq_API": ("setTranslatorGroqModel", "updateTranslatorGroqClient"),
+    "OpenRouter_API": ("setTranslatorOpenRouterModel", "updateTranslatorOpenRouterClient"),
+    "LMStudio": ("setTranslatorLMStudioModel", "updateTranslatorLMStudioClient"),
+    "OpenAI_Compatible": ("setTranslatorOpenAICompatibleModel", "updateTranslatorOpenAICompatibleClient"),
+    "Ollama": ("setTranslatorOllamaModel", "updateTranslatorOllamaClient"),
+}
+
+
 class Controller:
     def __init__(self, config_override=None, model_override=None) -> None:
         """
@@ -4958,6 +4971,20 @@ class Controller:
                 errorLogging()
                 status = False
 
+            if status and model_list is not None and engine in _ENGINE_MODEL_CLIENT_CALLS:
+                # 選んだモデルの設定とクライアントの生成 (ChatOpenAI は接続先ごとに HTTP クライアントと
+                # SSL 証明書を作り、約0.4秒かかる)。結果を順に反映するループ (直列) に置くと、エンジンの数だけ
+                # 待ちが積み上がる。ここなら、ほかのエンジンのネットワーク待ちと重なる。クライアントは
+                # エンジンごとに独立している。config への書き込みは、反映するループに残す
+                set_model, update_client = _ENGINE_MODEL_CLIENT_CALLS[engine]
+                try:
+                    getattr(model, set_model)(selected_model)
+                    getattr(model, update_client)()
+                except Exception as e:
+                    printLog(f"Error preparing engine {engine}: {str(e)}")
+                    errorLogging()
+                    status = False
+
             engine_check_elapsed[engine] = time.monotonic() - check_started
             return engine, status, auth_key_invalid, model_list, selected_model
 
@@ -5014,43 +5041,27 @@ class Controller:
                     case "Plamo_API":
                         config.SELECTABLE_PLAMO_MODEL_LIST = model_list
                         config.SELECTED_PLAMO_MODEL = selected_model
-                        model.setTranslatorPlamoModel(selected_model)
-                        model.updateTranslatorPlamoClient()
                     case "Gemini_API":
                         config.SELECTABLE_GEMINI_MODEL_LIST = model_list
                         config.SELECTED_GEMINI_MODEL = selected_model
-                        model.setTranslatorGeminiModel(selected_model)
-                        model.updateTranslatorGeminiClient()
                     case "OpenAI_API":
                         config.SELECTABLE_OPENAI_MODEL_LIST = model_list
                         config.SELECTED_OPENAI_MODEL = selected_model
-                        model.setTranslatorOpenAIModel(selected_model)
-                        model.updateTranslatorOpenAIClient()
                     case "Groq_API":
                         config.SELECTABLE_GROQ_MODEL_LIST = model_list
                         config.SELECTED_GROQ_MODEL = selected_model
-                        model.setTranslatorGroqModel(selected_model)
-                        model.updateTranslatorGroqClient()
                     case "OpenRouter_API":
                         config.SELECTABLE_OPENROUTER_MODEL_LIST = model_list
                         config.SELECTED_OPENROUTER_MODEL = selected_model
-                        model.setTranslatorOpenRouterModel(selected_model)
-                        model.updateTranslatorOpenRouterClient()
                     case "LMStudio":
                         config.SELECTABLE_LMSTUDIO_MODEL_LIST = model_list
                         config.SELECTED_LMSTUDIO_MODEL = selected_model
-                        model.setTranslatorLMStudioModel(selected_model)
-                        model.updateTranslatorLMStudioClient()
                     case "OpenAI_Compatible":
                         config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = model_list
                         config.SELECTED_OPENAI_COMPATIBLE_MODEL = selected_model
-                        model.setTranslatorOpenAICompatibleModel(selected_model)
-                        model.updateTranslatorOpenAICompatibleClient()
                     case "Ollama":
                         config.SELECTABLE_OLLAMA_MODEL_LIST = model_list
                         config.SELECTED_OLLAMA_MODEL = selected_model
-                        model.setTranslatorOllamaModel(selected_model)
-                        model.updateTranslatorOllamaClient()
 
             printLog(
                 f"{engine} check completed "
