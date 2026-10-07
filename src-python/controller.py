@@ -4708,6 +4708,7 @@ class Controller:
     def init(self, *args, **kwargs) -> None:
         removeLog()
         printLog("Start Initialization")
+        init_started = time.monotonic()
 
         self._bootstrapModel()
 
@@ -4849,6 +4850,9 @@ class Controller:
 
         # Init Translation Engine Status (with parallel processing)
         printLog("Init Translation Engine Status")
+        translation_phase_started = time.monotonic()
+        # エンジンごとの確認にかかった時間 (秒)。起動が遅いとき、どのエンジンが待たせているかを見る。
+        engine_check_elapsed: dict = {}
 
         def check_translation_engine(engine: str) -> tuple:
             """翻訳エンジンのステータスをチェック（並列実行用）"""
@@ -4856,6 +4860,7 @@ class Controller:
             auth_key_invalid = False
             model_list = None
             selected_model = None
+            check_started = time.monotonic()
 
             try:
                 match engine:
@@ -4953,6 +4958,7 @@ class Controller:
                 errorLogging()
                 status = False
 
+            engine_check_elapsed[engine] = time.monotonic() - check_started
             return engine, status, auth_key_invalid, model_list, selected_model
 
         engine_results = {}
@@ -4972,6 +4978,7 @@ class Controller:
                 continue
 
             status, auth_key_invalid, model_list, selected_model = engine_results[engine]
+            apply_started = time.monotonic()
 
             # ログ出力
             printLog(f"Start check {engine}")
@@ -5042,12 +5049,17 @@ class Controller:
                         model.setTranslatorOllamaModel(selected_model)
                         model.updateTranslatorOllamaClient()
 
-            printLog(f"{engine} check completed")
+            printLog(
+                f"{engine} check completed "
+                f"(check {engine_check_elapsed.get(engine, 0.0):.2f}s, apply {time.monotonic() - apply_started:.2f}s)"
+            )
 
-        printLog("Translation Engine Status Init completed")
+        printLog(f"Translation Engine Status Init completed ({time.monotonic() - translation_phase_started:.2f}s)")
 
         # Init Transcription Engine Status
         printLog("Init Transcription Engine Status")
+        transcription_phase_started = time.monotonic()
+        transcription_check_elapsed: dict = {}
 
         # Deepgram のモデル名 -> 対応言語一覧。check_transcription_engine() は
         # 全エンジン共通の戻り値シェイプ (model_list は list[str]) を持つため、
@@ -5067,6 +5079,7 @@ class Controller:
             auth_key_invalid = False
             model_list = None
             selected_model = None
+            check_started = time.monotonic()
 
             try:
                 match engine:
@@ -5139,6 +5152,7 @@ class Controller:
                 errorLogging()
                 status = False
 
+            transcription_check_elapsed[engine] = time.monotonic() - check_started
             return engine, status, auth_key_invalid, model_list, selected_model
 
         transcription_engine_results = {}
@@ -5167,7 +5181,10 @@ class Controller:
                 config.TRANSCRIPTION_AUTH_KEYS = auth_keys
                 printLog(f"{engine} transcription auth key is invalid")
             elif status:
-                printLog(f"{engine} transcription engine is valid/available")
+                printLog(
+                    f"{engine} transcription engine is valid/available "
+                    f"(check {transcription_check_elapsed.get(engine, 0.0):.2f}s)"
+                )
 
             if engine == "Groq_Whisper" and not status:
                 config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
@@ -5199,7 +5216,7 @@ class Controller:
                         config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
                         config.SELECTED_CUSTOM_WHISPER_MODEL = selected_model
 
-        printLog("Transcription Engine Status Init completed")
+        printLog(f"Transcription Engine Status Init completed ({time.monotonic() - transcription_phase_started:.2f}s)")
         self.initializationProgress(2)
 
         # Set Translation Engine
@@ -5334,7 +5351,7 @@ class Controller:
         printLog("Update settings")
         self.updateConfigSettings()
 
-        printLog("End Initialization")
+        printLog(f"End Initialization ({time.monotonic() - init_started:.2f}s)")
 
 
 def _makeSimpleConfigGetter(attr_name: str):
