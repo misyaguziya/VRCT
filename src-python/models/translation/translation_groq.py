@@ -5,35 +5,26 @@ from pydantic import SecretStr
 try:
     from .translation_languages import translation_lang
     from .translation_utils import loadTranslatePromptConfig
+    from .translation_model_list import RecentModelList
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang, loadTranslationLanguages
     from translation_utils import loadTranslatePromptConfig
+    from translation_model_list import RecentModelList
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
-def _authentication_check(api_key: str) -> bool:
-    """Check if the provided API key is valid by attempting to list models.
-    """
-    try:
-        client = OpenAI(
-            api_key=api_key,
-            base_url="https://api.groq.com/openai/v1",
-        )
-        client.models.list()
-        return True
-    except Exception:
-        return False
-
-def _get_available_text_models(api_key: str) -> list[str]:
-    """Extract only Groq models suitable for translation and chat applications.
-    """
-    client = OpenAI(
+def _fetch_models(api_key: str):
+    """モデル一覧を取得する。成功すればキーは有効 (認証の確認を兼ねる)。失敗は例外。"""
+    return OpenAI(
         api_key=api_key,
         base_url="https://api.groq.com/openai/v1",
-    )
-    res = client.models.list()
+    ).models.list()
+
+def _text_models(res) -> list[str]:
+    """Extract only Groq models suitable for translation and chat applications.
+    """
     allowed_models = []
 
     for model in res.data:
@@ -62,7 +53,10 @@ def _get_available_text_models(api_key: str) -> list[str]:
     allowed_models.sort()
     return allowed_models
 
-class GroqClient:
+def _get_available_text_models(api_key: str) -> list[str]:
+    return _text_models(_fetch_models(api_key))
+
+class GroqClient(RecentModelList):
     """Groq API Translation wrapper using OpenAI-compatible endpoint.
     
     Groq provides a fast LLM inference platform with an OpenAI-compatible API.
@@ -90,26 +84,24 @@ class GroqClient:
         self.groq_llm = None
 
     def getModelList(self) -> list[str]:
-        return _get_available_text_models(self.api_key) if self.api_key else []
+        if not self.api_key:
+            return []
+        return self._remember(self._takeAuthModels() or _get_available_text_models(self.api_key))
 
     def getAuthKey(self) -> str:
         return self.api_key
 
     def setAuthKey(self, api_key: str) -> bool:
-        result = _authentication_check(api_key)
-        if result:
-            self.api_key = api_key
-        return result
+        try:
+            res = _fetch_models(api_key)
+        except Exception:
+            return False
+        self.api_key = api_key
+        self._rememberFromAuth(lambda: _text_models(res))
+        return True
 
     def getModel(self) -> str:
         return self.model
-
-    def setModel(self, model: str) -> bool:
-        if model in self.getModelList():
-            self.model = model
-            return True
-        else:
-            return False
 
     def updateClient(self) -> None:
         self.groq_llm = ChatOpenAI(
