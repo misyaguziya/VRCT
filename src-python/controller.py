@@ -9,7 +9,7 @@ import re
 import time
 from device_manager import device_manager
 from config import config, ConfigValidationError, DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
-from model import model
+from model import model, SETUP_LAUNCHED, SETUP_DOWNLOAD_FAILED, SETUP_VERIFY_FAILED
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isWildcardBindAddress, isAvailableWebSocketServer
 from errors import ErrorCode, OcrStartError, VRCTError
 from models.transcription.transcription_openai_compatible import TRANSCRIPTION_MODEL_KEYWORDS, TRANSCRIPTION_API_ENGINES
@@ -279,6 +279,19 @@ _SIMPLE_CONFIG_GETTERS = {
     "getOcrMinConfidence": "OCR_MIN_CONFIDENCE",
     "getOcrBubbleMinTextLength": "OCR_BUBBLE_MIN_TEXT_LENGTH",
 }
+
+# 起動時のエンジンの確認で、選んだモデルの設定とクライアントの生成に使う Model のメソッド名 (モデル一覧を持つエンジン)
+_ENGINE_MODEL_CLIENT_CALLS = {
+    "Plamo_API": ("setTranslatorPlamoModel", "updateTranslatorPlamoClient"),
+    "Gemini_API": ("setTranslatorGeminiModel", "updateTranslatorGeminiClient"),
+    "OpenAI_API": ("setTranslatorOpenAIModel", "updateTranslatorOpenAIClient"),
+    "Groq_API": ("setTranslatorGroqModel", "updateTranslatorGroqClient"),
+    "OpenRouter_API": ("setTranslatorOpenRouterModel", "updateTranslatorOpenRouterClient"),
+    "LMStudio": ("setTranslatorLMStudioModel", "updateTranslatorLMStudioClient"),
+    "OpenAI_Compatible": ("setTranslatorOpenAICompatibleModel", "updateTranslatorOpenAICompatibleClient"),
+    "Ollama": ("setTranslatorOllamaModel", "updateTranslatorOllamaClient"),
+}
+
 
 class Controller:
     def __init__(self, config_override=None, model_override=None) -> None:
@@ -3518,16 +3531,31 @@ class Controller:
                 }
             }
 
+    def _runSoftwareUpdate(self, update: Callable[[Optional[str]], str], endpoint: str, target_version: Optional[str]) -> None:
+        """setup.exe を取得してインストーラを起動する。起動すればアプリは終了する。
+        戻ってきたら失敗なので、UI へ知らせる (UI は更新中の表示のまま待っている)。
+        起動したと確かめられた (SETUP_LAUNCHED) とき以外は、すべて失敗として知らせる。"""
+        result = SETUP_DOWNLOAD_FAILED
+        try:
+            result = update(target_version)
+        except Exception:
+            errorLogging()
+        if result == SETUP_LAUNCHED:
+            return
+        error_code = ErrorCode.UPDATE_SOFTWARE_VERIFY if result == SETUP_VERIFY_FAILED else ErrorCode.UPDATE_SOFTWARE_DOWNLOAD
+        error_response = VRCTError.create_error_response(error_code, data=target_version)
+        self.run(error_response["status"], endpoint, error_response["result"])
+
     def updateSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
         target_version = str(data) if data else None
-        th_start_update_software = Thread(target=model.updateSoftware, args=(target_version,))
+        th_start_update_software = Thread(target=self._runSoftwareUpdate, args=(model.updateSoftware, self.run_mapping["update_software"], target_version))
         th_start_update_software.daemon = True
         th_start_update_software.start()
         return {"status":200, "result":True}
 
     def updateCudaSoftware(self, data:Optional[str]=None, *args, **kwargs) -> dict:
         target_version = str(data) if data else None
-        th_start_update_cuda_software = Thread(target=model.updateCudaSoftware, args=(target_version,))
+        th_start_update_cuda_software = Thread(target=self._runSoftwareUpdate, args=(model.updateCudaSoftware, self.run_mapping["update_cuda_software"], target_version))
         th_start_update_cuda_software.daemon = True
         th_start_update_cuda_software.start()
         return {"status":200, "result":True}
@@ -4693,6 +4721,7 @@ class Controller:
     def init(self, *args, **kwargs) -> None:
         removeLog()
         printLog("Start Initialization")
+        init_started = time.monotonic()
 
         self._bootstrapModel()
 
@@ -4834,6 +4863,9 @@ class Controller:
 
         # Init Translation Engine Status (with parallel processing)
         printLog("Init Translation Engine Status")
+        translation_phase_started = time.monotonic()
+        # エンジンごとの確認にかかった時間 (秒)。起動が遅いとき、どのエンジンが待たせているかを見る。
+        engine_check_elapsed: dict = {}
 
         def check_translation_engine(engine: str) -> tuple:
             """翻訳エンジンのステータスをチェック（並列実行用）"""
@@ -4841,6 +4873,7 @@ class Controller:
             auth_key_invalid = False
             model_list = None
             selected_model = None
+            check_started = time.monotonic()
 
             try:
                 match engine:
@@ -4938,12 +4971,30 @@ class Controller:
                 errorLogging()
                 status = False
 
+            if status and model_list is not None and engine in _ENGINE_MODEL_CLIENT_CALLS:
+                # 選んだモデルの設定とクライアントの生成 (ChatOpenAI は接続先ごとに HTTP クライアントと
+                # SSL 証明書を作り、約0.4秒かかる)。結果を順に反映するループ (直列) に置くと、エンジンの数だけ
+                # 待ちが積み上がる。ここなら、ほかのエンジンのネットワーク待ちと重なる。クライアントは
+                # エンジンごとに独立している。config への書き込みは、反映するループに残す
+                set_model, update_client = _ENGINE_MODEL_CLIENT_CALLS[engine]
+                try:
+                    getattr(model, set_model)(selected_model)
+                    getattr(model, update_client)()
+                except Exception as e:
+                    printLog(f"Error preparing engine {engine}: {str(e)}")
+                    errorLogging()
+                    status = False
+
+            engine_check_elapsed[engine] = time.monotonic() - check_started
             return engine, status, auth_key_invalid, model_list, selected_model
 
         engine_results = {}
         engines_to_check = list(config.SELECTABLE_TRANSLATION_ENGINE_LIST)
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        # 確認は主にネットワーク待ち (認証・モデル一覧の取得)。エンジンの数 (13) より少ない並列数では、
+        # 先に遅いエンジンが枠を埋めて、後ろのエンジンが待たされる (実機で、最大の確認が 1.53 秒なのに
+        # 全体が 2.3 秒かかった)。エンジンごとに独立したクライアントなので、全部を同時に確認する。
+        with ThreadPoolExecutor(max_workers=max(1, len(engines_to_check))) as executor:
             future_to_engine = {executor.submit(check_translation_engine, engine): engine 
                               for engine in engines_to_check}
 
@@ -4957,6 +5008,7 @@ class Controller:
                 continue
 
             status, auth_key_invalid, model_list, selected_model = engine_results[engine]
+            apply_started = time.monotonic()
 
             # ログ出力
             printLog(f"Start check {engine}")
@@ -4989,50 +5041,39 @@ class Controller:
                     case "Plamo_API":
                         config.SELECTABLE_PLAMO_MODEL_LIST = model_list
                         config.SELECTED_PLAMO_MODEL = selected_model
-                        model.setTranslatorPlamoModel(selected_model)
-                        model.updateTranslatorPlamoClient()
                     case "Gemini_API":
                         config.SELECTABLE_GEMINI_MODEL_LIST = model_list
                         config.SELECTED_GEMINI_MODEL = selected_model
-                        model.setTranslatorGeminiModel(selected_model)
-                        model.updateTranslatorGeminiClient()
                     case "OpenAI_API":
                         config.SELECTABLE_OPENAI_MODEL_LIST = model_list
                         config.SELECTED_OPENAI_MODEL = selected_model
-                        model.setTranslatorOpenAIModel(selected_model)
-                        model.updateTranslatorOpenAIClient()
                     case "Groq_API":
                         config.SELECTABLE_GROQ_MODEL_LIST = model_list
                         config.SELECTED_GROQ_MODEL = selected_model
-                        model.setTranslatorGroqModel(selected_model)
-                        model.updateTranslatorGroqClient()
                     case "OpenRouter_API":
                         config.SELECTABLE_OPENROUTER_MODEL_LIST = model_list
                         config.SELECTED_OPENROUTER_MODEL = selected_model
-                        model.setTranslatorOpenRouterModel(selected_model)
-                        model.updateTranslatorOpenRouterClient()
                     case "LMStudio":
                         config.SELECTABLE_LMSTUDIO_MODEL_LIST = model_list
                         config.SELECTED_LMSTUDIO_MODEL = selected_model
-                        model.setTranslatorLMStudioModel(selected_model)
-                        model.updateTranslatorLMStudioClient()
                     case "OpenAI_Compatible":
                         config.SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST = model_list
                         config.SELECTED_OPENAI_COMPATIBLE_MODEL = selected_model
-                        model.setTranslatorOpenAICompatibleModel(selected_model)
-                        model.updateTranslatorOpenAICompatibleClient()
                     case "Ollama":
                         config.SELECTABLE_OLLAMA_MODEL_LIST = model_list
                         config.SELECTED_OLLAMA_MODEL = selected_model
-                        model.setTranslatorOllamaModel(selected_model)
-                        model.updateTranslatorOllamaClient()
 
-            printLog(f"{engine} check completed")
+            printLog(
+                f"{engine} check completed "
+                f"(check {engine_check_elapsed.get(engine, 0.0):.2f}s, apply {time.monotonic() - apply_started:.2f}s)"
+            )
 
-        printLog("Translation Engine Status Init completed")
+        printLog(f"Translation Engine Status Init completed ({time.monotonic() - translation_phase_started:.2f}s)")
 
         # Init Transcription Engine Status
         printLog("Init Transcription Engine Status")
+        transcription_phase_started = time.monotonic()
+        transcription_check_elapsed: dict = {}
 
         # Deepgram のモデル名 -> 対応言語一覧。check_transcription_engine() は
         # 全エンジン共通の戻り値シェイプ (model_list は list[str]) を持つため、
@@ -5052,6 +5093,7 @@ class Controller:
             auth_key_invalid = False
             model_list = None
             selected_model = None
+            check_started = time.monotonic()
 
             try:
                 match engine:
@@ -5124,12 +5166,14 @@ class Controller:
                 errorLogging()
                 status = False
 
+            transcription_check_elapsed[engine] = time.monotonic() - check_started
             return engine, status, auth_key_invalid, model_list, selected_model
 
         transcription_engine_results = {}
         transcription_engines_to_check = list(config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST)
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        # 翻訳エンジンの確認と同じ理由で、エンジンの数だけ同時に確認する
+        with ThreadPoolExecutor(max_workers=max(1, len(transcription_engines_to_check))) as executor:
             future_to_transcription_engine = {
                 executor.submit(check_transcription_engine, engine): engine
                 for engine in transcription_engines_to_check
@@ -5152,7 +5196,10 @@ class Controller:
                 config.TRANSCRIPTION_AUTH_KEYS = auth_keys
                 printLog(f"{engine} transcription auth key is invalid")
             elif status:
-                printLog(f"{engine} transcription engine is valid/available")
+                printLog(
+                    f"{engine} transcription engine is valid/available "
+                    f"(check {transcription_check_elapsed.get(engine, 0.0):.2f}s)"
+                )
 
             if engine == "Groq_Whisper" and not status:
                 config.SELECTABLE_GROQ_WHISPER_MODEL_LIST = []
@@ -5184,7 +5231,7 @@ class Controller:
                         config.SELECTABLE_CUSTOM_WHISPER_MODEL_LIST = model_list
                         config.SELECTED_CUSTOM_WHISPER_MODEL = selected_model
 
-        printLog("Transcription Engine Status Init completed")
+        printLog(f"Transcription Engine Status Init completed ({time.monotonic() - transcription_phase_started:.2f}s)")
         self.initializationProgress(2)
 
         # Set Translation Engine
@@ -5319,7 +5366,7 @@ class Controller:
         printLog("Update settings")
         self.updateConfigSettings()
 
-        printLog("End Initialization")
+        printLog(f"End Initialization ({time.monotonic() - init_started:.2f}s)")
 
 
 def _makeSimpleConfigGetter(attr_name: str):

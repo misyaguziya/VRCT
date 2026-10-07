@@ -74,6 +74,8 @@ run_mapping = {
 
     "connected_network":"/run/connected_network",
     "enable_ai_models":"/run/enable_ai_models",
+    "update_software":"/run/update_software",
+    "update_cuda_software":"/run/update_cuda_software",
 
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",

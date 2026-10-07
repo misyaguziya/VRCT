@@ -4,12 +4,14 @@ from langchain_ollama import ChatOllama
 try:
     from .translation_languages import translation_lang
     from .translation_utils import loadTranslatePromptConfig
+    from .translation_model_list import RecentModelList
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.abspath(__file__)))
     from translation_languages import translation_lang, loadTranslationLanguages
     from translation_utils import loadTranslatePromptConfig
+    from translation_model_list import RecentModelList
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
 def _authentication_check(base_url: str | None = None) -> bool:
@@ -40,7 +42,7 @@ def _get_available_text_models(base_url: str | None = None) -> list[str]:
     allowed_models.sort()
     return allowed_models
 
-class OllamaClient:
+class OllamaClient(RecentModelList):
     """Ollama Translation simple wrapper.
     prompt/translation_ollama.yml から system_prompt / supported_languages を読み込む。
     """
@@ -69,18 +71,11 @@ class OllamaClient:
 
     def getModelList(self) -> list[str]:
         if self.authenticationCheck():
-            return _get_available_text_models(self.base_url)
+            return self._remember(_get_available_text_models(self.base_url))
         return []
 
     def getModel(self) -> str:
         return self.model
-
-    def setModel(self, model: str) -> bool:
-        if model in self.getModelList():
-            self.model = model
-            return True
-        else:
-            return False
 
     def updateClient(self) -> None:
         self.openai_llm = ChatOllama(
