@@ -72,14 +72,25 @@ def test_stale_frame_rejected_and_repeat_session_does_not_overwrite(tmp_path):
 
 
 def test_capture_failure_never_reuses_last_success(tmp_path):
+    # Driven by capture count, not wall clock: no duration, the source stops the worker itself.
+    failures = 3
     source = Mock()
-    source.capture.side_effect = [frame()] + [sources.CaptureUnavailable("lost") for _ in range(30)]
+
+    def capture():
+        if source.capture.call_count == 1:
+            return frame()  # Built at capture time so a stalled thread can't age it.
+        if source.capture.call_count == 1 + failures:
+            worker.command("stop")
+        raise sources.CaptureUnavailable("lost")
+
+    source.capture.side_effect = capture
     store = collector.ImageStore(tmp_path, "test")
-    worker = collector.Collector(lambda: source, store, interval=0.02, duration=0.15, emit=Mock())
+    worker = collector.Collector(lambda: source, store, interval=0.01, duration=0,
+                                 max_age=60, emit=Mock())
     worker.start()
-    assert worker.done.wait(2)
+    assert worker.done.wait(30)
     worker.stop()
-    assert source.capture.call_count > 1
+    assert source.capture.call_count == 1 + failures
     assert store.count == 1 and worker.error is None
     source.close.assert_called_once()
 
