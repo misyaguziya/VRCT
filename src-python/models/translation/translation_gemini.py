@@ -5,6 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 try:
     from .translation_languages import translation_lang
     from .translation_utils import loadTranslatePromptConfig
+    from .translation_model_list import RecentModelList
 except Exception:
     import sys
     from os import path as os_path
@@ -12,6 +13,7 @@ except Exception:
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang
     from translation_utils import loadTranslatePromptConfig
+    from translation_model_list import RecentModelList
 
 logger = logging.getLogger("langchain_google_genai")
 logger.setLevel(logging.ERROR)
@@ -51,7 +53,7 @@ def _get_available_text_models(api_key: str) -> list[str]:
     allowed_models.sort()
     return allowed_models
 
-class GeminiClient:
+class GeminiClient(RecentModelList):
     def __init__(self, root_path: str = None):
         self.api_key = None
         self.model = None
@@ -74,7 +76,7 @@ class GeminiClient:
         self.gemini_llm = None
 
     def getModelList(self) -> list[str]:
-        return _get_available_text_models(self.api_key)
+        return self._remember(_get_available_text_models(self.api_key))
 
     def getAuthKey(self) -> str:
         return self.api_key
@@ -87,13 +89,6 @@ class GeminiClient:
 
     def getModel(self) -> str:
         return self.model
-
-    def setModel(self, model: str) -> bool:
-        if model in self.getModelList():
-            self.model = model
-            return True
-        else:
-            return False
 
     def updateClient(self) -> None:
         self.gemini_llm = ChatGoogleGenerativeAI(

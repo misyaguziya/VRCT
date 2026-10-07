@@ -91,7 +91,7 @@ class OpenAICompatibleClient(OpenAIClient):
         if not self.api_key or not self.base_url:
             return []
         try:
-            return _get_available_text_models(self.api_key, self.base_url)
+            return self._remember(_get_available_text_models(self.api_key, self.base_url))
         except Exception:
             return []
 
