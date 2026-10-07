@@ -3,14 +3,14 @@ from openai import OpenAI
 try:
     from .translation_languages import translation_lang
     from .translation_utils import loadTranslatePromptConfig
-    from .translation_openai import OpenAIClient, _authentication_check
+    from .translation_openai import OpenAIClient, _fetch_models
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang, loadTranslationLanguages
     from translation_utils import loadTranslatePromptConfig
-    from translation_openai import OpenAIClient, _authentication_check
+    from translation_openai import OpenAIClient, _fetch_models
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
 
@@ -31,14 +31,12 @@ _EXCLUDE_KEYWORDS = [
 ]
 
 
-def _get_available_text_models(api_key: str, base_url: str) -> list[str]:
+def _text_models(res) -> list[str]:
     """OpenAI 互換エンドポイント向け：除外条件に該当しないテキストモデルを全て許可する。
 
     プロバイダ独自命名（`llama-3.3-70b`, `mistral-large-latest`, `claude-3-5-sonnet` 等）
     が多いため `gpt-` プレフィックス判定は行わない。
     """
-    client = OpenAI(api_key=api_key, base_url=base_url)
-    res = client.models.list()
     allowed_models = []
 
     for m in res.data:
@@ -50,6 +48,10 @@ def _get_available_text_models(api_key: str, base_url: str) -> list[str]:
 
     allowed_models.sort()
     return allowed_models
+
+
+def _get_available_text_models(api_key: str, base_url: str) -> list[str]:
+    return _text_models(_fetch_models(api_key, base_url))
 
 
 class OpenAICompatibleClient(OpenAIClient):
@@ -91,16 +93,19 @@ class OpenAICompatibleClient(OpenAIClient):
         if not self.api_key or not self.base_url:
             return []
         try:
-            return _get_available_text_models(self.api_key, self.base_url)
+            return self._remember(self._takeAuthModels() or _get_available_text_models(self.api_key, self.base_url))
         except Exception:
             return []
 
     def setAuthKey(self, api_key: str) -> bool:
         # 認証は現在の base_url に対して行う
-        result = _authentication_check(api_key, self.base_url)
-        if result:
-            self.api_key = api_key
-        return result
+        try:
+            res = _fetch_models(api_key, self.base_url)
+        except Exception:
+            return False
+        self.api_key = api_key
+        self._rememberFromAuth(lambda: _text_models(res))
+        return True
 
 
 if __name__ == "__main__":

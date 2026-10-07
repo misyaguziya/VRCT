@@ -5,12 +5,14 @@ import requests
 try:
     from .translation_languages import translation_lang
     from .translation_utils import loadTranslatePromptConfig
+    from .translation_model_list import RecentModelList
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.abspath(__file__)))
     from translation_languages import translation_lang, loadTranslationLanguages
     from translation_utils import loadTranslatePromptConfig
+    from translation_model_list import RecentModelList
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
 def _authentication_check(base_url: str | None = None) -> bool:
@@ -41,7 +43,7 @@ def _get_available_text_models(base_url: str | None = None) -> list[str]:
     allowed_models.sort()
     return allowed_models
 
-class LMStudioClient:
+class LMStudioClient(RecentModelList):
     """LM Studio Translation simple wrapper.
     prompt/translation_lmstudio.yml から system_prompt / supported_languages を読み込む。
     """
@@ -76,17 +78,10 @@ class LMStudioClient:
         return result
 
     def getModelList(self) -> list[str]:
-        return _get_available_text_models(base_url=self.base_url) if self.base_url else []
+        return self._remember(_get_available_text_models(base_url=self.base_url)) if self.base_url else []
 
     def getModel(self) -> str:
         return self.model
-
-    def setModel(self, model: str) -> bool:
-        if model in self.getModelList():
-            self.model = model
-            return True
-        else:
-            return False
 
     def updateClient(self) -> None:
         self.openai_llm = ChatOpenAI(

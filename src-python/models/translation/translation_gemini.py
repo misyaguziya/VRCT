@@ -5,6 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 try:
     from .translation_languages import translation_lang
     from .translation_utils import loadTranslatePromptConfig
+    from .translation_model_list import RecentModelList
 except Exception:
     import sys
     from os import path as os_path
@@ -12,25 +13,38 @@ except Exception:
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang
     from translation_utils import loadTranslatePromptConfig
+    from translation_model_list import RecentModelList
 
 logger = logging.getLogger("langchain_google_genai")
 logger.setLevel(logging.ERROR)
 
-def _authentication_check(api_key: str) -> bool:
-    """Check if the provided API key is valid by attempting to list models.
-    """
-    try:
-        client = genai.Client(api_key=api_key)
-        client.models.list()
-        return True
-    except Exception:
-        return False
+class _ModelListing:
+    """models.list() の結果と、それを取った Client をひとまとめにしたもの。
 
-def _get_available_text_models(api_key: str) -> list[str]:
-    """Extract only Gemini models suitable for translation and chat applications
+    Client は破棄されると内部の HTTP クライアントを閉じる。`.models` は Client 自身ではなく
+    HTTP クライアントだけを持つので、Client を手元に持たないと、`list()` の最中や、次のページを
+    取るとき ("Client has been closed") に失敗する。以前は `genai.Client(...).models.list()` と
+    つないでいたため、有効なキーでも認証が失敗し、キーが無効扱いになって設定から消えた。
     """
+
+    def __init__(self, client, pager):
+        self.client = client
+        self.pager = pager
+
+    def __iter__(self):
+        return iter(self.pager)
+
+
+def _fetch_models(api_key: str):
+    """モデル一覧の最初のページを取得する。成功すればキーは有効 (認証の確認を兼ねる)。失敗は例外。"""
     client = genai.Client(api_key=api_key)
-    res = client.models.list()
+    return _ModelListing(client, client.models.list())
+
+def _text_models(res) -> list[str]:
+    """Extract only Gemini models suitable for translation and chat applications
+
+    res は全ページを順にたどれる (たどる間に次のページを取得する)。
+    """
     allowed_models = []
 
     # 除外対象のキーワード
@@ -51,7 +65,10 @@ def _get_available_text_models(api_key: str) -> list[str]:
     allowed_models.sort()
     return allowed_models
 
-class GeminiClient:
+def _get_available_text_models(api_key: str) -> list[str]:
+    return _text_models(_fetch_models(api_key))
+
+class GeminiClient(RecentModelList):
     def __init__(self, root_path: str = None):
         self.api_key = None
         self.model = None
@@ -74,26 +91,22 @@ class GeminiClient:
         self.gemini_llm = None
 
     def getModelList(self) -> list[str]:
-        return _get_available_text_models(self.api_key)
+        return self._remember(self._takeAuthModels() or _get_available_text_models(self.api_key))
 
     def getAuthKey(self) -> str:
         return self.api_key
 
     def setAuthKey(self, api_key: str) -> bool:
-        result = _authentication_check(api_key)
-        if result:
-            self.api_key = api_key
-        return result
+        try:
+            res = _fetch_models(api_key)
+        except Exception:
+            return False
+        self.api_key = api_key
+        self._rememberFromAuth(lambda: _text_models(res))
+        return True
 
     def getModel(self) -> str:
         return self.model
-
-    def setModel(self, model: str) -> bool:
-        if model in self.getModelList():
-            self.model = model
-            return True
-        else:
-            return False
 
     def updateClient(self) -> None:
         self.gemini_llm = ChatGoogleGenerativeAI(
