@@ -4964,7 +4964,10 @@ class Controller:
         engine_results = {}
         engines_to_check = list(config.SELECTABLE_TRANSLATION_ENGINE_LIST)
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        # 確認は主にネットワーク待ち (認証・モデル一覧の取得)。エンジンの数 (13) より少ない並列数では、
+        # 先に遅いエンジンが枠を埋めて、後ろのエンジンが待たされる (実機で、最大の確認が 1.53 秒なのに
+        # 全体が 2.3 秒かかった)。エンジンごとに独立したクライアントなので、全部を同時に確認する。
+        with ThreadPoolExecutor(max_workers=max(1, len(engines_to_check))) as executor:
             future_to_engine = {executor.submit(check_translation_engine, engine): engine 
                               for engine in engines_to_check}
 
@@ -5158,7 +5161,8 @@ class Controller:
         transcription_engine_results = {}
         transcription_engines_to_check = list(config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST)
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        # 翻訳エンジンの確認と同じ理由で、エンジンの数だけ同時に確認する
+        with ThreadPoolExecutor(max_workers=max(1, len(transcription_engines_to_check))) as executor:
             future_to_transcription_engine = {
                 executor.submit(check_transcription_engine, engine): engine
                 for engine in transcription_engines_to_check
