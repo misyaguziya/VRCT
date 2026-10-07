@@ -5,12 +5,14 @@ from pydantic import SecretStr
 try:
     from .translation_languages import translation_lang
     from .translation_utils import loadTranslatePromptConfig
+    from .translation_model_list import RecentModelList
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang, loadTranslationLanguages
     from translation_utils import loadTranslatePromptConfig
+    from translation_model_list import RecentModelList
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
 def _authentication_check(api_key: str, base_url: str | None = None) -> bool:
@@ -60,7 +62,7 @@ def _get_available_text_models(api_key: str, base_url: str | None = None) -> lis
     allowed_models.sort()
     return allowed_models
 
-class OpenAIClient:
+class OpenAIClient(RecentModelList):
     """OpenAI Translation simple wrapper.
     prompt/translation_openai.yml から system_prompt / supported_languages を読み込む。
     """
@@ -86,7 +88,7 @@ class OpenAIClient:
         self.openai_llm = None
 
     def getModelList(self) -> list[str]:
-        return _get_available_text_models(self.api_key, self.base_url) if self.api_key else []
+        return self._remember(_get_available_text_models(self.api_key, self.base_url)) if self.api_key else []
 
     def getAuthKey(self) -> str:
         return self.api_key
@@ -99,13 +101,6 @@ class OpenAIClient:
 
     def getModel(self) -> str:
         return self.model
-
-    def setModel(self, model: str) -> bool:
-        if model in self.getModelList():
-            self.model = model
-            return True
-        else:
-            return False
 
     def updateClient(self) -> None:
         self.openai_llm = ChatOpenAI(
