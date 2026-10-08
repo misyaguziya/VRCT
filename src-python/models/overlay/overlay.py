@@ -1,4 +1,5 @@
 import os
+import json
 import secrets
 from functools import lru_cache
 import ctypes
@@ -45,6 +46,8 @@ _STEP_REPORT_SEC = 10.0
 _STEP_SLOW_SEC = 0.05
 # 1秒あたりの処理時間の合計がこの ms 以上のときだけ内訳を出す
 _STEP_BREAKDOWN_MIN_MS = 50
+# VR画面の転送を1フレームずつ JSONL に記録する先 (Rust化の段階0の計測。tools/benchmark_overlay_live.py)。未設定なら記録しない
+_PROFILE_PATH = os.environ.get("VRCT_OVERLAY_PROFILE")
 # オーバーレイのスレッドの優先度 (Windows の THREAD_PRIORITY_ABOVE_NORMAL)。OCR (onnxruntime の複数スレッド) が
 # 動くと、純粋なメモリのコピーまで数倍に遅れた (実機で 1秒あたり 60〜150ms → 300〜600ms。GIL の切り替えを
 # 短くしても変わらなかった)。CPU の取り合いで待たされると見て、少しだけ先に動かす。最大の優先度にはしない
@@ -796,6 +799,13 @@ class Overlay:
         self.stream_unavailable = False
         # 前回転送した撮影の生データと、画面が最後に変わった時刻。変わっていなければ転送しない
         self.panel_last_raw: Optional[bytes] = None
+        # _PROFILE_PATH の記録用: 変わらず省いた/転送したフレーム数、撮影方法、前回の集計時の CPU 時間
+        self.profile_file = None
+        self.profile_unchanged = 0
+        self.profile_submitted = 0
+        self.capture_source: Optional[str] = None
+        self.profile_cpu = (time.thread_time(), time.process_time())
+        self.profile_stream_counts: tuple = (None, 0, 0.0)
         self.panel_last_change: float = 0.0
         self.panel_image_size: Optional[tuple] = None
         # 撮影・転送の失敗が続いている回数と、最後に記録した失敗 (同じ失敗はログに1回だけ出す)
@@ -1411,10 +1421,12 @@ class Overlay:
             return
         # 前回と同じなら、変換・転送をすべて省く (オーバーレイは前回のテクスチャを表示し続ける)
         if capture[0] == self.panel_last_raw:
+            self.profile_unchanged += 1
             return
         self.panel_last_raw = capture[0]
         self.panel_last_change = now
         self.markStep("panel:convert")
+        stamps = [time.perf_counter()] if _PROFILE_PATH else None
         pixels = window_capture.bgraFromCapture(capture)
         size = (pixels.shape[1], pixels.shape[0])
         # 各領域だけを角丸で残し、それ以外は透明にする (PrintWindow のアルファは不定)
@@ -1437,6 +1449,8 @@ class Overlay:
             if self.launcher_intro_state not in self.launcher_intro_logged:
                 self.launcher_intro_logged.add(self.launcher_intro_state)
                 printLog(f"overlay: launcher intro {self.launcher_intro_state}: key BGR={key}, transparent={ratio:.0%}")
+        if stamps:
+            stamps.append(time.perf_counter())
         GL = self.prepareGl()
         texture_size = self.gl["size"]
         if texture_size is None or size[0] > texture_size[0] or size[1] > texture_size[1]:
@@ -1446,13 +1460,28 @@ class Overlay:
             self.newPanelTexture(GL, (max(round(max_w * scale), size[0]), max(round(max_h * scale), size[1])))
         # setOverlayTexture の後はバインドが外れるため、毎回バインドし直す。撮影画像はテクスチャの左上に BGRA のまま書く
         self.markStep("panel:upload")
+        if stamps:
+            stamps.append(time.perf_counter())
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.gl["texture"])
         GL.glTexSubImage2D(GL.GL_TEXTURE_2D, 0, 0, 0, size[0], size[1], GL.GL_BGRA, GL.GL_UNSIGNED_BYTE, pixels)
+        if stamps:
+            stamps.append(time.perf_counter())
         GL.glFinish()
+        if stamps:
+            stamps.append(time.perf_counter())
         self.markStep("panel:set_texture")
         # 1枚のテクスチャを全領域のオーバーレイに渡す。表示される範囲は各オーバーレイの bounds で決まる
-        for handle in self.vrRegionHandles().values():
+        handles = self.vrRegionHandles()
+        for handle in handles.values():
             self.overlay.setOverlayTexture(handle, self.gl["vr_texture"])
+        self.profile_submitted += 1
+        if stamps:
+            stamps.append(time.perf_counter())
+            ms = [round((b - a) * 1000, 3) for a, b in zip(stamps, stamps[1:])]
+            self.writeProfile({"kind": "frame", "src": self.capture_source, "client": list(size),
+                               "texture": list(self.gl["size"]), "convert_ms": ms[0], "prepare_ms": ms[1],
+                               "upload_ms": ms[2], "finish_ms": ms[3], "set_ms": ms[4], "handles": len(handles),
+                               "tooltip": tooltip_matches, "intro": self.launcher_intro_state})
         image_size_changed = size != self.panel_image_size
         self.panel_image_size = size
         # 表示範囲はテクスチャの中の撮影画像の大きさで決まるので、並びか撮影の大きさが変わったら当て直す
@@ -1525,12 +1554,14 @@ class Overlay:
             # 画面キャプチャは撮り続けているので、届いている最新の画像を受け取るだけ (待たない)
             result = stream.take()
             if result is not None:
+                self.capture_source = "wgc"
                 self.capture_job = SimpleNamespace(hwnd=self.panel_hwnd, layout=self.layout, started=now,
                                                    done=True, result=result, error=None, reported=False)
                 return
             if not stream.stale:
                 return  # まだ1枚も届いていない
             # 大きさを変えた後の画像がまだ届かない: 届くまでは PrintWindow で撮る
+        self.capture_source = "pw"
         self.capture_job = SimpleNamespace(hwnd=self.panel_hwnd, layout=self.layout, started=now,
                                            done=False, result=None, error=None, reported=False)
         self.startCaptureJob(self.capture_job)
@@ -2932,10 +2963,41 @@ class Overlay:
         per_second = {name: round(total * 1000 / elapsed) for name, total in self.step_total.items() if total * 1000 / elapsed >= 2}
         if sum(per_second.values()) >= _STEP_BREAKDOWN_MIN_MS:
             printLog("overlay: 処理時間の内訳 (ms/秒)", {"loops_per_sec": round(self.step_loops / elapsed, 1), **per_second})
+        if _PROFILE_PATH:
+            self.writeProfileWindow(elapsed)
         self.step_max = {}
         self.step_total = {}
         self.step_loops = 0
         self.step_reported_at = now
+
+    def writeProfile(self, row: dict) -> None:
+        """_PROFILE_PATH へ1行書く。書けなければ記録をやめる (VR画面の処理は止めない)。"""
+        global _PROFILE_PATH
+        try:
+            if self.profile_file is None:
+                self.profile_file = open(_PROFILE_PATH, "a", encoding="utf-8", buffering=1)
+            self.profile_file.write(json.dumps({"wall": time.time(), **row}) + "\n")
+        except (OSError, TypeError, ValueError):
+            errorLogging()
+            _PROFILE_PATH = None
+
+    def writeProfileWindow(self, elapsed: float) -> None:
+        """reportSlowSteps の区間 (約10秒) の集計。overlay のスレッドで呼ぶ (thread_time はこのスレッドの CPU 時間)。"""
+        cpu = (time.thread_time(), time.process_time())
+        stream = self.panel_stream
+        arrivals, copy_s = getattr(stream, "arrivals", 0), getattr(stream, "copy_s", 0.0)
+        last_stream, last_arrivals, last_copy_s = self.profile_stream_counts
+        if last_stream is not stream:
+            last_arrivals, last_copy_s = 0, 0.0
+        self.writeProfile({"kind": "window", "dur_s": round(elapsed, 3), "loops": self.step_loops,
+                           "frames_submitted": self.profile_submitted, "frames_unchanged": self.profile_unchanged,
+                           "wgc_arrivals": arrivals - last_arrivals, "wgc_copy_ms": round((copy_s - last_copy_s) * 1000, 3),
+                           "overlay_thread_cpu_s": round(cpu[0] - self.profile_cpu[0], 4),
+                           "process_cpu_s": round(cpu[1] - self.profile_cpu[1], 4),
+                           "step_total_ms": {k: round(v * 1000, 1) for k, v in self.step_total.items()}})
+        self.profile_stream_counts = (stream, arrivals, copy_s)
+        self.profile_cpu = cpu
+        self.profile_submitted = self.profile_unchanged = 0
 
     def watchStall(self, current_frames: Callable[[], Dict[int, Any]], thread_id: int) -> None:
         """オーバーレイのスレッドが同じ段階で _STALL_REPORT_SEC 以上止まったら、どこで止まっているかをログに出す。"""

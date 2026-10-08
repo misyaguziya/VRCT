@@ -285,3 +285,12 @@
 - 実機抜き差し（`tools/check_audio_capture.py hotplug`を追加、ユーザー実施・修正前wheel）: 既定デバイス切替中も選択デバイスで受信継続、抜去で`AUDIO_READ_ERROR`/OSError検知、無データ状態のstopは即時でstream close、再接続後はindex 4→1に変わっても名前で再解決してopen成功。抜去→検知時間はツールの計測漏れで未測定（watcherスレッドで修正済み）。
 - 修正後wheel（pyd SHA256 `a6e96861…`）で同じ実機抜き差しを再実施し全段階PASS。最後のデータ→`AUDIO_READ_ERROR`検知485ms、無データstop即時、再接続後open 110ms・stop 46ms。
 - 結果JSON: `docs/benchmarks/audio_e2e_cycle15_2026-10-08.json`。Auto Mic Selectによる再選択・画面通知、ループバックの無音中フレーム停止、読取り遅延時のoverflowはE2E/ツールの対象外。
+
+## サイクル16 — 音声の残り検証(配布版の実推論・GUI結合)と、VR UI画像経路の段階0準備（2026-10-08）
+
+- 配布版の実推論: `tools/check_frozen_e2e.py build|run cpu|cuda`を追加。本番specを絶対パス化したコピーに検証専用runtime hook(`tools/frozen_e2e_hook.py`、環境変数が無ければ無動作)を足し、共有venvは変更せずPYTHONPATHで修正版wheelと固定cv2を渡してworktree内でビルド(CPU約610s・CUDA約670s、pyd SHA256 `a6e96861…`、OpenCV FFmpegは4100のみ)。配布版を実stdin/stdout IPCで起動し、UIと同じくIPCで推論デバイスを選び送信側文字起こしを有効化、合成音声を実時間で流してWhisper base実推論。CPU/CUDA(RTX 2080 Ti)×エネルギー/VADの4ケースPASS、stderr空、error.logは遮断した更新確認1件のみ、実録音デバイスは未open。VADの発話終了→文字はCPU約1.1〜1.4s・CUDA約0.5〜0.95s。結果`docs/benchmarks/audio_frozen_e2e_cycle16_2026-10-08.json`。検証ビルドでありリリースビルドではない。
+- 途中の発見: 設定既定の推論デバイスは常にCPU項目で、CUDA版でもUIでGPUを選ぶまでCPUで推論する(初版ハーネスはこれを見ずにPASSにしていたので判定へ追加)。sidecarは`/run/shutdown`で自ら終了せず、UIが2秒待ってTauriが終了させる仕様(ハーネスも合わせた)。IPCの`data`はbase64化JSON。`spec/backend_cuda.spec`(develop同様)がhf_xetだけCPU用.venvから集めている件は別タスクへ切り出し。
+- GUI結合(ユーザー実施、`npm run dev-fast`、worktreeに`node_modules`/`.venv`/`src-python/weights`の本体へのジャンクションを作成。git管理外。消すときは`rmdir`でリンクだけを消し、中身ごと消さないこと): Google・エネルギー方式で実マイクの送信5件、実ループバックの受信(英語)が表示され、文字起こし・VR画面のON/OFFも正常。今回のGUI確認ではWhisper・VAD・3秒超の発話は使われておらず、それらは配布版E2Eで確認済み。VR画面ON直後に1回WGCの開始に失敗しPrintWindowへ切替(既存の代替経路、音声変更とは無関係)。
+- これで音声の部分移行はB(配布版実推論・GUI結合)まで完了とする。
+- VR UI画像経路(計画A)の段階0準備: `VRCT_OVERLAY_PROFILE=<jsonl>`のときだけ、`transferCapture`が1フレームごとに変換/準備/転送/glFinish/setOverlayTextureの時間と撮影方法(wgc/pw)を、`reportSlowSteps`が10秒ごとにフレーム数・WGC到着数と複製時間・overlayスレッド/プロセスCPU時間を記録(既定は無動作、テスト2件)。`tools/benchmark_overlay_live.py`はVRCTを読み込まない別プロセスで、音声とビープで案内しながらS0(VR UI OFF)/S1(ON・静止)/S2(ON・スクロール)を3セット計測し、VRCTのCPU・スレッド・SteamVR compositorのフレーム時間とVRChatの累積dropped/reprojectedを集計する。判定基準はユーザー合意済み: S2がS0よりVRCTのCPUを50ms/s(1コア5%)以上かつばらつき超で増やす、またはcompositor p95がばらつき超で悪化→A(GPU直接提出)、転送系が変換より支配的→B(Pythonでのコピー削減)、どちらでもない→C(打ち切り)。
+- 設計時の見立て: 画面が変わったフレームごとに全面のCPU読み戻し→複製→切り出し→alpha→GL upload→glFinishが走り、1フレームはDPI1.0で約6MB・1.5で約13MB。静止中はほぼ0なので、DPI100%で操作の少ない使い方では改善が小さい可能性がある。段階0の実測で判断する。
