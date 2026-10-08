@@ -24,12 +24,9 @@ import special_thanks_members from "@images/about_vrct/special_thanks_members.pn
 import special_thanks_message_en from "@images/about_vrct/special_thanks_message_en.png";
 import special_thanks_message_ja from "@images/about_vrct/special_thanks_message_ja.png";
 
-import poster_showcase_section_title from "@images/about_vrct/poster_showcase_section_title.png";
-
 import clsx from "clsx";
 import { useI18n } from "@useI18n";
 import { useAppearance } from "@logics_configs";
-import { PosterShowcaseContents } from "./poster_showcase_contents/PosterShowcaseContents";
 
 import { generateLocalizedDocumentUrl } from "@ui_configs";
 
@@ -124,11 +121,6 @@ export const AboutVrct = () => {
                 }
             </div>
 
-
-            <div className={styles.poster_showcase_section}>
-                <img src={poster_showcase_section_title} className={clsx(styles.section_title, styles.poster_showcase)} />
-                <PosterShowcaseContents />
-            </div>
 
             <div className={styles.vrchat_disclaimer_section}>
                 <p className={styles.vrchat_disclaimer}>VRCT is not endorsed by VRChat and does not reflect the views or opinions of VRChat or anyone officially involved in producing or managing VRChat properties. VRChat and all associated properties are trademarks or registered trademarks of VRChat Inc. VRChat © VRChat Inc.</p>

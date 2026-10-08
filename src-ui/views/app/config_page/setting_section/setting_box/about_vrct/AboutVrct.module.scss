@@ -21,9 +21,6 @@
     &.special_thanks {
         margin-bottom: 0.6rem;
     }
-    &.poster_showcase {
-        margin-bottom: 0.6rem;
-    }
 }
 
 .dev_section {
@@ -201,12 +198,6 @@ $sns_left_pos: 0.8rem;
     width: 100%;
 }
 
-
-.poster_showcase_section {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
 
 .vrchat_disclaimer {
     font-size: 1.2rem;
