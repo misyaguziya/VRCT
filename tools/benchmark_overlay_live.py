@@ -175,8 +175,17 @@ def summarize(samples, frames_vr, cumulative, profile_frames, profile_windows):
     return out
 
 
-def decide(sets):
-    """Apply the pre-agreed stage-0 rule to per-set summaries."""
+def decide(all_sets):
+    """Apply the pre-agreed stage-0 rule to per-set summaries.
+
+    A set whose S0 still submitted overlay frames was not switched off in time
+    (VR UI still ON), so it is excluded instead of skewing min/spread.
+    """
+    excluded = [i for i, s in enumerate(all_sets) if s["S0"].get("overlay_frames", {}).get("submitted")]
+    sets = [s for i, s in enumerate(all_sets) if i not in excluded]
+    if not sets:
+        return {"verdict": "INVALID_no_clean_S0", "excluded_sets": excluded}
+
     def values(name, getter):
         return [v for v in (getter(s[name]) for s in sets) if v is not None]
 
@@ -198,7 +207,7 @@ def decide(sets):
     verdict = ("A_gpu_direct" if cpu_go or compositor_worse
                else "B_python_copy_reduction" if transfer > parts["convert_ms"] and transfer >= 25
                else "C_stop")
-    return {"verdict": verdict, "s2_minus_s0_cpu_ms_per_s": [round(v, 2) for v in cpu_delta],
+    return {"verdict": verdict, "excluded_sets": excluded, "s2_minus_s0_cpu_ms_per_s": [round(v, 2) for v in cpu_delta],
             "s0_cpu_spread_ms_per_s": round(spread, 2), "compositor_gpu_p95_worse": compositor_worse,
             "s2_overlay_ms_per_s_mean": {k: round(v, 2) for k, v in parts.items()}}
 
