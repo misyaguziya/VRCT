@@ -1,0 +1,761 @@
+{
+ "recorded_at": "2026-10-09",
+ "baseline_commit": "997cb4cc",
+ "status": "PASS (stage-1 checks 1-3 and texture replacement; 10-minute run and SteamVR restart pending)",
+ "scope": "Stage-1 PoC: native/vrct-graphics captures a window with Windows.Graphics.Capture (free-threaded pool, polled) on SteamVR's adapter, copies the client box into a Rust-owned B8G8R8A8_UNORM D3D11 texture with CopySubresourceRegion; Python submits it with TextureType_DirectX / ColorSpace_Gamma to 5 overlay handles (one texture, different bounds). tools/probe_overlay_d3d11.py.",
+ "environment": {
+  "hmd": "Meta Quest 3",
+  "gpu": "RTX 2080 Ti",
+  "windows_scale": "150%",
+  "test_window_client_px": [
+   1690,
+   880
+  ],
+  "texture_px": [
+   2128,
+   1136
+  ]
+ },
+ "headless": {
+  "headless-pass1": {
+   "mode": "headless",
+   "client_box": [
+    1,
+    31,
+    1691,
+    911
+   ],
+   "texture": [
+    2128,
+    1136
+   ],
+   "status": "PASS",
+   "polled": {
+    "frame_id": 1,
+    "content": [
+     1692,
+     912
+    ],
+    "copied": [
+     1690,
+     880
+    ],
+    "system_time_100ns": 6351403102329
+   },
+   "checks": {
+    "#ff0000": {
+     "at": [
+      422,
+      220
+     ],
+     "bgra": [
+      0,
+      0,
+      255,
+      255
+     ],
+     "expected": [
+      0,
+      0,
+      255,
+      255
+     ]
+    },
+    "#00ff00": {
+     "at": [
+      1267,
+      220
+     ],
+     "bgra": [
+      0,
+      255,
+      0,
+      255
+     ],
+     "expected": [
+      0,
+      255,
+      0,
+      255
+     ]
+    },
+    "#0000ff": {
+     "at": [
+      422,
+      660
+     ],
+     "bgra": [
+      255,
+      0,
+      0,
+      255
+     ],
+     "expected": [
+      255,
+      0,
+      0,
+      255
+     ]
+    },
+    "#ffffff": {
+     "at": [
+      1267,
+      660
+     ],
+     "bgra": [
+      255,
+      255,
+      255,
+      255
+     ],
+     "expected": [
+      255,
+      255,
+      255,
+      255
+     ]
+    },
+    "outside_copy": {
+     "at": [
+      1694,
+      884
+     ],
+     "bgra": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "expected": [
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "copied_matches_client": true,
+   "utc": "2026-10-08T14:41:11.268268+00:00"
+  },
+  "headless-pass2": {
+   "mode": "headless",
+   "client_box": [
+    1,
+    31,
+    1691,
+    911
+   ],
+   "texture": [
+    2128,
+    1136
+   ],
+   "status": "PASS",
+   "polled": {
+    "frame_id": 1,
+    "content": [
+     1692,
+     912
+    ],
+    "copied": [
+     1690,
+     880
+    ],
+    "system_time_100ns": 6351411853367
+   },
+   "checks": {
+    "#ff0000": {
+     "at": [
+      422,
+      220
+     ],
+     "bgra": [
+      0,
+      0,
+      255,
+      255
+     ],
+     "expected": [
+      0,
+      0,
+      255,
+      255
+     ]
+    },
+    "#00ff00": {
+     "at": [
+      1267,
+      220
+     ],
+     "bgra": [
+      0,
+      255,
+      0,
+      255
+     ],
+     "expected": [
+      0,
+      255,
+      0,
+      255
+     ]
+    },
+    "#0000ff": {
+     "at": [
+      422,
+      660
+     ],
+     "bgra": [
+      255,
+      0,
+      0,
+      255
+     ],
+     "expected": [
+      255,
+      0,
+      0,
+      255
+     ]
+    },
+    "#ffffff": {
+     "at": [
+      1267,
+      660
+     ],
+     "bgra": [
+      255,
+      255,
+      255,
+      255
+     ],
+     "expected": [
+      255,
+      255,
+      255,
+      255
+     ]
+    },
+    "outside_copy": {
+     "at": [
+      1694,
+      884
+     ],
+     "bgra": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "expected": [
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "copied_matches_client": true,
+   "utc": "2026-10-08T14:41:12.133573+00:00"
+  },
+  "headless-pass3": {
+   "mode": "headless",
+   "client_box": [
+    1,
+    31,
+    1691,
+    911
+   ],
+   "texture": [
+    2128,
+    1136
+   ],
+   "status": "PASS",
+   "polled": {
+    "frame_id": 1,
+    "content": [
+     1692,
+     912
+    ],
+    "copied": [
+     1690,
+     880
+    ],
+    "system_time_100ns": 6351419979178
+   },
+   "checks": {
+    "#ff0000": {
+     "at": [
+      422,
+      220
+     ],
+     "bgra": [
+      0,
+      0,
+      255,
+      255
+     ],
+     "expected": [
+      0,
+      0,
+      255,
+      255
+     ]
+    },
+    "#00ff00": {
+     "at": [
+      1267,
+      220
+     ],
+     "bgra": [
+      0,
+      255,
+      0,
+      255
+     ],
+     "expected": [
+      0,
+      255,
+      0,
+      255
+     ]
+    },
+    "#0000ff": {
+     "at": [
+      422,
+      660
+     ],
+     "bgra": [
+      255,
+      0,
+      0,
+      255
+     ],
+     "expected": [
+      255,
+      0,
+      0,
+      255
+     ]
+    },
+    "#ffffff": {
+     "at": [
+      1267,
+      660
+     ],
+     "bgra": [
+      255,
+      255,
+      255,
+      255
+     ],
+     "expected": [
+      255,
+      255,
+      255,
+      255
+     ]
+    },
+    "outside_copy": {
+     "at": [
+      1694,
+      884
+     ],
+     "bgra": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "expected": [
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   "copied_matches_client": true,
+   "utc": "2026-10-08T14:41:12.957091+00:00"
+  },
+  "headless-small2": {
+   "mode": "headless",
+   "client_box": [
+    1,
+    31,
+    1281,
+    751
+   ],
+   "texture": [
+    1280,
+    720
+   ],
+   "status": "PASS",
+   "polled": {
+    "frame_id": 1,
+    "content": [
+     1282,
+     752
+    ],
+    "copied": [
+     1280,
+     720
+    ],
+    "system_time_100ns": 6351605207752
+   },
+   "checks": {
+    "#ff0000": {
+     "at": [
+      320,
+      180
+     ],
+     "bgra": [
+      0,
+      0,
+      255,
+      255
+     ],
+     "expected": [
+      0,
+      0,
+      255,
+      255
+     ]
+    },
+    "#00ff00": {
+     "at": [
+      960,
+      180
+     ],
+     "bgra": [
+      0,
+      255,
+      0,
+      255
+     ],
+     "expected": [
+      0,
+      255,
+      0,
+      255
+     ]
+    },
+    "#0000ff": {
+     "at": [
+      320,
+      540
+     ],
+     "bgra": [
+      255,
+      0,
+      0,
+      255
+     ],
+     "expected": [
+      255,
+      0,
+      0,
+      255
+     ]
+    },
+    "#ffffff": {
+     "at": [
+      960,
+      540
+     ],
+     "bgra": [
+      255,
+      255,
+      255,
+      255
+     ],
+     "expected": [
+      255,
+      255,
+      255,
+      255
+     ]
+    }
+   },
+   "copied_matches_client": true,
+   "utc": "2026-10-08T14:41:31.469007+00:00"
+  },
+  "headless-clip": {
+   "mode": "headless",
+   "client_box": [
+    1,
+    31,
+    2401,
+    1331
+   ],
+   "texture": [
+    2128,
+    1136
+   ],
+   "status": "FAIL",
+   "polled": {
+    "frame_id": 1,
+    "content": [
+     2402,
+     1332
+    ],
+    "copied": [
+     2128,
+     1136
+    ],
+    "system_time_100ns": 6351613611373
+   },
+   "checks": {
+    "#ff0000": {
+     "at": [
+      600,
+      325
+     ],
+     "bgra": [
+      0,
+      0,
+      255,
+      255
+     ],
+     "expected": [
+      0,
+      0,
+      255,
+      255
+     ]
+    },
+    "#00ff00": {
+     "at": [
+      1800,
+      325
+     ],
+     "bgra": [
+      0,
+      255,
+      0,
+      255
+     ],
+     "expected": [
+      0,
+      255,
+      0,
+      255
+     ]
+    },
+    "#0000ff": {
+     "at": [
+      600,
+      975
+     ],
+     "bgra": [
+      255,
+      0,
+      0,
+      255
+     ],
+     "expected": [
+      255,
+      0,
+      0,
+      255
+     ]
+    },
+    "#ffffff": {
+     "at": [
+      1800,
+      975
+     ],
+     "bgra": [
+      255,
+      255,
+      255,
+      255
+     ],
+     "expected": [
+      255,
+      255,
+      255,
+      255
+     ]
+    }
+   },
+   "copied_matches_client": false,
+   "utc": "2026-10-08T14:41:32.309408+00:00"
+  }
+ },
+ "headless_note": "headless-clip FAILs only the copied==client item by design: a client larger than the texture is clipped to the texture.",
+ "headless_poll_timing": {
+  "frames": 180,
+  "poll_ms_p50": 0.173,
+  "poll_ms_p95": 0.245,
+  "poll_ms_max": 1.29
+ },
+ "vr_runs": {
+  "vr-20261008-235142": {
+   "mode": "vr",
+   "pattern": "flip",
+   "adapter_index": 0,
+   "client_box": [
+    1,
+    31,
+    1691,
+    911
+   ],
+   "handles": 5,
+   "hmd": "Meta Quest 3",
+   "errors": [],
+   "status": "RAN",
+   "frames": 1192,
+   "ticks": 1193,
+   "seconds": 60.01,
+   "poll_ms": {
+    "p50": 0.182,
+    "p95": 0.279,
+    "max": 1.099
+   },
+   "set_ms": {
+    "p50": 0.066,
+    "p95": 0.112,
+    "max": 1.339
+   },
+   "thread_cpu_ms_per_frame": {
+    "p50": 0.0,
+    "p95": 0.0,
+    "mean": 0.511
+   },
+   "thread_cpu_ms_per_s": 10.15,
+   "utc": "2026-10-08T14:51:42.512338+00:00"
+  },
+  "vr-20261008-235223": {
+   "mode": "vr",
+   "pattern": "static",
+   "adapter_index": 0,
+   "client_box": [
+    1,
+    31,
+    1691,
+    911
+   ],
+   "handles": 5,
+   "hmd": "Meta Quest 3",
+   "errors": [],
+   "status": "RAN",
+   "frames": 1,
+   "ticks": 398,
+   "seconds": 20.03,
+   "poll_ms": {
+    "p50": 0.66,
+    "p95": 0.66,
+    "max": 0.66
+   },
+   "set_ms": {
+    "p50": 0.961,
+    "p95": 0.961,
+    "max": 0.961
+   },
+   "thread_cpu_ms_per_frame": {
+    "p50": 0.0,
+    "p95": 0.0,
+    "mean": 0.0
+   },
+   "thread_cpu_ms_per_s": 0.0,
+   "utc": "2026-10-08T14:52:23.261845+00:00"
+  },
+  "vr-20261008-235549": {
+   "mode": "vr",
+   "pattern": "flip",
+   "adapter_index": 0,
+   "client_box": [
+    1,
+    31,
+    1691,
+    911
+   ],
+   "handles": 5,
+   "hmd": "Meta Quest 3",
+   "errors": [],
+   "status": "RAN",
+   "recreated_at_frame": 298,
+   "frames": 594,
+   "ticks": 597,
+   "seconds": 30.02,
+   "poll_ms": {
+    "p50": 0.181,
+    "p95": 0.265,
+    "max": 0.805
+   },
+   "set_ms": {
+    "p50": 0.066,
+    "p95": 0.129,
+    "max": 1.189
+   },
+   "thread_cpu_ms_per_frame": {
+    "p50": 0.0,
+    "p95": 0.0,
+    "mean": 0.421
+   },
+   "thread_cpu_ms_per_s": 8.33,
+   "utc": "2026-10-08T14:55:49.083181+00:00"
+  },
+  "vr-20261008-235958": {
+   "mode": "vr",
+   "pattern": "static",
+   "adapter_index": 0,
+   "client_box": [
+    1,
+    31,
+    1691,
+    911
+   ],
+   "handles": 5,
+   "hmd": "Meta Quest 3",
+   "errors": [],
+   "status": "RAN",
+   "frames": 3,
+   "ticks": 397,
+   "seconds": 20.0,
+   "poll_ms": {
+    "p50": 0.498,
+    "p95": 1.034,
+    "max": 1.034
+   },
+   "set_ms": {
+    "p50": 0.107,
+    "p95": 1.142,
+    "max": 1.142
+   },
+   "thread_cpu_ms_per_frame": {
+    "p50": 0.0,
+    "p95": 0.0,
+    "mean": 0.0
+   },
+   "thread_cpu_ms_per_s": 0.0,
+   "utc": "2026-10-08T14:59:58.398285+00:00"
+  }
+ },
+ "user_visual_checks": {
+  "flip_60s": "black/white alternated, counter increased, orientation correct (no flip/mirror), no tearing inside a panel",
+  "static_20s": "red top-left, green top-right, blue bottom-left, white bottom-right; brightness natural (ColorSpace_Gamma)",
+  "recreate_at_15s": "kept updating after the smaller texture replaced the first one, no cropping (no size lock seen with DirectX)"
+ },
+ "comparison_with_stage0": "Stage 0 current path: ~27 ms WGC copy + ~13 ms convert/upload/finish/set per changed frame. PoC: poll p50 0.18 ms + 5x setOverlayTexture p50 0.07 ms per frame; ~8-10 ms/s thread CPU at 20 Hz (thread_time granularity ~15.6 ms, so coarse).",
+ "go_criteria": {
+  "cpu_per_frame_le_25pct_of_stage0": true,
+  "poll_p95_lt_1ms": true,
+  "no_setOverlayTexture_errors": true,
+  "no_tearing": true,
+  "display_correct": true,
+  "texture_replacement_follows": true
+ },
+ "pending": [
+  "10-minute run: handle count / RSS / arrivals stable",
+  "SteamVR restart while running ends with typed failure",
+  "alpha mask / tooltip marker / launcher intro on GPU (stage 2)"
+ ],
+ "sources_sha256": {
+  "native/vrct-graphics/src/capture.rs": "f397e6c32d4440f8e6da1aabe1e6e39ebb935f05f9f5b104583680a6c8038243",
+  "native/vrct-graphics/src/lib.rs": "110fe7cf38b1a1e2d7c1343663cc55ce8076748cf3aa272bee79f60190cb6c93",
+  "native/vrct-graphics/Cargo.toml": "ae4eab18f603e9bc8a089ade91b33932e9a32d987ad7dea93621292865ff9df0",
+  "tools/probe_overlay_d3d11.py": "fb4e3e5805f50982fcb3e958e3f02b2e9771b23459892315339fbe0157584199"
+ },
+ "wheel_sha256": "1852710dfab8c68e2aebd3a9a8eaf05a9c1b22f5cc02ce90816b0760ef4dbdd5"
+}

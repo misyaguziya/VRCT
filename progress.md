@@ -301,3 +301,11 @@
 - 判定: A(GPU直接提出へ進む)。セット1はS0でも68フレーム転送しており(VR UIのOFFが間に合わなかった)除外。条件どおりのセット2・3でS2はS0よりVRCTのプロセスCPUを+325/+199ms/s増やし、合意基準(50ms/s以上かつS0のばらつき約90ms/s超)を満たした。計測直後のツールはこのセットを除外せず最小値で判定してBと出していたため、除外を加えて再計算し、元の判定も`decision_as_recorded`として残した。
 - 内訳: WGCで届いた画像の`frame_buffer.tobytes()`が1回約27ms(GPU→CPU読み戻しをGIL保持のまま複製)で72〜90ms/s、overlayスレッドが79〜89ms/s(1フレームあたり変換約5ms、upload約3.7ms、glFinish約3〜4ms、upload/finishのp95は約30msに跳ねる)。Pythonでのコピー削減(B)ではライブラリ内の読み戻しを消せない。compositorのGPU時間p95はS2で約0.07ms高いが絶対値は小さく、VRChatのdroppedは0、reprojectedは全シナリオで約半数(Quest Link由来とみられる)。
 - 27ms/フレームのGIL保持は音声・IPCスレッドを止め得るので、画像経路をRustへ移すと副次的にそれも減る見込み。次は段階1(独立PoC: Rust所有D3D11テクスチャをTextureType_DirectXで提出)。結果`docs/benchmarks/overlay_live_baseline_20261008.json`。
+
+## サイクル18 — VR UI画像経路 段階1(独立PoC)成立（2026-10-09）
+
+- `native/vrct-graphics`(Rust/PyO3、windows 0.61.1、pyo3 0.24.2 abi3)を追加。SteamVRのアダプタ上でD3D11デバイスを作り、Windows.Graphics.Captureのfree-threaded poolを呼出し側スレッドからポーリング、クライアント領域を`CopySubresourceRegion`でRust所有のB8G8R8A8_UNORMテクスチャへGPU上コピーする(CPU読み戻しなし)。Pythonへはテクスチャのポインタだけを返し、OpenVRはPythonが持つ。`#[pyclass(unsendable)]`で作成スレッド専用、別スレッドでdropされるとPyO3 0.24は解放せずリークするので`close()`を明示する。`read_back()`はPoCの画素確認専用。
+- 外部仕様の調査(サブエージェント): 共有フラグ不要(Desktop+と同じMiscFlags=0)、ColorSpace_Gammaを明示、サイズは`GetDesc`を信頼、コピーと`SetOverlayTexture`は同じスレッドで。windows-capture crateは手動ポーリング・自前デバイス指定ができず使わない。
+- SteamVRなし(`tools/probe_overlay_d3d11.py headless`): Tkのテスト窓4色がBGRAまで一致・コピー外は透明を3回連続PASS、テクスチャより大きいクライアントは切り詰め。ポーリングp50 0.17ms・p95 0.25ms。
+- 実機(ユーザー実施、Quest 3、5ハンドルに1テクスチャ): 白黒20Hz切替60秒で1192フレームをエラー0で提出、向き正しく裂けなし。4色の位置・明るさ正常。15秒時点で小さいテクスチャへ差し替えても更新が続き切れなし(GL経路で見た最初の大きさ固定はDirectXでは見られず)。ポーリングp50 0.18ms・5ハンドル分の`setOverlayTexture`p50 0.07ms。段階0の約40ms/フレーム(複製27ms+変換・転送・完了待ち13ms)に対し約0.3ms。段階1の合格条件(CPU時間25%以下、ポーリングp95<1ms、エラー・裂けなし)を満たす。
+- 未実施: 10分連続動作、実行中のSteamVR再起動。次は段階2(角丸マスク・ツールチップの印・起動演出をGPU経路で互換にし、既存overlay.pyへ既定OFFの切替で組み込む)。結果`docs/benchmarks/overlay_d3d11_poc_2026-10-09.json`。

@@ -1,0 +1,13 @@
+[build-system]
+requires = ["maturin==1.8.3"]
+build-backend = "maturin"
+
+[project]
+name = "vrct-graphics"
+version = "0.1.0"
+requires-python = ">=3.10"
+description = "VRCT VR UI capture PoC (WGC -> D3D11 texture)"
+license = "MIT"
+
+[tool.maturin]
+locked = true
