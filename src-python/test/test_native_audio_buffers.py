@@ -54,6 +54,15 @@ def test_shared_immutable_input_can_be_processed_concurrently(native, name, args
 
 @pytest.mark.parametrize("name,args,frame", CASES)
 def test_call_retains_input_when_other_thread_drops_last_external_reference(native, name, args, frame):
+    # The OS may not schedule the observer within the few-ms GIL release; such a
+    # run proves nothing either way, so retry instead of failing on scheduling luck.
+    for _ in range(5):
+        if _drop_reference_during_call(native, name, args, frame):
+            return
+    pytest.fail("observer never ran while the native call released the GIL")
+
+
+def _drop_reference_during_call(native, name, args, frame):
     ready = threading.Event()
     run = threading.Event()
     destroyed = threading.Event()
@@ -92,7 +101,9 @@ def test_call_retains_input_when_other_thread_drops_last_external_reference(nati
         run.set()
         thread.join(5)
     assert not thread.is_alive()
-    assert progressed_during_call
+    assert result == expected
+    if not progressed_during_call:
+        return False  # The observer only ran after the call: inconclusive.
     assert observed == [True]
     assert destroyed.is_set()
-    assert result == expected
+    return True

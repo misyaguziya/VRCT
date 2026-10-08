@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "recorded_at": "2026-10-08",
+  "scope": "cycle13 frozen startup (guarded) re-run for CPU/CUDA; closes the cycle11 CPU callback-registration FAIL",
+  "baseline_commit": "7877fec9",
+  "harness": "tmp/cycle13-startup/run_startup.py (Codex checkout, untracked) run with suffix claude1",
+  "limitations": [
+    "guarded run: sockets/requests/recording denied, HF offline, no model inference",
+    "does not re-verify full PYZ/asset hash equivalence between dist and current source; source hashes of model.py/test match the cycle13 checkpoint (install.bat/requirements.txt differ only by CRLF in the Codex working copy)",
+    "startup time not a performance figure"
+  ],
+  "runs": {
+    "cpu": {
+      "status": "PASS",
+      "init_seconds": 22.004109399975277,
+      "overlay_callbacks_verified": 5,
+      "mute_callback_verified": true,
+      "watchdog_callback_verified": true,
+      "early_heartbeat_verified": true,
+      "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+      "cv2_version": "4.10.0",
+      "ipc_responses": {
+        "/get/data/version": "3.6.0-beta.1",
+        "/get/data/compute_mode": "cpu"
+      },
+      "shutdown_response": 200,
+      "exit_code": 0,
+      "stderr_empty": true,
+      "distribution_files_copied": 3181,
+      "exe_sha256": "b291f8dfa564cdcd9942d1deb5b98b8f517ea6d2f29e3302a978983e3d9f1753"
+    },
+    "cuda": {
+      "status": "PASS",
+      "init_seconds": 23.463840799988247,
+      "overlay_callbacks_verified": 5,
+      "mute_callback_verified": true,
+      "watchdog_callback_verified": true,
+      "early_heartbeat_verified": true,
+      "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+      "cv2_version": "4.10.0",
+      "ipc_responses": {
+        "/get/data/version": "3.6.0-beta.1",
+        "/get/data/compute_mode": "cuda"
+      },
+      "shutdown_response": 200,
+      "exit_code": 0,
+      "stderr_empty": true,
+      "distribution_files_copied": 3192,
+      "exe_sha256": "7069dc45782935d46ec4cc58bc3966d58f52489a11ad93d7e0440095f50494ac"
+    }
+  }
+}

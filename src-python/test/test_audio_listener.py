@@ -108,6 +108,33 @@ def test_energy_matches_pinned_fork(native, rate, channels, case):
     assert detector.energy_threshold == pytest.approx(expected["threshold"], abs=1e-9)
 
 
+@pytest.mark.parametrize("case,expected", [
+    # The fork dropped this phrase (RETRY): the wall clock beat the equal phrase limit.
+    ("wall_limit_long", [("PHRASE", 9), ("PHRASE", 10), ("RETRY", 0)]),
+    # The fork rejected the 3-buffer tail of a phrase-limit split as too short.
+    ("split_tail", [("PHRASE", 11), ("PHRASE", 11), ("RETRY", 0)]),
+    # After a real pause (> pause_threshold) a short blip is rejected as in the fork.
+    ("split_pause_blip", [("PHRASE", 11), ("RETRY", 0)]),
+])
+def test_energy_time_limit_splits_keep_speech(native, case, expected):
+    limit, wall, values = 0.7, 5, [2000] * 11
+    if case == "wall_limit_long":
+        limit, wall, values = 0, 0.5, [2000] * 9 + [0, 2000]
+    elif case == "split_pause_blip":
+        values += [0] * 14
+    values += [2000] * (0 if case == "wall_limit_long" else 3) + [0] * 40
+    detector = native.EnergyDetector(16000, 1024, 300, False, limit, wall, 1)
+    source, clock, actions = FakeSource([chunk(v) for v in values]), [0.0], []
+    source.clock = clock
+    while not actions or actions[-1][0] != "RETRY":
+        action, audio = detector.before_read(clock[0])
+        if action == "READ":
+            detector.push(source.read(1024), clock[0])
+        else:
+            actions.append((action, len(audio or b"") // 2048))
+    assert actions == expected
+
+
 def test_rms_extremes_and_interleaved_samples(native):
     for values in ([0], [-32768], [32767], [-32768, 32767, 1, -1], range(-32768, 32768, 17)):
         pcm = b"".join(struct.pack("<h", v) for v in values)
