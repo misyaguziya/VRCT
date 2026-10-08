@@ -294,3 +294,10 @@
 - これで音声の部分移行はB(配布版実推論・GUI結合)まで完了とする。
 - VR UI画像経路(計画A)の段階0準備: `VRCT_OVERLAY_PROFILE=<jsonl>`のときだけ、`transferCapture`が1フレームごとに変換/準備/転送/glFinish/setOverlayTextureの時間と撮影方法(wgc/pw)を、`reportSlowSteps`が10秒ごとにフレーム数・WGC到着数と複製時間・overlayスレッド/プロセスCPU時間を記録(既定は無動作、テスト2件)。`tools/benchmark_overlay_live.py`はVRCTを読み込まない別プロセスで、音声とビープで案内しながらS0(VR UI OFF)/S1(ON・静止)/S2(ON・スクロール)を3セット計測し、VRCTのCPU・スレッド・SteamVR compositorのフレーム時間とVRChatの累積dropped/reprojectedを集計する。判定基準はユーザー合意済み: S2がS0よりVRCTのCPUを50ms/s(1コア5%)以上かつばらつき超で増やす、またはcompositor p95がばらつき超で悪化→A(GPU直接提出)、転送系が変換より支配的→B(Pythonでのコピー削減)、どちらでもない→C(打ち切り)。
 - 設計時の見立て: 画面が変わったフレームごとに全面のCPU読み戻し→複製→切り出し→alpha→GL upload→glFinishが走り、1フレームはDPI1.0で約6MB・1.5で約13MB。静止中はほぼ0なので、DPI100%で操作の少ない使い方では改善が小さい可能性がある。段階0の実測で判断する。
+
+## サイクル17 — VR UI画像経路 段階0の実測（2026-10-08、ユーザー実施）
+
+- 環境: Meta Quest 3、RTX 2080 Ti、Windows表示スケール150%、VRChat起動中、`npm run dev-fast`+`VRCT_OVERLAY_PROFILE`。`tools/benchmark_overlay_live.py`で3セット×(S0/S1/S2 各60秒)。VR画面のclientは1690×880(BGRA約5.95MB/フレーム)、テクスチャ2128×1136。撮影はほぼWGC(PrintWindowは39行のみ)。
+- 判定: A(GPU直接提出へ進む)。セット1はS0でも68フレーム転送しており(VR UIのOFFが間に合わなかった)除外。条件どおりのセット2・3でS2はS0よりVRCTのプロセスCPUを+325/+199ms/s増やし、合意基準(50ms/s以上かつS0のばらつき約90ms/s超)を満たした。計測直後のツールはこのセットを除外せず最小値で判定してBと出していたため、除外を加えて再計算し、元の判定も`decision_as_recorded`として残した。
+- 内訳: WGCで届いた画像の`frame_buffer.tobytes()`が1回約27ms(GPU→CPU読み戻しをGIL保持のまま複製)で72〜90ms/s、overlayスレッドが79〜89ms/s(1フレームあたり変換約5ms、upload約3.7ms、glFinish約3〜4ms、upload/finishのp95は約30msに跳ねる)。Pythonでのコピー削減(B)ではライブラリ内の読み戻しを消せない。compositorのGPU時間p95はS2で約0.07ms高いが絶対値は小さく、VRChatのdroppedは0、reprojectedは全シナリオで約半数(Quest Link由来とみられる)。
+- 27ms/フレームのGIL保持は音声・IPCスレッドを止め得るので、画像経路をRustへ移すと副次的にそれも減る見込み。次は段階1(独立PoC: Rust所有D3D11テクスチャをTextureType_DirectXで提出)。結果`docs/benchmarks/overlay_live_baseline_20261008.json`。
