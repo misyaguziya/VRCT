@@ -22,7 +22,7 @@ CPU/CUDAとも`bat/install.bat`と`bat/build*.bat`が拡張をビルド・導入
 - `normalize_pcm16(pcm: bytes, sample_width: int, channels: int) -> bytes`: signed PCM8/16/24/32LEをPCM16へ変換後、1〜256chをties-to-evenの平均でmonoにする。8bitもsigned。完全sampleが必要で、端数channel frameは破棄する。入力・出力それぞれ64MiB以下、空入力可。mono PCM16は元のimmutable bytesを返し、それ以外は入力bytesを借用し、GILを解放してRust所有の出力bufferへ変換する。整数幅変換にはMITを選択した`dasp_sample =0.11.0`（追加依存なし）を使う。
 - VAD normalizerのレート変換と状態/resetは既存`audioop.ratecv`を維持する。非bytes・非標準形式・不完全sample・大入力は従来経路で処理し、幅変換後のinterleaved PCM16に対する旧downmixの64MiB制限も保持する。
 - `speaker_downmix_pcm16(pcm: bytes, channels: int) -> bytes`: 非VAD speaker向けPCM16LE、3〜256ch、完全frame、空入力可、入力上限64MiB。pydub 0.25.1と同じく各channelを床除算して順に加算し、途中でもi16範囲を超えればOverflowError。VAD平均・stereo合算とは別の契約。対象外の形式・サイズと拡張未導入時は既存pydubへ戻る。
-- `EnergyDetector`: 既存forkの音量閾値・発話開始終了・前後保持・短発話棄却・timeoutを状態機械として処理する。listenerは各read前に`before_read()`、read後に`push()`を呼ぶ。無制限録音時も音声bufferを無制限に拡大しない。
+- `EnergyDetector`: 既存forkの音量閾値・発話開始終了・前後保持・短発話棄却・timeoutを状態機械として処理する。listenerは各read前に`before_read()`、read後に`push()`を呼ぶ。無制限録音時も音声bufferを無制限に拡大しない。forkとの意図的な差は2点: 録音中のwall-clock `record_timeout`は発話を捨てず短発話判定を通して`PHRASE`として返す。`phrase_time_limit`/`record_timeout`で分割した直後（無音が`pause_threshold`以内）に始まる続きの発話は短発話として棄却しない。
 - 入力上限64MiBを処理前に検証。これは総メモリ上限ではない。FLAC生成・downmix・正規化中はGILを解放し、参照元を保持したimmutable `PyBytes`のsliceだけを借用する。入力コピーを省き、出力は引き続きRustが所有する。Python API・mutable bufferには触れない。[固定PyO3 0.24.2のbytes契約](https://github.com/PyO3/pyo3/blob/v0.24.2/src/types/bytes.rs)に従い、同期呼出し終了まで入力を保持する。エネルギー判定の短いchunk処理はGILを保持する。
 - FLACは単一thread、LPC次数4で可逆圧縮する。次数10の既定値より計算量を抑え、LPCを無効にする案より出力サイズを維持する。圧縮率と時間は入力によって変わる。
 - 録音と8000〜96000HzのGoogle FLACにはnative拡張が必須。未導入時は導入案内を含むImportError、壊れたDLLや実行エラーも明示する。SpeechRecognitionパッケージは不要。normalizerと対象外speaker変換の既存fallbackは維持する。
@@ -54,6 +54,13 @@ nativeテストには拡張の導入が必要。未導入時のskipを成功と�
 ```powershell
 .\.venv\Scripts\python.exe tools/check_audio_capture.py benchmark --output tmp/capture-benchmark.json
 .\.venv\Scripts\python.exe tools/check_audio_capture.py lifecycle --output tmp/capture-lifecycle.json
+```
+
+物理的な切断・再接続は対話式の`hotplug`で確認する。選んだマイク(USBヘッドセット)を本番のRecorderで開き、コンソールの案内に従ってWindows既定デバイスの切替、抜去、再接続を行う。各段階のcallback件数、`device_error_info`のcode/stage、抜去からエラー検知までの時間、`stop()`が15秒(`TRANSCRIPT_STOP_JOIN_TIMEOUT`相当)内に戻ったか、再接続後に名前で再解決したデバイスを開けたかを記録する。音声とデバイス名は保存しない。各案内と待機は`--step-timeout`秒(既定120)で打ち切り、Ctrl+Cでも録音を止めてから途中結果を出す。Recorder層だけの確認で、Auto Mic Selectによる再選択や画面通知は含まない。`--vad`でVAD Recorder、`--speaker`で既定出力のループバックも同時に観測する。
+
+```powershell
+$env:PYTHONPATH="$PWD\tmp\native-site;$PWD\src-python"
+.\.venv\Scripts\python.exe tools/check_audio_capture.py hotplug --output tmp/capture-hotplug.json
 ```
 
 録音I/Oは当面PyAudioWPatchを維持する。固定依存0.2.12.6はC/PortAudioで録音し、read/open/初期化等ではGILを解放する。単に呼び出し元をRustへ変えてもOS側の待機や初期化は残る。常駐instanceによる初期化省略はデバイス再検出に影響するため、性能だけで採用しない。根拠と残る条件は`progress.md`のサイクル3Dを参照。

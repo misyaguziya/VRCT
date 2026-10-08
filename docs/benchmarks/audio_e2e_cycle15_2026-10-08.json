@@ -1,0 +1,3180 @@
+{
+ "recorded_at": "2026-10-08",
+ "baseline_commit": "7877fec9",
+ "scope": "Device-free end-to-end audio check (tools/check_audio_e2e.py): SAPI Japanese speech paced in real time through MicSession/SpeakerSession -> recorder -> listener/VAD -> AudioTranscriber -> providers. Whisper real (weights base); Google via fake urlopen; OpenAI-compatible via local server.",
+ "findings": {
+  "D1_record_timeout_drop": "energy mode: the wall-clock record_timeout (3 s) races the audio-time phrase_time_limit (3 s); when it wins, the in-progress phrase (up to 3 s) is discarded. Present identically in the pinned SpeechRecognition fork (develop) and the Rust port.",
+  "D2_short_continuation_rejected": "energy mode: after a time-limit split, a remainder below phrase_threshold is rejected as too short and the word ending is lost. Identical in fork and port.",
+  "fix": "native/vrct-audio/src/energy.rs: record_timeout emits the buffered phrase via the normal acceptance path; a phrase starting within pause_threshold after a split is not rejected as short. Intended deviation from the fork: a short sound within 0.8 s after a split is now emitted."
+ },
+ "ab_fork_vs_native_before_fix": {
+  "fork": [
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "FAIL",
+    "results": 2,
+    "expected": 3,
+    "stop_seconds": 0.016,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.076,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": null,
+      "last_inference_s": null,
+      "cer": null,
+      "text": null
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 665600
+   },
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.047,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.081,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.717,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   },
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "FAIL",
+    "results": 2,
+    "expected": 3,
+    "stop_seconds": 0.016,
+    "utterances": [
+     {
+      "latency_s": 0.029,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.076,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": null,
+      "last_inference_s": null,
+      "cer": null,
+      "text": null
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 665600
+   },
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.016,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.081,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   },
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 937984
+   },
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.031,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.096,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   },
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.076,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 937984
+   },
+   {
+    "listener": "fork",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.031,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.081,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.687,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   }
+  ],
+  "native": [
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.687,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 937984
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.016,
+    "utterances": [
+     {
+      "latency_s": 0.06,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.08,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.701,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.015,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 937984
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.032,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.08,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.015,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.076,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 659456
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.016,
+    "utterances": [
+     {
+      "latency_s": 0.06,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.08,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.015,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.092,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 937984
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "stop_seconds": 0.016,
+    "utterances": [
+     {
+      "latency_s": 0.043,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.081,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   }
+  ],
+  "note": "pre-revision harness (always-available fake source). Speaker queued sizes identical between fork and native; mic drops random in both."
+ },
+ "fix_comparison_under_cpu_load": {
+  "before": [
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.671,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 985088
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 1,
+    "losses": [
+     [
+      20.515,
+      "rejected_short"
+     ]
+    ],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.065,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.687,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 2019328
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "FAIL",
+    "results": 2,
+    "expected": 3,
+    "record_timeout_drops": 1,
+    "rejected_short": 0,
+    "losses": [
+     [
+      31.594,
+      "record_timeout"
+     ]
+    ],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.107,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": null,
+      "last_inference_s": null,
+      "cer": null,
+      "text": null
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 686080
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 1,
+    "losses": [
+     [
+      20.515,
+      "rejected_short"
+     ]
+    ],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.081,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.687,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "FAIL",
+    "results": 2,
+    "expected": 3,
+    "record_timeout_drops": 1,
+    "rejected_short": 0,
+    "losses": [
+     [
+      31.594,
+      "record_timeout"
+     ]
+    ],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": null,
+      "last_inference_s": null,
+      "cer": null,
+      "text": null
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 667648
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 1,
+    "losses": [
+     [
+      20.515,
+      "rejected_short"
+     ]
+    ],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.081,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.687,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 2048000
+   }
+  ],
+  "after": [
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.015,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.075,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.671,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 972800
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.075,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2166784
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 1021952
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.016,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2187264
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.671,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 1007616
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.015,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.06,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.107,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2142208
+   }
+  ],
+  "before2": [
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.076,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 958464
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 1,
+    "losses": [
+     [
+      20.516,
+      "rejected_short"
+     ]
+    ],
+    "stop_seconds": 0.016,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.016,
+    "utterances": [
+     {
+      "latency_s": 0.06,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.08,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 2039808
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.671,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 925696
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 1,
+    "losses": [
+     [
+      20.516,
+      "rejected_short"
+     ]
+    ],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.06,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.065,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1994752
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.671,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 921600
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 1,
+    "losses": [
+     [
+      20.516,
+      "rejected_short"
+     ]
+    ],
+    "stop_seconds": 0.016,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.06,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -1.065,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": -0.702,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 1937408
+   }
+  ],
+  "after2": [
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.015,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.092,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 1036288
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.076,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2138112
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 983040
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.015,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.687,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2113536
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.028,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.671,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 991232
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.059,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.091,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.687,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2109440
+   }
+  ]
+ },
+ "final_cpu_matrix_after_fix": {
+  "pyd_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+  "cases": [
+   {
+    "listener": "native",
+    "engine": "whisper",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.016,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.406,
+    "utterances": [
+     {
+      "latency_s": 4.2,
+      "last_inference_s": 1.156,
+      "cer": 0.0476,
+      "text": "今日はいい天気ですね。3歩に行きましょう。"
+     },
+     {
+      "latency_s": 4.185,
+      "last_inference_s": 1.109,
+      "cer": 0.0,
+      "text": "この音声認識のテストは正常に動作していますか。"
+     },
+     {
+      "latency_s": 3.408,
+      "last_inference_s": 1.079,
+      "cer": 0.2174,
+      "text": "VRチャットで友達と一緒に遊びたいです。"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 993280
+   },
+   {
+    "listener": "native",
+    "engine": "whisper",
+    "kind": "mic",
+    "detector": "vad",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.016,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.391,
+    "utterances": [
+     {
+      "latency_s": 1.091,
+      "last_inference_s": 0.969,
+      "cer": 0.0952,
+      "text": "今日はいい天気ですね。3歩に行きましょう"
+     },
+     {
+      "latency_s": 1.232,
+      "last_inference_s": 1.109,
+      "cer": 0.0,
+      "text": "この音声認識のテストは正常に動作していますか。"
+     },
+     {
+      "latency_s": 1.158,
+      "last_inference_s": 1.11,
+      "cer": 0.2174,
+      "text": "VRチャットで友達と一緒に遊びたいです。"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 393216
+   },
+   {
+    "listener": "native",
+    "engine": "whisper",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.391,
+    "utterances": [
+     {
+      "latency_s": 4.106,
+      "last_inference_s": 1.062,
+      "cer": 0.0476,
+      "text": "今日はいい天気ですね。3歩に行きましょう。"
+     },
+     {
+      "latency_s": 4.216,
+      "last_inference_s": 1.125,
+      "cer": 0.0,
+      "text": "この音声認識のテストは正常に動作していますか。"
+     },
+     {
+      "latency_s": 3.361,
+      "last_inference_s": 1.063,
+      "cer": 0.2174,
+      "text": "VRチャットで友達と一緒に遊びたいです。"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2113536
+   },
+   {
+    "listener": "native",
+    "engine": "whisper",
+    "kind": "speaker",
+    "detector": "vad",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.016,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.391,
+    "utterances": [
+     {
+      "latency_s": 1.012,
+      "last_inference_s": 0.921,
+      "cer": 0.0952,
+      "text": "今日はいい天気ですね。3歩に行きましょう"
+     },
+     {
+      "latency_s": 1.232,
+      "last_inference_s": 1.125,
+      "cer": 0.0,
+      "text": "この音声認識のテストは正常に動作していますか。"
+     },
+     {
+      "latency_s": 1.204,
+      "last_inference_s": 1.125,
+      "cer": 0.2174,
+      "text": "VRチャットで友達と一緒に遊びたいです。"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 393216
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.044,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.076,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 960512
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "mic",
+    "detector": "vad",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.122,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.123,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": 0.064,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 393216
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.016,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.06,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.092,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": -0.686,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2088960
+   },
+   {
+    "listener": "native",
+    "engine": "google",
+    "kind": "speaker",
+    "detector": "vad",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.0,
+    "utterances": [
+     {
+      "latency_s": 0.106,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google okgoogle ok"
+     },
+     {
+      "latency_s": 0.122,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     },
+     {
+      "latency_s": 0.048,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "google ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 393216
+   },
+   {
+    "listener": "native",
+    "engine": "api",
+    "kind": "mic",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.187,
+    "utterances": [
+     {
+      "latency_s": 3.372,
+      "last_inference_s": 0.328,
+      "cer": null,
+      "text": "api ok"
+     },
+     {
+      "latency_s": 3.091,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "api ok"
+     },
+     {
+      "latency_s": 2.345,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "api ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 972800
+   },
+   {
+    "listener": "native",
+    "engine": "api",
+    "kind": "mic",
+    "detector": "vad",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.187,
+    "utterances": [
+     {
+      "latency_s": 0.106,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "api okapi ok"
+     },
+     {
+      "latency_s": 0.154,
+      "last_inference_s": 0.016,
+      "cer": null,
+      "text": "api ok"
+     },
+     {
+      "latency_s": 0.064,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "api ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 393216
+   },
+   {
+    "listener": "native",
+    "engine": "api",
+    "kind": "speaker",
+    "detector": "energy",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.188,
+    "utterances": [
+     {
+      "latency_s": 3.091,
+      "last_inference_s": 0.032,
+      "cer": null,
+      "text": "api ok"
+     },
+     {
+      "latency_s": 3.107,
+      "last_inference_s": 0.031,
+      "cer": null,
+      "text": "api ok"
+     },
+     {
+      "latency_s": 2.329,
+      "last_inference_s": 0.015,
+      "cer": null,
+      "text": "api ok"
+     }
+    ],
+    "queued_items": 5,
+    "queued_bytes": 2072576
+   },
+   {
+    "listener": "native",
+    "engine": "api",
+    "kind": "speaker",
+    "detector": "vad",
+    "status": "PASS",
+    "results": 3,
+    "expected": 3,
+    "record_timeout_drops": 0,
+    "rejected_short": 0,
+    "losses": [],
+    "stop_seconds": 0.0,
+    "stop_stream_calls": 1,
+    "transcriber_ready_s": 0.188,
+    "utterances": [
+     {
+      "latency_s": 0.106,
+      "last_inference_s": 0.0,
+      "cer": null,
+      "text": "api okapi ok"
+     },
+     {
+      "latency_s": 0.154,
+      "last_inference_s": 0.031,
+      "cer": null,
+      "text": "api ok"
+     },
+     {
+      "latency_s": 0.079,
+      "last_inference_s": 0.031,
+      "cer": null,
+      "text": "api ok"
+     }
+    ],
+    "queued_items": 4,
+    "queued_bytes": 393216
+   }
+  ]
+ },
+ "cuda_whisper_before_fix": [
+  {
+   "listener": "native",
+   "engine": "whisper",
+   "kind": "mic",
+   "detector": "energy",
+   "status": "PASS",
+   "results": 3,
+   "expected": 3,
+   "stop_seconds": 0.016,
+   "utterances": [
+    {
+     "latency_s": 4.763,
+     "last_inference_s": 1.735,
+     "cer": 0.0476,
+     "text": "今日はいい天気ですね。3歩に行きましょう。"
+    },
+    {
+     "latency_s": 3.529,
+     "last_inference_s": 0.453,
+     "cer": 0.0,
+     "text": "この音声認識のテストは正常に動作していますか。"
+    },
+    {
+     "latency_s": 2.72,
+     "last_inference_s": 0.422,
+     "cer": 0.2174,
+     "text": "VRチャットで友達と一緒に遊びたいです。"
+    }
+   ],
+   "queued_items": 5,
+   "queued_bytes": 937984
+  },
+  {
+   "listener": "native",
+   "engine": "whisper",
+   "kind": "mic",
+   "detector": "vad",
+   "status": "PASS",
+   "results": 3,
+   "expected": 3,
+   "stop_seconds": 0.016,
+   "utterances": [
+    {
+     "latency_s": 0.34,
+     "last_inference_s": 0.234,
+     "cer": 0.0952,
+     "text": "今日はいい天気ですね。3歩に行きましょう"
+    },
+    {
+     "latency_s": 0.575,
+     "last_inference_s": 0.453,
+     "cer": 0.0,
+     "text": "この音声認識のテストは正常に動作していますか。"
+    },
+    {
+     "latency_s": 0.423,
+     "last_inference_s": 0.407,
+     "cer": 0.2174,
+     "text": "VRチャットで友達と一緒に遊びたいです。"
+    }
+   ],
+   "queued_items": 4,
+   "queued_bytes": 393216
+  },
+  {
+   "listener": "native",
+   "engine": "whisper",
+   "kind": "speaker",
+   "detector": "energy",
+   "status": "PASS",
+   "results": 3,
+   "expected": 3,
+   "stop_seconds": 0.016,
+   "utterances": [
+    {
+     "latency_s": 3.543,
+     "last_inference_s": 0.453,
+     "cer": 0.0476,
+     "text": "今日はいい天気ですね。3歩に行きましょう。"
+    },
+    {
+     "latency_s": 2.263,
+     "last_inference_s": 0.36,
+     "cer": 0.0435,
+     "text": "この音声認識のテストは正常に動作しています。"
+    },
+    {
+     "latency_s": 2.657,
+     "last_inference_s": 0.375,
+     "cer": 0.2174,
+     "text": "VRチャットで友達と一緒に遊びたいです。"
+    }
+   ],
+   "queued_items": 4,
+   "queued_bytes": 1937408
+  },
+  {
+   "listener": "native",
+   "engine": "whisper",
+   "kind": "speaker",
+   "detector": "vad",
+   "status": "PASS",
+   "results": 3,
+   "expected": 3,
+   "stop_seconds": 0.015,
+   "utterances": [
+    {
+     "latency_s": 0.278,
+     "last_inference_s": 0.187,
+     "cer": 0.0952,
+     "text": "今日はいい天気ですね。3歩に行きましょう"
+    },
+    {
+     "latency_s": 0.56,
+     "last_inference_s": 0.453,
+     "cer": 0.0,
+     "text": "この音声認識のテストは正常に動作していますか。"
+    },
+    {
+     "latency_s": 0.392,
+     "last_inference_s": 0.375,
+     "cer": 0.2174,
+     "text": "VRチャットで友達と一緒に遊びたいです。"
+    }
+   ],
+   "queued_items": 4,
+   "queued_bytes": 393216
+  }
+ ],
+ "harness_sha256": "cc3c424959d90f04e9ddd48405c3887b51e45d76869f6768c3c160a8c6effa29",
+ "limitations": [
+  "fake source catches up instead of overflowing when the reader lags",
+  "loopback devices that deliver no frames during silence are not emulated",
+  "synthetic single-voice speech; CER is a smoke signal, not an accuracy evaluation",
+  "latencies measured on a shared dev machine; not a performance claim",
+  "cuda_whisper_before_fix used the pre-revision harness"
+ ],
+ "distribution_verification_cycle13_vs_cycle11": {
+  "pyinstaller": "6.10.0",
+  "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]",
+  "head": "7877fec9c3b0571a563c4bd5065f1be869810b83",
+  "results": [
+   {
+    "mode": "cpu",
+    "new_dist": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\dist-cpu",
+    "old_dist": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle11-sidecar\\dist-cpu",
+    "pyz": {
+     "new_count": 5987,
+     "old_count": 5987,
+     "only_new": [],
+     "only_old": [],
+     "typecode_diff": [],
+     "compared": 5987,
+     "raw_identical": 21,
+     "identical_after_co_filename_norm": 5986,
+     "only_co_filename_differs": [
+      "active_endpoint_tracker",
+      "build_channel",
+      "config",
+      "controller",
+      "device_manager",
+      "errors",
+      "models",
+      "models.background_priority",
+      "models.clipboard.clipboard",
+      "models.message_pipeline",
+      "models.obs",
+      "models.obs.obs_browser_source_server",
+      "models.ocr",
+      "models.ocr.ocr_bubble_detector",
+      "models.ocr.ocr_capture",
+      "models.ocr.ocr_capture_d3d11",
+      "models.ocr.ocr_capture_hwnd",
+      "models.ocr.ocr_capture_openvr",
+      "models.ocr.ocr_engine_rapidocr",
+      "models.ocr.ocr_languages",
+      "models.ocr.ocr_pipeline",
+      "models.openvr_session",
+      "models.osc.osc",
+      "models.overlay",
+      "models.overlay.overlay",
+      "models.overlay.overlay_image",
+      "models.overlay.overlay_tooltip",
+      "models.overlay.overlay_utils",
+      "models.overlay.window_capture",
+      "models.process_check",
+      "models.telemetry",
+      "models.telemetry.client",
+      "models.telemetry.core",
+      "models.telemetry.state",
+      "models.transcription.audio_listener",
+      "models.transcription.audio_source",
+      "models.transcription.audio_vad",
+      "models.transcription.google_speech",
+      "models.transcription.native_audio",
+      "models.transcription.pcm_audio",
+      "models.transcription.transcription_deepgram",
+      "models.transcription.transcription_languages",
+      "models.transcription.transcription_openai_compatible",
+      "models.transcription.transcription_providers",
+      "models.transcription.transcription_recorder",
+      "models.transcription.transcription_transcriber",
+      "models.transcription.transcription_whisper",
+      "models.translation.translation_gemini",
+      "models.translation.translation_groq",
+      "models.translation.translation_languages",
+      "models.translation.translation_lmstudio",
+      "models.translation.translation_model_list",
+      "models.translation.translation_ollama",
+      "models.translation.translation_openai",
+      "models.translation.translation_openai_compatible",
+      "models.translation.translation_openrouter",
+      "models.translation.translation_plamo",
+      "models.translation.translation_providers",
+      "models.translation.translation_translator",
+      "models.translation.translation_utils",
+      "models.transliteration.transliteration_context_rules",
+      "models.transliteration.transliteration_kana_to_hepburn",
+      "models.transliteration.transliteration_transliterator",
+      "models.watchdog.watchdog",
+      "models.websocket",
+      "models.websocket.websocket_server",
+      "setuptools._vendor.autocommand",
+      "setuptools._vendor.autocommand.autoasync",
+      "setuptools._vendor.autocommand.autocommand",
+      "setuptools._vendor.autocommand.automain",
+      "setuptools._vendor.autocommand.autoparse",
+      "setuptools._vendor.autocommand.errors",
+      "setuptools._vendor.backports",
+      "setuptools._vendor.backports.tarfile",
+      "setuptools._vendor.backports.tarfile.__main__",
+      "setuptools._vendor.backports.tarfile.compat",
+      "setuptools._vendor.backports.tarfile.compat.py38",
+      "setuptools._vendor.importlib_metadata",
+      "setuptools._vendor.importlib_metadata._adapters",
+      "setuptools._vendor.importlib_metadata._collections",
+      "setuptools._vendor.importlib_metadata._compat",
+      "setuptools._vendor.importlib_metadata._functools",
+      "setuptools._vendor.importlib_metadata._itertools",
+      "setuptools._vendor.importlib_metadata._meta",
+      "setuptools._vendor.importlib_metadata._text",
+      "setuptools._vendor.importlib_metadata.compat",
+      "setuptools._vendor.importlib_metadata.compat.py311",
+      "setuptools._vendor.importlib_metadata.compat.py39",
+      "setuptools._vendor.importlib_metadata.diagnose",
+      "setuptools._vendor.inflect",
+      "setuptools._vendor.inflect.compat",
+      "setuptools._vendor.inflect.compat.py38",
+      "setuptools._vendor.jaraco.collections",
+      "setuptools._vendor.jaraco.context",
+      "setuptools._vendor.jaraco.functools",
+      "setuptools._vendor.jaraco.text",
+      "setuptools._vendor.jaraco.text.layouts",
+      "setuptools._vendor.more_itertools",
+      "setuptools._vendor.more_itertools.more",
+      "setuptools._vendor.more_itertools.recipes",
+      "setuptools._vendor.packaging",
+      "setuptools._vendor.packaging._elffile",
+      "setuptools._vendor.packaging._manylinux",
+      "setuptools._vendor.packaging._musllinux",
+      "setuptools._vendor.packaging._parser",
+      "setuptools._vendor.packaging._structures",
+      "setuptools._vendor.packaging._tokenizer",
+      "setuptools._vendor.packaging.licenses",
+      "setuptools._vendor.packaging.licenses._spdx",
+      "setuptools._vendor.packaging.markers",
+      "setuptools._vendor.packaging.metadata",
+      "setuptools._vendor.packaging.requirements",
+      "setuptools._vendor.packaging.specifiers",
+      "setuptools._vendor.packaging.tags",
+      "setuptools._vendor.packaging.utils",
+      "setuptools._vendor.packaging.version",
+      "setuptools._vendor.platformdirs",
+      "setuptools._vendor.platformdirs.__main__",
+      "setuptools._vendor.platformdirs.android",
+      "setuptools._vendor.platformdirs.api",
+      "setuptools._vendor.platformdirs.macos",
+      "setuptools._vendor.platformdirs.unix",
+      "setuptools._vendor.platformdirs.version",
+      "setuptools._vendor.platformdirs.windows",
+      "setuptools._vendor.tomli",
+      "setuptools._vendor.tomli._parser",
+      "setuptools._vendor.tomli._re",
+      "setuptools._vendor.tomli._types",
+      "setuptools._vendor.typeguard",
+      "setuptools._vendor.typeguard._checkers",
+      "setuptools._vendor.typeguard._config",
+      "setuptools._vendor.typeguard._decorators",
+      "setuptools._vendor.typeguard._exceptions",
+      "setuptools._vendor.typeguard._functions",
+      "setuptools._vendor.typeguard._importhook",
+      "setuptools._vendor.typeguard._memo",
+      "setuptools._vendor.typeguard._pytest_plugin",
+      "setuptools._vendor.typeguard._suppression",
+      "setuptools._vendor.typeguard._transformer",
+      "setuptools._vendor.typeguard._union_transformer",
+      "setuptools._vendor.typeguard._utils",
+      "setuptools._vendor.typing_extensions",
+      "setuptools._vendor.wheel",
+      "setuptools._vendor.wheel.__main__",
+      "setuptools._vendor.wheel._bdist_wheel",
+      "setuptools._vendor.wheel._setuptools_logging",
+      "setuptools._vendor.wheel.bdist_wheel",
+      "setuptools._vendor.wheel.cli",
+      "setuptools._vendor.wheel.cli.convert",
+      "setuptools._vendor.wheel.cli.pack",
+      "setuptools._vendor.wheel.cli.tags",
+      "setuptools._vendor.wheel.cli.unpack",
+      "setuptools._vendor.wheel.macosx_libfile",
+      "setuptools._vendor.wheel.metadata",
+      "setuptools._vendor.wheel.util",
+      "setuptools._vendor.wheel.vendored",
+      "setuptools._vendor.wheel.vendored.packaging",
+      "setuptools._vendor.wheel.vendored.packaging._elffile",
+      "setuptools._vendor.wheel.vendored.packaging._manylinux",
+      "setuptools._vendor.wheel.vendored.packaging._musllinux",
+      "setuptools._vendor.wheel.vendored.packaging._parser",
+      "setuptools._vendor.wheel.vendored.packaging._structures",
+      "setuptools._vendor.wheel.vendored.packaging._tokenizer",
+      "setuptools._vendor.wheel.vendored.packaging.markers",
+      "setuptools._vendor.wheel.vendored.packaging.requirements",
+      "setuptools._vendor.wheel.vendored.packaging.specifiers",
+      "setuptools._vendor.wheel.vendored.packaging.tags",
+      "setuptools._vendor.wheel.vendored.packaging.utils",
+      "setuptools._vendor.wheel.vendored.packaging.version",
+      "setuptools._vendor.wheel.wheelfile",
+      "setuptools._vendor.zipp",
+      "setuptools._vendor.zipp.compat",
+      "setuptools._vendor.zipp.compat.py310",
+      "setuptools._vendor.zipp.glob",
+      "utils",
+      "vrct_audio"
+     ],
+     "code_differs": [
+      "model"
+     ],
+     "unexpected_code_diffs": [],
+     "expected_but_identical": []
+    },
+    "model": {
+     "new_co_filenames": [
+      "src-python\\model.py"
+     ],
+     "new_vs_worktree_source": true,
+     "new_vs_HEAD_blob": true,
+     "old_vs_HEAD_parent_blob": true,
+     "worktree_vs_codex_source_crlf_normalized": true,
+     "normalization": "co_filename excluded only (co_firstlineno NOT normalized)"
+    },
+    "pkg": {
+     "new_entries": [
+      "PYZ-00.pyz[z]",
+      "mainloop[s]",
+      "pyi_rth__tkinter[s]",
+      "pyi_rth_cryptography_openssl[s]",
+      "pyi_rth_inspect[s]",
+      "pyi_rth_multiprocessing[s]",
+      "pyi_rth_pkgres[s]",
+      "pyi_rth_pkgutil[s]",
+      "pyi_rth_setuptools[s]",
+      "pyiboot01_bootstrap[s]",
+      "pyimod01_archive[m]",
+      "pyimod02_importers[m]",
+      "pyimod03_ctypes[m]",
+      "pyimod04_pywin32[m]",
+      "smoke_hook[s]",
+      "startup_hook[s]",
+      "struct[m]"
+     ],
+     "only_new": [],
+     "only_old": [],
+     "identical": [
+      "mainloop[s]",
+      "pyi_rth__tkinter[s]",
+      "pyi_rth_cryptography_openssl[s]",
+      "pyi_rth_inspect[s]",
+      "pyi_rth_multiprocessing[s]",
+      "pyi_rth_pkgres[s]",
+      "pyi_rth_pkgutil[s]",
+      "pyi_rth_setuptools[s]",
+      "pyiboot01_bootstrap[s]",
+      "pyimod01_archive[m]",
+      "pyimod02_importers[m]",
+      "pyimod03_ctypes[m]",
+      "pyimod04_pywin32[m]",
+      "smoke_hook[s]",
+      "struct[m]"
+     ],
+     "differs": [
+      "startup_hook[s]"
+     ],
+     "unexpected_diffs": [],
+     "scripts_vs_source": {
+      "startup_hook": {
+       "source": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\startup_hook.py",
+       "equal": true
+      },
+      "mainloop": {
+       "source": "D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.claude\\worktrees\\backend-rust-migration-8f45d6\\src-python\\mainloop.py",
+       "equal": true
+      },
+      "smoke_hook": {
+       "source": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle11-sidecar\\smoke_hook.py",
+       "equal": true
+      }
+     },
+     "old_startup_hook_vs_cycle11_source": true
+    },
+    "exe": {
+     "new_sha256": "b291f8dfa564cdcd9942d1deb5b98b8f517ea6d2f29e3302a978983e3d9f1753",
+     "old_sha256": "2220bdf093490ff1719299335c27fa1e0cdefe3c64b3ef7338e50991bcba6b0c",
+     "prefix_len": [
+      330240,
+      330240
+     ],
+     "bootloader_prefix_byte_identical": false,
+     "prefix_diff_offsets": [
+      "0x108",
+      "0x109",
+      "0x158",
+      "0x159",
+      "0x15a",
+      "0x3a5b4",
+      "0x3a5b5"
+     ],
+     "pe_meta_fields": {
+      "coff_timestamp": [
+       "0x108",
+       4
+      ],
+      "checksum": [
+       "0x158",
+       4
+      ],
+      "debug_dir0_timestamp": [
+       "0x3a5b4",
+       4
+      ]
+     },
+     "prefix_unexplained_diff_offsets": [],
+     "bootloader_prefix_identical_except_pe_timestamps_checksum": true
+    },
+    "internal": {
+     "new_files": 3180,
+     "old_files": 3180,
+     "only_new": [],
+     "only_old": [],
+     "sha256_differs": [],
+     "top_level_new": [
+      "VRCT-sidecar-x86_64-pc-windows-msvc.exe",
+      "_internal"
+     ],
+     "top_level_old": [
+      "VRCT-sidecar-x86_64-pc-windows-msvc.exe",
+      "_internal"
+     ]
+    },
+    "checks": {
+     "pyz_module_set_identical": true,
+     "pyz_only_expected_code_diffs": true,
+     "model_matches_worktree_source": true,
+     "pkg_entry_set_identical": true,
+     "pkg_only_startup_hook_differs": true,
+     "startup_hook_matches_cycle13_source": true,
+     "mainloop_matches_worktree_source": true,
+     "internal_tree_identical": true,
+     "bootloader_prefix_identical_except_pe_timestamps_checksum": true
+    },
+    "status": "PASS"
+   },
+   {
+    "mode": "cuda",
+    "new_dist": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\dist-cuda",
+    "old_dist": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle11-sidecar\\dist-cuda",
+    "pyz": {
+     "new_count": 5559,
+     "old_count": 5559,
+     "only_new": [],
+     "only_old": [],
+     "typecode_diff": [],
+     "compared": 5559,
+     "raw_identical": 21,
+     "identical_after_co_filename_norm": 5558,
+     "only_co_filename_differs": [
+      "active_endpoint_tracker",
+      "build_channel",
+      "config",
+      "controller",
+      "device_manager",
+      "errors",
+      "models",
+      "models.background_priority",
+      "models.clipboard.clipboard",
+      "models.message_pipeline",
+      "models.obs",
+      "models.obs.obs_browser_source_server",
+      "models.ocr",
+      "models.ocr.ocr_bubble_detector",
+      "models.ocr.ocr_capture",
+      "models.ocr.ocr_capture_d3d11",
+      "models.ocr.ocr_capture_hwnd",
+      "models.ocr.ocr_capture_openvr",
+      "models.ocr.ocr_engine_rapidocr",
+      "models.ocr.ocr_languages",
+      "models.ocr.ocr_pipeline",
+      "models.openvr_session",
+      "models.osc.osc",
+      "models.overlay",
+      "models.overlay.overlay",
+      "models.overlay.overlay_image",
+      "models.overlay.overlay_tooltip",
+      "models.overlay.overlay_utils",
+      "models.overlay.window_capture",
+      "models.process_check",
+      "models.telemetry",
+      "models.telemetry.client",
+      "models.telemetry.core",
+      "models.telemetry.state",
+      "models.transcription.audio_listener",
+      "models.transcription.audio_source",
+      "models.transcription.audio_vad",
+      "models.transcription.google_speech",
+      "models.transcription.native_audio",
+      "models.transcription.pcm_audio",
+      "models.transcription.transcription_deepgram",
+      "models.transcription.transcription_languages",
+      "models.transcription.transcription_openai_compatible",
+      "models.transcription.transcription_providers",
+      "models.transcription.transcription_recorder",
+      "models.transcription.transcription_transcriber",
+      "models.transcription.transcription_whisper",
+      "models.translation.translation_gemini",
+      "models.translation.translation_groq",
+      "models.translation.translation_languages",
+      "models.translation.translation_lmstudio",
+      "models.translation.translation_model_list",
+      "models.translation.translation_ollama",
+      "models.translation.translation_openai",
+      "models.translation.translation_openai_compatible",
+      "models.translation.translation_openrouter",
+      "models.translation.translation_plamo",
+      "models.translation.translation_providers",
+      "models.translation.translation_translator",
+      "models.translation.translation_utils",
+      "models.transliteration.transliteration_context_rules",
+      "models.transliteration.transliteration_kana_to_hepburn",
+      "models.transliteration.transliteration_transliterator",
+      "models.watchdog.watchdog",
+      "models.websocket",
+      "models.websocket.websocket_server",
+      "setuptools._vendor.autocommand",
+      "setuptools._vendor.autocommand.autoasync",
+      "setuptools._vendor.autocommand.autocommand",
+      "setuptools._vendor.autocommand.automain",
+      "setuptools._vendor.autocommand.autoparse",
+      "setuptools._vendor.autocommand.errors",
+      "setuptools._vendor.backports",
+      "setuptools._vendor.backports.tarfile",
+      "setuptools._vendor.backports.tarfile.__main__",
+      "setuptools._vendor.backports.tarfile.compat",
+      "setuptools._vendor.backports.tarfile.compat.py38",
+      "setuptools._vendor.importlib_metadata",
+      "setuptools._vendor.importlib_metadata._adapters",
+      "setuptools._vendor.importlib_metadata._collections",
+      "setuptools._vendor.importlib_metadata._compat",
+      "setuptools._vendor.importlib_metadata._functools",
+      "setuptools._vendor.importlib_metadata._itertools",
+      "setuptools._vendor.importlib_metadata._meta",
+      "setuptools._vendor.importlib_metadata._text",
+      "setuptools._vendor.importlib_metadata.compat",
+      "setuptools._vendor.importlib_metadata.compat.py311",
+      "setuptools._vendor.importlib_metadata.compat.py39",
+      "setuptools._vendor.importlib_metadata.diagnose",
+      "setuptools._vendor.inflect",
+      "setuptools._vendor.inflect.compat",
+      "setuptools._vendor.inflect.compat.py38",
+      "setuptools._vendor.jaraco.collections",
+      "setuptools._vendor.jaraco.context",
+      "setuptools._vendor.jaraco.functools",
+      "setuptools._vendor.jaraco.text",
+      "setuptools._vendor.jaraco.text.layouts",
+      "setuptools._vendor.more_itertools",
+      "setuptools._vendor.more_itertools.more",
+      "setuptools._vendor.more_itertools.recipes",
+      "setuptools._vendor.packaging",
+      "setuptools._vendor.packaging._elffile",
+      "setuptools._vendor.packaging._manylinux",
+      "setuptools._vendor.packaging._musllinux",
+      "setuptools._vendor.packaging._parser",
+      "setuptools._vendor.packaging._structures",
+      "setuptools._vendor.packaging._tokenizer",
+      "setuptools._vendor.packaging.licenses",
+      "setuptools._vendor.packaging.licenses._spdx",
+      "setuptools._vendor.packaging.markers",
+      "setuptools._vendor.packaging.metadata",
+      "setuptools._vendor.packaging.requirements",
+      "setuptools._vendor.packaging.specifiers",
+      "setuptools._vendor.packaging.tags",
+      "setuptools._vendor.packaging.utils",
+      "setuptools._vendor.packaging.version",
+      "setuptools._vendor.platformdirs",
+      "setuptools._vendor.platformdirs.__main__",
+      "setuptools._vendor.platformdirs.android",
+      "setuptools._vendor.platformdirs.api",
+      "setuptools._vendor.platformdirs.macos",
+      "setuptools._vendor.platformdirs.unix",
+      "setuptools._vendor.platformdirs.version",
+      "setuptools._vendor.platformdirs.windows",
+      "setuptools._vendor.tomli",
+      "setuptools._vendor.tomli._parser",
+      "setuptools._vendor.tomli._re",
+      "setuptools._vendor.tomli._types",
+      "setuptools._vendor.typeguard",
+      "setuptools._vendor.typeguard._checkers",
+      "setuptools._vendor.typeguard._config",
+      "setuptools._vendor.typeguard._decorators",
+      "setuptools._vendor.typeguard._exceptions",
+      "setuptools._vendor.typeguard._functions",
+      "setuptools._vendor.typeguard._importhook",
+      "setuptools._vendor.typeguard._memo",
+      "setuptools._vendor.typeguard._pytest_plugin",
+      "setuptools._vendor.typeguard._suppression",
+      "setuptools._vendor.typeguard._transformer",
+      "setuptools._vendor.typeguard._union_transformer",
+      "setuptools._vendor.typeguard._utils",
+      "setuptools._vendor.typing_extensions",
+      "setuptools._vendor.wheel",
+      "setuptools._vendor.wheel.__main__",
+      "setuptools._vendor.wheel._bdist_wheel",
+      "setuptools._vendor.wheel._setuptools_logging",
+      "setuptools._vendor.wheel.bdist_wheel",
+      "setuptools._vendor.wheel.cli",
+      "setuptools._vendor.wheel.cli.convert",
+      "setuptools._vendor.wheel.cli.pack",
+      "setuptools._vendor.wheel.cli.tags",
+      "setuptools._vendor.wheel.cli.unpack",
+      "setuptools._vendor.wheel.macosx_libfile",
+      "setuptools._vendor.wheel.metadata",
+      "setuptools._vendor.wheel.util",
+      "setuptools._vendor.wheel.vendored",
+      "setuptools._vendor.wheel.vendored.packaging",
+      "setuptools._vendor.wheel.vendored.packaging._elffile",
+      "setuptools._vendor.wheel.vendored.packaging._manylinux",
+      "setuptools._vendor.wheel.vendored.packaging._musllinux",
+      "setuptools._vendor.wheel.vendored.packaging._parser",
+      "setuptools._vendor.wheel.vendored.packaging._structures",
+      "setuptools._vendor.wheel.vendored.packaging._tokenizer",
+      "setuptools._vendor.wheel.vendored.packaging.markers",
+      "setuptools._vendor.wheel.vendored.packaging.requirements",
+      "setuptools._vendor.wheel.vendored.packaging.specifiers",
+      "setuptools._vendor.wheel.vendored.packaging.tags",
+      "setuptools._vendor.wheel.vendored.packaging.utils",
+      "setuptools._vendor.wheel.vendored.packaging.version",
+      "setuptools._vendor.wheel.wheelfile",
+      "setuptools._vendor.zipp",
+      "setuptools._vendor.zipp.compat",
+      "setuptools._vendor.zipp.compat.py310",
+      "setuptools._vendor.zipp.glob",
+      "utils",
+      "vrct_audio"
+     ],
+     "code_differs": [
+      "model"
+     ],
+     "unexpected_code_diffs": [],
+     "expected_but_identical": []
+    },
+    "model": {
+     "new_co_filenames": [
+      "src-python\\model.py"
+     ],
+     "new_vs_worktree_source": true,
+     "new_vs_HEAD_blob": true,
+     "old_vs_HEAD_parent_blob": true,
+     "worktree_vs_codex_source_crlf_normalized": true,
+     "normalization": "co_filename excluded only (co_firstlineno NOT normalized)"
+    },
+    "pkg": {
+     "new_entries": [
+      "PYZ-00.pyz[z]",
+      "mainloop[s]",
+      "pyi_rth__tkinter[s]",
+      "pyi_rth_cryptography_openssl[s]",
+      "pyi_rth_inspect[s]",
+      "pyi_rth_multiprocessing[s]",
+      "pyi_rth_pkgres[s]",
+      "pyi_rth_pkgutil[s]",
+      "pyi_rth_setuptools[s]",
+      "pyiboot01_bootstrap[s]",
+      "pyimod01_archive[m]",
+      "pyimod02_importers[m]",
+      "pyimod03_ctypes[m]",
+      "pyimod04_pywin32[m]",
+      "smoke_hook[s]",
+      "startup_hook[s]",
+      "struct[m]"
+     ],
+     "only_new": [],
+     "only_old": [],
+     "identical": [
+      "mainloop[s]",
+      "pyi_rth__tkinter[s]",
+      "pyi_rth_cryptography_openssl[s]",
+      "pyi_rth_inspect[s]",
+      "pyi_rth_multiprocessing[s]",
+      "pyi_rth_pkgres[s]",
+      "pyi_rth_pkgutil[s]",
+      "pyi_rth_setuptools[s]",
+      "pyiboot01_bootstrap[s]",
+      "pyimod01_archive[m]",
+      "pyimod02_importers[m]",
+      "pyimod03_ctypes[m]",
+      "pyimod04_pywin32[m]",
+      "smoke_hook[s]",
+      "struct[m]"
+     ],
+     "differs": [
+      "startup_hook[s]"
+     ],
+     "unexpected_diffs": [],
+     "scripts_vs_source": {
+      "startup_hook": {
+       "source": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\startup_hook.py",
+       "equal": true
+      },
+      "mainloop": {
+       "source": "D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.claude\\worktrees\\backend-rust-migration-8f45d6\\src-python\\mainloop.py",
+       "equal": true
+      },
+      "smoke_hook": {
+       "source": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle11-sidecar\\smoke_hook.py",
+       "equal": true
+      }
+     },
+     "old_startup_hook_vs_cycle11_source": true
+    },
+    "exe": {
+     "new_sha256": "7069dc45782935d46ec4cc58bc3966d58f52489a11ad93d7e0440095f50494ac",
+     "old_sha256": "9c9ba12805db4f73cc0b3a360364a70488f76ba53e0b4986d846dd49d3db4436",
+     "prefix_len": [
+      330240,
+      330240
+     ],
+     "bootloader_prefix_byte_identical": false,
+     "prefix_diff_offsets": [
+      "0x108",
+      "0x109",
+      "0x158",
+      "0x159",
+      "0x3a5b4",
+      "0x3a5b5"
+     ],
+     "pe_meta_fields": {
+      "coff_timestamp": [
+       "0x108",
+       4
+      ],
+      "checksum": [
+       "0x158",
+       4
+      ],
+      "debug_dir0_timestamp": [
+       "0x3a5b4",
+       4
+      ]
+     },
+     "prefix_unexplained_diff_offsets": [],
+     "bootloader_prefix_identical_except_pe_timestamps_checksum": true
+    },
+    "internal": {
+     "new_files": 3191,
+     "old_files": 3191,
+     "only_new": [],
+     "only_old": [],
+     "sha256_differs": [],
+     "top_level_new": [
+      "VRCT-sidecar-x86_64-pc-windows-msvc.exe",
+      "_internal"
+     ],
+     "top_level_old": [
+      "VRCT-sidecar-x86_64-pc-windows-msvc.exe",
+      "_internal"
+     ]
+    },
+    "checks": {
+     "pyz_module_set_identical": true,
+     "pyz_only_expected_code_diffs": true,
+     "model_matches_worktree_source": true,
+     "pkg_entry_set_identical": true,
+     "pkg_only_startup_hook_differs": true,
+     "startup_hook_matches_cycle13_source": true,
+     "mainloop_matches_worktree_source": true,
+     "internal_tree_identical": true,
+     "bootloader_prefix_identical_except_pe_timestamps_checksum": true
+    },
+    "status": "PASS"
+   }
+  ],
+  "status": "PASS"
+ },
+ "final_cuda_whisper_after_fix": [
+  {
+   "kind": "mic",
+   "detector": "energy",
+   "status": "PASS",
+   "losses": [],
+   "utterances": [
+    {
+     "latency_s": 3.544,
+     "last_inference_s": 0.516,
+     "cer": 0.0476
+    },
+    {
+     "latency_s": 3.404,
+     "last_inference_s": 0.313,
+     "cer": 0.0
+    },
+    {
+     "latency_s": 2.579,
+     "last_inference_s": 0.265,
+     "cer": 0.2174
+    }
+   ]
+  },
+  {
+   "kind": "mic",
+   "detector": "vad",
+   "status": "PASS",
+   "losses": [],
+   "utterances": [
+    {
+     "latency_s": 0.278,
+     "last_inference_s": 0.172,
+     "cer": 0.0952
+    },
+    {
+     "latency_s": 0.435,
+     "last_inference_s": 0.297,
+     "cer": 0.0
+    },
+    {
+     "latency_s": 0.392,
+     "last_inference_s": 0.328,
+     "cer": 0.2174
+    }
+   ]
+  },
+  {
+   "kind": "speaker",
+   "detector": "energy",
+   "status": "PASS",
+   "losses": [],
+   "utterances": [
+    {
+     "latency_s": 3.293,
+     "last_inference_s": 0.234,
+     "cer": 0.0476
+    },
+    {
+     "latency_s": 3.388,
+     "last_inference_s": 0.297,
+     "cer": 0.0435
+    },
+    {
+     "latency_s": 2.579,
+     "last_inference_s": 0.281,
+     "cer": 0.2174
+    }
+   ]
+  },
+  {
+   "kind": "speaker",
+   "detector": "vad",
+   "status": "PASS",
+   "losses": [],
+   "utterances": [
+    {
+     "latency_s": 0.262,
+     "last_inference_s": 0.156,
+     "cer": 0.0952
+    },
+    {
+     "latency_s": 0.404,
+     "last_inference_s": 0.297,
+     "cer": 0.0
+    },
+    {
+     "latency_s": 0.36,
+     "last_inference_s": 0.312,
+     "cer": 0.2174
+    }
+   ]
+  }
+ ],
+ "physical_hotplug": {
+  "note": "user-run tools/check_audio_capture.py hotplug, energy recorder, USB mic; device names not saved",
+  "before_fix": {
+   "scope": "Guided physical hotplug check of the production recorder classes; raw PCM discarded immediately, no ASR/network",
+   "settings": {
+    "recorder": "energy",
+    "speaker_loopback": false,
+    "step_timeout_s": 120.0,
+    "stop_timeout_s": 15
+   },
+   "limitations": [
+    "Recorder layer only: MicSession/SpeakerSession, controller error notices and restarts are not run.",
+    "With Auto Mic Select on, the app follows the OS default input: DeviceManager monitoring stops the mic session, re-resolves the new default by name and restarts it. This tool never re-selects.",
+    "Auto Speaker Select also follows the active render endpoint (ActiveEndpointTracker); not run here.",
+    "error_after_enter_ms includes human delay before unplugging; last_data_to_error_ms does not.",
+    "outcome no_data means no read returned during the window; it says nothing about loudness.",
+    "Device names are printed to the console only and not saved."
+   ],
+   "steps": [
+    {
+     "step": "open",
+     "at_s": 0.25,
+     "devices": [
+      {
+       "device": "mic",
+       "found": true,
+       "open_ms": 157.0,
+       "returned_within_timeout": true,
+       "error": null,
+       "source": {
+        "requested_index": 4,
+        "actual_index": 4,
+        "rate": 44100,
+        "channels": 1
+       },
+       "fell_back_to_other_device": false,
+       "listening": true
+      }
+     ]
+    },
+    {
+     "step": "baseline",
+     "at_s": 3.266,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 131,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 130,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "endpoint_switch",
+     "at_s": 56.219,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 2389,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 214,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "endpoint_restore",
+     "at_s": 68.25,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 2901,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 131,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "unplug",
+     "at_s": 77.11,
+     "mic_error_detected": true,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 3083,
+       "queued_phrases": 0,
+       "stream_open": false,
+       "device_error": {
+        "code": "AUDIO_READ_ERROR",
+        "stage": "recording",
+        "exception_type": "OSError"
+       },
+       "error_after_enter_ms": 0.0,
+       "last_data_to_error_ms": 4641.0
+      }
+     ]
+    },
+    {
+     "step": "stop_after_unplug",
+     "at_s": 77.11,
+     "results": [
+      {
+       "device": "mic",
+       "returned_within_timeout": true,
+       "stop_ms": 0.0,
+       "error": null,
+       "stream_closed": true
+      }
+     ]
+    },
+    {
+     "step": "restart_after_replug",
+     "at_s": 92.875,
+     "device_update": {
+      "returned_within_timeout": true,
+      "ms": 157.0,
+      "error": null
+     },
+     "devices": [
+      {
+       "device": "mic",
+       "found": true,
+       "open_ms": 93.0,
+       "returned_within_timeout": true,
+       "error": null,
+       "source": {
+        "requested_index": 1,
+        "actual_index": 1,
+        "rate": 44100,
+        "channels": 1
+       },
+       "fell_back_to_other_device": false,
+       "listening": true
+      }
+     ],
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 130,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 130,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "stop_after_replug",
+     "at_s": 92.938,
+     "results": [
+      {
+       "device": "mic",
+       "returned_within_timeout": true,
+       "stop_ms": 63.0,
+       "error": null,
+       "stream_closed": true
+      }
+     ]
+    }
+   ],
+   "completed": true,
+   "python": "3.11.5",
+   "platform": "Windows-10-10.0.26200-SP0",
+   "source_sha256": {
+    "src-python/models/transcription/audio_source.py": "390926fb7e9ff91bb3fb6b193636c3441646df450d2282ddc2a27f0838e2eda2",
+    "src-python/models/transcription/audio_listener.py": "f0c154cf4a4a19f94e7b328872e427d46bcd9901a69578fd688d24a117b42637",
+    "src-python/models/transcription/transcription_recorder.py": "ea2449874e0aa0acf9cfdef272391091220a338a35af286c12bffa73f8ffbb7d",
+    "src-python/device_manager.py": "1205d550ca5353c6df1dd4708420dbcbcec9e26848e614bc7ea032eefab95d6a",
+    "tools/check_audio_capture.py": "5758b9c22f5fd64daa2767540b2b0d56733ddde498694008fa5b58f45aab5c93"
+   },
+   "native_binary_sha256": "35294a2a692f9ba3a0ec1ef897f20a8e3f18a47cafedf3779dbe0fe9ff29dabc"
+  },
+  "after_fix": {
+   "scope": "Guided physical hotplug check of the production recorder classes; raw PCM discarded immediately, no ASR/network",
+   "settings": {
+    "recorder": "energy",
+    "speaker_loopback": false,
+    "step_timeout_s": 120.0,
+    "stop_timeout_s": 15
+   },
+   "limitations": [
+    "Recorder layer only: MicSession/SpeakerSession, controller error notices and restarts are not run.",
+    "With Auto Mic Select on, the app follows the OS default input: DeviceManager monitoring stops the mic session, re-resolves the new default by name and restarts it. This tool never re-selects.",
+    "Auto Speaker Select also follows the active render endpoint (ActiveEndpointTracker); not run here.",
+    "error_after_enter_ms includes human delay before unplugging (negative if unplugged before Enter); last_data_to_error_ms does not.",
+    "outcome no_data means no read returned during the window; it says nothing about loudness.",
+    "Device names are printed to the console only and not saved."
+   ],
+   "steps": [
+    {
+     "step": "open",
+     "at_s": 0.25,
+     "devices": [
+      {
+       "device": "mic",
+       "found": true,
+       "open_ms": 141.0,
+       "returned_within_timeout": true,
+       "error": null,
+       "source": {
+        "requested_index": 1,
+        "actual_index": 1,
+        "rate": 44100,
+        "channels": 1
+       },
+       "fell_back_to_other_device": false,
+       "listening": true
+      }
+     ]
+    },
+    {
+     "step": "baseline",
+     "at_s": 3.266,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 131,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 130,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "endpoint_switch",
+     "at_s": 19.188,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 811,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 216,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "endpoint_restore",
+     "at_s": 29.016,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 1230,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 130,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "unplug",
+     "at_s": 35.219,
+     "mic_error_detected": true,
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 1476,
+       "queued_phrases": 0,
+       "stream_open": false,
+       "device_error": {
+        "code": "AUDIO_READ_ERROR",
+        "stage": "recording",
+        "exception_type": "OSError"
+       },
+       "error_after_enter_ms": 1547.0,
+       "last_data_to_error_ms": 485.0
+      }
+     ]
+    },
+    {
+     "step": "stop_after_unplug",
+     "at_s": 35.219,
+     "results": [
+      {
+       "device": "mic",
+       "returned_within_timeout": true,
+       "stop_ms": 0.0,
+       "error": null,
+       "stream_closed": true
+      }
+     ]
+    },
+    {
+     "step": "restart_after_replug",
+     "at_s": 56.079,
+     "device_update": {
+      "returned_within_timeout": true,
+      "ms": 156.0,
+      "error": null
+     },
+     "devices": [
+      {
+       "device": "mic",
+       "found": true,
+       "open_ms": 110.0,
+       "returned_within_timeout": true,
+       "error": null,
+       "source": {
+        "requested_index": 1,
+        "actual_index": 1,
+        "rate": 44100,
+        "channels": 1
+       },
+       "fell_back_to_other_device": false,
+       "listening": true
+      }
+     ],
+     "probes": [
+      {
+       "device": "mic",
+       "energy_callbacks": 130,
+       "queued_phrases": 0,
+       "stream_open": true,
+       "device_error": null,
+       "energy_delta": 130,
+       "phrase_delta": 0,
+       "outcome": "data_continued"
+      }
+     ]
+    },
+    {
+     "step": "stop_after_replug",
+     "at_s": 56.125,
+     "results": [
+      {
+       "device": "mic",
+       "returned_within_timeout": true,
+       "stop_ms": 46.0,
+       "error": null,
+       "stream_closed": true
+      }
+     ]
+    }
+   ],
+   "completed": true,
+   "python": "3.11.5",
+   "platform": "Windows-10-10.0.26200-SP0",
+   "source_sha256": {
+    "src-python/models/transcription/audio_source.py": "390926fb7e9ff91bb3fb6b193636c3441646df450d2282ddc2a27f0838e2eda2",
+    "src-python/models/transcription/audio_listener.py": "f0c154cf4a4a19f94e7b328872e427d46bcd9901a69578fd688d24a117b42637",
+    "src-python/models/transcription/transcription_recorder.py": "ea2449874e0aa0acf9cfdef272391091220a338a35af286c12bffa73f8ffbb7d",
+    "src-python/device_manager.py": "1205d550ca5353c6df1dd4708420dbcbcec9e26848e614bc7ea032eefab95d6a",
+    "tools/check_audio_capture.py": "710e203a0bccc4b8e0a5afcd6a4d96ba51d7e03afe2bd47f0046b730134e7409"
+   },
+   "native_binary_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83"
+  }
+ }
+}

@@ -1,9 +1,11 @@
-"""Offline checks for the manual enumeration profiler, using no audio devices."""
+"""Offline checks for the manual audio capture tool, using no audio devices."""
 
 from dataclasses import dataclass
 import importlib.util
 from pathlib import Path
 import sys
+import threading
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -108,3 +110,103 @@ def test_enumeration_rejects_changed_device_snapshot(profiler):
     state.changes = True
     with pytest.raises(RuntimeError, match='snapshot changed'):
         module.enumeration()
+
+
+@pytest.fixture
+def hotplug_tool(monkeypatch):
+    """Drive the hotplug steps with fake recorders and scripted Enter presses."""
+    state = SimpleNamespace(index=1, unplugged=threading.Event(), hang_stop=False, release=threading.Event(),
+                            asked=[])
+
+    class FakeRecorder:
+        def __init__(self, device, *args, **kwargs):
+            self.source = SimpleNamespace(device_index=device['index'], SAMPLE_RATE=48000, channels=1,
+                                          stream=object())
+            self.device_error_event = threading.Event()
+            self.device_error_info = None
+            self.stop = None
+
+        def recordIntoQueue(self, audio, energy):
+            stopped = threading.Event()
+
+            def run():
+                while not stopped.is_set() and not state.unplugged.is_set():
+                    energy.put_nowait(1.0)
+                    time.sleep(0.01)
+                if state.unplugged.is_set() and not stopped.is_set():
+                    self.device_error_info = SimpleNamespace(error_code=SimpleNamespace(value='AUDIO_READ_ERROR'),
+                                                             stage='recording', exception_type='OSError')
+                    self.device_error_event.set()
+
+            def stop(wait_for_stop=True):
+                stopped.set()
+                if state.hang_stop:
+                    state.release.wait()
+                self.source.stream = None
+
+            threading.Thread(target=run, daemon=True).start()
+            self.stop = stop
+
+    def devices():
+        return {'Host': [{'index': state.index, 'name': 'Headset'}]}
+
+    def update():
+        state.index = 3
+        state.unplugged.clear()
+
+    manager = SimpleNamespace(getDefaultMicDevice=lambda: {'host': {'name': 'Host'}, 'device': devices()['Host'][0]},
+                              getMicDevices=devices, getSpeakerDevices=lambda: [],
+                              getDefaultSpeakerDevice=lambda: {'device': {'name': 'NoDevice'}}, update=update)
+    recorders = SimpleNamespace(SelectedMicEnergyAndAudioRecorder=FakeRecorder, SelectedMicVadRecorder=FakeRecorder,
+                                SelectedSpeakerEnergyAndAudioRecorder=FakeRecorder)
+    monkeypatch.setitem(sys.modules, 'pyaudiowpatch', SimpleNamespace())
+    monkeypatch.setitem(sys.modules, 'device_manager', SimpleNamespace(device_manager=manager))
+    monkeypatch.setitem(sys.modules, 'models.transcription.native_audio',
+                        SimpleNamespace(get_native_audio=lambda: object()))
+    monkeypatch.setitem(sys.modules, 'models.transcription.transcription_recorder', recorders)
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location('audio_capture_hotplug_test', root / 'tools/check_audio_capture.py')
+    module = importlib.util.module_from_spec(spec)
+    monkeypatch.setattr(sys, 'path', list(sys.path))
+    spec.loader.exec_module(module)
+    wait_until = module.wait_until
+    monkeypatch.setattr(module, 'wait_until', lambda predicate, timeout: wait_until(predicate, min(timeout, 0.3)))
+
+    def ask(step, message, timeout):
+        state.asked.append(step)
+        if step == 'unplug':
+            state.unplugged.set()
+        return ''
+
+    monkeypatch.setattr(module, 'ask', ask)
+    yield module, state
+    state.release.set()
+
+
+def test_hotplug_records_unplug_stop_and_replug(hotplug_tool):
+    module, state = hotplug_tool
+    report = module.hotplug()
+    assert report['completed'], report
+    steps = {row['step']: row for row in report['steps']}
+    assert state.asked == ['select', 'endpoint_switch', 'endpoint_restore', 'unplug', 'replug']
+    assert steps['endpoint_switch']['probes'][0]['outcome'] == 'data_continued'
+    unplug = steps['unplug']
+    assert unplug['mic_error_detected']
+    assert unplug['probes'][0]['device_error'] == {'code': 'AUDIO_READ_ERROR', 'stage': 'recording',
+                                                   'exception_type': 'OSError'}
+    assert unplug['probes'][0]['last_data_to_error_ms'] is not None
+    assert steps['stop_after_unplug']['results'][0]['returned_within_timeout']
+    restart = steps['restart_after_replug']
+    assert restart['devices'][0]['source']['requested_index'] == 3
+    assert not restart['devices'][0]['fell_back_to_other_device']
+    assert restart['probes'][0]['outcome'] == 'data_continued'
+    assert 'cleanup' not in report
+
+
+def test_hotplug_bounds_a_hung_stop(hotplug_tool):
+    module, state = hotplug_tool
+    state.hang_stop = True
+    report = module.hotplug()
+    steps = {row['step']: row for row in report['steps']}
+    assert steps['stop_after_unplug']['results'][0]['returned_within_timeout'] is False
+    assert steps['stop_after_unplug']['results'][0]['stream_closed'] is False

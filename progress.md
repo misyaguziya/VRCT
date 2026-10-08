@@ -265,3 +265,23 @@
 - OCRは4AのCPU画素変換と5の入力整形、Overlayは4Bの起動演出透過処理を実装。最新developの再学習モデルで129画像の旧新同値を確認。GPU直接提出、モデル/認識ロジックの変更、通常overlay描画全体の性能は別条件。
 - cv2の収集元統一は11で確認済み、installerの衝突修復は12で反映済み。13の配布物最終照合とfrozen起動を最初に完了し、その後GUIと配布版実モデル推論の結合を確認する。
 - 1〜9はローカルcommit `b9be99e7`、10〜13は今回の引継ぎcheckpointへ保存。13の未完条件は上記のとおり。pushとdevelopへのマージは未実施。
+
+## サイクル14 — 検証の完了（2026-10-08、Claudeへ引継ぎ後・単独でRust化を継続する方針）
+
+- 本worktree（`claude/backend-rust-migration-8f45d6`、HEAD `7877fec9`）で`maturin 1.8.3`によりwheelを再ビルド（隔離`CARGO_TARGET_DIR`、`tmp/`配下。共有venvは未変更）。pyd SHA256は`35294a2a…`で、配布検証済みの`8286bd9c…`とはビルドパス差で一致しない。同一ソースの別ビルドであり、検証済みpydそのものではない。
+- Rust: `cargo test --locked`・clippy `-D warnings`・fmt成功。Python: `src-python/test`全体を`vrct_audio`導入下で実行し1857件＋136 subtests成功・skip 0を4連続確認。初回のみ2件失敗したが原因未特定で再現しない（不安定なテストの存在を否定しない）。最初のBash経由の実行はPYTHONPATHが`/d/...`形式になり拡張が読めず、native系306件がskipされた。PowerShellで再実行した結果が上記。
+- サイクル13のfrozen起動: ソース（model.py・追加テスト）のhashがcheckpointと一致、install.bat/requirements.txtはCodex作業コピーのCRLF差のみ。新suffix`claude1`でCPU/CUDA各1回実行しPASS。Overlay 5＋mute＋watchdogのcallback実体、先行heartbeatの無初期化、JSON stdout、空stderr、期待したHTTPガード例外のみ、IPC200、shutdown200、exit 0。11のCPU失敗（callback登録のAttributeError）の解消を確認。永続結果は`docs/benchmarks/audio_startup_cycle14_2026-10-08.json`。
+- 未実施: 配布物と現行ソースの全PYZ/資産hash照合、通常GUIとの結合、配布版での実モデル推論、物理hotplug/endpoint切替、無データ停止、発話終了から表示までの時間。developへは当面合流せず、このブランチで単独にRust化を進める。
+
+## サイクル15 — 音声のE2E検証・実機抜き差し・エネルギー検出の音声消失修正（2026-10-08）
+
+- 実デバイスなしのE2Eハーネス`tools/check_audio_e2e.py`を追加。SAPI日本語合成音声を実時間でpacingし、本番`MicSession`/`SpeakerSession`→recorder→listener/VAD→`AudioTranscriber`→providerを通す。差替えは`AudioCaptureSource`のみ（時計連動の`get_read_available`、`stop_stream`でreadを解除）。Whisperは実推論、Googleは偽`urlopen`でFLACを復号検証、OpenAI互換はローカルサーバでWAVを検証。`--listener fork`でdevelopの旧fork listenerとA/B可能。独立レビューの指摘（停止経路未通過、availability常時あり、損失カウンタの誤分類、`import model`による`src-python/config.json`書換えの未記載等）を反映済み。
+- 発見: エネルギー方式に旧forkと同一の音声消失欠陥が2件（Rust移植は忠実に再現していた）。D1: 壁時計`record_timeout`(3s)が音声時間`phrase_time_limit`(3s)に競り勝つと録音中の最大3秒が破棄。D2: 時間上限で分割した直後の短い残りが短発話として棄却され語尾が消える。A/Bでspeakerのqueueサイズはfork/nativeで完全一致。
+- 修正（ユーザー承認済み）: `native/vrct-audio/src/energy.rs`のみ。record_timeout時は通常の採用判定を通してPHRASEで返す。分割直後`pause_threshold`以内に始まる続きは短発話棄却しない。forkとの意図的な差は「分割直後0.8s以内の短い音も発話として出る」点。Python側変更なし。Rust 16件、clippy/fmt成功。
+- CPU負荷下の前後比較（google/energy、各6回）: 修正前はmicで2/6回3発話目が消失、speakerで6/6回語尾0.8sが消失 → 修正後は全12回消失0。修正後の全マトリクス（mic/speaker×energy/VAD×Whisper/Google/API、`--fail-on-loss`）CPU12ケース・CUDA Whisper4ケースとも全PASS。CERは合成1話者のsmokeで精度評価ではない。
+- 遅延（発話終了→文字、共有開発機での観測値で性能主張ではない）: VADはCPU約1.0〜1.2s・CUDA約0.3〜0.4s、エネルギー方式はCPU約3.4〜4.2s・CUDA約2.6〜3.5s。エネルギー方式の大半は`phrase_timeout=3`の確定待ちとASR推論で、Rust化した前処理は数msで支配要因ではない。
+- 既存テストの不安定さを修正: `test_native_audio_buffers.py`のGIL解放中参照破棄テストがOSスケジューリング次第で失敗していた（セッション冒頭の原因不明の単発失敗）。観測スレッドが呼出し中に走らなかった試行は判定不能として最大5回やり直す形にし、負荷下10回連続成功。pytest全体1862件成功×3回、skip 0。
+- 配布物照合（引継ぎ手順2）: cycle13とcycle11のPYZ module集合一致、code object差分は`model`のみで現行`model.py`と一致、exe内hookの差分は`startup_hook`のみ、`_internal` 3180/3191ファイルのSHA256差分0（CPU/CUDA）。co_filenameの差（176 module）はTOC再利用ビルドでpathexが効かなかったためで動作影響なし。
+- 実機抜き差し（`tools/check_audio_capture.py hotplug`を追加、ユーザー実施・修正前wheel）: 既定デバイス切替中も選択デバイスで受信継続、抜去で`AUDIO_READ_ERROR`/OSError検知、無データ状態のstopは即時でstream close、再接続後はindex 4→1に変わっても名前で再解決してopen成功。抜去→検知時間はツールの計測漏れで未測定（watcherスレッドで修正済み）。
+- 修正後wheel（pyd SHA256 `a6e96861…`）で同じ実機抜き差しを再実施し全段階PASS。最後のデータ→`AUDIO_READ_ERROR`検知485ms、無データstop即時、再接続後open 110ms・stop 46ms。
+- 結果JSON: `docs/benchmarks/audio_e2e_cycle15_2026-10-08.json`。Auto Mic Selectによる再選択・画面通知、ループバックの無音中フレーム停止、読取り遅延時のoverflowはE2E/ツールの対象外。
