@@ -1,0 +1,118 @@
+{
+  "status": "PASS",
+  "scope": "Actual pip and cmd repair in a new offline venv; not the destructive full installer",
+  "steps": [
+    {
+      "step": "install-headless",
+      "exit_code": 0
+    },
+    {
+      "step": "install-gui-conflict",
+      "exit_code": 0
+    },
+    {
+      "step": "check-conflict",
+      "exit_code": 0
+    },
+    {
+      "step": "repair",
+      "exit_code": 0
+    },
+    {
+      "step": "verify-repair",
+      "exit_code": 0
+    },
+    {
+      "step": "repeat-repair",
+      "exit_code": 0
+    },
+    {
+      "step": "verify-repeat-repair",
+      "exit_code": 0
+    },
+    {
+      "step": "recreate-conflict",
+      "exit_code": 0
+    },
+    {
+      "step": "repair-failed-install",
+      "exit_code": 1
+    },
+    {
+      "step": "repair-after-failure",
+      "exit_code": 0
+    },
+    {
+      "step": "verify-recovery",
+      "exit_code": 0
+    }
+  ],
+  "both_installer_blocks_equal_tested_commands": true,
+  "conflict_reproduced": true,
+  "repair_idempotent": true,
+  "failed_reinstall_prevents_followup": true,
+  "retry_recovers": true,
+  "draft_sha256": "52c988ab34bcd33458050204903f1df2ead14b5b2c449d761cdec0edb3b366da",
+  "wheels_sha256": {
+    "numpy-1.26.4-cp311-cp311-win_amd64.whl": "cd25bcecc4974d09257ffcd1f098ee778f7834c3ad767fe5db785be9a4aa9cb2",
+    "opencv_python-4.11.0.86-cp37-abi3-win_amd64.whl": "085ad9b77c18853ea66283e98affefe2de8cc4c1f43eda4c100cf9b2721142ec",
+    "opencv_python_headless-4.10.0.84-cp37-abi3-win_amd64.whl": "afcf28bd1209dd58810d33defb622b325d3cbe49dcd7a43a902982c33e5fad05"
+  },
+  "script_sha256": "9cfdac1c90f77411de4cb8425d2e52a2527206f7c270dc9c3761d3e8fe23d54e",
+  "shared_environments_modified": false,
+  "validation_sources": {
+    "check_repair.py": {
+      "sha256": "9cfdac1c90f77411de4cb8425d2e52a2527206f7c270dc9c3761d3e8fe23d54e",
+      "text": "\"\"\"Exercise the proposed batch commands against a disposable offline venv.\"\"\"\nimport hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport subprocess\nimport sys\n\nfolder = Path(__file__).resolve().parent\nenv_dir = folder / 'test-venv'\nassert not env_dir.exists()\nsubprocess.run([sys.executable, '-m', 'venv', str(env_dir)], check=True)\npython = env_dir / 'Scripts/python.exe'\nenvironment = os.environ.copy()\nenvironment.pop('PYTHONPATH', None)\nenvironment['PATH'] = str(env_dir/'Scripts') + os.pathsep + environment['PATH']\nenvironment['PIP_NO_INDEX'] = '1'\nenvironment['PIP_FIND_LINKS'] = str(folder/'wheels')\nenvironment['PIP_CONFIG_FILE'] = os.devnull\nenvironment['PYTHONIOENCODING'] = 'utf-8'\nenvironment['PYTHONDONTWRITEBYTECODE'] = '1'\nrecords = []\n\ndef run(label, args, expected=0, env=None):\n    result = subprocess.run(args, cwd=folder, env=env or environment, capture_output=True, text=True, encoding='utf-8', errors='replace')\n    (folder/(label+'.log')).write_text(result.stdout+result.stderr, encoding='utf-8')\n    assert result.returncode == expected, (label, result.returncode, result.stderr)\n    records.append({'step':label,'exit_code':result.returncode})\n    return result\n\nrun('install-headless', [str(python),'-m','pip','install','--no-deps','numpy==1.26.4','opencv-python-headless==4.10.0.84'])\nrun('install-gui-conflict', [str(python),'-m','pip','install','--no-deps','opencv-python==4.11.0.86'])\nrun('check-conflict', [str(python),'-c',\"import cv2,importlib.metadata as m; assert cv2.__version__=='4.11.0'; assert m.version('opencv-python')=='4.11.0.86'; assert m.version('opencv-python-headless')=='4.10.0.84'; print('Conflict reproduced')\"])\nbatch = folder/'repair-block.bat'\ncommand = [os.environ.get('COMSPEC', 'cmd.exe'),'/d','/c',str(batch)]\nverify = '''\nimport cv2,importlib.metadata as m,json\nfrom pathlib import Path\nimport numpy as np\nassert cv2.__version__=='4.10.0'\nassert m.version('opencv-python-headless')=='4.10.0.84'\ntry:\n    m.version('opencv-python')\nexcept m.PackageNotFoundError:\n    pass\nelse:\n    raise AssertionError('GUI OpenCV still installed')\ndlls=sorted(p.name for p in Path(cv2.__file__).parent.glob('opencv_videoio_ffmpeg*.dll'))\nassert dlls==['opencv_videoio_ffmpeg4100_64.dll'], dlls\nassert np.array_equal(cv2.cvtColor(np.array([[[1,2,3]]],dtype=np.uint8),cv2.COLOR_BGR2RGB),np.array([[[3,2,1]]],dtype=np.uint8))\nprint(json.dumps({'status':'PASS','version':cv2.__version__,'dlls':dlls}))\n'''\nfor label in ('repair','repeat-repair'):\n    result = run(label,command)\n    assert 'FOLLOWUP_REACHED' in result.stdout\n    run('verify-'+label,[str(python),'-c',verify])\nrun('recreate-conflict',[str(python),'-m','pip','install','--no-deps','opencv-python==4.11.0.86'])\nempty = folder/'empty-wheelhouse'\nempty.mkdir()\nfailure_env = dict(environment,PIP_FIND_LINKS=str(empty))\nresult=run('repair-failed-install',command,expected=1,env=failure_env)\nassert 'FOLLOWUP_REACHED' not in result.stdout\nresult=run('repair-after-failure',command)\nassert 'FOLLOWUP_REACHED' in result.stdout\nrun('verify-recovery',[str(python),'-c',verify])\ndraft=(folder/'install.bat').read_text(encoding='ascii')\nblock=batch.read_text(encoding='ascii').removeprefix('@echo off\\n').removesuffix('\\necho FOLLOWUP_REACHED\\n')\nassert draft.count(block)==2, 'Both CPU and CUDA installer blocks must equal the exercised commands'\nreport={'status':'PASS','scope':'Actual pip and cmd repair in a new offline venv; not the destructive full installer',\n        'steps':records,'both_installer_blocks_equal_tested_commands':True,\n        'conflict_reproduced':True,'repair_idempotent':True,'failed_reinstall_prevents_followup':True,'retry_recovers':True,\n        'draft_sha256':hashlib.sha256((folder/'install.bat').read_bytes()).hexdigest(),\n        'wheels_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((folder/'wheels').glob('*.whl'))},\n        'script_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),\n        'shared_environments_modified':False}\n(folder/'result.json').write_text(json.dumps(report,indent=2),encoding='utf-8')\nprint(json.dumps(report))\n"
+    },
+    "repair-block.bat": {
+      "sha256": "fe3fe4dc7e5260a4df940a714b5f989ea0b910d2107f96b07af4c0a40f2349c2",
+      "text": "@echo off\nREM rapidocr/windows-capture pull in opencv-python, which overwrites headless cv2.\nREM Uninstall the overlapping GUI files first, then restore the pinned headless build.\npython -m pip uninstall --yes opencv-python\nif errorlevel 1 exit /b 1\npython -m pip install --no-cache-dir --force-reinstall --no-deps opencv-python-headless==4.10.0.84\nif errorlevel 1 exit /b 1\npython -c \"import cv2; import importlib.metadata as m; assert cv2.__version__ == '4.10.0'; assert m.version('opencv-python-headless') == '4.10.0.84'; assert not any(d.metadata['Name'].lower() == 'opencv-python' for d in m.distributions())\"\nif errorlevel 1 exit /b 1\necho FOLLOWUP_REACHED\n"
+    }
+  },
+  "drafts": {
+    "install.bat": {
+      "sha256": "52c988ab34bcd33458050204903f1df2ead14b5b2c449d761cdec0edb3b366da",
+      "text": "REM .venv exists\nif exist .venv (\n    rmdir /s /q .venv\n)\n\nREM make .venv\npython -m venv .venv\n\nREM install packages for .venv\ncall .venv/Scripts/activate\npython.exe -m pip install --upgrade pip\npython -m pip install --no-cache-dir --force-reinstall -r requirements.txt\nif errorlevel 1 exit /b 1\npython -m pip install --no-deps ./native/vrct-audio\nif errorlevel 1 exit /b 1\nREM rapidocr/windows-capture pull in opencv-python, which overwrites headless cv2.\nREM Uninstall the overlapping GUI files first, then restore the pinned headless build.\npython -m pip uninstall --yes opencv-python\nif errorlevel 1 exit /b 1\npython -m pip install --no-cache-dir --force-reinstall --no-deps opencv-python-headless==4.10.0.84\nif errorlevel 1 exit /b 1\npython -c \"import cv2; import importlib.metadata as m; assert cv2.__version__ == '4.10.0'; assert m.version('opencv-python-headless') == '4.10.0.84'; assert not any(d.metadata['Name'].lower() == 'opencv-python' for d in m.distributions())\"\nif errorlevel 1 exit /b 1\npython -X utf8 tools\\fetch_ocr_models.py\n\nREM if .venv_cuda exists\nif exist .venv_cuda (\n    rmdir /s /q .venv_cuda\n)\n\nREM make .venv_cuda\npython -m venv .venv_cuda\n\nREM install packages for .venv_cuda\ncall .venv_cuda/Scripts/activate\npython.exe -m pip install --upgrade pip\npython -m pip install --no-cache-dir --force-reinstall -r requirements_cuda.txt\nif errorlevel 1 exit /b 1\npython -m pip install --no-deps ./native/vrct-audio\nif errorlevel 1 exit /b 1\nREM rapidocr/windows-capture pull in opencv-python, which overwrites headless cv2.\nREM Uninstall the overlapping GUI files first, then restore the pinned headless build.\npython -m pip uninstall --yes opencv-python\nif errorlevel 1 exit /b 1\npython -m pip install --no-cache-dir --force-reinstall --no-deps opencv-python-headless==4.10.0.84\nif errorlevel 1 exit /b 1\npython -c \"import cv2; import importlib.metadata as m; assert cv2.__version__ == '4.10.0'; assert m.version('opencv-python-headless') == '4.10.0.84'; assert not any(d.metadata['Name'].lower() == 'opencv-python' for d in m.distributions())\"\nif errorlevel 1 exit /b 1\npython -X utf8 tools\\fetch_ocr_models.py\n"
+    },
+    "requirements.txt": {
+      "sha256": "2ff96837118ab78cccc0aac4c69705ba0db8bbce36065e3951a2f2ba8d59efcb",
+      "text": "# NOTE: torch was dropped on 2026-09-18. It was pulled in by EasyOCR (now\n# replaced by RapidOCR) and used only to enumerate CUDA devices, which\n# ctranslate2 and the CUDA driver API can do by themselves (see\n# src-python/utils.py). The GPU build gets its cuBLAS/cuDNN from the\n# nvidia-*-cu12 wheels listed in requirements_cuda.txt instead.\nfaster-whisper==1.1.1\nctranslate2==4.6.0\ntransformers==4.40.2\npillow == 10.0.0\nPyAudioWPatch == 0.2.12.6\npython-osc == 1.9.0\nPyYAML==6.0.2\ndeepl == 1.22.0\nflashtext ==2.7\npyinstaller==6.10.0\nnumpy==1.26.4\nsentencepiece==0.2.1  # PYSEC-2026-1909 fixed in 0.2.1\nopenvr==1.26.701\n# VR UI overlay texture (models/overlay/overlay.py). Were imported but not\n# declared here; pinned to the versions already verified working in .venv.\nglfw==2.7.0\nPyOpenGL==3.1.7\n# VR UI window capture (Windows.Graphics.Capture). Like rapidocr it requires\n# opencv-python. After dependency installation, bat/install.bat removes that\n# overlapping package and restores the pinned opencv-python-headless build.\n# Optional at runtime: without it the overlay falls back to PrintWindow.\nwindows-capture==2.0.1\npydub==0.25.1\npsutil==5.9.8\npycaw==20240210\nwebsockets==15.0.1\nhuggingface_hub==0.32.2\nhf-xet==1.1.2\n# NOTE: PYSEC-2026-3447 is fixed in setuptools 83.0.0, but setuptools removed\n# the pkg_resources module entirely in 82.0.0, and both openvr and\n# ctranslate2 still `import pkg_resources` at import time - bumping past\n# 81.x breaks the app outright (verified: 32 test files fail to even collect).\n# Stays pinned below the vulnerable-but-still-supported line until openvr/\n# ctranslate2 drop their pkg_resources dependency upstream.\nsetuptools==80.8.0\nlangchain-openai==0.3.32\nlangchain-google-genai==2.1.10\ngoogle-genai==1.45.0\ngrpcio==1.83.1  # >=1.83.0: google-auth PQC support (min requirement from 2026-10)\nlangchain-ollama==0.3.10\nSudachiPy==0.6.10\nSudachiDict-core==20250825\nSudachiDict-full==20250825\naiohttp==3.14.3\n# requests is imported directly; urllib3/certifi are its transitive deps that\n# are also used at runtime. pyperclip is imported directly too. None of these\n# were declared here before (backend review 2026-08-27, phase 3 item 28) -\n# pinned to the versions already verified working, so pip-audit can check them.\n# NOTE: keep comments in this file ASCII-only - pip-audit's requirements\n# parser decodes the file using the OS locale codepage rather than UTF-8, and\n# non-ASCII text can make parsing fail depending on the machine's locale.\nrequests==2.34.2\nurllib3==2.7.0  # PYSEC-2026-141/1994/1996/1998 fixed by 2.6.0-2.7.0\ncertifi==2025.8.3\npyperclip==1.11.0\n# Git dependencies are pinned to a commit SHA instead of a tag (tags are\n# mutable, backend review 2026-08-27 phase 3 item 28). Each SHA is the commit\n# the corresponding tag pointed to as of 2026-09-04 (verified via\n# `git ls-remote --tags`).\ntinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@5765a85b0d83da41b8266f75dfd3c99f0dec4411  # tag: 0.1.3\naptabase==0.1.0\n# OCR: RapidOCR (PP-OCR on ONNX). Replaced EasyOCR on 2026-09-18.\n# Accuracy (95 training images, CER): EasyOCR 0.69 -> PP-OCRv6 small 0.27.\n# EasyOCR required torch and pulled in torch(1.2GB)+scipy+scikit-image.\n# NOTE: rapidocr requires opencv-python, but this app uses\n# opencv-python-headless. bat/install.bat removes opencv-python after dependency\n# installation and force-reinstalls headless to restore their overlapping files.\n# The remaining dependencies are listed explicitly below.\nrapidocr==3.9.2\nopencv-python-headless==4.10.0.84\nomegaconf==2.3.1\ncolorlog==6.12.0\npyclipper==1.4.0\nshapely==2.1.2\npython-bidi==0.6.11\n\n# Direct high-rate FLAC encoder (also used by faster-whisper).\nav==18.1.0\n"
+    }
+  },
+  "evidence_sha256": {
+    "check-conflict.log": "541c9dc1fe6778d7ddbcb00d1441e9bd2b0a778f34e04a01cf05aba3c47eaa47",
+    "check-repair.log": "d63cedb903c7fd15c1b018ea4158bb78b73f4ab6bb4b0eeb71e40d28e94c2989",
+    "download.log": "0986c96a93d769291d15f124bbf16d30fc812788c33a0ef48de24d15ddf525ee",
+    "install-gui-conflict.log": "2f5f07fd90b5c80894a047f8811f894d212be1fa87769893621fcc2867b82404",
+    "install-headless.log": "8a9fb44c3c039beef09d6b05c241071404ad6e751b0c0c0348f76f8bc0f0b4d4",
+    "recreate-conflict.log": "2f5f07fd90b5c80894a047f8811f894d212be1fa87769893621fcc2867b82404",
+    "repair-after-failure.log": "bee9fcb38cd614b70cf36abc40bfee47e0c166c6c02d3f25035deacf6e1e8a29",
+    "repair-failed-install.log": "e487a129a4881ec4fde5e2142002465981db2a6f8a4bde28829beb317c3f506d",
+    "repair.log": "5f48f9cc78778f8ec6ab537290d42758f5810a71d217ae434026029493f59b4c",
+    "repeat-repair.log": "bee9fcb38cd614b70cf36abc40bfee47e0c166c6c02d3f25035deacf6e1e8a29",
+    "verify-recovery.log": "48e4dfa3e9df0fbfd8efbafe5843a8bdbe807b52eb7acb19c75b68be5808b4a3",
+    "verify-repair.log": "48e4dfa3e9df0fbfd8efbafe5843a8bdbe807b52eb7acb19c75b68be5808b4a3",
+    "verify-repeat-repair.log": "48e4dfa3e9df0fbfd8efbafe5843a8bdbe807b52eb7acb19c75b68be5808b4a3"
+  },
+  "limitations": [
+    "Full bat/install.bat would replace real .venv directories and download packages/models; it was not executed.",
+    "The actual extracted CPU/CUDA repair commands were run in one new offline Python 3.11 venv; both blocks are identical.",
+    "Direct pip install -r requirements.txt can still install conflicting opencv-python. The supported batch performs the repair.",
+    "pip check may report missing opencv-python metadata required by rapidocr/windows-capture; headless remains the intentional runtime substitute.",
+    "The initial dependency installation may download opencv-python before the repair removes it."
+  ],
+  "production_application": {
+    "status": "PASS",
+    "files": {
+      "bat/install.bat": "52c988ab34bcd33458050204903f1df2ead14b5b2c449d761cdec0edb3b366da",
+      "requirements.txt": "2ff96837118ab78cccc0aac4c69705ba0db8bbce36065e3951a2f2ba8d59efcb"
+    },
+    "matches_reviewed_tested_drafts": true,
+    "after_cycle11_input_freeze_closed": true
+  },
+  "independent_review": {
+    "verdict": "LGTM",
+    "scope": "Design, draft, result audit and final production application reviewed LGTM. 11 step results, actual repair/repeat/recovery, expected failure stop, draft/block/script hashes and final product diff verified."
+  }
+}

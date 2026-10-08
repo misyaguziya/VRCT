@@ -932,10 +932,9 @@ class Model:
         self.th_watchdog = None
         # watchdog は init() の先頭で作る。フロントエンドは spawn 直後から
         # /run/feed_watchdog を送り続け、ハンドラワーカーは init() の実行中でも
-        # feedWatchdog() を処理する。ensure_initialized() は _init_failed
-        # のため init() を再実行せず素通りするので、ここより後 (Overlay や
-        # オーディオ初期化の後) で作ると、遅い環境 (ビルド版) で
-        # 'Model' object has no attribute 'watchdog' になる。
+        # feedWatchdog() を処理する。heartbeat は初期化を開始せず、生成済みの
+        # watchdog だけを更新する。重い Overlay やオーディオの初期化中も
+        # feed を受け取れるよう、先に用意する。
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         # マイク/スピーカーそれぞれの文字起こし・エナジー計測は
         # _AudioDeviceSession (MicSession/SpeakerSession) に集約されている。
@@ -2494,8 +2493,13 @@ class Model:
         self._armFreezeDump()
 
     def feedWatchdog(self):
-        self.ensure_initialized()
-        self.watchdog.feed()
+        # The frontend sends heartbeats before Controller.init(). Starting lazy
+        # initialization here would let a handler race the main-thread bootstrap
+        # and register callbacks before resources such as overlay exist.
+        watchdog = getattr(self, "watchdog", None)
+        if watchdog is None:
+            return
+        watchdog.feed()
         self._armFreezeDump()
 
     def _armFreezeDump(self):

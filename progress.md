@@ -2,7 +2,7 @@
 
 ## 中間チェックポイント（2026-10-08）
 
-ユーザーの依頼により、サイクル1〜9の実装・テスト・設計資料・計測結果を1つのローカルコミットにまとめる。基準はdevelopの`e1c24d1b`、保存先は`codex/rust-audio-pipeline`。developへのマージとpushは未実施。以下の各サイクルにある「未commit」は作業当時の記録であり、現在の保存状態はこのチェックポイントを参照する。
+ユーザーの依頼により、サイクル1〜9をローカルコミット`b9be99e7`に保存済み。基準はdevelopの`e1c24d1b`、保存先は`codex/rust-audio-pipeline`。今回、サイクル10〜12の検証結果とインストール修正、およびサイクル13の起動競合修正を追加チェックポイントとして保存する。developへのマージとpushは未実施。過去の「未commit」は作業当時の記録。Claude Codeへの引継ぎは`docs/claude_code_handoff_2026-10-08.md`を最初に読む。
 
 | 対象 | 現在の状態 |
 |---|---|
@@ -18,18 +18,20 @@
 
 - 最新の音声実装はCPU/CUDAそれぞれ667件＋3 subtests、Rust13件、clippy/fmt、独立設計・実装レビューを通過。旧SR import禁止、skip 0。
 - OCRは最新モデルに対し129画像で前処理・出力・切り出しの一致を確認。Overlayは画素互換テストと合成入力の性能比較を実施。各結果と条件は下のサイクル4/5の記録を参照。
-- CPU/CUDAの全sidecar確認はサイクル7/8版で完了。最新9のDLLはCPU/CUDA限定exeで確認済み。最新9を含む全sidecarの再ビルド・全アプリ動作確認とは区別する。
+- 最新9のDLLを含むCPU/CUDA全sidecarを10/11で再ビルド。11で余剰OpenCV DLLの収集を解消。11のfrozen起動ではCPUのコールバック登録失敗が判明し、13で修正。13は単体回帰と限定exe smokeまで成功し、修正後のfrozen起動・配布物の最終照合は未完了。
+- 実Whisper baseのローカル合成音認識はCPU/CUDA各2回成功。通常GUIとの結合や配布exe内の実モデル推論は未検証。起動競合の関連テストはCPU/CUDA各24件＋2 subtests成功。
+- 最新DLLで既定マイクとループバックの開始・停止・再開始をCPU/CUDA各3回確認。隔離設定と通信・録音ガード付きのsource起動では、初期化・version/compute_modeのIPC・終了が両方成功。物理切断やendpoint切替は未実行。
 - ベンチマークは処理単位の比較。通常の短い音声やFLACを含め全条件で高速化したわけではなく、発話終了から画面表示までの改善率は未測定。詳細は`docs/benchmarks/`に保存。
 
 ### 次に進める順序
 
-1. このチェックポイントの最新DLLを含めたCPU/CUDA全sidecarを再構築し、配布物と実際のアプリ起動を確認する。
-2. マイク/ループバック、停止・再開始、endpoint切替・切断再接続、実認識までの時間を実機で確認する。サイクル3Bの限定録音試験で確認した範囲と区別する。
+1. サイクル13の修正後配布物を照合し、ガード付きfrozen起動を再実行する。その後、通常GUIと配布版ローカルモデル推論の結合を確認する。限定exeテストとsource実推論を全アプリ確認として扱わない。
+2. endpoint切替・切断再接続・無データが続く状態の停止、実認識までの時間を実機で確認する。通常のマイク/ループバックの開始・停止・再開始はサイクル10で確認済み。
 3. 全体計測で残る重い箇所を選び、次のRust化を判断する。PyAudio置換・OCR認識器の置換・OverlayのGPU直接提出は、それぞれ効果と互換性を確認してから設計する。
 
 コミット対象はソース・テスト・ライセンス・手順・計測JSON。`tmp/`の実行ログ、wheel/DLL、ビルド出力、録音や画像データは含めない。
 
-コミット前の独立対象監査はLGTM。最新検証のソース・ベンチ・ログhashを再照合し一致。実装変更がないためテストは再実行していない。staged diffの空白検査は第三者通知の末尾空行1件のみを例外として保持し、それ以外はPASS。通知を検証済みwheelとbyte単位で一致させるためであり、ライセンス本文の変更はない。
+前回`b9be99e7`のコミット前監査はLGTM。検証時のソース・ベンチ・ログhashを再照合し一致。前回は実装変更がなかったためテストを再実行していない。前回staged diffの空白検査は第三者通知の末尾空行1件のみを例外として保持し、それ以外はPASS。通知を検証済みwheelとbyte単位で一致させるためであり、ライセンス本文の変更はない。
 
 ## 基準と完了条件
 
@@ -215,6 +217,42 @@
 - 新DLLを`tmp/cycle9/native-site`へ隔離導入し、CPU/CUDAの限定PyInstaller build/runともexit 0。ソースPYTHONPATHなしの隔離cwdで6 API/24正規化形式/resampler状態/発話内raw-WAV再利用/Whisper入力変更隔離を確認。4 PythonモジュールのPYZ code object、新pyd、notice全文も照合一致。SDK/logger/モデルはstub。配布spec・依存を変えていないため全sidecarは再構築せず、全sidecarの最終確認は7/8時点として区別する。
 - 実機録音・外部HTTP・GPU推論は未実行。共有venv、ユーザーの既存変更、commit/pushに変更なし。ログと再現spec/scriptは`tmp/cycle9`。初回`python -m maturin`は隔離targetのexeを見つけられなかったため、既存maturin 1.8.3のexeを直接起動してビルド成功。環境検査のtorch metadata欠如は「未導入」と記録する方式に修正し成功し、アプリの修正では解消していない。
 
+## チェックポイント後の検証（サイクル10、2026-10-08）
+
+- `b9be99e7f27ff97abbad2c6f3abd1d218263404b`を基準に再開。製品ソース・共有venvは変更せず、最新9のpydを使ってCPU/CUDA全sidecarを`tmp/cycle10-sidecar`へ並行構築し、両方exit 0。CPU約1646秒・1,225,617,338 bytes/3,182 files、CUDA約1574秒・3,075,191,868 bytes/3,193 files。旧7/8の配布物は保持。本番specとの差はパス・探索先・限定runtime hookのみで、289入力ファイルをhash固定し構築後も一致。独立harness/specレビューLGTM。
+- ソースPYTHONPATHなし・隔離cwdから両exeの限定テストがexit 0。native 6 API、24形式の正規化とresampler状態、raw/WAV再利用、Whisper入力の変更隔離、8/44.1/96/192kHz FLAC復号一致を確認。Google HTTPとWhisperモデルをmockにし、通常controller起動前に終了する。両PYZの音声9モジュールを現行code objectと照合し一致。最新pyd・ライセンス全文・OCRモデル・固定cv2のhash、glfw同梱、CUDA数学DLL11本を確認。旧SR module・dist-info・付属FLAC exeは0。既存spec由来の存在しない`audio_pipeline` hidden import等の非致命診断は残る。
+- 配布検証の永続結果・入力hash・再現scriptは`docs/benchmarks/audio_full_sidecar_cycle10_2026-10-08.json`に保存。親も結果JSONと入力freeze・実exe/native hash・配布file数/bytesを再照合し一致。
+- 最終独立監査LGTM。実exe内の12モジュール・mainloop・検証hookを現行ソースと照合し一致。前回7/8の配布物から削除0、既存cv2/model/license/glfw/font/translation資産のhash変更0。両版で共有venv由来の`opencv_videoio_ffmpeg4110_64.dll`が1本（27,954,688 bytes）余分に収集されていた。固定4.10の資産と動作は維持され、今回のnative検証はPASS。配布最小化時の収集元統一をlow課題として残す。289入力のfreezeは共有venv全体の固定ではない。
+- 最新DLLで既定マイク（44.1kHz/mono）とWASAPIループバック（48kHz/stereo）をCPU/CUDA各3回起動し、音量取得、pause要求、同時stop、再開始、繰返しstop、解放を確認。全回両方でmeter受信、device errorなし。stopはCPU31.288/10.940/22.342ms、CUDA26.404/19.591/44.665ms。音声は破棄し保存・送信しない。物理抜き差し、Windows既定endpointの切替、実認識・無音長時間停止はこの試験に含めない。
+- 各環境用にtrackedの`src-python`250ファイルを専用tmpへcopyし、copy/現行/source manifestのhash一致を確認。専用configでtelemetry・auto device選択・転写・OCR・VR UI・OBS/WebSocketをOFFにし、ユーザー設定を利用しない。Python socketのconnect/sendto/bindとDNS、requestsを拒否しHF offlineを設定。起動中の録音openは禁止、ClipboardのSteamVR検出のみFalseへ差し替える。OSレベルの通信隔離ではない。
+- 本番Main/Controller/Modelとprocess loggerを使ったsource起動をCPU/CUDA両方で確認。初期化完了、version（3.6.0-beta.1）、compute_mode（cpu/cuda）、shutdownは全て200。Main.stop後にMainのthread停止・子process exit 0。stderr空、error.log各1件は意図したHTTPガードによる更新確認失敗のみ。正常なGUI/frozen mainloop起動・モデル推論・全daemon停止の証明とは区別する。独立成果監査LGTM。
+- source起動の初回CPU試行は、検証用ready printとアプリstdout writerが混ざって不正JSONとなり、検証側が100秒timeout。Controllerは初期化完了していた。検証コードのみready.json方式へ修正し、fresh directoryで再試行して成功した。初回証跡は保持し、製品の修正・失敗と混同しない。
+- 起動時間の観測値はCPU14.27秒/CUDA16.63秒（import込み）。モデル未配置・ガード付き・全buildと同時実行のため性能比較には使わない。結果と検証scriptは`docs/benchmarks/audio_runtime_checkpoint_2026-10-08.json`、詳細ログは`tmp/cycle10-runtime`へ保存。実装変更がないため667件の音声回帰を再実行することはせず、今回追加した実行条件を検証した。
+
+## サイクル11 — 配布の収集元統一とfrozen起動確認（PARTIAL・競合発見）
+
+- サイクル10で余分なOpenCV 4.11用DLLが収集された原因を独立調査。PyInstaller 6.10.0の`pathex`は解析グラフでは先頭、実行プロセスでは末尾に追加され、cv2 hookとisolated子プロセスが共有venvのcv2を参照していた。起動前の`PYTHONPATH`をnative/cv2/sourceの隔離先に揃えたCPU/CUDA事前検査では、全て固定4.10を参照し、4100 DLLのみが収集対象になることを確認。
+- 製品specや共有venvを変更せず、`tmp/cycle11-sidecar`で全再解析・ビルド・限定smokeがCPU/CUDAとも成功。CPU 3,181 files / 1,197,668,203 bytes、CUDA 3,192 files / 3,047,242,733 bytes。10との相対ファイル差は余剰4110 DLLの除去のみ。293入力の照合を16:45:27 JSTに閉じた後、12/13の本番変更を開始した。このfreezeは現在のソースではなく変更前の履歴。
+- 本物のbootloader `__main__`を捕捉するガード付きfrozen起動は両版exit 0・IPC 200だったが、独立監査でCPUの`Model.overlay`未生成によるコールバック登録失敗を発見。runnerの初期PASSを訂正し、健全なCPU起動はFAIL、サイクル全体をPARTIALと記録。CUDAの当該試行は成功。失敗ログを保持し、再試行だけで解決扱いにしない。永続証跡は`docs/benchmarks/audio_full_sidecar_cycle11_2026-10-08.json`。
+- ビルドと並行して既存のWhisper baseモデル4ファイルを専用tmpへcopyし、ローカルSAPIで合成した定型英文をCPU/CUDA各2回実推論してPASS。実deviceはcpu/cuda、compute_typeはint8_float32/int8_float16。Rustで48kHz/stereo→mono変換後、既存providerの16kHz raw再利用と独立float配列を経由し、本物Whisperがsegmentsを生成。全4回の文が合成元と一致し、配列値・入力不変・重み原本/copy hashを確認。単一合成文のsmokeであり精度評価ではない。モデルや音声をダウンロード・外部送信せず、ユーザー録音を使わない。並行処理中の実行時間は性能比較に利用しない。`docs/benchmarks/audio_local_whisper_cycle11_2026-10-08.json`に結果・検証sourceを保存。
+- 独立調査で別の既存インストール課題も確認。`bat/install.bat`の最初の通常依存解決はrapidocr/windows-capture経由で`opencv-python`を導入し得る。後段の`--no-deps`再導入は既に入ったpackageを除去しないため、両共有venvにopencv-python 4.11/headless 4.10が併存している。検証用探索先の統一とは別に、後続12でインストール手順を是正した。
+
+## サイクル12 — OpenCVインストール衝突の修復（完了）
+
+- `bat/install.bat`の最初のrequirements導入で通常版とheadless版が同居し、後段のrapidocr/windows-capture再導入では修復できないことを確認。両opencv packageのRECORDにはcv2.pydを含む92個の共有パスがあるため、通常版のuninstall後にheadlessを必ずforce-reinstallする必要がある。
+- CPU/CUDA共通で通常版の除去→既存固定版headless 4.10.0.84の再導入→cv2実version/metadata確認を実装。requirements導入と修復の各コマンドに失敗時の即終了を追加。依存指定は変えず説明コメントを更新。11の入力照合を閉じた後、レビュー・試験済みドラフトを本番2ファイルへ反映し、独立最終レビューもLGTM。toolchain encodingテスト3件PASS。
+- 使い捨てvenvと取得済みwheelのみで実cmd/pipを実行。headless 4.10→通常版4.11で衝突再現、修復、修復の再実行、空wheelhouseで復元失敗と後続処理禁止、その後の再試行で復旧を確認。11段階のうち失敗注入だけ期待exit 1、他はexit 0。cv2 4.10、通常版metadataなし、FFmpeg 4100のみ、画像変換成功を検査。CPU/CUDA両ドラフトのblockは実試験用blockと一致。独立成果監査もLGTM。
+- 証跡と再現scriptは`docs/benchmarks/opencv_install_repair_cycle12_2026-10-08.json`。共有venvを変更する全installerは実行しない。`pip install -r requirements.txt`単体では衝突が残り得ること、headless代替のためpip checkがopencv-python metadata欠落を報告し得ることは制約として残る。
+
+## サイクル13 — 先行heartbeatによる初期化競合の修正（実装済み・配布最終検証は未完）
+
+- 11のCPU失敗は、先行`/run/feed_watchdog`がhandler threadから重いModel初期化を開始し、main thread側の初期化・callback登録と競合したもの。`feedWatchdog()`は生成済みwatchdogだけを更新し、未生成なら戻る最小修正にした。watchdog生成後は重い初期化の途中でもfeed可能。一般の全IPC初期化競合を解決する変更ではない。
+- 独立設計・実装レビューLGTM。新規6テストで未初期化/初期化失敗時、初期化中feed、7 callback保持、例外伝播を確認。関連テストはCPU/CUDA各24件＋2 subtests PASS（既存警告4件）。CPUは最終のテスト内lint修正前、CUDAは修正後。製品ソースは両実行間で不変。ruff 0.14.4 PASS。旧checkpointのメソッドを子processで差し戻すと新規試験が3 failures / 2 errorsになり、不具合検出を確認。
+- 11のAnalysis TOCと依存資産を再利用してPYZ/EXE/COLLECTを再構築。両ログにCOLLECT完了があり、配布exeの限定smokeも両版PASS。全依存の再解析ではなく、build process終了コードの直接回収と新旧全PYZ/資産hash最終照合は未完。初回specのnamespace `'-'`に対する誤assertは検証specのみ修正し、初回ログも保持。
+- 強化した起動harnessは、先行heartbeatで資源が生成されないこと、初期化後のOverlay 5個＋mute＋watchdogのcallback実体、stdout JSON・stderr空・期待したHTTPガード例外のみを検査する。独立harnessレビューLGTM。
+- 引継ぎ依頼でCPU/CUDA起動runnerとその専用exeを停止。copy後の起動途中で停止し、`result.json`は未生成。PASSとは扱わず、fresh suffix付きで再実行する。`tmp/cycle13-startup`の途中ログ・コピーは保持。永続checkpointは`docs/benchmarks/audio_startup_heartbeat_cycle13_2026-10-08.json`。
+- 引継ぎcheckpointの独立対象監査LGTM。12ファイルのstageに一時配布物・録音・重みなし。JSON 6件の構文と11/13のPARTIAL維持、staged diffの空白検査PASS。修正後frozen起動・配布物照合の完了を意味しない。
+
 ## 残る条件と次のサイクル
 
 - サイクル3Bの実装・独立レビュー・対象テスト・限定実機確認・CPU/CUDA配布検証、および3Cの多チャンネル変換・独立レビュー・互換/性能比較・CPU/CUDA最小exe検証は完了。
@@ -225,4 +263,5 @@
 - 既存の8秒timeoutはprobe呼び出し元を復帰させるもので、ハングしたPyAudio呼出しや保持lockを強制解放する保証はない。本番openのtimeout化も今回の変更に含めない。
 - 実音声の外部送信やクラウド認証の導入は行っていない。Googleは従来の経路を独立clientへ移し、別のクラウドサービスへは変更していない。
 - OCRは4AのCPU画素変換と5の入力整形、Overlayは4Bの起動演出透過処理を実装。最新developの再学習モデルで129画像の旧新同値を確認。GPU直接提出、モデル/認識ロジックの変更、通常overlay描画全体の性能は別条件。
-- サイクル1〜9を上記中間チェックポイントとしてローカルcommitに保存する。pushとdevelopへのマージは未実施。
+- cv2の収集元統一は11で確認済み、installerの衝突修復は12で反映済み。13の配布物最終照合とfrozen起動を最初に完了し、その後GUIと配布版実モデル推論の結合を確認する。
+- 1〜9はローカルcommit `b9be99e7`、10〜13は今回の引継ぎcheckpointへ保存。13の未完条件は上記のとおり。pushとdevelopへのマージは未実施。
