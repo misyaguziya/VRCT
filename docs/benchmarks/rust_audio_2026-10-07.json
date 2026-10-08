@@ -1,0 +1,209 @@
+{
+  "base_commit": "307dd79615f5529f03a411961b215b3863feecbd",
+  "cpu": "Intel Core i7-9700K @ 3.60GHz",
+  "rustc": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+  "scope": "Offline synthetic PCM. Process-local conversion timings, not ASR, network, or UI latency.",
+  "selected_configuration": "LPC order 4; single thread; release LTO thin",
+  "source_sha256": {
+    "native/vrct-audio/src/lib.rs": "3de8821ceb1183663bacee707c0229dd55e2b9835db5e3711a3fa6ef72d41b1e",
+    "native/vrct-audio/Cargo.lock": "7c97f70c2edb8075bf0b06fa88b19f88fd213f926191aec4623bf49172bff36d",
+    "tools/benchmark_audio_native.py": "7545aa363abb5516db5d57f2ed70b0cff161bc720e1003bbbfbf6ab395d2faca"
+  },
+  "experiments": {
+    "default_lpc10": {
+      "python": "3.11.5",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "input": "synthetic tone + seeded noise; no network",
+      "repeats": 9,
+      "results": [
+        {
+          "operation": "flac",
+          "rate": 16000,
+          "seconds": 3,
+          "old_bytes": 81655,
+          "native_bytes": 73707,
+          "old_median_ms": 11.4992,
+          "native_median_ms": 2.1126
+        },
+        {
+          "operation": "flac",
+          "rate": 16000,
+          "seconds": 15,
+          "old_bytes": 374995,
+          "native_bytes": 368212,
+          "old_median_ms": 18.075,
+          "native_median_ms": 11.2942
+        },
+        {
+          "operation": "flac",
+          "rate": 48000,
+          "seconds": 3,
+          "old_bytes": 228187,
+          "native_bytes": 220394,
+          "old_median_ms": 14.887,
+          "native_median_ms": 6.9861
+        },
+        {
+          "operation": "flac",
+          "rate": 48000,
+          "seconds": 15,
+          "old_bytes": 1107615,
+          "native_bytes": 1101599,
+          "old_median_ms": 34.4235,
+          "native_median_ms": 35.8376
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 16000,
+          "channels": 2,
+          "old_median_ms": 0.023883599999999998,
+          "native_median_ms": 0.0041417
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 48000,
+          "channels": 2,
+          "old_median_ms": 0.0559005,
+          "native_median_ms": 0.0229568
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 48000,
+          "channels": 6,
+          "old_median_ms": 0.0629624,
+          "native_median_ms": 0.025220799999999998
+        }
+      ]
+    },
+    "lpc_disabled": {
+      "python": "3.11.5",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "input": "synthetic tone + seeded noise; no network",
+      "repeats": 9,
+      "results": [
+        {
+          "operation": "flac",
+          "rate": 16000,
+          "seconds": 3,
+          "old_bytes": 81655,
+          "native_bytes": 75847,
+          "old_median_ms": 11.5673,
+          "native_median_ms": 0.9447
+        },
+        {
+          "operation": "flac",
+          "rate": 16000,
+          "seconds": 15,
+          "old_bytes": 374995,
+          "native_bytes": 379047,
+          "old_median_ms": 18.1321,
+          "native_median_ms": 5.7387
+        },
+        {
+          "operation": "flac",
+          "rate": 48000,
+          "seconds": 3,
+          "old_bytes": 228187,
+          "native_bytes": 225830,
+          "old_median_ms": 14.937,
+          "native_median_ms": 3.4644
+        },
+        {
+          "operation": "flac",
+          "rate": 48000,
+          "seconds": 15,
+          "old_bytes": 1107615,
+          "native_bytes": 1129044,
+          "old_median_ms": 34.6398,
+          "native_median_ms": 18.4389
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 16000,
+          "channels": 2,
+          "old_median_ms": 0.024183200000000002,
+          "native_median_ms": 0.0042543
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 48000,
+          "channels": 2,
+          "old_median_ms": 0.0559165,
+          "native_median_ms": 0.023081400000000002
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 48000,
+          "channels": 6,
+          "old_median_ms": 0.0625368,
+          "native_median_ms": 0.0252415
+        }
+      ]
+    },
+    "selected_lpc4": {
+      "python": "3.11.5",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "input": "synthetic tone + seeded noise; no network",
+      "repeats": 9,
+      "results": [
+        {
+          "operation": "flac",
+          "rate": 16000,
+          "seconds": 3,
+          "old_bytes": 81655,
+          "native_bytes": 75302,
+          "old_median_ms": 11.48,
+          "native_median_ms": 1.5757
+        },
+        {
+          "operation": "flac",
+          "rate": 16000,
+          "seconds": 15,
+          "old_bytes": 374995,
+          "native_bytes": 376330,
+          "old_median_ms": 18.1975,
+          "native_median_ms": 8.7468
+        },
+        {
+          "operation": "flac",
+          "rate": 48000,
+          "seconds": 3,
+          "old_bytes": 228187,
+          "native_bytes": 220518,
+          "old_median_ms": 14.8796,
+          "native_median_ms": 5.3199
+        },
+        {
+          "operation": "flac",
+          "rate": 48000,
+          "seconds": 15,
+          "old_bytes": 1107615,
+          "native_bytes": 1102360,
+          "old_median_ms": 34.6203,
+          "native_median_ms": 27.466
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 16000,
+          "channels": 2,
+          "old_median_ms": 0.0238765,
+          "native_median_ms": 0.004281699999999999
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 48000,
+          "channels": 2,
+          "old_median_ms": 0.056328,
+          "native_median_ms": 0.023083
+        },
+        {
+          "operation": "normalizer_32ms",
+          "rate": 48000,
+          "channels": 6,
+          "old_median_ms": 0.06285980000000001,
+          "native_median_ms": 0.0251409
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "cycle7-parent-verification.json": {
+    "status": "PASS",
+    "benchmark_cases": 20,
+    "baseline_ast_equal": true,
+    "source_and_native_hashes_match": true,
+    "mit_text_exact": true,
+    "wheel_notice_and_binary_match": true,
+    "wheel_sha256": "4107b409379ae55ce61520fcc3b972f9ac1da52b141bb52f3e1221eb394bcb33",
+    "native_sha256": "497de5454e8faf87c5d581a31bfb883eb7598c363b831340596bad1608576537"
+  },
+  "cycle8-parent-verification.json": {
+    "status": "PASS",
+    "cases": 54,
+    "baseline_oracles_match_ast": true,
+    "current_and_baseline_hashes_match": true,
+    "all_inputs_equal": true,
+    "improved_case_count": 42,
+    "selected": [
+      {
+        "operation": "raw",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 1,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 6.8451,
+        "current_median_ms": 7.0616
+      },
+      {
+        "operation": "raw",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 3,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 22.0473,
+        "current_median_ms": 8.5658
+      },
+      {
+        "operation": "raw",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 5,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 47.2098,
+        "current_median_ms": 10.9837
+      },
+      {
+        "operation": "wav",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 1,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 7.7011,
+        "current_median_ms": 7.3512
+      },
+      {
+        "operation": "wav",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 3,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 25.7455,
+        "current_median_ms": 8.0738
+      },
+      {
+        "operation": "wav",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 5,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 41.8878,
+        "current_median_ms": 8.0411
+      },
+      {
+        "operation": "whisper",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 1,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 8.749,
+        "current_median_ms": 9.1593
+      },
+      {
+        "operation": "whisper",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 3,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 25.1496,
+        "current_median_ms": 8.6257
+      },
+      {
+        "operation": "whisper",
+        "rate": 48000,
+        "seconds": 15,
+        "candidates": 5,
+        "batch": 1,
+        "input_equal": true,
+        "previous_median_ms": 37.5518,
+        "current_median_ms": 8.1237
+      }
+    ]
+  },
+  "frozen-verification.json": {
+    "status": "PASS",
+    "scope": "limited offline frozen modules, SDK/logger/inference stubs",
+    "builds": {
+      "cpu": {
+        "status": "PASS",
+        "code_objects_match_current_source": {
+          "pcm_audio": "e3cbc38c317a6e3bd8db2f3b405d334d21d152940d262063efcc5e0867bffbb7",
+          "native_audio": "6cae2f1c0522cf639bc3d8809be9e3ec0122d2c7967f7153c33c8413abf68584",
+          "audio_vad": "dc8e0f40f7634049fbd53c67dcb4f19faa554998d2043e011df863691c86b412",
+          "transcription_providers": "29266ea74dd7a4d4f446f82e07925469df127f8826b1bccd76d7a0daf34bd77d"
+        },
+        "native_sha256": "497de5454e8faf87c5d581a31bfb883eb7598c363b831340596bad1608576537",
+        "notice_matches": true,
+        "smoke": {
+          "status": "PASS",
+          "native_sha256": "497de5454e8faf87c5d581a31bfb883eb7598c363b831340596bad1608576537",
+          "native_apis": 6,
+          "normalizer_cases": 24,
+          "state_and_pcm_equal": true,
+          "canonical_raw_wav_reused": true,
+          "whisper_input_mutation_isolated": true,
+          "scope": "offline limited modules; SDK/logger/inference stubs"
+        }
+      },
+      "cuda": {
+        "status": "PASS",
+        "code_objects_match_current_source": {
+          "pcm_audio": "e3cbc38c317a6e3bd8db2f3b405d334d21d152940d262063efcc5e0867bffbb7",
+          "native_audio": "6cae2f1c0522cf639bc3d8809be9e3ec0122d2c7967f7153c33c8413abf68584",
+          "audio_vad": "dc8e0f40f7634049fbd53c67dcb4f19faa554998d2043e011df863691c86b412",
+          "transcription_providers": "29266ea74dd7a4d4f446f82e07925469df127f8826b1bccd76d7a0daf34bd77d"
+        },
+        "native_sha256": "497de5454e8faf87c5d581a31bfb883eb7598c363b831340596bad1608576537",
+        "notice_matches": true,
+        "smoke": {
+          "status": "PASS",
+          "native_sha256": "497de5454e8faf87c5d581a31bfb883eb7598c363b831340596bad1608576537",
+          "native_apis": 6,
+          "normalizer_cases": 24,
+          "state_and_pcm_equal": true,
+          "canonical_raw_wav_reused": true,
+          "whisper_input_mutation_isolated": true,
+          "scope": "offline limited modules; SDK/logger/inference stubs"
+        }
+      }
+    }
+  },
+  "independent_tests": {
+    "cycle7": {
+      "cpu": 589,
+      "cuda": 589,
+      "rust": 13,
+      "skipped": 0
+    },
+    "cycle8": {
+      "cpu": 243,
+      "cuda": 243,
+      "subtests_each": 3,
+      "skipped": 0
+    },
+    "reviews": {
+      "cycle7": "LGTM",
+      "cycle8": "LGTM"
+    }
+  }
+}

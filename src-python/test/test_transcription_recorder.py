@@ -1,6 +1,6 @@
 """Tests for transcription_recorder.
 
-`BaseEnergyAndAudioRecorder` は speech_recognition.Recognizer を用いた
+`BaseEnergyAndAudioRecorder` は NativeAudioListener を用いた
 `listen_energy_and_audio_in_background` に発話区間検出とフレーズ境界を委ねる
 (ADR-0004)。このため統合的な入力→キュー投入までの検証は
 listen_energy_and_audio_in_background 側のロジックに寄りかかるが、ここでは
@@ -19,7 +19,6 @@ import unittest
 from queue import Queue
 from unittest.mock import patch, MagicMock
 
-from speech_recognition import AudioSource
 from errors import ErrorCode
 
 from models.transcription.transcription_recorder import (
@@ -63,7 +62,7 @@ class TestCreateMicrophone(unittest.TestCase):
         default_source = FakeAudioSource(opens=True)
 
         with patch(
-            "models.transcription.transcription_recorder.Microphone",
+            "models.transcription.transcription_recorder.AudioCaptureSource",
             side_effect=[selected_source, default_source],
         ):
             source = _create_microphone({}, device_index=10)
@@ -80,7 +79,7 @@ class TestCreateMicrophone(unittest.TestCase):
         default_source = FakeAudioSource(opens=False)
 
         with patch(
-            "models.transcription.transcription_recorder.Microphone",
+            "models.transcription.transcription_recorder.AudioCaptureSource",
             side_effect=[selected_source, default_source],
         ):
             with self.assertRaisesRegex(OSError, "audio devices could not be opened"):
@@ -107,7 +106,7 @@ class TestCreateMicrophone(unittest.TestCase):
                 pass
 
         with patch(
-            "models.transcription.transcription_recorder.Microphone",
+            "models.transcription.transcription_recorder.AudioCaptureSource",
             return_value=HangingSource(),
         ):
             with patch(
@@ -163,12 +162,12 @@ class TestLockedAudioSource(unittest.TestCase):
     faulthandler の crash_trace.log で実際に確認済み (2026-08-19)。
     """
 
-    def test_is_recognized_as_an_audio_source(self) -> None:
-        # speech_recognition.listen_energy_and_audio_in_background は
-        # `assert isinstance(source, AudioSource)` で弾くため、ラッパー
-        # 自身が AudioSource のサブクラスである必要がある。
-        wrapped = _LockedAudioSource(FakeAudioSource(opens=True))
-        self.assertIsInstance(wrapped, AudioSource)
+    def test_wrapper_accepts_plain_capture_source(self) -> None:
+        source = FakeAudioSource(opens=True)
+        wrapped = _LockedAudioSource(source)
+        with wrapped as opened:
+            self.assertIs(opened, source)
+        self.assertTrue(source.exit_called)
 
     def test_enter_exit_hold_pyaudio_op_lock(self) -> None:
         inner = FakeAudioSource(opens=True)
@@ -251,7 +250,7 @@ class TestRecorderChunkSize(unittest.TestCase):
         selected_source.channels = 2
 
         with patch(
-            "models.transcription.transcription_recorder.Microphone"
+            "models.transcription.transcription_recorder.AudioCaptureSource"
         ) as mock_microphone:
             mock_microphone.return_value = selected_source
             SelectedSpeakerEnergyAndAudioRecorder(
@@ -278,7 +277,7 @@ class TestRecorderChunkSize(unittest.TestCase):
         speaker_source.channels = 2
 
         with patch(
-            "models.transcription.transcription_recorder.Microphone"
+            "models.transcription.transcription_recorder.AudioCaptureSource"
         ) as mock_microphone:
             mock_microphone.side_effect = [mic_source, speaker_source]
 
@@ -374,7 +373,7 @@ class TestRecorderPipeline(unittest.TestCase):
         self.assertEqual(kwargs.get("record_timeout"), float("inf"))
 
     def test_stop_force_stops_stream_before_delegating(self) -> None:
-        """listener が stream.read() でブロックしていると、speech_recognition
+        """listener が stream.read() でブロックしていると、stopper
         側の stop (listener_thread.join() にタイムアウト無し) が永久に
         返らない (WASAPI ループバック無音時などで実際に発生を確認済み、
         過去に 9665bb5a で修正されたが VAD 実装ごとの revert で失われて
@@ -784,7 +783,7 @@ class TestVadRecorderPipeline(unittest.TestCase):
     def test_audio_callback_pushes_raw_bytes_and_segment_reason(self) -> None:
         """VAD 経由のキューアイテムはエネルギー閾値方式と異なり
         (raw_bytes, recorded_at, reason) の3要素タプル。reason は
-        AudioData.segment_reason (custom_speech_recognition フォークが
+        listenerのsegment_reason (listenerが
         segmenter の SpeechSegment.reason を伝播したもの) からそのまま
         引き継がれる (AudioTranscriber が max_duration/自然な区切りを
         区別するために必要、2026-09-06)。"""

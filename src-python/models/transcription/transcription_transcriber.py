@@ -1,11 +1,11 @@
-"""Runtime transcriber that wraps Google SpeechRecognition and faster-whisper.
+"""Runtime transcriber that wraps Google web recognition and faster-whisper.
 
 This class focuses on converting incoming raw audio buffers into text using
 either the Google web recognizer (online) or a local Whisper model (offline).
 
 キューには常に (raw_bytes, recorded_at) タプルが積まれる。エネルギー
 閾値方式 (既定) では、フレーズ境界は
-`speech_recognition.listen_energy_and_audio_in_background` の
+`NativeAudioListener.listen_energy_and_audio_in_background` の
 phrase_time_limit と AudioTranscriber.transcribeAudioQueue の
 phrase_timeout/MAX_PHRASE_DURATION_SECONDS で決まる。VAD方式
 (config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD、2026-09-06にオプトインとして再導入) では、
@@ -23,15 +23,14 @@ partial (発話中の暫定結果) 通知は行わない。
 """
 
 import time
-from io import BytesIO
 from queue import Empty
 from threading import Event
-import wave
+import audioop
 from typing import Any, Dict, List, Optional
-from speech_recognition import Recognizer, AudioData, AudioFile
-from speech_recognition.exceptions import UnknownValueError
+from .pcm_audio import PcmAudio
+from .native_audio import get_native_audio
+from .google_speech import GoogleSpeechClient
 from datetime import datetime, timedelta
-from pyaudiowpatch import get_sample_size, paInt16
 from .transcription_whisper import getWhisperModel, checkWhisperWeight
 from .transcription_providers import (
     GoogleProvider,
@@ -42,16 +41,15 @@ from .transcription_providers import (
 )
 from .transcription_openai_compatible import TRANSCRIPTION_API_ENGINES as _API_TRANSCRIPTION_ENGINES
 
-# OpenAI互換系 (base_url/model差し替え) に加えて、独自プロトコルの
-# Deepgramも「APIキー/モデルを持つクラウドエンジン」として同列に扱う箇所
-# (last_recognition_errorのリセット対象等) で使う。
-_CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
-
 from pydub import AudioSegment
 from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
 from utils import errorLogging, printLog
 
 import warnings
+
+# OpenAI互換系に加えて、独自プロトコルのDeepgramもクラウド系として扱う。
+_CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
+
 warnings.simplefilter('ignore', RuntimeWarning)
 
 PHRASE_TIMEOUT = 3
@@ -145,8 +143,7 @@ class AudioTranscriber:
         # カウントし、テキストが得られた場合のみ「成功」とする。
         self.asr_attempts = 0
         self.asr_successes = 0
-        self.audio_recognizer = Recognizer()
-        self.audio_recognizer.operation_timeout = GOOGLE_RECOGNIZE_TIMEOUT_SECONDS
+        self.google_client = GoogleSpeechClient(timeout=GOOGLE_RECOGNIZE_TIMEOUT_SECONDS)
         self.transcription_engine = "Google"
         self.whisper_model = None
         self.whisper_weight_type = whisper_weight_type
@@ -203,7 +200,7 @@ class AudioTranscriber:
             return LocalWhisperProvider(self.whisper_model)
         if self.transcription_engine in _CLOUD_TRANSCRIPTION_ENGINES:
             return self._api_provider
-        return GoogleProvider(self.audio_recognizer)
+        return GoogleProvider(self.google_client)
 
     def transcribeAudioQueue(
         self,
@@ -546,9 +543,6 @@ class AudioTranscriber:
                             no_repeat_ngram_size=no_repeat_ngram_size,
                             force_language=force_language,
                         )
-                    except UnknownValueError:
-                        language_calls.append(f"{language}=nomatch")
-                        continue
                     except TranscriptionApiError as exc:
                         self.last_recognition_error = True
                         self.last_api_error_code = exc.error_code
@@ -567,22 +561,13 @@ class AudioTranscriber:
                     if text:
                         language_calls.append(f"{language}={elapsed_ms}ms")
                     else:
-                        # 「認識結果0件」を例外ではなく空文字で返すプロバイダが
-                        # ある。GoogleProvider は UnknownValueError を内部で
-                        # 握って ("", 0.0, False) を返すため、上の
-                        # except UnknownValueError は Google では一度も発火
-                        # しない。ここで拾わないと、何も認識できなかった
-                        # 呼び出しが成功したかのように所要時間だけログに出て、
-                        # 失敗率の内訳 (nomatch なのか timeout なのか) を
-                        # 実ログから追えない。
+                        # 認識結果なしと通信失敗をログでも区別する。
                         language_calls.append(f"{language}=nomatch({elapsed_ms}ms)")
                     if confidence > best["confidence"]:
                         best = {"confidence": confidence, "text": text, "language": language}
                     if is_definitive:
                         break
 
-        except UnknownValueError:
-            pass
         except AudioPipelineError:
             raise
         except Exception as exc:  # noqa: BLE001 - convert to pipeline failure
@@ -621,31 +606,34 @@ class AudioTranscriber:
         )
         return True
 
-    def processMicData(self) -> AudioData:
-        audio_data = AudioData(
-            self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"]
+    def processMicData(self) -> PcmAudio:
+        # Microphone capture is mono even when device metadata reports more channels.
+        return PcmAudio(
+            self.audio_sources["last_sample"], self.audio_sources["sample_rate"],
+            self.audio_sources["sample_width"],
         )
-        return audio_data
 
-    def processSpeakerData(self) -> AudioData:
-        temp_file = BytesIO()
-        with wave.open(temp_file, 'wb') as wf:
-            wf.setnchannels(self.audio_sources["channels"])
-            wf.setsampwidth(get_sample_size(paInt16))
-            wf.setframerate(self.audio_sources["sample_rate"])
-            wf.writeframes(self.audio_sources["last_sample"])
-        temp_file.seek(0)
-
-        if self.audio_sources["channels"] > 2:
-            audio = AudioSegment.from_file(temp_file, format="wav")
-            mono_audio = audio.set_channels(1)
-            temp_file = BytesIO()
-            mono_audio.export(temp_file, format="wav")
-            temp_file.seek(0)
-
-        with AudioFile(temp_file) as source:
-            audio = self.audio_recognizer.record(source)
-        return audio
+    def processSpeakerData(self) -> PcmAudio:
+        raw = self.audio_sources["last_sample"]
+        rate = self.audio_sources["sample_rate"]
+        width = self.audio_sources["sample_width"]
+        channels = self.audio_sources["channels"]
+        if type(channels) is not int or channels < 1:
+            raise ValueError("invalid speaker channel count")
+        if type(width) is not int or not 1 <= width <= 4 or len(raw) % (width * channels):
+            raise ValueError("invalid speaker PCM frame")
+        if channels == 2:
+            # AudioFile used a saturating sum, not the usual channel average.
+            raw = audioop.tomono(raw, width, 1, 1)
+        elif channels > 2:
+            native = (get_native_audio() if width == 2 and channels <= 256
+                      and len(raw) <= 64 * 1024 * 1024 else None)
+            if native is not None:
+                raw = native.speaker_downmix_pcm16(raw, channels)
+            else:
+                raw = AudioSegment(data=raw, sample_width=width, frame_rate=rate,
+                                   channels=channels).set_channels(1).raw_data
+        return PcmAudio(raw, rate, width)
 
     def updateTranscript(self, result: dict) -> None:
         """呼び出し元 (_finalizeAndTranscribe) は完成したフレーズ1件に

@@ -74,15 +74,17 @@ class TestVrchatSceneCheck(unittest.TestCase):
         capture._mirror.read.assert_not_called()
 
     def test_vrchat_frame_is_returned_as_bgr(self) -> None:
-        # D3D11Mirror は収集ツール向けに RGB で返す。OCR は HWND 経路と同じ BGR。
+        # OCR requests BGR directly; no second channel reversal/copy is needed.
         capture = self._make(renderer=100, focus=100)
-        rgb = np.zeros((2, 2, 3), dtype=np.uint8)
-        rgb[..., 0] = 10
-        rgb[..., 2] = 30
-        capture._mirror.read.return_value = rgb
+        bgr = np.zeros((2, 2, 3), dtype=np.uint8)
+        bgr[..., 0] = 30
+        bgr[..., 2] = 10
+        capture._mirror.read.return_value = bgr
         with self._name("VRChat.exe"):
             frame = capture.capture()
         self.assertEqual(tuple(frame[0, 0]), (30, 0, 10))
+        self.assertIs(frame, bgr)
+        capture._mirror.read.assert_called_once_with(color_order="BGR")
 
     def test_repeated_failures_log_once_until_a_frame_is_read(self) -> None:
         # SteamVR 再起動中などは5秒ごとに再試行する。error.log を毎回汚さない。
@@ -91,6 +93,28 @@ class TestVrchatSceneCheck(unittest.TestCase):
             for _ in range(3):
                 self.assertIsNone(capture.capture())
         logging.assert_called_once()
+
+    def test_conversion_failure_releases_and_reconnects_next_capture(self) -> None:
+        capture = self._make(renderer=100, focus=100)
+        failed = capture._mirror
+        failed.read.side_effect = RuntimeError("pixel conversion failed")
+        replacement = MagicMock()
+        replacement.read.return_value = np.zeros((1, 1, 3), dtype=np.uint8)
+        with patch.object(capture, "_isVrchatScene", return_value=True), \
+                patch.object(capture, "isAvailable", return_value=True), \
+                patch("models.ocr.ocr_capture_openvr.openvr_session.release") as release, \
+                patch("models.ocr.ocr_capture_openvr.openvr_session.acquire") as acquire, \
+                patch("models.ocr.ocr_capture_openvr.openvr.IVRCompositor"), \
+                patch("models.ocr.ocr_capture_openvr.D3D11Mirror", return_value=replacement), \
+                patch("models.ocr.ocr_capture_openvr.errorLogging"):
+            self.assertIsNone(capture.capture())
+            failed.close.assert_called_once()
+            release.assert_called_once()
+            self.assertIsNone(capture._mirror)
+            self.assertIs(capture.capture(), replacement.read.return_value)
+            acquire.assert_called_once()
+            replacement.read.assert_called_once_with(color_order="BGR")
+            self.assertFalse(capture._failure_logged)
 
     def test_vrchat_scene_is_detected(self) -> None:
         with self._name("VRChat.exe"):

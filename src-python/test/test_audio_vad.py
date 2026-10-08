@@ -347,7 +347,7 @@ class TestVadSegmenterDiagnosticCallback(unittest.TestCase):
 
 
 class TestVadRecognizerAdapter(unittest.TestCase):
-    """`custom_speech_recognition` の listen_with_segmenter_in_background が
+    """自前listenerの listen_with_segmenter_in_background が
     要求する sample_rate/sample_width/process/flush プロトコルへ
     VadSegmenter を適合させるアダプタのテスト。
     """

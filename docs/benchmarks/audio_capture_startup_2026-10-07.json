@@ -1,0 +1,120 @@
+{
+  "scope": "Actual default-device constructor plus probe open/close only; no reads or ASR",
+  "repeats": 7,
+  "results": [
+    {
+      "device": "mic",
+      "index": 1,
+      "rate": 44100,
+      "channels": 1,
+      "milliseconds": {
+        "legacy": [
+          281.6744,
+          204.9617,
+          173.8021,
+          158.9948,
+          158.9115,
+          171.8412,
+          256.8147
+        ],
+        "current": [
+          109.0903,
+          120.5198,
+          88.5872,
+          90.6761,
+          80.6435,
+          89.7107,
+          90.1691
+        ]
+      },
+      "median_ms": {
+        "legacy": 173.8021,
+        "current": 90.1691
+      },
+      "pyaudio_init_counts": {
+        "legacy": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "current": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "device": "loopback",
+      "index": 39,
+      "rate": 48000,
+      "channels": 2,
+      "milliseconds": {
+        "legacy": [
+          157.0055,
+          162.6961,
+          160.303,
+          156.1133,
+          157.8771,
+          157.6226,
+          171.7817
+        ],
+        "current": [
+          85.0413,
+          81.3734,
+          82.538,
+          82.0825,
+          81.8975,
+          82.4339,
+          86.0858
+        ]
+      },
+      "median_ms": {
+        "legacy": 157.8771,
+        "current": 82.4339
+      },
+      "pyaudio_init_counts": {
+        "legacy": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "current": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  ],
+  "python": "3.11.5",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "source_sha256": {
+    "src-python/models/transcription/audio_source.py": "390926fb7e9ff91bb3fb6b193636c3441646df450d2282ddc2a27f0838e2eda2",
+    "src-python/models/transcription/audio_listener.py": "261d47e4746e915a2288f1dabbff6787072fad65a45721dab5cf113423f22db8",
+    "src-python/models/transcription/transcription_recorder.py": "ed3b9db83035d144d94b77d4952e287332ab4f357d8630fb4ae61096a510446b",
+    "tools/check_audio_capture.py": "6c1a072532f9818e609229851713efb06c27b91d617b6a00a3c2eead9c67949a"
+  },
+  "legacy_speech_recognition_sha256": "9a30e09b8dfd34e666407ca86127647268a0523675eafe5a24c9d71ac884cced",
+  "measurement_conditions": {
+    "cpu": "Intel Core i7-9700K @ 3.60GHz",
+    "concurrent_work": "PyInstaller CPU sidecar build",
+    "note": "Indicative paired medians on one machine. No warm-up iteration discarded; no audio reads in this preparation benchmark."
+  }
+}

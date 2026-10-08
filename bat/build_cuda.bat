@@ -8,6 +8,10 @@ if exist src-tauri\bin\_internal\.vrct-dev-placeholder (
     )
 )
 call .venv_cuda/Scripts/activate
+python -m pip install --no-deps ./native/vrct-audio
+if errorlevel 1 exit /b 1
+python -c "import vrct_audio; assert callable(vrct_audio.encode_flac)"
+if errorlevel 1 exit /b 1
 if "%VRCT_PYINSTALLER_CLEAN%"=="1" (
     pyinstaller spec/backend_cuda.spec --distpath src-tauri/bin --clean --noconfirm --log-level ERROR
 ) else (

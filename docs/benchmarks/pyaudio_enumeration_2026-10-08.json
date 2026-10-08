@@ -1,0 +1,361 @@
+{
+  "date": "2026-10-08",
+  "baseline_commit": "307dd79615f5529f03a411961b215b3863feecbd",
+  "cpu": "Intel Core i7-9700K @ 3.60GHz; 8 physical/logical cores",
+  "purpose": "Assess the existing PyAudio boundary; no application or Rust code changed, no speedup claimed.",
+  "scope": "Sequential isolated workers. No streams opened, no audio read/saved/transmitted. CPU/CUDA identify Python environments, not GPU execution. Instrumentation overhead included; individual stage medians need not sum to the total median.",
+  "official_release": {
+    "package": "PyAudioWPatch",
+    "version": "0.2.12.6",
+    "tag_commit": "7f0ff6ccc76b55ba1eb22a5c76ef97d8b7f48fee",
+    "cp311_win_amd64_wheel_sha256": "ff9642f32d6cc9fb183c88f36a9a34d8a7f0434dd96022ec7d235732c07c2188",
+    "extension_sha256": "6df6fafc7e446c6b663710829ec80c30bfe253f8d5a820b542ce35710a4f385d",
+    "metadata_url": "https://pypi.org/pypi/PyAudioWPatch/0.2.12.6/json",
+    "c_source_url": "https://github.com/s0d3s/PyAudioWPatch/blob/7f0ff6ccc76b55ba1eb22a5c76ef97d8b7f48fee/src/_portaudiomodule.c",
+    "verification": "Installed CPU extension matches official wheel bytes. C details read from corresponding fixed tag; reproducible rebuild from source not performed."
+  },
+  "runs": {
+    "cpu": {
+      "scope": "Isolated DeviceManager.update with no open streams in this worker; no capture or network",
+      "timing_note": "Import-time initialization is excluded. Other time includes Python instrumentation. Times are per-trial non-overlapping; only init and terminate calls are timed separately. Results do not describe updates while an existing PortAudio stream remains open.",
+      "repeats": 9,
+      "trials": [
+        {
+          "total_ms": 78.8253,
+          "initialize_ms": 78.0835,
+          "terminate_ms": 0.0923,
+          "other_ms": 0.6494999999999977,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 80.8933,
+          "initialize_ms": 79.7433,
+          "terminate_ms": 0.1311,
+          "other_ms": 1.0188999999999915,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 81.8424,
+          "initialize_ms": 81.0358,
+          "terminate_ms": 0.0984,
+          "other_ms": 0.708200000000003,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 78.6383,
+          "initialize_ms": 77.9327,
+          "terminate_ms": 0.084,
+          "other_ms": 0.621600000000004,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 79.0723,
+          "initialize_ms": 78.377,
+          "terminate_ms": 0.0998,
+          "other_ms": 0.5955000000000031,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 81.5934,
+          "initialize_ms": 80.9479,
+          "terminate_ms": 0.082,
+          "other_ms": 0.5634999999999984,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 77.3293,
+          "initialize_ms": 76.5962,
+          "terminate_ms": 0.0992,
+          "other_ms": 0.6339000000000075,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 80.8562,
+          "initialize_ms": 80.2019,
+          "terminate_ms": 0.0741,
+          "other_ms": 0.5802000000000063,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 81.3181,
+          "initialize_ms": 80.535,
+          "terminate_ms": 0.1244,
+          "other_ms": 0.6587000000000046,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        }
+      ],
+      "median_ms": {
+        "total_ms": 80.8562,
+        "initialize_ms": 79.7433,
+        "terminate_ms": 0.0984,
+        "other_ms": 0.6339000000000075
+      },
+      "snapshot_sha256": "88c1d9d4642ee37c26509a3b0e4002a6aebe19138c2f989ea0824d53cc9f4576",
+      "pyaudiowpatch": {
+        "version": "0.2.12.6",
+        "extension_sha256": "6df6fafc7e446c6b663710829ec80c30bfe253f8d5a820b542ce35710a4f385d"
+      },
+      "device_manager_sha256": "1205d550ca5353c6df1dd4708420dbcbcec9e26848e614bc7ea032eefab95d6a",
+      "python": "3.11.5",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "source_sha256": {
+        "src-python/models/transcription/audio_source.py": "390926fb7e9ff91bb3fb6b193636c3441646df450d2282ddc2a27f0838e2eda2",
+        "src-python/models/transcription/audio_listener.py": "261d47e4746e915a2288f1dabbff6787072fad65a45721dab5cf113423f22db8",
+        "src-python/models/transcription/transcription_recorder.py": "ed3b9db83035d144d94b77d4952e287332ab4f357d8630fb4ae61096a510446b",
+        "tools/check_audio_capture.py": "4113ad02ee9ebe78a42b7932e6e5c7aa402380dc6af80c36808e0798b3a950a5"
+      }
+    },
+    "cuda": {
+      "scope": "Isolated DeviceManager.update with no open streams in this worker; no capture or network",
+      "timing_note": "Import-time initialization is excluded. Other time includes Python instrumentation. Times are per-trial non-overlapping; only init and terminate calls are timed separately. Results do not describe updates while an existing PortAudio stream remains open.",
+      "repeats": 9,
+      "trials": [
+        {
+          "total_ms": 82.042,
+          "initialize_ms": 81.3726,
+          "terminate_ms": 0.076,
+          "other_ms": 0.593399999999996,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 84.2511,
+          "initialize_ms": 83.5565,
+          "terminate_ms": 0.0859,
+          "other_ms": 0.6086999999999941,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 86.669,
+          "initialize_ms": 86.03,
+          "terminate_ms": 0.0845,
+          "other_ms": 0.5544999999999958,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 79.0865,
+          "initialize_ms": 78.4061,
+          "terminate_ms": 0.087,
+          "other_ms": 0.5934000000000059,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 83.2188,
+          "initialize_ms": 82.5869,
+          "terminate_ms": 0.0803,
+          "other_ms": 0.5516000000000016,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 86.7983,
+          "initialize_ms": 85.9844,
+          "terminate_ms": 0.1905,
+          "other_ms": 0.6234000000000038,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 81.3087,
+          "initialize_ms": 80.6502,
+          "terminate_ms": 0.0838,
+          "other_ms": 0.5747000000000037,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 83.3277,
+          "initialize_ms": 82.6487,
+          "terminate_ms": 0.11,
+          "other_ms": 0.5689999999999878,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        },
+        {
+          "total_ms": 80.2235,
+          "initialize_ms": 79.5427,
+          "terminate_ms": 0.0846,
+          "other_ms": 0.596200000000005,
+          "calls": {
+            "__init__": 1,
+            "get_host_api_count": 4,
+            "get_host_api_info_by_index": 25,
+            "get_device_info_by_host_api_device_index": 93,
+            "get_device_info_by_index": 305,
+            "get_host_api_info_by_type": 2,
+            "get_loopback_device_info_generator": 12,
+            "terminate": 1
+          }
+        }
+      ],
+      "median_ms": {
+        "total_ms": 83.2188,
+        "initialize_ms": 82.5869,
+        "terminate_ms": 0.0846,
+        "other_ms": 0.593399999999996
+      },
+      "snapshot_sha256": "88c1d9d4642ee37c26509a3b0e4002a6aebe19138c2f989ea0824d53cc9f4576",
+      "pyaudiowpatch": {
+        "version": "0.2.12.6",
+        "extension_sha256": "6df6fafc7e446c6b663710829ec80c30bfe253f8d5a820b542ce35710a4f385d"
+      },
+      "device_manager_sha256": "1205d550ca5353c6df1dd4708420dbcbcec9e26848e614bc7ea032eefab95d6a",
+      "python": "3.11.5",
+      "platform": "Windows-10-10.0.26200-SP0",
+      "source_sha256": {
+        "src-python/models/transcription/audio_source.py": "390926fb7e9ff91bb3fb6b193636c3441646df450d2282ddc2a27f0838e2eda2",
+        "src-python/models/transcription/audio_listener.py": "261d47e4746e915a2288f1dabbff6787072fad65a45721dab5cf113423f22db8",
+        "src-python/models/transcription/transcription_recorder.py": "ed3b9db83035d144d94b77d4952e287332ab4f357d8630fb4ae61096a510446b",
+        "tools/check_audio_capture.py": "4113ad02ee9ebe78a42b7932e6e5c7aa402380dc6af80c36808e0798b3a950a5"
+      }
+    }
+  }
+}

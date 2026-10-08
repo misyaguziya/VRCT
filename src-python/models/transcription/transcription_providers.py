@@ -29,7 +29,8 @@ from openai import (
     OpenAI,
     RateLimitError,
 )
-from speech_recognition import AudioData, Recognizer, UnknownValueError
+from .pcm_audio import PcmAudio
+from .google_speech import GoogleSpeechClient
 
 from errors import ErrorCode
 from models.transcription.transcription_deepgram import resolveDeepgramLanguageCode
@@ -52,7 +53,7 @@ class TranscriptionApiError(Exception):
 class TranscriptionProvider(Protocol):
     def transcribe(
         self,
-        audio_data: AudioData,
+        audio_data: PcmAudio,
         language: str,
         country: str,
         *,
@@ -75,19 +76,19 @@ class TranscriptionProvider(Protocol):
 
 
 class GoogleProvider:
-    """既存の `recognize_google` 呼び出しをそのまま包む。
+    """独立した Google web recognizer client を包む。
 
     Google は候補言語ごとに別プロトコル呼び出しが必要で「検出された
     言語」という概念が無いため、`is_definitive` は常に False (呼び出し元は
     全候補を試行する、既存の挙動と同じ)。
     """
 
-    def __init__(self, recognizer: Recognizer) -> None:
-        self._recognizer = recognizer
+    def __init__(self, client: GoogleSpeechClient) -> None:
+        self._client = client
 
     def transcribe(
         self,
-        audio_data: AudioData,
+        audio_data: PcmAudio,
         language: str,
         country: str,
         *,
@@ -104,22 +105,9 @@ class GoogleProvider:
         # 再送信する」(interim_send、AudioTranscriber側) も併用しているが、
         # このプロバイダ自体は毎回渡された audio_data を1回認識するだけで
         # 良く、パディングや再送信ロジックを知る必要はない。
-        try:
-            # join_all_results=True: このエンドポイントは、1クリップに
-            # 複数の発話区間 (無音を挟んだ複数の文) が含まれる場合、それ
-            # ぞれを別々の result ブロックとして返すことがある。既定
-            # (最初のブロックだけを使う) のままだと後続の発話が黙って
-            # 失われる (2026-09-07、実機で確認・custom_speech_recognition
-            # フォーク側で修正)。これは上記のパディング対策とは独立した
-            # 別の不具合修正なので撤回せず維持する。
-            text, confidence = self._recognizer.recognize_google(
-                audio_data,
-                language=transcription_lang[language][country]["Google"],
-                with_confidence=True,
-                join_all_results=True,
-            )
-        except UnknownValueError:
-            return "", 0.0, False
+        text, confidence = self._client.recognize(
+            audio_data, language=transcription_lang[language][country]["Google"]
+        )
         return text, confidence, False
 
 
@@ -131,7 +119,7 @@ class LocalWhisperProvider:
 
     def transcribe(
         self,
-        audio_data: AudioData,
+        audio_data: PcmAudio,
         language: str,
         country: str,
         *,
@@ -142,7 +130,8 @@ class LocalWhisperProvider:
     ) -> Tuple[str, float, bool]:
         raw = np.frombuffer(
             audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16
-        ).flatten().astype(np.float32) / 32768.0
+        ).astype(np.float32)
+        raw /= 32768.0
 
         source_language = transcription_lang[language][country]["Whisper"] if force_language else None
         segments, info = self._whisper_model.transcribe(
@@ -192,7 +181,7 @@ class OpenAICompatibleTranscriptionProvider:
     それぞれ専用のインスタンスを持つ)。
 
     音声フォーマットは各API先の仕様に準拠する方針のため、現時点では
-    最も広くサポートされている WAV (`AudioData.get_wav_data()`) を使う。
+    最も広くサポートされている WAV (`PcmAudio.get_wav_data()`) を使う。
     """
 
     def __init__(self, api_key: str, base_url: str, model: str, engine_name: str) -> None:
@@ -204,7 +193,7 @@ class OpenAICompatibleTranscriptionProvider:
 
     def transcribe(
         self,
-        audio_data: AudioData,
+        audio_data: PcmAudio,
         language: str,
         country: str,
         *,
@@ -301,7 +290,7 @@ class DeepgramProvider:
 
     def transcribe(
         self,
-        audio_data: AudioData,
+        audio_data: PcmAudio,
         language: str,
         country: str,
         *,

@@ -331,7 +331,9 @@ def safe_transcription(transcriber, audio_queue, languages, countries):
 ## 依存関係
 
 ### 必須依存関係
-- `speech_recognition`: Google音声認識
+- 自前 `GoogleSpeechClient`: Google認識のHTTP通信・応答解析
+- `vrct_audio`: 8000〜96000HzのFLAC生成（必須）
+- `av==18.1.0`: 96000Hz超のFLAC生成（655350Hz以下・10の倍数、PCM16入力64MiB以下）
 - `faster_whisper`: Whisper音声認識
 - `pyaudiowpatch`: 音声入力
 - `pydub`: 音声処理

@@ -1,0 +1,1852 @@
+{
+  "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "numpy": "1.26.4",
+  "repeats": 9,
+  "fresh_clip_each_trial": true,
+  "baseline_pcm_sha256": "501cd5adbf4952cfd39e29da8b59bb708616df84e628358b7a7fbeba09874a57",
+  "baseline_provider_sha256": "9e873e4e2eaa89052021038878d07e85d883cf9b62bbcc71ff90c5c8ebd41061",
+  "source_sha256": {
+    "src-python/models/transcription/pcm_audio.py": "e3cbc38c317a6e3bd8db2f3b405d334d21d152940d262063efcc5e0867bffbb7",
+    "src-python/models/transcription/transcription_providers.py": "29266ea74dd7a4d4f446f82e07925469df127f8826b1bccd76d7a0daf34bd77d",
+    "tools/benchmark_audio_preparation.py": "86a3498fed06786b2a9ac6b432c0f8f218c4c070de97327dbfbf4893f0689117"
+  },
+  "results": [
+    {
+      "operation": "raw",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.001308,
+      "current_median_ms": 0.001553,
+      "trials_ms": {
+        "previous": [
+          0.001324,
+          0.001298,
+          0.001313,
+          0.001623,
+          0.001161,
+          0.001308,
+          0.001152,
+          0.001312,
+          0.001172
+        ],
+        "current": [
+          0.001644,
+          0.001412,
+          0.001581,
+          0.001409,
+          0.001655,
+          0.001416,
+          0.001553,
+          0.001417,
+          0.001582
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.001707,
+      "current_median_ms": 0.00209,
+      "trials_ms": {
+        "previous": [
+          0.001742,
+          0.001715,
+          0.001556,
+          0.001714,
+          0.001554,
+          0.001707,
+          0.001559,
+          0.002,
+          0.001572
+        ],
+        "current": [
+          0.002119,
+          0.00204,
+          0.00209,
+          0.001945,
+          0.002097,
+          0.001949,
+          0.002129,
+          0.001944,
+          0.002144
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.002099,
+      "current_median_ms": 0.002604,
+      "trials_ms": {
+        "previous": [
+          0.002107,
+          0.002099,
+          0.001934,
+          0.002098,
+          0.00201,
+          0.002122,
+          0.002652,
+          0.00212,
+          0.002015
+        ],
+        "current": [
+          0.002931,
+          0.002425,
+          0.002604,
+          0.002438,
+          0.003159,
+          0.002451,
+          0.002974,
+          0.002433,
+          0.002766
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.001299,
+      "current_median_ms": 0.001557,
+      "trials_ms": {
+        "previous": [
+          0.001339,
+          0.001307,
+          0.00118,
+          0.001299,
+          0.001173,
+          0.001307,
+          0.001172,
+          0.001325,
+          0.00118
+        ],
+        "current": [
+          0.001557,
+          0.001397,
+          0.001557,
+          0.001413,
+          0.001564,
+          0.001488,
+          0.001594,
+          0.001421,
+          0.001582
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.001698,
+      "current_median_ms": 0.002105,
+      "trials_ms": {
+        "previous": [
+          0.001721,
+          0.001698,
+          0.001553,
+          0.001842,
+          0.001567,
+          0.001706,
+          0.001561,
+          0.001819,
+          0.001547
+        ],
+        "current": [
+          0.002171,
+          0.001945,
+          0.002341,
+          0.001967,
+          0.002121,
+          0.002052,
+          0.002338,
+          0.001944,
+          0.002105
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.002075,
+      "current_median_ms": 0.002587,
+      "trials_ms": {
+        "previous": [
+          0.002224,
+          0.002082,
+          0.001974,
+          0.002075,
+          0.001923,
+          0.002108,
+          0.001935,
+          0.002106,
+          0.001926
+        ],
+        "current": [
+          0.002587,
+          0.002481,
+          0.002584,
+          0.002562,
+          0.002567,
+          0.002937,
+          0.002745,
+          0.002693,
+          0.002706
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 1.2198,
+      "current_median_ms": 1.2185,
+      "trials_ms": {
+        "previous": [
+          1.228,
+          1.2095,
+          1.2253,
+          1.2058,
+          1.2018,
+          1.3048,
+          1.3106,
+          1.2198,
+          1.2127
+        ],
+        "current": [
+          1.1975,
+          1.1876,
+          1.2185,
+          1.229,
+          1.2263,
+          1.2758,
+          1.2218,
+          1.2159,
+          1.2176
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 3.7669,
+      "current_median_ms": 1.2859,
+      "trials_ms": {
+        "previous": [
+          3.7669,
+          3.8102,
+          4.3459,
+          4.6479,
+          3.8426,
+          3.7575,
+          3.6268,
+          3.6577,
+          3.6741
+        ],
+        "current": [
+          1.2789,
+          1.3371,
+          1.8273,
+          2.2358,
+          1.3154,
+          1.2859,
+          1.2599,
+          1.2611,
+          1.21
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 6.1706,
+      "current_median_ms": 1.2501,
+      "trials_ms": {
+        "previous": [
+          6.1651,
+          6.1285,
+          6.1262,
+          6.2493,
+          6.1706,
+          6.6391,
+          6.1109,
+          6.3576,
+          6.2743
+        ],
+        "current": [
+          1.2346,
+          1.2575,
+          1.2501,
+          1.2937,
+          1.2456,
+          1.2231,
+          1.2282,
+          1.2922,
+          1.2986
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 6.3411,
+      "current_median_ms": 6.2617,
+      "trials_ms": {
+        "previous": [
+          6.4368,
+          6.3787,
+          6.103,
+          6.1247,
+          6.3411,
+          6.2783,
+          6.2236,
+          6.6014,
+          7.0846
+        ],
+        "current": [
+          6.1397,
+          6.2617,
+          6.3549,
+          6.4668,
+          6.1557,
+          6.1926,
+          6.2798,
+          6.2039,
+          7.3555
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 19.2763,
+      "current_median_ms": 6.2141,
+      "trials_ms": {
+        "previous": [
+          19.3038,
+          18.7173,
+          19.2763,
+          19.4828,
+          19.2139,
+          18.8925,
+          18.8985,
+          20.9759,
+          19.5704
+        ],
+        "current": [
+          6.3223,
+          6.0938,
+          6.4706,
+          7.0797,
+          6.545,
+          6.1998,
+          6.2141,
+          6.1267,
+          6.1829
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 32.5627,
+      "current_median_ms": 7.1741,
+      "trials_ms": {
+        "previous": [
+          30.821,
+          32.5627,
+          32.6699,
+          46.5697,
+          38.3502,
+          31.266,
+          31.3674,
+          34.5069,
+          32.2273
+        ],
+        "current": [
+          7.3405,
+          7.1741,
+          6.3302,
+          7.8389,
+          7.329,
+          6.3812,
+          7.8886,
+          6.275,
+          6.5242
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 1.4015,
+      "current_median_ms": 1.3549,
+      "trials_ms": {
+        "previous": [
+          1.4015,
+          1.3429,
+          1.9555,
+          1.3407,
+          1.3904,
+          1.3028,
+          1.4797,
+          1.7599,
+          1.7072
+        ],
+        "current": [
+          1.3492,
+          1.3269,
+          1.3735,
+          1.3538,
+          1.3549,
+          1.3081,
+          1.3698,
+          1.4924,
+          1.4504
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 4.4402,
+      "current_median_ms": 1.4163,
+      "trials_ms": {
+        "previous": [
+          6.5226,
+          4.5451,
+          4.4402,
+          4.3578,
+          4.1487,
+          4.4823,
+          4.4609,
+          4.2125,
+          4.1693
+        ],
+        "current": [
+          2.0974,
+          1.4783,
+          1.3404,
+          1.587,
+          1.3771,
+          1.3715,
+          1.617,
+          1.4163,
+          1.4008
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 6.8784,
+      "current_median_ms": 1.3498,
+      "trials_ms": {
+        "previous": [
+          7.6381,
+          6.7739,
+          6.6916,
+          7.001,
+          7.128,
+          8.7899,
+          6.8784,
+          6.6488,
+          6.6212
+        ],
+        "current": [
+          1.3198,
+          1.3364,
+          1.3747,
+          1.3498,
+          1.5263,
+          1.3896,
+          1.3453,
+          1.4648,
+          1.3273
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 6.8451,
+      "current_median_ms": 7.0616,
+      "trials_ms": {
+        "previous": [
+          6.9438,
+          6.6934,
+          7.3183,
+          6.7634,
+          6.7757,
+          7.1698,
+          7.1743,
+          6.8451,
+          6.8182
+        ],
+        "current": [
+          6.6973,
+          6.9762,
+          6.7203,
+          7.1261,
+          8.4724,
+          11.641,
+          7.1695,
+          7.0616,
+          6.94
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 22.0473,
+      "current_median_ms": 8.5658,
+      "trials_ms": {
+        "previous": [
+          21.3505,
+          21.2897,
+          21.4993,
+          20.2111,
+          22.4486,
+          23.9217,
+          25.436,
+          22.0473,
+          24.3697
+        ],
+        "current": [
+          8.8694,
+          6.8229,
+          7.0048,
+          7.0835,
+          9.0652,
+          8.5658,
+          7.0115,
+          8.9227,
+          26.1596
+        ]
+      }
+    },
+    {
+      "operation": "raw",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 47.2098,
+      "current_median_ms": 10.9837,
+      "trials_ms": {
+        "previous": [
+          38.4201,
+          49.1932,
+          47.2098,
+          52.2517,
+          43.8103,
+          47.8268,
+          50.7323,
+          38.5211,
+          39.236
+        ],
+        "current": [
+          8.0311,
+          10.9837,
+          12.687,
+          11.2217,
+          54.2677,
+          12.9217,
+          10.7955,
+          8.9062,
+          9.4401
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.010153,
+      "current_median_ms": 0.010025,
+      "trials_ms": {
+        "previous": [
+          0.017966,
+          0.011726,
+          0.033311,
+          0.010153,
+          0.022614,
+          0.009059,
+          0.008057,
+          0.009833,
+          0.009204
+        ],
+        "current": [
+          0.020561,
+          0.013381,
+          0.009905,
+          0.012698,
+          0.015267,
+          0.010025,
+          0.00911,
+          0.008272,
+          0.009961
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.024779,
+      "current_median_ms": 0.010508,
+      "trials_ms": {
+        "previous": [
+          0.024779,
+          0.053199,
+          0.037473,
+          0.022303,
+          0.034386,
+          0.039998,
+          0.021651,
+          0.023553,
+          0.024773
+        ],
+        "current": [
+          0.011957,
+          0.015701,
+          0.011951,
+          0.009647,
+          0.010968,
+          0.010508,
+          0.009621,
+          0.010138,
+          0.009436
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.041374,
+      "current_median_ms": 0.011162,
+      "trials_ms": {
+        "previous": [
+          0.041374,
+          0.039625,
+          0.046093,
+          0.047764,
+          0.040285,
+          0.0448,
+          0.040564,
+          0.040502,
+          0.045058
+        ],
+        "current": [
+          0.011162,
+          0.011038,
+          0.011904,
+          0.009472,
+          0.010503,
+          0.010672,
+          0.01282,
+          0.016255,
+          0.013307
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.025495,
+      "current_median_ms": 0.029283,
+      "trials_ms": {
+        "previous": [
+          0.025495,
+          0.069809,
+          0.029075,
+          0.027309,
+          0.032039,
+          0.023896,
+          0.020582,
+          0.023168,
+          0.020839
+        ],
+        "current": [
+          0.030501,
+          0.081034,
+          0.088397,
+          0.044322,
+          0.021782,
+          0.021074,
+          0.021625,
+          0.029283,
+          0.021859
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.07424,
+      "current_median_ms": 0.025588,
+      "trials_ms": {
+        "previous": [
+          0.060555,
+          0.088421,
+          0.07424,
+          0.083042,
+          0.065408,
+          0.091067,
+          0.112011,
+          0.068201,
+          0.065111
+        ],
+        "current": [
+          0.029523,
+          0.025588,
+          0.037033,
+          0.025347,
+          0.039839,
+          0.049777,
+          0.024227,
+          0.023,
+          0.023634
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.102039,
+      "current_median_ms": 0.023222,
+      "trials_ms": {
+        "previous": [
+          0.107867,
+          0.100354,
+          0.102039,
+          0.107502,
+          0.097508,
+          0.101639,
+          0.117962,
+          0.098627,
+          0.102697
+        ],
+        "current": [
+          0.023114,
+          0.022948,
+          0.023298,
+          0.023222,
+          0.023201,
+          0.026156,
+          0.034697,
+          0.027422,
+          0.022595
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 1.2895,
+      "current_median_ms": 1.317,
+      "trials_ms": {
+        "previous": [
+          1.2907,
+          1.2063,
+          1.2703,
+          1.2895,
+          1.3348,
+          1.2615,
+          1.2431,
+          1.5218,
+          2.5006
+        ],
+        "current": [
+          1.2286,
+          1.2711,
+          1.5176,
+          1.317,
+          1.3656,
+          1.2622,
+          1.2976,
+          1.3848,
+          1.521
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 3.998,
+      "current_median_ms": 1.2806,
+      "trials_ms": {
+        "previous": [
+          3.998,
+          4.4768,
+          3.8578,
+          4.1892,
+          4.4402,
+          3.7706,
+          3.7264,
+          3.773,
+          4.0414
+        ],
+        "current": [
+          1.2448,
+          1.2284,
+          1.2701,
+          1.2806,
+          1.2929,
+          1.2904,
+          1.2334,
+          1.6382,
+          1.3418
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 6.5243,
+      "current_median_ms": 1.3237,
+      "trials_ms": {
+        "previous": [
+          6.6896,
+          6.7333,
+          6.5243,
+          7.1561,
+          7.2262,
+          6.0934,
+          6.4383,
+          6.3728,
+          6.3916
+        ],
+        "current": [
+          1.6214,
+          1.3203,
+          1.8327,
+          1.5368,
+          1.3377,
+          1.2582,
+          1.2288,
+          1.2339,
+          1.3237
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 6.8131,
+      "current_median_ms": 6.2633,
+      "trials_ms": {
+        "previous": [
+          6.3119,
+          18.5986,
+          6.8428,
+          6.4084,
+          6.1089,
+          6.2208,
+          6.9506,
+          6.8131,
+          8.1579
+        ],
+        "current": [
+          6.2633,
+          7.2298,
+          6.2144,
+          6.1749,
+          6.2319,
+          6.2017,
+          6.3366,
+          7.5095,
+          7.4197
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 24.7705,
+      "current_median_ms": 6.7985,
+      "trials_ms": {
+        "previous": [
+          27.9893,
+          27.0403,
+          27.0259,
+          24.7705,
+          23.3578,
+          22.8059,
+          25.1183,
+          19.6345,
+          19.6394
+        ],
+        "current": [
+          8.4382,
+          8.334,
+          8.8934,
+          8.2257,
+          6.4058,
+          6.7985,
+          6.7314,
+          6.7477,
+          6.4287
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 36.6848,
+      "current_median_ms": 6.5805,
+      "trials_ms": {
+        "previous": [
+          34.9366,
+          32.1045,
+          31.7648,
+          41.6525,
+          36.8619,
+          39.9215,
+          35.0688,
+          36.6848,
+          41.1588
+        ],
+        "current": [
+          6.5728,
+          6.2518,
+          8.2422,
+          7.7984,
+          7.1279,
+          6.4296,
+          7.463,
+          6.5355,
+          6.5805
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 1.4513,
+      "current_median_ms": 1.4964,
+      "trials_ms": {
+        "previous": [
+          1.5804,
+          1.3688,
+          1.3621,
+          5.4263,
+          1.4211,
+          1.6228,
+          1.5446,
+          1.4513,
+          1.4343
+        ],
+        "current": [
+          1.4403,
+          1.5096,
+          1.5659,
+          1.4964,
+          2.2981,
+          1.4957,
+          1.4819,
+          1.4238,
+          1.5278
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 4.8166,
+      "current_median_ms": 1.5241,
+      "trials_ms": {
+        "previous": [
+          5.0291,
+          4.7586,
+          4.2184,
+          4.8166,
+          5.4387,
+          4.4631,
+          4.4819,
+          5.2503,
+          6.1291
+        ],
+        "current": [
+          1.7817,
+          1.5241,
+          1.3819,
+          1.3394,
+          1.6532,
+          1.6719,
+          1.509,
+          1.4344,
+          5.3183
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 8.1789,
+      "current_median_ms": 1.5263,
+      "trials_ms": {
+        "previous": [
+          8.35,
+          11.9927,
+          8.1789,
+          7.8514,
+          8.4915,
+          7.4068,
+          6.9259,
+          6.7153,
+          8.4542
+        ],
+        "current": [
+          1.4165,
+          1.4651,
+          2.1329,
+          1.6589,
+          1.6272,
+          1.4466,
+          1.5263,
+          1.3934,
+          3.4952
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 7.7011,
+      "current_median_ms": 7.3512,
+      "trials_ms": {
+        "previous": [
+          9.5795,
+          8.1239,
+          7.3095,
+          8.0529,
+          6.8219,
+          8.3921,
+          7.7011,
+          7.5428,
+          7.5079
+        ],
+        "current": [
+          7.3512,
+          8.7468,
+          6.9266,
+          7.1774,
+          6.785,
+          7.5502,
+          10.2989,
+          9.8081,
+          7.1215
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 25.7455,
+      "current_median_ms": 8.0738,
+      "trials_ms": {
+        "previous": [
+          25.3127,
+          27.3479,
+          22.5867,
+          22.352,
+          23.7322,
+          41.0578,
+          25.7455,
+          26.5163,
+          26.3851
+        ],
+        "current": [
+          6.8157,
+          7.6661,
+          7.114,
+          7.023,
+          8.0782,
+          10.2603,
+          8.0738,
+          8.1754,
+          14.6894
+        ]
+      }
+    },
+    {
+      "operation": "wav",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 41.8878,
+      "current_median_ms": 8.0411,
+      "trials_ms": {
+        "previous": [
+          36.4164,
+          41.8878,
+          34.9601,
+          47.0518,
+          36.1656,
+          36.3304,
+          47.0668,
+          46.4639,
+          51.3857
+        ],
+        "current": [
+          7.5836,
+          12.5615,
+          7.9853,
+          7.1407,
+          8.0411,
+          6.8794,
+          8.8983,
+          12.1122,
+          8.1908
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.044552,
+      "current_median_ms": 0.039709,
+      "trials_ms": {
+        "previous": [
+          0.042551,
+          0.044552,
+          0.042574,
+          0.056039,
+          0.062215,
+          0.061501,
+          0.045781,
+          0.042655,
+          0.041607
+        ],
+        "current": [
+          0.03911,
+          0.040507,
+          0.039106,
+          0.039709,
+          0.060574,
+          0.062566,
+          0.039972,
+          0.036546,
+          0.038393
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.135156,
+      "current_median_ms": 0.123846,
+      "trials_ms": {
+        "previous": [
+          0.132475,
+          0.135156,
+          0.122101,
+          0.24789,
+          0.16345,
+          0.123805,
+          0.138464,
+          0.129475,
+          0.166524
+        ],
+        "current": [
+          0.130541,
+          0.109229,
+          0.118056,
+          0.203079,
+          0.123846,
+          0.117635,
+          0.245355,
+          0.129452,
+          0.115614
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 16000,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.214483,
+      "current_median_ms": 0.189975,
+      "trials_ms": {
+        "previous": [
+          0.217973,
+          0.236068,
+          0.202262,
+          0.212158,
+          0.268614,
+          0.204308,
+          0.221803,
+          0.214483,
+          0.208531
+        ],
+        "current": [
+          0.178765,
+          0.193026,
+          0.198505,
+          0.189975,
+          0.184069,
+          0.188134,
+          0.219526,
+          0.283967,
+          0.188036
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 0.689488,
+      "current_median_ms": 0.186139,
+      "trials_ms": {
+        "previous": [
+          1.151496,
+          0.740639,
+          0.588836,
+          0.626976,
+          0.782874,
+          0.733749,
+          0.531729,
+          0.689488,
+          0.674595
+        ],
+        "current": [
+          0.189683,
+          0.242939,
+          0.213498,
+          0.175029,
+          0.17156,
+          0.163416,
+          0.186139,
+          0.269239,
+          0.154528
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 2.053209,
+      "current_median_ms": 0.534451,
+      "trials_ms": {
+        "previous": [
+          3.138277,
+          3.499562,
+          3.069234,
+          1.979122,
+          2.053209,
+          2.303312,
+          1.792241,
+          1.536297,
+          1.49336
+        ],
+        "current": [
+          0.607596,
+          0.509563,
+          0.488142,
+          0.472193,
+          0.611519,
+          0.551951,
+          0.492829,
+          0.650435,
+          0.534451
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 16000,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 100,
+      "input_equal": true,
+      "previous_median_ms": 2.085466,
+      "current_median_ms": 0.835578,
+      "trials_ms": {
+        "previous": [
+          3.377268,
+          2.206622,
+          2.087601,
+          2.085466,
+          1.907567,
+          2.081827,
+          2.75691,
+          2.02687,
+          1.954544
+        ],
+        "current": [
+          1.086352,
+          1.02012,
+          0.785135,
+          0.835578,
+          0.82319,
+          0.812503,
+          0.929713,
+          0.829485,
+          0.85347
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 1.3207,
+      "current_median_ms": 1.3185,
+      "trials_ms": {
+        "previous": [
+          1.2929,
+          1.488,
+          1.3207,
+          1.2854,
+          1.306,
+          1.3377,
+          1.2572,
+          1.3467,
+          1.3255
+        ],
+        "current": [
+          1.3436,
+          1.5357,
+          1.2423,
+          1.3358,
+          1.2645,
+          1.2478,
+          1.2906,
+          1.3185,
+          1.3802
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 3.935,
+      "current_median_ms": 1.4572,
+      "trials_ms": {
+        "previous": [
+          3.8337,
+          3.8322,
+          3.8638,
+          4.2343,
+          3.935,
+          4.9609,
+          7.5134,
+          3.8962,
+          4.2591
+        ],
+        "current": [
+          1.5119,
+          1.3275,
+          1.3206,
+          1.3407,
+          1.5423,
+          1.4572,
+          2.2211,
+          1.5146,
+          1.3605
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 44100,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 6.6265,
+      "current_median_ms": 1.4483,
+      "trials_ms": {
+        "previous": [
+          6.8127,
+          6.6265,
+          7.8855,
+          6.3765,
+          6.7294,
+          6.7146,
+          6.4466,
+          6.2816,
+          6.4178
+        ],
+        "current": [
+          1.5329,
+          1.4483,
+          1.5142,
+          1.4795,
+          1.4315,
+          1.4917,
+          1.4082,
+          1.4315,
+          1.3994
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 7.0642,
+      "current_median_ms": 6.6446,
+      "trials_ms": {
+        "previous": [
+          7.3186,
+          6.7964,
+          7.0615,
+          7.0642,
+          6.8456,
+          6.7746,
+          7.2127,
+          9.0359,
+          11.4134
+        ],
+        "current": [
+          6.2374,
+          6.473,
+          7.4109,
+          7.103,
+          6.6446,
+          6.3602,
+          6.412,
+          6.8564,
+          9.9932
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 21.3206,
+      "current_median_ms": 7.2727,
+      "trials_ms": {
+        "previous": [
+          20.653,
+          20.2482,
+          21.8389,
+          19.7042,
+          22.2343,
+          21.3206,
+          32.1119,
+          24.0153,
+          20.6304
+        ],
+        "current": [
+          8.1066,
+          6.6834,
+          7.0543,
+          6.8241,
+          7.2727,
+          7.0126,
+          8.0362,
+          8.9106,
+          8.0556
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 44100,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 34.9567,
+      "current_median_ms": 7.6603,
+      "trials_ms": {
+        "previous": [
+          36.3809,
+          32.8144,
+          34.8362,
+          33.2828,
+          34.1705,
+          37.1842,
+          34.9567,
+          37.555,
+          44.3019
+        ],
+        "current": [
+          7.8417,
+          7.2376,
+          7.4464,
+          7.4606,
+          7.814,
+          7.17,
+          7.8064,
+          7.9025,
+          7.6603
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 1.4501,
+      "current_median_ms": 1.4896,
+      "trials_ms": {
+        "previous": [
+          1.4961,
+          2.0218,
+          1.4339,
+          1.6793,
+          1.4022,
+          1.5361,
+          1.4501,
+          1.3604,
+          1.3842
+        ],
+        "current": [
+          1.5628,
+          1.6521,
+          1.4896,
+          1.4429,
+          1.4396,
+          1.6889,
+          1.4325,
+          1.3799,
+          1.5406
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 5.0984,
+      "current_median_ms": 1.8396,
+      "trials_ms": {
+        "previous": [
+          4.9926,
+          4.3623,
+          4.2655,
+          6.0658,
+          5.9795,
+          7.8572,
+          5.0984,
+          4.7162,
+          6.4133
+        ],
+        "current": [
+          1.6098,
+          2.6101,
+          1.5161,
+          1.5363,
+          2.1286,
+          2.7123,
+          1.5703,
+          1.8516,
+          1.8396
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 48000,
+      "seconds": 3,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 8.839,
+      "current_median_ms": 1.7988,
+      "trials_ms": {
+        "previous": [
+          7.6969,
+          7.1759,
+          7.1577,
+          7.9316,
+          9.6423,
+          9.2668,
+          9.0188,
+          9.9838,
+          8.839
+        ],
+        "current": [
+          1.5366,
+          1.5179,
+          1.5873,
+          1.5075,
+          1.8836,
+          1.7988,
+          7.0143,
+          11.6302,
+          2.9228
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 1,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 8.749,
+      "current_median_ms": 9.1593,
+      "trials_ms": {
+        "previous": [
+          8.0861,
+          8.1156,
+          7.2762,
+          10.1873,
+          8.0958,
+          8.749,
+          9.3402,
+          8.8973,
+          10.2733
+        ],
+        "current": [
+          9.6293,
+          7.5225,
+          10.1087,
+          17.896,
+          9.1593,
+          8.0903,
+          8.4013,
+          8.0511,
+          9.2575
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 3,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 25.1496,
+      "current_median_ms": 8.6257,
+      "trials_ms": {
+        "previous": [
+          22.6714,
+          25.1496,
+          36.0029,
+          26.8308,
+          25.8133,
+          31.1923,
+          22.3582,
+          23.6806,
+          23.5079
+        ],
+        "current": [
+          11.771,
+          8.6257,
+          9.1116,
+          8.1415,
+          8.6801,
+          7.9457,
+          7.7713,
+          9.106,
+          7.6851
+        ]
+      }
+    },
+    {
+      "operation": "whisper",
+      "rate": 48000,
+      "seconds": 15,
+      "candidates": 5,
+      "batch": 1,
+      "input_equal": true,
+      "previous_median_ms": 37.5518,
+      "current_median_ms": 8.1237,
+      "trials_ms": {
+        "previous": [
+          44.8384,
+          45.4625,
+          37.2269,
+          38.4886,
+          36.8603,
+          36.1516,
+          37.5518,
+          37.8965,
+          36.3169
+        ],
+        "current": [
+          9.6375,
+          8.2356,
+          8.4419,
+          7.8687,
+          8.1237,
+          7.5883,
+          7.8696,
+          7.6372,
+          8.1434
+        ]
+      }
+    }
+  ]
+}

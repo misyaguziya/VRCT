@@ -1,0 +1,312 @@
+{
+  "python": "3.11.5",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "input": "synthetic PCM; no devices or network",
+  "repeats": 9,
+  "scope": "Process-local conversion and synchronous energy detection/buffering. Energy includes Python read/before_read/push and no-op energy callbacks. Excludes device waiting, background thread scheduling, ASR and UI latency.",
+  "source_sha256": {
+    "native/vrct-audio/src/lib.rs": "68bdfd67e39feebaa88fc5c84f242975195b9805000d0ee31c6a2e941ce865a9",
+    "native/vrct-audio/src/energy.rs": "1bf6b80552e8a4e7e75f8d1745c08bf5c29a39a44e78cfda7b7636f7a70817ae",
+    "native/vrct-audio/Cargo.lock": "7c97f70c2edb8075bf0b06fa88b19f88fd213f926191aec4623bf49172bff36d",
+    "tools/benchmark_audio_native.py": "4af3794dd86e4202d38f1ed4753ca389ae1ef30f2e7dd42ccbca30e5af49d131",
+    "src-python/models/transcription/transcription_transcriber.py": "a43a1dc1805caa8aa340f2337d4a692aebac128b04e831e8187466e1933d973c",
+    "src-python/models/transcription/native_audio.py": "3b86aca63f5e0f3ffd8f67631b90c0ebb62649b1fa896b10f4ca72cf11e2b074"
+  },
+  "native_binary": {
+    "path": "tmp\\cycle3c-native-site\\vrct_audio\\vrct_audio.pyd",
+    "sha256": "2d38d52f4172aa420e562b8e14abdf302d1c197452e712df1d1abe44d6e248b7"
+  },
+  "legacy_speech_recognition_sha256": "9a30e09b8dfd34e666407ca86127647268a0523675eafe5a24c9d71ac884cced",
+  "pydub": {
+    "version": "0.25.1",
+    "audio_segment_sha256": "35fe55907198d6ff49a9becdb4461fc11a4badfaaeb1f05d3c6399b22ed1e428"
+  },
+  "results": [
+    {
+      "operation": "speaker_downmix",
+      "rate": 48000,
+      "seconds": 3,
+      "channels": 3,
+      "input_bytes": 864000,
+      "output_bytes": 288000,
+      "trials_ms": {
+        "old": [
+          76.6253,
+          74.2758,
+          76.989,
+          77.1451,
+          74.1787,
+          74.4558,
+          75.4839,
+          78.8444,
+          73.945
+        ],
+        "numpy": [
+          9.0155,
+          6.9745,
+          8.281,
+          8.9329,
+          8.5879,
+          6.2839,
+          7.2657,
+          11.3628,
+          6.9291
+        ],
+        "native": [
+          1.84,
+          1.5868,
+          1.574,
+          1.1895,
+          1.6822,
+          1.2015,
+          2.1911,
+          1.8016,
+          1.7015
+        ]
+      },
+      "old_median_ms": 75.4839,
+      "numpy_median_ms": 8.281,
+      "native_median_ms": 1.6822
+    },
+    {
+      "operation": "speaker_downmix",
+      "rate": 48000,
+      "seconds": 3,
+      "channels": 6,
+      "input_bytes": 1728000,
+      "output_bytes": 288000,
+      "trials_ms": {
+        "old": [
+          152.6479,
+          152.7407,
+          154.2751,
+          148.4967,
+          151.8365,
+          152.6134,
+          153.0953,
+          152.8518,
+          151.2319
+        ],
+        "numpy": [
+          15.506,
+          12.4211,
+          12.5072,
+          14.8265,
+          12.6551,
+          13.6191,
+          17.2962,
+          15.9924,
+          12.5366
+        ],
+        "native": [
+          3.4241,
+          2.6382,
+          3.3676,
+          2.5554,
+          3.4521,
+          2.828,
+          2.5545,
+          2.8229,
+          2.9131
+        ]
+      },
+      "old_median_ms": 152.6479,
+      "numpy_median_ms": 13.6191,
+      "native_median_ms": 2.828
+    },
+    {
+      "operation": "speaker_downmix",
+      "rate": 48000,
+      "seconds": 3,
+      "channels": 8,
+      "input_bytes": 2304000,
+      "output_bytes": 288000,
+      "trials_ms": {
+        "old": [
+          207.0482,
+          202.5856,
+          201.6945,
+          201.2367,
+          203.9526,
+          203.1945,
+          206.9101,
+          200.6437,
+          205.8184
+        ],
+        "numpy": [
+          18.4132,
+          19.3739,
+          19.394,
+          20.4557,
+          22.321,
+          18.9973,
+          17.8558,
+          17.9854,
+          16.8759
+        ],
+        "native": [
+          4.6673,
+          3.6616,
+          3.695,
+          3.7626,
+          4.0417,
+          4.0878,
+          4.1384,
+          4.2924,
+          4.1151
+        ]
+      },
+      "old_median_ms": 203.1945,
+      "numpy_median_ms": 18.9973,
+      "native_median_ms": 4.0878
+    },
+    {
+      "operation": "speaker_downmix",
+      "rate": 48000,
+      "seconds": 15,
+      "channels": 3,
+      "input_bytes": 4320000,
+      "output_bytes": 1440000,
+      "trials_ms": {
+        "old": [
+          374.547,
+          384.3026,
+          379.7639,
+          375.3838,
+          376.6881,
+          372.654,
+          404.8283,
+          377.3872,
+          375.5434
+        ],
+        "numpy": [
+          38.4319,
+          41.5246,
+          36.4905,
+          36.4467,
+          37.3764,
+          38.6771,
+          43.4392,
+          40.0319,
+          43.1675
+        ],
+        "native": [
+          9.652,
+          7.9515,
+          9.0145,
+          8.932,
+          10.2205,
+          7.8458,
+          8.1946,
+          8.4466,
+          10.2274
+        ]
+      },
+      "old_median_ms": 376.6881,
+      "numpy_median_ms": 38.6771,
+      "native_median_ms": 8.932
+    },
+    {
+      "operation": "speaker_downmix",
+      "rate": 48000,
+      "seconds": 15,
+      "channels": 6,
+      "input_bytes": 8640000,
+      "output_bytes": 1440000,
+      "trials_ms": {
+        "old": [
+          770.5486,
+          767.6842,
+          772.0083,
+          767.0124,
+          759.9763,
+          766.0407,
+          762.1949,
+          900.9196,
+          813.9427
+        ],
+        "numpy": [
+          69.5121,
+          68.7763,
+          68.0522,
+          67.5669,
+          70.152,
+          83.7836,
+          68.8275,
+          72.7587,
+          91.5526
+        ],
+        "native": [
+          17.075,
+          15.1269,
+          15.7109,
+          15.8073,
+          15.6959,
+          15.6525,
+          17.0947,
+          14.9079,
+          18.4153
+        ]
+      },
+      "old_median_ms": 767.6842,
+      "numpy_median_ms": 69.5121,
+      "native_median_ms": 15.7109
+    },
+    {
+      "operation": "speaker_downmix",
+      "rate": 48000,
+      "seconds": 15,
+      "channels": 8,
+      "input_bytes": 11520000,
+      "output_bytes": 1440000,
+      "trials_ms": {
+        "old": [
+          1250.6391,
+          1068.7904,
+          1180.0842,
+          1060.7573,
+          1086.0142,
+          1203.8353,
+          1256.4391,
+          1189.0073,
+          1108.4205
+        ],
+        "numpy": [
+          109.0959,
+          104.8899,
+          90.2647,
+          99.2939,
+          102.7953,
+          102.464,
+          136.9862,
+          153.2689,
+          91.7532
+        ],
+        "native": [
+          23.3542,
+          20.542,
+          22.313,
+          19.4528,
+          22.8466,
+          20.0043,
+          24.9095,
+          23.0204,
+          23.9672
+        ]
+      },
+      "old_median_ms": 1180.0842,
+      "numpy_median_ms": 102.7953,
+      "native_median_ms": 22.8466
+    }
+  ],
+  "baseline_commit": "307dd79615f5529f03a411961b215b3863feecbd",
+  "measurement_date": "2026-10-07",
+  "measurement_conditions": {
+    "cpu": "Intel Core i7-9700K @ 3.60GHz; 8 physical/logical cores",
+    "build": "maturin 1.8.3 release wheel; locked Cargo dependencies; Rust 1.88.0",
+    "timing": "9 alternating forward/reverse trials after correctness calls; no build or test running concurrently in this task",
+    "comparison": "pydub baseline and NumPy candidate return raw bytes; native includes processSpeakerData dispatch and PcmAudio construction",
+    "scope": "Synthetic PCM16LE clips at 48kHz, non-VAD speaker downmix only. Does not measure stereo, device I/O, ASR inference, network, application startup or end-to-end latency.",
+    "data": "No microphone, real recordings, external requests or model loading"
+  }
+}

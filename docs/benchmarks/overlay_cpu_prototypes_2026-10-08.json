@@ -1,0 +1,705 @@
+{
+  "date": "2026-10-08",
+  "scope": "Exploratory, non-production CPU-only PyO3 prototype. Measures immutable bytes input / bytearray output / Python copies, not GPU, capture, or all possible Rust designs. Crop report stores 9 trials; intro prototype stores only 19-trial medians. Production acceptance measurements are in overlay_intro_2026-10-08.json.",
+  "python": "3.11.5",
+  "processor": "Intel64 Family 6 Model 158 Stepping 13, GenuineIntel",
+  "opencv_version": "4.10.0",
+  "opencv_threads": 8,
+  "numpy_version": "1.26.4",
+  "rustc": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+  "native_sha256": "a5dd810a38415afd1e3e499f151e40b0d074c4c0ab79513243906bad636b9fa8",
+  "crop": [
+    {
+      "layout": "default",
+      "scale": 1,
+      "size": [
+        1690,
+        880
+      ],
+      "intro": false,
+      "median_ms": {
+        "old": 3.8092,
+        "cv2": 3.7952,
+        "rust": 3.6993
+      },
+      "trials_ms": {
+        "old": [
+          3.1829,
+          2.789,
+          4.5316,
+          3.8092,
+          4.923,
+          3.1707,
+          3.5971,
+          4.1165,
+          3.9028
+        ],
+        "cv2": [
+          3.8011,
+          3.3312,
+          3.7952,
+          4.9987,
+          4.134,
+          3.5995,
+          3.2652,
+          5.5807,
+          3.3884
+        ],
+        "rust": [
+          5.3137,
+          4.0718,
+          3.6014,
+          3.1944,
+          4.4976,
+          3.6993,
+          3.5661,
+          3.9025,
+          3.4753
+        ]
+      }
+    },
+    {
+      "layout": "default",
+      "scale": 1,
+      "size": [
+        1690,
+        880
+      ],
+      "intro": true,
+      "median_ms": {
+        "old": 10.9175,
+        "cv2": 10.5069,
+        "rust": 5.6453
+      },
+      "trials_ms": {
+        "old": [
+          12.4346,
+          10.2496,
+          9.85,
+          11.2225,
+          13.7762,
+          10.8782,
+          10.9175,
+          12.8103,
+          9.9313
+        ],
+        "cv2": [
+          9.8106,
+          12.1291,
+          10.2338,
+          10.7816,
+          9.6051,
+          12.5758,
+          17.1658,
+          10.1323,
+          10.5069
+        ],
+        "rust": [
+          5.6857,
+          4.7574,
+          7.2945,
+          5.5076,
+          5.9368,
+          5.6453,
+          6.5751,
+          5.2753,
+          5.0933
+        ]
+      }
+    },
+    {
+      "layout": "default",
+      "scale": 1.5,
+      "size": [
+        2535,
+        1320
+      ],
+      "intro": false,
+      "median_ms": {
+        "old": 7.5729,
+        "cv2": 8.2215,
+        "rust": 9.7305
+      },
+      "trials_ms": {
+        "old": [
+          7.5729,
+          6.7681,
+          7.9656,
+          11.8942,
+          7.5641,
+          7.2968,
+          6.789,
+          8.2559,
+          9.5456
+        ],
+        "cv2": [
+          7.9157,
+          8.21,
+          10.6513,
+          8.2215,
+          8.1156,
+          10.1112,
+          8.8936,
+          7.8542,
+          9.3876
+        ],
+        "rust": [
+          10.0972,
+          9.8744,
+          9.4423,
+          9.3721,
+          9.7305,
+          10.4021,
+          10.9212,
+          8.5484,
+          8.5654
+        ]
+      }
+    },
+    {
+      "layout": "default",
+      "scale": 1.5,
+      "size": [
+        2535,
+        1320
+      ],
+      "intro": true,
+      "median_ms": {
+        "old": 26.0345,
+        "cv2": 25.9857,
+        "rust": 13.6029
+      },
+      "trials_ms": {
+        "old": [
+          29.0144,
+          25.4723,
+          26.255,
+          26.6901,
+          26.1405,
+          25.9419,
+          25.2883,
+          24.7811,
+          26.0345
+        ],
+        "cv2": [
+          25.9615,
+          27.5604,
+          26.4242,
+          25.0984,
+          23.9593,
+          25.9857,
+          26.5034,
+          26.929,
+          25.0088
+        ],
+        "rust": [
+          13.8377,
+          15.1131,
+          12.163,
+          12.5496,
+          16.8641,
+          12.0412,
+          13.6029,
+          15.7932,
+          12.8607
+        ]
+      }
+    },
+    {
+      "layout": "default",
+      "scale": 2,
+      "size": [
+        3380,
+        1760
+      ],
+      "intro": false,
+      "median_ms": {
+        "old": 14.7131,
+        "cv2": 16.2355,
+        "rust": 18.4707
+      },
+      "trials_ms": {
+        "old": [
+          17.6182,
+          13.2495,
+          13.3147,
+          15.334,
+          14.7131,
+          13.786,
+          13.8602,
+          15.7537,
+          16.5028
+        ],
+        "cv2": [
+          14.5457,
+          17.6864,
+          16.8853,
+          14.6728,
+          15.122,
+          17.3535,
+          17.1154,
+          16.2355,
+          14.9037
+        ],
+        "rust": [
+          18.4707,
+          15.3094,
+          15.0373,
+          18.9911,
+          19.4182,
+          17.5845,
+          15.8176,
+          22.4171,
+          19.1022
+        ]
+      }
+    },
+    {
+      "layout": "default",
+      "scale": 2,
+      "size": [
+        3380,
+        1760
+      ],
+      "intro": true,
+      "median_ms": {
+        "old": 46.0471,
+        "cv2": 45.1888,
+        "rust": 24.0945
+      },
+      "trials_ms": {
+        "old": [
+          44.2499,
+          47.6774,
+          44.599,
+          44.2493,
+          47.3646,
+          48.2095,
+          46.0471,
+          46.4045,
+          43.7202
+        ],
+        "cv2": [
+          49.2647,
+          45.1888,
+          44.7368,
+          45.1039,
+          44.607,
+          45.8698,
+          46.4313,
+          46.9085,
+          43.2332
+        ],
+        "rust": [
+          26.5812,
+          23.0047,
+          27.4945,
+          21.804,
+          24.7717,
+          24.0231,
+          24.0945,
+          21.9321,
+          26.4959
+        ]
+      }
+    },
+    {
+      "layout": "max",
+      "scale": 1,
+      "size": [
+        2128,
+        1136
+      ],
+      "intro": false,
+      "median_ms": {
+        "old": 5.6722,
+        "cv2": 6.3092,
+        "rust": 6.5454
+      },
+      "trials_ms": {
+        "old": [
+          7.2962,
+          5.8365,
+          5.8008,
+          4.9919,
+          5.6099,
+          5.0543,
+          5.8276,
+          4.4424,
+          5.6722
+        ],
+        "cv2": [
+          6.3092,
+          5.6071,
+          8.3862,
+          5.5974,
+          7.3269,
+          5.3948,
+          8.212,
+          5.9461,
+          6.6172
+        ],
+        "rust": [
+          6.6208,
+          5.2256,
+          6.6639,
+          6.45,
+          7.4235,
+          5.9498,
+          6.5454,
+          5.6387,
+          8.5025
+        ]
+      }
+    },
+    {
+      "layout": "max",
+      "scale": 1,
+      "size": [
+        2128,
+        1136
+      ],
+      "intro": true,
+      "median_ms": {
+        "old": 12.5931,
+        "cv2": 12.7743,
+        "rust": 9.3701
+      },
+      "trials_ms": {
+        "old": [
+          12.5931,
+          11.9203,
+          15.1064,
+          12.3846,
+          15.2607,
+          11.8969,
+          14.3551,
+          10.7814,
+          14.6067
+        ],
+        "cv2": [
+          12.397,
+          12.5988,
+          12.6635,
+          12.7743,
+          12.2768,
+          12.8652,
+          14.3128,
+          14.0086,
+          13.7241
+        ],
+        "rust": [
+          10.174,
+          9.3701,
+          9.0089,
+          9.5622,
+          8.1037,
+          10.5967,
+          7.8596,
+          9.4938,
+          8.0412
+        ]
+      }
+    },
+    {
+      "layout": "max",
+      "scale": 1.5,
+      "size": [
+        3192,
+        1704
+      ],
+      "intro": false,
+      "median_ms": {
+        "old": 12.8185,
+        "cv2": 14.3017,
+        "rust": 16.0567
+      },
+      "trials_ms": {
+        "old": [
+          17.0221,
+          15.37,
+          11.8886,
+          11.5178,
+          10.7781,
+          11.44,
+          16.6902,
+          15.4826,
+          12.8185
+        ],
+        "cv2": [
+          13.7258,
+          13.6585,
+          14.3017,
+          15.6941,
+          16.669,
+          15.1114,
+          15.3767,
+          13.4317,
+          13.0609
+        ],
+        "rust": [
+          16.0567,
+          15.9281,
+          16.6015,
+          15.3454,
+          14.3496,
+          20.1207,
+          15.5332,
+          16.2149,
+          18.2209
+        ]
+      }
+    },
+    {
+      "layout": "max",
+      "scale": 1.5,
+      "size": [
+        3192,
+        1704
+      ],
+      "intro": true,
+      "median_ms": {
+        "old": 30.6062,
+        "cv2": 31.6917,
+        "rust": 18.852
+      },
+      "trials_ms": {
+        "old": [
+          32.0674,
+          28.6446,
+          29.5864,
+          33.517,
+          29.4772,
+          30.6062,
+          32.756,
+          30.1267,
+          31.5605
+        ],
+        "cv2": [
+          31.6062,
+          32.3629,
+          32.5879,
+          30.9848,
+          32.1817,
+          32.5402,
+          30.5838,
+          30.8683,
+          31.6917
+        ],
+        "rust": [
+          18.7173,
+          18.7012,
+          18.852,
+          20.6593,
+          21.6922,
+          18.749,
+          20.3856,
+          18.0135,
+          19.8799
+        ]
+      }
+    },
+    {
+      "layout": "max",
+      "scale": 2,
+      "size": [
+        4256,
+        2272
+      ],
+      "intro": false,
+      "median_ms": {
+        "old": 24.896,
+        "cv2": 27.8622,
+        "rust": 27.4515
+      },
+      "trials_ms": {
+        "old": [
+          25.3901,
+          28.8709,
+          24.0184,
+          29.3451,
+          22.1225,
+          21.4881,
+          24.896,
+          21.5133,
+          24.9021
+        ],
+        "cv2": [
+          26.889,
+          27.7606,
+          32.0386,
+          28.1453,
+          28.0416,
+          26.1315,
+          25.5057,
+          27.8622,
+          29.6137
+        ],
+        "rust": [
+          25.922,
+          27.3604,
+          27.8882,
+          25.1435,
+          30.3591,
+          29.0788,
+          26.4741,
+          33.2831,
+          27.4515
+        ]
+      }
+    },
+    {
+      "layout": "max",
+      "scale": 2,
+      "size": [
+        4256,
+        2272
+      ],
+      "intro": true,
+      "median_ms": {
+        "old": 55.5209,
+        "cv2": 59.4782,
+        "rust": 37.0828
+      },
+      "trials_ms": {
+        "old": [
+          59.0441,
+          56.2469,
+          59.1249,
+          52.2108,
+          58.4594,
+          55.0613,
+          54.1301,
+          55.5209,
+          54.2989
+        ],
+        "cv2": [
+          61.699,
+          58.4421,
+          59.3589,
+          58.7311,
+          61.3509,
+          57.3946,
+          61.2191,
+          59.4782,
+          61.0355
+        ],
+        "rust": [
+          37.0828,
+          35.2497,
+          38.7525,
+          38.2478,
+          36.3723,
+          35.6349,
+          37.475,
+          36.9921,
+          37.6054
+        ]
+      }
+    }
+  ],
+  "intro": [
+    {
+      "scale": 1,
+      "mode": "random",
+      "median_ms": {
+        "old": 6.2723,
+        "cv2": 1.3023,
+        "cv_fast": 1.2336,
+        "rust": 2.7543
+      }
+    },
+    {
+      "scale": 1,
+      "mode": "background",
+      "median_ms": {
+        "old": 8.997,
+        "cv2": 3.8464,
+        "cv_fast": 1.2944,
+        "rust": 2.9244
+      }
+    },
+    {
+      "scale": 1.25,
+      "mode": "random",
+      "median_ms": {
+        "old": 10.9002,
+        "cv2": 1.8872,
+        "cv_fast": 1.7251,
+        "rust": 4.0917
+      }
+    },
+    {
+      "scale": 1.25,
+      "mode": "background",
+      "median_ms": {
+        "old": 14.6784,
+        "cv2": 5.387,
+        "cv_fast": 1.5651,
+        "rust": 4.0679
+      }
+    },
+    {
+      "scale": 1.5,
+      "mode": "random",
+      "median_ms": {
+        "old": 15.7829,
+        "cv2": 2.7371,
+        "cv_fast": 1.932,
+        "rust": 6.1728
+      }
+    },
+    {
+      "scale": 1.5,
+      "mode": "background",
+      "median_ms": {
+        "old": 21.9935,
+        "cv2": 8.2591,
+        "cv_fast": 2.4131,
+        "rust": 6.0079
+      }
+    },
+    {
+      "scale": 2,
+      "mode": "random",
+      "median_ms": {
+        "old": 29.5108,
+        "cv2": 5.064,
+        "cv_fast": 4.8309,
+        "rust": 10.9883
+      }
+    },
+    {
+      "scale": 2,
+      "mode": "background",
+      "median_ms": {
+        "old": 38.5196,
+        "cv2": 14.9553,
+        "cv_fast": 5.1507,
+        "rust": 10.8579
+      }
+    }
+  ],
+  "source_snapshots": {
+    "Cargo.toml": "[package]\nname = \"overlay-poc\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\nname = \"overlay_poc\"\ncrate-type = [\"cdylib\"]\n\n[dependencies]\npyo3 = { version = \"=0.24.2\", features = [\"extension-module\", \"abi3-py310\"] }\n\n[profile.release]\nlto = \"thin\"\ncodegen-units = 1\n",
+    "Cargo.lock": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4\n\n[[package]]\nname = \"autocfg\"\nversion = \"1.5.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53\"\n\n[[package]]\nname = \"cfg-if\"\nversion = \"1.0.5\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600\"\n\n[[package]]\nname = \"heck\"\nversion = \"0.5.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea\"\n\n[[package]]\nname = \"indoc\"\nversion = \"2.0.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"79cf5c93f93228cf8efb3ba362535fb11199ac548a09ce117c9b1adc3030d706\"\ndependencies = [\n \"rustversion\",\n]\n\n[[package]]\nname = \"libc\"\nversion = \"0.2.190\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78\"\n\n[[package]]\nname = \"memoffset\"\nversion = \"0.9.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a\"\ndependencies = [\n \"autocfg\",\n]\n\n[[package]]\nname = \"once_cell\"\nversion = \"1.21.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50\"\n\n[[package]]\nname = \"overlay-poc\"\nversion = \"0.1.0\"\ndependencies = [\n \"pyo3\",\n]\n\n[[package]]\nname = \"portable-atomic\"\nversion = \"1.15.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"05c8b63e8d9609db387f0324918f81d68fe27748f084ef092fb35954d0539a85\"\n\n[[package]]\nname = \"proc-macro2\"\nversion = \"1.0.107\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9\"\ndependencies = [\n \"unicode-ident\",\n]\n\n[[package]]\nname = \"pyo3\"\nversion = \"0.24.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e5203598f366b11a02b13aa20cab591229ff0a89fd121a308a5df751d5fc9219\"\ndependencies = [\n \"cfg-if\",\n \"indoc\",\n \"libc\",\n \"memoffset\",\n \"once_cell\",\n \"portable-atomic\",\n \"pyo3-build-config\",\n \"pyo3-ffi\",\n \"pyo3-macros\",\n \"unindent\",\n]\n\n[[package]]\nname = \"pyo3-build-config\"\nversion = \"0.24.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"99636d423fa2ca130fa5acde3059308006d46f98caac629418e53f7ebb1e9999\"\ndependencies = [\n \"once_cell\",\n \"target-lexicon\",\n]\n\n[[package]]\nname = \"pyo3-ffi\"\nversion = \"0.24.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"78f9cf92ba9c409279bc3305b5409d90db2d2c22392d443a87df3a1adad59e33\"\ndependencies = [\n \"libc\",\n \"pyo3-build-config\",\n]\n\n[[package]]\nname = \"pyo3-macros\"\nversion = \"0.24.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"0b999cb1a6ce21f9a6b147dcf1be9ffedf02e0043aec74dc390f3007047cecd9\"\ndependencies = [\n \"proc-macro2\",\n \"pyo3-macros-backend\",\n \"quote\",\n \"syn\",\n]\n\n[[package]]\nname = \"pyo3-macros-backend\"\nversion = \"0.24.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"822ece1c7e1012745607d5cf0bcb2874769f0f7cb34c4cde03b9358eb9ef911a\"\ndependencies = [\n \"heck\",\n \"proc-macro2\",\n \"pyo3-build-config\",\n \"quote\",\n \"syn\",\n]\n\n[[package]]\nname = \"quote\"\nversion = \"1.0.47\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001\"\ndependencies = [\n \"proc-macro2\",\n]\n\n[[package]]\nname = \"rustversion\"\nversion = \"1.0.23\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f\"\n\n[[package]]\nname = \"syn\"\nversion = \"2.0.119\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"unicode-ident\",\n]\n\n[[package]]\nname = \"target-lexicon\"\nversion = \"0.13.5\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"adb6935a6f5c20170eeceb1a3835a49e12e19d792f6dd344ccc76a985ca5a6ca\"\n\n[[package]]\nname = \"unicode-ident\"\nversion = \"1.0.26\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"d245f478577f809a851594d02313b640fb437e0bb33866753cff937863096954\"\n\n[[package]]\nname = \"unindent\"\nversion = \"0.2.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"7264e107f553ccae879d21fbea1d6724ac785e8c3bfc762137959b5802826ef3\"\n",
+    "src\\lib.rs": "use pyo3::prelude::*;\nuse pyo3::types::{PyByteArray, PyBytes};\nuse pyo3::exceptions::PyValueError;\n\n#[pyfunction]\nfn convert<'py>(py: Python<'py>, raw: &Bound<'py, PyBytes>, width: usize, height: usize,\n    crop: (usize,usize,usize,usize), mask: &Bound<'py, PyBytes>, intro: Option<(usize,usize,usize,usize)>)\n    -> PyResult<Bound<'py, PyByteArray>> {\n    let raw=raw.as_bytes(); let mask=mask.as_bytes();\n    let (x0,y0,x1,y1)=crop;\n    if width==0 || height==0 || width>16384 || height>16384 || x0>=x1 || y0>=y1 || x1>width || y1>height\n        || raw.len()!=width*height*4 || mask.len()!=(x1-x0)*(y1-y0) {\n        return Err(PyValueError::new_err(\"bad layout\"));\n    }\n    let w=x1-x0; let h=y1-y0;\n    if let Some((a,b,c,d))=intro {if a>=c || b>=d || c>w || d>h {return Err(PyValueError::new_err(\"bad intro\"));}}\n    PyByteArray::new_with(py,w*h*4,|out| {py.allow_threads(|| {\n        for y in 0..h {\n            let src=&raw[((y+y0)*width+x0)*4..((y+y0)*width+x1)*4];\n            let dst=&mut out[y*w*4..(y+1)*w*4];\n            let alpha=&mask[y*w..(y+1)*w];\n            for ((s,d),a) in src.chunks_exact(4).zip(dst.chunks_exact_mut(4)).zip(alpha) {\n                d[..3].copy_from_slice(&s[..3]); d[3]=*a;\n            }\n        }\n        if let Some((a,b,c,d))=intro {\n            let start=(b*w+a)*4; let key=[out[start],out[start+1],out[start+2]];\n            for y in b..d {for x in a..c {\n                let p=&mut out[(y*w+x)*4..(y*w+x+1)*4];\n                let diff=p[..3].iter().zip(key).map(|(v,k)|v.abs_diff(k)).max().unwrap();\n                let keyed=((diff.saturating_sub(4) as u16)*255/16).min(255) as u8;\n                p[3]=p[3].min(keyed); if p[3]==0 {p[..3].fill(0);}\n            }}\n        }\n    }); Ok(())})\n}\n\n#[pyfunction]\nfn intro<'py>(py: Python<'py>, raw: &Bound<'py, PyBytes>)->PyResult<(Bound<'py, PyByteArray>, (u8,u8,u8), f64)> {\n    let raw=raw.as_bytes();\n    if raw.len()<4 || raw.len()%4!=0 {return Err(PyValueError::new_err(\"bad bytes\"));}\n    let key=(raw[0],raw[1],raw[2]); let mut zero=0usize;\n    let result=PyByteArray::new_with(py,raw.len(),|out|{py.allow_threads(|| {\n        for (src,dst) in raw.chunks_exact(4).zip(out.chunks_exact_mut(4)) {\n            let diff=src[0].abs_diff(key.0).max(src[1].abs_diff(key.1)).max(src[2].abs_diff(key.2));\n            let keyed=((diff.saturating_sub(4) as u16)*255/16).min(255) as u8;\n            dst[3]=src[3].min(keyed);\n            if dst[3]==0 {zero+=1;} else {dst[..3].copy_from_slice(&src[..3]);}\n        }\n    });Ok(())})?;\n    Ok((result,key,zero as f64/(raw.len()/4) as f64))\n}\n\n#[pymodule]\nfn overlay_poc(m: &Bound<'_, PyModule>)->PyResult<()> { m.add_function(wrap_pyfunction!(convert,m)?)?;m.add_function(wrap_pyfunction!(intro,m)?)?;Ok(()) }\n",
+    "bench.py": "import json, statistics, sys, time\nfrom pathlib import Path\nimport cv2\nimport numpy as np\nsys.path.insert(0,str(Path(__file__).resolve().parents[2]/'src-python'))\nfrom models.overlay.overlay import DEFAULT_LAYOUT, MAX_LAYOUT, LAUNCHER, atlasMaskArray, regionRect\nimport overlay_poc\ndef introKeyAlpha(p,rect):\n    a,b,c,d=rect;r=p[b:d,a:c];k=r[0,0,:3].astype(np.int32)\n    diff=np.abs(r[...,:3].astype(np.int32)-k).max(axis=2)\n    alpha=np.minimum(r[...,3],np.clip((diff-4)*255//16,0,255).astype(np.uint8))\n    r[...,3]=alpha;r[alpha==0,:3]=0\n    return tuple(int(v) for v in k),float(np.mean(alpha==0))\nresults=[]\nfor name,layout in [('default',DEFAULT_LAYOUT),('max',MAX_LAYOUT)]:\n    for scale in [1,1.5,2]:\n        w,h=(round(v*scale) for v in layout['atlas'])\n        fw,fh=w+16,h+38\n        raw=np.random.default_rng(7).integers(0,256,(fh,fw,4),dtype=np.uint8).tobytes()\n        crop=(8,30,8+w,30+h)\n        view=np.frombuffer(raw,np.uint8).reshape(fh,fw,4)[30:30+h,8:8+w]\n        mask=atlasMaskArray((w,h),layout)\n        for intro in [False,True]:\n            rect=regionRect(LAUNCHER,(w,h),layout) if intro else None\n            def old():\n                p=view.copy(); p[...,3]=mask\n                if intro: introKeyAlpha(p,rect)\n                return p\n            def cv():\n                p=np.empty((h,w,4),np.uint8)\n                cv2.mixChannels([view,mask],[p],[0,0,1,1,2,2,4,3])\n                if intro: introKeyAlpha(p,rect)\n                return p\n            def rust():\n                return np.frombuffer(overlay_poc.convert(raw,fw,fh,crop,mask.tobytes(),rect),np.uint8).reshape(h,w,4)\n            funcs={'old':old,'cv2':cv,'rust':rust}\n            expected=old()\n            for f in funcs.values(): assert np.array_equal(f(),expected)\n            timings={k:[] for k in funcs}\n            for i in range(9):\n                for k in (list(funcs) if i%2==0 else list(reversed(funcs))):\n                    t=time.perf_counter_ns(); funcs[k](); timings[k].append((time.perf_counter_ns()-t)/1e6)\n            r=dict(layout=name,scale=scale,size=(w,h),intro=intro,median_ms={k:statistics.median(v) for k,v in timings.items()},trials_ms=timings)\n            results.append(r); print(json.dumps({k:v for k,v in r.items() if k!='trials_ms'}),flush=True)\nPath(__file__).with_name('result.json').write_text(json.dumps(results,indent=2))\n",
+    "intro_bench.py": "import json, statistics, time\nfrom pathlib import Path\nimport cv2\nimport numpy as np\nimport overlay_poc\ntable=np.clip((np.arange(256,dtype=np.int32)-4)*255//16,0,255).astype(np.uint8)\ndef old(p,rect):\n    a,b,c,d=rect;r=p[b:d,a:c];k=r[0,0,:3].astype(np.int32)\n    diff=np.abs(r[...,:3].astype(np.int32)-k).max(axis=2)\n    alpha=np.minimum(r[...,3],np.clip((diff-4)*255//16,0,255).astype(np.uint8))\n    r[...,3]=alpha;r[alpha==0,:3]=0\n    return tuple(int(v) for v in k),float(np.mean(alpha==0))\ndef cv(p,rect):\n    a,b,c,d=rect;r=p[b:d,a:c];k=tuple(int(v) for v in r[0,0,:3])\n    blue,green,red,_=cv2.split(cv2.absdiff(r,(*k,0)))\n    diff=cv2.max(cv2.max(blue,green),red)\n    alpha=cv2.min(r[...,3],cv2.LUT(diff,table))\n    r[...,3]=alpha;r[alpha==0,:3]=0\n    return k,float(np.mean(alpha==0))\ndef cv_fast(p,rect):\n    a,b,c,d=rect;r=p[b:d,a:c];k=tuple(int(v) for v in r[0,0,:3])\n    blue,green,red,_=cv2.split(cv2.absdiff(r,(*k,0)))\n    diff=cv2.max(cv2.max(blue,green),red)\n    alpha=cv2.min(r[...,3],cv2.LUT(diff,table))\n    cv2.insertChannel(alpha,r,3)\n    r[:]=cv2.copyTo(r,alpha)\n    return k,float((alpha.size-cv2.countNonZero(alpha))/alpha.size)\ndef rust(p,rect):\n    a,b,c,d=rect;r=p[b:d,a:c]\n    data,k,ratio=overlay_poc.intro(r.tobytes())\n    r[:]=np.frombuffer(data,np.uint8).reshape(r.shape)\n    return k,ratio\nresults=[]\nfor scale in [1,1.25,1.5,2]:\n    w,h=round(952*scale),round(128*scale)\n    for mode in ['random','background']:\n        p=np.random.default_rng(1).integers(0,256,(h+7,w+3,4),dtype=np.uint8)\n        rect=(1,3,1+w,3+h)\n        if mode=='background':p[3:3+h,1:1+w]=[50,40,30,255];p[5:50,100:300,:3]=255\n        expected=p.copy();ref=old(expected,rect)\n        funcs=dict(old=old,cv2=cv,cv_fast=cv_fast,rust=rust)\n        for f in funcs.values():\n            actual=p.copy();assert ref==f(actual,rect);assert np.array_equal(expected,actual)\n        t={k:[] for k in funcs}\n        for i in range(19):\n            for k in (list(funcs) if i%2==0 else list(reversed(funcs))):\n                f=funcs[k]\n                copy=p.copy();s=time.perf_counter_ns();f(copy,rect);t[k].append((time.perf_counter_ns()-s)/1e6)\n        r=dict(scale=scale,mode=mode,median_ms={k:statistics.median(v) for k,v in t.items()});results.append(r);print(json.dumps(r))\nPath(__file__).with_name('intro-result.json').write_text(json.dumps(results,indent=2))\n"
+  },
+  "source_sha256": {
+    "Cargo.toml": "401759e5395f3e41cf90e2faf8417de761456e7d708c1961825652e5ebbd9072",
+    "Cargo.lock": "d4dbb25e0102870f83aed35508068734229fb516167e155b747c6ff9563e063b",
+    "src\\lib.rs": "216492091690f12220e072a1a8c07a370fa22ef8bcca99761b7a65d06add5f89",
+    "bench.py": "7a6a8a082d44b265b6d5703ae8a8b5215963db9a3877d6b40a8ff67dccee55d8",
+    "intro_bench.py": "a3b78620086d029db544f59ecd00770561c99f644c4cc6d67c80a644546d5654"
+  },
+  "reproduction": [
+    "Restore source_snapshots into a temporary directory with paths preserved.",
+    "cargo build --release --locked --manifest-path <temporary>/Cargo.toml",
+    "Copy target/release/overlay_poc.dll to overlay_poc.pyd beside bench.py.",
+    "Set the repository src-python path in bench.py if the temporary directory is moved, and use OpenCV4.10 with NumPy1.26.4.",
+    "python bench.py; python intro_bench.py"
+  ],
+  "decision": "Do not ship this Rust image extension. Crop+mask fusion gives no consistent benefit, and larger frames regress. For intro, existing OpenCV beats this prototype including Python copies. Keep normal crop/mask and adopt the independently reviewed OpenCV implementation."
+}
