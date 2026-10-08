@@ -1,0 +1,156 @@
+{
+  "status": "PASS",
+  "checkpoint": "b9be99e7f27ff97abbad2c6f3abd1d218263404b",
+  "scope": "Real local source-provider inference with existing Whisper base weights and locally generated test speech",
+  "results": {
+    "cpu": {
+      "status": "PASS",
+      "scope": "source provider with real local base model, synthetic speech; no recording, remote ASR or downloads",
+      "mode": "cpu",
+      "actual_device": "cpu",
+      "actual_compute_type": "int8_float32",
+      "load_seconds": 1.5657221999717876,
+      "outputs": [
+        {
+          "text": " This is a local speech recognition test. The audio stays on this computer.",
+          "confidence": 1,
+          "definitive": true,
+          "elapsed_seconds": 6.334489700035192
+        },
+        {
+          "text": " This is a local speech recognition test. The audio stays on this computer.",
+          "confidence": 1,
+          "definitive": true,
+          "elapsed_seconds": 7.907444800017402
+        }
+      ],
+      "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+      "weights_sha256": {
+        "config.json": "56a6d8110d311f19c8f0471e562832c7527f146b567275bfca59fcf7c184da9a",
+        "model.bin": "d01c3014881c9c6f3133c182f3d2887eb6ca1c789a7538c5c007196857a0a6a9",
+        "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+        "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      },
+      "input": {
+        "source": "Windows SAPI Microsoft Zira Desktop",
+        "text": "This is a local speech recognition test. The audio stays on this computer.",
+        "wav_sha256": "d166156c6350ca10ec3a7b2109e6a070ca302adaecbafb4a6b5b9b640540a630",
+        "sample_rate": 22050,
+        "channels": 1,
+        "sample_width": 2,
+        "native_test_format": "48000 Hz PCM16 stereo to mono",
+        "canonical_array_shape": [
+          92617
+        ]
+      },
+      "independent_model_inputs": true,
+      "input_unchanged": true,
+      "raw_cache_reused": true,
+      "blocked_calls": {
+        "socket.bind": 1
+      },
+      "limitations": "Synthetic single phrase, two calls; no microphone-to-GUI measurement or recognition accuracy comparison. Timings under concurrent builds are not benchmarks."
+    },
+    "cuda": {
+      "status": "PASS",
+      "scope": "source provider with real local base model, synthetic speech; no recording, remote ASR or downloads",
+      "mode": "cuda",
+      "actual_device": "cuda",
+      "actual_compute_type": "int8_float16",
+      "load_seconds": 5.451566100004129,
+      "outputs": [
+        {
+          "text": " This is a local speech recognition test. The audio stays on this computer.",
+          "confidence": 1,
+          "definitive": true,
+          "elapsed_seconds": 7.033420099993236
+        },
+        {
+          "text": " This is a local speech recognition test. The audio stays on this computer.",
+          "confidence": 1,
+          "definitive": true,
+          "elapsed_seconds": 0.7482762000290677
+        }
+      ],
+      "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+      "weights_sha256": {
+        "config.json": "56a6d8110d311f19c8f0471e562832c7527f146b567275bfca59fcf7c184da9a",
+        "model.bin": "d01c3014881c9c6f3133c182f3d2887eb6ca1c789a7538c5c007196857a0a6a9",
+        "tokenizer.json": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+        "vocabulary.txt": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"
+      },
+      "input": {
+        "source": "Windows SAPI Microsoft Zira Desktop",
+        "text": "This is a local speech recognition test. The audio stays on this computer.",
+        "wav_sha256": "d166156c6350ca10ec3a7b2109e6a070ca302adaecbafb4a6b5b9b640540a630",
+        "sample_rate": 22050,
+        "channels": 1,
+        "sample_width": 2,
+        "native_test_format": "48000 Hz PCM16 stereo to mono",
+        "canonical_array_shape": [
+          92617
+        ]
+      },
+      "independent_model_inputs": true,
+      "input_unchanged": true,
+      "raw_cache_reused": true,
+      "blocked_calls": {
+        "socket.bind": 1
+      },
+      "limitations": "Synthetic single phrase, two calls; no microphone-to-GUI measurement or recognition accuracy comparison. Timings under concurrent builds are not benchmarks."
+    }
+  },
+  "single_fixture_transcript_matches_prompt": true,
+  "synthesis": {
+    "engine": "Windows SAPI Microsoft Zira Desktop (language 409)",
+    "input_text": "This is a local speech recognition test. The audio stays on this computer.",
+    "output_mode": "SAPI.SpFileStream.Open(path,3,false), SpVoice.AudioOutputStream=file, Rate=0, Speak(text)",
+    "playback": false,
+    "user_recording_used": false,
+    "wav_sha256": "d166156c6350ca10ec3a7b2109e6a070ca302adaecbafb4a6b5b9b640540a630"
+  },
+  "weights_original_and_copy_unchanged": true,
+  "validation_source": {
+    "sha256": "0912230a3b6068d3d65b203ab5c08d68d42a44788dcf007cb5f0f5622d88546e",
+    "text": "\"\"\"Real local Whisper inference on locally synthesized speech; no user recording.\"\"\"\nimport audioop\nfrom collections import Counter\nimport hashlib\nimport json\nimport math\nimport os\nfrom pathlib import Path\nimport sys\nimport time\nimport wave\n\nmode = sys.argv[1]\nassert mode in ('cpu', 'cuda')\nfolder = Path(__file__).resolve().parent\nroot = folder.parents[1]\nrun = folder / mode\nrun.mkdir(exist_ok=False)\nos.chdir(run)\nos.environ.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', HF_DATASETS_OFFLINE='1',\n                  HF_HUB_DISABLE_TELEMETRY='1', DO_NOT_TRACK='1')\nblocked = Counter()\n\ndef audit(event, args):\n    if event in ('socket.connect', 'socket.sendto', 'socket.bind', 'socket.getaddrinfo'):\n        blocked[event] += 1\n        raise OSError('Network disabled for local model test')\n\nsys.addaudithook(audit)\nimport requests\n\ndef no_http(*args, **kwargs):\n    blocked['requests'] += 1\n    raise requests.ConnectionError('HTTP disabled for local model test')\n\nrequests.sessions.Session.request = no_http\nimport numpy as np\nimport vrct_audio\nfrom models.transcription.pcm_audio import PcmAudio\nfrom models.transcription.transcription_providers import LocalWhisperProvider\nfrom models.transcription.transcription_whisper import getWhisperModel\n\nwave_path = folder / 'local-test.wav'\nwith wave.open(str(wave_path), 'rb') as source:\n    original_rate, width, channels = source.getframerate(), source.getsampwidth(), source.getnchannels()\n    assert width == 2 and channels == 1\n    original = source.readframes(source.getnframes())\npcm48, _ = audioop.ratecv(original, 2, 1, original_rate, 48000, None)\nstereo48 = audioop.tostereo(pcm48, 2, 1.0, 1.0)\nmono48 = vrct_audio.normalize_pcm16(stereo48, 2, 2)\nassert mono48 == pcm48\nassert vrct_audio.downmix_pcm16(stereo48, 2) == pcm48\nassert vrct_audio.rms_pcm16(mono48) > 0\nclip = PcmAudio(mono48, 48000, 2)\ncanonical = clip.get_raw_data(convert_rate=16000, convert_width=2)\nassert canonical is clip.get_raw_data(convert_rate=16000, convert_width=2)\nexpected = np.frombuffer(canonical, np.int16).flatten().astype(np.float32) / 32768.0\nmodel_root = folder / 'model-copy'\nweight_dir = model_root / 'weights/whisper/base'\nweight_hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in weight_dir.iterdir() if p.is_file()}\nload_start = time.perf_counter()\nmodel = getWhisperModel(str(model_root), 'base', device=mode)\nload_seconds = time.perf_counter() - load_start\nassert model.model.device == mode\n\nclass ObservedModel:\n    def __init__(self):\n        self.inputs = []\n\n    def transcribe(self, data, **kwargs):\n        assert data.dtype == np.float32 and np.array_equal(data, expected)\n        assert not any(np.shares_memory(data, previous) for previous in self.inputs)\n        self.inputs.append(data)\n        return model.transcribe(data, **kwargs)\n\nobserved = ObservedModel()\nprovider = LocalWhisperProvider(observed)\noutputs = []\nfor _ in range(2):\n    start = time.perf_counter()\n    text, confidence, definitive = provider.transcribe(clip, 'English', 'United States', avg_logprob=-1.0,\n        no_speech_prob=0.6, no_repeat_ngram_size=3, force_language=True)\n    elapsed = time.perf_counter() - start\n    assert text.strip() and math.isfinite(confidence) and 0 <= confidence <= 1 and definitive is True\n    outputs.append({'text':text,'confidence':confidence,'definitive':definitive,'elapsed_seconds':elapsed})\nassert outputs[0]['text'] == outputs[1]['text']\nassert len(observed.inputs) == 2 and all(np.array_equal(data, expected) for data in observed.inputs)\nassert {p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in weight_dir.iterdir() if p.is_file()} == weight_hashes\nnative_hash = hashlib.sha256(Path(vrct_audio.vrct_audio.__file__).read_bytes()).hexdigest()\nassert native_hash == '8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53'\nresult = {'status':'PASS', 'scope':'source provider with real local base model, synthetic speech; no recording, remote ASR or downloads',\n          'mode':mode,'actual_device':model.model.device,'actual_compute_type':model.model.compute_type,\n          'load_seconds':load_seconds,'outputs':outputs,'native_sha256':native_hash,'weights_sha256':weight_hashes,\n          'input':{'source':'Windows SAPI Microsoft Zira Desktop',\n                   'text':'This is a local speech recognition test. The audio stays on this computer.',\n                   'wav_sha256':hashlib.sha256(wave_path.read_bytes()).hexdigest(),\n                   'sample_rate':original_rate,'channels':channels,'sample_width':width,\n                   'native_test_format':'48000 Hz PCM16 stereo to mono', 'canonical_array_shape':list(expected.shape)},\n          'independent_model_inputs':True,'input_unchanged':True,'raw_cache_reused':True,'blocked_calls':dict(blocked),\n          'limitations':'Synthetic single phrase, two calls; no microphone-to-GUI measurement or recognition accuracy comparison. Timings under concurrent builds are not benchmarks.'}\n(run/'result.json').write_text(json.dumps(result,indent=2),encoding='utf-8')\nprint(json.dumps(result))\n"
+  },
+  "source_sha256": {
+    "src-python/models/transcription/transcription_whisper.py": "ffd798c6bb14a820c8a8a57567fe992bf6a5cd0e357b3d2233efb9d238fed06e",
+    "src-python/models/transcription/transcription_providers.py": "29266ea74dd7a4d4f446f82e07925469df127f8826b1bccd76d7a0daf34bd77d",
+    "src-python/models/transcription/pcm_audio.py": "e3cbc38c317a6e3bd8db2f3b405d334d21d152940d262063efcc5e0867bffbb7",
+    "src-python/models/transcription/transcription_languages.py": "a46ba1765bb265c92a52fbc39278dcdbdcfe545b0a4daf9d4983fa70600d6f7b",
+    "src-python/utils.py": "f682ea9235ad83f01486bc7c302b4647497a9c3d4cf9741ff6df94a56c93467c"
+  },
+  "evidence_sha256": {
+    "whisper-cpu.log": "bc509ad1cdf8faf66c820888a0ab427d662a95a43abe23c3e0ef09273edbe859",
+    "whisper-cuda.log": "9e0962979de892a3c9ed2cc2eba6b49732db80fb33f3306d489fd4f76732464d",
+    "cpu/result.json": "7a6396bf0f3b8b19b3798ac8b6326c30bccc73a7c7a9861c0b571b0dbaf97e4a",
+    "cuda/result.json": "0edf06c85157710e2f9dad82e43c157a0381adb7c445a247d59d0eef2fcfda61",
+    "model-source-sha256.json": "aed4075201b3dbf9d339e21023fce8b5b1ee0a5b9768a79c2ce893e7b459f44c"
+  },
+  "launch_environment": {
+    "PYTHONPATH": [
+      "tmp/cycle9/native-site",
+      "tmp/cv2-pinned",
+      "src-python"
+    ],
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "independent_harness_review": "LGTM; actual WhisperModel delegation and generator consumption verified",
+  "limitations": [
+    "One synthetic English phrase, two calls per mode; not an accuracy benchmark.",
+    "Float equivalence uses the same canonical PCM; independent legacy resampling equivalence is covered in earlier tests, not this harness.",
+    "Timings include concurrent build contention and first-call setup; not a CPU/CUDA performance comparison.",
+    "Source environment inference; not packaged-model or GUI integration.",
+    "Python communication guards and offline/local-only code paths; no OS firewall isolation."
+  ],
+  "warnings": [
+    "audioop deprecation warning; Python 3.11 runtime"
+  ],
+  "independent_result_review": {
+    "verdict": "LGTM",
+    "checks_matched": 24,
+    "scope": "Read-only comparison of results, logs, source/script/wav/copied-model hashes and claims; no repeat inference",
+    "note": "Original-model immutability, SAPI generation and exit codes rely on parent execution evidence; confidence is language probability, not recognition accuracy."
+  }
+}

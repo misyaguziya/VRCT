@@ -21,8 +21,8 @@ openvr==1.26.701
 glfw==2.7.0
 PyOpenGL==3.1.7
 # VR UI window capture (Windows.Graphics.Capture). Like rapidocr it requires
-# opencv-python, so it is installed with --no-deps (see bat/install.bat);
-# numpy and cv2 (opencv-python-headless) are listed elsewhere in this file.
+# opencv-python. After dependency installation, bat/install.bat removes that
+# overlapping package and restores the pinned opencv-python-headless build.
 # Optional at runtime: without it the overlay falls back to PrintWindow.
 windows-capture==2.0.1
 pydub==0.25.1
@@ -68,8 +68,9 @@ aptabase==0.1.0
 # Accuracy (95 training images, CER): EasyOCR 0.69 -> PP-OCRv6 small 0.27.
 # EasyOCR required torch and pulled in torch(1.2GB)+scipy+scikit-image.
 # NOTE: rapidocr requires opencv-python, but this app uses
-# opencv-python-headless, so it is installed with --no-deps (see
-# bat/install.bat). Its dependencies are listed explicitly below.
+# opencv-python-headless. bat/install.bat removes opencv-python after dependency
+# installation and force-reinstalls headless to restore their overlapping files.
+# The remaining dependencies are listed explicitly below.
 rapidocr==3.9.2
 opencv-python-headless==4.10.0.84
 omegaconf==2.3.1

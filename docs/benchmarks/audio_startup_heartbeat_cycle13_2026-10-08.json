@@ -1,0 +1,288 @@
+{
+  "status": "PARTIAL",
+  "recorded_at": "2026-10-08T17:19:30.038841+09:00",
+  "scope": "Early heartbeat startup race fix; checkpoint before full frozen validation finished",
+  "baseline_commit": "b9be99e7f27ff97abbad2c6f3abd1d218263404b",
+  "stop_reason": "User requested a commit and handoff to Claude Code; owned startup runners and dedicated executables were stopped.",
+  "change": "feedWatchdog only feeds an already-created watchdog; it does not start Model initialization.",
+  "source_snapshot": [
+    {
+      "path": "src-python/model.py",
+      "sha256": "4c4363a8e711b2d526f9d22a9844a4d661d3f3d1fb1d62be1c3338cfa06ed343"
+    },
+    {
+      "path": "src-python/test/test_model_early_watchdog.py",
+      "sha256": "ad909f038a672ec341df069ee020ae208f9664cca442478ba37ecb2d672a34bf"
+    },
+    {
+      "path": "bat/install.bat",
+      "sha256": "52c988ab34bcd33458050204903f1df2ead14b5b2c449d761cdec0edb3b366da"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "2ff96837118ab78cccc0aac4c69705ba0db8bbce36065e3951a2f2ba8d59efcb"
+    }
+  ],
+  "tests": {
+    "cpu": {
+      "status": "PASS",
+      "passed": 24,
+      "subtests_passed": 2,
+      "warnings": 4,
+      "log": {
+        "path": "tmp/cycle13-startup/cpu-tests.log",
+        "sha256": "2dccab72b3e6b210e71e368d385d126f96ab79d87c8240b1b51c3f8b7961c518",
+        "text": "..................{\"status\": 348, \"log\": \"Start Initialization\", \"data\": \"None\"}\n.{\"status\": 348, \"log\": \"Download Whisper Model Weight\", \"data\": \"None\"}\n.....                                               [100%]\n============================== warnings summary ===============================\n..\\..\\..\\..\\..\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\ctranslate2\\__init__.py:8\n  D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\ctranslate2\\__init__.py:8: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html\n    import pkg_resources\n\n..\\..\\..\\..\\..\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\google\\genai\\types.py:9523\n  D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\google\\genai\\types.py:9523: PydanticDeprecatedSince212: Using `@model_validator` with mode='after' on a classmethod is deprecated. Instead, use an instance method. See the documentation at https://docs.pydantic.dev/2.13/concepts/validators/#model-after-validator. Deprecated in Pydantic V2.12 to be removed in V3.0.\n    @model_validator(mode='after')  # type: ignore[arg-type]\n\n<frozen importlib._bootstrap>:241\n  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute\n\n<frozen importlib._bootstrap>:241\n  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n24 passed, 4 warnings, 2 subtests passed in 8.27s\n"
+      }
+    },
+    "cuda": {
+      "status": "PASS",
+      "passed": 24,
+      "subtests_passed": 2,
+      "warnings": 4,
+      "log": {
+        "path": "tmp/cycle13-startup/cuda-tests.log",
+        "sha256": "24d5c6af916469219225415993c3a3626dfee81aa98ed3db18436e7367b3b4c9",
+        "text": "..................{\"status\": 348, \"log\": \"Start Initialization\", \"data\": \"None\"}\n.{\"status\": 348, \"log\": \"Download Whisper Model Weight\", \"data\": \"None\"}\n.....                                               [100%]\n============================== warnings summary ===============================\n..\\..\\..\\..\\..\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\ctranslate2\\__init__.py:8\n  D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\ctranslate2\\__init__.py:8: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html\n    import pkg_resources\n\n..\\..\\..\\..\\..\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\google\\genai\\types.py:9523\n  D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\google\\genai\\types.py:9523: PydanticDeprecatedSince212: Using `@model_validator` with mode='after' on a classmethod is deprecated. Instead, use an instance method. See the documentation at https://docs.pydantic.dev/2.13/concepts/validators/#model-after-validator. Deprecated in Pydantic V2.12 to be removed in V3.0.\n    @model_validator(mode='after')  # type: ignore[arg-type]\n\n<frozen importlib._bootstrap>:241\n  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute\n\n<frozen importlib._bootstrap>:241\n  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n24 passed, 4 warnings, 2 subtests passed in 10.73s\n"
+      }
+    },
+    "ruff": {
+      "version": "0.14.4",
+      "status": "PASS",
+      "log": {
+        "path": "tmp/cycle13-startup/ruff-pinned.log",
+        "sha256": "a4443afdcfb6d7363adb285762515ccf7cf50473b1a05c20c1a50f6bed4d26b0",
+        "text": "All checks passed!\n"
+      }
+    },
+    "legacy_regression": {
+      "status": "PASS_EXPECTED_REJECTION",
+      "scope": "Old checkpoint heartbeat method injected in child process only; new tests reject it.",
+      "log": {
+        "path": "tmp/cycle13-startup/legacy-regression.log",
+        "sha256": "2078f80ac57594838f7c59759695512121eb6c2fdf7d96f4421c7fe46ad85820",
+        "text": "test_early_feed_then_bootstrap_keeps_all_resource_callbacks (watchdog_regression.EarlyWatchdogTests.test_early_feed_then_bootstrap_keeps_all_resource_callbacks) ... FAIL\ntest_existing_watchdog_is_fed_without_retrying_failed_initialization (watchdog_regression.EarlyWatchdogTests.test_existing_watchdog_is_fed_without_retrying_failed_initialization) ... FAIL\n{\"status\": 348, \"log\": \"Clipboard: VR monitor thread started.\", \"data\": \"None\"}\n{\"status\": 348, \"log\": \"Clipboard initialized. Waiting for SteamVR.\", \"data\": \"None\"}\ntest_feed_failure_is_propagated_without_arming_dump (watchdog_regression.EarlyWatchdogTests.test_feed_failure_is_propagated_without_arming_dump) ... FAIL\ntest_feed_remains_available_while_main_thread_initializes_resources (watchdog_regression.EarlyWatchdogTests.test_feed_remains_available_while_main_thread_initializes_resources) ... ok\ntest_initialized_watchdog_keeps_feeding_and_arming_dump (watchdog_regression.EarlyWatchdogTests.test_initialized_watchdog_keeps_feeding_and_arming_dump) ... ok\ntest_prebootstrap_feed_does_not_initialize_resources_or_arm_dump (watchdog_regression.EarlyWatchdogTests.test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump) ... \n  test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump (watchdog_regression.EarlyWatchdogTests.test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump) (initialization_started=False) ... ERROR\n  test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump (watchdog_regression.EarlyWatchdogTests.test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump) (initialization_started=True) ... ERROR\n\n======================================================================\nERROR: test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump (watchdog_regression.EarlyWatchdogTests.test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump) (initialization_started=False)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\codex\\home\\worktrees\\4508\\VRCT\\src-python\\test\\test_model_early_watchdog.py\", line 23, in test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump\n    self.assertIsNone(self.model.feedWatchdog())\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<checkpoint-heartbeat>\", line 2498, in feedWatchdog\nAttributeError: 'Model' object has no attribute 'watchdog'\n\n======================================================================\nERROR: test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump (watchdog_regression.EarlyWatchdogTests.test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump) (initialization_started=True)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\codex\\home\\worktrees\\4508\\VRCT\\src-python\\test\\test_model_early_watchdog.py\", line 23, in test_prebootstrap_feed_does_not_initialize_resources_or_arm_dump\n    self.assertIsNone(self.model.feedWatchdog())\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<checkpoint-heartbeat>\", line 2498, in feedWatchdog\nAttributeError: 'Model' object has no attribute 'watchdog'\n\n======================================================================\nFAIL: test_early_feed_then_bootstrap_keeps_all_resource_callbacks (watchdog_regression.EarlyWatchdogTests.test_early_feed_then_bootstrap_keeps_all_resource_callbacks)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\codex\\home\\worktrees\\4508\\VRCT\\src-python\\test\\test_model_early_watchdog.py\", line 76, in test_early_feed_then_bootstrap_keeps_all_resource_callbacks\n    constructor.assert_not_called()\n  File \"C:\\Users\\misyaguzi\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\unittest\\mock.py\", line 900, in assert_not_called\n    raise AssertionError(msg)\nAssertionError: Expected 'MicSession' to not have been called. Called 1 times.\nCalls: [call()].\n\n======================================================================\nFAIL: test_existing_watchdog_is_fed_without_retrying_failed_initialization (watchdog_regression.EarlyWatchdogTests.test_existing_watchdog_is_fed_without_retrying_failed_initialization)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\codex\\home\\worktrees\\4508\\VRCT\\src-python\\test\\test_model_early_watchdog.py\", line 36, in test_existing_watchdog_is_fed_without_retrying_failed_initialization\n    init.assert_not_called()\n  File \"C:\\Users\\misyaguzi\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\unittest\\mock.py\", line 900, in assert_not_called\n    raise AssertionError(msg)\nAssertionError: Expected 'init' to not have been called. Called 1 times.\nCalls: [call()].\n\n======================================================================\nFAIL: test_feed_failure_is_propagated_without_arming_dump (watchdog_regression.EarlyWatchdogTests.test_feed_failure_is_propagated_without_arming_dump)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"D:\\codex\\home\\worktrees\\4508\\VRCT\\src-python\\test\\test_model_early_watchdog.py\", line 130, in test_feed_failure_is_propagated_without_arming_dump\n    with self.assertRaisesRegex(RuntimeError, \"feed failed\"):\nAssertionError: RuntimeError not raised\n\n----------------------------------------------------------------------\nRan 6 tests in 0.057s\n\nFAILED (failures=3, errors=2)\nPASS: checkpoint heartbeat method rejected by new regression tests; product source was not modified.\n"
+      },
+      "exit_code_directly_recovered": false
+    }
+  },
+  "builds": {
+    "cpu": {
+      "kind": "PYZ/EXE/COLLECT using cycle11 dependency Analysis",
+      "collect_log_completed": true,
+      "original_process_exit_code": null,
+      "distribution_file_count": 3181,
+      "distribution_total_bytes": 1197626572,
+      "executable": {
+        "path": "tmp/cycle13-startup/dist-cpu/VRCT-sidecar-x86_64-pc-windows-msvc.exe",
+        "sha256": "b291f8dfa564cdcd9942d1deb5b98b8f517ea6d2f29e3302a978983e3d9f1753"
+      },
+      "build_log": {
+        "path": "tmp/cycle13-startup/build-cpu.log",
+        "sha256": "62b3a46af3f27173ce104fb345b251c00cb78f55f23d0d2a6d9de86da0aeb165",
+        "text": "565 INFO: PyInstaller: 6.10.0, contrib hooks: 2026.7\n566 INFO: Python: 3.11.5\n663 INFO: Platform: Windows-10-10.0.26200-SP0\n663 INFO: Python environment: D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\n2074 INFO: checking PYZ\n2075 INFO: Building PYZ because PYZ-00.toc is non existent\n2075 INFO: Building PYZ (ZlibArchive) D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\work-cpu\\cpu\\PYZ-00.pyz\n56588 INFO: Building PYZ (ZlibArchive) D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\work-cpu\\cpu\\PYZ-00.pyz completed successfully.\n57340 INFO: checking PKG\n57342 INFO: Building PKG because PKG-00.toc is non existent\n57342 INFO: Building PKG (CArchive) VRCT-sidecar-x86_64-pc-windows-msvc.pkg\n57963 INFO: Building PKG (CArchive) VRCT-sidecar-x86_64-pc-windows-msvc.pkg completed successfully.\n57977 INFO: Bootloader D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe\n57977 INFO: checking EXE\n57977 INFO: Building EXE because EXE-00.toc is non existent\n57977 INFO: Building EXE from EXE-00.toc\n57977 INFO: Copying bootloader EXE to D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\work-cpu\\cpu\\VRCT-sidecar-x86_64-pc-windows-msvc.exe\n58101 INFO: Copying icon to EXE\n58192 INFO: Copying 0 resources to EXE\n58192 INFO: Embedding manifest in EXE\n58296 INFO: Appending PKG archive to EXE\n58692 INFO: Fixing EXE headers\n62101 INFO: Building EXE from EXE-00.toc completed successfully.\n62291 INFO: checking COLLECT\n62291 INFO: Building COLLECT because COLLECT-00.toc is non existent\n62291 INFO: Removing dir D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\dist-cpu\\.\n62314 INFO: Building COLLECT COLLECT-00.toc\n177993 INFO: Building COLLECT COLLECT-00.toc completed successfully.\n"
+      },
+      "limited_smoke": {
+        "status": "PASS",
+        "scope": "full sidecar build; isolated native/codec/assets smoke, no controller/device/network/GPU startup",
+        "speech_recognition_available": false,
+        "flac_roundtrip_rates": [
+          8000,
+          44100,
+          96000,
+          192000
+        ],
+        "normalize_pcm16_cases": 24,
+        "resampler_state_equal": true,
+        "canonical_raw_wav_reused": true,
+        "whisper_mutation_isolated": true,
+        "dasp_mit_notice_present": true,
+        "cv2_version": "4.10.0",
+        "assets": [
+          "licenses/google_speech_LICENSE.txt",
+          "licenses/vrct-audio/THIRD_PARTY_LICENSES.txt",
+          "ocr_onnx/chatbox_yolox_tiny.onnx",
+          "fonts/NotoSansJP-Regular.ttf",
+          "translation_settings/prompt",
+          "translation_settings/languages",
+          "openvr",
+          "glfw",
+          "faster_whisper",
+          "rapidocr"
+        ],
+        "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+        "model_sha256": "ac3767540dd46f5587a799d611139a18b213293cd1bcabba4491aed7235b8007"
+      },
+      "startup": {
+        "status": "INTERRUPTED_FOR_HANDOFF",
+        "result_json_present": false,
+        "directory": "tmp/cycle13-startup/startup-cpu",
+        "observed_logs": [
+          {
+            "path": "tmp/cycle13-startup/startup-cpu/stderr.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "tmp/cycle13-startup/startup-cpu/stdout.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          }
+        ],
+        "copied_source_hashes": {
+          "VRCT-sidecar-x86_64-pc-windows-msvc.exe": "b291f8dfa564cdcd9942d1deb5b98b8f517ea6d2f29e3302a978983e3d9f1753",
+          "_internal/vrct_audio/vrct_audio.pyd": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+          "_internal/cv2/cv2.pyd": "4705689bc8cbe47b57e95560c648cbabdba43de1615d62a85ff21437285ee1b7"
+        }
+      },
+      "full_pyz_and_internal_hash_comparison": "NOT_COMPLETED"
+    },
+    "cuda": {
+      "kind": "PYZ/EXE/COLLECT using cycle11 dependency Analysis",
+      "collect_log_completed": true,
+      "original_process_exit_code": null,
+      "distribution_file_count": 3192,
+      "distribution_total_bytes": 3047203593,
+      "executable": {
+        "path": "tmp/cycle13-startup/dist-cuda/VRCT-sidecar-x86_64-pc-windows-msvc.exe",
+        "sha256": "7069dc45782935d46ec4cc58bc3966d58f52489a11ad93d7e0440095f50494ac"
+      },
+      "build_log": {
+        "path": "tmp/cycle13-startup/build-cuda.log",
+        "sha256": "aa700a272367f9494c4f4583b5a5584b92c2508d7e01cce9878096b69b249cd4",
+        "text": "686 INFO: PyInstaller: 6.10.0, contrib hooks: 2026.7\n686 INFO: Python: 3.11.5\n805 INFO: Platform: Windows-10-10.0.26200-SP0\n806 INFO: Python environment: D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\n2298 INFO: checking PYZ\n2298 INFO: Building PYZ because PYZ-00.toc is non existent\n2299 INFO: Building PYZ (ZlibArchive) D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\work-cuda\\cuda\\PYZ-00.pyz\n53781 INFO: Building PYZ (ZlibArchive) D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\work-cuda\\cuda\\PYZ-00.pyz completed successfully.\n54360 INFO: checking PKG\n54368 INFO: Building PKG because PKG-00.toc is non existent\n54369 INFO: Building PKG (CArchive) VRCT-sidecar-x86_64-pc-windows-msvc.pkg\n54687 INFO: Building PKG (CArchive) VRCT-sidecar-x86_64-pc-windows-msvc.pkg completed successfully.\n54690 INFO: Bootloader D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe\n54690 INFO: checking EXE\n54690 INFO: Building EXE because EXE-00.toc is non existent\n54690 INFO: Building EXE from EXE-00.toc\n54691 INFO: Copying bootloader EXE to D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\work-cuda\\cuda\\VRCT-sidecar-x86_64-pc-windows-msvc.exe\n54927 INFO: Copying icon to EXE\n55032 INFO: Copying 0 resources to EXE\n55032 INFO: Embedding manifest in EXE\n55197 INFO: Appending PKG archive to EXE\n55506 INFO: Fixing EXE headers\n59397 INFO: Building EXE from EXE-00.toc completed successfully.\n59506 INFO: checking COLLECT\n59507 INFO: Building COLLECT because COLLECT-00.toc is non existent\n59508 INFO: Removing dir D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle13-startup\\dist-cuda\\.\n59510 INFO: Building COLLECT COLLECT-00.toc\n181423 INFO: Building COLLECT COLLECT-00.toc completed successfully.\n"
+      },
+      "limited_smoke": {
+        "status": "PASS",
+        "scope": "full sidecar build; isolated native/codec/assets smoke, no controller/device/network/GPU startup",
+        "speech_recognition_available": false,
+        "flac_roundtrip_rates": [
+          8000,
+          44100,
+          96000,
+          192000
+        ],
+        "normalize_pcm16_cases": 24,
+        "resampler_state_equal": true,
+        "canonical_raw_wav_reused": true,
+        "whisper_mutation_isolated": true,
+        "dasp_mit_notice_present": true,
+        "cv2_version": "4.10.0",
+        "assets": [
+          "licenses/google_speech_LICENSE.txt",
+          "licenses/vrct-audio/THIRD_PARTY_LICENSES.txt",
+          "ocr_onnx/chatbox_yolox_tiny.onnx",
+          "fonts/NotoSansJP-Regular.ttf",
+          "translation_settings/prompt",
+          "translation_settings/languages",
+          "openvr",
+          "glfw",
+          "faster_whisper",
+          "rapidocr",
+          "nvidia/cublas",
+          "nvidia/cudnn"
+        ],
+        "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+        "model_sha256": "ac3767540dd46f5587a799d611139a18b213293cd1bcabba4491aed7235b8007"
+      },
+      "startup": {
+        "status": "INTERRUPTED_FOR_HANDOFF",
+        "result_json_present": false,
+        "directory": "tmp/cycle13-startup/startup-cuda",
+        "observed_logs": [
+          {
+            "path": "tmp/cycle13-startup/startup-cuda/stderr.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          },
+          {
+            "path": "tmp/cycle13-startup/startup-cuda/stdout.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "text": ""
+          }
+        ],
+        "copied_source_hashes": {
+          "VRCT-sidecar-x86_64-pc-windows-msvc.exe": "7069dc45782935d46ec4cc58bc3966d58f52489a11ad93d7e0440095f50494ac",
+          "_internal/vrct_audio/vrct_audio.pyd": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+          "_internal/cv2/cv2.pyd": "4705689bc8cbe47b57e95560c648cbabdba43de1615d62a85ff21437285ee1b7"
+        }
+      },
+      "full_pyz_and_internal_hash_comparison": "NOT_COMPLETED"
+    }
+  },
+  "independent_review": {
+    "design": "LGTM",
+    "product_implementation": "LGTM",
+    "startup_harness": "LGTM",
+    "final_distribution_and_startup_audit": "NOT_COMPLETED"
+  },
+  "reproduction_sources": [
+    {
+      "path": "tmp/cycle13-startup/cpu.spec",
+      "sha256": "f1640845da1f466f6a612acd0cc2e71e6fa83453baadd56e2e54adb4023c488f",
+      "text": "import ast\nimport os\nfrom pathlib import Path\nimport PyInstaller\nfrom PyInstaller.building.build_main import Analysis\nassert PyInstaller.__version__ == '6.10.0'\nassert os.environ.get('PYINSTALLER_STRICT_COLLECT_MODE') == '1'\nroot = Path(SPECPATH).parents[1]\nold = root / 'tmp/cycle11-sidecar'\nmode = 'cpu'\nvalues = ast.literal_eval((old / ('work-' + mode) / mode / 'Analysis-00.toc').read_text(encoding='utf-8'))\nassert len(values) == len(Analysis._GUTS)\ndata = dict(zip((entry[0] for entry in Analysis._GUTS), values))\nfor key in ('pure','scripts','binaries','datas'):\n    assert isinstance(data[key], list)\n    assert all(isinstance(row, tuple) and len(row) == 3 for row in data[key])\npure = list(data['pure'])\nassert len([row for row in pure if row[0] == 'model']) == 1\nassert Path(next(row[1] for row in pure if row[0] == 'model')).resolve() == root / 'src-python/model.py'\nassert all(row[1] == '-' or Path(row[1]).is_file() for row in pure)\nscripts = [(name, str(Path(SPECPATH) / 'startup_hook.py') if name == 'startup_hook' else source, kind) for name,source,kind in data['scripts']]\nassert sum(row[0] == 'startup_hook' for row in scripts) == 1\nassert all(Path(row[1]).is_file() for row in scripts)\ndef remap(rows):\n    result = [(name, str(old / ('dist-' + mode) / '_internal' / name), kind) for name,source,kind in rows]\n    assert all(Path(row[1]).is_file() for row in result)\n    return result\nbinaries = remap(data['binaries'])\ndatas = remap(data['datas'])\npyz = PYZ(pure)\nexe = EXE(pyz, scripts, [], exclude_binaries=True, name='VRCT-sidecar-x86_64-pc-windows-msvc', debug=False, bootloader_ignore_signals=False, strip=False, upx=False, console=True, disable_windowed_traceback=False, argv_emulation=False, target_arch=None, codesign_identity=None, entitlements_file=None, icon=[])\ncoll = COLLECT(exe, binaries, datas, strip=False, upx=False, upx_exclude=[], name='.')\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/cuda.spec",
+      "sha256": "3d83bdfa2c415abf7ed151c2843dc631e59e9717d45cf071a71fc5048b7cee5d",
+      "text": "import ast\nimport os\nfrom pathlib import Path\nimport PyInstaller\nfrom PyInstaller.building.build_main import Analysis\nassert PyInstaller.__version__ == '6.10.0'\nassert os.environ.get('PYINSTALLER_STRICT_COLLECT_MODE') == '1'\nroot = Path(SPECPATH).parents[1]\nold = root / 'tmp/cycle11-sidecar'\nmode = 'cuda'\nvalues = ast.literal_eval((old / ('work-' + mode) / mode / 'Analysis-00.toc').read_text(encoding='utf-8'))\nassert len(values) == len(Analysis._GUTS)\ndata = dict(zip((entry[0] for entry in Analysis._GUTS), values))\nfor key in ('pure','scripts','binaries','datas'):\n    assert isinstance(data[key], list)\n    assert all(isinstance(row, tuple) and len(row) == 3 for row in data[key])\npure = list(data['pure'])\nassert len([row for row in pure if row[0] == 'model']) == 1\nassert Path(next(row[1] for row in pure if row[0] == 'model')).resolve() == root / 'src-python/model.py'\nassert all(row[1] == '-' or Path(row[1]).is_file() for row in pure)\nscripts = [(name, str(Path(SPECPATH) / 'startup_hook.py') if name == 'startup_hook' else source, kind) for name,source,kind in data['scripts']]\nassert sum(row[0] == 'startup_hook' for row in scripts) == 1\nassert all(Path(row[1]).is_file() for row in scripts)\ndef remap(rows):\n    result = [(name, str(old / ('dist-' + mode) / '_internal' / name), kind) for name,source,kind in rows]\n    assert all(Path(row[1]).is_file() for row in result)\n    return result\nbinaries = remap(data['binaries'])\ndatas = remap(data['datas'])\npyz = PYZ(pure)\nexe = EXE(pyz, scripts, [], exclude_binaries=True, name='VRCT-sidecar-x86_64-pc-windows-msvc', debug=False, bootloader_ignore_signals=False, strip=False, upx=False, console=True, disable_windowed_traceback=False, argv_emulation=False, target_arch=None, codesign_identity=None, entitlements_file=None, icon=[])\ncoll = COLLECT(exe, binaries, datas, strip=False, upx=False, upx_exclude=[], name='.')\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/startup_hook.py",
+      "sha256": "ad4cddbda95cf8b5c35e962b572ad8c1651f0669563104a2a9b730179dbc91a3",
+      "text": "\"\"\"Validation-only guards; let the bootloader run the real mainloop as __main__.\"\"\"\nimport os\n\nif os.environ.get('VRCT_FROZEN_STARTUP_VALIDATION') == '1':\n    import atexit\n    import collections\n    import hashlib\n    import ipaddress\n    import json\n    from pathlib import Path\n    import sys\n    import threading\n    import time\n    import traceback\n\n    assert getattr(sys, 'frozen', False)\n    run_dir = Path(os.environ['VRCT_VALIDATION_RUN_DIR']).resolve()\n    app_dir = Path(sys.executable).resolve().parent\n    assert app_dir == run_dir / 'app'\n    assert Path.cwd().resolve() == run_dir\n    assert (run_dir / 'validation-only').is_file()\n    assert Path(sys._MEIPASS).resolve() == app_dir / '_internal'\n    assert not (app_dir / 'weights').exists()\n    started = time.perf_counter()\n    os.environ.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', HF_DATASETS_OFFLINE='1',\n                      HF_HUB_DISABLE_TELEMETRY='1', DO_NOT_TRACK='1')\n    blocked = collections.Counter()\n    state = {'status': 'FAIL', 'reason': 'mainloop has not completed startup and shutdown'}\n\n    def audit(event, args):\n        if event in ('socket.connect', 'socket.sendto', 'socket.bind'):\n            blocked[event] += 1\n            raise OSError('Network disabled by frozen startup validation')\n        if event == 'socket.getaddrinfo':\n            try:\n                ipaddress.ip_address(args[0])\n            except ValueError:\n                blocked[event] += 1\n                raise OSError('DNS disabled by frozen startup validation') from None\n\n    sys.addaudithook(audit)\n    import requests\n\n    def no_http(*args, **kwargs):\n        blocked['requests'] += 1\n        raise requests.ConnectionError('HTTP disabled by frozen startup validation')\n\n    requests.sessions.Session.request = no_http\n    import pyaudiowpatch\n\n    def no_recording(*args, **kwargs):\n        blocked['recording'] += 1\n        raise AssertionError('Startup must not open a recording stream')\n\n    pyaudiowpatch.PyAudio.open = no_recording\n    from models.clipboard import clipboard\n    clipboard.checkSteamvrRunning = lambda: False\n\n    def save_result():\n        state['blocked_calls'] = dict(blocked)\n        (run_dir / 'worker-result.json').write_text(json.dumps(state, indent=2), encoding='utf-8')\n\n    atexit.register(save_result)\n\n    def observe(app, namespace):\n        try:\n            deadline = time.monotonic() + 100\n            while time.monotonic() < deadline:\n                model_module = sys.modules.get('model')\n                model = getattr(model_module, 'model', None)\n                if (getattr(model, '_inited', False) and not getattr(model, '_init_failed', True)\n                        and all(entry['status'] for entry in namespace['mapping'].values())):\n                    break\n                time.sleep(0.05)\n            else:\n                raise AssertionError('Frozen initialization timeout')\n            assert 'mainloop' not in sys.modules, 'mainloop must run once as __main__'\n            assert blocked['recording'] == 0\n            bindings = {\n                'position_changed_callback': '_onOverlayPositionChanged',\n                'pointer_callback': '_onVrPanelPointer',\n                'panel_out_of_view_callback': '_onVrPanelLogOutOfView',\n                'launcher_intro_callback': '_onVrPanelLauncherIntro',\n                'layout_callback': '_onVrPanelLayout',\n            }\n            def check_bound(actual, expected, owner):\n                assert actual.__self__ is owner\n                assert actual.__func__ is expected.__func__\n            for slot, method in bindings.items():\n                check_bound(getattr(model.overlay, slot), getattr(app.controller, method), app.controller)\n            check_bound(model.mic_mute_status_change_callback, app.controller._changeMicTranscriptStatusLocked, app.controller)\n            check_bound(model.watchdog.callback, app.escalateShutdown, app)\n            assert (run_dir / 'early-heartbeat.json').is_file()\n            import vrct_audio\n            import cv2\n            assert cv2.__version__ == '4.10.0'\n            native_hash = hashlib.sha256(Path(vrct_audio.vrct_audio.__file__).read_bytes()).hexdigest()\n            assert native_hash == '8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53'\n            init_seconds = time.perf_counter() - started\n            (run_dir / 'ready.json').write_text(json.dumps({'init_seconds': init_seconds}), encoding='utf-8')\n            while not (run_dir / 'stop').exists():\n                assert not app._stop_event.is_set(), 'Unexpected shutdown before runner request'\n                time.sleep(0.05)\n            app.stop(wait=5)\n            assert not any(thread.is_alive() for thread in app._threads)\n            assert blocked['recording'] == 0\n            state.clear()\n            state.update(status='PASS', scope='frozen __main__ backend startup, real IPC and Main.stop under guards',\n                         frozen=True, mainloop_imported_twice=False, main_threads_stopped=True,\n                         config_isolated=True, recording_streams_opened=0, init_seconds=init_seconds,\n                         overlay_callbacks_verified=5, mute_callback_verified=True, watchdog_callback_verified=True, early_heartbeat_verified=True,\n                         native_sha256=native_hash, cv2_version=cv2.__version__)\n            save_result()\n        except BaseException:\n            state.update(status='FAIL', reason=traceback.format_exc())\n            save_result()\n\n    def capture_main(frame, event, arg):\n        if (event == 'line' and frame.f_code.co_name == '<module>'\n                and frame.f_globals.get('__name__') == '__main__'\n                and Path(frame.f_code.co_filename).name == 'mainloop.py'\n                and 'main_instance' in frame.f_globals):\n            # Capture the actual bootloader frame before its __main__ block.\n            sys.settrace(None)\n            namespace = frame.f_globals\n            assert Path(namespace['__file__']).resolve().parent == Path(sys._MEIPASS).resolve()\n            model = sys.modules['model'].model\n            assert not model._inited and not model._init_failed\n            assert getattr(model, 'watchdog', None) is None\n            assert not hasattr(model, 'overlay')\n            response = namespace['main_instance'].controller.feedWatchdog()\n            assert response['status'] == 200\n            assert not model._inited and not model._init_failed\n            assert getattr(model, 'watchdog', None) is None\n            assert not hasattr(model, 'overlay')\n            (run_dir / 'early-heartbeat.json').write_text(json.dumps({'status': 'PASS', 'model_initialized': False}), encoding='utf-8')\n            config = sys.modules['config'].config\n            assert Path(config.PATH_LOCAL).resolve() == app_dir\n            for key in ('ENABLE_TELEMETRY', 'AUTO_MIC_SELECT', 'AUTO_SPEAKER_SELECT',\n                        'VRC_MIC_MUTE_SYNC', 'ENABLE_TRANSCRIPTION_SEND', 'ENABLE_TRANSCRIPTION_RECEIVE',\n                        'ENABLE_OCR_CAPTURE', 'ENABLE_TRANSLATION', 'ENABLE_CLIPBOARD',\n                        'WEBSOCKET_SERVER', 'OBS_BROWSER_SOURCE', 'OVERLAY_SMALL_LOG',\n                        'OVERLAY_LARGE_LOG', 'OVERLAY_VR_PANEL'):\n                assert getattr(config, key) is False, key\n            assert all(value is None for value in config.AUTH_KEYS.values())\n            assert config.OSC_IP_ADDRESS == '127.0.0.2'\n            (run_dir / 'main-captured.json').write_text(json.dumps({'name': namespace['__name__'],\n                'filename': frame.f_code.co_filename, 'config_isolated': True}), encoding='utf-8')\n            threading.Thread(target=observe, args=(namespace['main_instance'], namespace),\n                             name='FrozenValidationObserver', daemon=False).start()\n            return None\n        if Path(frame.f_code.co_filename).name == 'mainloop.py':\n            return capture_main\n        return None\n\n    sys.settrace(capture_main)\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/run_startup.py",
+      "sha256": "a46ec9d3eb4072a048bf27bb1c8f92ba220ec808a60dbc5bd5689bc285c0bc3b",
+      "text": "import hashlib\nimport json\nimport os\nfrom pathlib import Path\nimport queue\nimport shutil\nimport subprocess\nimport sys\nimport threading\nimport time\n\nroot = Path(__file__).resolve().parents[2]\nfolder = Path(__file__).resolve().parent\nmode = sys.argv[1]\nassert mode in (\"cpu\", \"cuda\")\nsuffix = (\"-\" + sys.argv[2]) if len(sys.argv) > 2 else \"\"\nassert not any(char in suffix for char in \"/\\\\:\")\nrun_dir = folder / (\"startup-\" + mode + suffix)\napp_dir = run_dir / \"app\"\nassert not run_dir.exists(), \"Use a fresh run folder, preserving prior evidence\"\nrun_dir.mkdir(parents=True)\nsource_dist = folder / (\"dist-\" + mode)\nshutil.copytree(source_dist, app_dir)\nsource_files = {p.relative_to(source_dist).as_posix():p.stat().st_size for p in source_dist.rglob(\"*\") if p.is_file()}\ncopy_files = {p.relative_to(app_dir).as_posix():p.stat().st_size for p in app_dir.rglob(\"*\") if p.is_file()}\nassert source_files == copy_files\nhashes = {}\nfor relative in (\"VRCT-sidecar-x86_64-pc-windows-msvc.exe\", \"_internal/vrct_audio/vrct_audio.pyd\", \"_internal/cv2/cv2.pyd\"):\n    hashes[relative] = hashlib.sha256((source_dist / relative).read_bytes()).hexdigest()\n    assert hashlib.sha256((app_dir / relative).read_bytes()).hexdigest() == hashes[relative]\n(run_dir / \"validation-only\").touch()\nflags = (\"ENABLE_TELEMETRY\", \"AUTO_MIC_SELECT\", \"AUTO_SPEAKER_SELECT\", \"VRC_MIC_MUTE_SYNC\",\n         \"WEBSOCKET_SERVER\", \"OBS_BROWSER_SOURCE\", \"OVERLAY_SMALL_LOG\", \"OVERLAY_LARGE_LOG\",\n         \"OVERLAY_VR_PANEL\", \"LOGGER_FEATURE\", \"ENABLE_CLIPBOARD\", \"CONVERT_MESSAGE_TO_ROMAJI\", \"CONVERT_MESSAGE_TO_HIRAGANA\")\nsettings = {key: False for key in flags}\nsettings[\"OSC_IP_ADDRESS\"] = \"127.0.0.2\"  # Existing OSCQuery-disable branch; sends also denied.\n(app_dir / \"config.json\").write_text(json.dumps(settings), encoding=\"utf-8\")\n(run_dir / \"source-sha256.json\").write_text(json.dumps(hashes, indent=2), encoding=\"utf-8\")\nenvironment = os.environ.copy()\nenvironment.pop(\"PYTHONPATH\", None)\nenvironment.pop(\"VRCT_RELEASE_VALIDATION_SMOKE\", None)\nenvironment.pop(\"VRCT_RELEASE_VALIDATION_CUDA\", None)\nenvironment[\"PYTHONDONTWRITEBYTECODE\"] = \"1\"\nenvironment[\"PYTHONIOENCODING\"] = \"utf-8\"\nenvironment[\"VRCT_FROZEN_STARTUP_VALIDATION\"] = \"1\"\nenvironment[\"VRCT_VALIDATION_RUN_DIR\"] = str(run_dir)\nexecutable = app_dir / \"VRCT-sidecar-x86_64-pc-windows-msvc.exe\"\n\nevents = queue.Queue()\nwith (run_dir / \"stderr.log\").open(\"w\", encoding=\"utf-8\") as errors:\n    child = subprocess.Popen([str(executable)],\n                             cwd=run_dir, env=environment, stdin=subprocess.PIPE, stdout=subprocess.PIPE,\n                             stderr=errors, text=True, encoding=\"utf-8\", creationflags=subprocess.CREATE_NO_WINDOW)\n\n    def read_output():\n        with (run_dir / \"stdout.log\").open(\"w\", encoding=\"utf-8\") as output:\n            for line in child.stdout:\n                output.write(line)\n                output.flush()\n                try:\n                    events.put(json.loads(line))\n                except json.JSONDecodeError:\n                    pass\n\n    reader = threading.Thread(target=read_output, daemon=True)\n    reader.start()\n    began = time.monotonic()\n    last_feed = began - 20\n    ready = initialized = requested = False\n    responses = {}\n    endpoints = (\"/get/data/version\", \"/get/data/compute_mode\")\n    try:\n        while time.monotonic() - began < 100:\n            assert child.poll() is None, \"Worker exited before IPC verification\"\n            ready = (run_dir / \"ready.json\").exists()\n            if ready and initialized and not requested:\n                for endpoint in endpoints:\n                    child.stdin.write(json.dumps({\"endpoint\": endpoint}) + \"\\n\")\n                child.stdin.flush()\n                requested = True\n            if time.monotonic() - last_feed > 10:\n                child.stdin.write(json.dumps({\"endpoint\": \"/run/feed_watchdog\"}) + \"\\n\")\n                child.stdin.flush()\n                last_feed = time.monotonic()\n            try:\n                event = events.get(timeout=0.2)\n            except queue.Empty:\n                continue\n            if event.get(\"endpoint\") == \"/run/initialization_complete\":\n                assert event[\"status\"] == 200\n                initialized = True\n            if requested and event.get(\"endpoint\") in endpoints:\n                assert event[\"status\"] == 200\n                responses[event[\"endpoint\"]] = event[\"result\"]\n            if ready and initialized and requested and len(responses) == len(endpoints):\n                break\n        assert ready and initialized and len(responses) == len(endpoints), \"Startup/IPC timeout\"\n        child.stdin.write(json.dumps({\"endpoint\": \"/run/shutdown\"}) + \"\\n\")\n        child.stdin.flush()\n        deadline = time.monotonic() + 30\n        while time.monotonic() < deadline:\n            event = events.get(timeout=max(0.1, deadline-time.monotonic()))\n            if event.get(\"endpoint\") == \"/run/shutdown\":\n                assert event[\"status\"] == 200\n                break\n        else:\n            raise AssertionError(\"Shutdown response timeout\")\n        child.stdin.close()\n        (run_dir / \"stop\").touch()\n        assert child.wait(timeout=20) == 0\n        reader.join(3)\n        result = json.loads((run_dir / \"worker-result.json\").read_text(encoding=\"utf-8\"))\n        assert result[\"status\"] == \"PASS\", result\n        assert responses[\"/get/data/version\"] == \"3.6.0-beta.1\"\n        assert responses[\"/get/data/compute_mode\"] == mode\n        assert (run_dir / \"main-captured.json\").is_file()\n        lines = (run_dir / 'stdout.log').read_text(encoding='utf-8').splitlines()\n        assert lines and all(isinstance(json.loads(line), dict) for line in lines)\n        assert (run_dir / 'stderr.log').stat().st_size == 0\n        error_text = (run_dir / 'error.log').read_text(encoding='utf-8')\n        assert error_text.count('Traceback (most recent call last):') == 1, error_text\n        assert 'requests.exceptions.ConnectionError: HTTP disabled by frozen startup validation' in error_text\n        assert 'in checkSoftwareUpdated' in error_text and 'in _fetchGithubReleases' in error_text\n        assert error_text.rstrip().endswith('requests.exceptions.ConnectionError: HTTP disabled by frozen startup validation')\n        result.update(stdout_valid_json=True, stderr_empty=True, expected_http_error_only=True)\n        result.update(mode=mode, initialization_complete=True, ipc_responses=responses, shutdown_response=200,\n                      distribution_files_copied=len(source_files), frozen=True, exit_code=child.returncode)\n        (run_dir / \"result.json\").write_text(json.dumps(result, indent=2), encoding=\"utf-8\")\n        print(mode + \": PASS; guarded frozen startup, IPC and clean shutdown\")\n    finally:\n        if child.poll() is None:\n            child.kill()\n            child.wait(timeout=10)\n        reader.join(3)\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/run_smoke.py",
+      "sha256": "ac286f1221da4b65d4f7b4bcb4ecd692daf5c8c700a8a13a4dc90fc908a1b814",
+      "text": "from pathlib import Path\nimport json\nimport os\nimport subprocess\nimport sys\n\nroot = Path.cwd()\nmode = sys.argv[1]\nassert mode in ('cpu', 'cuda')\nout = root / 'tmp/cycle13-startup'\ncwd = out / ('runtime-' + mode)\ncwd.mkdir(exist_ok=True)\nenvironment = os.environ.copy()\nenvironment.pop('PYTHONPATH', None)\nenvironment['VRCT_RELEASE_VALIDATION_SMOKE'] = '1'\nif mode == 'cuda':\n    environment['VRCT_RELEASE_VALIDATION_CUDA'] = '1'\nelse:\n    environment.pop('VRCT_RELEASE_VALIDATION_CUDA', None)\nexecutable = out / ('dist-' + mode) / 'VRCT-sidecar-x86_64-pc-windows-msvc.exe'\ntry:\n    result = subprocess.run([str(executable)], cwd=cwd, env=environment, capture_output=True,\n                            text=True, encoding='utf-8', errors='replace', timeout=90,\n                            creationflags=subprocess.CREATE_NO_WINDOW)\nexcept subprocess.TimeoutExpired:\n    (out / ('smoke-' + mode + '.log')).write_text('FAIL: 90 second smoke timeout\\n', encoding='utf-8')\n    raise\n(out / ('smoke-' + mode + '.log')).write_text(result.stdout + result.stderr, encoding='utf-8')\nassert result.returncode == 0, (result.returncode, result.stderr[-1800:])\nreport = json.loads(result.stdout)\nassert report['status'] == 'PASS'\n(out / ('smoke-' + mode + '.json')).write_text(json.dumps(report, indent=2), encoding='utf-8')\nprint(mode + ': PASS; no source PYTHONPATH, devices or network')\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/check_legacy_regression.py",
+      "sha256": "f91583b55f03a313d759781595616522aae411d763706e0bdffcaefe5b839e0d",
+      "text": "\"\"\"Show that the new regression tests reject the checkpoint heartbeat method.\"\"\"\nimport ast\nimport importlib.util\nfrom pathlib import Path\nimport subprocess\nimport unittest\n\nimport model\n\nroot = Path(__file__).resolve().parents[2]\nold = subprocess.check_output(['git', 'show', 'b9be99e7:src-python/model.py'], cwd=root).decode('utf-8')\ncls = next(node for node in ast.parse(old).body if isinstance(node, ast.ClassDef) and node.name == 'Model')\nmethod = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == 'feedWatchdog')\nscope = dict(model.__dict__)\nexec(compile(ast.Module(body=[method], type_ignores=[]), '<checkpoint-heartbeat>', 'exec'), scope)\nmodel.Model.feedWatchdog = scope['feedWatchdog']\nspec = importlib.util.spec_from_file_location('watchdog_regression', root/'src-python/test/test_model_early_watchdog.py')\ntests = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(tests)\nresult = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromModule(tests))\nmodel.faulthandler.cancel_dump_traceback_later()\nassert not result.wasSuccessful(), 'Regression suite must reject the old heartbeat method'\nassert any('prebootstrap' in test.id() for test, _ in result.errors + result.failures)\nprint('PASS: checkpoint heartbeat method rejected by new regression tests; product source was not modified.')\n"
+    }
+  ],
+  "limitations": [
+    "Not a completed release acceptance cycle. CPU/CUDA corrected frozen startup and complete artifact audit remain pending.",
+    "Cycle11 CPU startup failed callback registration despite an initial runner PASS; its historical report remains PARTIAL.",
+    "CPU targeted tests preceded the final test-only lint changes; CUDA targeted tests used the final test source. Product code did not change between runs.",
+    "Build completion is evidenced by successful COLLECT logs and runnable limited smoke; original build process exit codes were not directly recovered.",
+    "Repackaging reused cycle11 Analysis TOCs and dependency assets. It was not a fresh dependency analysis.",
+    "Ignored tmp artifacts are local only. Specs depend on the old TOCs/distributions; embedded scripts alone are insufficient in a fresh clone.",
+    "No normal GUI, packaged real-model inference, physical hotplug, all-daemon teardown or end-to-end performance claim.",
+    "Python-level network/recording guards are not OS firewall isolation. Shared venvs and user settings were not modified."
+  ],
+  "initial_harness_failures_preserved": [
+    {
+      "path": "tmp/cycle13-startup/build-cpu-attempt1.log",
+      "sha256": "b36873d3c6ad2486f031a503816ff9d4e1134838f89880df269e0cb4e99037da",
+      "text": "708 INFO: PyInstaller: 6.10.0, contrib hooks: 2026.7\n708 INFO: Python: 3.11.5\n779 INFO: Platform: Windows-10-10.0.26200-SP0\n779 INFO: Python environment: D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\PyInstaller\\__main__.py\", line 308, in <module>\n    run()\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\PyInstaller\\__main__.py\", line 215, in run\n    run_build(pyi_config, spec_file, **vars(args))\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\PyInstaller\\__main__.py\", line 70, in run_build\n    PyInstaller.building.build_main.main(pyi_config, spec_file, **kwargs)\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\PyInstaller\\building\\build_main.py\", line 1227, in main\n    build(specfile, distpath, workpath, clean_build)\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv\\Lib\\site-packages\\PyInstaller\\building\\build_main.py\", line 1167, in build\n    exec(code, spec_namespace)\n  File \"tmp/cycle13-startup/cpu.spec\", line 20, in <module>\n    assert all(Path(row[1]).is_file() for row in pure)\nAssertionError\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/build-cuda-attempt1.log",
+      "sha256": "0456e32a8c114c8c7c034c3b27cfab2e3a3bc7c8519932d321a17e758d66483a",
+      "text": "570 INFO: PyInstaller: 6.10.0, contrib hooks: 2026.7\n570 INFO: Python: 3.11.5\n676 INFO: Platform: Windows-10-10.0.26200-SP0\n676 INFO: Python environment: D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\PyInstaller\\__main__.py\", line 308, in <module>\n    run()\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\PyInstaller\\__main__.py\", line 215, in run\n    run_build(pyi_config, spec_file, **vars(args))\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\PyInstaller\\__main__.py\", line 70, in run_build\n    PyInstaller.building.build_main.main(pyi_config, spec_file, **kwargs)\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\PyInstaller\\building\\build_main.py\", line 1227, in main\n    build(specfile, distpath, workpath, clean_build)\n  File \"D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\.venv_cuda\\Lib\\site-packages\\PyInstaller\\building\\build_main.py\", line 1167, in build\n    exec(code, spec_namespace)\n  File \"tmp/cycle13-startup/cuda.spec\", line 20, in <module>\n    assert all(Path(row[1]).is_file() for row in pure)\nAssertionError\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/cuda-tests-missing-pytest.log",
+      "sha256": "c1f105716cba7263ac81ade7f5e2aa1232af575ba6f3e82ea562de88da88e301",
+      "text": "Traceback (most recent call last):\n  File \"D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle6\\no_sr_runner.py\", line 10, in <module>\n    import pytest\nModuleNotFoundError: No module named 'pytest'\n"
+    },
+    {
+      "path": "tmp/cycle13-startup/ruff.log",
+      "sha256": "24e5bb70464b069d4d3dd76d469dfa120b84434671cf32c1be87973803fcb756",
+      "text": "BLE001 Do not catch blind exception: `BaseException`\n   --> src-python\\test\\test_model_early_watchdog.py:106:20\n    |\n104 |             except EndInit:\n105 |                 pass\n106 |             except BaseException as exc:\n    |                    ^^^^^^^^^^^^^\n107 |                 failures.append(exc)\n    |\n\nSIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements\n   --> src-python\\test\\test_model_early_watchdog.py:129:9\n    |\n127 |           self.model.watchdog = MagicMock()\n128 |           self.model.watchdog.feed.side_effect = RuntimeError(\"feed failed\")\n129 | /         with patch.object(self.model, \"_armFreezeDump\") as arm:\n130 | |             with self.assertRaisesRegex(RuntimeError, \"feed failed\"):\n    | |_____________________________________________________________________^\n131 |                   self.model.feedWatchdog()\n132 |           arm.assert_not_called()\n    |\nhelp: Combine `with` statements\n\nFound 2 errors.\n"
+    }
+  ],
+  "checkpoint_writer": {
+    "path": "tmp/cycle13-startup/save_checkpoint.py",
+    "sha256": "8c152a355d2290a7261dfd12a84bd7c067b1c6c916274c23d169341b421a6d05",
+    "text": "\"\"\"Preserve the stopped cycle13 validation state for the handoff commit.\"\"\"\nimport hashlib\nimport json\nfrom datetime import datetime\nfrom pathlib import Path\n\nroot = Path(__file__).resolve().parents[2]\nfolder = Path(__file__).resolve().parent\n\n\ndef digest(path):\n    with path.open('rb') as stream:\n        return hashlib.file_digest(stream, 'sha256').hexdigest()\n\n\ndef evidence(path, include_text=False):\n    item = {'path': path.relative_to(root).as_posix(), 'sha256': digest(path)}\n    if include_text:\n        item['text'] = path.read_text(encoding='utf-8-sig')\n    return item\n\n\nreport = {\n    'status': 'PARTIAL',\n    'recorded_at': datetime.now().astimezone().isoformat(),\n    'scope': 'Early heartbeat startup race fix; checkpoint before full frozen validation finished',\n    'baseline_commit': 'b9be99e7f27ff97abbad2c6f3abd1d218263404b',\n    'stop_reason': 'User requested a commit and handoff to Claude Code; owned startup runners and dedicated executables were stopped.',\n    'change': 'feedWatchdog only feeds an already-created watchdog; it does not start Model initialization.',\n    'source_snapshot': [evidence(root / name) for name in (\n        'src-python/model.py', 'src-python/test/test_model_early_watchdog.py',\n        'bat/install.bat', 'requirements.txt')],\n    'tests': {},\n    'builds': {},\n    'independent_review': {\n        'design': 'LGTM', 'product_implementation': 'LGTM',\n        'startup_harness': 'LGTM',\n        'final_distribution_and_startup_audit': 'NOT_COMPLETED',\n    },\n    'reproduction_sources': [evidence(folder / name, True) for name in (\n        'cpu.spec', 'cuda.spec', 'startup_hook.py', 'run_startup.py',\n        'run_smoke.py', 'check_legacy_regression.py')],\n    'limitations': [\n        'Not a completed release acceptance cycle. CPU/CUDA corrected frozen startup and complete artifact audit remain pending.',\n        'Cycle11 CPU startup failed callback registration despite an initial runner PASS; its historical report remains PARTIAL.',\n        'CPU targeted tests preceded the final test-only lint changes; CUDA targeted tests used the final test source. Product code did not change between runs.',\n        'Build completion is evidenced by successful COLLECT logs and runnable limited smoke; original build process exit codes were not directly recovered.',\n        'Repackaging reused cycle11 Analysis TOCs and dependency assets. It was not a fresh dependency analysis.',\n        'Ignored tmp artifacts are local only. Specs depend on the old TOCs/distributions; embedded scripts alone are insufficient in a fresh clone.',\n        'No normal GUI, packaged real-model inference, physical hotplug, all-daemon teardown or end-to-end performance claim.',\n        'Python-level network/recording guards are not OS firewall isolation. Shared venvs and user settings were not modified.',\n    ],\n}\nfor mode in ('cpu', 'cuda'):\n    test_log = (folder / (mode + '-tests.log')).read_text(encoding='utf-8-sig')\n    assert '24 passed, 4 warnings, 2 subtests passed' in test_log\n    report['tests'][mode] = {'status': 'PASS', 'passed': 24, 'subtests_passed': 2,\n                             'warnings': 4, 'log': evidence(folder / (mode + '-tests.log'), True)}\n    build_log = folder / ('build-' + mode + '.log')\n    assert 'COLLECT-00.toc completed successfully.' in build_log.read_text(encoding='utf-8-sig')\n    dist = folder / ('dist-' + mode)\n    files = [p for p in dist.rglob('*') if p.is_file()]\n    smoke = json.loads((folder / ('smoke-' + mode + '.json')).read_text(encoding='utf-8'))\n    assert smoke['status'] == 'PASS'\n    startup = folder / ('startup-' + mode)\n    assert not (startup / 'result.json').exists()\n    report['builds'][mode] = {\n        'kind': 'PYZ/EXE/COLLECT using cycle11 dependency Analysis',\n        'collect_log_completed': True, 'original_process_exit_code': None,\n        'distribution_file_count': len(files),\n        'distribution_total_bytes': sum(p.stat().st_size for p in files),\n        'executable': evidence(dist / 'VRCT-sidecar-x86_64-pc-windows-msvc.exe'),\n        'build_log': evidence(build_log, True),\n        'limited_smoke': smoke,\n        'startup': {\n            'status': 'INTERRUPTED_FOR_HANDOFF', 'result_json_present': False,\n            'directory': startup.relative_to(root).as_posix(),\n            'observed_logs': [evidence(p, True) for p in sorted(startup.glob('*.log'))],\n            'copied_source_hashes': json.loads((startup / 'source-sha256.json').read_text(encoding='utf-8')),\n        },\n        'full_pyz_and_internal_hash_comparison': 'NOT_COMPLETED',\n    }\nreport['tests']['ruff'] = {'version': '0.14.4', 'status': 'PASS',\n                           'log': evidence(folder / 'ruff-pinned.log', True)}\nassert 'All checks passed!' in report['tests']['ruff']['log']['text']\nreport['tests']['legacy_regression'] = {\n    'status': 'PASS_EXPECTED_REJECTION',\n    'scope': 'Old checkpoint heartbeat method injected in child process only; new tests reject it.',\n    'log': evidence(folder / 'legacy-regression.log', True),\n    'exit_code_directly_recovered': False,\n}\nreport['initial_harness_failures_preserved'] = [evidence(folder / name, True) for name in (\n    'build-cpu-attempt1.log', 'build-cuda-attempt1.log',\n    'cuda-tests-missing-pytest.log', 'ruff.log')]\nreport['checkpoint_writer'] = evidence(Path(__file__), True)\ndestination = root / 'docs/benchmarks/audio_startup_heartbeat_cycle13_2026-10-08.json'\ndestination.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\\n', encoding='utf-8')\n\nrepair_path = root / 'docs/benchmarks/opencv_install_repair_cycle12_2026-10-08.json'\nrepair = json.loads(repair_path.read_text(encoding='utf-8'))\nrepair['independent_review']['scope'] = (\n    'Design, draft, result audit and final production application reviewed LGTM. '\n    '11 step results, actual repair/repeat/recovery, expected failure stop, '\n    'draft/block/script hashes and final product diff verified.')\nrepair_path.write_text(json.dumps(repair, ensure_ascii=False, indent=2) + '\\n', encoding='utf-8')\nprint('Saved cycle13 PARTIAL checkpoint and finalized cycle12 review scope.')\n"
+  }
+}
