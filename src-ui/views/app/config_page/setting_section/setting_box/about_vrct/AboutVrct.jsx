@@ -12,13 +12,6 @@ import contributor_poposuke from "@images/about_vrct/contributor_poposuke.png";
 import contributor_kumaguma from "@images/about_vrct/contributor_kumaguma.png";
 import contributor_riku from "@images/about_vrct/contributor_riku.png";
 
-import localization_section_title from "@images/about_vrct/localization_section_title.png";
-import localization_1 from "@images/about_vrct/localization_1.png";
-import localization_2 from "@images/about_vrct/localization_2.png";
-import localization_3 from "@images/about_vrct/localization_3.png";
-import localization_4 from "@images/about_vrct/localization_4.png";
-import localization_5 from "@images/about_vrct/localization_5.png";
-
 import special_thanks_section_title from "@images/about_vrct/special_thanks_section_title.png";
 import special_thanks_members from "@images/about_vrct/special_thanks_members.png";
 import special_thanks_message_en from "@images/about_vrct/special_thanks_message_en.png";
@@ -89,24 +82,6 @@ export const AboutVrct = () => {
                     <div className={styles.contributor_card_wrapper}>
                         <img src={contributor_riku} className={clsx(styles.contributors_img, styles.contributors)} />
                         <OpenLinkContainer className={styles.contributors_riku_x} href_id="contributors_riku_x" />
-                    </div>
-                </div>
-            </div>
-
-            <div className={styles.localization_section}>
-                <img src={localization_section_title} className={clsx(styles.section_title, styles.localization)} />
-                <div className={styles.localization_members_wrapper}>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_1} className={styles.localization_members_img} />
-                        <img src={localization_2} className={styles.localization_members_img} />
-                    </div>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_3} className={styles.localization_members_img} />
-                        <img src={localization_4} className={styles.localization_members_img} />
-                    </div>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_5} className={styles.localization_members_img} />
-                        {/* <img src={localization_6} className={styles.localization_members_img} /> */}
                     </div>
                 </div>
             </div>

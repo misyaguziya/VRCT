@@ -161,31 +161,6 @@ $sns_left_pos: 0.8rem;
     @include contributors_sns_styles($bottom_pos, $sns_left_pos);
 }
 
-.localization_section {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 0.6rem;
-}
-.localization_members_wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: start;
-    column-gap: 4rem;
-    row-gap: 1rem;
-    flex-wrap: wrap;
-}
-.localization_members_row_wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: start;
-    gap: 0.2rem;
-}
-.localization_members_img {
-    height: 2.2rem;
-}
-
 .special_thanks_section {
     display: flex;
     flex-direction: column;
