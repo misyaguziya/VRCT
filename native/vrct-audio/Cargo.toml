@@ -1,0 +1,20 @@
+[package]
+name = "vrct-audio"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.83"
+license = "MIT"
+description = "PCM processing and in-process FLAC encoding for VRCT"
+
+[lib]
+name = "vrct_audio"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+dasp_sample = "=0.11.0"
+flacenc = { version = "=0.5.1", default-features = false }
+pyo3 = { version = "=0.24.2", features = ["extension-module", "abi3-py310"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

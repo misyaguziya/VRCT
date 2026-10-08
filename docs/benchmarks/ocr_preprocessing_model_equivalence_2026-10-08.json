@@ -1,0 +1,2731 @@
+{
+  "head": "e1c24d1b0434e562a02bd4f00106e8bd3974f789",
+  "model_sha256": "ac3767540dd46f5587a799d611139a18b213293cd1bcabba4491aed7235b8007",
+  "source_sha256": "bda1bdd119bb44030ea4b1cb7a463a1b09dd172c5170951b5b9854f7b4f8d941",
+  "validation_sha256": "20699f02fa4139d99b1bde2d11f8bb6a7eeb199dfcd60ee972f9c3237e3f58e2",
+  "python": "3.11.5",
+  "opencv": "4.10.0",
+  "numpy": "1.26.4",
+  "onnxruntime": "1.30.0",
+  "provider": [
+    "CPUExecutionProvider"
+  ],
+  "ort_intra_op_threads": 4,
+  "ort_inter_op_threads": 1,
+  "confidence": 0.7,
+  "nms_iou": 0.65,
+  "scope": "Same shipped retrained model and same CPU session; old/new preprocessing, direct ONNX outputs and production decoding/crops compared exactly on 80 val + 49 holdout existing images. No text recognition, screenshots, network or saved image data. Runtime not a performance benchmark.",
+  "records": [
+    {
+      "split": "val",
+      "image_sha256": "db4d2f2d0162d06f557e277988aae3da3cf647aaf62fee82224569e5185a6d04",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "a83bec1b9dea68028e063e21ecce9052da65dd9973b6cd109448027fe223c01b",
+      "output_sha256": "9d3778509b5deabc14061181958995f79eba836cd137071ed03ce84477f2cf0e",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "f8f300385cef3b81e2f6d5b3d8e4b2fd77db3434e4fc8935a1fb52e701461399",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "8a6337c7cf19416a91185bb81d09d59a61d1c99540838e036385319f60dcef0b",
+      "output_sha256": "4900e142adfb112d4ea3d886c05b51852840378aeafdf59807b84a9cf9f47572",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "d1871e455496e37ef789bc0a4047f98377dabfb2f1c15401fa351b86a0226623",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "fe628aa41146e3d85ccfa617e8415d5f540aa35fa520a9cd06225e6ac0eff563",
+      "output_sha256": "9faaee5b8aae44d1b0500a8fa483d6999721dc161d350f7bef51612e6fff5eca",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "92775653c37bd7fe033e6ba8a0577536a91982b1f01277b694dd2a51782bdf28",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "42298358157d047bb7ab9129c54da2ae706cb2c3c7c3831b11ee2a3fee48da40",
+      "output_sha256": "8fd15beb31a065dc06463d34a59728dfa8f88d39cbbc82072531ae2ab68b0df0",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "0b252c920879c9e4973d4bcfc2dcd6ff3566cbf9e063e07c7825fd103fbd0abe",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "f5a8ea96a555a2627a60d39bd4c88e1be9f6dca8b4ae7a22d772449bcf3eeb3f",
+      "output_sha256": "2ca095ef7146416f364b0be194a41ef820695a3f21a5ad13158accfcad5f40ff",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "a6000079c8cc4e0fe0cf9b6044b110ff9802e58d3872e4b584a27c96e4bc4d39",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "fcb67f426685a83355eacf923eb0b53f60f5b9c45522f9b63c059a934755ebd4",
+      "output_sha256": "40d41d763a19c46ec99a7ab8dd8d9dce631421856a3b6ec5e8ddbb2a4ef3d43f",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "d683367b88cc2d6e0b00798adcecc2a8649f05f2b4ed1bc3dbe80455b347dafe",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "380b0c8f7adccd91d5b03895331b4ce66c7dd23f6c486c986ebd77dd8829734f",
+      "output_sha256": "81df6eedbbafb70d822a561eeae7d9859ceef08860c3ad7c8757922b98b0a4ef",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "3f39cdb7c89c8c7d794cbea11bafec8c2dced89e459d74a4677f933900c818f1",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "a84030c55960648e8bac081db2671c6802dec83b7150173cdcc8a99a1403f5bd",
+      "output_sha256": "b20b93fdf6077b4f03d33a97ec55e963612ca7e5583b408820c6a79dbf2cb4bb",
+      "candidates_before_nms": 5,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9f3dffe7cf72a28f9bc0f2ed36ecdd979fd1f9e4627e40302b3e7313ff204d76",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "13e40518c93f31af29c7c9c7e9fa3a054de780f0617eaab0eb0592b7fa47754d",
+      "output_sha256": "02adb7cfbf14c91acae79900be9de487feacd44a2007ef4447b4bb81fea0d1e1",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "130bbece4ece24c66da277dd12eef0a74bec753407c15f9bc399c3ae9e8ae699",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "b5f35e7deb8007eb9ce3a5774efdbbe53c3bd10f612fb071fc6c70a2568fc200",
+      "output_sha256": "6fc97e63881864c0364ce1b700e784387cec4647272d992bb63afd8ae49b1bd7",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "c40e1afda08d8abe9846f880591d333b79ec47aa64c199e8e868a22f44154089",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "94c10005d653af7e9641a3e2c30b5155dcaaca9cb40c00bc8819d111b6d65533",
+      "output_sha256": "b8fb1b645629b9131141df1e83ff0150f6f321063329b4cffe328212fb720212",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "edecaccd3c746aad07e4ee5c24ac33a45aa9b0f35d12d5a767e48a38078219a2",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "9499f3bd5823768a84ca6df485a41f259d3f3acc676861292471c0a9f8ef2869",
+      "output_sha256": "d3355446080f4e4cf5111b1578c03ffb1a9cfe49710b827aa1dda8156c6976e4",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "e80b93a1b53ed564777ac5dfa2e5c4c4696996a79c7c070487450d068f53d6a8",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "bf966a00fec13089a3f9bbf22027b6d9efcd8218ffd2c7b841d5bb0e28a61a65",
+      "output_sha256": "a3cbd2c65e55f597a2c3359dc39822a8be13b7288fff043810fd885fde189248",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9e607e42bab8d5daef218cfb4c41cc0e84d73c306759567f740f2a9483f15c5a",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "251defaf2c5f4176e6bf8002c7494a7603ae70b69d34c2a02c8edead83ec1ec3",
+      "output_sha256": "a67d7e4ab41a986398d8388c7b4758a3522ff0297e8b3d5ac536a259a907873b",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "fa77f639584817b279085acf6bb14599967607789df0f27947a13f58dbc1c0ac",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "c7019ca6af67f93a153d8e3a011237ddd974b662d75a497d3fc0cf5f89a683a5",
+      "output_sha256": "2ed57f1062365f49f594d408b4702d36aa7d903f090dc7b6a421244b87902195",
+      "candidates_before_nms": 5,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "7f24e86122e9c11f5dd104395534d8b389c536b01e3d6ded8055ecce4ae5a05b",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "2fc8391310d704be5d2bc5728cfa1fdbce1ec6ac4d771f6d47c81f6b4dd2cba6",
+      "output_sha256": "8caf6ca97845dad6004f6861be0e41e9f1a0b5fdfb89056af41284f39d86daec",
+      "candidates_before_nms": 6,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "e7ac75a7ebb1651ebc68f93b01f7471176de205e3ced868013e38d710c11c4cd",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "658ad09c75facbd35d08a2e36cde3591592f5f0344ef97978836071550f312f6",
+      "output_sha256": "2381ac0b51e831f323e6084b43074ab9e9d6ec60de528cd11124f4a58b2e31fb",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "5c62b8702ce47f0f6af60dc3fbb9bcf86eca48533d2f7e67d1fba372380e6fc0",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "470d234bbdf48de8e4fab7b308e50a1cfdab634137d801b55663582e718a83bb",
+      "output_sha256": "6101f81e30c97f6c18563cfdecff303f0e0246264f3ea956d50342cbadec0a58",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "070ed75340bf0ddf30ee7dd282e51d2a341897b22f9e372ebc9cdbc7df725b6b",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "9ac9db701b1b3572e3b2185b4aabd83d3497d23b60e4fdb9c1d05ce52960ef7a",
+      "output_sha256": "98d81c9da489346ae500d3b3aa2e8065da21c921acbe726a14d58bb4a6cb4bd7",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9c35cfcebfe0ed4f9985677edf790d3bd40749088e2394ceff643579f9857431",
+      "frame_size": [
+        2575,
+        1455
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        736,
+        1280
+      ],
+      "tensor_sha256": "f9221099eff3b0255dcd00986cb0f4f0e91c7ef5cca00bac1cca92e0ead6573f",
+      "output_sha256": "ec85c6a0c630d6a74b303329b21399495eb248b76e31628c56886c74a1d3cb75",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "6fcedc3b7ee8c7e5ebdb845ffff73527d197c64363496bc34f3981dbeba1d48c",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "a74b8fd8219742d5e73548988e19fb61e4e0402de91e95bd6c1b88affe2b4588",
+      "output_sha256": "4af428c4c44d77b0f31e31de2c8870f5f9807e5b3ea0301532aea6f468a7ea1b",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "23c223c6904655a3330e7b5fd97fed04f770931994e37195e0502df24d635395",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "7859f27a18e78b0511e76c6e2a8caaab21b27c34f1de79e95334808bf480fec3",
+      "output_sha256": "9972d50294e64cfb4056e639d610df841fbbff944e6bd807257b04d6cae6b721",
+      "candidates_before_nms": 5,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "c623f0aa34b2fafca06bfc2d16b3f3cb4d1e8af876ad0434832041d6402c35c0",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "b3b773bb812f978e65714b48fa73dbdb60bf34f3a0c559e5dc7e9344d2afca38",
+      "output_sha256": "02653f37425f3d3eaad7d8836ddce4ddae3472d2095c2b50b148f2c0d4edb8a6",
+      "candidates_before_nms": 4,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "36be89267746150ba414b2df5ba1e7753031c02ae02003bec5adc3dcb357c96a",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "dffcfb790c4476a01060b58874c2f75bdfff7e4cc0cf6af8cee0d803aa03f3e6",
+      "output_sha256": "ce6ec8617e28d3ecfff0e62d6bc1ec52a0fce091534ceff95573693104b730b2",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "5f96ef6b208a446e3a78026a472de76a960c578533ce54626962aabf739ac220",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "4c51445e0e736ad72d9537c5f452f5ea624fe10fc3198f1908b4423cea2daa3b",
+      "output_sha256": "b604d826e1a7fa7959de44c4a99845fa11a5e7864004f4a51085f8c50dba950b",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "a2cf3b4956903593a71e57375f0d8bbe03bb5f12e57e0001409935be8bbd9d32",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "6d3166035bd86bdb5fd7469ac66ff112f10723cf4f5208ea3cfeb83af8a1c360",
+      "output_sha256": "9856695dc03052c30742eecd2389b4cde602df41a9b6804e2db8dff11b8f0587",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "c46798de16f559298db1a005cd21ed761a3a3ebd359376fee2938f9694278bd6",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "f75efeef3f3c4c532c22980020bb214b35e7ee290119491625a76632a0a451f5",
+      "output_sha256": "07f9663506be693e1d7890d2a95bc1b06051d6aef5737e819cacdf95adb1f7cf",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "3e533e9452b9efc75c1344547faf1073775fa3cba40e49166ae012480f850012",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "f47891304d033f8743d5948b9e8afa57cd9537849134d20c909c7a5301615068",
+      "output_sha256": "9f6d8a299f15a63434f7688e873ce43ec9b4919a34e9b5c30f146290bc79ea26",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9e9de69315fc45280ad958e0a3123a43cb8cfe0f683240547def58e1d0f590da",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "2a3e7db80321c5f0418867f99773e694941f155a29b40166c9d9c4b2fd602dc9",
+      "output_sha256": "37ad75f8fbab42e2a947776f03b4c96906b8ff045ee32158a069a1d82c1ea355",
+      "candidates_before_nms": 6,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "3adb0538bfb8973a5f20cf5863ed085411833ba8d088b03ae005d6ab4ec5fd21",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "1af7fad709ec8abee0df1dda089881b890268ab9eb8940f87f82cf3606f65a84",
+      "output_sha256": "29bbefa90c1c9d1ad3cc0224af5f378b7416d7530d883dad410f9df678508eff",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "79e0a961bab53b415b7485c7f11748eaa4318f121e94d43f9aab1c33628acd27",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "ad3623e0f6477c7ba6974e1f17decbcb7af775252ae0c9d0ffdf962dc28a7a17",
+      "output_sha256": "17b2520fe37e38230741fc00725c81e02b8090104d3fbc28f5133301528dcbd4",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "622fc110e11f1e265ff038eb7c6e613d717d4cf45a22e56a8094b21146955699",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "50097b132dea7a183b3562feb20719386a0e40820f2b485cfe5c82851a6a6b23",
+      "output_sha256": "4118877b6bf41e5781f47e1f5050d06f462beb4f82ba719d1af3d743ddd5ac51",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "95f68aff5c385734d748de77cb748fe4978066a6a712bfbe908cb3ad9043c030",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "8a2504b716c7492cf1ef0a1d0fd435929145e9dffd7f5c19ee05149ddde17af0",
+      "output_sha256": "b7f5028b9087bd8d216c0d03022d15cfb600b750da87684e2a6766bedb6b6551",
+      "candidates_before_nms": 5,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9f5150c96bc663878f9b2417266e459703d505b6fb6dd9736be2a0de19bdf81c",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "c8cf64d1fa9bcbafa3ffb64788a6287baf4f4f489caf6c6eec8d09cd7262a30e",
+      "output_sha256": "0701eb6bd87c3f141d4dc080373f210e3c0659bbf373c957134d1fb89b654156",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "855bdb82457d3e43e5343d7bc0a6f6095784f221788cc256515d13a6e86cba6d",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "234fc8ae83640c965dbdbd3d3cc71366686ef6ed86b2a6d0e9851fd21309b6b5",
+      "output_sha256": "d2d0936b4857bc0046b5eaa37089c2ed358ab77608a1e3e8afe6382bc8474be1",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "a33a4c4ec3d152efb03898944b001fdc6fff7f8232cc2c2882877c601c32726c",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "69b48b63cbb67e50113b34d2a251eb28c2b50b04115a97414d92c8fe0e642e59",
+      "output_sha256": "de628cd0f08a3cba7e36761e476b475e8476752bc453f55ae8407074d6daf6e8",
+      "candidates_before_nms": 1,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "cf431e323de36ba9a25d5f9728d90ce6345a9d38a8ace43e7d48834431bbb181",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "2e48c0a67614abdf7a4832dd3826f0c91e32b13b89e4b0b2dc3919ba1233242d",
+      "output_sha256": "9dc50c111b37a6b6c222ca36c2661d61cec907102908e202c51dd9319acac010",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "e47f0441bba7b7e29ac516a243abf629b2c9bdf30c875deeac05c705d7fd63fc",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "fae12aeffbf7445d85ce0bebd99d6bde318680c9d5565700d3876a34c4e57373",
+      "output_sha256": "a5ff947f1f17a7f341a3848eeb683025f2bb112fb84194ae96cd82de3e645cfe",
+      "candidates_before_nms": 5,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "1b9187e4faa0ebea47814eecf21ee58d252fe953eff38f024ac051fb802d1991",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "1909c37b07201b1ccff5f16ff1d8d0a2d79d34ae550feb0df15c878267969335",
+      "output_sha256": "62ca9a1d5158c0afb22647245af10522def1f9daff9b27c4863e136dd9d00525",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "e7d4e64e15c3d60673cf3d5a47d7cc7ca806d10ad90cc21154185b4ca2d2e01e",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "0c445706227d464f31068f9a8e0cae02f9e5e75892674d12b39bf2804a47a4ce",
+      "output_sha256": "81b16e222dc553b7db727ce168c949034a6ca9ab738c26fedc4bf2d4cf9b01ba",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9fcf654529599ec86386e7a342c0817672b661507a25e8289c8776e9b31115bd",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "97ad3c7da53c8b7dc91eac62151c3fc5de4d78f9aebfb3168904128ae00be60a",
+      "output_sha256": "924468735d68bfd6d3601629434918e33687baa3741e591a820bd695da947962",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "f841b8c410e34f96b6ebf3caf7597525579b5f3aae470717c43501a4949d880c",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "c53f18d27bc20a64f8b848d1ed98e9b31cc4b07b55441a7b3f52e5cebb613799",
+      "output_sha256": "418032f5a49cb44223561917071ee28f115b75eabd4083d617239057ac739cca",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "41f2ba8dd569c86ed6f2a6189d4ef785f5eeb145934d9b356f71755d9aaf8554",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "d996a3193fee8caa696d33c6c8a00ce75eb2c3939edc594c3dfacb56d64fd9b3",
+      "output_sha256": "37bade075aeef180845274aa1d5033c3881fa6c65e276f08e9c4e63cfa568fb2",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "f516891db5a3a6aa0ba114e381b4b3ec764bb91b56fee8294ab9ac990ffdf8c5",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "5fd372e08fd887ab0f2fb7301284fa5b5ef2d22ea7cc4fbee4a86e0ca15899a4",
+      "output_sha256": "ba45fa1cf90861190c5710ec4ce0a7978a6d3ad0d7fe990d37aa91eef4856dd9",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "1b42f4afcf13dc9f7f738455e306e5500ec0ec6c4479bf6a21cfff464beb9f37",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "ec990248536530602d20740effb33ee2e2ad18944b759876f3ce2706adae6f15",
+      "output_sha256": "22c8fbb93dcac19cc3562d09e793d5f2d89579ca36d4bdb56bc2a503b4e761f8",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "4c71a3f81dce0661db65b109e1721fbb6092ceecd6f0daa4066690c051b1c4d8",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "ab1d5f154776c30d146b7cf332bf7f69ef6e527bde48ffcc672f029be2f96611",
+      "output_sha256": "5349fa5356ac21e47fb65db360a369b06b7867b735bb9694d237e7b6f731b8d7",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "0d2af8f0c20cec2eb730157a5a3755f35acf5bbb87e9e2d526a0eb8af12a0827",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "a336be13e201d803591cdbfd44e1f8f0aca17186f1214dfe85129768b7d023af",
+      "output_sha256": "0eb495f2acf8c77edee326bd045a7d706a201d91f463e0848b33ad38ae342f7c",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "f5f43190274da0a15f06b4ea5b8758deed5f36160b80d26d298de315cce12dc2",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "cd94a39c9eeb1680274d5d5b20a7958d89d1ba9ab94bd3390f76c5a2e03ad544",
+      "output_sha256": "80bcf259350a1e986bd05ca26bf692c49bc8d2698eeb751b9a346488b35e7911",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "22a4292f8624024fcec3d196ce49b6fa84e90b9a6d559306ecbb836832bdb232",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "d81586f5be2c2d67f2ae801289a137a8e40001807cd45fe971290b98c754a3ce",
+      "output_sha256": "1e3111176acfe7b6d9c9fd146e61f4a4dd6bef6efbd57f2e484b77f9aab4b3a9",
+      "candidates_before_nms": 6,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "20e5cb8166ca6446165fb03434d2d20ce517703197e7a47b5cdb113909e8171b",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "d749f9b676bbffe0eac843ec2ddef0fd5dfc7ed3ed3276f859ec63611848d87c",
+      "output_sha256": "dd992b451472257ec91b6f6dffb73136f67565aa3473eed8b52486712364a0ea",
+      "candidates_before_nms": 5,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "8cfc0cd19a32e4c4a4aadaa7fd7e08f947aea6b060afafc1812c618fe15337dc",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "48594a19dd88aaf9de8785629eee144a07092daeacfdd68f5f21943fa9fbc07a",
+      "output_sha256": "3042c0fb9fe8d28165ff1c592dcbd345a6515d7efb8a6d9be2ba081f62f0dd63",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "1ecc41355f27070afb51e7aec9c18bf2478fe36d055b0c34554c53b214da20f0",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "b15e937de0ef42dd04a74cb26931ce1ccb1cac39e3c2fc892fc22eb9e525aeb4",
+      "output_sha256": "e8cc82b554dce19817dcb4e43a1d1fef1f8fb6c7f0c4946df0c7f8b08c72ca43",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "7634e6053af9abecdd2be3c9c9de60450d93d31302c1a5ca25f4c67a1b0861a1",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "aeeea5070d42945e346e80bdd8bb396eb6e9a3737c73e39830f22b496bebeada",
+      "output_sha256": "37ac00af096d123805c02314e9af3afd8e819b0cb6abf300a1d6c90939bfa2a8",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "115af1390fe96d9dc95b97374c5239cc0b6d1a359036c52757a96db0a244fe5d",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "2d7f092d87009e5fc19ab7d26cf515f0e8b4b589f6c53c6e7a61fa2b19cddc67",
+      "output_sha256": "dfe2155759d6ce08cfd040efb1138808731212745bf30eccaf55202d5e019eb5",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "43572874ef1e4fd6a2cbc5342cf2a62e4337af24ee25a6cc069590b382603792",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "e69d7cb597149bfb7f86d7b0e1f7062d0a2dcd72f91de892730741102d051c53",
+      "output_sha256": "7663d3414134878b40800a0f5e51b38c82b09ab3a50452de3286664d8887c806",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "252666b908f8f9b5c48f57f7b8f93349ea0fda47fa3788de928224649d0bf9eb",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "b45dae790dbcdbfe67536196dec5dcd6888d81db846e7daa3ad00a19d4d1f8f0",
+      "output_sha256": "a5e117ef2c45d4f292014db988f4404b3a4c0acaf242b3ea126a742c1742a42d",
+      "candidates_before_nms": 10,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "0354eed3c5d16f4e7c177ccba0b17bac70ea93201ba11ff91d4cacfadc1b632e",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "61d518920de6ca9757d1008d82a88eb1116f3faed74f21f0f6456dc04f7ce8e4",
+      "output_sha256": "928486e8a669f82a8ec32ecf7df33ded9baf39dc7d9541fb444324ea252e23c2",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "217ffc5e73392f33d5fc2d2ea832c189d5c004c41aed2c69575b4573bfd9ae3d",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "bdc418ab99df6cdd69c16dbc219342855af41c8c43a9d3e630acf15622b13afc",
+      "output_sha256": "81fe098a7d43cf4638d7e3fc85dcfb1465120b6b8e8620d2b6714d368da550ab",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "25e7c4f12bd1d78368bf9ca0c65e1e65cc894bdbcc83d290d9b066e60866107c",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "27e007c345cdab03a831a36c96dd90f90954443f22d8767993351e93dbb49c64",
+      "output_sha256": "6497ab5bdd499574c6c28cf61615ea2541480608b011ae192e15a264a7415b10",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9894582ae67682134235f8bd7b432de90d8a5a72f6860b0bd9a68253269739d2",
+      "frame_size": [
+        1936,
+        1048
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        704,
+        1280
+      ],
+      "tensor_sha256": "7f4137b25f4f27f69bfd6f5226afb9651a9443875633bb2c60a22cab5806cd59",
+      "output_sha256": "f6f043c88886ad4e038e56ba6e3d73a22374293c3312659951c0457aecc84fbb",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "f4248dd78790d788b5c13e32be51dab5160bdc66678f442a67f924814f669a25",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "ffbd76454dbe7b94af1efc22be78bd60e73ad958e0a28f36b1e1be873152b27a",
+      "output_sha256": "6931bd863c2c768a3df26fba7b1cbb97d50879f6342aea1c71d1d8cc5e94ed68",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "390b00f0b851f355872e7b626681d43b4b1c3f5df8388a0a1b78f724b12b3576",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "4657784b151f7cce68adb560db9c5a7e64808fa3766e187a80d98e04ceac11f3",
+      "output_sha256": "43f67b3aaa478726d6c8e34e8403d278792e61340a6122bc483f819e86c6a6a1",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "6ffeafd90dc121a8f9f0b76a7626e0df42f7b31eaaaea2ca018bcd1beb924b23",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "f2f24f7a76307352e37e121ad099fe59b3844710d5a5ee5a984bf073a1201fc9",
+      "output_sha256": "a65571305575c7c850b3033d57557509d6a17f39c472ea1eb1fb60a60fde4da9",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "7fe1a8648afb7cf2c275d337dac0b7dd513822e290e2dd4470fcc5deefe35c90",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "2dff5d5111786bfd77d01f3127cc6f30475b98cf039c5dcf2109aec9942cb97f",
+      "output_sha256": "c947fcc28a10de9be663a4d3ecd08f3e95f50428432ac0961536a6cea969800a",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "d511edfdd2c14d8ebf8817128454763fc730ab4b2d51e0e96f6679030f82673c",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "78b45562cf862f1924e7cfcc8a9fea604fae532420620c77e185481319c64569",
+      "output_sha256": "224f6eafc9d3cf13e5180028eecf14bc3202d448a65ccd31bd74e5d5589f42af",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "392bf12ff1cb9d1154983a23e373e11a621488a9b6cc803ed590ddeba7255a7e",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "1b4676b90551dda1f3644a0ea324774aeae90c6853709e6a0f934cf49bfad2d7",
+      "output_sha256": "74343f3bcad16a1d4c0256ae102c84ad0bb0f32d862c7d0fe47b50300a3d4ac8",
+      "candidates_before_nms": 6,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "c072306c77a7c1cec19fd239ffd13fbb6afdbce866ffa7c5b54b6dc4fbbeb55d",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "639d9eeffd64443e863bc5115812434e6775f88c4e156237f266fe97fcc7cef2",
+      "output_sha256": "a863f25f861753ee571d73df381bcfc17e0df3b672d85554e4f50638059d05d1",
+      "candidates_before_nms": 6,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "9d38d5fb98ff6258758f8b31ad064c1b5d5298c4f909ad1a5b331be86a3abdcb",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "3814ef6266c77debad1ebe76f513907fa7bc4c4834beff2eed9d46d498020d59",
+      "output_sha256": "cbd3217735c10d7ba29c6cd65a5a5bcbad4b9564f580b8c9eba336bfc8dc6281",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "6dd9003dc579bae0a4f07ded026bbe352b8f98261619179a90d2dd444a9b7d53",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "4ce25d76149f2de0322258b82386941a18f6d18ac429973ddd7ec40e385b1433",
+      "output_sha256": "64df46f8f0b2ba16b4865e02b86a330f7df2fd484f46c2c800728a43a2a6ee32",
+      "candidates_before_nms": 6,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "f3b1f9b204a4e0c5e69c8d2b872f8eea2de8cb629366c9acfee86af25d1199b1",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "dcdb7c7d4389ddeb217c0cfe828c3f5b8db6bcb48c6e3a6eaeb94739c5c44cf4",
+      "output_sha256": "c79f68bb762f3f9be18a133f675fd00991e3ed5b8c4686a38f91324af3911cc0",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "80ad57f35219e00138bfd7e70dba8aaa175fdc1598e7fc256d4d5b19722542df",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "297d9695a83fb80beed2d79fd322f09266eef0992b5ae288c448e270fb0a31e0",
+      "output_sha256": "e965004421332b111c43ca45ea33f6b36402b337f7849f5bc1cccddf26747b5b",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "b50d76db4b57f10778eea669dcfacd8771c7af9201a7a650b110c8386bfc670d",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "e998a7107cb3aa76c009565010ca558b0306070e84da46656eb7456da62554f8",
+      "output_sha256": "07d7b59c33d8743d3209fe48d1fc6fead0354826543c30d668aa1bf3c1101696",
+      "candidates_before_nms": 9,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "ee362a17f1993646fa1abaa36a7b3cdd67bae95b3d0736a99ceab8af62c49933",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "e78623cb1efcb87cec2ba8aa7caf42a36cb167541a16ac77b95c83f5181b0077",
+      "output_sha256": "e0a9e30f3c5ce1da81f669a551171f4409d94efa2054a45c9365f6e96b84f332",
+      "candidates_before_nms": 12,
+      "detections": 2,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "ea62b9b9482a671a6bdd7d2ed9aa5053e8c6660d2af3e5ee015b8d8685848ff7",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "ec6e2f5d214b1857be8ffd182ee98d89c6e9b34bbc6469df73ccfacf4e80989b",
+      "output_sha256": "4c2a7444e5529e26e5b7b5ced563e7fa11df7e569317373cee8364facd508537",
+      "candidates_before_nms": 10,
+      "detections": 2,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "f60754bfca6a0ce7b8f005bfa3f8c06dc04c7cae4e81847c05675f07f659a171",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "4decda9c710bf382002755bff35b659b3343a7ffb5d82e2e5c57dcc75ceacec4",
+      "output_sha256": "202a8cefe63e7083098d42a3c754dd8dba49d6ef6e5f4ae202ee40e7fcb98c01",
+      "candidates_before_nms": 6,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "71bedde5dfe157cc550bf963e5c1ba78bf74c19892a5d1de53cf5a6a1a9cfa6c",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "f17722056babc55f885179426fef3585f35ff73133930af3526ab33a18d4cc85",
+      "output_sha256": "faae76769aae23b3728c36f25f6198725ed5397468643d9e76a70ad29c65d0f3",
+      "candidates_before_nms": 7,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "0a0a9a7b1891c22338161ae43ed0db03952e08407ba6cbb274ee33c5a495de65",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "db6908a5f2ab88fe90a1d2a6173fb3a8e9932dbc658c2e3effa921280015998c",
+      "output_sha256": "392aa3a3e362ca3b56c9eb86b78de0b1f93d491ddd0180699a7a250268ce5000",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "76ee9547a215fab8d162bd3bb23767afb819b54c657084797c17789d1f43a8d2",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "dade501d6b0175afdf7c98397f801e8ed074f889956672dad297d9b93f216d74",
+      "output_sha256": "3e2a2577e9bded798de2e90ebca90929dbc46f9adf0ee6fbd7bcbf18157cfcd7",
+      "candidates_before_nms": 8,
+      "detections": 1,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "b3b33fc4b5a34544d095aeae52ac8b8bdca2c29c0a63e21ec135e606f59e822e",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "ee51d0dd34a9114e9c040a0af8ec8c7e873eea4d4160f694e47e95bc5769a128",
+      "output_sha256": "7b01beff18736e1d48f625ba05ade0f1b3c6dc71634f3aa92ad18cfd9aad353c",
+      "candidates_before_nms": 6,
+      "detections": 2,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "val",
+      "image_sha256": "61d72758541a1b76da53fe47040ef762d5129f50bcb085314b3e8cc882f068f9",
+      "frame_size": [
+        2988,
+        3260
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "f1f1463263a304e1cfae4ba38c3fe42ae77efc2b1b8869cf09c4b6a26e77ec79",
+      "output_sha256": "c5ce94edb4e63df1f3a5de1ef59e2e0d040445aecf126333df8352df429b54f4",
+      "candidates_before_nms": 8,
+      "detections": 2,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "e465512179781568550dfd66c92448cc571b0456d7320ab32647cf178e69d242",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "5baa429cab4c1e3c9f81110f38a205d8a07cef00ac914856f056817a1fb69791",
+      "output_sha256": "abc889bbd62f6e3d6aa74883af5da6846b364d16c23b00ad14bc6e9f0302fb28",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "fda7b97228dc96ca9c746f9ea562e4807c8ffbea7a91549a5df6a2d01d23a64c",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "43add7e888a31da0d6851e5f7d49b48af80679539684300b34c6da9309b35e94",
+      "output_sha256": "bb8e16b65e999f46d972a4931010088a131f624ae3a1ba3a40cdbd7dc106d185",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "f4c84fcd444f9209b0a8b6379c5ca2a256c6e9e3130a5960bb7e8ec7311a3f79",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "223e44536298f4bbf96f6bfde05199253c51e4d1aa46c6372f2c031c4b06f946",
+      "output_sha256": "a9b72f9a423103689a9456a1a85005728938c9da23179ca26aa9439128da0914",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "b74729c353cd74db228b9e7c5237cfe877bb6f1369f5af1b601cf01282814305",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "6edce0fdd447bf271ed42b42131b48bc0e7714c202979628c1df4e8b066f1872",
+      "output_sha256": "2f818e9524ca607aa7ee4f252a27dbaeecf041490bca5ff7bcbe8ab38fe7c338",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "ee2e62bbb1986f303ca5ef30790dcdd7d0268acbbb11db878418a4203f82514a",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "3d1004f3bc3d1bb3262b8375f0d64a07ed95aae26efd7623c5daf18345470504",
+      "output_sha256": "5ff6e98976fb7e2323fd6828f0efbc51e10b81e8e93ef9162c404feddd2762eb",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "c39d76cca212b05f92abca72d8f0e14320b95e9cfed9d57a8ad4b5784b9a5e13",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "babf18f686b352dc97b5867ee1667f9e5b3d299d78b70a5eb3aa700aba9838a4",
+      "output_sha256": "e2a272dd64199ad70c389c99070c050b1e6db0f3b8055bb4d41cb6472da01d8f",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "0ab3c9ecd415bfd17afec482b95c93f6f6e133802c250fb50a4df66994011518",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "67f3a756b691ce298d52c141ead0836d2303fbadc69447d045236e81776a1629",
+      "output_sha256": "7729b2d23f8636cf8a13a14c5922af32a5f37b19912b433511a9c108c28d75d4",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "64f1685f1e883d4578e6e3ab78d1bf2392e85ed2a61cfe581c79a6df4de40d30",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "ef440abd466146762cdabac599fd8d6bbc3d1ba78718758f68dec4b7deeb0a86",
+      "output_sha256": "1d03e02d698c9c996b45b9f429069a9a801905fd2be6182005f81e3d7c88c04c",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "88218dc3b8dafeface5982f68ee7d1d83b37a95baa738b6d269347b8d34e144c",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "91f91fb27d1f514c130aef4ff69cbee75e52918bfefade1bb7eaaad07814bb89",
+      "output_sha256": "b364e7f5059ab56a3ff98a2a7d1772283c0ab8e10130458d71c26da7e825da8e",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "3d8eddf38dccf379361f25ceb1a40d8470d764cf7a13e3db7728a9a96bae093f",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "f498a37eb0599c945ef62df03a02eed3587593511d4a5f7884595004847d91cf",
+      "output_sha256": "ce52a6d1c89357dab6e2c6fdfc5ad47c0e3058fef6e175726fcd57f9a2edad8d",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "0d09ac75720cf8734a87e4c5d9155ad436f6b5f06481646fde5bb4f14c5e0c8e",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "073235c618be86041eca89df25a3240f62f050f1f62f103dee1c002eae2ff0f2",
+      "output_sha256": "f9bfd695ca4c0d00708d7776bced58a4176d26b71c94e5d7a81726f4d6abc6bb",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "66ad049851d2f1ca43ec1ead273374cc16d32fa2fc67fe8d0d9405750cc54840",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "fcf58b1f8174f386c3ed79b0fbe9c0732330a50ae48c7163144bcb8594bff3a0",
+      "output_sha256": "ca4a11bed04fdd95a08b65f2e7280a008cacc7dd0ae8f1ccfe25afe3395dafe7",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "3f8a24ac5ff1ffd6ef21ab14cc6344b5aca5b9483a0e3613dc9812544cdb6eba",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "fbc5006bcdbd4c1d66604d92ad5c0b6249992aaaf8bc0d61d15a632aee27cda0",
+      "output_sha256": "bd4483d5be293f02b1ebda5b88c68ef7ac924299ff8c339820d688175d169827",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "81b7e5bcff285b7ad0f4b901d3bf5ab68192b36b5fe7ec958ae478b2761559ac",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "c185ec4adcdc451e3cf42096104d7edaa986dd7d627126a2aaae35164cca1ab1",
+      "output_sha256": "5eecb9f3068bb618815cecb2de174c66f4ed10247b09bae2300ceef71c78cb3b",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "5426dda4d900a0443a5d70bc8400a4bb86923a03b6b060b986717e2d494ba9d2",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "7dad62f21a8afa7dc6fc45da7228306e7cd4dd4c76e326324a0c74c7c7418e6a",
+      "output_sha256": "973597b4df77a0c1d37115295c8073d6dff743683c11e45aa23fff5759a261a1",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "f4da6317f886361adb658739d902acde703a6125c9ed4531c45b532112fd7e44",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "eac0ce17944198306e2a26cef7124a208137d8ff8b6b9a5753ed4eae87991cb1",
+      "output_sha256": "86389aff7db09da8d0b8164608fd0457c6460f5934837d133f138141dad12b23",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "02115116fcf63e2bf7e6779664937c02a9103d978180fdd186bdd5498017f724",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "3cfac08f77e0d0ca9b3031cb64a4e75172fef4567e5ffb09cd2bbcb817b71eb3",
+      "output_sha256": "fccca4b14e1a13b4dd02d1f7d16a39200803191692f22af5f779bbb1f81404fb",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "0f0bb3cd1654ab84c77640d4a88becc50006d1584562762f22f9a7e7b2a8cce7",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "472882b7bae21f12534d5840d2da048f448f176002b7de0c736de8e6bfb8630f",
+      "output_sha256": "11824ea4ca0f73725654b02bfaaad60776fd0df8ba638d917ad17897e557beb2",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "b2df02d3ad1e28b7f8851090b692bc78e9feb6942a8624ab87513bec40648d6b",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "3f1e9cb26b9a2a4292e09364bd1370c0ca69edcffb5fe621149a92035bc28d86",
+      "output_sha256": "8f52342853043a7ff1b7fe29057fd04b67461394d5ef4a9612b667f38270c4cc",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "4a369a81e00254bf7864be3a7e288b4639cd62453a610394d47d093353efc97d",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "9792748810fd2bdc6278e89c066f7e58add34aeacbef24ab35ee10134ce81de7",
+      "output_sha256": "46459eb51e6fba743815dade90b835fe12f84f7abce3604c02d84c7acf724fb0",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "d2117ab3dfdfb635f01f59aa52431b08fa50f157084e536fb29fe98977a3daaf",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "ea623357b92ac271c87edb34b082d23dda2f6d6b18ba17931b58ba307e599661",
+      "output_sha256": "cdc97eae0fbf2fde9861ea77cc2a273e189e9745930e66793ceef568a63e2d0d",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "df667b34e5e610925a188166bd2612e8a279f64c8897d012171a100682f9f6f0",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "d553a2a93883f7f1e7bc6540eef563cfc00ebf538c218cf8f5ac51db4471eb0e",
+      "output_sha256": "cb7f33931e5dcfdf3ab34c5111aaf116557ef8901d1539d46b71aefd5dd9b559",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "57d6b2a9362c0a427531b07a3ded25d4958ff3e6af1f367a089cde6082808714",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "44f6e4cb0c041a5f1d9e1414093d3f56f354955a9af3d1e3f58d154298e0f479",
+      "output_sha256": "dfcac0e03158f9df2b7800cd5d0659cd0830f518f256853428b1bfc3a763d515",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "5ce227472f3aaffa39519d344bb42bf47994a66d2c363913bd9598d9df1ebb53",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "92c15bab9e2a3acd216f66abd1805192b85666832949388b3cfe73c7215cc331",
+      "output_sha256": "3b2c24ee7ba0c4be13a5a04050964562376149417aec131d25f5fb3eedde1a02",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "6e96ed7a77c5f8323fff308b3dd65b54a9cfa2d1665cd7d5140ab9255475d8d1",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "d43f4eaf430bfb66de1e0b1b7de6de4df708a9aa22d53a3d00c9175761a773d3",
+      "output_sha256": "301f346f6ee7b94a1f309e0f8df590624a161d9f857f9d874443b50c00044938",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "d4bb43d49c49122601d634edfe3488cf9c41a3e0133b4d855e812f08704286ed",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "ee999b390ba51deb6f73e17bc6cb946285caf9a401f05e6789497855e2bbe334",
+      "output_sha256": "3f34e185714d396bdeb8e59d85813cac604977cdd384a9010410e52bdb5ef36a",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "13867c1262b922e9eec62e285a089b2068de3a3496c78b241c23cdbbc4f502c3",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "1fafc197cb6e18692a377e8b59a4db496f0379164aef3ad3a4b0836e9865931a",
+      "output_sha256": "021a103e64dad86f419da7d2d2d801663bfb9ed73b2c1fea4ba9d1e0b32ca845",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "84b58d87b9d01145466053bb2e148dade59a1461c81725cd186795462849a52f",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "d5736db78f3afe86bc83562c05a79e524d5a35e217a9e62b72c6e59104c1d0e1",
+      "output_sha256": "168232f8aed5a171d109ea3c122aa1d637f948baf5b922ac28bee037e249fa0d",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "0cc5c9723e7d6a2d9cceb136c37f04fe072e80841c17696d4bcdcef5124095de",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "141540477450b446d8127a9cf7aedd99de0a1f475ee551e93b86bc8aa9932744",
+      "output_sha256": "393828ea9340247197631f13c6ba49c57e818372d67a77881d02f38f44dfbc3b",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "8c89eb1d2e79ace1771c01912f2a9aedb7c2e7ed9fd2963de735f7340d44f32f",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "13c982a1a4d10760f9dd91d4c29b979e9ffc9d0dfdc392dcd725645c0d966c20",
+      "output_sha256": "d8a943e441b84c361d9252385aebf763a4b52338042d733c8491404262f43556",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "fa3bb60f67ade3e144a46daa88247c568af276b74b360ecfec2339da10a9078b",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "2e1679da88154e8ddc1d79a8794e3774a4fb667f02a063074ce0578c884cc676",
+      "output_sha256": "a8f022522c2d7fe89fb7569bbbeaf6f2fefc18e047c37ec5b803c55139b11532",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "083d7b3d8e02ed204643707323193d07db1e13fa7c277bf74d23774e611a5b87",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "eb1b8b1217a1d06d2d0f7a1ff7e2d949c4909ce5126e12f09ec3994fd6707718",
+      "output_sha256": "1a514f7478a25fae0bd51fab9ccbe202b7385a622671e7f2426a240b9e6649eb",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "c8a682b43d102d48c48e3cf97438fb4f003030a3c8207e530ae348924bb80409",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "d5cd3490f66826df3f48ec938c242640af93a27bd7d2abbe8fc6faf0cb5b806e",
+      "output_sha256": "a8cbfac424c18e0c43312776c1799001f5834c81a66e09cd9eaa5b6d783516f0",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "505714e83ac02c73860d6f9bc3f043f646d0feee8f8c002eb3ff05d3b4ab9aed",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "554bece50fa02df5c7c45bbe9fab1282bc11c89a969373d4887668bf4082e9f5",
+      "output_sha256": "b919245539a188384af17c2fe25903d01308c0618dd52b3ca03fa8b3afd90c86",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "390c655ab54bb1cc1fb944dc3af6aa0be433aaa274c23774761490170c44a869",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "426fdaa6c820b488a7c8d00a7a9667103391aa963b66adbc3bf26b37bd3090e7",
+      "output_sha256": "a4cb9bc43683caef1f47a858883fe090cb17f56d008f9c96227330895363e61a",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "99176fe74aba42e316aad395dd01fb3708fc78748482dfa59e0fc1f2ab18e1ac",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "21dcd35fab6a31429b46206362efb103456b38305450558adecd4fcf78149f77",
+      "output_sha256": "97bffdc9f8511bbc5a3fefa4fafde47b3e73e3469b803a7abfd8253683c1d64f",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "580fcdc67926823ce5c5c717b951db7b55534d2cd111148513a776012abce22f",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "ab78deb88b8586dfcdb66cb8d7210a11f4e456a2e18504aad07de4e02b7835c5",
+      "output_sha256": "3ba9c1de2ffd592865a1312f312c91f288970f2888d03c593d1dcb2569f306f2",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "76873156ec735c872ead8bc2bf086d531cb625fff55824ef57fd8495271b7fdc",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "81901442a42d35f489128eb2429bd4d029531d77a469d3a7ccb55590ec6b7b90",
+      "output_sha256": "435e51750272f9c438e865b8a376f21f54682296bc793be5b6987fc2055622e9",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "9a7292a9a1d181ce3ce7224e953ba95e85bfa3c126b682cd99f4f48716f268fe",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "f96f5a8a9c56d74b84507b9875b792f6e65f3896de764e9b1dd5656e654e9f64",
+      "output_sha256": "218b5b47af3774b1c2046c64890ad1182f90323acf92443374672af43b17f477",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "970f8ba6e7c7ea5fa57f6a856232d8815fe8f8031bcbc8934eff0dee8f3681a5",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "800238df2d1bea75df949c6a8af1307887fd26815e2d7e4c04dc45ccf22c60c9",
+      "output_sha256": "001ab616493fe0183b0bcc9ea5a17bd5f87163a098356910c44875be51e6af2e",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "163b9e0f14d0c5b270fcce2117eec6b5a32ccaf55fe1ffab7e912a4cb0d081a7",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "abf6d4c9bcced3a93f225b19d70f9176e15d193b782829b3aad3e38b4ca8641d",
+      "output_sha256": "eecf82c10c1b394fca1daf9fbdf8c08df0c6e94775469993e5f77674bae22d4f",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "3724a8f622b80f5be915d18552a190f8b665043712c2b7b22438fb506d574789",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "73acbd7a9881c2fd3efbc8c0c661421c60d52b009a9356983efd96b308d0e082",
+      "output_sha256": "88a0bef5d748a3e7ac4e02749163dc6748a44e5f548d72231e6077de34e0dd00",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "fd074f7e26d9dbab0eaf05c5a72b068b0db820af74c431c47ee9369cce31cb36",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "0cc467ff06adb5640b3873cc22582376cca4d4901b8e7c165498690a21518be4",
+      "output_sha256": "1fa7cc7459cb7ff57671e8181c02432e109bfe6982f828f72daddeb41fdd27d4",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "8a2c44fdcbd2b30e880c45ec55fa65e91cac15f9a5101c5014e1dd59950d3245",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "9de8c801a1d147cd4c85a574d00bbb0d4e83f481d8387c9032c90fa80e381a42",
+      "output_sha256": "793fb8f4d833a2e412800946ffc0e049285a44f9607c63d45436239f682aa8d9",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "64d6503f6757960e9a3e769cd186a1164d5c3a13483ace8ad6876fbce3fc0d6a",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "08093f48a1fe16a0a57502bf857b9f89f24b9a6987b106d5b0e900308f29b6c3",
+      "output_sha256": "8a91146d7503f1fef0ae6dda2428f39937fa879a457e4f1e5aea58d5d2c1caab",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "19c21585ef6bcf5e4c806d3e48c6d102df91153bec7ac63444bcdc0f41c036d8",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "24701aab3e1f2e75b210a89085e1925e9c9f0ad90622f1a81eccf18e9dae905c",
+      "output_sha256": "5452437a4b90131163632055858faf084aa4b791c810ab30cab70ce60e171ded",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "8c2ffc973130b5a666c2add4f43d54763f5485147a8deb8b59059425fb3dfc5d",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "148f55bff10e87d870541101b950820ffdbfdeaff221a7d732768a0b892ea0b2",
+      "output_sha256": "e5cab3f7134b7f180884175f8a90a735e2b6a60525b20e19854847d78cb5bee3",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "e9ee1ae5bb18bc7766366530c7e9699333a05d57c3c1a7eb74d5643ac9776fd0",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "eb725e9f1075a86cf1a8c989a75c163935366426057afd227e462e6b1235ea97",
+      "output_sha256": "1ed0201016649df7fc90293fcc1a03b1cf32c41de443a7718d7ebc266227f026",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    },
+    {
+      "split": "holdout",
+      "image_sha256": "fe847c65d4a66999cf0218444c892f409c07eb5e24d7734ba650cc80b987a6a6",
+      "frame_size": [
+        2984,
+        3256
+      ],
+      "tensor_shape": [
+        1,
+        3,
+        1280,
+        1184
+      ],
+      "tensor_sha256": "18a9a4a56eab1515ac3726c28de96be36c488f8e56dda0c3f8716da5a055e43e",
+      "output_sha256": "09336b63b2f7611221df815f8cb9560726fdcff93a3cfae0a120968b6d76b4f9",
+      "candidates_before_nms": 0,
+      "detections": 0,
+      "tensor_equal": true,
+      "model_output_equal": true,
+      "boxes_and_crops_equal": true
+    }
+  ],
+  "validation_source": "\"\"\"Offline local val/holdout equivalence; never captures, sends or saves images.\"\"\"\nimport argparse\nimport hashlib\nimport json\nfrom pathlib import Path\nimport platform\nimport sys\nimport time\nfrom unittest.mock import patch\n\nimport cv2\nimport numpy as np\nimport onnxruntime as ort\n\nROOT=Path(__file__).resolve().parents[2]\nsys.path.insert(0,str(ROOT/'src-python'))\nfrom models.ocr.ocr_bubble_detector import BubbleDetector\nfrom models.ocr.ocr_languages import ocr_onnx_threads\n\n\ndef legacy(frame,size):\n    h,w=frame.shape[:2]\n    scale=min(size/w,size/h)\n    nw,nh=max(1,int(w*scale)),max(1,int(h*scale))\n    resized=cv2.resize(frame,(nw,nh),interpolation=cv2.INTER_LINEAR)\n    canvas=np.full((-(-nh//32)*32,-(-nw//32)*32,3),114,dtype=np.uint8)\n    canvas[:nh,:nw]=resized\n    return np.ascontiguousarray(canvas.transpose(2,0,1)[None],dtype=np.float32),scale\n\n\nclass RecordedSession:\n    def __init__(self,expected,predictions):\n        self.expected,self.predictions=expected,predictions\n        self.calls=0\n    def run(self,_,feeds):\n        self.calls+=1\n        assert len(feeds)==1 and np.array_equal(next(iter(feeds.values())),self.expected)\n        return [self.predictions]\n\n\ndef main():\n    parser=argparse.ArgumentParser()\n    parser.add_argument('--data-root',type=Path,required=True)\n    parser.add_argument('--output',type=Path,required=True)\n    args=parser.parse_args()\n    assert cv2.__version__=='4.10.0'\n    annotated=args.data_root/'dataset_annotated'\n    images=[('val',annotated/line.strip()) for line in (annotated/'val.txt').read_text().splitlines() if line.strip()]\n    images += [('holdout',p) for p in sorted((args.data_root/'dataset_holdout/overlay_test_20261006/images').glob('*.png'))]\n    assert sum(s=='val' for s,_ in images)==80\n    assert sum(s=='holdout' for s,_ in images)==49\n    model=ROOT/'src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx'\n    detector=BubbleDetector(model_path=str(model))\n    session=detector.loadModel()\n    assert session.get_providers()==['CPUExecutionProvider']\n    current_letterbox=detector._letterbox\n    records=[]\n    started=time.monotonic()\n    for index,(split,path) in enumerate(images):\n        raw=path.read_bytes()\n        frame=cv2.imdecode(np.frombuffer(raw,np.uint8),cv2.IMREAD_COLOR)\n        assert frame is not None,str(path)\n        old,old_scale=legacy(frame,detector.image_size)\n        new,new_scale=current_letterbox(frame)\n        assert old_scale==new_scale and np.array_equal(old,new),str(path)\n        assert new.dtype==np.float32 and new.flags.c_contiguous and new.flags.owndata and new.flags.writeable\n        old_pred=session.run(None,{detector._input_name:old})[0]\n        new_pred=session.run(None,{detector._input_name:new})[0]\n        np.testing.assert_array_equal(new_pred,old_pred)\n        outputs=[]\n        for fn,tensor,prediction in [(lambda f:legacy(f,detector.image_size),old,old_pred),(current_letterbox,new,new_pred)]:\n            replay=RecordedSession(tensor,prediction)\n            with patch.object(detector,'_session',replay),patch.object(detector,'_letterbox',fn):\n                boxes=detector.detect(frame)\n            assert replay.calls==1\n            outputs.append([(list(bbox),hashlib.sha256(crop.tobytes()).hexdigest()) for bbox,crop in boxes])\n        assert outputs[0]==outputs[1]\n        predictions=new_pred.reshape(-1,6)\n        count=int(np.count_nonzero(predictions[:,4]*predictions[:,5]>=detector.confidence))\n        records.append({'split':split,'image_sha256':hashlib.sha256(raw).hexdigest(),'frame_size':[frame.shape[1],frame.shape[0]],'tensor_shape':list(new.shape),'tensor_sha256':hashlib.sha256(new.tobytes()).hexdigest(),'output_sha256':hashlib.sha256(new_pred.tobytes()).hexdigest(),'candidates_before_nms':count,'detections':len(outputs[1]),'tensor_equal':True,'model_output_equal':True,'boxes_and_crops_equal':True})\n        if (index+1)%10==0 or index+1==len(images):\n            print(f'PASS {index+1}/{len(images)} ({time.monotonic()-started:.1f}s)',flush=True)\n    report={'head':__import__('subprocess').check_output(['git','rev-parse','HEAD'],text=True).strip(),'model_sha256':hashlib.sha256(model.read_bytes()).hexdigest(),'source_sha256':hashlib.sha256((ROOT/'src-python/models/ocr/ocr_bubble_detector.py').read_bytes()).hexdigest(),'validation_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'python':platform.python_version(),'opencv':cv2.__version__,'numpy':np.__version__,'onnxruntime':ort.__version__,'provider':session.get_providers(),'ort_intra_op_threads':ocr_onnx_threads(),'ort_inter_op_threads':1,'confidence':detector.confidence,'nms_iou':detector.nms_iou,'scope':'Same shipped retrained model and same CPU session; old/new preprocessing, direct ONNX outputs and production decoding/crops compared exactly on 80 val + 49 holdout existing images. No text recognition, screenshots, network or saved image data. Runtime not a performance benchmark.','records':records}\n    args.output.write_text(json.dumps(report,indent=2)+'\\n',encoding='utf-8')\n    print('PASS all real-model tensor/output/crop comparisons',flush=True)\n\nif __name__=='__main__':main()\n",
+  "reproduction": "Restore validation_source byte-for-byte to tmp/cycle5-preprocess/model_validation.py under this repository. With OpenCV4.10 and the stated runtime, run python tmp/cycle5-preprocess/model_validation.py --data-root <checkout-with-existing-datasets> --output <result.json>. Requires existing local val80 and holdout49; no screenshots or dataset images are included in this report."
+}

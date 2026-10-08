@@ -151,7 +151,7 @@ class OpenVRMirrorCapture:
         try:
             if not self._isVrchatScene():
                 return None
-            rgb = self._mirror.read()
+            frame = self._mirror.read(color_order="BGR")
         except Exception:
             # The compositor session may have been torn down (SteamVR restart).
             # Drop everything so the next tick re-acquires.
@@ -159,8 +159,7 @@ class OpenVRMirrorCapture:
             self._resetVrState()
             return None
         self._failure_logged = False
-        # D3D11Mirror returns RGB (for the tools); OCR uses BGR like the HWND path.
-        return np.ascontiguousarray(rgb[:, :, ::-1])
+        return frame
 
     def close(self) -> None:
         """Release OCR-owned resources and our shared-session reference.

@@ -82,7 +82,7 @@ class TestVrctTranscriptionIntegration(unittest.TestCase):
             transcription_engine="Google",
             vad_segmented=True,
         )
-        transcriber.audio_recognizer.recognize_google = MagicMock(
+        transcriber.google_client.recognize = MagicMock(
             return_value=("これはGoogle経路のテストです", 0.9)
         )
         queue = Queue()
@@ -93,10 +93,9 @@ class TestVrctTranscriptionIntegration(unittest.TestCase):
 
         self.assertTrue(result)
         self.assertEqual(transcript["text"], "これはGoogle経路のテストです")
-        transcriber.audio_recognizer.recognize_google.assert_called_once()
-        _, kwargs = transcriber.audio_recognizer.recognize_google.call_args
+        transcriber.google_client.recognize.assert_called_once()
+        _, kwargs = transcriber.google_client.recognize.call_args
         self.assertEqual(kwargs["language"], "ja-JP")
-        self.assertTrue(kwargs["join_all_results"])
 
 
 if __name__ == "__main__":

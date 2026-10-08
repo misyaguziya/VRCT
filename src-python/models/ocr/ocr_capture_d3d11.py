@@ -15,6 +15,48 @@ import ctypes as ct
 import uuid
 
 
+def _validate_pixel_layout(width, height, row_pitch, view_format, color_order):
+    if color_order not in ("RGB", "BGR"):
+        raise ValueError("color_order must be RGB or BGR")
+    if view_format not in (28, 29, 87, 91):
+        raise ValueError("unsupported typed DXGI pixel format")
+    if (type(width) is not int or type(height) is not int or type(row_pitch) is not int
+            or width <= 0 or height <= 0 or row_pitch < width * 4):
+        raise ValueError("invalid mapped pixel dimensions or row pitch")
+
+
+def _pixels_from_bytes(raw, width, height, row_pitch, view_format, color_order="RGB"):
+    """Return owned, writable contiguous pixels; retain D3D's top-row ordering."""
+    import numpy as np
+
+    _validate_pixel_layout(width, height, row_pitch, view_format, color_order)
+    if not isinstance(raw, bytes):
+        raise TypeError("mapped pixels must be an owned bytes copy")
+    required = row_pitch * height
+    if len(raw) < required:
+        raise ValueError("mapped pixel buffer is shorter than its layout")
+    rows = np.frombuffer(raw, dtype=np.uint8, count=required).reshape(height, row_pitch)
+    pixels = rows[:, :width * 4].reshape(height, width, 4)
+    try:
+        import cv2
+    except ModuleNotFoundError as error:
+        if error.name != "cv2":
+            raise
+        input_is_bgr = view_format in (87, 91)
+        channels = pixels[:, :, :3]
+        if input_is_bgr != (color_order == "BGR"):
+            channels = channels[:, :, ::-1]
+        # ascontiguousarray alone can alias readonly input for singleton images.
+        return np.array(channels, dtype=np.uint8, copy=True, order="C")
+    conversion = {
+        (False, "RGB"): cv2.COLOR_RGBA2RGB,
+        (False, "BGR"): cv2.COLOR_RGBA2BGR,
+        (True, "RGB"): cv2.COLOR_BGRA2RGB,
+        (True, "BGR"): cv2.COLOR_BGRA2BGR,
+    }[(view_format in (87, 91), color_order)]
+    return cv2.cvtColor(pixels, conversion)
+
+
 class TextureDesc(ct.Structure):
     """D3D11_TEXTURE2D_DESC (including its inline DXGI_SAMPLE_DESC)."""
 
@@ -124,9 +166,9 @@ class D3D11Mirror:
             release(adapter)
             release(factory)
 
-    def read(self):
-        import numpy as np
-
+    def read(self, *, color_order="RGB"):
+        if color_order not in ("RGB", "BGR"):
+            raise ValueError("color_order must be RGB or BGR")
         com_call(self.context, 47, None, [ct.c_void_p, ct.c_void_p],
                  self.staging, self.texture)
         mapped = MappedResource()
@@ -136,14 +178,13 @@ class D3D11Mirror:
                           self.staging, 0, 1, 0, ct.byref(mapped)), "Map")
         try:
             self.row_pitch = mapped.RowPitch
+            _validate_pixel_layout(self.desc.Width, self.desc.Height, mapped.RowPitch,
+                                   self.view_format, color_order)
+            if not mapped.pData:
+                raise ValueError("Map returned a null pixel pointer")
             raw = ct.string_at(mapped.pData, mapped.RowPitch * self.desc.Height)
-            rows = np.frombuffer(raw, dtype=np.uint8).reshape(
-                self.desc.Height, mapped.RowPitch)
-            rgba = rows[:, :self.desc.Width * 4].reshape(
-                self.desc.Height, self.desc.Width, 4)
-            rgb = rgba[:, :, [2, 1, 0]] if self.view_format in (87, 91) else rgba[:, :, :3]
-            # D3D top row is row zero. Do not apply the GL path's vertical flip.
-            return np.ascontiguousarray(rgb)
+            return _pixels_from_bytes(raw, self.desc.Width, self.desc.Height,
+                                      mapped.RowPitch, self.view_format, color_order)
         finally:
             com_call(self.context, 15, None, [ct.c_void_p, ct.c_uint], self.staging, 0)
 

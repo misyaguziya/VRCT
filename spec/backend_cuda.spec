@@ -10,6 +10,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        ('./../src-python/models/transcription/google_speech_LICENSE.txt', 'licenses/'),
+        ('./../native/vrct-audio/THIRD_PARTY_LICENSES.txt', 'licenses/vrct-audio/'),
         ('./../src-python/models/overlay/fonts', 'fonts/'),
         ('./../src-python/models/translation/translation_settings/prompt', 'translation_settings/prompt/'),
         ('./../src-python/models/translation/translation_settings/languages', 'translation_settings/languages/'),
@@ -29,11 +31,11 @@ a = Analysis(
     # 同じDLL群が torch 経由で収集されていた)。実行時のDLL検索パス登録は
     # src-python/utils.py の _registerBundledCudaLibraries が行う。
     hiddenimports=['telemetry_keys', 'faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr', 'windows_capture',
-                   'nvidia.cublas', 'nvidia.cudnn'],
+                   'nvidia.cublas', 'nvidia.cudnn', 'vrct_audio'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['pandas', 'matplotlib', 'PyQt5'],
+    excludes=["speech_recognition", 'pandas', 'matplotlib', 'PyQt5'],
     noarchive=False,
     optimize=0,
 )

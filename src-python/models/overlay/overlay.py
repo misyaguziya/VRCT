@@ -305,6 +305,11 @@ def _atlasMask(image_size: tuple, atlas: tuple, regions: tuple) -> Image.Image:
 
 
 _INTRO_KEY_SOFT = (4, 20)  # 背景色との差がこれ以下なら透明、これ以上なら不透明。間は滑らかにつなぐ (カプセルの縁の縮れ防止)
+_INTRO_ALPHA_LUT = np.clip(
+    (np.arange(256, dtype=np.int32) - _INTRO_KEY_SOFT[0]) * 255
+    // (_INTRO_KEY_SOFT[1] - _INTRO_KEY_SOFT[0]), 0, 255,
+).astype(np.uint8)
+_INTRO_ALPHA_LUT.flags.writeable = False
 
 
 def introKeyAlpha(pixels: np.ndarray, rect: tuple) -> tuple:
@@ -318,6 +323,24 @@ def introKeyAlpha(pixels: np.ndarray, rect: tuple) -> tuple:
     x0, y0, x1, y1 = rect
     region = pixels[y0:y1, x0:x1]
     key = region[0, 0, :3].astype(np.int32)  # int16 だと、下の (diff - low) * 255 が桁あふれして、明るい色が透明になる
+    if region.dtype == np.uint8 and region.ndim == 3 and region.shape[2] == 4:
+        try:
+            import cv2
+        except ModuleNotFoundError as error:
+            if error.name != "cv2":
+                raise
+        else:
+            key_tuple = tuple(int(v) for v in key)
+            blue, green, red, _ = cv2.split(cv2.absdiff(region, (*key_tuple, 0)))
+            diff = cv2.max(cv2.max(blue, green), red)
+            alpha = cv2.min(region[..., 3], cv2.LUT(diff, _INTRO_ALPHA_LUT))
+            result = cv2.copyTo(region, alpha)
+            result[..., 3] = alpha
+            ratio = float((alpha.size - cv2.countNonZero(alpha)) / alpha.size)
+            # NumPy handles strided views. No input mutation before all OpenCV
+            # operations have succeeded, so upload cannot see partial keying.
+            region[:] = result
+            return key_tuple, ratio
     diff = np.abs(region[..., :3].astype(np.int32) - key).max(axis=2)
     low, high = _INTRO_KEY_SOFT
     keyed = np.clip((diff - low) * 255 // (high - low), 0, 255).astype(np.uint8)

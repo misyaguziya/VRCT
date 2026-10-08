@@ -1,0 +1,106 @@
+{
+  "scope": "Actual default mic and WASAPI loopback; raw PCM discarded immediately, no ASR/network",
+  "runs": [
+    {
+      "run": 0,
+      "pause_requested": false,
+      "stop_ms": 30.50310001708567,
+      "actual_sources": [
+        {
+          "index": 1,
+          "rate": 44100,
+          "channels": 1
+        },
+        {
+          "index": 39,
+          "rate": 48000,
+          "channels": 2
+        }
+      ],
+      "meter_received": [
+        true,
+        true
+      ],
+      "discarded_phrases": [
+        0,
+        0
+      ],
+      "discarded_bytes": [
+        0,
+        0
+      ]
+    },
+    {
+      "run": 1,
+      "pause_requested": true,
+      "stop_ms": 10.020800051279366,
+      "actual_sources": [
+        {
+          "index": 1,
+          "rate": 44100,
+          "channels": 1
+        },
+        {
+          "index": 39,
+          "rate": 48000,
+          "channels": 2
+        }
+      ],
+      "meter_received": [
+        true,
+        true
+      ],
+      "discarded_phrases": [
+        0,
+        0
+      ],
+      "discarded_bytes": [
+        0,
+        0
+      ]
+    },
+    {
+      "run": 2,
+      "pause_requested": false,
+      "stop_ms": 22.446799906902015,
+      "actual_sources": [
+        {
+          "index": 1,
+          "rate": 44100,
+          "channels": 1
+        },
+        {
+          "index": 39,
+          "rate": 48000,
+          "channels": 2
+        }
+      ],
+      "meter_received": [
+        true,
+        true
+      ],
+      "discarded_phrases": [
+        0,
+        0
+      ],
+      "discarded_bytes": [
+        0,
+        0
+      ]
+    }
+  ],
+  "not_tested": [
+    "physical unplug/replug",
+    "endpoint switch",
+    "recognition accuracy"
+  ],
+  "python": "3.11.5",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "source_sha256": {
+    "src-python/models/transcription/audio_source.py": "390926fb7e9ff91bb3fb6b193636c3441646df450d2282ddc2a27f0838e2eda2",
+    "src-python/models/transcription/audio_listener.py": "261d47e4746e915a2288f1dabbff6787072fad65a45721dab5cf113423f22db8",
+    "src-python/models/transcription/transcription_recorder.py": "ed3b9db83035d144d94b77d4952e287332ab4f357d8630fb4ae61096a510446b",
+    "tools/check_audio_capture.py": "6c1a072532f9818e609229851713efb06c27b91d617b6a00a3c2eead9c67949a"
+  },
+  "native_binary_sha256": "b6442f6b65ba3437a3a635c6b1f6c3df0963f772d450f676dc7a2ca438709ca8"
+}

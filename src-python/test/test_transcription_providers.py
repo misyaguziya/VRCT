@@ -9,11 +9,15 @@
 """
 
 import unittest
+import audioop
+from io import BytesIO
+import wave
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import httpx
 import requests
+import numpy as np
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -21,7 +25,7 @@ from openai import (
     AuthenticationError,
     RateLimitError,
 )
-from speech_recognition import AudioData, UnknownValueError
+from models.transcription.pcm_audio import PcmAudio
 
 from errors import ErrorCode
 from models.transcription.transcription_providers import (
@@ -37,15 +41,15 @@ def _segment(text: str, avg_logprob: float = -0.1, no_speech_prob: float = 0.1) 
     return SimpleNamespace(text=text, avg_logprob=avg_logprob, no_speech_prob=no_speech_prob)
 
 
-def _audio_data(seconds: float, sample_rate: int = 16000, sample_width: int = 2) -> AudioData:
+def _audio_data(seconds: float, sample_rate: int = 16000, sample_width: int = 2) -> PcmAudio:
     frame_count = int(seconds * sample_rate)
-    return AudioData(b"\x00" * (frame_count * sample_width), sample_rate, sample_width)
+    return PcmAudio(b"\x00" * (frame_count * sample_width), sample_rate, sample_width)
 
 
 class TestGoogleProvider(unittest.TestCase):
     def test_returns_text_and_confidence_on_success(self) -> None:
         recognizer = MagicMock()
-        recognizer.recognize_google.return_value = ("hello", 0.9)
+        recognizer.recognize.return_value = ("hello", 0.9)
         provider = GoogleProvider(recognizer)
 
         text, confidence, is_definitive = provider.transcribe(
@@ -58,17 +62,13 @@ class TestGoogleProvider(unittest.TestCase):
         # Google に「検出言語」の概念は無いため、常に False (呼び出し元が
         # 全候補を試行する既存の挙動を維持する)。
         self.assertFalse(is_definitive)
-        recognizer.recognize_google.assert_called_once()
-        _, kwargs = recognizer.recognize_google.call_args
+        recognizer.recognize.assert_called_once()
+        _, kwargs = recognizer.recognize.call_args
         self.assertEqual(kwargs["language"], "en-US")
-        # 複数発話区間を含む音声 (発話の先頭から累積したクリップ等) で
-        # 後続の発話が黙って失われないよう、常に全ブロックを連結させる
-        # (2026-09-07、custom_speech_recognitionフォーク側の修正と対)。
-        self.assertTrue(kwargs["join_all_results"])
 
-    def test_returns_empty_text_on_unknown_value_error(self) -> None:
+    def test_returns_empty_text_on_no_match(self) -> None:
         recognizer = MagicMock()
-        recognizer.recognize_google.side_effect = UnknownValueError()
+        recognizer.recognize.return_value = ("", 0.0)
         provider = GoogleProvider(recognizer)
 
         text, confidence, is_definitive = provider.transcribe(
@@ -87,7 +87,7 @@ class TestGoogleProvider(unittest.TestCase):
         AudioTranscriber側で対応する)。このプロバイダは audio_data を
         そのまま1回だけ認識する。"""
         recognizer = MagicMock()
-        recognizer.recognize_google.return_value = ("hello world", 0.9)
+        recognizer.recognize.return_value = ("hello world", 0.9)
         provider = GoogleProvider(recognizer)
 
         provider.transcribe(
@@ -95,10 +95,43 @@ class TestGoogleProvider(unittest.TestCase):
             avg_logprob=-0.8, no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=True,
         )
 
-        recognizer.recognize_google.assert_called_once()
+        recognizer.recognize.assert_called_once()
 
 
 class TestLocalWhisperProvider(unittest.TestCase):
+    def test_float_samples_equal_previous_path_and_model_mutation_is_isolated(self):
+        for rate in (16000, 44100, 48000):
+            with self.subTest(rate=rate):
+                original = np.arange(-32768, 32768, dtype="<i2").tobytes()
+                audio = PcmAudio(original, rate, 2)
+                expected = np.frombuffer(audio.get_raw_data(16000, 2), np.int16).flatten().astype(np.float32) / 32768.0
+                arrays = []
+
+                def transcribe(samples, **kwargs):
+                    np.testing.assert_array_equal(samples, expected)
+                    self.assertEqual(samples.dtype, np.float32)
+                    self.assertTrue(samples.flags.c_contiguous)
+                    self.assertTrue(samples.flags.writeable)
+                    self.assertEqual(samples.ndim, 1)
+                    for previous in arrays:
+                        self.assertFalse(np.shares_memory(previous, samples))
+                    arrays.append(samples)
+                    samples[:] = 123  # An engine may mutate its owned scratch input.
+                    return [], SimpleNamespace(language="en", language_probability=0.5)
+
+                model = SimpleNamespace(transcribe=transcribe)
+                provider = LocalWhisperProvider(model)
+                for _ in range(3):
+                    provider.transcribe(
+                        audio, "English", "United States", avg_logprob=-0.8,
+                        no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=False,
+                    )
+                self.assertEqual(audio.frame_data, original)
+                np.testing.assert_array_equal(
+                    np.frombuffer(audio.get_raw_data(16000, 2), np.int16).astype(np.float32) / 32768.0,
+                    expected,
+                )
+
     def _make_audio_data(self) -> MagicMock:
         audio_data = MagicMock()
         audio_data.get_raw_data.return_value = b"\x00\x00" * 8
@@ -169,6 +202,26 @@ class TestLocalWhisperProvider(unittest.TestCase):
 
 
 class TestOpenAICompatibleTranscriptionProvider(unittest.TestCase):
+    def test_candidates_reuse_identical_wav_in_sdk_calls(self):
+        provider = self._make_provider()
+        provider._client.audio.transcriptions.create.return_value = SimpleNamespace(
+            text="hello", language="en", segments=[],
+        )
+        audio = PcmAudio(np.arange(-300, 300, dtype="<i2").tobytes(), 48000, 2)
+        with patch("models.transcription.pcm_audio.audioop.ratecv", wraps=audioop.ratecv) as resample:
+            for _ in range(3):
+                provider.transcribe(
+                    audio, "English", "United States", avg_logprob=-0.8,
+                    no_speech_prob=0.6, no_repeat_ngram_size=0, force_language=False,
+                )
+            self.assertEqual(resample.call_count, 1)
+        calls = provider._client.audio.transcriptions.create.call_args_list
+        wav = calls[0].kwargs["file"][1]
+        self.assertTrue(all(call.kwargs["file"][1] is wav for call in calls))
+        with wave.open(BytesIO(wav)) as reader:
+            self.assertEqual((reader.getframerate(), reader.getsampwidth(), reader.getnchannels()), (16000, 2, 1))
+            self.assertEqual(reader.readframes(reader.getnframes()), audio.get_raw_data(16000, 2))
+
     def _make_audio_data(self) -> MagicMock:
         audio_data = MagicMock()
         audio_data.get_wav_data.return_value = b"RIFF....WAVEfmt "

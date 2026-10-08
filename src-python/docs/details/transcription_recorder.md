@@ -21,7 +21,7 @@
 音声を取りこぼす」という実機での指摘: エネルギー閾値方式の `phrase_time_limit`
 (既定 `record_timeout`=3秒) は無音の有無に関わらず単語の途中でも問答無用で録音チャンクを
 打ち切る設計であり、これが主因と判明した。`BaseVadAndAudioRecorder` は
-`custom_speech_recognition` フォークの `Recognizer.listen_with_segmenter_in_background`
+自前 `NativeAudioListener.listen_with_segmenter_in_background`
 (区切り判定を一切持たず `segmenter` に完全委任する汎用の差し込み点) 経由で
 `models/transcription/audio_vad.py` の `VadSegmenter` (Silero VAD、kikitan-translator と
 同じパラメータ、プリロール・anchor方式のヒステリシス・`max_speech_frames` 安全弁を実装) に
@@ -100,8 +100,7 @@ audio_queue に積まれるアイテムの形はエネルギー閾値方式と�
 `(raw_bytes, recorded_at, reason)` の3要素タプル。`reason` は
 `"silence"`/`"flush"` (自然な区切り) または `"max_duration"`
 (`VadSegmenter.max_speech_frames` の安全弁、無音を挟まない強制打ち切り)
-のいずれか (`audio_vad.SpeechSegment.reason` が `custom_speech_recognition`
-フォークの `AudioData.segment_reason` として伝播されたもの)。
+のいずれか (`audio_vad.SpeechSegment.reason` がlistenerの `segment_reason` として伝播されたもの)。
 
 **2026-09-06、実機検証で「長い連続発話ほど内容が丸ごと抜け落ちる」
 regressionが判明し、reason に応じた挙動の分岐を追加した**: 当初は reason を
@@ -186,10 +185,10 @@ adjustForNoise() -> None
 (デバイス列挙、ストリーム open/close) が同時に走ることはなく、Windows WASAPI 特有の
 「並行操作でデッドロック」を防ぎます。
 
-`recordIntoQueue` は `misyaguziya/custom_speech_recognition` フォークが提供する
-`Recognizer.listen_energy_and_audio_in_background`（`listen_in_background` 相当に
+`recordIntoQueue` は自前 `NativeAudioListener` が提供する
+`listen_energy_and_audio_in_background`（`listen_in_background` 相当に
 `callback_energy` フックを足したもの、エネルギー閾値方式）または
-`Recognizer.listen_with_segmenter_in_background`（区切り判定を `segmenter` に完全委任する
+`NativeAudioListener.listen_with_segmenter_in_background`（区切り判定を `segmenter` に完全委任する
 汎用の差し込み点、`config.MIC_ENABLE_VAD/SPEAKER_ENABLE_VAD` 時）のいずれかを使います。`callback_energy` は
 フレーズ確定を待たず生チャンク読み取りのたびに呼ばれ、Config パネルの音量メーターを
 リアルタイム更新するために必須です（`listen_in_background` だけではフレーズ確定時にしか
@@ -200,10 +199,9 @@ adjustForNoise() -> None
 ## 設定パラメータ
 
 ### しきい値設定
-- **energy_threshold**: `Recognizer` に設定されるが、現行の自作 listener ループでは
-  フレーズ検出に使われない（`speech_recognition` の built-in energy-based phrase detection
-  を使っていた旧経路の名残）。将来 `Recognizer` を使う経路を復活させる場合のために保持。
-- **dynamic_energy_threshold**: 同上。
+- **energy_threshold**: Rust `EnergyDetector` の発話開始判定に使用する。VAD方式では使用しない。
+- **dynamic_energy_threshold**: エネルギー方式の待機中に閾値を更新する。
+- 録音には `vrct_audio` 拡張が必須。未導入時は導入エラーを返す。デバイスI/OはPyAudioWPatchを使い、SpeechRecognitionには依存しない。
 
 ### タイムアウト設定
 - **phrase_time_limit**: エネルギー閾値方式のみで使用。`record_timeout` と同値

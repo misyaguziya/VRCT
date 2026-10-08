@@ -1,4 +1,4 @@
-"""Recorders that wrap speech_recognition microphone interfaces.
+"""Recorders that wrap the PCM16 PyAudio capture interface.
 
 These classes provide small adapters that push raw audio bytes into queues.
 They intentionally keep a thin API so the rest of the system can mock them
@@ -10,9 +10,9 @@ in tests.
 - `BaseEnergyAndAudioRecorder` が mic/speaker 共通の唯一の Recorder として、
   音声データ (audio_queue) とエネルギー (energy_queue) の両方を同時に扱う。
   同一物理デバイスに対する PyAudio Microphone インスタンスは常に 1 つ。
-- 発話区間検出・フレーズ境界・pause/resume/stop は `speech_recognition` の
-  `listen_energy_and_audio_in_background` に完全に委任する (energy_threshold,
-  phrase_time_limit)。独自 VAD/ストリーミング分割は行わない (ADR-0004 参照)。
+- native有効時は発話区間検出をRustへ、pause/resume/stopと読み取りを
+  audio_listenerへ委任する。nativeは必須で、未導入時は導入案内を含むImportErrorを返す。
+  VAD方式の発話区間検出はVadSegmenterが引き続き担当する。
   `callback_energy` フックにより、フレーズ確定を待たず生チャンクごとに
   エナジー値を取得できる (音量メーターのリアルタイム更新用)。
 - PyAudio 操作は全て `pyaudio_op_lock` の下で行い、WASAPI ロック競合を防ぐ。
@@ -20,7 +20,8 @@ in tests.
 
 import threading
 from typing import Any, Callable, Optional
-from speech_recognition import AudioSource, Recognizer, Microphone
+from models.transcription.audio_source import AudioCaptureSource
+from models.transcription.audio_listener import create_listener
 from datetime import datetime
 from errors import AudioPipelineFailure, ERROR_METADATA, ErrorCode
 from utils import errorLogging, printLog, putDroppingOldestOnFull
@@ -91,8 +92,8 @@ def _validate_audio_source(source: Any) -> Any:
     return source
 
 
-class _LockedAudioSource(AudioSource):
-    """speech_recognition の AudioSource をラップし、`__enter__`/`__exit__`
+class _LockedAudioSource:
+    """capture sourceをラップし、`__enter__`/`__exit__`
     (実際の PyAudio ストリーム open/close) だけを pyaudio_op_lock で
     直列化する。
 
@@ -111,10 +112,6 @@ class _LockedAudioSource(AudioSource):
     """
 
     def __init__(self, source: Any) -> None:
-        # AudioSource を継承するのは listen_energy_and_audio_in_background
-        # の `assert isinstance(source, AudioSource)` を通すためだけ。
-        # AudioSource.__init__ は "抽象クラスです" として
-        # NotImplementedError を送出するガードなので、意図的に呼ばない。
         self._source = source
         self._read_error_handler: Optional[Callable[[Exception], None]] = None
 
@@ -123,7 +120,12 @@ class _LockedAudioSource(AudioSource):
 
     def __enter__(self) -> Any:
         with pyaudio_op_lock:
-            self._source.__enter__()
+            try:
+                self._source.__enter__()
+            except Exception as error:
+                if self._read_error_handler is not None:
+                    self._read_error_handler(error)
+                raise
             stream = getattr(self._source, "stream", None)
             if (
                 stream is not None
@@ -142,21 +144,14 @@ class _LockedAudioSource(AudioSource):
 
 
 def _open_with_fallback(fallback_kwargs: dict[str, Any], **device_kwargs: Any) -> Any:
-    # speech_recognition の Microphone.__init__ 自体が、コンストラクタ内で
-    # 独自に PyAudio() を new し get_device_count()/get_device_info_by_index()
-    # 等のデバイス列挙を行ってから terminate() する。この呼び出しが
-    # pyaudio_op_lock の外側にあると、mic 側と speaker 側の Microphone(...)
-    # コンストラクタが並行実行され、WASAPI 内部でデッドロックし得る
-    # (実際に mic=CABLE Output, speaker=Steam Streaming Speakers を同時に
-    # 有効化した際にハングを確認済み)。
-    # そのため Microphone(...) の生成から _validate_audio_source による
-    # open/close 疎通確認まで、一貫して同じ pyaudio_op_lock 区間で行う。
+    # Default-rate resolution may enumerate devices. Keep construction and the
+    # probe open/close under the same PyAudio lock, including fallback.
     with pyaudio_op_lock:
         try:
-            return _validate_audio_source(Microphone(**device_kwargs))
+            return _validate_audio_source(AudioCaptureSource(**device_kwargs))
         except Exception:
             try:
-                return _validate_audio_source(Microphone(**fallback_kwargs))
+                return _validate_audio_source(AudioCaptureSource(**fallback_kwargs))
             except Exception as fallback_error:
                 raise OSError(
                     "Selected and default audio devices could not be opened"
@@ -234,14 +229,14 @@ def _wrapStopperWithBlockingReadUnblock(
     両 Recorder に共通する問題への対処なので、ここに集約して二重実装に
     よるドリフトを避ける。
 
-    speech_recognition 側の stopper は listener スレッドの join() に
+    listenerの stopper は listener スレッドの join() に
     タイムアウトを持たない。listener は self.source.stream.read() で
     ブロックしており、WASAPI ループバックの無音時などデータが来なく
     なると read() は返らず、stop() が永久にブロックしてしまう。
     Pa_StopStream (pyaudio_stream.stop_stream) は稼働中のストリームを
     別スレッドから止める用途の API で、進行中の read を強制的に返させる。
     Pa_CloseStream と異なり別スレッドから呼んでもデッドロックしない。
-    self.source.stream は speech_recognition の MicrophoneStream ラッパで、
+    self.source.stream は 自前の _CaptureStream ラッパで、
     実 PyAudio stream は .pyaudio_stream 属性経由でアクセスする。
     """
 
@@ -274,10 +269,9 @@ class BaseEnergyAndAudioRecorder:
     so a given physical device is only ever opened once. Every PyAudio
     operation is serialized via `pyaudio_op_lock`.
 
-    フレーズ境界・エネルギー閾値による発話検出は `speech_recognition` の
-    `listen_energy_and_audio_in_background` に完全委任する (energy_threshold /
-    dynamic_energy_threshold / phrase_time_limit)。独自 VAD は使わない。
-    この API は `listen_in_background` と同じ発話区間検出ロジックを使うが、
+    フレーズ境界・エネルギー閾値による発話検出はnative有効時にRustへ委任する。
+    nativeは必須で、未導入時は導入案内を含むImportErrorを返す。
+    この API は従来と同じ発話区間検出ロジックを使うが、
     追加で `callback_energy` フックを持ち、フレーズ確定を待たず生チャンク
     読み取りのたびにエナジー値を通知できる (config パネルの音量メーターを
     リアルタイム更新するために必要)。
@@ -292,12 +286,12 @@ class BaseEnergyAndAudioRecorder:
         record_timeout: int,
         label: str = "mic",
     ) -> None:
-        self.recorder = Recognizer()
+        self.recorder = create_listener(self._on_stream_read_error)
         self.recorder.energy_threshold = energy_threshold
         self.recorder.dynamic_energy_threshold = dynamic_energy_threshold
         self.phrase_time_limit = phrase_time_limit
         # record_timeout=0 (以下) は「無制限録音」の意図として扱う (issue #113)。
-        # custom_speech_recognition 3.10.4.3 以降は録音ループ冒頭で
+        # listenerは録音ループ冒頭で
         #   if time.time() - record_start_time > record_timeout: raise WaitTimeoutError
         # というガードが入り、0 を渡すとループ突入直後に必ず真になって
         # 1 バッファも読めないまま録音が中断され、音声が一切拾えなくなる。
@@ -416,7 +410,7 @@ class BaseEnergyAndAudioRecorder:
 
 class BaseVadAndAudioRecorder:
     """`BaseEnergyAndAudioRecorder` の VAD 版。フレーズ境界検出を
-    `speech_recognition` の energy_threshold/pause_threshold ではなく、
+    エネルギー方式の energy_threshold/pause_threshold ではなく、
     `VadRecognizerAdapter` (Silero VAD ベースの `VadSegmenter`) に委譲する。
 
     ストリームの open/close・停止/一時停止の仕組み (`_create_microphone`
@@ -437,7 +431,7 @@ class BaseVadAndAudioRecorder:
     """
 
     def __init__(self, source: Any, record_timeout: int, label: str = "vad") -> None:
-        self.recorder = Recognizer()
+        self.recorder = create_listener(self._on_stream_read_error)
         self.record_timeout = float("inf") if record_timeout <= 0 else record_timeout
         self.stop = None
         self.pause = None
@@ -554,7 +548,7 @@ class BaseVadAndAudioRecorder:
         (BaseEnergyAndAudioRecorder の2要素タプルとは形が異なる点に注意)。
 
         reason は "silence"/"flush"/"max_duration"/None のいずれか
-        (`audio_vad.SpeechSegment.reason`、custom_speech_recognition フォークの
+        (`audio_vad.SpeechSegment.reason`、listenerの
         `AudioData.segment_reason` として伝播されたもの)。
         AudioTranscriber.transcribeAudioQueue は reason=="max_duration"
         (無音を挟まない強制打ち切り) の場合は単独で確定・送信せず蓄積し、

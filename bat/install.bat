@@ -10,6 +10,8 @@ REM install packages for .venv
 call .venv/Scripts/activate
 python.exe -m pip install --upgrade pip
 pip install --no-cache-dir --force-reinstall -r requirements.txt
+python -m pip install --no-deps ./native/vrct-audio
+if errorlevel 1 exit /b 1
 REM rapidocr requires opencv-python, but this app uses opencv-python-headless.
 REM Both provide the same cv2 and collide, so reinstall it without its
 REM dependencies (the dependencies are listed explicitly in requirements).
@@ -30,6 +32,8 @@ REM install packages for .venv_cuda
 call .venv_cuda/Scripts/activate
 python.exe -m pip install --upgrade pip
 pip install --no-cache-dir --force-reinstall -r requirements_cuda.txt
+python -m pip install --no-deps ./native/vrct-audio
+if errorlevel 1 exit /b 1
 REM rapidocr requires opencv-python, but this app uses opencv-python-headless.
 REM Both provide the same cv2 and collide, so reinstall it without its
 REM dependencies (the dependencies are listed explicitly in requirements).

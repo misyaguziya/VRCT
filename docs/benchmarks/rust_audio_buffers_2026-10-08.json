@@ -1,0 +1,1670 @@
+{
+  "python": "3.11.5 (tags/v3.11.5:cce6ba9, Aug 24 2023, 14:38:34) [MSC v.1936 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "numpy": "1.26.4",
+  "av": "18.1.0",
+  "repeats": 9,
+  "benchmark_source_sha256": "1c1cc3a351a7d91aec6e34f141c24054aeb2aeb9812fe8c5a7658b7b278e2e14",
+  "binaries": {
+    "baseline": {
+      "path": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle7-native-site\\vrct_audio\\vrct_audio.pyd",
+      "sha256": "497de5454e8faf87c5d581a31bfb883eb7598c363b831340596bad1608576537"
+    },
+    "candidate": {
+      "path": "D:\\codex\\home\\worktrees\\4508\\VRCT\\tmp\\cycle9\\native-site\\vrct_audio\\vrct_audio.pyd",
+      "sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53"
+    }
+  },
+  "measurement": "Python API including returned bytes; alternating order; synthetic PCM; no ASR or I/O",
+  "results": [
+    {
+      "operation": "downmix_pcm16",
+      "args": [
+        1
+      ],
+      "width": 2,
+      "channels": 1,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 2048,
+      "input_sha256": "7483340f9f803680db92d49720f4223f1d9b84ca11482916f3b6453e5fd2d71c",
+      "output_sha256": "7483340f9f803680db92d49720f4223f1d9b84ca11482916f3b6453e5fd2d71c",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0006625,
+          0.00041410000000000004,
+          0.0004207,
+          0.0004139,
+          0.00048080000000000003,
+          0.0004536,
+          0.0005457000000000001,
+          0.0004425,
+          0.0004187
+        ],
+        "candidate": [
+          0.0004823,
+          0.0003748,
+          0.000385,
+          0.00040889999999999996,
+          0.0003387,
+          0.0003373,
+          0.0004963,
+          0.0005642,
+          0.00035089999999999996
+        ]
+      },
+      "baseline_median_ms": 0.0004425,
+      "candidate_median_ms": 0.000385
+    },
+    {
+      "operation": "downmix_pcm16",
+      "args": [
+        2
+      ],
+      "width": 2,
+      "channels": 2,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 4096,
+      "input_sha256": "a2d193be843c8ac48344e43eab534e06bfcd7c08bcb413dcc902b6ba56c160da",
+      "output_sha256": "5303341f5f88fc4f6b885a6c3abe7f96d33245b9c45fb80441a8ff0dc97821a6",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0047408,
+          0.0052114,
+          0.0047735,
+          0.0057335,
+          0.0050307,
+          0.0066938,
+          0.0052766,
+          0.0047511,
+          0.0049295
+        ],
+        "candidate": [
+          0.0040451,
+          0.0042966,
+          0.0039923,
+          0.0039674,
+          0.0040663,
+          0.0043137,
+          0.0042011999999999996,
+          0.0042811,
+          0.0045046
+        ]
+      },
+      "baseline_median_ms": 0.0050307,
+      "candidate_median_ms": 0.0042011999999999996
+    },
+    {
+      "operation": "downmix_pcm16",
+      "args": [
+        6
+      ],
+      "width": 2,
+      "channels": 6,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 12288,
+      "input_sha256": "c87c2b438f8d688561ecd6ee54abaf73b7bc6c67d7701883a6d3fa75f4b2f11b",
+      "output_sha256": "5c4c9602c9c69cff17d86dff069574b00d92e4e0d3e9233c0a1b258acfd59d21",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0075066,
+          0.0085235,
+          0.0069528,
+          0.0082074,
+          0.009082100000000001,
+          0.0099786,
+          0.0066814,
+          0.0114047,
+          0.0065205
+        ],
+        "candidate": [
+          0.0052756,
+          0.0065566999999999995,
+          0.0054947,
+          0.0052865,
+          0.0055194,
+          0.0057709,
+          0.0053712,
+          0.00723,
+          0.0054653
+        ]
+      },
+      "baseline_median_ms": 0.0082074,
+      "candidate_median_ms": 0.0054947
+    },
+    {
+      "operation": "speaker_downmix_pcm16",
+      "args": [
+        3
+      ],
+      "width": 2,
+      "channels": 3,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 6144,
+      "input_sha256": "ec8969ac6b120570539b3ebfec3b499566231ebccd92c1c84c4bba401945e9a3",
+      "output_sha256": "23b0d0ecc9220a3072cb5bb408151e8789fcd2e2fb9b0e5e7072add312a6bc07",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0094607,
+          0.0087396,
+          0.0078773,
+          0.0083207,
+          0.0080722,
+          0.0078878,
+          0.0109682,
+          0.0080706,
+          0.0076649
+        ],
+        "candidate": [
+          0.008587899999999999,
+          0.0091179,
+          0.0094312,
+          0.008034399999999999,
+          0.008295700000000001,
+          0.0092786,
+          0.0081261,
+          0.0086856,
+          0.0089341
+        ]
+      },
+      "baseline_median_ms": 0.0080722,
+      "candidate_median_ms": 0.0086856
+    },
+    {
+      "operation": "speaker_downmix_pcm16",
+      "args": [
+        6
+      ],
+      "width": 2,
+      "channels": 6,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 12288,
+      "input_sha256": "c87c2b438f8d688561ecd6ee54abaf73b7bc6c67d7701883a6d3fa75f4b2f11b",
+      "output_sha256": "e39ef9f8802c172a207eab373c2c7f65d27787760e15b098c01b4216d81bfac4",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0149553,
+          0.0175499,
+          0.0150252,
+          0.015687299999999998,
+          0.0158939,
+          0.0152102,
+          0.0149692,
+          0.015121899999999999,
+          0.0151161
+        ],
+        "candidate": [
+          0.014932899999999999,
+          0.0160533,
+          0.0151762,
+          0.015011,
+          0.0155586,
+          0.0155282,
+          0.0154404,
+          0.0153372,
+          0.0158903
+        ]
+      },
+      "baseline_median_ms": 0.015121899999999999,
+      "candidate_median_ms": 0.0154404
+    },
+    {
+      "operation": "speaker_downmix_pcm16",
+      "args": [
+        8
+      ],
+      "width": 2,
+      "channels": 8,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 16384,
+      "input_sha256": "f2608a08ad83cb291c4d877c01b67df41d559085b50cd9f4c588fe417ca5a9d4",
+      "output_sha256": "7a931b1507b494f4dbb0eb93465fc9956f50916a652db4a04b1c3dcda4e56259",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.018402599999999998,
+          0.0181991,
+          0.018549200000000002,
+          0.0206568,
+          0.019041,
+          0.0188755,
+          0.018105,
+          0.019511,
+          0.018953900000000003
+        ],
+        "candidate": [
+          0.020211299999999998,
+          0.0200667,
+          0.0199063,
+          0.019816,
+          0.0203625,
+          0.021928299999999998,
+          0.0210256,
+          0.020585700000000002,
+          0.0203685
+        ]
+      },
+      "baseline_median_ms": 0.0188755,
+      "candidate_median_ms": 0.0203625
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        1,
+        1
+      ],
+      "width": 1,
+      "channels": 1,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 1024,
+      "input_sha256": "3aa4d9a34fe6b1aadc6245c8d5f5e8d024bbc68c157033817b1c5433cdd6d8f6",
+      "output_sha256": "77a21606c756837c0c6fc393a3befb0e17fcb2b09a3f35fc0f18dfa787d01596",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0013563,
+          0.0011175999999999998,
+          0.0010761,
+          0.0013107000000000001,
+          0.0013899000000000001,
+          0.0011981,
+          0.001091,
+          0.0011349,
+          0.0010754
+        ],
+        "candidate": [
+          0.0010612,
+          0.0009327999999999999,
+          0.0009473999999999999,
+          0.0009885,
+          0.0010294000000000002,
+          0.0010539000000000002,
+          0.0010672000000000001,
+          0.0014291,
+          0.0009356
+        ]
+      },
+      "baseline_median_ms": 0.0011349,
+      "candidate_median_ms": 0.0010294000000000002
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        1,
+        2
+      ],
+      "width": 1,
+      "channels": 2,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 2048,
+      "input_sha256": "7483340f9f803680db92d49720f4223f1d9b84ca11482916f3b6453e5fd2d71c",
+      "output_sha256": "46544f1038716281d267d310be4846d001f8348fc6f0c51486ee02093c038f62",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0033701,
+          0.0040253,
+          0.003298,
+          0.004170699999999999,
+          0.0034297,
+          0.0034731999999999996,
+          0.0070001,
+          0.0032829,
+          0.0034398000000000002
+        ],
+        "candidate": [
+          0.0042712,
+          0.0046558,
+          0.0041291,
+          0.004182399999999999,
+          0.0043416,
+          0.004147100000000001,
+          0.0043117,
+          0.0041309,
+          0.0062328
+        ]
+      },
+      "baseline_median_ms": 0.0034398000000000002,
+      "candidate_median_ms": 0.0042712
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        1,
+        6
+      ],
+      "width": 1,
+      "channels": 6,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 6144,
+      "input_sha256": "ec8969ac6b120570539b3ebfec3b499566231ebccd92c1c84c4bba401945e9a3",
+      "output_sha256": "a48e9afb1a5996a805c75c6f119e05193b04d7230ec7bd7ea8496b318c3d9273",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0056898,
+          0.0053923999999999995,
+          0.0053886,
+          0.0058947,
+          0.0059285,
+          0.0054785,
+          0.005824,
+          0.0057793,
+          0.0068351
+        ],
+        "candidate": [
+          0.005345399999999999,
+          0.0067231999999999995,
+          0.0061688,
+          0.00584,
+          0.0064078,
+          0.005486899999999999,
+          0.0056966000000000004,
+          0.0054963,
+          0.0055845
+        ]
+      },
+      "baseline_median_ms": 0.0057793,
+      "candidate_median_ms": 0.0056966000000000004
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        2,
+        2
+      ],
+      "width": 2,
+      "channels": 2,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 4096,
+      "input_sha256": "a2d193be843c8ac48344e43eab534e06bfcd7c08bcb413dcc902b6ba56c160da",
+      "output_sha256": "5303341f5f88fc4f6b885a6c3abe7f96d33245b9c45fb80441a8ff0dc97821a6",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0049158000000000006,
+          0.0050528000000000005,
+          0.0050232,
+          0.006523,
+          0.004734,
+          0.005415,
+          0.0058267,
+          0.0049695,
+          0.0055817
+        ],
+        "candidate": [
+          0.0038602,
+          0.0041709,
+          0.0036613,
+          0.0041313999999999995,
+          0.0038567,
+          0.0040066,
+          0.0037106,
+          0.0036858000000000004,
+          0.0037825
+        ]
+      },
+      "baseline_median_ms": 0.0050528000000000005,
+      "candidate_median_ms": 0.0038567
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        2,
+        6
+      ],
+      "width": 2,
+      "channels": 6,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 12288,
+      "input_sha256": "c87c2b438f8d688561ecd6ee54abaf73b7bc6c67d7701883a6d3fa75f4b2f11b",
+      "output_sha256": "5c4c9602c9c69cff17d86dff069574b00d92e4e0d3e9233c0a1b258acfd59d21",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0064227,
+          0.0068316,
+          0.0062433,
+          0.0062052,
+          0.0062647,
+          0.0063614,
+          0.0069648,
+          0.0067474,
+          0.0063462
+        ],
+        "candidate": [
+          0.005600399999999999,
+          0.0055208,
+          0.005893,
+          0.0052172,
+          0.0062976,
+          0.0051551999999999995,
+          0.0050492,
+          0.005030199999999999,
+          0.0050687
+        ]
+      },
+      "baseline_median_ms": 0.0063614,
+      "candidate_median_ms": 0.0052172
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        3,
+        1
+      ],
+      "width": 3,
+      "channels": 1,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 3072,
+      "input_sha256": "96fd7b39b43622ce5e9ff18a1b8541fc299f10346f67685e93efb3d891f21540",
+      "output_sha256": "bd2de61331c5c9db50376b0748d0adefdb83473add73f9e4bd3f829143310023",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.001202,
+          0.0019274000000000001,
+          0.0011722,
+          0.0010333,
+          0.0021825,
+          0.0010188,
+          0.0010167,
+          0.0015373,
+          0.0010514
+        ],
+        "candidate": [
+          0.0008906000000000001,
+          0.0008709,
+          0.0011028,
+          0.0010747999999999999,
+          0.0011593,
+          0.0010473,
+          0.0009023999999999999,
+          0.0012562,
+          0.0008651
+        ]
+      },
+      "baseline_median_ms": 0.0011722,
+      "candidate_median_ms": 0.0010473
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        3,
+        2
+      ],
+      "width": 3,
+      "channels": 2,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 6144,
+      "input_sha256": "ec8969ac6b120570539b3ebfec3b499566231ebccd92c1c84c4bba401945e9a3",
+      "output_sha256": "1599a4cc353857e026e77dab0afd8815ff8d69458637eab3b4b450aa86262069",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0030686999999999997,
+          0.0038372,
+          0.0037032,
+          0.0032832,
+          0.0034179,
+          0.0031576,
+          0.0031819,
+          0.003506,
+          0.0032505
+        ],
+        "candidate": [
+          0.0038904,
+          0.004609899999999999,
+          0.0031019,
+          0.0032505,
+          0.0034887,
+          0.0034049,
+          0.003307,
+          0.004281699999999999,
+          0.0030410999999999997
+        ]
+      },
+      "baseline_median_ms": 0.0032832,
+      "candidate_median_ms": 0.0034049
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        3,
+        6
+      ],
+      "width": 3,
+      "channels": 6,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 18432,
+      "input_sha256": "cf595106279566c174c54691c612566cbac0f1e7e567f15b18ac9dbdde90b56b",
+      "output_sha256": "e3dded2f15a9a9ec3c88a284f910665964326c60f3cc1fb67b53a723e33373e9",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.005169600000000001,
+          0.005004300000000001,
+          0.005532100000000001,
+          0.005027899999999999,
+          0.0052118,
+          0.0051341,
+          0.0051471,
+          0.0054456999999999995,
+          0.0053008000000000005
+        ],
+        "candidate": [
+          0.0051807,
+          0.0048074,
+          0.0059552,
+          0.0049321,
+          0.005145,
+          0.004731,
+          0.004855,
+          0.0048831000000000005,
+          0.005406899999999999
+        ]
+      },
+      "baseline_median_ms": 0.005169600000000001,
+      "candidate_median_ms": 0.0049321
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        4,
+        1
+      ],
+      "width": 4,
+      "channels": 1,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 4096,
+      "input_sha256": "a2d193be843c8ac48344e43eab534e06bfcd7c08bcb413dcc902b6ba56c160da",
+      "output_sha256": "5a41eb2119108f48b69e723efc5eb58fdccda110feffbc2ddcfb487cff181f3d",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0013055999999999999,
+          0.0011187999999999999,
+          0.0011815999999999999,
+          0.0012137,
+          0.0011307,
+          0.0014717,
+          0.001293,
+          0.0052942,
+          0.0013471
+        ],
+        "candidate": [
+          0.0009383999999999999,
+          0.0009561,
+          0.0009835,
+          0.0009804,
+          0.000974,
+          0.0010286,
+          0.0009828,
+          0.0010102,
+          0.001234
+        ]
+      },
+      "baseline_median_ms": 0.001293,
+      "candidate_median_ms": 0.0009828
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        4,
+        2
+      ],
+      "width": 4,
+      "channels": 2,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 8192,
+      "input_sha256": "33a7a5ce3ad55a47fa8b2a55c39568d0965130fbf571148cba452481ece8842c",
+      "output_sha256": "bb61eec372d1bed66ef71a31b1fbbc872e2d6ba0028dbac6e6baefdaa644518a",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0052338,
+          0.0053178,
+          0.0087247,
+          0.0050895,
+          0.0081345,
+          0.0051446,
+          0.0061006,
+          0.004685,
+          0.005063
+        ],
+        "candidate": [
+          0.0048549,
+          0.0041053,
+          0.0040189,
+          0.0041693,
+          0.00437,
+          0.0042469,
+          0.0048936000000000006,
+          0.0040683,
+          0.004410600000000001
+        ]
+      },
+      "baseline_median_ms": 0.0052338,
+      "candidate_median_ms": 0.0042469
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        4,
+        6
+      ],
+      "width": 4,
+      "channels": 6,
+      "frames": 1024,
+      "batch": 1000,
+      "input_bytes": 24576,
+      "input_sha256": "7e708f9725b8a21235f609bea41226f1ccb79e7791423966e211a276e9d825ae",
+      "output_sha256": "dca7344432a845b045f2cc4264853670143edd880c9cb3a1308d3e2f1ddf5884",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          0.0071502,
+          0.0076353,
+          0.0065326,
+          0.0066284,
+          0.0074996,
+          0.0066261,
+          0.0071351,
+          0.0070265,
+          0.0075242
+        ],
+        "candidate": [
+          0.0048543,
+          0.0055405,
+          0.0053268000000000005,
+          0.0057616,
+          0.0060623000000000005,
+          0.0048893,
+          0.0063511999999999996,
+          0.0051067,
+          0.0050884
+        ]
+      },
+      "baseline_median_ms": 0.0071351,
+      "candidate_median_ms": 0.0053268000000000005
+    },
+    {
+      "operation": "downmix_pcm16",
+      "args": [
+        1
+      ],
+      "width": 2,
+      "channels": 1,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 1440000,
+      "input_sha256": "8bfdc602a319e6f04789e4f628547b4566c6fb29bf99c6f4c940332b8ee13b5c",
+      "output_sha256": "8bfdc602a319e6f04789e4f628547b4566c6fb29bf99c6f4c940332b8ee13b5c",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          2.4456,
+          2.5103,
+          1.2763,
+          1.3908,
+          1.52,
+          1.0477,
+          1.7485,
+          1.4332,
+          1.2599
+        ],
+        "candidate": [
+          0.7897,
+          0.8911,
+          1.0793,
+          3.0495,
+          2.3984,
+          0.9674,
+          1.0551,
+          0.7825,
+          1.1588
+        ]
+      },
+      "baseline_median_ms": 1.4332,
+      "candidate_median_ms": 1.0551
+    },
+    {
+      "operation": "downmix_pcm16",
+      "args": [
+        2
+      ],
+      "width": 2,
+      "channels": 2,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 2880000,
+      "input_sha256": "ece16218c5081db9cd0f6ce56548ab625046647d1c8070796e838db770177f29",
+      "output_sha256": "817b360bb0d81c82a4c03863b771f3397a56e862c8898a56d1fd605965052514",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          4.8798,
+          4.9938,
+          4.8035,
+          5.8025,
+          6.2113,
+          8.4639,
+          5.2087,
+          5.5926,
+          5.2387
+        ],
+        "candidate": [
+          4.4786,
+          3.3106,
+          4.4552,
+          4.117,
+          3.8214,
+          4.2347,
+          3.313,
+          3.3253,
+          3.394
+        ]
+      },
+      "baseline_median_ms": 5.2387,
+      "candidate_median_ms": 3.8214
+    },
+    {
+      "operation": "downmix_pcm16",
+      "args": [
+        6
+      ],
+      "width": 2,
+      "channels": 6,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 8640000,
+      "input_sha256": "f98a9b5330d247857294f60ad42ac8100279ef0e85e877a5ce4c19bf6b9a1134",
+      "output_sha256": "419e7bf9d2dab7576346a7695ec3c14ebe592c300a272a7212a3bde573b1b24f",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          11.9155,
+          12.7422,
+          9.2886,
+          12.085,
+          8.2369,
+          7.8669,
+          8.8936,
+          7.9667,
+          9.5309
+        ],
+        "candidate": [
+          5.2056,
+          4.7122,
+          4.5361,
+          7.3608,
+          5.933,
+          4.9467,
+          5.2674,
+          5.0183,
+          6.9613
+        ]
+      },
+      "baseline_median_ms": 9.2886,
+      "candidate_median_ms": 5.2056
+    },
+    {
+      "operation": "speaker_downmix_pcm16",
+      "args": [
+        3
+      ],
+      "width": 2,
+      "channels": 3,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 4320000,
+      "input_sha256": "2a18e8bcc40aabe8de1cd3c8489d0a46223495a5ec4cdb871d43bf63fd23db45",
+      "output_sha256": "f1be59878c69765e4e96c3411f0b01bb68dd0ec90e031c15ce9cbad34c0384ad",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          7.4605,
+          7.2947,
+          8.1593,
+          10.9388,
+          7.6073,
+          11.6578,
+          7.5971,
+          8.6775,
+          9.2644
+        ],
+        "candidate": [
+          6.593,
+          6.9012,
+          6.3895,
+          6.2101,
+          6.3515,
+          7.2884,
+          7.1769,
+          7.1593,
+          6.4356
+        ]
+      },
+      "baseline_median_ms": 8.1593,
+      "candidate_median_ms": 6.593
+    },
+    {
+      "operation": "speaker_downmix_pcm16",
+      "args": [
+        6
+      ],
+      "width": 2,
+      "channels": 6,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 8640000,
+      "input_sha256": "f98a9b5330d247857294f60ad42ac8100279ef0e85e877a5ce4c19bf6b9a1134",
+      "output_sha256": "cd6dd8da2abf40cb5b384ec3b1924327b3b0883e17db9db4bffda38461a005d5",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          17.1497,
+          15.402,
+          14.551,
+          16.0133,
+          16.8895,
+          15.09,
+          14.4933,
+          17.8495,
+          14.5091
+        ],
+        "candidate": [
+          10.7369,
+          12.125,
+          13.9628,
+          10.742,
+          12.0367,
+          12.3855,
+          12.9083,
+          11.466,
+          12.0741
+        ]
+      },
+      "baseline_median_ms": 15.402,
+      "candidate_median_ms": 12.0741
+    },
+    {
+      "operation": "speaker_downmix_pcm16",
+      "args": [
+        8
+      ],
+      "width": 2,
+      "channels": 8,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 11520000,
+      "input_sha256": "af736f6fd81553b0c830a479ab081999a3b3a5a24769cfa5c02fc8d071cee1e3",
+      "output_sha256": "0514cdba4f809ccc1b9c0bf23b15df3ebcfed7a6e7be86387aae8dcb12a15a9a",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          18.1455,
+          19.5555,
+          19.7589,
+          19.0998,
+          20.8281,
+          17.5704,
+          19.432,
+          19.7159,
+          19.5413
+        ],
+        "candidate": [
+          14.9213,
+          14.6381,
+          14.5113,
+          14.5794,
+          19.4144,
+          18.6214,
+          15.3888,
+          14.9623,
+          18.7004
+        ]
+      },
+      "baseline_median_ms": 19.5413,
+      "candidate_median_ms": 14.9623
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        1,
+        1
+      ],
+      "width": 1,
+      "channels": 1,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 720000,
+      "input_sha256": "c55fcb6b4c2014cb0db9369cde4b5027e86058c4350219e50c76e9938274d22c",
+      "output_sha256": "c55c87498f1ac72056cc9fd8555611f929bf5fbd7c6477577b32bf5bf87e244f",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          1.8946,
+          1.5609,
+          2.0144,
+          3.3367,
+          2.7781,
+          2.4389,
+          1.4579,
+          2.6778,
+          1.7406
+        ],
+        "candidate": [
+          1.3315,
+          1.5004,
+          2.3894,
+          1.2734,
+          1.9983,
+          1.2507,
+          1.6544,
+          1.9057,
+          1.7739
+        ]
+      },
+      "baseline_median_ms": 2.0144,
+      "candidate_median_ms": 1.6544
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        1,
+        2
+      ],
+      "width": 1,
+      "channels": 2,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 1440000,
+      "input_sha256": "8bfdc602a319e6f04789e4f628547b4566c6fb29bf99c6f4c940332b8ee13b5c",
+      "output_sha256": "afad16528466de7dc4291288836f9bcaea553693c3bd6ae912b39b05ca4ab785",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          3.1971,
+          5.9021,
+          3.6872,
+          4.4307,
+          3.7907,
+          3.5556,
+          5.795,
+          3.394,
+          3.3176
+        ],
+        "candidate": [
+          4.2591,
+          5.0352,
+          3.3039,
+          3.6586,
+          3.6549,
+          3.179,
+          4.1757,
+          3.9381,
+          3.6295
+        ]
+      },
+      "baseline_median_ms": 3.6872,
+      "candidate_median_ms": 3.6586
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        1,
+        6
+      ],
+      "width": 1,
+      "channels": 6,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 4320000,
+      "input_sha256": "2a18e8bcc40aabe8de1cd3c8489d0a46223495a5ec4cdb871d43bf63fd23db45",
+      "output_sha256": "98399323fe81c9b875217c793f7cb0b17b0fd0b260335dbba124dcd16e48fdb5",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          6.8611,
+          5.7561,
+          8.2391,
+          5.8251,
+          7.0414,
+          6.8476,
+          6.7207,
+          6.9171,
+          6.551
+        ],
+        "candidate": [
+          4.8741,
+          4.653,
+          4.7955,
+          5.5602,
+          4.3188,
+          6.617,
+          4.4456,
+          4.3869,
+          4.3684
+        ]
+      },
+      "baseline_median_ms": 6.8476,
+      "candidate_median_ms": 4.653
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        2,
+        2
+      ],
+      "width": 2,
+      "channels": 2,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 2880000,
+      "input_sha256": "ece16218c5081db9cd0f6ce56548ab625046647d1c8070796e838db770177f29",
+      "output_sha256": "817b360bb0d81c82a4c03863b771f3397a56e862c8898a56d1fd605965052514",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          5.4481,
+          4.6077,
+          5.3183,
+          5.1748,
+          4.6604,
+          5.7901,
+          5.2664,
+          5.5143,
+          5.5333
+        ],
+        "candidate": [
+          6.0906,
+          3.6398,
+          5.3733,
+          3.7965,
+          3.3726,
+          3.5629,
+          3.1587,
+          3.0561,
+          3.4345
+        ]
+      },
+      "baseline_median_ms": 5.3183,
+      "candidate_median_ms": 3.5629
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        2,
+        6
+      ],
+      "width": 2,
+      "channels": 6,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 8640000,
+      "input_sha256": "f98a9b5330d247857294f60ad42ac8100279ef0e85e877a5ce4c19bf6b9a1134",
+      "output_sha256": "419e7bf9d2dab7576346a7695ec3c14ebe592c300a272a7212a3bde573b1b24f",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          10.6717,
+          12.2738,
+          10.0775,
+          9.188,
+          8.242,
+          8.9965,
+          9.0959,
+          8.1662,
+          9.422
+        ],
+        "candidate": [
+          4.9721,
+          4.2854,
+          6.4591,
+          5.8829,
+          4.95,
+          5.0039,
+          4.7327,
+          7.164,
+          4.8593
+        ]
+      },
+      "baseline_median_ms": 9.188,
+      "candidate_median_ms": 4.9721
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        3,
+        1
+      ],
+      "width": 3,
+      "channels": 1,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 2160000,
+      "input_sha256": "4a395973c2d6057bf08feb0e348c9c3caabce6f5cb54281097448f4432d045c2",
+      "output_sha256": "c84dc969b7d7312d9c9f050ddbdf04226b197610fe5ae094212ab8af77c9831d",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          2.6269,
+          3.1572,
+          2.3399,
+          2.0599,
+          2.5419,
+          2.6343,
+          1.7372,
+          2.9612,
+          2.6415
+        ],
+        "candidate": [
+          1.4434,
+          1.3114,
+          1.4223,
+          2.0313,
+          2.4269,
+          1.745,
+          1.6188,
+          1.4542,
+          1.1356
+        ]
+      },
+      "baseline_median_ms": 2.6269,
+      "candidate_median_ms": 1.4542
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        3,
+        2
+      ],
+      "width": 3,
+      "channels": 2,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 4320000,
+      "input_sha256": "2a18e8bcc40aabe8de1cd3c8489d0a46223495a5ec4cdb871d43bf63fd23db45",
+      "output_sha256": "4770681c1f24982a3a9ca39f1ff4b5b651fd53923dcfb9f56d0afaeb659405e9",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          4.7875,
+          4.5307,
+          8.4456,
+          4.1134,
+          4.6925,
+          4.6419,
+          4.5413,
+          6.5748,
+          4.2558
+        ],
+        "candidate": [
+          3.2999,
+          2.8453,
+          3.8505,
+          2.763,
+          3.3795,
+          4.0404,
+          2.796,
+          2.8729,
+          2.9355
+        ]
+      },
+      "baseline_median_ms": 4.6419,
+      "candidate_median_ms": 2.9355
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        3,
+        6
+      ],
+      "width": 3,
+      "channels": 6,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 12960000,
+      "input_sha256": "8d14cb35c098abe2525bfcdb625c7029482045b87cdab9884454bd5997707425",
+      "output_sha256": "bf61e7b8c15cdebd0c4d1a08e66b903a7122e04e8c030893305805f36caca44b",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          9.5593,
+          9.2803,
+          14.9916,
+          9.4883,
+          11.6488,
+          10.7282,
+          9.9141,
+          10.3834,
+          8.5479
+        ],
+        "candidate": [
+          5.006,
+          5.0563,
+          4.9987,
+          4.231,
+          4.7407,
+          5.1816,
+          4.1658,
+          3.9903,
+          6.3406
+        ]
+      },
+      "baseline_median_ms": 9.9141,
+      "candidate_median_ms": 4.9987
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        4,
+        1
+      ],
+      "width": 4,
+      "channels": 1,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 2880000,
+      "input_sha256": "ece16218c5081db9cd0f6ce56548ab625046647d1c8070796e838db770177f29",
+      "output_sha256": "47750379a3b2a5a875ffc94c14ff6420d53625108b1913fe2ae849f3f2dfdd83",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          2.4888,
+          3.74,
+          3.9152,
+          2.8982,
+          2.6427,
+          5.3304,
+          3.1324,
+          3.6066,
+          2.3685
+        ],
+        "candidate": [
+          1.491,
+          2.0904,
+          1.7312,
+          1.5065,
+          2.4455,
+          1.4714,
+          2.7131,
+          1.324,
+          1.5929
+        ]
+      },
+      "baseline_median_ms": 3.1324,
+      "candidate_median_ms": 1.5929
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        4,
+        2
+      ],
+      "width": 4,
+      "channels": 2,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 5760000,
+      "input_sha256": "a8e954f5663fd1c337198f58b619c874fceac5de9a157868f9408b4bdb8df00d",
+      "output_sha256": "e9556c732bdd9335cd6454a72dcb9242bde173c5d0dce363992dcd1cd764bcd6",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          5.6407,
+          7.2091,
+          6.5786,
+          6.3536,
+          5.4271,
+          6.1821,
+          6.0466,
+          10.4712,
+          5.7808
+        ],
+        "candidate": [
+          3.3956,
+          4.4466,
+          3.904,
+          4.2956,
+          3.6403,
+          4.5907,
+          3.1777,
+          3.9889,
+          3.8048
+        ]
+      },
+      "baseline_median_ms": 6.1821,
+      "candidate_median_ms": 3.904
+    },
+    {
+      "operation": "normalize_pcm16",
+      "args": [
+        4,
+        6
+      ],
+      "width": 4,
+      "channels": 6,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 17280000,
+      "input_sha256": "dd1ac041f206bee7c5abff347ad5e87aa7e9e2396918d31502bb7872bb64f8d5",
+      "output_sha256": "8fefc07b284ea97c52a71b44c311fd358dca9d845115183265460085168aa4f0",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          13.3274,
+          13.4082,
+          11.2237,
+          14.9355,
+          16.7941,
+          14.8403,
+          14.169,
+          13.7024,
+          13.8654
+        ],
+        "candidate": [
+          4.7567,
+          4.4338,
+          7.1933,
+          5.8522,
+          5.3322,
+          5.011,
+          6.317,
+          6.874,
+          8.2563
+        ]
+      },
+      "baseline_median_ms": 13.8654,
+      "candidate_median_ms": 5.8522
+    },
+    {
+      "operation": "encode_flac",
+      "args": [
+        16000
+      ],
+      "width": 2,
+      "channels": 1,
+      "frames": 48000,
+      "batch": 1,
+      "input_bytes": 96000,
+      "input_sha256": "4b2f0a7a6ae1d630d820101c1e9a1c2b48035e4f719b2bef0a8bcd00d2837f44",
+      "output_sha256": "f44ab17ec4ea3ed3d708d2bef55d335be243423776bc2941540308be910b3369",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          1.7576,
+          2.2793,
+          2.3937,
+          2.0765,
+          1.7031,
+          1.6746,
+          1.5861,
+          2.2116,
+          1.8579
+        ],
+        "candidate": [
+          1.6713,
+          1.6775,
+          2.0252,
+          1.8388,
+          2.0564,
+          1.7897,
+          2.1321,
+          1.7896,
+          1.7736
+        ]
+      },
+      "baseline_median_ms": 1.8579,
+      "candidate_median_ms": 1.7897
+    },
+    {
+      "operation": "encode_flac",
+      "args": [
+        16000
+      ],
+      "width": 2,
+      "channels": 1,
+      "frames": 240000,
+      "batch": 1,
+      "input_bytes": 480000,
+      "input_sha256": "3598ee200ac04e28883bd9290323826079fbf4dc5e4a7bfabe0e7cc806439203",
+      "output_sha256": "e43ea35a9e469c06960fc747256a2745bd9c21e6ead5b25fda9fb9f73cc7d119",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          10.8748,
+          10.9686,
+          10.9542,
+          10.8504,
+          10.8535,
+          10.8625,
+          10.7617,
+          11.0712,
+          11.594
+        ],
+        "candidate": [
+          10.1792,
+          11.6716,
+          11.8296,
+          9.9823,
+          11.8691,
+          10.9399,
+          12.2532,
+          11.0402,
+          10.8888
+        ]
+      },
+      "baseline_median_ms": 10.8748,
+      "candidate_median_ms": 11.0402
+    },
+    {
+      "operation": "encode_flac",
+      "args": [
+        48000
+      ],
+      "width": 2,
+      "channels": 1,
+      "frames": 144000,
+      "batch": 1,
+      "input_bytes": 288000,
+      "input_sha256": "bc6aa06302fcd0474a0db62cd2873d147fa4fd167e327a43e6929fe8365be841",
+      "output_sha256": "26530374990099105d5e02a469cb6d4a274edd7b95ae8692989701659822403e",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          6.2034,
+          6.916,
+          5.8521,
+          6.6211,
+          5.8218,
+          6.5278,
+          5.9581,
+          6.4769,
+          8.3164
+        ],
+        "candidate": [
+          5.8461,
+          8.6491,
+          5.8471,
+          7.619,
+          8.2854,
+          6.8561,
+          7.3296,
+          6.7073,
+          6.9115
+        ]
+      },
+      "baseline_median_ms": 6.4769,
+      "candidate_median_ms": 6.9115
+    },
+    {
+      "operation": "encode_flac",
+      "args": [
+        48000
+      ],
+      "width": 2,
+      "channels": 1,
+      "frames": 720000,
+      "batch": 1,
+      "input_bytes": 1440000,
+      "input_sha256": "e6f4558e7484dc2e30529f31938b8b50cda1c0f4c503e8d70c13a462f6f700ff",
+      "output_sha256": "aa02abe2286973b4eba95d5516daf882c5f272937f43b801bb8d1cca0af4f8ff",
+      "identical_output": true,
+      "trials_ms": {
+        "baseline": [
+          35.2411,
+          33.2333,
+          34.3174,
+          34.4323,
+          33.7283,
+          33.0828,
+          38.7863,
+          34.2272,
+          36.7609
+        ],
+        "candidate": [
+          33.5773,
+          35.2203,
+          34.5193,
+          37.1739,
+          35.8195,
+          34.2478,
+          35.3143,
+          32.709,
+          35.1569
+        ]
+      },
+      "baseline_median_ms": 34.3174,
+      "candidate_median_ms": 35.1569
+    }
+  ],
+  "source_sha256": {
+    "native/vrct-audio/src/lib.rs": "59282db5054a844e19f5b04fbae512f0ef0f7f24b7b5cd4aa5e53ba0b896a200",
+    "native/vrct-audio/src/normalize.rs": "51c783c5dc53ea88b8761aec721b0743f305667397755b7d3f393b914f620499",
+    "native/vrct-audio/src/energy.rs": "1bf6b80552e8a4e7e75f8d1745c08bf5c29a39a44e78cfda7b7636f7a70817ae",
+    "native/vrct-audio/Cargo.toml": "8af498936434f5ce3d8e2ccfb4fa207d1dff76f0a23a50aed98eba0c71e60158",
+    "native/vrct-audio/Cargo.lock": "febea73f175f69832d1801d5f721dcd4320b1fbdeacb0bbfa47da5c89189dd78",
+    "native/vrct-audio/pyproject.toml": "f069008205ad637394e0b4bed010e26077a8b41b311915e40c7fd180cb2e13c0",
+    "src-python/test/test_native_audio_buffers.py": "d1837d0cadf2451eaac24b19a4fedee1047d191235ef125f1cf5fcf8d71ac7eb"
+  },
+  "baseline_source_sha256": {
+    "lib.rs": "3a4fc0fc6e56d69f0273043d6c9dcf9a20a7dff8990a198b6da078d560d74c6a",
+    "normalize.rs": "5600f26cfe8ade7310362d9080dc91f7f96416043782f6da7cec02217b4fed78",
+    "energy.rs": "1bf6b80552e8a4e7e75f8d1745c08bf5c29a39a44e78cfda7b7636f7a70817ae",
+    "Cargo.lock": "febea73f175f69832d1801d5f721dcd4320b1fbdeacb0bbfa47da5c89189dd78"
+  },
+  "baseline_source_verified_against": "tmp/audio-release-validation/source-freeze-sha256.json (cycles 7/8 full sidecar)",
+  "wheel_sha256": "8177dd444745ddac81dc7f76c03551081eb208b5ce1b5903a9e31376801acdbc",
+  "unchanged_contract": "API, validation, output ownership and dependencies; only input Vec copy removed at four APIs",
+  "allocation_reduction": "one temporary Vec of input_bytes per converted call; not a measured process peak memory reduction",
+  "limitations": "No actual ASR, device or GPU timing. FLAC and small chunks do not consistently improve.",
+  "validation": {
+    "independent_design_review": "LGTM",
+    "independent_implementation_review": "LGTM",
+    "rust": {
+      "test_passed": 13,
+      "clippy": "PASS",
+      "fmt": "PASS"
+    },
+    "python_cpu": {
+      "suites": 15,
+      "passed": 667,
+      "subtests_passed": 3,
+      "skipped": 0,
+      "speech_recognition_import_forbidden": true
+    },
+    "python_cuda": {
+      "suites": 15,
+      "passed": 667,
+      "subtests_passed": 3,
+      "skipped": 0,
+      "speech_recognition_import_forbidden": true
+    },
+    "ruff_changed_python_files": "PASS (ruff 0.14.4)",
+    "frozen": {
+      "status": "PASS",
+      "scope": "limited offline frozen modules, SDK/logger/inference stubs",
+      "builds": {
+        "cpu": {
+          "status": "PASS",
+          "code_objects_match_current_source": {
+            "pcm_audio": "e3cbc38c317a6e3bd8db2f3b405d334d21d152940d262063efcc5e0867bffbb7",
+            "native_audio": "6cae2f1c0522cf639bc3d8809be9e3ec0122d2c7967f7153c33c8413abf68584",
+            "audio_vad": "dc8e0f40f7634049fbd53c67dcb4f19faa554998d2043e011df863691c86b412",
+            "transcription_providers": "29266ea74dd7a4d4f446f82e07925469df127f8826b1bccd76d7a0daf34bd77d"
+          },
+          "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+          "notice_matches": true,
+          "smoke": {
+            "status": "PASS",
+            "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+            "native_apis": 6,
+            "normalizer_cases": 24,
+            "state_and_pcm_equal": true,
+            "canonical_raw_wav_reused": true,
+            "whisper_input_mutation_isolated": true,
+            "scope": "offline limited modules; SDK/logger/inference stubs"
+          }
+        },
+        "cuda": {
+          "status": "PASS",
+          "code_objects_match_current_source": {
+            "pcm_audio": "e3cbc38c317a6e3bd8db2f3b405d334d21d152940d262063efcc5e0867bffbb7",
+            "native_audio": "6cae2f1c0522cf639bc3d8809be9e3ec0122d2c7967f7153c33c8413abf68584",
+            "audio_vad": "dc8e0f40f7634049fbd53c67dcb4f19faa554998d2043e011df863691c86b412",
+            "transcription_providers": "29266ea74dd7a4d4f446f82e07925469df127f8826b1bccd76d7a0daf34bd77d"
+          },
+          "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+          "notice_matches": true,
+          "smoke": {
+            "status": "PASS",
+            "native_sha256": "8286bd9ca1f1221d1b14e7f4ccd7040d1d586a6b6fc469e5e15ffa148ca8fc53",
+            "native_apis": 6,
+            "normalizer_cases": 24,
+            "state_and_pcm_equal": true,
+            "canonical_raw_wav_reused": true,
+            "whisper_input_mutation_isolated": true,
+            "scope": "offline limited modules; SDK/logger/inference stubs"
+          }
+        }
+      }
+    },
+    "commands": "Verification commands (cwd D:/codex/home/worktrees/4508/VRCT)\nPYTHONPATH=tmp/cycle9/native-site;src-python;tmp/cycle4a-pytest (all absolute)\nRust:\ncargo test --locked --manifest-path native/vrct-audio/Cargo.toml => exit 0, 13 passed, 0 ignored\ncargo clippy --locked --manifest-path native/vrct-audio/Cargo.toml --all-targets -- -D warnings => exit 0\ncargo fmt --manifest-path native/vrct-audio/Cargo.toml -- --check => exit 0\nPython:\nCPU=D:/WORKSPACE/WORK/VRChatProject/VRCT/.venv/Scripts/python.exe\nCUDA=D:/WORKSPACE/WORK/VRChatProject/VRCT/.venv_cuda/Scripts/python.exe\nBoth: <python> tmp/cycle6/no_sr_runner.py -q -ra <suite paths>\nSuite paths (src-python/test/ prefix, .py suffix):\ntest_native_audio test_native_audio_buffers test_audio_normalizer test_pcm_audio test_google_speech test_audio_listener test_audio_source test_audio_vad test_transcription_recorder test_transcription_transcriber test_transcription_providers test_audio_pipeline_failure test_transcription_deepgram test_transcription_openai_compatible test_vrct_transcription_integration\nCPU: first 14 together => exit 0, 664 passed, 3 subtests passed, 5 warnings, skip 0; final integration separately => exit 0, 3 passed, 2 warnings, skip 0\nCUDA: all 15 together, see cuda-test.log\nEnvironment: <python> tmp/cycle9/test_environment.py => exit 0 CPU and CUDA\nFirst environment probe failed because torch metadata is absent; corrected probe records absent optional packages.\nNo source/test edits; no shared venv changes; no real device/model/HTTP checks.\nCUDA final: exit 0, 667 passed, 3 subtests passed, 5 warnings, skip 0, 44.48 seconds. Wheel/native byte equality PASS exit 0. All required delegated checks PASS.\n",
+    "full_sidecar_rebuilt": false,
+    "real_devices_http_gpu_inference": false,
+    "log_sha256": {
+      "cargo-test.log": "e77138a0b150436e2d58da7ebccbcb037c78a757e5edad87499d4163a3125403",
+      "clippy.log": "36b3a22fb58f1f0ade63441577559adbff3694e5dbb6847777ff6bc0470dc4dd",
+      "fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "cpu-test.log": "fbe5adbe70b0c9b1cda2deecc42e74cecbdb5164d7a3f4754e3bb348f2307aef",
+      "cpu-integration-test.log": "786278ba6b21ee9247b0737a2eca190fa82efdf6abeeeb072e62312201b02fbc",
+      "cuda-test.log": "ee6df84b323ac21597e40c7113fe37edbc144823ad5e1eb171a3676e0e2ef9fc",
+      "frozen-build-cpu.log": "b154d5c5929c789747399c65f8f3f9dc037407fab3a641065d5a900b69c41a14",
+      "frozen-build-cuda.log": "10121916e7eefd67988ae1b8c4a09b7bd39ee917ae0c139fb52e05430cb48a7a",
+      "smoke-cpu.log": "a6b6988c9ac8ce9aff5cc394e8d6693503f867e8a6b5986dbac658ef31dd8ca9",
+      "smoke-cuda.log": "a6b6988c9ac8ce9aff5cc394e8d6693503f867e8a6b5986dbac658ef31dd8ca9"
+    }
+  }
+}

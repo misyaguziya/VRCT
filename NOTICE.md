@@ -15,7 +15,8 @@ BOOTH.
 | License | VRCT Chat-Bubble Detection Model License Agreement — [`LICENSE.txt`](src-python/models/ocr/onnx/LICENSE.txt) (Japanese, authoritative) / [`LICENSE.en.txt`](src-python/models/ocr/onnx/LICENSE.en.txt) (English translation) |
 
 This file is **not** covered by the MIT License in `LICENSE`. Every other
-file in this repository is.
+file in this repository is, except third-party source and license notices
+identified below, which retain their original terms.
 
 ### What you may and may not do
 
@@ -88,4 +89,17 @@ the OCR feature is unavailable.
 This table covers bundled **model weights** only. Python package
 dependencies are listed in `requirements.txt` / `requirements_cuda.txt` and
 carry their own licenses; JavaScript and Rust dependencies are listed in
-`package.json` and `src-tauri/Cargo.toml`.
+`package.json`, `src-tauri/Cargo.toml`, and `native/vrct-audio/Cargo.toml`.
+
+## Audio processing dependencies
+
+The Google protocol adapter in `src-python/models/transcription/google_speech.py`,
+the native energy detector, its Python listener, and the PCM16 capture source follow code from
+SpeechRecognition / custom_speech_recognition, under BSD-3-Clause.
+Its original notice is preserved in the adjacent `google_speech_LICENSE.txt` and
+included in the built application under `licenses/`.
+
+The `vrct-audio` extension uses flacenc (Apache-2.0), PyO3 (MIT OR Apache-2.0),
+and their locked dependencies. Its speaker downmix follows pydub 0.25.1 (MIT).
+Their notices are collected in
+`native/vrct-audio/THIRD_PARTY_LICENSES.txt` and included in the built application.

@@ -1,0 +1,53 @@
+{
+  "python": "3.11.5",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "input": "synthetic PCM; no devices or network",
+  "repeats": 9,
+  "scope": "Process-local conversion and synchronous energy detection/buffering. Energy includes Python read/before_read/push and no-op energy callbacks. Excludes device waiting, background thread scheduling, ASR and UI latency.",
+  "source_sha256": {
+    "native/vrct-audio/src/lib.rs": "f699128e848146ac744ef1a2c1d41c30caa53653246daa54aa080fc87177e61a",
+    "native/vrct-audio/src/energy.rs": "1bf6b80552e8a4e7e75f8d1745c08bf5c29a39a44e78cfda7b7636f7a70817ae",
+    "native/vrct-audio/Cargo.lock": "7c97f70c2edb8075bf0b06fa88b19f88fd213f926191aec4623bf49172bff36d",
+    "tools/benchmark_audio_native.py": "603b84649a77e304fc209939d471dadd8fd8f7a464ce14fdbb9eaf415714e878"
+  },
+  "native_binary": {
+    "path": "tmp\\native-site\\vrct_audio\\vrct_audio.pyd",
+    "sha256": "b6442f6b65ba3437a3a635c6b1f6c3df0963f772d450f676dc7a2ca438709ca8"
+  },
+  "legacy_speech_recognition_sha256": "9a30e09b8dfd34e666407ca86127647268a0523675eafe5a24c9d71ac884cced",
+  "results": [
+    {
+      "operation": "energy_phrase",
+      "rate": 16000,
+      "channels": 1,
+      "phrase_limit_seconds": 3,
+      "read_chunks": 51,
+      "output_bytes": 104448,
+      "batch": 300,
+      "old_median_ms": 0.21123066666666665,
+      "native_median_ms": 0.06671766666666668
+    },
+    {
+      "operation": "energy_phrase",
+      "rate": 48000,
+      "channels": 1,
+      "phrase_limit_seconds": 3,
+      "read_chunks": 145,
+      "output_bytes": 296960,
+      "batch": 300,
+      "old_median_ms": 0.6326166666666666,
+      "native_median_ms": 0.19086566666666666
+    },
+    {
+      "operation": "energy_phrase",
+      "rate": 48000,
+      "channels": 2,
+      "phrase_limit_seconds": 3,
+      "read_chunks": 145,
+      "output_bytes": 593920,
+      "batch": 300,
+      "old_median_ms": 1.213598,
+      "native_median_ms": 0.898592
+    }
+  ]
+}

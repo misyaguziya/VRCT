@@ -1,0 +1,27 @@
+{
+  "scope": "fresh Python process import cv2 including NumPy/dependencies, OS cache not cleared; excludes process launch and app startup",
+  "opencv_version": "4.10.0",
+  "trials_ms": [
+    204.8543,
+    201.4183,
+    194.3266,
+    201.8407,
+    195.2084,
+    198.6133,
+    203.0017
+  ],
+  "median_ms": 201.4183,
+  "numpy_preloaded": {
+    "scope": "fresh Python process with NumPy imported before timer; no cv2 loaded; OS cache not cleared",
+    "trials_ms": [
+      40.6752,
+      38.7681,
+      40.4997,
+      39.3727,
+      40.4681,
+      42.859,
+      41.9917
+    ],
+    "median_ms": 40.4997
+  }
+}

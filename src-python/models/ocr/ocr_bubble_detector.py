@@ -166,6 +166,14 @@ class BubbleDetector:
         resized = cv2.resize(frame, (nw, nh), interpolation=cv2.INTER_LINEAR)
         canvas_w = -(-nw // SIZE_MULTIPLE) * SIZE_MULTIPLE
         canvas_h = -(-nh // SIZE_MULTIPLE) * SIZE_MULTIPLE
+        if resized.dtype == np.uint8 and resized.ndim == 3 and resized.shape[2] == 3:
+            # Write the final CHW tensor directly, avoiding an intermediate
+            # uint8 canvas. Preserve legacy casting for every other input type.
+            tensor = np.empty((1, 3, canvas_h, canvas_w), dtype=np.float32)
+            tensor[0, :, :nh, :nw] = resized.transpose(2, 0, 1)
+            tensor[0, :, nh:, :] = PAD_COLOR
+            tensor[0, :, :nh, nw:] = PAD_COLOR
+            return tensor, scale
         canvas = np.full((canvas_h, canvas_w, 3), PAD_COLOR, dtype=np.uint8)
         canvas[:nh, :nw] = resized
         tensor = np.ascontiguousarray(canvas.transpose(2, 0, 1)[None], dtype=np.float32)

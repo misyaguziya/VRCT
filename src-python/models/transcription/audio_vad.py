@@ -48,6 +48,8 @@ from typing import Callable, Deque, Literal, Optional, Protocol
 
 import numpy as np
 
+from .native_audio import get_native_audio
+
 TARGET_SAMPLE_RATE = 16000
 FRAME_SAMPLES = 512
 FRAME_DURATION_MS = FRAME_SAMPLES / TARGET_SAMPLE_RATE * 1000  # 32.0 ms
@@ -67,6 +69,7 @@ class Pcm16MonoNormalizer:
         self.sample_width = sample_width
         self.channels = max(1, channels)
         self._rate_state = None
+        self._native_audio = get_native_audio()
 
     def reset(self) -> None:
         self._rate_state = None
@@ -75,16 +78,35 @@ class Pcm16MonoNormalizer:
         if not data:
             return b""
 
-        if self.sample_width != 2:
-            data = audioop.lin2lin(data, self.sample_width, 2)
+        if (
+            self._native_audio is not None
+            and isinstance(data, bytes)
+            and type(self.sample_width) is int
+            and 1 <= self.sample_width <= 4
+            and type(self.channels) is int
+            and 1 <= self.channels <= 256
+            and len(data) % self.sample_width == 0
+            and len(data) <= 64 * 1024 * 1024
+            # Preserve the previous downmix limit after width conversion and
+            # incomplete channel-frame removal (not just the input byte count).
+            and len(data) // self.sample_width // self.channels * self.channels * 2 <= 64 * 1024 * 1024
+        ):
+            data = self._native_audio.normalize_pcm16(data, self.sample_width, self.channels)
+        else:
+            if self.sample_width != 2:
+                data = audioop.lin2lin(data, self.sample_width, 2)
 
-        samples = np.frombuffer(data, dtype=np.int16)
-        complete_samples = samples.size - samples.size % self.channels
-        samples = samples[:complete_samples]
-        if self.channels > 1 and samples.size:
-            frames = samples.reshape(-1, self.channels).astype(np.int32)
-            samples = np.rint(frames.mean(axis=1)).clip(-32768, 32767).astype(np.int16)
-        data = samples.astype("<i2", copy=False).tobytes()
+            samples = np.frombuffer(data, dtype=np.int16)
+            complete_samples = samples.size - samples.size % self.channels
+            samples = samples[:complete_samples]
+            if self.channels > 1 and samples.size:
+                if self._native_audio is not None and self.channels <= 256:
+                    data = self._native_audio.downmix_pcm16(samples.tobytes(), self.channels)
+                    samples = np.frombuffer(data, dtype=np.int16)
+                else:
+                    frames = samples.reshape(-1, self.channels).astype(np.int32)
+                    samples = np.rint(frames.mean(axis=1)).clip(-32768, 32767).astype(np.int16)
+            data = samples.astype("<i2", copy=False).tobytes()
 
         if self.sample_rate != TARGET_SAMPLE_RATE:
             data, self._rate_state = audioop.ratecv(
@@ -332,12 +354,12 @@ class VadSegmenter:
 
 
 class VadRecognizerAdapter:
-    """custom_speech_recognition の `Recognizer.listen_with_segmenter_in_background`
+    """自前 `NativeAudioListener.listen_with_segmenter_in_background`
     が要求するプロトコル (`sample_rate`/`sample_width`/`process`/`flush`) に
     `VadSegmenter` を適合させる薄いアダプタ。
 
-    `custom_speech_recognition` 自体は VAD/Silero を一切知らない (汎用の
-    差し込み点のみを提供する設計、詳細は fork 側コミット参照)。`VadSegmenter`
+    listener自体は VAD/Silero を一切知らない (汎用の
+    差し込み点のみを提供する設計)。`VadSegmenter`
     もマイク/スピーカーのネイティブなサンプルレート/チャンネル数を知らない
     (常に 16kHz mono int16 前提) ため、両者を繋ぐ変換をここで行う。
     """
