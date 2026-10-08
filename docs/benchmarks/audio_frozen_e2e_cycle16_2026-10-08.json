@@ -1,0 +1,216 @@
+{
+ "recorded_at": "2026-10-08",
+ "baseline_commit": "c6bc1927",
+ "status": "PASS",
+ "scope": "Validation PyInstaller builds (spec/backend*.spec + tools/frozen_e2e_hook.py runtime hook) of CPU and CUDA sidecars; real stdin/stdout IPC, real Whisper base (CPU; CUDA on RTX 2080 Ti selected over IPC like the UI), paced SAPI WAV capture; network, real recording, translation and VRChat OSC off.",
+ "builds": {
+  "cpu": {
+   "exe_sha256": "8407455be4c56cc9c218b020077bee6c0d5f242e6799c8d65f8e27f742a6c096",
+   "vrct_audio_pyd_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+   "files": 3178
+  },
+  "cuda": {
+   "exe_sha256": "9b338a1aaeaae3593f3b818a4286098587678b025ced459aed4192e8854e3c49",
+   "vrct_audio_pyd_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+   "files": 3189
+  }
+ },
+ "runs": {
+  "cpu-energy5": {
+   "status": "PASS",
+   "mode": "cpu",
+   "detector": "energy",
+   "compute_mode": "cpu",
+   "init_seconds": 9.78,
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3本に行きましょう。",
+     "cer": 0.0952,
+     "latency_s": 4.169
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 4.232
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 4.408
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "alive_after_shutdown_grace": true,
+   "worker": {
+    "frozen": true,
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 3
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cpu",
+     "compute_type": "auto"
+    }
+   }
+  },
+  "cpu-vad5": {
+   "status": "PASS",
+   "mode": "cpu",
+   "detector": "vad",
+   "compute_mode": "cpu",
+   "init_seconds": 10.31,
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3歩に行きましょう",
+     "cer": 0.0952,
+     "latency_s": 1.138
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 1.388
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 1.408
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "alive_after_shutdown_grace": true,
+   "worker": {
+    "frozen": true,
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 4
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cpu",
+     "compute_type": "auto"
+    }
+   }
+  },
+  "cuda-energy5": {
+   "status": "PASS",
+   "mode": "cuda",
+   "detector": "energy",
+   "compute_mode": "cuda",
+   "init_seconds": 10.42,
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3歩に行きましょう。",
+     "cer": 0.0476,
+     "latency_s": 4.606
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 3.435
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 2.657
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "alive_after_shutdown_grace": true,
+   "worker": {
+    "frozen": true,
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 3
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cuda",
+     "compute_type": "auto"
+    }
+   }
+  },
+  "cuda-vad5": {
+   "status": "PASS",
+   "mode": "cuda",
+   "detector": "vad",
+   "compute_mode": "cuda",
+   "init_seconds": 12.55,
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3歩に行きましょう",
+     "cer": 0.0952,
+     "latency_s": 0.528
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 0.951
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 0.501
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "alive_after_shutdown_grace": true,
+   "worker": {
+    "frozen": true,
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 4
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cuda",
+     "compute_type": "auto"
+    }
+   }
+  }
+ },
+ "findings": [
+  "The sidecar never exits on /run/shutdown by itself; the UI (src-ui/logics/common/useWindow.js asyncCloseApp) waits 2 s and Tauri ends it. The runner mirrors that.",
+  "The config default compute device is always the CPU entry; a CUDA build infers on CPU until the UI selects the GPU (an earlier runner revision passed without checking this).",
+  "spec/backend_cuda.spec (also on develop) collects hf_xet from the CPU .venv; harmless while both are 1.1.2, but CUDA-only setups fail to build. Split into a separate task."
+ ],
+ "sources_sha256": {
+  "tools/check_frozen_e2e.py": "37c4e6663861041cc551e941b9887536d5423e028c3314749010e44986ff4609",
+  "tools/frozen_e2e_hook.py": "fd8a7d6f10729894e7a70a59ba470d9701ca45c8aac24ec09a9187d73d6b8567",
+  "tools/check_audio_e2e.py": "cc3c424959d90f04e9ddd48405c3887b51e45d76869f6768c3c160a8c6effa29"
+ },
+ "limitations": [
+  "validation builds, not release builds",
+  "single synthetic speaker; CER is a smoke signal",
+  "latency on a shared dev machine, not a performance claim",
+  "GUI (Tauri) integration checked separately by the user"
+ ]
+}

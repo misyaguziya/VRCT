@@ -7,6 +7,7 @@
 (src-tauri/src/lib.rs の BROWSER_ARGS)。
 """
 import ctypes
+import time
 from ctypes import wintypes
 from typing import Optional
 
@@ -114,9 +115,15 @@ class WindowStream:
         capture = WindowsCapture(cursor_capture=False, draw_border=False,
                                  minimum_update_interval=_STREAM_MIN_INTERVAL_MS, window_hwnd=hwnd)
 
+        self.arrivals = 0  # 届いた回数と複製の合計時間 (overlay の段階0の計測用)
+        self.copy_s = 0.0
+
         def on_frame_arrived(frame, control):
             # 画像は呼び出しの間しか使えないので複製する
+            started = time.perf_counter()
             self.latest = (frame.frame_buffer.tobytes(), (frame.width, frame.height))
+            self.copy_s += time.perf_counter() - started
+            self.arrivals += 1
 
         def on_closed():
             self.window_closed = True
