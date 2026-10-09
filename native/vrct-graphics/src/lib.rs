@@ -133,6 +133,14 @@ impl CaptureSession {
             .map_err(|e| error("render", e))
     }
 
+    /// Send queued GPU work now. Call after SetOverlayTexture: SteamVR records its copy of
+    /// the texture on this device's context, and without a flush that copy waits for the next
+    /// render (seen in VR: every change showed one update late, a tooltip only after a click).
+    fn flush(&self) -> PyResult<()> {
+        self.gpu()?.flush();
+        Ok(())
+    }
+
     /// ID3D11Texture2D* borrowed for Texture_t.handle; valid until close().
     #[getter]
     fn texture_ptr(&self) -> PyResult<usize> {

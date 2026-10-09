@@ -5,10 +5,12 @@
 //! mask (and the launcher intro keying) into `out`, the texture SteamVR reads.
 //! No CPU copy of whole frames on the normal path: `read_row` reads one row
 //! for the tooltip marker, `read_back` exists for tests only. Everything runs
-//! on the caller's thread; the WGC frame pool is free-threaded and polled.
+//! on the caller's thread, except that WGC frames are taken from the
+//! free-threaded pool as they arrive (on a WinRT thread) and only the newest
+//! is kept until `poll`.
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    Arc,
+    Arc, Mutex, MutexGuard,
 };
 use windows::{
     core::{Interface, Result},
@@ -112,12 +114,28 @@ struct Wgc {
     // Set from a WinRT thread when the window goes away or capture ends.
     closed: Arc<AtomicBool>,
     closed_token: i64,
+    // The newest frame, replaced from a WinRT thread as frames arrive. Left in the
+    // pool instead, both buffers fill between polls and WGC holds back the last
+    // change until the next poll (measured: every poll after a burst of changes
+    // returned the one before last), so a hover tooltip waited for the next change.
+    newest: Arc<Mutex<Option<Direct3D11CaptureFrame>>>,
+    arrived_token: i64,
+}
+
+fn lock(
+    slot: &Mutex<Option<Direct3D11CaptureFrame>>,
+) -> MutexGuard<'_, Option<Direct3D11CaptureFrame>> {
+    slot.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 impl Drop for Wgc {
     fn drop(&mut self) {
+        let _ = self.pool.RemoveFrameArrived(self.arrived_token);
         let _ = self.item.RemoveClosed(self.closed_token);
         let _ = self.session.Close();
+        if let Some(frame) = lock(&self.newest).take() {
+            let _ = frame.Close();
+        }
         let _ = self.pool.Close();
     }
 }
@@ -291,6 +309,21 @@ impl Gpu {
             flag.store(true, Ordering::Relaxed);
             Ok(())
         }))?;
+        let newest = Arc::new(Mutex::new(None));
+        let slot = newest.clone();
+        let arrived_token = pool.FrameArrived(&TypedEventHandler::new(
+            move |pool: windows::core::Ref<Direct3D11CaptureFramePool>, _| {
+                if let Ok(pool) = pool.ok() {
+                    let mut slot = lock(&slot);
+                    while let Ok(frame) = pool.TryGetNextFrame() {
+                        if let Some(old) = slot.replace(frame) {
+                            old.Close()?;
+                        }
+                    }
+                }
+                Ok(())
+            },
+        ))?;
         let wgc = Wgc {
             item,
             pool,
@@ -298,6 +331,8 @@ impl Gpu {
             pool_size,
             closed,
             closed_token,
+            newest,
+            arrived_token,
         };
         wgc.session.SetIsCursorCaptureEnabled(false)?;
         // Not available before Windows 11: then the yellow border stays.
@@ -316,14 +351,9 @@ impl Gpu {
         let Some(wgc) = self.wgc.as_mut() else {
             return Ok(None);
         };
-        let mut latest = None;
-        // Drain to the newest frame; older ones go straight back to the pool.
-        while let Ok(frame) = wgc.pool.TryGetNextFrame() {
-            if let Some(old) = latest.replace(frame) {
-                old.Close()?;
-            }
-        }
-        let Some(frame) = latest else { return Ok(None) };
+        let Some(frame) = lock(&wgc.newest).take() else {
+            return Ok(None);
+        };
         // Return the frame to the pool even when copying fails half way.
         let copied = self.copy_frame(&frame, client);
         let closed = frame.Close();
@@ -423,6 +453,10 @@ impl Gpu {
             );
         }
         Ok((width, height))
+    }
+
+    pub fn flush(&self) {
+        unsafe { self.context.Flush() };
     }
 
     /// One row of `captured` (BGRA, texture width): the tooltip marker check.

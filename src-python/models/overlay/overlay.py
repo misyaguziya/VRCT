@@ -1161,6 +1161,9 @@ class Overlay:
             self.hideTooltip()
             if state["visible"]:
                 self.tooltip_state = state
+            if _PROFILE_PATH:
+                self.writeProfile({"kind": "tooltip", "event": "request", "visible": state["visible"],
+                                   "mode": state.get("mode"), "region": state.get("region"), "revision": state["revision"]})
 
     def tooltipTargetMatches(self, xy: tuple | None) -> bool:
         state = self.tooltip_state
@@ -1185,6 +1188,11 @@ class Overlay:
                 or parent in self.vr_windows_hidden or (parent == TOOLBAR and PANEL in self.vr_windows_hidden)
                 or self.grabbing is not None or self.resizing is not None or self.layout_applied is not self.layout
                 or not self.tooltipTargetMatches(self.pointer_notified)):
+            if _PROFILE_PATH:
+                self.writeProfile({"kind": "tooltip", "event": "dropped", "available": available, "visible": visible,
+                                   "layout_applied": self.layout_applied is self.layout,
+                                   "target": self.tooltipTargetMatches(self.pointer_notified),
+                                   "pointer": self.pointer_notified, "button": state["button"]})
             self.hideTooltip()
             return
         if not self.tooltip_ready or self.tooltip_handle is None:
@@ -1220,6 +1228,13 @@ class Overlay:
         bounds.vMin, bounds.vMax = (top, bottom) if self.gpu is not None else (1 - top, 1 - bottom)
         self.overlay.setOverlayTextureBounds(self.tooltip_handle, bounds)
         self.overlay.showOverlay(self.tooltip_handle)
+        if self.gpu is not None and not self.tooltip_shown:
+            # 隠れていた間に渡したテクスチャは使われないことがあるので、出したときに渡し直す
+            self.overlay.setOverlayTexture(self.tooltip_handle, self.gpu_vr_texture)
+            self.gpu.flush()
+        if _PROFILE_PATH and not self.tooltip_shown:
+            self.writeProfile({"kind": "tooltip", "event": "shown", "revision": state["revision"],
+                               "bounds": [round(bounds.uMin, 4), round(bounds.uMax, 4), round(bounds.vMin, 4), round(bounds.vMax, 4)]})
         self.tooltip_shown = True
 
     def panelSize(self) -> tuple:
@@ -1518,7 +1533,7 @@ class Overlay:
         if stamps:
             stamps.append(time.perf_counter())
             ms = [round((b - a) * 1000, 3) for a, b in zip(stamps, stamps[1:])]
-            self.writeProfile({"kind": "frame", "src": self.capture_source, "client": list(size),
+            self.writeProfile({"kind": "frame", "src": self.capture_source, "client": list(size), "age_ms": self.frameAgeMs(),
                                "texture": list(self.gl["size"]), "convert_ms": ms[0], "prepare_ms": ms[1],
                                "upload_ms": ms[2], "finish_ms": ms[3], "set_ms": ms[4], "handles": len(handles),
                                "tooltip": tooltip_matches, "intro": self.launcher_intro_state})
@@ -1600,6 +1615,7 @@ class Overlay:
         try:
             for handle in handles.values():
                 self.overlay.setOverlayTexture(handle, self.gpu_vr_texture)
+            gpu.flush()  # SteamVR の写す処理はこのデバイスに積まれる。送らないと次の画面が来るまで表示されない
         except openvr.OpenVRError as error:
             # SteamVR が DirectX のテクスチャを受け付けない (別の GPU など)。OpenGL なら映ることがある
             errorLogging()
@@ -1610,6 +1626,7 @@ class Overlay:
             stamps.append(time.perf_counter())
             ms = [round((b - a) * 1000, 3) for a, b in zip(stamps, stamps[1:])]
             self.writeProfile({"kind": "frame", "backend": "gpu", "src": self.capture_source, "client": list(size),
+                               "age_ms": self.frameAgeMs(),
                                "texture": list(gpu.size), "convert_ms": ms[0], "prepare_ms": 0.0, "upload_ms": ms[1],
                                "finish_ms": 0.0, "set_ms": ms[2], "handles": len(handles),
                                "tooltip": tooltip_matches, "intro": self.launcher_intro_state})
@@ -3168,6 +3185,11 @@ class Overlay:
         self.step_total = {}
         self.step_loops = 0
         self.step_reported_at = now
+
+    def frameAgeMs(self) -> Optional[float]:
+        """渡した画像の古さ (計測用)。WGC の画像だけ。OpenGL は届いてから、GPU は画面が描いてからの時間。"""
+        at = getattr(self.panel_stream, "latest_at", None)
+        return round((time.perf_counter() - at) * 1000, 1) if self.capture_source == "wgc" and at else None
 
     def writeProfile(self, row: dict) -> None:
         """_PROFILE_PATH へ1行書く。書けなければ記録をやめる (VR画面の処理は止めない)。"""

@@ -32,6 +32,9 @@ class FakeGpu:
     def render(self, intro=0, rect=(0, 0, 0, 0)):
         self.calls.append(("render", intro, rect))
 
+    def flush(self):
+        self.calls.append(("flush",))
+
     def close(self):
         self.closed = True
 
@@ -63,7 +66,8 @@ def no_cpu_frame_copy():
 def test_render_then_submit_dx_texture_to_every_region():
     overlay = gpu_overlay()
     overlay.transferCapture(capture(overlay), 1)
-    assert names(overlay.gpu) == ["set_mask", "render"]
+    # SteamVR records its copy of the texture on our context: flushed after submitting, not left for the next frame
+    assert names(overlay.gpu) == ["set_mask", "render", "flush"]
     submitted = [call.args for call in overlay.overlay.setOverlayTexture.call_args_list]
     assert submitted and all(texture is overlay.gpu_vr_texture for _, texture in submitted)
     assert {handle for handle, _ in submitted} == set(overlay.vrRegionHandles().values())
@@ -75,7 +79,7 @@ def test_same_frame_is_skipped_and_mask_is_sent_once():
     overlay.transferCapture(capture(overlay), 1)
     overlay.transferCapture(capture(overlay), 2)  # same token: nothing to do
     overlay.transferCapture(capture(overlay, ("gpu", 2)), 3)  # new frame, same mask
-    assert names(overlay.gpu) == ["set_mask", "render", "render"]
+    assert names(overlay.gpu) == ["set_mask", "render", "flush", "render", "flush"]
 
 
 def test_printwindow_bytes_are_uploaded():
@@ -109,6 +113,21 @@ def test_tooltip_marker_row_decides_mask_and_ready():
         overlay.transferCapture(capture(overlay), 2)
     hide.assert_called()
     assert overlay.tooltip_ready is False
+
+
+def test_shown_tooltip_gets_the_texture_again():
+    """A texture set while the tooltip overlay was hidden may not be used: give it again on show."""
+    overlay = gpu_overlay()
+    overlay.tooltip_state, overlay.tooltip_ready = payload(mode="hover"), True
+    overlay.panel_image_size = overlay.window_size
+    overlay.updateTooltip()
+    calls = [name for name, *_ in overlay.overlay.method_calls]
+    assert calls.index("setOverlayTexture") > calls.index("showOverlay")
+    assert overlay.overlay.setOverlayTexture.call_args.args == (overlay.tooltip_handle, overlay.gpu_vr_texture)
+    assert names(overlay.gpu)[-1] == "flush"
+    overlay.overlay.reset_mock()
+    overlay.updateTooltip()  # already shown: nothing again
+    overlay.overlay.setOverlayTexture.assert_not_called()
 
 
 def test_no_marker_read_without_tooltip():
