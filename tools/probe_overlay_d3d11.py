@@ -4,6 +4,7 @@ Runs alone (not inside VRCT); needs the built vrct_graphics on PYTHONPATH.
 
     python tools/probe_overlay_d3d11.py headless           # no SteamVR: pixel check of the copy
     python tools/probe_overlay_d3d11.py vr --seconds 60    # SteamVR: shows overlays in front of the HMD
+    python tools/probe_overlay_d3d11.py burst              # no SteamVR: the last of quick changes is not held back
     python tools/probe_overlay_d3d11.py soak --seconds 600 # no SteamVR: leak check over a long run
 
 vr mode shows a Tk test window as `--handles` overlays (each a slice of one
@@ -133,6 +134,52 @@ def headless(args):
         session.close()
         root.destroy()
     return report
+
+
+def burst(args):
+    """No SteamVR: after a burst of changes and no polling meanwhile, the next poll must show the last change.
+
+    With the frames left in the 2-buffer pool, WGC held the last change back until a later poll
+    (every trial returned the one before last), so a hover tooltip waited for the next change.
+    """
+    import vrct_graphics
+
+    width, height = 640, 360
+    root, canvas, hwnd = make_window(width, height)
+
+    def fill(color, seconds):
+        canvas.delete("all")
+        canvas.create_rectangle(0, 0, width, height, fill=color, outline=color)
+        until = time.perf_counter() + seconds
+        while time.perf_counter() < until:
+            root.update()
+            time.sleep(0.005)
+
+    fill("#000000", 0.1)
+    box = client_box(hwnd)
+    session = open_session(vrct_graphics, hwnd, args.adapter, (1024, 512), box)
+    trials = []
+    try:
+        wait_frame(session, box, root)
+        fill("#000000", 0.5)
+        session.poll(box)
+        names = [name for name, _ in QUADRANTS]
+        for trial in range(len(names) + 1):
+            order = names[trial % len(names):] + names[:trial % len(names)]
+            for name in order:
+                fill(name, 0.04)  # 4 changes 40 ms apart; the overlay polls every 1/20-1/4 s
+            fill(order[-1], 0.25)
+            polled = session.poll(box)
+            if polled is not None:
+                session.render()
+            offset = (height // 2 * 1024 + width // 2) * 4
+            got = list(session.read_back()[offset:offset + 3]) if polled is not None else None
+            expected = list(dict(QUADRANTS)[order[-1]])
+            trials.append({"last": order[-1], "expected_bgr": expected, "got_bgr": got, "ok": got == expected})
+    finally:
+        session.close()
+        root.destroy()
+    return {"mode": "burst", "trials": trials, "status": "PASS" if all(t["ok"] for t in trials) else "FAIL"}
 
 
 def gpu_adapter_mb():
@@ -372,7 +419,7 @@ def vr(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("mode", choices=("headless", "soak", "vr"))
+    parser.add_argument("mode", choices=("headless", "burst", "soak", "vr"))
     parser.add_argument("--size", type=int, nargs=2, default=(1690, 880), help="client size of the test window")
     parser.add_argument("--texture", type=int, nargs=2, default=(2128, 1136))
     parser.add_argument("--adapter", type=int, default=0, help="headless only; vr uses SteamVR's adapter")
@@ -383,7 +430,7 @@ def main():
     parser.add_argument("--recreate-at", type=float, default=0)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
-    report = {"headless": headless, "soak": soak, "vr": vr}[args.mode](args)
+    report = {"headless": headless, "burst": burst, "soak": soak, "vr": vr}[args.mode](args)
     report["utc"] = datetime.now(timezone.utc).isoformat()
     out = args.out or ROOT / "tmp" / "overlay_poc" / f"{args.mode}-{datetime.now():%Y%m%d-%H%M%S}.json"
     out.parent.mkdir(parents=True, exist_ok=True)

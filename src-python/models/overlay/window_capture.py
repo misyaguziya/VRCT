@@ -119,11 +119,13 @@ class WindowStream:
 
         self.arrivals = 0  # 届いた回数と複製の合計時間 (overlay の段階0の計測用)
         self.copy_s = 0.0
+        self.latest_at: Optional[float] = None  # 最新の画像が届いた時刻 (perf_counter、計測用)
 
         def on_frame_arrived(frame, control):
             # 画像は呼び出しの間しか使えないので複製する
             started = time.perf_counter()
             self.latest = (frame.frame_buffer.tobytes(), (frame.width, frame.height))
+            self.latest_at = started
             self.copy_s += time.perf_counter() - started
             self.arrivals += 1
 
@@ -177,6 +179,8 @@ class GpuStream:
         self.started = time.monotonic()
         self.arrivals = 0  # 届いた回数と GPU 上の複製にかかった時間 (overlay の計測用)
         self.copy_s = 0.0
+        # 最新のフレームを画面が描いた時刻 (perf_counter の秒。WGC の SystemRelativeTime は同じ QPC、計測用)
+        self.latest_at: Optional[float] = None
         session.start(hwnd)
 
     @property
@@ -204,6 +208,8 @@ class GpuStream:
                 # 古い大きさのフレーム (やクライアント領域を写しきれなかったフレーム) は中身も使えない。
                 # 同じ番号で後から加工し直さないよう捨てる
                 self.latest = (("gpu", polled["frame_id"]), frame_size) if frame_size == bounds[0] and copied_all else None
+                drawn = polled.get("system_time_100ns")
+                self.latest_at = drawn / 1e7 if drawn else None
         if self.latest is None:
             # 使えるフレームがまだ無い。1枚でも届いた後なら、次が届くまで PrintWindow で撮ってもらう
             self.stale = self.arrivals > 0
