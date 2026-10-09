@@ -9,7 +9,7 @@
 import ctypes
 import time
 from ctypes import wintypes
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -30,6 +30,8 @@ _SWP_ASYNCWINDOWPOS = 0x4000
 _DWMWA_EXTENDED_FRAME_BOUNDS = 9
 _DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
 # 画面キャプチャの画像を受け取る最短の間隔 (ms)。受け取るたびに1枚 (約5MB) を複製する
+# GpuStream: 開始してからこの秒数フレームが1枚も届かなければ止まったとみなす
+_GPU_FIRST_FRAME_TIMEOUT_SEC = 5.0
 _STREAM_MIN_INTERVAL_MS = 33
 
 _user32 = ctypes.windll.user32 if hasattr(ctypes, "windll") else None
@@ -157,6 +159,67 @@ class WindowStream:
 
     def close(self) -> None:
         self.control.stop()
+
+
+class GpuStream:
+    """WindowStream の GPU 版 (VRCT_OVERLAY_GPU)。画面キャプチャを Rust (vrct_graphics) のテクスチャへ直接写す。
+
+    take() は画像の bytes の代わりに (("gpu", フレーム番号), フレームの大きさ, クライアント領域) を返す。
+    画像は GPU のテクスチャにあり Python には来ない。session (CaptureSession) は overlay が持ち、ここでは閉じない。
+    """
+
+    def __init__(self, session: Any, hwnd: int) -> None:
+        self.session = session
+        self.hwnd = hwnd
+        self.latest: Optional[tuple] = None
+        self.stale = False
+        self.failed = False  # 写すのに失敗した (デバイスを失ったなど): closed にして PrintWindow に任せる
+        self.started = time.monotonic()
+        self.arrivals = 0  # 届いた回数と GPU 上の複製にかかった時間 (overlay の計測用)
+        self.copy_s = 0.0
+        session.start(hwnd)
+
+    @property
+    def closed(self) -> bool:
+        """止まった。開始してから1枚も届かないときも止まったとみなす (WGC が黙って止まると検知できないため)。"""
+        no_frame = self.arrivals == 0 and time.monotonic() - self.started > _GPU_FIRST_FRAME_TIMEOUT_SEC
+        return self.failed or no_frame or self.session.closed or not self.session.capturing
+
+    def take(self) -> Optional[tuple]:
+        """WindowStream.take と同じ意味。新しいフレームが届いていれば、そのクライアント領域をテクスチャへ写す。"""
+        bounds = _frameClientBox(self.hwnd)
+        self.stale = False
+        if bounds is not None and not self.failed:
+            started = time.perf_counter()
+            try:
+                polled = self.session.poll(bounds[1])
+            except RuntimeError:
+                self.failed = True
+                raise
+            if polled is not None:
+                self.copy_s += time.perf_counter() - started
+                self.arrivals += 1
+                frame_size, client = tuple(polled["frame"]), bounds[1]
+                copied_all = tuple(polled["copied"]) == (client[2] - client[0], client[3] - client[1])
+                # 古い大きさのフレーム (やクライアント領域を写しきれなかったフレーム) は中身も使えない。
+                # 同じ番号で後から加工し直さないよう捨てる
+                self.latest = (("gpu", polled["frame_id"]), frame_size) if frame_size == bounds[0] and copied_all else None
+        if self.latest is None:
+            # 使えるフレームがまだ無い。1枚でも届いた後なら、次が届くまで PrintWindow で撮ってもらう
+            self.stale = self.arrivals > 0
+            return None
+        token, frame_size = self.latest
+        if bounds is None or bounds[0] != frame_size:
+            self.stale = True
+            return None
+        return token, frame_size, bounds[1]
+
+    def invalidate(self) -> None:
+        """PrintWindow の画像でテクスチャを上書きした。今のフレーム番号で後から加工し直さない。"""
+        self.latest = None
+
+    def close(self) -> None:
+        self.session.stop()
 
 
 def _frameClientBox(hwnd: int) -> Optional[tuple]:

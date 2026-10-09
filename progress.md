@@ -309,3 +309,12 @@
 - SteamVRなし(`tools/probe_overlay_d3d11.py headless`): Tkのテスト窓4色がBGRAまで一致・コピー外は透明を3回連続PASS、テクスチャより大きいクライアントは切り詰め。ポーリングp50 0.17ms・p95 0.25ms。
 - 実機(ユーザー実施、Quest 3、5ハンドルに1テクスチャ): 白黒20Hz切替60秒で1192フレームをエラー0で提出、向き正しく裂けなし。4色の位置・明るさ正常。15秒時点で小さいテクスチャへ差し替えても更新が続き切れなし(GL経路で見た最初の大きさ固定はDirectXでは見られず)。ポーリングp50 0.18ms・5ハンドル分の`setOverlayTexture`p50 0.07ms。段階0の約40ms/フレーム(複製27ms+変換・転送・完了待ち13ms)に対し約0.3ms。段階1の合格条件(CPU時間25%以下、ポーリングp95<1ms、エラー・裂けなし)を満たす。
 - 未実施: 10分連続動作、実行中のSteamVR再起動。次は段階2(角丸マスク・ツールチップの印・起動演出をGPU経路で互換にし、既存overlay.pyへ既定OFFの切替で組み込む)。結果`docs/benchmarks/overlay_d3d11_poc_2026-10-09.json`。
+
+## サイクル19 — VR UI画像経路 段階2(VR UI互換・既定OFFで組み込み)完了（2026-10-09）
+
+- `native/vrct-graphics`をデバイス・テクスチャの寿命とWGCの寿命に分けた(`CaptureSession(adapter,w,h)`+`start/stop/poll/upload/read_row/set_mask/render`)。撮影フレームとCPU製マスクを1回のピクセルシェーダで合成し、起動演出のキー抜き(introKeyAlpha・LUT)もシェーダへ移植。シェーダはfxcで作った`.cso`を`include_bytes!`で埋め込み、実行時コンパイラ不要(`shaders/build_shaders.cmd`)。SteamVRのクライアントが同じimmediate contextを使うため、renderのたびに`ClearState`後に全状態を設定し直す。
+- `overlay.py`に`VRCT_OVERLAY_GPU=1`のときだけ動くGPU経路(`transferGpu`、`window_capture.GpuStream`)。CPU側に残るのはマスク作成(変化時のみ送る)と吹き出しの印1行の読み取りだけ。GPUの作成失敗・GPUエラー・`setOverlayTexture`失敗・DPI上昇でテクスチャ不足のときはOpenGLへ戻す(アプリ再起動まで)。WGC開始失敗・古い大きさのフレーム・開始5秒で1枚も来ない場合はPrintWindowの画像を同じDXテクスチャへ送る。表示範囲はDXの上端v=0で反転しない。資源は作ったoverlayスレッドでだけ閉じる(PyO3 0.24のunsendableは別スレッドでdropされると解放しないため)。
+- 検証: CPUとのビット単位一致(3レイアウト×DPI4種×起動演出3状態・吹き出し・印の読み取り)16件、fakeによる経路テスト、全体1902件成功・skip 0、Rust clippy警告なし。独立レビューはhighなし、medium3件(PrintWindow代替の継続、`setOverlayTexture`失敗時の退避、WGCの停止検知)とlowを修正。
+- 実機(ユーザー実施、Quest 3・150%): 起動演出(起動直後・OFF/ON)、角丸の黒縁なし、吹き出し、スクロール/クリック位置、角のリサイズ、字幕だけON、VR UIでのマイク文字起こし、いずれも正常。文字のくっきり具合はOpenGL版と同等(A/B)。途中で見つけた「計測コードがストリームを保持し続け、次のoverlayスレッドでGPU資源が破棄されPyO3の警告が通知される」不具合は修正し回帰テストを追加。初回に見えた起動演出中の約4秒のフレーム空白は再現せず、OpenGL版でも1〜1.5秒の空白はWebView側で同様に出る。
+- 1フレームあたりのoverlayスレッド処理(p50、参考値): OpenGL約13.6ms(変換5.7・転送3.8・完了待ち2.2・受け渡し1.9)→GPU約0.25ms。OpenGLではこのほかWGC画像の複製約27ms/フレームが別スレッドでかかる。同条件の負荷比較は段階5で行う。
+- 未確認: 表示倍率175%でのOpenGL退避、段階1の10分連続動作・SteamVR終了。終了時の`OSError: [Errno 22]`(UIを閉じた後のstdout書き込み)はOpenGL版でも出る既存挙動。結果`docs/benchmarks/overlay_gpu_stage2_2026-10-09.json`。
