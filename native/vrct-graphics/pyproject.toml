@@ -6,8 +6,12 @@ build-backend = "maturin"
 name = "vrct-graphics"
 version = "0.1.0"
 requires-python = ">=3.10"
-description = "VRCT VR UI capture PoC (WGC -> D3D11 texture)"
+description = "VRCT VR UI image path: Windows.Graphics.Capture into a D3D11 texture for SteamVR overlays"
 license = "MIT"
 
 [tool.maturin]
 locked = true
+include = [
+    { path = "THIRD_PARTY_LICENSES.txt", format = ["sdist", "wheel"] },
+    { path = "LICENSE", format = ["sdist", "wheel"] },
+]

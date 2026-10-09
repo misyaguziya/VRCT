@@ -318,3 +318,12 @@
 - 実機(ユーザー実施、Quest 3・150%): 起動演出(起動直後・OFF/ON)、角丸の黒縁なし、吹き出し、スクロール/クリック位置、角のリサイズ、字幕だけON、VR UIでのマイク文字起こし、いずれも正常。文字のくっきり具合はOpenGL版と同等(A/B)。途中で見つけた「計測コードがストリームを保持し続け、次のoverlayスレッドでGPU資源が破棄されPyO3の警告が通知される」不具合は修正し回帰テストを追加。初回に見えた起動演出中の約4秒のフレーム空白は再現せず、OpenGL版でも1〜1.5秒の空白はWebView側で同様に出る。
 - 1フレームあたりのoverlayスレッド処理(p50、参考値): OpenGL約13.6ms(変換5.7・転送3.8・完了待ち2.2・受け渡し1.9)→GPU約0.25ms。OpenGLではこのほかWGC画像の複製約27ms/フレームが別スレッドでかかる。同条件の負荷比較は段階5で行う。
 - 未確認: 表示倍率175%でのOpenGL退避、段階1の10分連続動作・SteamVR終了。終了時の`OSError: [Errno 22]`(UIを閉じた後のstdout書き込み)はOpenGL版でも出る既存挙動。結果`docs/benchmarks/overlay_gpu_stage2_2026-10-09.json`。
+
+## サイクル20 — WGC開始競合の修正、段階5ツールの改修、段階4の配布、GPU経路の10分連続（2026-10-09）
+
+- 段階5の初回計測(ユーザー実施)は無効: 文字起こし等の重い処理がONで負荷が揺れ、さらにOpenGL版で2回目以降UIが固まる・GPU版で吹き出しが出ない/ポインタ表示が遅い、が起きた。どちらもVR画面ON直後のWGC開始失敗(0x80070057 / Failed to convert item)で次のONまでPrintWindowに固定されていたのが原因。`overlay.py`の`streamFailed`で1・2・3・4秒空けて最大5回試し直し、実際に撮れたら失敗回数を0に戻す(長時間の散発停止で固定しない)。両経路に効く。無効な2ファイルは`tmp/stage5-invalid/`へ退避しコミットしない。
+- 段階5の計測ツール: 約7分(準備10・warmup5・計測30秒×3セット)に短縮。重い処理を常にONにしたまま比べられるよう、プロセスCPUではなくVR画面の画像経路に帰属するCPU(overlayスレッドCPU、OpenGLはWGC複製スレッドを加算)を2秒窓の計装から集計。`--compare GL GPU`で採用判定(GPUのS2画像経路≦GLの25%、GPUでPrintWindow 0、dropped非増加、S2フレーム数比0.8〜1.25、両レポートのbackendがgl/gpuであること)。
+- 段階4の配布: `vrct_graphics`をinstall/build bat・両specへ追加、Rust依存のライセンス(`tools/collect_rust_licenses.py`で生成)をwheelと配布物へ同梱、NOTICE追記。CPU/CUDAの検証ビルドで同梱pydのhash一致・ライセンス一致、配布版の自己チェック(GPU合成の読み戻しがビット一致)と実推論の4ケースPASS(`docs/benchmarks/overlay_gpu_stage4_2026-10-09.json`)。install.batの追加行は一時venvで実行し導入・import・ライセンス同梱を確認(共有venvのbat自体は未実行)。`native/vrct-graphics/target/`をignoreに追加。
+- 10分連続(SteamVRなし、`tools/probe_overlay_d3d11.py soak`): 20Hzで画面を変え続け、30秒ごとにWGC停止/開始、120秒ごとにセッション作り直し。11214フレーム・エラー0、poll p50 0.28ms/p95 0.42ms、150秒以降の増分はRSS +2.9MB・ハンドル+7・GPU全体のメモリ0でPASS(`docs/benchmarks/overlay_gpu_soak_2026-10-09.json`)。途中、プロセス別のGPUメモリカウンタがWGC開始1回ごとに約1フレーム分(6.6MB)増え続けたが、GPU全体の使用量は30回の再開始でも不変・OpenGL版のwindows-captureでも同じ増え方で、カウンタの見かけ(Microsoft KB4490156と同種)と判断。
+- 独立レビュー: highは`target/`未ignore(修正)、mediumは成功時に失敗回数が戻らない点(修正・テスト追加)、旧形式レポートをcompareで判定できない点(退避・テスト追加)。pytest全体1909件成功。
+- 残り(実機): 段階5の再計測(重い処理ONのままGL/GPU各約7分)と既定ON判断、SteamVR終了時の挙動、175%でのOpenGL退避。

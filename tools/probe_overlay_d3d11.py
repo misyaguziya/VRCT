@@ -4,6 +4,7 @@ Runs alone (not inside VRCT); needs the built vrct_graphics on PYTHONPATH.
 
     python tools/probe_overlay_d3d11.py headless           # no SteamVR: pixel check of the copy
     python tools/probe_overlay_d3d11.py vr --seconds 60    # SteamVR: shows overlays in front of the HMD
+    python tools/probe_overlay_d3d11.py soak --seconds 600 # no SteamVR: leak check over a long run
 
 vr mode shows a Tk test window as `--handles` overlays (each a slice of one
 texture, as VRCT does with its atlas) submitted as TextureType_DirectX /
@@ -131,6 +132,101 @@ def headless(args):
     finally:
         session.close()
         root.destroy()
+    return report
+
+
+def gpu_adapter_mb():
+    """Dedicated GPU memory in use on the busiest adapter (GPU Adapter Memory counter), or None.
+
+    Not the per-process counter: that one grows by about one frame per WGC start
+    and never comes back, while the adapter total stays flat (30 restarts: process
+    +199 MB, adapter +0). Other programs using the GPU show up here, so keep it idle.
+    """
+    import subprocess
+
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command",
+                              "(Get-Counter '\\GPU Adapter Memory(*)\\Dedicated Usage').CounterSamples"
+                              " | Measure-Object CookedValue -Maximum | % Maximum"], capture_output=True, text=True,
+                             timeout=30)
+        return round(float(out.stdout.strip()) / 2**20, 1)
+    except (subprocess.TimeoutExpired, ValueError):
+        return None
+
+
+def soak(args):
+    """No SteamVR: a long run of what the overlay thread does, for leaks.
+
+    Flips the window at --hz and polls + renders every tick; restarts the capture
+    every 30 s (VR UI OFF/ON) and replaces the whole session every 120 s (a new
+    overlay thread). RSS / handles / threads / GPU memory in use are sampled every 30 s.
+    """
+    import psutil
+    import vrct_graphics
+
+    width, height = args.size
+    root, canvas, hwnd = make_window(width, height)
+    draw(canvas, "flip", 0, width, height)
+    root.update()
+    box = client_box(hwnd)
+    me = psutil.Process()
+    session = open_session(vrct_graphics, hwnd, args.adapter, args.texture, box)
+    report = {"mode": "soak", "client_box": box, "texture": session.size, "seconds": args.seconds, "hz": args.hz,
+              "status": "FAIL"}
+    frames, errors, restarts, sessions, poll_ms, resources = 0, [], 0, 1, [], []
+    started = last_sample = time.perf_counter()
+    last_restart = last_session = started
+    tick = 0
+    try:
+        resources.append({"t_s": 0.0, "rss_mb": round(me.memory_info().rss / 2**20, 1), "handles": me.num_handles(),
+                          "threads": me.num_threads(), "gpu_mb": gpu_adapter_mb(), "frames": 0})
+        while time.perf_counter() - started < args.seconds:
+            now = time.perf_counter()
+            tick += 1
+            draw(canvas, "flip", tick, width, height)
+            root.update()
+            try:
+                if now - last_session >= 120:
+                    session.close()
+                    session = open_session(vrct_graphics, hwnd, args.adapter, args.texture, box)
+                    sessions += 1
+                    last_session = last_restart = now
+                elif now - last_restart >= 30:
+                    session.stop()
+                    session.start(hwnd)
+                    restarts += 1
+                    last_restart = now
+                if tick % args.hz < 1:  # the tooltip mask changes now and then
+                    w, h = min(width, session.size[0]), min(height, session.size[1])
+                    session.set_mask(bytes([255 if tick % 2 else 128]) * (w * h), w, h)
+                t0 = time.perf_counter()
+                if session.poll(box) is not None:
+                    session.render()
+                    frames += 1
+                poll_ms.append((time.perf_counter() - t0) * 1000)
+            except Exception as error:  # noqa: BLE001 - recorded, the run goes on
+                errors.append({"t_s": round(now - started, 1), "error": repr(error)})
+            if now - last_sample >= 30:
+                resources.append({"t_s": round(now - started, 1), "rss_mb": round(me.memory_info().rss / 2**20, 1),
+                                  "handles": me.num_handles(), "threads": me.num_threads(),
+                                  "gpu_mb": gpu_adapter_mb(), "frames": frames})
+                last_sample = now
+            time.sleep(max(0.0, 1 / args.hz - (time.perf_counter() - now)))
+    finally:
+        session.close()
+        root.destroy()
+    # growth after the first session replacement (allocators and caches have warmed up by then)
+    base = next((r for r in resources if r["t_s"] >= 150), resources[0])
+    end = resources[-1]
+    growth = {k: round(end[k] - base[k], 1) for k in ("rss_mb", "handles", "threads", "gpu_mb")
+              if end.get(k) is not None and base.get(k) is not None}
+    report.update(frames=frames, ticks=tick, capture_restarts=restarts, sessions=sessions, errors=errors[:20],
+                  error_count=len(errors), poll_ms={"p50": pct(poll_ms, 0.5), "p95": pct(poll_ms, 0.95)},
+                  resources=resources, growth_since={"t_s": base["t_s"], **growth})
+    # ponytail: fixed thresholds; one leaked texture (~9.6 MB) or a handle per restart would exceed them
+    ok = not errors and frames > tick * 0.5 and growth.get("rss_mb", 0) < 20 and growth.get("handles", 0) < 50 \
+        and growth.get("gpu_mb", 9) < 9  # an unreadable GPU counter is not a pass
+    report["status"] = "PASS" if ok else "FAIL"
     return report
 
 
@@ -276,7 +372,7 @@ def vr(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("mode", choices=("headless", "vr"))
+    parser.add_argument("mode", choices=("headless", "soak", "vr"))
     parser.add_argument("--size", type=int, nargs=2, default=(1690, 880), help="client size of the test window")
     parser.add_argument("--texture", type=int, nargs=2, default=(2128, 1136))
     parser.add_argument("--adapter", type=int, default=0, help="headless only; vr uses SteamVR's adapter")
@@ -287,7 +383,7 @@ def main():
     parser.add_argument("--recreate-at", type=float, default=0)
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
-    report = (headless if args.mode == "headless" else vr)(args)
+    report = {"headless": headless, "soak": soak, "vr": vr}[args.mode](args)
     report["utc"] = datetime.now(timezone.utc).isoformat()
     out = args.out or ROOT / "tmp" / "overlay_poc" / f"{args.mode}-{datetime.now():%Y%m%d-%H%M%S}.json"
     out.parent.mkdir(parents=True, exist_ok=True)

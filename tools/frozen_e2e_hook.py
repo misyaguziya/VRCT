@@ -114,6 +114,30 @@ if os.environ.get("VRCT_FROZEN_E2E_DIR"):
     counted(transcription_providers.GoogleProvider, "google_calls")
     counted(transcription_providers.OpenAICompatibleTranscriptionProvider, "api_calls")
 
+    def graphics_check():
+        """The bundled vrct_graphics works inside the exe: device, embedded shaders, compose, read back."""
+        try:
+            import vrct_graphics
+
+            width, height = 64, 32
+            session = vrct_graphics.CaptureSession(0, width, height)
+            try:
+                frame = bytes(range(256)) * (width * height * 4 // 256)
+                session.upload(frame, width, height, (0, 0, width, height))
+                mask = bytes([255 if x < width // 2 else 0 for _ in range(height) for x in range(width)])
+                session.set_mask(mask, width, height)
+                session.render()
+                out = session.read_back()
+            finally:
+                session.close()
+            expected = bytearray(frame)
+            expected[3::4] = mask
+            return {"ok": out == bytes(expected), "module": vrct_graphics.__file__}
+        except Exception as error:  # recorded; the runner fails the case
+            return {"ok": False, "error": repr(error)}
+
+    state["graphics_check"] = graphics_check()
+
     def save():
         config = getattr(sys.modules.get("config"), "config", None)  # None while still importing
         if config is not None:

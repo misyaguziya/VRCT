@@ -1,0 +1,222 @@
+{
+ "recorded_at": "2026-10-09",
+ "baseline_commit": "5eb3b998",
+ "status": "PASS",
+ "scope": "Stage 4: vrct-graphics bundled into the CPU and CUDA sidecars from the production specs (hidden import, licenses/vrct-graphics), validation builds via tools/check_frozen_e2e.py; inside each exe the hook builds a D3D11 session, uploads a frame, composes with a mask using the embedded shaders and reads it back (bit-exact), and real Whisper runs over IPC.",
+ "builds": {
+  "cpu": {
+   "exe_sha256": "8ba4567eb078fdb2bdb2a7204c28a0afe026e9ecebf9748fbf6fce471f9160a0",
+   "vrct_graphics_pyd_sha256": "ad05fd7ce5768c3907bf2acdbf250e73c309d641c04680907bbd9f62df4c93cc",
+   "vrct_audio_pyd_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+   "graphics_licenses_identical_to_repo": true,
+   "files": 3180
+  },
+  "cuda": {
+   "exe_sha256": "62a2e54c4482892d9c12caabd80978867675cfeb3640ecaf54b528b9d333109d",
+   "vrct_graphics_pyd_sha256": "ad05fd7ce5768c3907bf2acdbf250e73c309d641c04680907bbd9f62df4c93cc",
+   "vrct_audio_pyd_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+   "graphics_licenses_identical_to_repo": true,
+   "files": 3191
+  }
+ },
+ "runs": {
+  "cpu-stage4": {
+   "status": "PASS",
+   "compute_mode": "cpu",
+   "detector": "energy",
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3歩に行きましょう。",
+     "cer": 0.0476,
+     "latency_s": 4.482
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 4.623
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 3.736
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "worker": {
+    "frozen": true,
+    "graphics_check": {
+     "ok": true
+    },
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 3
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cpu",
+     "compute_type": "auto"
+    }
+   }
+  },
+  "cpu-stage4vad": {
+   "status": "PASS",
+   "compute_mode": "cpu",
+   "detector": "vad",
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3歩に行きましょう",
+     "cer": 0.0952,
+     "latency_s": 1.372
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 2.31
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 1.501
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "worker": {
+    "frozen": true,
+    "graphics_check": {
+     "ok": true
+    },
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 4
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cpu",
+     "compute_type": "auto"
+    }
+   }
+  },
+  "cuda-stage4": {
+   "status": "PASS",
+   "compute_mode": "cuda",
+   "detector": "energy",
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3歩に行きましょう。",
+     "cer": 0.0476,
+     "latency_s": 4.778
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 3.467
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 2.611
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "worker": {
+    "frozen": true,
+    "graphics_check": {
+     "ok": true
+    },
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 3
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cuda",
+     "compute_type": "auto"
+    }
+   }
+  },
+  "cuda-stage4vad": {
+   "status": "PASS",
+   "compute_mode": "cuda",
+   "detector": "vad",
+   "utterances": [
+    {
+     "reference": "今日はいい天気ですね。散歩に行きましょう。",
+     "text": "今日はいい天気ですね。3歩に行きましょう",
+     "cer": 0.0952,
+     "latency_s": 0.262
+    },
+    {
+     "reference": "この音声認識のテストは正常に動作していますか。",
+     "text": "この音声認識のテストは正常に動作していますか。",
+     "cer": 0.0,
+     "latency_s": 0.435
+    },
+    {
+     "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+     "text": "VRチャットで友達と一緒に遊びたいです。",
+     "cer": 0.2174,
+     "latency_s": 0.407
+    }
+   ],
+   "stderr_bytes": 0,
+   "error_log_only_expected_http": true,
+   "worker": {
+    "frozen": true,
+    "graphics_check": {
+     "ok": true
+    },
+    "native_sha256": "a6e96861eb311c4a11a1a3981d5e1c84c60804013e7f572d69d053e615cc9e83",
+    "counts": {
+     "blocked_socket.bind": 1,
+     "blocked_requests": 4,
+     "whisper_calls": 4
+    },
+    "config": {
+     "engine": "Whisper",
+     "weight": "base",
+     "compute_device": "cuda",
+     "compute_type": "auto"
+    }
+   }
+  }
+ },
+ "changes": [
+  "native/vrct-graphics LICENSE + THIRD_PARTY_LICENSES.txt (tools/collect_rust_licenses.py) included in the wheel",
+  "bat/install.bat, bat/build.bat, bat/build_cuda.bat install vrct-graphics (build bats also import-check it)",
+  "spec/backend.spec and spec/backend_cuda.spec: hidden import vrct_graphics, licenses/vrct-graphics",
+  "NOTICE.md: VR UI graphics dependencies"
+ ],
+ "limitations": [
+  "validation builds from spec copies with the E2E runtime hook, not release builds",
+  "bat/install.bat and bat/build*.bat themselves were not run (they rewrite the shared venvs)",
+  "GPU overlay path in the exe still needs VRCT_OVERLAY_GPU=1 (default OFF until stage 5 adoption)"
+ ],
+ "sources_sha256": {
+  "spec/backend.spec": "3278544497ca26781beb4fe5bc904a562334560c922586eb20455d93bd64f5fd",
+  "spec/backend_cuda.spec": "7624e47cd317c8580db1c76af9720f9232b76cfb149a628f2213f76a103ca9c1",
+  "tools/frozen_e2e_hook.py": "7bdf636c78aba6fabbf7e249a94936b19dd3226cd3bd8536983786276fc73371",
+  "tools/check_frozen_e2e.py": "b94c6200e9bf212d938958eef646fab69389b5527c19975ff08c85fa09407bf2",
+  "native/vrct-graphics/THIRD_PARTY_LICENSES.txt": "81f4af4463439ba1d28614b2b6dc596d393c3fdeb81ebf850b3c90cf8172a8a6"
+ }
+}
