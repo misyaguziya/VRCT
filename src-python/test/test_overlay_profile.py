@@ -25,6 +25,7 @@ def test_profile_is_off_by_default(tmp_path):
          patch.object(overlay, "writeProfile") as write:
         transfer_twice(overlay)
         overlay.step_reported_at -= 60
+        overlay.profile_window_at -= 60
         overlay.reportSlowSteps()
     write.assert_not_called()
 
@@ -35,6 +36,7 @@ def test_profile_writes_frame_and_window_rows(tmp_path):
     with patch.object(overlay_module, "_PROFILE_PATH", str(path)):
         transfer_twice(overlay)
         overlay.step_reported_at -= 60
+        overlay.profile_window_at -= 60
         overlay.reportSlowSteps()
         overlay.profile_file.close()
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
@@ -43,6 +45,6 @@ def test_profile_writes_frame_and_window_rows(tmp_path):
     for key in ("convert_ms", "prepare_ms", "upload_ms", "finish_ms", "set_ms"):
         assert frame[key] >= 0
     assert frame["handles"] >= 1
-    assert window["kind"] == "window"
+    assert window["kind"] == "window" and window["backend"] == "gl"
     assert (window["frames_submitted"], window["frames_unchanged"]) == (1, 1)
     assert overlay.profile_submitted == overlay.profile_unchanged == 0

@@ -16,6 +16,12 @@ reprojected frames). The overlay profile JSONL adds per-frame convert / upload
 
     python tools/benchmark_overlay_live.py --profile-jsonl tmp/overlay_profile/vrct.jsonl
     python tools/benchmark_overlay_live.py --dry-run   # no SteamVR, short, for checking the tool
+    python tools/benchmark_overlay_live.py --compare GL.json GPU.json   # stage 5: GL vs GPU
+
+Other VRCT features (transcription, translation, OCR) may stay ON: their load
+varies, so the comparison uses the CPU attributable to the VR UI image path
+(overlay thread CPU, plus the windows-capture copy thread on OpenGL) rather
+than whole-process CPU, which is still reported.
 
 Decision rule fixed before measuring (2026-10-08, agreed with the user):
 go to the GPU-direct Rust path when S2 adds >= 50 ms/s (5% of a core) of VRCT
@@ -130,8 +136,11 @@ def read_profile(path, start_wall, end_wall):
             row = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if start_wall <= row.get("wall", 0) <= end_wall:
-            (frames if row.get("kind") == "frame" else windows).append(row)
+        wall = row.get("wall", 0)
+        if row.get("kind") == "frame" and start_wall <= wall <= end_wall:
+            frames.append(row)
+        elif row.get("kind") == "window" and start_wall <= wall - row.get("dur_s", 0) and wall <= end_wall:
+            windows.append(row)  # only windows fully inside the scenario
     return frames, windows
 
 
@@ -166,12 +175,19 @@ def summarize(samples, frames_vr, cumulative, profile_frames, profile_windows):
             values = [f.get(key) for f in profile_frames]
             out["overlay_frames"][key] = {"p50": pct(values, 0.5), "p95": pct(values, 0.95),
                                           "ms_per_s": round(sum(v for v in values if v) / seconds, 2)}
+        out["overlay_frames"]["printwindow"] = sum(1 for f in profile_frames if f.get("src") == "pw")
         out["overlay_frames"]["texture"] = profile_frames[-1].get("texture")
         out["overlay_frames"]["client"] = profile_frames[-1].get("client")
     if profile_windows:
         out["overlay_windows"] = {k: round(sum(w.get(k, 0) or 0 for w in profile_windows), 3)
                                   for k in ("frames_submitted", "frames_unchanged", "wgc_arrivals",
-                                            "wgc_copy_ms", "overlay_thread_cpu_s")}
+                                            "wgc_copy_ms", "overlay_thread_cpu_s", "dur_s")}
+        out["overlay_windows"]["backends"] = sorted({w.get("backend", "gl") for w in profile_windows})
+        covered = out["overlay_windows"]["dur_s"]
+        # GL copies frames on the windows-capture thread (add it); GPU polls on the overlay thread (already in).
+        separate_copy = sum(w.get("wgc_copy_ms", 0) for w in profile_windows if w.get("backend", "gl") == "gl")
+        out["image_path_ms_per_s"] = round(
+            (out["overlay_windows"]["overlay_thread_cpu_s"] * 1000 + separate_copy) / covered, 2) if covered else None
     return out
 
 
@@ -193,6 +209,7 @@ def decide(all_sets):
         return r.get("compositor", {}).get("m_flCompositorRenderGpuMs", {}).get("p95")
 
     cpu_delta = [s["S2"]["cpu_ms_per_s"] - s["S0"]["cpu_ms_per_s"] for s in sets]
+    image_path = [s["S2"].get("image_path_ms_per_s") for s in sets]
     s0_cpu = values("S0", lambda r: r["cpu_ms_per_s"])
     spread = (max(s0_cpu) - min(s0_cpu)) if len(s0_cpu) > 1 else 0.0
     p95_s0, p95_s2 = values("S0", comp_p95), values("S2", comp_p95)
@@ -209,7 +226,55 @@ def decide(all_sets):
                else "C_stop")
     return {"verdict": verdict, "excluded_sets": excluded, "s2_minus_s0_cpu_ms_per_s": [round(v, 2) for v in cpu_delta],
             "s0_cpu_spread_ms_per_s": round(spread, 2), "compositor_gpu_p95_worse": compositor_worse,
+            "s2_image_path_ms_per_s": image_path,
             "s2_overlay_ms_per_s_mean": {k: round(v, 2) for k, v in parts.items()}}
+
+
+def compare(gl_path, gpu_path):
+    """Stage-5 adoption check from two reports taken under the same conditions."""
+    runs = {name: json.loads(Path(path).read_text(encoding="utf-8")) for name, path in (("gl", gl_path), ("gpu", gpu_path))}
+
+    def values(name, scenario, getter):
+        return [v for v in (getter(s[scenario]) for s in runs[name]["sets"] if scenario in s) if v is not None]
+
+    def mean(vals):
+        return round(statistics.mean(vals), 2) if vals else None
+
+    def p95(r):
+        return r.get("compositor", {}).get("m_flTotalRenderGpuMs", {}).get("p95")
+
+    out = {"inputs": {"gl": str(gl_path), "gpu": str(gpu_path)}}
+    for name in runs:
+        out[name] = {
+            "sets": len(runs[name]["sets"]),
+            "s2_image_path_ms_per_s": values(name, "S2", lambda r: r.get("image_path_ms_per_s")),
+            "s1_image_path_ms_per_s": values(name, "S1", lambda r: r.get("image_path_ms_per_s")),
+            "s2_frames_submitted": values(name, "S2", lambda r: r.get("overlay_windows", {}).get("frames_submitted")),
+            "backends": sorted({b for sc in ("S1", "S2") for bs in values(
+                name, sc, lambda r: r.get("overlay_windows", {}).get("backends")) for b in bs}),
+            "printwindow_frames": sum(sum(values(name, sc, lambda r: r.get("overlay_frames", {}).get("printwindow")))
+                                      for sc in ("S1", "S2")),
+            "process_cpu_ms_per_s": {sc: mean(values(name, sc, lambda r: r["cpu_ms_per_s"])) for sc in ("S0", "S1", "S2")},
+            "total_render_gpu_p95_ms": {sc: mean(values(name, sc, p95)) for sc in ("S0", "S2")},
+            "vrchat_dropped": sum(sum(values(name, sc, lambda r: r.get("vrchat_cumulative_delta", {}).get("dropped")))
+                                  for sc in ("S0", "S1", "S2")),
+        }
+    gl, gpu = out["gl"], out["gpu"]
+    gl_s2, gpu_s2 = mean(gl["s2_image_path_ms_per_s"]), mean(gpu["s2_image_path_ms_per_s"])
+    work = mean(gpu["s2_frames_submitted"]) and mean(gl["s2_frames_submitted"]) and \
+        mean(gpu["s2_frames_submitted"]) / mean(gl["s2_frames_submitted"])
+    checks = {
+        "gpu_image_path_le_25pct_of_gl": bool(gl_s2 and gpu_s2 is not None and gpu_s2 <= 0.25 * gl_s2),
+        "no_printwindow_on_gpu": gpu["printwindow_frames"] == 0,
+        "no_dropped_frames_added": gpu["vrchat_dropped"] <= gl["vrchat_dropped"],
+        "reports_are_gl_then_gpu": gl["backends"] == ["gl"] and gpu["backends"] == ["gpu"],
+        "workload_similar_frames_ratio": round(work, 2) if work else None,
+    }
+    out["ratio_s2_image_path_gpu_over_gl"] = round(gpu_s2 / gl_s2, 3) if gl_s2 and gpu_s2 is not None else None
+    out["checks"] = checks
+    out["adopt"] = all(v for k, v in checks.items() if k != "workload_similar_frames_ratio") and bool(
+        work and 0.8 <= work <= 1.25)
+    return out
 
 
 def main():
@@ -218,12 +283,20 @@ def main():
     parser.add_argument("--profile-jsonl", type=Path, default=ROOT / "tmp" / "overlay_profile" / "vrct.jsonl")
     parser.add_argument("--out", type=Path)
     parser.add_argument("--sets", type=int, default=3)
-    parser.add_argument("--prepare", type=float, default=15, help="seconds to switch scenario")
-    parser.add_argument("--warmup", type=float, default=10)
-    parser.add_argument("--duration", type=float, default=60)
+    parser.add_argument("--prepare", type=float, default=10, help="seconds to switch scenario")
+    parser.add_argument("--warmup", type=float, default=5)
+    parser.add_argument("--duration", type=float, default=30)
+    parser.add_argument("--compare", nargs=2, metavar=("GL_JSON", "GPU_JSON"), type=Path,
+                        help="compare two finished reports (stage 5) instead of measuring")
     parser.add_argument("--dpi-note", default="", help="Windows display scale you are using, e.g. 150%%")
     parser.add_argument("--dry-run", action="store_true", help="no SteamVR/speech; 1 set of 3 s scenarios")
     args = parser.parse_args()
+    if args.compare:
+        result = compare(*args.compare)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        if args.out:
+            args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        return 0 if result["adopt"] else 1
     import psutil
 
     if args.dry_run:

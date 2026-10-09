@@ -48,6 +48,7 @@ _STEP_SLOW_SEC = 0.05
 _STEP_BREAKDOWN_MIN_MS = 50
 # VR画面の転送を1フレームずつ JSONL に記録する先 (Rust化の段階0の計測。tools/benchmark_overlay_live.py)。未設定なら記録しない
 _PROFILE_PATH = os.environ.get("VRCT_OVERLAY_PROFILE")
+_PROFILE_WINDOW_SEC = 2.0  # 集計の行を書く間隔 (計測ツールが短いシナリオでも区間に収まる行だけ数えられるように)
 # VR画面の加工と転送を GPU (native/vrct-graphics、DirectX のテクスチャ) で行う。Rust化の段階2。既定は OFF (OpenGL)
 _GPU_ENABLED = os.environ.get("VRCT_OVERLAY_GPU") == "1"
 # オーバーレイのスレッドの優先度 (Windows の THREAD_PRIORITY_ABOVE_NORMAL)。OCR (onnxruntime の複数スレッド) が
@@ -812,6 +813,7 @@ class Overlay:
         self.profile_file = None
         self.profile_unchanged = 0
         self.profile_submitted = 0
+        self.profile_window_at = time.monotonic()
         self.capture_source: Optional[str] = None
         # 前回の集計の (スレッド, その CPU 時間, プロセスの CPU 時間) と (撮影の id, 届いた回数, 複製の時間)。
         # 撮影そのものは持たない (持つと、閉じた後も GPU の資源が別のスレッドまで生き残る)
@@ -3148,6 +3150,9 @@ class Overlay:
     def reportSlowSteps(self) -> None:
         """_STEP_REPORT_SEC ごとに、遅い段階があれば (_STEP_SLOW_SEC 超え) その最大時間をログに出す。"""
         now = time.monotonic()
+        if _PROFILE_PATH and now - self.profile_window_at >= _PROFILE_WINDOW_SEC:
+            self.writeProfileWindow(now - self.profile_window_at)
+            self.profile_window_at = now
         if now - self.step_reported_at < _STEP_REPORT_SEC:
             return
         slow = {name: round(took * 1000) for name, took in self.step_max.items() if took > _STEP_SLOW_SEC}
@@ -3158,8 +3163,6 @@ class Overlay:
         per_second = {name: round(total * 1000 / elapsed) for name, total in self.step_total.items() if total * 1000 / elapsed >= 2}
         if sum(per_second.values()) >= _STEP_BREAKDOWN_MIN_MS:
             printLog("overlay: 処理時間の内訳 (ms/秒)", {"loops_per_sec": round(self.step_loops / elapsed, 1), **per_second})
-        if _PROFILE_PATH:
-            self.writeProfileWindow(elapsed)
         self.step_max = {}
         self.step_total = {}
         self.step_loops = 0
@@ -3177,7 +3180,10 @@ class Overlay:
             _PROFILE_PATH = None
 
     def writeProfileWindow(self, elapsed: float) -> None:
-        """reportSlowSteps の区間 (約10秒) の集計。overlay のスレッドで呼ぶ (thread_time はこのスレッドの CPU 時間)。"""
+        """_PROFILE_WINDOW_SEC ごとの集計。overlay のスレッドで呼ぶ (thread_time はこのスレッドの CPU 時間)。
+
+        wgc_copy_ms は OpenGL では windows-capture のスレッドで、GPU ではこのスレッドの中で使った時間。
+        """
         cpu = (get_ident(), time.thread_time(), time.process_time())
         if self.profile_cpu[0] != cpu[0]:
             self.profile_cpu = (cpu[0], 0.0, cpu[2])  # このスレッドで初めての集計: スレッドの開始から数える
@@ -3186,12 +3192,12 @@ class Overlay:
         last_stream, last_arrivals, last_copy_s = self.profile_stream_counts
         if last_stream != id(stream):
             last_arrivals, last_copy_s = 0, 0.0
-        self.writeProfile({"kind": "window", "dur_s": round(elapsed, 3), "loops": self.step_loops,
+        self.writeProfile({"kind": "window", "dur_s": round(elapsed, 3),
+                           "backend": "gpu" if self.gpu is not None else "gl",
                            "frames_submitted": self.profile_submitted, "frames_unchanged": self.profile_unchanged,
                            "wgc_arrivals": arrivals - last_arrivals, "wgc_copy_ms": round((copy_s - last_copy_s) * 1000, 3),
                            "overlay_thread_cpu_s": round(cpu[1] - self.profile_cpu[1], 4),
-                           "process_cpu_s": round(cpu[2] - self.profile_cpu[2], 4),
-                           "step_total_ms": {k: round(v * 1000, 1) for k, v in self.step_total.items()}})
+                           "process_cpu_s": round(cpu[2] - self.profile_cpu[2], 4)})
         self.profile_stream_counts = (id(stream), arrivals, copy_s)
         self.profile_cpu = cpu
         self.profile_submitted = self.profile_unchanged = 0
