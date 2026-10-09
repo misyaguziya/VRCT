@@ -206,6 +206,10 @@ _PANEL_CAPTURE_INTERVAL_SEC = 1 / 20
 _PANEL_IDLE_CAPTURE_INTERVAL_SEC = 1 / 4
 _PANEL_ACTIVE_HOLD_SEC = 1.0
 _PANEL_FIND_INTERVAL_SEC = 2.0
+# 画面キャプチャを始められない・止まったときに試し直す回数と間隔 (n 回目の失敗の後 n 倍待つ)。
+# VR画面のウィンドウを作った直後は、キャプチャを始められないことがある (実機で 0x80070057 / Failed to convert item)
+_STREAM_START_ATTEMPTS = 5
+_STREAM_RETRY_SEC = 1.0
 # コントローラの先端の向きが分からなかったとき、もう一度調べるまでの秒数 (それまでは本体の向きで指す)
 _TIP_RETRY_SEC = 5.0
 # レーザーの上下の向きの調整 (度)。コントローラの先端の向き (tipOffset) からこれだけ上に向ける。
@@ -796,9 +800,12 @@ class Overlay:
         # VR画面を撮り続ける画面キャプチャ (window_capture.WindowStream)。使えなければ PrintWindow で撮る
         self.panel_stream: Optional[Any] = None
         # stream_missing は windows-capture が無い (起動し直すまで戻らない)。stream_unavailable は始められない・
-        # 止まった (撮り直しを繰り返さないよう、次に VR UI を ON にするまで PrintWindow で撮る)
+        # 止まったのが _STREAM_START_ATTEMPTS 回続いた (次に VR UI を ON にするまで PrintWindow で撮る)。
+        # それまでは stream_retry_at まで PrintWindow で撮り、時間が来たら試し直す
         self.stream_missing = False
         self.stream_unavailable = False
+        self.stream_failures = 0
+        self.stream_retry_at = 0.0
         # 前回転送した撮影の生データと、画面が最後に変わった時刻。変わっていなければ転送しない
         self.panel_last_raw: Optional[bytes] = None
         # _PROFILE_PATH の記録用: 変わらず省いた/転送したフレーム数、撮影方法、前回の集計時の CPU 時間
@@ -1091,6 +1098,8 @@ class Overlay:
         self.capture_job = None  # 止める前に頼んだ撮影の結果は使わない
         self.closePanelStream()
         self.stream_unavailable = False
+        self.stream_failures = 0
+        self.stream_retry_at = 0.0
 
     def getVrLayout(self) -> dict:
         """Include the capture generation without changing the static layout."""
@@ -1399,6 +1408,8 @@ class Overlay:
         self.panel_errors = 0
         self.panel_error = None
         self.stream_unavailable = False
+        self.stream_failures = 0
+        self.stream_retry_at = 0.0
         self.panel_last_raw = None
         now = time.monotonic()
         self.panel_last_change = now
@@ -1725,6 +1736,7 @@ class Overlay:
             # 画面キャプチャは撮り続けているので、届いている最新の画像を受け取るだけ (待たない)
             result = stream.take()
             if result is not None:
+                self.stream_failures = 0  # 撮れている: たまに止まっても数え直す (長く使ううちに PrintWindow へ固定しない)
                 self.capture_source = "wgc"
                 self.capture_job = SimpleNamespace(hwnd=self.panel_hwnd, layout=self.layout, started=now,
                                                    done=True, result=result, error=None, reported=False)
@@ -1739,17 +1751,16 @@ class Overlay:
 
     def panelStream(self) -> Optional[Any]:
         """VR画面のウィンドウを撮り続ける画面キャプチャ。使えなければ None (PrintWindow で撮る)。"""
-        if self.stream_missing or self.stream_unavailable:
+        if self.stream_missing or self.stream_unavailable or time.monotonic() < self.stream_retry_at:
             return None
         stream = self.panel_stream
         if stream is not None and stream.hwnd == self.panel_hwnd and not stream.closed:
             return stream
         if stream is not None and stream.hwnd == self.panel_hwnd:
-            # 同じウィンドウなのに止まった: 撮り直しを繰り返さず PrintWindow に切り替える
-            printLog("overlay: 画面キャプチャが止まったので PrintWindow で撮ります")
-            self.stream_unavailable = True
+            # 同じウィンドウなのに止まった: しばらく PrintWindow で撮り、試し直す
             self.resetTooltipEpoch()
             self.closePanelStream()
+            self.streamFailed("止まった")
             return None
         self.resetTooltipEpoch()
         self.closePanelStream()  # ウィンドウが作り直された
@@ -1764,10 +1775,20 @@ class Overlay:
             return None
         except Exception:
             errorLogging()
-            printLog("overlay: 画面キャプチャを始められないので PrintWindow で撮ります")
-            self.stream_unavailable = True
+            self.streamFailed("始められない")
             return None
         return self.panel_stream
+
+    def streamFailed(self, reason: str) -> None:
+        """画面キャプチャが使えなかった。数回までは間を空けて試し直し、続くなら次の ON まで PrintWindow で撮る。"""
+        self.stream_failures += 1
+        if self.stream_failures >= _STREAM_START_ATTEMPTS:
+            self.stream_unavailable = True
+            printLog(f"overlay: 画面キャプチャが{reason}ので PrintWindow で撮ります", {"failures": self.stream_failures})
+            return
+        self.stream_retry_at = time.monotonic() + _STREAM_RETRY_SEC * self.stream_failures
+        printLog(f"overlay: 画面キャプチャが{reason}ので、しばらく PrintWindow で撮って試し直します",
+                 {"failures": self.stream_failures, "retry_in_sec": _STREAM_RETRY_SEC * self.stream_failures})
 
     def closePanelStream(self) -> None:
         stream, self.panel_stream = self.panel_stream, None
