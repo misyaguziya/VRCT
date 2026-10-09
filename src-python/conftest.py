@@ -49,3 +49,9 @@ _utils.process_logger = _utils.setupLogger("process", _os_path.join(_config_dir,
 _utils.error_logger = _utils.setupLogger("error", _os_path.join(_config_dir, "error.log"), logging.ERROR)
 # controller は `from utils import removeLog` で import 時に名前を取り込むので、その前に差し替える
 _utils.removeLog = lambda: None
+
+# VR画面の転送は既定で GPU を使うが、テストは OpenGL 経路を前提に書いている (GPU 経路のテストは
+# overlay._GPU_ENABLED を個別に True にする)。fake の system で本物の vrct_graphics を作りに行かせない。
+import os as _os
+
+_os.environ.setdefault("VRCT_OVERLAY_GPU", "0")

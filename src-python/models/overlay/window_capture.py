@@ -162,7 +162,7 @@ class WindowStream:
 
 
 class GpuStream:
-    """WindowStream の GPU 版 (VRCT_OVERLAY_GPU)。画面キャプチャを Rust (vrct_graphics) のテクスチャへ直接写す。
+    """WindowStream の GPU 版 (既定。VRCT_OVERLAY_GPU=0 で使わない)。画面キャプチャを Rust (vrct_graphics) のテクスチャへ直接写す。
 
     take() は画像の bytes の代わりに (("gpu", フレーム番号), フレームの大きさ, クライアント領域) を返す。
     画像は GPU のテクスチャにあり Python には来ない。session (CaptureSession) は overlay が持ち、ここでは閉じない。
