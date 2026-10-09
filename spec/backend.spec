@@ -16,6 +16,7 @@ a = Analysis(
     datas=[
         ('./../src-python/models/transcription/google_speech_LICENSE.txt', 'licenses/'),
         ('./../native/vrct-audio/THIRD_PARTY_LICENSES.txt', 'licenses/vrct-audio/'),
+        ('./../native/vrct-graphics/THIRD_PARTY_LICENSES.txt', 'licenses/vrct-graphics/'),
         ('./../src-python/models/overlay/fonts', 'fonts/'),
         ('./../src-python/models/translation/translation_settings/prompt', 'translation_settings/prompt/'),
         ('./../src-python/models/translation/translation_settings/languages', 'translation_settings/languages/'),
@@ -27,7 +28,7 @@ a = Analysis(
         ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/'),
         ('./../.venv/Lib/site-packages/rapidocr', 'rapidocr/'),
         ],
-    hiddenimports=['telemetry_keys', 'faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr', 'windows_capture', 'vrct_audio'],
+    hiddenimports=['telemetry_keys', 'faster_whisper.vad', 'models.transcription.audio_pipeline', 'rapidocr', 'cv2', 'models.ocr', 'windows_capture', 'vrct_audio', 'vrct_graphics'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

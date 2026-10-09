@@ -55,6 +55,7 @@ dist-ssr
 # Customize
 /build
 /native/vrct-audio/target/
+/native/vrct-graphics/target/
 error.txt
 config.json
 config.json.tmp

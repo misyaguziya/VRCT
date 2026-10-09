@@ -5,7 +5,8 @@
 
 `build` copies spec/backend*.spec with absolute paths and tools/frozen_e2e_hook.py
 as a runtime hook, then runs PyInstaller from the shared venv without modifying
-it (PYTHONPATH supplies the built vrct_audio and the pinned headless cv2).
+it (PYTHONPATH supplies the built vrct_audio / vrct_graphics and the pinned headless cv2).
+The hook also checks vrct_graphics inside the exe (D3D11 device, embedded shaders, compose).
 `run` copies the dist to a fresh folder with an isolated config.json and the
 Whisper weights, starts the exe, enables mic transcription over the real stdin
 IPC, plays SAPI speech through the hook's capture source and checks the
@@ -52,7 +53,8 @@ def build(mode, args):
     spec = WORK / f"{mode}.spec"
     spec.write_text(text, encoding="utf-8")
     env = {**os.environ, "PYTHONPATH": os.pathsep.join(
-        [str(ROOT / "tmp" / "native-site"), args.cv2_site, str(ROOT / "src-python")])}
+        [str(ROOT / "tmp" / "native-site"), str(ROOT / "tmp" / "graphics-site"), args.cv2_site,
+         str(ROOT / "src-python")])}
     command = [str(venv / "Scripts" / "python.exe"), "-m", "PyInstaller", str(spec), "--noconfirm",
                "--distpath", str(WORK / f"dist-{mode}"), "--workpath", str(WORK / f"work-{mode}"),
                "--log-level", "WARN"]
@@ -211,6 +213,7 @@ def run(mode, args):
     report.update(compute_mode=responses.get("/get/data/compute_mode"), worker=worker, messages=texts,
                   utterances=utterances, stderr_bytes=len(stderr_text.encode()))
     ok = (not report["stderr_bytes"] and report["error_log_only_expected_http"]
+          and worker.get("graphics_check", {}).get("ok") is True
           and worker["counts"].get("whisper_calls", 0) > 0
           and not worker["counts"].get("google_calls") and not worker["counts"].get("real_recording_opens")
           and worker["config"]["engine"] == "Whisper" and all(u["cer"] <= 0.5 for u in utterances)

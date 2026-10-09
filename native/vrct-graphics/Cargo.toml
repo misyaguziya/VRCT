@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.83"
 license = "MIT"
-description = "Stage-1 PoC: Windows.Graphics.Capture into a Rust-owned D3D11 texture for SteamVR overlays"
+description = "VRCT VR UI image path: Windows.Graphics.Capture into a Rust-owned D3D11 texture for SteamVR overlays"
 
 [lib]
 name = "vrct_graphics"

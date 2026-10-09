@@ -13,6 +13,8 @@ python -m pip install --no-cache-dir --force-reinstall -r requirements.txt
 if errorlevel 1 exit /b 1
 python -m pip install --no-deps ./native/vrct-audio
 if errorlevel 1 exit /b 1
+python -m pip install --no-deps ./native/vrct-graphics
+if errorlevel 1 exit /b 1
 REM rapidocr/windows-capture pull in opencv-python, which overwrites headless cv2.
 REM Uninstall the overlapping GUI files first, then restore the pinned headless build.
 python -m pip uninstall --yes opencv-python
@@ -37,6 +39,8 @@ python.exe -m pip install --upgrade pip
 python -m pip install --no-cache-dir --force-reinstall -r requirements_cuda.txt
 if errorlevel 1 exit /b 1
 python -m pip install --no-deps ./native/vrct-audio
+if errorlevel 1 exit /b 1
+python -m pip install --no-deps ./native/vrct-graphics
 if errorlevel 1 exit /b 1
 REM rapidocr/windows-capture pull in opencv-python, which overwrites headless cv2.
 REM Uninstall the overlapping GUI files first, then restore the pinned headless build.
