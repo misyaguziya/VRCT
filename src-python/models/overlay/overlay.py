@@ -49,8 +49,9 @@ _STEP_BREAKDOWN_MIN_MS = 50
 # VR画面の転送を1フレームずつ JSONL に記録する先 (Rust化の段階0の計測。tools/benchmark_overlay_live.py)。未設定なら記録しない
 _PROFILE_PATH = os.environ.get("VRCT_OVERLAY_PROFILE")
 _PROFILE_WINDOW_SEC = 2.0  # 集計の行を書く間隔 (計測ツールが短いシナリオでも区間に収まる行だけ数えられるように)
-# VR画面の加工と転送を GPU (native/vrct-graphics、DirectX のテクスチャ) で行う。Rust化の段階2。既定は OFF (OpenGL)
-_GPU_ENABLED = os.environ.get("VRCT_OVERLAY_GPU") == "1"
+# VR画面の加工と転送を GPU (native/vrct-graphics、DirectX のテクスチャ) で行う。段階5の比較で既定にした
+# (使えなければ OpenGL に戻る)。VRCT_OVERLAY_GPU=0 なら最初から OpenGL
+_GPU_ENABLED = os.environ.get("VRCT_OVERLAY_GPU") != "0"
 # オーバーレイのスレッドの優先度 (Windows の THREAD_PRIORITY_ABOVE_NORMAL)。OCR (onnxruntime の複数スレッド) が
 # 動くと、純粋なメモリのコピーまで数倍に遅れた (実機で 1秒あたり 60〜150ms → 300〜600ms。GIL の切り替えを
 # 短くしても変わらなかった)。CPU の取り合いで待たされると見て、少しだけ先に動かす。最大の優先度にはしない

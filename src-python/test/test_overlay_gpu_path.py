@@ -1,4 +1,4 @@
-"""The VRCT_OVERLAY_GPU path of overlay.transferCapture with a fake CaptureSession (no GPU, no SteamVR)."""
+"""The GPU path (default; VRCT_OVERLAY_GPU=0 turns it off) of overlay.transferCapture with a fake CaptureSession (no GPU, no SteamVR)."""
 
 import threading
 from unittest.mock import patch
@@ -162,7 +162,7 @@ def test_close_only_on_the_owner_thread():
     assert not fake.closed and overlay.gpu is None
 
 
-def test_gpu_is_off_by_default():
+def test_gpu_can_be_turned_off():  # VRCT_OVERLAY_GPU=0
     overlay = overlay_fixture()
     with patch.object(overlay_module, "_GPU_ENABLED", False), \
          patch.dict("sys.modules", {"vrct_graphics": None}):

@@ -1,0 +1,79 @@
+{
+  "inputs": {
+    "gl": "docs\\benchmarks\\overlay_live_stage5b_gl_20261009.json",
+    "gpu": "docs\\benchmarks\\overlay_live_stage5b_gpu_20261009.json"
+  },
+  "gl": {
+    "sets": 3,
+    "s2_image_path_ms_per_s": [
+      310.33,
+      139.93,
+      238.86
+    ],
+    "s1_image_path_ms_per_s": [
+      98.04,
+      24.24,
+      24.24
+    ],
+    "s2_frames_submitted": [
+      127,
+      58,
+      92
+    ],
+    "backends": [
+      "gl"
+    ],
+    "printwindow_frames": 0,
+    "process_cpu_ms_per_s": {
+      "S0": 1943.81,
+      "S1": 2056.37,
+      "S2": 2123.63
+    },
+    "total_render_gpu_p95_ms": {
+      "S0": 53.45,
+      "S2": 55.04
+    },
+    "vrchat_dropped": 0
+  },
+  "gpu": {
+    "sets": 3,
+    "s2_image_path_ms_per_s": [
+      66.17,
+      74.17,
+      41.49
+    ],
+    "s1_image_path_ms_per_s": [
+      23.67,
+      27.6,
+      25.87
+    ],
+    "s2_frames_submitted": [
+      122,
+      192,
+      127
+    ],
+    "backends": [
+      "gpu"
+    ],
+    "printwindow_frames": 1,
+    "process_cpu_ms_per_s": {
+      "S0": 2166.17,
+      "S1": 2110.42,
+      "S2": 2104.46
+    },
+    "total_render_gpu_p95_ms": {
+      "S0": 53.74,
+      "S2": 57.55
+    },
+    "vrchat_dropped": 0
+  },
+  "ratio_s2_image_path_gpu_over_gl": 0.264,
+  "checks": {
+    "gpu_image_path_le_25pct_of_gl": false,
+    "no_printwindow_on_gpu": false,
+    "no_dropped_frames_added": true,
+    "reports_are_gl_then_gpu": true,
+    "workload_similar_frames_ratio": 1.59
+  },
+  "adopt": false
+}

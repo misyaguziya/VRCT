@@ -1,0 +1,645 @@
+{
+  "utc_start": "20261009T150443Z",
+  "pid": 25908,
+  "process": "python.exe",
+  "dpi_note": "150%",
+  "hmd": "Meta Quest 3",
+  "settings": {
+    "pid": 25908,
+    "profile_jsonl": "tmp\\overlay_profile\\stage5b-gl.jsonl",
+    "out": "docs\\benchmarks\\overlay_live_stage5b_gl_20261009.json",
+    "sets": 3,
+    "prepare": 10,
+    "warmup": 5,
+    "duration": 30,
+    "compare": null,
+    "dpi_note": "150%",
+    "dry_run": false
+  },
+  "source_sha256": {
+    "tools/benchmark_overlay_live.py": "01780011ce8e68a0f0b57e172b8165a17357c6c51b71f9952ab55d413884e889",
+    "src-python/models/overlay/overlay.py": "57457e529f09117caea2b8b55517e073d5147acb9afc601029b10cd99a1e13d5",
+    "src-python/models/overlay/window_capture.py": "1801b1ded30c2090b4fd47e85bb0bd44e5662f1bf1447063f872f3fa8b52292a"
+  },
+  "sets": [
+    {
+      "S0": {
+        "seconds": 30.56,
+        "cpu_ms_per_s": 1953.96,
+        "busiest_threads_ms_per_s": [
+          649.78,
+          353.27,
+          343.55
+        ],
+        "rss_mb_max": 1453.6,
+        "handles_delta": 3,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 41.883,
+            "p95": 52.889
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.293,
+            "p95": 0.332
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.757,
+            "p95": 1.192
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 49.195,
+            "p95": 61.634
+          },
+          "frames": 603,
+          "reprojected_frames": 603
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2778,
+          "dropped": 0,
+          "reprojected": 2175,
+          "same_app": true
+        }
+      },
+      "S1": {
+        "seconds": 30.95,
+        "cpu_ms_per_s": 2073.2,
+        "busiest_threads_ms_per_s": [
+          628.98,
+          352.85,
+          345.79
+        ],
+        "rss_mb_max": 1564.0,
+        "handles_delta": -11,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 44.013,
+            "p95": 58.862
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.322,
+            "p95": 0.496
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.819,
+            "p95": 1.297
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 51.869,
+            "p95": 71.143
+          },
+          "frames": 576,
+          "reprojected_frames": 576
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2788,
+          "dropped": 0,
+          "reprojected": 2212,
+          "same_app": true
+        },
+        "overlay_frames": {
+          "submitted": 60,
+          "convert_ms": {
+            "p50": 7.21,
+            "p95": 37.188,
+            "ms_per_s": 21.38
+          },
+          "upload_ms": {
+            "p50": 6.375,
+            "p95": 36.242,
+            "ms_per_s": 17.54
+          },
+          "finish_ms": {
+            "p50": 4.308,
+            "p95": 36.494,
+            "ms_per_s": 13.44
+          },
+          "set_ms": {
+            "p50": 1.643,
+            "p95": 5.366,
+            "ms_per_s": 5.84
+          },
+          "arrive_to_submit_ms": {
+            "p50": null,
+            "p95": null,
+            "ms_per_s": 0.0
+          },
+          "printwindow": 0,
+          "texture": [
+            2128,
+            1136
+          ],
+          "client": [
+            1690,
+            978
+          ]
+        },
+        "overlay_windows": {
+          "frames_submitted": 50,
+          "frames_unchanged": 186,
+          "wgc_arrivals": 33,
+          "wgc_copy_ms": 1077.21,
+          "overlay_thread_cpu_s": 1.703,
+          "dur_s": 28.359,
+          "backends": [
+            "gl"
+          ]
+        },
+        "image_path_ms_per_s": 98.04
+      },
+      "S2": {
+        "seconds": 30.0,
+        "cpu_ms_per_s": 2206.25,
+        "busiest_threads_ms_per_s": [
+          596.88,
+          329.69,
+          324.48
+        ],
+        "rss_mb_max": 1569.4,
+        "handles_delta": -2,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 20.2,
+            "p95": 51.608
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.328,
+            "p95": 0.416
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.775,
+            "p95": 1.407
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 45.434,
+            "p95": 65.147
+          },
+          "frames": 638,
+          "reprojected_frames": 638
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2698,
+          "dropped": 0,
+          "reprojected": 2060,
+          "same_app": true
+        },
+        "overlay_frames": {
+          "submitted": 137,
+          "convert_ms": {
+            "p50": 6.773,
+            "p95": 41.422,
+            "ms_per_s": 58.2
+          },
+          "upload_ms": {
+            "p50": 5.851,
+            "p95": 45.053,
+            "ms_per_s": 56.52
+          },
+          "finish_ms": {
+            "p50": 3.432,
+            "p95": 39.276,
+            "ms_per_s": 39.5
+          },
+          "set_ms": {
+            "p50": 1.995,
+            "p95": 32.872,
+            "ms_per_s": 21.87
+          },
+          "arrive_to_submit_ms": {
+            "p50": null,
+            "p95": null,
+            "ms_per_s": 0.0
+          },
+          "printwindow": 0,
+          "texture": [
+            2128,
+            1136
+          ],
+          "client": [
+            1690,
+            978
+          ]
+        },
+        "overlay_windows": {
+          "frames_submitted": 127,
+          "frames_unchanged": 231,
+          "wgc_arrivals": 166,
+          "wgc_copy_ms": 5763.707,
+          "overlay_thread_cpu_s": 3.047,
+          "dur_s": 28.391,
+          "backends": [
+            "gl"
+          ]
+        },
+        "image_path_ms_per_s": 310.33
+      }
+    },
+    {
+      "S0": {
+        "seconds": 30.75,
+        "cpu_ms_per_s": 1928.86,
+        "busiest_threads_ms_per_s": [
+          635.16,
+          360.77,
+          348.07
+        ],
+        "rss_mb_max": 1550.1,
+        "handles_delta": 0,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 43.165,
+            "p95": 54.147
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.285,
+            "p95": 0.335
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.778,
+            "p95": 1.227
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 48.644,
+            "p95": 60.836
+          },
+          "frames": 610,
+          "reprojected_frames": 610
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2774,
+          "dropped": 0,
+          "reprojected": 2164,
+          "same_app": true
+        }
+      },
+      "S1": {
+        "seconds": 30.83,
+        "cpu_ms_per_s": 2065.9,
+        "busiest_threads_ms_per_s": [
+          653.83,
+          363.91,
+          357.83
+        ],
+        "rss_mb_max": 1593.6,
+        "handles_delta": 2,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 42.716,
+            "p95": 51.772
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.33,
+            "p95": 0.385
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.81,
+            "p95": 1.277
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 48.003,
+            "p95": 59.759
+          },
+          "frames": 619,
+          "reprojected_frames": 619
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2774,
+          "dropped": 0,
+          "reprojected": 2155,
+          "same_app": true
+        },
+        "overlay_windows": {
+          "frames_submitted": 0,
+          "frames_unchanged": 110,
+          "wgc_arrivals": 0,
+          "wgc_copy_ms": 0,
+          "overlay_thread_cpu_s": 0.687,
+          "dur_s": 28.343,
+          "backends": [
+            "gl"
+          ]
+        },
+        "image_path_ms_per_s": 24.24
+      },
+      "S2": {
+        "seconds": 30.95,
+        "cpu_ms_per_s": 2128.23,
+        "busiest_threads_ms_per_s": [
+          636.04,
+          343.77,
+          340.74
+        ],
+        "rss_mb_max": 1597.6,
+        "handles_delta": -1,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 45.289,
+            "p95": 56.45
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.317,
+            "p95": 0.389
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.8,
+            "p95": 1.214
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 51.059,
+            "p95": 66.814
+          },
+          "frames": 582,
+          "reprojected_frames": 582
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2786,
+          "dropped": 0,
+          "reprojected": 2204,
+          "same_app": true
+        },
+        "overlay_frames": {
+          "submitted": 62,
+          "convert_ms": {
+            "p50": 6.525,
+            "p95": 34.083,
+            "ms_per_s": 22.54
+          },
+          "upload_ms": {
+            "p50": 5.809,
+            "p95": 35.716,
+            "ms_per_s": 16.87
+          },
+          "finish_ms": {
+            "p50": 3.383,
+            "p95": 36.242,
+            "ms_per_s": 15.35
+          },
+          "set_ms": {
+            "p50": 1.937,
+            "p95": 5.828,
+            "ms_per_s": 6.77
+          },
+          "arrive_to_submit_ms": {
+            "p50": null,
+            "p95": null,
+            "ms_per_s": 0.0
+          },
+          "printwindow": 0,
+          "texture": [
+            2128,
+            1136
+          ],
+          "client": [
+            1690,
+            978
+          ]
+        },
+        "overlay_windows": {
+          "frames_submitted": 58,
+          "frames_unchanged": 202,
+          "wgc_arrivals": 67,
+          "wgc_copy_ms": 2118.067,
+          "overlay_thread_cpu_s": 1.859,
+          "dur_s": 28.421,
+          "backends": [
+            "gl"
+          ]
+        },
+        "image_path_ms_per_s": 139.93
+      }
+    },
+    {
+      "S0": {
+        "seconds": 30.7,
+        "cpu_ms_per_s": 1948.61,
+        "busiest_threads_ms_per_s": [
+          631.05,
+          327.23,
+          326.72
+        ],
+        "rss_mb_max": 1573.2,
+        "handles_delta": 2,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 44.033,
+            "p95": 53.322
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.283,
+            "p95": 0.327
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.755,
+            "p95": 1.147
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 48.885,
+            "p95": 61.276
+          },
+          "frames": 606,
+          "reprojected_frames": 606
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2776,
+          "dropped": 0,
+          "reprojected": 2170,
+          "same_app": true
+        }
+      },
+      "S1": {
+        "seconds": 30.66,
+        "cpu_ms_per_s": 2030.02,
+        "busiest_threads_ms_per_s": [
+          669.2,
+          360.34,
+          359.83
+        ],
+        "rss_mb_max": 1611.4,
+        "handles_delta": 2,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 42.18,
+            "p95": 51.212
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.309,
+            "p95": 0.353
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.792,
+            "p95": 1.292
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 47.921,
+            "p95": 60.922
+          },
+          "frames": 615,
+          "reprojected_frames": 615
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2765,
+          "dropped": 0,
+          "reprojected": 2150,
+          "same_app": true
+        },
+        "overlay_frames": {
+          "submitted": 5,
+          "convert_ms": {
+            "p50": 6.443,
+            "p95": 7.013,
+            "ms_per_s": 1.02
+          },
+          "upload_ms": {
+            "p50": 5.954,
+            "p95": 7.139,
+            "ms_per_s": 0.86
+          },
+          "finish_ms": {
+            "p50": 1.814,
+            "p95": 6.639,
+            "ms_per_s": 0.42
+          },
+          "set_ms": {
+            "p50": 2.379,
+            "p95": 4.185,
+            "ms_per_s": 0.38
+          },
+          "arrive_to_submit_ms": {
+            "p50": null,
+            "p95": null,
+            "ms_per_s": 0.0
+          },
+          "printwindow": 0,
+          "texture": [
+            2128,
+            1136
+          ],
+          "client": [
+            1690,
+            978
+          ]
+        },
+        "overlay_windows": {
+          "frames_submitted": 0,
+          "frames_unchanged": 115,
+          "wgc_arrivals": 0,
+          "wgc_copy_ms": 0,
+          "overlay_thread_cpu_s": 0.687,
+          "dur_s": 28.343,
+          "backends": [
+            "gl"
+          ]
+        },
+        "image_path_ms_per_s": 24.24
+      },
+      "S2": {
+        "seconds": 30.02,
+        "cpu_ms_per_s": 2036.41,
+        "busiest_threads_ms_per_s": [
+          597.08,
+          321.7,
+          304.53
+        ],
+        "rss_mb_max": 1613.7,
+        "handles_delta": 2,
+        "compositor": {
+          "m_flTotalRenderGpuMs": {
+            "p50": 45.526,
+            "p95": 57.059
+          },
+          "m_flCompositorRenderGpuMs": {
+            "p50": 0.325,
+            "p95": 0.388
+          },
+          "m_flCompositorRenderCpuMs": {
+            "p50": 0.817,
+            "p95": 1.274
+          },
+          "m_flClientFrameIntervalMs": {
+            "p50": 50.643,
+            "p95": 66.089
+          },
+          "frames": 567,
+          "reprojected_frames": 567
+        },
+        "vrchat_cumulative_delta": {
+          "presents": 2704,
+          "dropped": 0,
+          "reprojected": 2137,
+          "same_app": true
+        },
+        "overlay_frames": {
+          "submitted": 111,
+          "convert_ms": {
+            "p50": 7.155,
+            "p95": 50.475,
+            "ms_per_s": 56.08
+          },
+          "upload_ms": {
+            "p50": 6.21,
+            "p95": 53.699,
+            "ms_per_s": 54.23
+          },
+          "finish_ms": {
+            "p50": 2.926,
+            "p95": 39.172,
+            "ms_per_s": 27.51
+          },
+          "set_ms": {
+            "p50": 1.964,
+            "p95": 36.225,
+            "ms_per_s": 17.46
+          },
+          "arrive_to_submit_ms": {
+            "p50": null,
+            "p95": null,
+            "ms_per_s": 0.0
+          },
+          "printwindow": 0,
+          "texture": [
+            2128,
+            1136
+          ],
+          "client": [
+            1690,
+            978
+          ]
+        },
+        "overlay_windows": {
+          "frames_submitted": 92,
+          "frames_unchanged": 198,
+          "wgc_arrivals": 124,
+          "wgc_copy_ms": 4504.147,
+          "overlay_thread_cpu_s": 2.266,
+          "dur_s": 28.343,
+          "backends": [
+            "gl"
+          ]
+        },
+        "image_path_ms_per_s": 238.86
+      }
+    }
+  ],
+  "status": "COMPLETE",
+  "decision": {
+    "verdict": "A_gpu_direct",
+    "excluded_sets": [],
+    "s2_minus_s0_cpu_ms_per_s": [
+      252.29,
+      199.37,
+      87.8
+    ],
+    "s0_cpu_spread_ms_per_s": 25.1,
+    "compositor_gpu_p95_worse": true,
+    "s2_image_path_ms_per_s": [
+      310.33,
+      139.93,
+      238.86
+    ],
+    "s2_overlay_ms_per_s_mean": {
+      "convert_ms": 45.61,
+      "upload_ms": 42.54,
+      "finish_ms": 27.45,
+      "set_ms": 15.37
+    }
+  }
+}

@@ -327,3 +327,15 @@
 - 10分連続(SteamVRなし、`tools/probe_overlay_d3d11.py soak`): 20Hzで画面を変え続け、30秒ごとにWGC停止/開始、120秒ごとにセッション作り直し。11214フレーム・エラー0、poll p50 0.28ms/p95 0.42ms、150秒以降の増分はRSS +2.9MB・ハンドル+7・GPU全体のメモリ0でPASS(`docs/benchmarks/overlay_gpu_soak_2026-10-09.json`)。途中、プロセス別のGPUメモリカウンタがWGC開始1回ごとに約1フレーム分(6.6MB)増え続けたが、GPU全体の使用量は30回の再開始でも不変・OpenGL版のwindows-captureでも同じ増え方で、カウンタの見かけ(Microsoft KB4490156と同種)と判断。
 - 独立レビュー: highは`target/`未ignore(修正)、mediumは成功時に失敗回数が戻らない点(修正・テスト追加)、旧形式レポートをcompareで判定できない点(退避・テスト追加)。pytest全体1909件成功。
 - 残り(実機): 段階5の再計測(重い処理ONのままGL/GPU各約7分)と既定ON判断、SteamVR終了時の挙動、175%でのOpenGL退避。
+
+## サイクル21 — 段階5の比較とGPU経路の既定化（2026-10-10）
+
+- 計測(ユーザー実施、Quest 3・150%、文字起こし・翻訳・OCRはON): OpenGL版`overlay_live_stage5b_gl_20261009.json`・GPU版`..._gpu_...`を3セットずつ、`--compare`の結果は`overlay_stage5_compare_20261009.json`。
+- 事前基準では不採用(`adopt: false`)。外れた3項目と評価:
+  - S2の画像経路CPU: OpenGL平均230ms/s(140〜310)→GPU 61ms/s(41〜74)で比26.4%(基準25%以下)。ただしGPU版は同じ時間に1.59倍のフレームを送っており、待機分(S1、両版とも約24ms/s)を引いた1フレームあたりはOpenGL約56〜65ms→GPU約4〜10ms(約1/8)。
+  - フレーム数比1.59(基準0.8〜1.25): 「GPUが仕事を減らして速く見える」ことを防ぐ項目だが、今回は逆にOpenGLが処理しきれず更新が少ない。手でのスクロール量のばらつきも含む。
+  - GPUでPrintWindow 1回: S2中にログが伸びてウィンドウの大きさが変わり、新しい大きさのWGC画像が届くまでの1枚(設計どおり。OpenGLにもある)。開始失敗でPrintWindowに固定される不具合ではない。他の11回はVR UI ON直後の起動演出中で集計外。
+  - その他: VRChatのdroppedは両方0。compositorのGPU時間p95はGPU版S2が約2.5ms高いが、OpenGL版自身のセット間の幅(51.6〜57.1ms)の中。重い処理の影響で両方とも描画は重い(p50約43ms、約78%が再投影)。
+- ユーザー判断(A): 上記を記録したうえでGPU経路を既定にする。`VRCT_OVERLAY_GPU=0`で最初からOpenGL。GPUを作れない・失敗したときにOpenGLへ戻る経路は維持。テストはOpenGL前提のため`src-python/conftest.py`で`VRCT_OVERLAY_GPU=0`を既定にし、GPU経路のテストは個別に有効化。pytest全体1909件成功。
+- 配布物: サイクル20の段階4検証ビルド(`vrct_graphics`同梱・exe内の自己チェックPASS)以降の差分は既定値1行のみで再ビルドはしていない。exe内でSteamVRに描く経路の確認は実機が必要。
+- 未確認: SteamVR終了・再起動時の挙動、表示倍率175%でのOpenGL退避(手順3・4、記録上は未実施)。
