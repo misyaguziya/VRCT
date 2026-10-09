@@ -101,7 +101,7 @@ const WindowButton = ({ Svg, label, name = label, is_open, is_attention = false,
     })} aria-label={is_attention ? t("vr_panel.recall_log") : name} aria-pressed={is_open}
         tipTitle={name} tipState={t(`vr_panel.tooltip.${is_holding ? "holding" : is_attention ? "lost" : is_open ? "open" : "hidden"}`)}
         tipHelp={t(`vr_panel.tooltip.${is_holding ? "holding_help" : is_attention ? "click_recall" :
-            onLongPress ? "log_help" : is_open ? "close_view" : "open_view"}`)}
+            onLongPress ? (is_open ? "log_close_help" : "log_open_help") : is_open ? "close_view" : "open_view"}`)}
         onMouseDown={onMouseDown} onMouseUp={stopTimer} onMouseLeave={stopTimer} onBlur={stopTimer}
         onClick={() => { if (!long_pressed.current) onClick(); long_pressed.current = false; }}>
         <Svg className={styles.icon} aria-hidden="true" />
