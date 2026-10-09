@@ -53,11 +53,11 @@ export const VrToolbar = () => {
         </div>
         <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.font")}>
             <Button className={styles.font_button} label={t("vr_panel.tooltip.smaller")} state={font}
-                tipState={`${current}: ${font.data}`} tipHelp={t(`vr_panel.tooltip.${font.data <= FONT_SIZE.min ? "font_limit" : "font_help"}`)}
+                tipState={t("vr_panel.tooltip.font_current", { size: font.data })} tipHelp={t(`vr_panel.tooltip.${font.data <= FONT_SIZE.min ? "font_limit" : "font_help"}`)}
                 disabled={font.data <= FONT_SIZE.min} onClick={() => setOverlayVrPanelFontSize(font.data - 1)}>A−</Button>
             <span className={styles.value} aria-label={`${t("vr_panel.tooltip.font")}: ${font.data}`}>{font.data}</span>
             <Button className={styles.font_button} label={t("vr_panel.tooltip.larger")} state={font}
-                tipState={`${current}: ${font.data}`} tipHelp={t(`vr_panel.tooltip.${font.data >= FONT_SIZE.max ? "font_limit" : "font_help"}`)}
+                tipState={t("vr_panel.tooltip.font_current", { size: font.data })} tipHelp={t(`vr_panel.tooltip.${font.data >= FONT_SIZE.max ? "font_limit" : "font_help"}`)}
                 disabled={font.data >= FONT_SIZE.max} onClick={() => setOverlayVrPanelFontSize(font.data + 1)}>A＋</Button>
         </div>
         <div className={styles.group}>
