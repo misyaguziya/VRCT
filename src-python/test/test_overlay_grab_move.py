@@ -1742,7 +1742,7 @@ class PanelStreamTest(unittest.TestCase):
         self.wc.WindowStream.side_effect = [OSError("GraphicsCaptureItem"), self.stream]
         with patch("models.overlay.overlay.errorLogging"):
             self.overlay.updatePanel()
-        self.assertTrue(self.overlay.stream_unavailable)
+        self.assertEqual(self.overlay.stream_failures, 1)  # 試し直すまでは PrintWindow
         self.wc.findWindow.return_value = 123
         self.overlay.setVrPanelEnabled(False)
         self.overlay.setVrPanelEnabled(True)
@@ -1764,8 +1764,44 @@ class PanelStreamTest(unittest.TestCase):
         self.stream.closed = True
         self.overlay.panel_last_capture = 0.0
         self.overlay.updatePanel()
-        self.assertTrue(self.overlay.stream_unavailable)
+        self.assertEqual(self.overlay.stream_failures, 1)
+        self.assertIsNone(self.overlay.panel_stream)
         self.stream.close.assert_called_once()
+
+    def test_failed_start_is_retried_after_a_short_wait(self):
+        """ウィンドウを作った直後に始められなくても、少し待って試し直す (次の ON まで PrintWindow に固定しない)。"""
+        self.wc.WindowStream.side_effect = [OSError("0x80070057"), self.stream]
+        with patch("models.overlay.overlay.errorLogging"):
+            self.overlay.updatePanel()
+        self.assertIsNone(self.overlay.panel_stream)
+        self.overlay.panel_last_capture = 0.0
+        self.overlay.updatePanel()  # まだ待っている間は試さない
+        self.assertEqual(self.wc.WindowStream.call_count, 1)
+        self.overlay.stream_retry_at = 0.0  # 待ち時間が過ぎた
+        self.overlay.panel_last_capture = 0.0
+        self.overlay.updatePanel()
+        self.assertIs(self.overlay.panel_stream, self.stream)
+        self.assertFalse(self.overlay.stream_unavailable)
+
+    def test_gives_up_after_repeated_failures(self):
+        from models.overlay.overlay import _STREAM_START_ATTEMPTS
+
+        self.wc.WindowStream.side_effect = OSError("0x80070057")
+        with patch("models.overlay.overlay.errorLogging"):
+            for _ in range(_STREAM_START_ATTEMPTS + 2):
+                self.overlay.stream_retry_at = 0.0
+                self.overlay.panel_last_capture = 0.0
+                self.overlay.updatePanel()
+        self.assertTrue(self.overlay.stream_unavailable)
+        self.assertEqual(self.wc.WindowStream.call_count, _STREAM_START_ATTEMPTS)
+        self.wc.captureWindowRaw.assert_called()
+
+    def test_a_captured_frame_clears_the_failure_count(self):
+        from models.overlay.overlay import _STREAM_START_ATTEMPTS
+
+        self.overlay.stream_failures = _STREAM_START_ATTEMPTS - 1
+        self.overlay.updatePanel()
+        self.assertEqual(self.overlay.stream_failures, 0)
 
     def test_new_window_gets_a_new_stream(self):
         self.overlay.updatePanel()

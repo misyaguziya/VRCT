@@ -118,7 +118,7 @@ class VrPanelCaptureRecoveryTest(unittest.TestCase):
     def test_failed_stream_is_retried_through_controller_off_on(self):
         self.wc.WindowStream.side_effect = [OSError("GraphicsCaptureItem"), self.stream]
         self._tick()
-        self.assertTrue(self.overlay.stream_unavailable)
+        self.assertEqual(self.overlay.stream_failures, 1)
         self.overlay.transferCapture.assert_called_once_with(self.printed, ANY)
         self.overlay.transferCapture.reset_mock()
 
@@ -166,7 +166,7 @@ class VrPanelCaptureRecoveryTest(unittest.TestCase):
         self._tick()
         self._off_on()
         self._tick()
-        self.assertTrue(self.overlay.stream_unavailable)
+        self.assertEqual(self.overlay.stream_failures, 1)  # OFF/ON で数え直し、待つ間は試さない
         self.assertEqual(self.wc.WindowStream.call_count, 2)
         self.overlay.panel_last_capture = 0
         self._tick()
