@@ -8,6 +8,7 @@ import { useStore_MicVolume, useStore_SelectableFontFamilyList, useStore_Speaker
 import { ui_configs } from "@ui_configs";
 
 import HmdSvg from "@images/mui_head_mounted_device.svg?react";
+import ConfigurationSvg from "@images/configuration.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import AppearanceSvg from "@images/mui_palette.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
@@ -89,7 +90,7 @@ export const VrSettingsWindow = ({ onClose }) => {
     const category_label = (id) => (id === "vr" ? "VR" : t(`config_page.side_menu_labels.${id}`));
 
     return (
-        <VrWindow Icon={HmdSvg} title={t("vr_panel.window_settings")} onClose={onClose} close_label={t("vr_panel.settings.close")} is_lockable={false}>
+        <VrWindow Icon={ConfigurationSvg} title={t("vr_panel.window_settings")} onClose={onClose} close_label={t("vr_panel.settings.close")} is_lockable={false}>
             <div className={styles.window_body}>
                 <p className={styles.banner}>
                     <WarningSvg className={styles.banner_icon} aria-hidden="true" />

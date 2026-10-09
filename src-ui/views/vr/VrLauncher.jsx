@@ -9,7 +9,8 @@ import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 import CopyThinSvg from "@images/copy_thin.svg?react";
-import HmdSvg from "@images/mui_head_mounted_device.svg?react";
+import ConfigurationSvg from "@images/configuration.svg?react";
+import LanguageSvg from "@images/mui_language.svg?react";
 import vrct_logo from "@images/vrct_logo_for_dark_mode.png";
 import vrct_icon from "@images/vrct_icon_for_vr_intro.png";
 import { VrTooltipButton } from "./VrTooltip";
@@ -51,9 +52,9 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup }) => {
                 <WindowButton Svg={CopyThinSvg} label={is_log_lost ? t("vr_panel.recall_log") : t("vr_panel.window_log")}
                     name={t("vr_panel.window_log")} is_open={windows.log} is_attention={is_log_lost}
                     onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog} onLongPress={recallLog} />
-                <WindowButton Svg={TranslationSvg} label={t("vr_panel.window_language")}
+                <WindowButton Svg={LanguageSvg} label={t("vr_panel.window_language")}
                     is_open={windows.popup === "language"} onClick={() => togglePopup("language")} />
-                <WindowButton Svg={HmdSvg} label={t("vr_panel.window_settings")}
+                <WindowButton Svg={ConfigurationSvg} label={t("vr_panel.window_settings")}
                     is_open={windows.popup === "settings"} onClick={() => togglePopup("settings")} />
             </div>
         </div>
@@ -72,7 +73,7 @@ const FunctionButton = ({ Svg, label, name, state, onClick, is_locked }) => {
         tipHelp={is_locked ? t("vr_panel.locked_by_config_page") : is_pending ? t("vr_panel.tooltip.busy_help") :
             t(`vr_panel.tooltip.${state.data === true ? "disable" : "enable"}`)}
         onClick={() => { if (!is_pending && !is_locked) onClick(); }}>
-        <Svg className={styles.icon} aria-hidden="true" /><span className={styles.label}>{label}</span>
+        <Svg className={styles.icon} aria-hidden="true" />
         {(is_locked || is_pending) && <span className={styles.state_mark} aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d={is_locked ? "M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11" :
                 "M6 3h12M6 21h12M7 3v4l5 5-5 5v4M17 3v4l-5 5 5 5v4"} /></svg>
@@ -103,6 +104,6 @@ const WindowButton = ({ Svg, label, name = label, is_open, is_attention = false,
             onLongPress ? "log_help" : is_open ? "close_view" : "open_view"}`)}
         onMouseDown={onMouseDown} onMouseUp={stopTimer} onMouseLeave={stopTimer} onBlur={stopTimer}
         onClick={() => { if (!long_pressed.current) onClick(); long_pressed.current = false; }}>
-        <Svg className={styles.icon} aria-hidden="true" /><span className={styles.label}>{label}</span>
+        <Svg className={styles.icon} aria-hidden="true" />
     </VrTooltipButton>;
 };
