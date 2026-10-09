@@ -48,6 +48,8 @@ _STEP_SLOW_SEC = 0.05
 _STEP_BREAKDOWN_MIN_MS = 50
 # VR画面の転送を1フレームずつ JSONL に記録する先 (Rust化の段階0の計測。tools/benchmark_overlay_live.py)。未設定なら記録しない
 _PROFILE_PATH = os.environ.get("VRCT_OVERLAY_PROFILE")
+# VR画面の加工と転送を GPU (native/vrct-graphics、DirectX のテクスチャ) で行う。Rust化の段階2。既定は OFF (OpenGL)
+_GPU_ENABLED = os.environ.get("VRCT_OVERLAY_GPU") == "1"
 # オーバーレイのスレッドの優先度 (Windows の THREAD_PRIORITY_ABOVE_NORMAL)。OCR (onnxruntime の複数スレッド) が
 # 動くと、純粋なメモリのコピーまで数倍に遅れた (実機で 1秒あたり 60〜150ms → 300〜600ms。GIL の切り替えを
 # 短くしても変わらなかった)。CPU の取り合いで待たされると見て、少しだけ先に動かす。最大の優先度にはしない
@@ -115,11 +117,11 @@ _COLOR_GRABBING = (0xB7 / 255, 0xDE / 255, 0xD8 / 255)
 try:
     from . import overlay_utils as utils
     from . import window_capture
-    from .overlay_tooltip import LAUNCHER_WIDTH_PX, marker_matches, tooltip_mask, validate_tooltip
+    from .overlay_tooltip import LAUNCHER_WIDTH_PX, marker_matches, marker_points, marker_row_matches, tooltip_mask, validate_tooltip
 except ImportError:
     import overlay_utils as utils
     import window_capture
-    from overlay_tooltip import LAUNCHER_WIDTH_PX, marker_matches, tooltip_mask, validate_tooltip
+    from overlay_tooltip import LAUNCHER_WIDTH_PX, marker_matches, marker_points, marker_row_matches, tooltip_mask, validate_tooltip
 
 # VR UI: Tauriの "VRCT VR Panel" ウィンドウ1枚に複数のウィンドウ (ログ・ランチャー) を並べて描き、
 # 1回だけ撮影して、オーバーレイごとにその一部 (領域) を切り出して表示する。
@@ -804,8 +806,18 @@ class Overlay:
         self.profile_unchanged = 0
         self.profile_submitted = 0
         self.capture_source: Optional[str] = None
-        self.profile_cpu = (time.thread_time(), time.process_time())
+        # 前回の集計の (スレッド, その CPU 時間, プロセスの CPU 時間) と (撮影の id, 届いた回数, 複製の時間)。
+        # 撮影そのものは持たない (持つと、閉じた後も GPU の資源が別のスレッドまで生き残る)
+        self.profile_cpu: tuple = (None, 0.0, 0.0)
         self.profile_stream_counts: tuple = (None, 0, 0.0)
+        # _GPU_ENABLED のときの CaptureSession と、それを作ったスレッド (作ったスレッドでしか閉じられない)。
+        # gpu_failed は一度 OpenGL に戻したら、アプリを起動し直すまで GPU を使わない印
+        self.gpu: Optional[Any] = None
+        self.gpu_owner: Optional[int] = None
+        self.gpu_failed = False
+        self.gpu_mask_key: Optional[tuple] = None
+        self.gpu_vr_texture: Optional[Any] = None
+        self.gpu_retired: list = []
         self.panel_last_change: float = 0.0
         self.panel_image_size: Optional[tuple] = None
         # 撮影・転送の失敗が続いている回数と、最後に記録した失敗 (同じ失敗はログに1回だけ出す)
@@ -1189,10 +1201,11 @@ class Overlay:
         self.overlay.setOverlayWidthInMeters(self.tooltip_handle, bw * mpp)
         tx, ty, _, _ = self.layout["regions"][TOOLTIP]
         scale = self.panel_image_size[0] / self.layout["atlas"][0]
-        tw, th = self.gl["size"]
+        tw, th = self.panelTextureSize()
         bounds = openvr.VRTextureBounds_t()
         bounds.uMin, bounds.uMax = tx * scale / tw, (tx + bw) * scale / tw
-        bounds.vMin, bounds.vMax = 1 - (ty + 8) * scale / th, 1 - (ty + 8 + bh + 6) * scale / th
+        top, bottom = (ty + 8) * scale / th, (ty + 8 + bh + 6) * scale / th
+        bounds.vMin, bounds.vMax = (top, bottom) if self.gpu is not None else (1 - top, 1 - bottom)
         self.overlay.setOverlayTextureBounds(self.tooltip_handle, bounds)
         self.overlay.showOverlay(self.tooltip_handle)
         self.tooltip_shown = True
@@ -1260,16 +1273,20 @@ class Overlay:
         """今の並びに合わせて、各領域の表示範囲 (bounds) とログの大きさ・位置をオーバーレイに反映する。"""
         # 撮影画像はテクスチャの左上の一部 (newPanelTexture)。その割合で表示範囲を縮める
         fu, fv = 1.0, 1.0
-        if self.gl is not None and self.gl.get("size") and self.panel_image_size is not None:
-            fu = self.panel_image_size[0] / self.gl["size"][0]
-            fv = self.panel_image_size[1] / self.gl["size"][1]
+        texture_size = self.panelTextureSize()
+        if texture_size and self.panel_image_size is not None:
+            fu = self.panel_image_size[0] / texture_size[0]
+            fv = self.panel_image_size[1] / texture_size[1]
         for size, handle in self.vrRegionHandles().items():
             if size == TOOLTIP:
                 continue  # 吹き出しの表示範囲は updateTooltip が決める
             u_min, u_max, v_min, v_max = regionBounds(size, self.layout)
             bounds = openvr.VRTextureBounds_t()
             bounds.uMin, bounds.uMax = u_min * fu, u_max * fu
-            bounds.vMin, bounds.vMax = 1 - (1 - v_min) * fv, 1 - (1 - v_max) * fv
+            if self.gpu is not None:
+                bounds.vMin, bounds.vMax = (1 - v_min) * fv, (1 - v_max) * fv  # DirectX: 画像の上が v=0
+            else:
+                bounds.vMin, bounds.vMax = 1 - (1 - v_min) * fv, 1 - (1 - v_max) * fv
             self.overlay.setOverlayTextureBounds(handle, bounds)
         if self.initialized is True and PANEL in self.settings:
             s = self.settings[PANEL]
@@ -1284,6 +1301,12 @@ class Overlay:
         })
         if self.resizing is None:
             self.hideResizeGhost()
+
+    def panelTextureSize(self) -> Optional[tuple]:
+        """VR画面を渡しているテクスチャの大きさ (GPU なら DirectX、そうでなければ OpenGL)。"""
+        if self.gpu is not None:
+            return self.gpu.size
+        return None if self.gl is None else self.gl.get("size")
 
     def vrRegionSizes(self) -> list:
         return [size for size in VR_REGIONS if size in self.settings]
@@ -1427,6 +1450,9 @@ class Overlay:
         self.panel_last_change = now
         self.markStep("panel:convert")
         stamps = [time.perf_counter()] if _PROFILE_PATH else None
+        if self.gpu is not None:
+            self.transferGpu(capture, stamps)
+            return
         pixels = window_capture.bgraFromCapture(capture)
         size = (pixels.shape[1], pixels.shape[0])
         # 各領域だけを角丸で残し、それ以外は透明にする (PrintWindow のアルファは不定)
@@ -1482,6 +1508,10 @@ class Overlay:
                                "texture": list(self.gl["size"]), "convert_ms": ms[0], "prepare_ms": ms[1],
                                "upload_ms": ms[2], "finish_ms": ms[3], "set_ms": ms[4], "handles": len(handles),
                                "tooltip": tooltip_matches, "intro": self.launcher_intro_state})
+        self.finishTransfer(size, tooltip_matches)
+
+    def finishTransfer(self, size: tuple, tooltip_matches: bool) -> None:
+        """テクスチャを渡した後の共通の処理 (OpenGL・GPU)。"""
         image_size_changed = size != self.panel_image_size
         self.panel_image_size = size
         # 表示範囲はテクスチャの中の撮影画像の大きさで決まるので、並びか撮影の大きさが変わったら当て直す
@@ -1489,6 +1519,146 @@ class Overlay:
             self.applyLayout()
         self.tooltip_ready = tooltip_matches
         self.safeUpdateTooltip()
+
+    def transferGpu(self, capture: tuple, stamps: Optional[list]) -> None:
+        """transferCapture の GPU 版。撮影画像は GPU のテクスチャにあり、角丸・吹き出し・起動演出を GPU で加工して渡す。
+
+        CPU で作るのはマスク (atlasMaskArray・tooltip_mask、変わったときだけ送る) と、吹き出しの印の1行の読み取りだけ。
+        GPU で失敗したら OpenGL に戻す (fallbackToGl)。
+        """
+        gpu = self.gpu
+        size = captureSize(capture)
+        if size[0] > gpu.size[0] or size[1] > gpu.size[1]:
+            # DPI が上がって入らない。DirectX のテクスチャは作り直さず OpenGL に任せる (newPanelTexture と同じ制約)
+            self.fallbackToGl("texture too small", {"image": size, "texture": gpu.size})
+            return
+        state = self.tooltip_state
+        tooltip_matches = False
+        if isinstance(capture[0], (bytes, bytearray)):  # PrintWindow で撮った画像
+            try:
+                gpu.upload(capture[0], *capture[1], capture[2])
+            except ValueError:
+                # 撮っている間にウィンドウの大きさが変わった: このフレームだけ捨てる (GPU は壊れていない)
+                errorLogging()
+                return
+            except RuntimeError as error:
+                errorLogging()
+                self.fallbackToGl("gpu error", {"error": str(error)})
+                return
+            if isinstance(self.panel_stream, window_capture.GpuStream):
+                self.panel_stream.invalidate()  # テクスチャを上書きしたので、前の WGC のフレーム番号では加工し直さない
+        try:
+            if state is not None:
+                py, columns = marker_points(size[0], self.layout)
+                if 0 <= py < size[1]:
+                    row = np.frombuffer(gpu.read_row(py), dtype=np.uint8).reshape(-1, 4)[: size[0]]
+                    tooltip_matches = marker_row_matches(row, columns, state)
+            key = (size, self.layout["atlas"], tuple(sorted(self.layout["regions"].items())),
+                   (state["epoch"], state["revision"]) if tooltip_matches else None)
+            if key != self.gpu_mask_key:  # マスクは並び・大きさ・吹き出しが変わったときだけ作って送る
+                mask = atlasMaskArray(size, self.layout)
+                if tooltip_matches:
+                    mask = tooltip_mask(size, self.layout, state, mask)
+                gpu.set_mask(np.ascontiguousarray(mask).tobytes(), *size)
+                self.gpu_mask_key = key
+            intro, rect = 0, (0, 0, 0, 0)
+            if self.launcher_intro_state != "idle" and LAUNCHER in self.layout["regions"]:
+                intro = 1 if self.launcher_intro_state == "pending" else 2
+                rect = regionRect(LAUNCHER, size, self.layout)
+            if stamps:
+                stamps.append(time.perf_counter())
+            self.markStep("panel:upload")
+            gpu.render(intro, rect)
+        except (RuntimeError, ValueError) as error:
+            errorLogging()
+            self.fallbackToGl("gpu error", {"error": str(error)})
+            return
+        if not tooltip_matches:
+            self.tooltip_ready = False
+            self.hideTooltipOverlay()
+        if intro and self.launcher_intro_state not in self.launcher_intro_logged:
+            self.launcher_intro_logged.add(self.launcher_intro_state)
+            printLog(f"overlay: launcher intro {self.launcher_intro_state} (GPU)")
+        if stamps:
+            stamps.append(time.perf_counter())
+        self.markStep("panel:set_texture")
+        handles = self.vrRegionHandles()
+        try:
+            for handle in handles.values():
+                self.overlay.setOverlayTexture(handle, self.gpu_vr_texture)
+        except openvr.OpenVRError as error:
+            # SteamVR が DirectX のテクスチャを受け付けない (別の GPU など)。OpenGL なら映ることがある
+            errorLogging()
+            self.fallbackToGl("set texture", {"error": str(error)})
+            return
+        self.profile_submitted += 1
+        if stamps:
+            stamps.append(time.perf_counter())
+            ms = [round((b - a) * 1000, 3) for a, b in zip(stamps, stamps[1:])]
+            self.writeProfile({"kind": "frame", "backend": "gpu", "src": self.capture_source, "client": list(size),
+                               "texture": list(gpu.size), "convert_ms": ms[0], "prepare_ms": 0.0, "upload_ms": ms[1],
+                               "finish_ms": 0.0, "set_ms": ms[2], "handles": len(handles),
+                               "tooltip": tooltip_matches, "intro": self.launcher_intro_state})
+        self.finishTransfer(size, tooltip_matches)
+
+    def ensureGpu(self) -> None:
+        """_GPU_ENABLED なら、撮影の前に GPU のテクスチャを作る。使えなければ OpenGL のまま (1回だけログに出す)。
+
+        GPU のときも OpenGL の環境は使う (リサイズの点線の枠と、VR画面があるかの判定 self.gl)。
+        """
+        if self.gpu is not None and self.gpu_owner != get_ident():
+            # 前のオーバーレイのスレッドが止まりきらないまま作り直された: そのスレッドのものには触れない (解放もしない)
+            self.gpu, self.gpu_retired = None, []
+        if not _GPU_ENABLED or self.gpu is not None or self.gpu_failed or self.window_size is None:
+            return
+        try:
+            import vrct_graphics
+
+            # newPanelTexture と同じく、最大の並びが入る大きさで1回だけ作る
+            scale = self.window_size[0] / self.layout["atlas"][0]
+            max_w, max_h = MAX_LAYOUT["atlas"]
+            size = (max(round(max_w * scale), self.window_size[0]), max(round(max_h * scale), self.window_size[1]))
+            gpu = vrct_graphics.CaptureSession(self.system.getDXGIOutputInfo(), *size)
+        except Exception:
+            errorLogging()
+            printLog("overlay: GPU 転送を使えないので OpenGL で転送します")
+            self.gpu_failed = True
+            return
+        texture = openvr.Texture_t()
+        texture.handle = gpu.texture_ptr
+        texture.eType = openvr.TextureType_DirectX
+        texture.eColorSpace = openvr.ColorSpace_Gamma
+        self.gpu, self.gpu_owner, self.gpu_vr_texture, self.gpu_mask_key = gpu, get_ident(), texture, None
+        self.closePanelStream()  # 以後の撮影は GPU のテクスチャへ
+        printLog("overlay: VR画面を GPU で転送します", {"texture": size})
+
+    def fallbackToGl(self, reason: str, data: Dict[str, Any]) -> None:
+        """GPU 転送をやめて OpenGL に戻す。アプリを起動し直すまで GPU は使わない。"""
+        printLog("overlay: GPU 転送をやめて OpenGL で転送します", {"reason": reason, **data})
+        self.closePanelStream()
+        for handle in self.vrRegionHandles().values():
+            try:
+                self.overlay.clearOverlayTexture(handle)
+            except Exception:
+                errorLogging()
+        # SteamVR がまだ参照しているかもしれないので、閉じるのは teardown (closeGpu) で
+        self.gpu_retired.append(self.gpu)
+        self.gpu = None
+        self.gpu_failed = True
+        self.capture_job = None  # GPU のフレーム番号を持つ撮影結果を OpenGL の経路に渡さない
+        self.panel_last_raw = None
+        self.layout_applied = None
+
+    def closeGpu(self) -> None:
+        """GPU のテクスチャを解放する。作ったスレッドでだけ閉じる (別のスレッドでは参照を捨てるだけ)。"""
+        for gpu in (self.gpu, *self.gpu_retired):
+            if gpu is not None and self.gpu_owner == get_ident():
+                try:
+                    gpu.close()
+                except Exception:
+                    errorLogging()
+        self.gpu = None
+        self.gpu_retired = []
 
     def collectCapture(self, now: float) -> Optional[tuple]:
         """撮影を使い捨てのスレッドに頼み、撮れていればその結果 (captureWindowRaw) を返す。まだなら None。
@@ -1549,6 +1719,7 @@ class Overlay:
             self.window_size = window_capture.resizeClient(self.panel_hwnd, *self.layout["atlas"])
             self.window_fitted_layout = self.layout
             self.logLayout("resize", {"target": self.window_size})
+        self.ensureGpu()
         stream = self.panelStream()
         if stream is not None:
             # 画面キャプチャは撮り続けているので、届いている最新の画像を受け取るだけ (待たない)
@@ -1583,7 +1754,10 @@ class Overlay:
         self.resetTooltipEpoch()
         self.closePanelStream()  # ウィンドウが作り直された
         try:
-            self.panel_stream = window_capture.WindowStream(self.panel_hwnd)
+            if self.gpu is not None:
+                self.panel_stream = window_capture.GpuStream(self.gpu, self.panel_hwnd)
+            else:
+                self.panel_stream = window_capture.WindowStream(self.panel_hwnd)
         except ImportError:
             printLog("overlay: windows-capture が無いので PrintWindow で撮ります")
             self.stream_missing = True
@@ -2983,19 +3157,21 @@ class Overlay:
 
     def writeProfileWindow(self, elapsed: float) -> None:
         """reportSlowSteps の区間 (約10秒) の集計。overlay のスレッドで呼ぶ (thread_time はこのスレッドの CPU 時間)。"""
-        cpu = (time.thread_time(), time.process_time())
+        cpu = (get_ident(), time.thread_time(), time.process_time())
+        if self.profile_cpu[0] != cpu[0]:
+            self.profile_cpu = (cpu[0], 0.0, cpu[2])  # このスレッドで初めての集計: スレッドの開始から数える
         stream = self.panel_stream
         arrivals, copy_s = getattr(stream, "arrivals", 0), getattr(stream, "copy_s", 0.0)
         last_stream, last_arrivals, last_copy_s = self.profile_stream_counts
-        if last_stream is not stream:
+        if last_stream != id(stream):
             last_arrivals, last_copy_s = 0, 0.0
         self.writeProfile({"kind": "window", "dur_s": round(elapsed, 3), "loops": self.step_loops,
                            "frames_submitted": self.profile_submitted, "frames_unchanged": self.profile_unchanged,
                            "wgc_arrivals": arrivals - last_arrivals, "wgc_copy_ms": round((copy_s - last_copy_s) * 1000, 3),
-                           "overlay_thread_cpu_s": round(cpu[0] - self.profile_cpu[0], 4),
-                           "process_cpu_s": round(cpu[1] - self.profile_cpu[1], 4),
+                           "overlay_thread_cpu_s": round(cpu[1] - self.profile_cpu[1], 4),
+                           "process_cpu_s": round(cpu[2] - self.profile_cpu[2], 4),
                            "step_total_ms": {k: round(v * 1000, 1) for k, v in self.step_total.items()}})
-        self.profile_stream_counts = (stream, arrivals, copy_s)
+        self.profile_stream_counts = (id(stream), arrivals, copy_s)
         self.profile_cpu = cpu
         self.profile_submitted = self.profile_unchanged = 0
 
@@ -3027,6 +3203,7 @@ class Overlay:
                 errorLogging()
         self.closePanelStream()
         self.destroyOverlays()
+        self.closeGpu()  # オーバーレイが無くなってから (SteamVR がテクスチャを参照しなくなってから) 解放する
         self.releaseSession()
         self.shutdownPanelTexture()
         printLog("overlay: 止めました")

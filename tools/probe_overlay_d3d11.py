@@ -11,6 +11,9 @@ ColorSpace_Gamma. Patterns: `flip` alternates black/white with a frame
 counter every tick (tearing shows as mixed halves), `static` four colours.
 `--recreate-at S` replaces the texture with a smaller one after S seconds
 (checks whether SteamVR follows a new texture or keeps the first size).
+
+Long runs: RSS / handles / threads are sampled every 10 s, and the run stops
+with a `stop_reason` when SteamVR quits or is lost, or capture fails.
 Writes a JSON report (timings of poll and setOverlayTexture per frame, errors).
 """
 
@@ -72,12 +75,22 @@ def pct(values, q):
     return round(values[min(len(values) - 1, int(q * len(values)))], 3) if values else None
 
 
+def open_session(vrct_graphics, hwnd, adapter, texture, box):
+    """Texture + WGC on the window, composed with an all-opaque mask of the client size."""
+    session = vrct_graphics.CaptureSession(adapter, *texture)
+    session.start(hwnd)
+    width, height = min(box[2] - box[0], texture[0]), min(box[3] - box[1], texture[1])
+    session.set_mask(bytes([255]) * (width * height), width, height)
+    return session
+
+
 def wait_frame(session, box, root, timeout=3.0):
     deadline = time.perf_counter() + timeout
     while time.perf_counter() < deadline:
         root.update()
         polled = session.poll(box)
         if polled is not None:
+            session.render()
             return polled
         time.sleep(0.01)
     return None
@@ -91,7 +104,7 @@ def headless(args):
     draw(canvas, "static", 0, width, height)
     root.update()
     box = client_box(hwnd)
-    session = vrct_graphics.CaptureSession(hwnd, args.adapter, args.texture[0], args.texture[1])
+    session = open_session(vrct_graphics, hwnd, args.adapter, args.texture, box)
     report = {"mode": "headless", "client_box": box, "texture": session.size, "status": "FAIL"}
     try:
         polled = wait_frame(session, box, root)
@@ -155,7 +168,7 @@ def vr(args):
             overlay.setOverlayTextureBounds(handle, bounds)
 
     try:
-        session = vrct_graphics.CaptureSession(hwnd, adapter, args.texture[0], args.texture[1])
+        session = open_session(vrct_graphics, hwnd, adapter, args.texture, box)
         span = 1.2
         for index in range(args.handles):
             handle = overlay.createOverlay(f"vrct.d3d11.poc.{index}", f"VRCT D3D11 PoC {index}")
@@ -171,12 +184,28 @@ def vr(args):
         set_bounds(session)
         texture = texture_for(session)
         poll_ms, set_ms, cpu_ms, frames = [], [], [], 0
+        import psutil
+
+        me, resources, last_sample, failing = psutil.Process(), [], 0.0, 0
+        event = openvr.VREvent_t()
         started = time.perf_counter()
         recreated = False
         tick = 0
+        report["stop_reason"] = "duration"
         while time.perf_counter() - started < args.seconds:
             tick_start = time.perf_counter()
             tick += 1
+            if tick_start - last_sample >= 10:  # resource leaks show up over a long run
+                resources.append({"t_s": round(tick_start - started, 1), "rss_mb": round(me.memory_info().rss / 2**20, 1),
+                                  "handles": me.num_handles(), "threads": me.num_threads(), "frames": frames})
+                last_sample = tick_start
+            quit_requested = False
+            while system.pollNextEvent(event):
+                quit_requested |= event.eventType == openvr.VREvent_Quit
+            if quit_requested:
+                system.acknowledgeQuit_Exiting()
+                report["stop_reason"] = "steamvr_quit"
+                break
             if args.pattern == "flip":
                 draw(canvas, "flip", tick, width, height)
             root.update()
@@ -185,21 +214,34 @@ def vr(args):
                 for handle in handles:
                     overlay.clearOverlayTexture(handle)
                 session.close()
-                session = vrct_graphics.CaptureSession(hwnd, adapter, args.texture[0] * 3 // 4, args.texture[1] * 3 // 4)
+                session = open_session(vrct_graphics, hwnd, adapter, (args.texture[0] * 3 // 4, args.texture[1] * 3 // 4), box)
                 set_bounds(session)
                 texture = texture_for(session)
                 recreated = True
                 report["recreated_at_frame"] = frames
             cpu0, t0 = time.thread_time(), time.perf_counter()
-            polled = session.poll(box)
+            try:
+                polled = session.poll(box)
+            except RuntimeError as error:  # e.g. device removed or the window closed
+                report["errors"].append(f"poll: {error}")
+                report["stop_reason"] = "capture_failed"
+                break
+            if polled is not None:
+                session.render()
             t1 = time.perf_counter()
             if polled is not None:
+                failed = False
                 for handle in handles:
                     try:
                         overlay.setOverlayTexture(handle, texture)
                     except openvr.OpenVRError as error:
+                        failed = True
                         if len(report["errors"]) < 20:
                             report["errors"].append(f"frame {frames}: {error}")
+                failing = failing + 1 if failed else 0
+                if failing >= 20:  # SteamVR went away without a quit event
+                    report["stop_reason"] = "steamvr_lost"
+                    break
                 t2 = time.perf_counter()
                 frames += 1
                 poll_ms.append((t1 - t0) * 1000)
@@ -212,7 +254,7 @@ def vr(args):
                       set_ms={"p50": pct(set_ms, 0.5), "p95": pct(set_ms, 0.95), "max": pct(set_ms, 1.0)},
                       thread_cpu_ms_per_frame={"p50": pct(cpu_ms, 0.5), "p95": pct(cpu_ms, 0.95),
                                                "mean": round(statistics.mean(cpu_ms), 3) if cpu_ms else None},
-                      thread_cpu_ms_per_s=round(sum(cpu_ms) / elapsed, 2))
+                      thread_cpu_ms_per_s=round(sum(cpu_ms) / elapsed, 2), resources=resources)
         report["status"] = "RAN" if frames and not report["errors"] else "FAIL"  # visual checks are the user's
     finally:
         for handle in handles:

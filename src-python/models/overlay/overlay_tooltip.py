@@ -53,20 +53,32 @@ def validate_tooltip(data: object) -> dict:
     return result
 
 
-def marker_matches(pixels: np.ndarray, layout: dict, state: dict) -> bool:
-    """Read 80 big-endian bits from 4x8 logical-pixel black/white cells."""
-    scale = pixels.shape[1] / layout["atlas"][0]
+def marker_points(width: int, layout: dict) -> tuple:
+    """The marker's pixel row and the 80 sample columns in an image `width` px wide."""
+    scale = width / layout["atlas"][0]
     x, y, _, _ = layout["regions"]["tooltip"]
+    return round((y + 4) * scale), [round((x + index * 4 + 2) * scale) for index in range(80)]
+
+
+def marker_row_matches(row: np.ndarray, columns: list, state: dict) -> bool:
+    """Compare one BGR(A) pixel row with the 80 big-endian bits of epoch/revision."""
     bits = (state["epoch"] << 32) | state["revision"]
-    for index in range(80):
-        px, py = round((x + index * 4 + 2) * scale), round((y + 4) * scale)
-        if not (0 <= py < pixels.shape[0] and 0 <= px < pixels.shape[1]):
+    for index, px in enumerate(columns):
+        if not 0 <= px < row.shape[0]:
             return False
-        color = pixels[py, px, :3]
+        color = row[px, :3]
         expected = (bits >> (79 - index)) & 1
         if not (np.all(color >= 224) if expected else np.all(color <= 31)):
             return False
     return True
+
+
+def marker_matches(pixels: np.ndarray, layout: dict, state: dict) -> bool:
+    """Read 80 big-endian bits from 4x8 logical-pixel black/white cells."""
+    py, columns = marker_points(pixels.shape[1], layout)
+    if not 0 <= py < pixels.shape[0]:
+        return False
+    return marker_row_matches(pixels[py], columns, state)
 
 
 def tooltip_mask(image_size: tuple, layout: dict, state: dict, static_mask: np.ndarray) -> np.ndarray:

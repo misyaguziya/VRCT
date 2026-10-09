@@ -1,0 +1,96 @@
+{
+ "recorded_at": "2026-10-09",
+ "baseline_commit": "5f0c3d4c",
+ "status": "PASS",
+ "scope": "Stage 2: GPU compose (captured x CPU mask + launcher intro keying in one pixel shader) and integration into overlay.py behind VRCT_OVERLAY_GPU=1 (default OFF), with fallback to OpenGL.",
+ "pixel_equivalence": "src-python/test/test_overlay_gpu_pixels.py: bit-exact vs CPU for 3 layouts x DPI 1/1.25/1.5/2 x intro idle/pending/playing, tooltip mask, marker row, upload clipping, input validation (16 tests, real D3D11 device)",
+ "fake_path_tests": "src-python/test/test_overlay_gpu_path.py: call order, mask resend only on change, PrintWindow upload/invalidate/size race, tooltip marker, intro modes, DX bounds, GL fallback (too small / gpu error / set texture error), owner-thread close, GpuStream stale/first-frame timeout/poll failure, no lingering session reference",
+ "full_suite": "1902 passed, 0 skipped",
+ "independent_review": "no high; 3 medium + low items fixed (PrintWindow fallback continuity, setOverlayTexture failure fallback, WGC death detection via Closed event and first-frame timeout, pending job drop, invalidate after upload, mask built only on change, 0x0 Recreate skip, frame always returned)",
+ "hmd_checks_user": {
+  "environment": "Meta Quest 3, Windows scale 150%",
+  "ok": [
+   "launcher intro at startup and after VR UI OFF/ON (A/B with OpenGL: both visible)",
+   "rounded corners without black edges",
+   "tooltip show/hide",
+   "scroll/click positions",
+   "corner resize incl. layout change",
+   "text sharpness same as OpenGL (A/B)",
+   "subtitles-only mode",
+   "mic transcription while VR UI on"
+  ],
+  "not_checked": [
+   "DPI change to 175% (OpenGL fallback)",
+   "10-minute run / SteamVR quit (stage 1 leftovers)"
+  ]
+ },
+ "issues_found_and_fixed_in_hmd_runs": [
+  "profile code kept a reference to the GpuStream so the unsendable session was dropped on the next overlay thread (PyO3 'unsendable ... dropped on another thread' notice)",
+  "first-session 4 s frame gap during intro was not reproduced; GL shows the same 1-1.5 s WebView gaps"
+ ],
+ "profile_gl": {
+  "frames": 142,
+  "src": {
+   "wgc": 142
+  },
+  "intro": {
+   "pending": 2,
+   "playing": 28,
+   "idle": 112
+  },
+  "convert_ms": {
+   "p50": 5.725,
+   "p95": 33.856
+  },
+  "upload_ms": {
+   "p50": 3.845,
+   "p95": 32.3
+  },
+  "finish_ms": {
+   "p50": 2.155,
+   "p95": 10.256
+  },
+  "set_ms": {
+   "p50": 1.854,
+   "p95": 27.655
+  }
+ },
+ "profile_gpu": {
+  "frames": 653,
+  "src": {
+   "wgc": 651,
+   "pw": 2
+  },
+  "intro": {
+   "pending": 8,
+   "playing": 140,
+   "idle": 505
+  },
+  "convert_ms": {
+   "p50": 0.012,
+   "p95": 5.678
+  },
+  "upload_ms": {
+   "p50": 0.113,
+   "p95": 0.369
+  },
+  "finish_ms": {
+   "p50": 0.0,
+   "p95": 0.0
+  },
+  "set_ms": {
+   "p50": 0.116,
+   "p95": 0.681
+  }
+ },
+ "profile_note": "GPU path per changed frame: convert_ms = marker row + mask (only on change), upload_ms = render, set_ms = setOverlayTexture to all handles. Not a stage-5 load comparison (different interaction per run).",
+ "sources_sha256": {
+  "native/vrct-graphics/src/capture.rs": "06aa2bc5c99867797ea24c1fb24ddd47162ca3c4f4e1bdf59679bd886a395897",
+  "native/vrct-graphics/src/lib.rs": "7847565ff4a4774c5afe5736bdcb10498472f8901ea4fd0a21818c5b202a8b6c",
+  "native/vrct-graphics/shaders/compose.hlsl": "b52c86392dea8ebd89edd0d339b7120754300435db40633d90e545815e60b02e",
+  "native/vrct-graphics/shaders/compose_vs.cso": "9f0ab91f3e3e6bfc30c41368c3ab179015d06d7dad87ece038cf3bf106ddab86",
+  "native/vrct-graphics/shaders/compose_ps.cso": "4b4608f081c3fb161458e716e8fd5bf0a4da34bd156284b1a59392c5b15878dd",
+  "src-python/models/overlay/overlay.py": "1fa5740644f419aafbb3c2cbbd0bcb42bd4d7a545a835d03214ae6f08aa2664d",
+  "src-python/models/overlay/window_capture.py": "1801b1ded30c2090b4fd47e85bb0bd44e5662f1bf1447063f872f3fa8b52292a"
+ }
+}
