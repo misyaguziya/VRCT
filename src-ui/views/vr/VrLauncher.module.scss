@@ -5,15 +5,15 @@
 .group { display: flex; gap: 8px; }
 .divider { flex-shrink: 0; width: 4px; height: 72px; margin: 0 4px; border-radius: 2px; background: var(--dark_650_color); }
 .button {
-    position: relative; width: 124px; height: 104px; flex-direction: column; gap: 8px; padding: 6px;
+    // 文字は出さない (名前は指したときの吹き出しで出す)。7つとも同じ大きさ
+    position: relative; width: 112px; height: 104px; padding: 6px;
     &:not([aria-pressed="true"]) { background: var(--dark_850_color); color: var(--dark_400_color); }
     &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
     &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
     &.is_disabled { background: var(--dark_900_color); color: var(--dark_450_color); cursor: default; }
 }
-.icon { width: 40px; height: 40px; flex-shrink: 0; color: currentColor; fill: currentColor; }
-.label { max-width: 100%; font-size: 19px; font-weight: 600; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
-.window_button { width: 96px; .icon { width: 36px; height: 36px; } &.is_attention { background: var(--dark_950_color); color: var(--warning_color); } &.is_holding { box-shadow: inset 0 0 0 3px var(--warning_color); } }
+.icon { width: 52px; height: 52px; flex-shrink: 0; color: currentColor; fill: currentColor; }
+.window_button { &.is_attention { background: var(--dark_950_color); color: var(--warning_color); } &.is_holding { box-shadow: inset 0 0 0 3px var(--warning_color); } }
 .state_mark { position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; padding: 2px; border-radius: 6px; background: var(--dark_950_color); color: var(--dark_350_color); display: flex; svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; } }
 .is_pending .state_mark { color: var(--primary_100_color); }
 // 左端の VRCT のマーク (吹き出し)。ロゴ画像の左 22.6% (= 吹き出し) だけを 60px 幅で切り出す。ランチャーの幅 (952px) はこの分を含む
