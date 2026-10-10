@@ -347,3 +347,12 @@
 - 原因2(実機で確認・修正): 計装(`VRCT_OVERLAY_PROFILE`に吹き出しの要求/表示/取り下げと画像の古さを追加)で、GPU版でもバックエンドは0〜50msで吹き出しを表示していたと分かった。本物のGPUでの再現でも合成とboundsは正しかった。SteamVRはDirectXテクスチャの写しをこちらのD3D11コンテキストに積むが、`setOverlayTexture`の後に`Flush`しておらず、写しが次の画面変化のrenderまで送られなかった(変化が続く間は1回遅れ、止まった直後の吹き出しは次の変化まで出ない)。OpenGL版は`glFinish`するので起きない。`CaptureSession.flush()`を追加し提出直後に呼ぶ。隠れていた吹き出しを出すときはテクスチャを渡し直す。
 - 実機(ユーザー実施): 吹き出しがホバーで出る、フォーカスの遅れなし。画像の古さ(描画→提出)は中央値24ms(OpenGL版は約60ms)。
 - 検証: pytest全体1910件成功(負荷時に1件だけ落ちるテストが別に2回出たが、8回連続の再実行で再現せず未特定)、Rust clippy/fmt、burst・headless・10分soak(FrameArrived版)PASS。
+- 配布物の再検証(2026-10-10、ee804c24・3094471b後): 本番specからCPU/CUDAの検証ビルド(各約680s、ファイル数3180/3191、ERRORは既知のhidden import 1件)。両方に最新`vrct_graphics.pyd`(`70077e7b…`)が入っていることを確認。配布版4ケース(CPU/CUDA×エネルギー/VAD)とも実推論・exe内のGPU自己チェック・stderr空でPASS(`docs/benchmarks/overlay_gpu_frozen_cycle22_2026-10-10.json`)。
+
+## サイクル23 — アプリ全体のCPU計測と、OCRの黒判定・OSC受信の無駄の削減（2026-10-10）
+
+- 重い処理をすべてONにした実機(文字起こし・翻訳・OCR・VR UI GPU版・VRChat)のバックエンドに`py-spy`(tmp/pyspy、`--nonblocking`)を60秒つなぎ、Windowsのスレッド別CPUと突き合わせた(`docs/benchmarks/backend_cpu_profile_heavy_2026-10-10.json`)。合計約1.7コアのうち約7割がOCR(検出モデルのonnxruntime 4スレッドで約0.7コア、OCRスレッド0.44コア)。VR UIは24ms/s。Rust化で効く残りの重い処理は無い(重いのはonnxruntime内の推論)。
+- OCRの黒判定`isFrameBlank`が毎回VRの画面全体をfloatにして平均・分散を計算し、1回170ms(4Kは415ms)かかっていた(OCRスレッドの約4割)。VRミラーは「全画素が同じ」かだけを見る用途なので`frame.min() == frame.max()`(12ms、厳密)に、デスクトップの「ほぼ黒」判定は縦横4画素おきの標本(17〜39ms、平均・分散はほぼ一致)にした。
+- OSC受信が`ThreadingOSCUDPServer`でパケットごとにスレッドを起こしていた(起動からスレッド約32万本、受信スレッドだけで94ms/s)。`BlockingOSCUDPServer`にして1本の受信スレッドで順に処理する。登録している処理はミュート同期1つ(キューに積むだけ)。毎秒約1万5千件の連続送信でもミュート100件を取りこぼさずスレッド増加なし、UDP往復のテストを追加。VRChat起動後にVRCTを起動するパターンで実機のミュート同期を確認(VRCT先起動・VRChat再起動は未確認、つながる仕組みは変更していない)。
+- 修正後の再計測: OCRスレッドから黒判定が消え(444→362ms/s、今回は文字認識も動いていた)、OSCは受信スレッド1本70ms/s・プロセスのスレッド139→118。今回はOCRの文字認識が動いていたため、プロセス全体(1706ms/s)は前回と同程度で、全体の削減量はこの比較では示せていない。
+- 残りの最大はOCRの検出モデル(約0.6〜0.7コア)。GPU実行・間隔・スレッド数は認識の速さに関わる製品判断として未着手。pytest全体1913件成功。

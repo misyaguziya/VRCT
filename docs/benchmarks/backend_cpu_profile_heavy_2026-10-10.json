@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-10",
+  "scope": "Whole backend under the user's heavy setup (mic+speaker transcription with Google, translation, OCR, VR UI on the GPU path, VRChat running), dev-fast, Quest 3 / 150%. py-spy 0.4.0 record --nonblocking --threads 60 s at 200 Hz (Python stacks only) plus Windows per-thread CPU over the same 60 s.",
+  "process_cpu_ms_per_s": 1707,
+  "threads_ms_per_s": {
+    "ocr_pipeline (Python thread)": 444,
+    "three native threads not seen by py-spy (onnxruntime intra-op pool of the OCR detector, ocr_onnx_threads()=4)": [
+      259,
+      232,
+      220
+    ],
+    "oscServerServe + per-packet threads (ThreadingOSCUDPServer, thread counter ~319000 since start)": 94,
+    "overlay main loop (GPU path)": 24,
+    "active_endpoint_tracker": 17,
+    "transcription workers / audio readers": "each < 15"
+  },
+  "ocr_pipeline_python_samples": {
+    "onnxruntime run (detector)": "51%",
+    "isFrameBlank np.mean/np.var on the whole mirror frame": "about 38%"
+  },
+  "isFrameBlank_ms_per_call": {
+    "2575x1455x3 full": 169.2,
+    "4K full": 414.9,
+    "every 4th pixel each way, 2575x1455": 16.7,
+    "4K sampled": 39.1
+  },
+  "conclusion": "No remaining hot spot is a Rust candidate: the largest is model inference inside onnxruntime (already native). Fixed in Python: isFrameBlank samples every 4th pixel; OSC uses BlockingOSCUDPServer (one receive thread). Not changed: the OCR detector itself (thread count, interval, GPU provider are product decisions). Whole-process CPU did not drop in the second run because OCR text recognition was running; per component, the blank check left the OCR thread and OSC no longer starts a thread per packet.",
+  "after_fixes": {
+    "note": "Same setup, VRCT restarted with the fixes (VR mirror: exact min==max uniform check; desktop: sampled mean/var; OSC: BlockingOSCUDPServer). OCR read frames on 39/40 and 29/29 ticks, and this time also ran text recognition (candidate=2 ocr=2), so total OCR work was larger than in the first run.",
+    "process_cpu_ms_per_s": 1706,
+    "threads_ms_per_s": {
+      "ocr_pipeline (Python thread, no isFrameBlank samples any more)": 362,
+      "onnxruntime threads (detector, ocr_onnx_threads()=4)": [
+        215,
+        206,
+        205
+      ],
+      "three more native threads (RapidOCR recognition, idle in the first run)": [
+        126,
+        126,
+        119
+      ],
+      "oscServerServe (all OSC parsing on this one thread, no per-packet threads)": 70
+    },
+    "process_threads": {
+      "before": 139,
+      "after": 118
+    }
+  }
+}

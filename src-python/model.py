@@ -1655,8 +1655,8 @@ class Model:
     def startReceiveOSC(self):
         self.ensure_initialized()
         def changeHandlerMute(address, osc_arguments):
-            # ThreadingOSCUDPServer は受信メッセージごとに新しいスレッドを
-            # 起こすため、ここはロックを一切持たない任意のスレッドで走る。
+            # OSC の受信スレッド (osc.py の oscServerServe) で走り、ロックを
+            # 一切持たない。受信を止めないよう、ここで待つ処理をしないこと。
             # changeMicTranscriptStatus() を直接ここで呼ぶと、Auto Mic
             # Select のデバイス切替や mainloop ワーカーが直接呼ぶ
             # start/stop 系 (_stop()/_start() を実行中) と
