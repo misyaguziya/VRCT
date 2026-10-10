@@ -890,6 +890,9 @@ class SpeakerSession(_AudioDeviceSession):
 
 class Model:
     _instance = None
+    # mic_mute_status の確認と更新を一度に行う (OSC はパケットごとに別スレッドで届き、/avatar/change は
+    # 同じものが続けて届くことがある)
+    _mute_status_lock = Lock()
 
     def __new__(cls):
         if cls._instance is None:
@@ -1669,19 +1672,40 @@ class Model:
             # mic_lifecycle_lock 付きラッパー) にすることで、ロックを直接
             # 取得する経路とも完全に排他制御する。
             if config.VRC_MIC_MUTE_SYNC is True:
-                if osc_arguments is True and self.mic_mute_status is False:
-                    self.mic_mute_status = osc_arguments
-                    self.mic_lifecycle_worker.enqueue(
-                        self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
-                    )
-                elif osc_arguments is False and self.mic_mute_status is True:
-                    self.mic_mute_status = osc_arguments
-                    self.mic_lifecycle_worker.enqueue(
-                        self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
-                    )
+                with self._mute_status_lock:
+                    if osc_arguments is True and self.mic_mute_status is False:
+                        self.mic_mute_status = osc_arguments
+                        self.mic_lifecycle_worker.enqueue(
+                            self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                        )
+                    elif osc_arguments is False and self.mic_mute_status is True:
+                        self.mic_mute_status = osc_arguments
+                        self.mic_lifecycle_worker.enqueue(
+                            self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                        )
+
+        def changeHandlerAvatar(address, *osc_arguments):
+            # アバターを読み込んだ (VRChat の起動・再起動・アバター変更)。ミュートの状態はアバターの
+            # パラメータなので、読み込むまで OSCQuery に無い (VRChat が現れた直後の問い合わせは 404)。
+            # ここで読み直して同期する。VRCT を先に起動した場合も、ここで初めて状態が決まる。
+            # このパケットのスレッドで問い合わせる (マイクのキューを HTTP の待ちで止めない)
+            if config.VRC_MIC_MUTE_SYNC is not True:
+                return
+            mute = self.osc_handler.getOSCParameterMuteSelf()
+            printLog("OSC: MuteSelf read on avatar change", {"mute": mute})
+            if mute is None:
+                return
+            with self._mute_status_lock:
+                if mute == self.mic_mute_status:
+                    return
+                self.mic_mute_status = mute
+                self.mic_lifecycle_worker.enqueue(
+                    self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                )
 
         dict_filter_and_target = {
             self.osc_handler.osc_parameter_muteself: changeHandlerMute,
+            "/avatar/change": changeHandlerAvatar,
         }
         self.osc_handler.setDictFilterAndTarget(dict_filter_and_target)
         self.osc_handler.receiveOscParameters()
