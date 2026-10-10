@@ -276,12 +276,18 @@ class HwndCapture:
 
 
 def isFrameBlank(frame: Optional[np.ndarray], mean_threshold: float = 3.0, var_threshold: float = 20.0) -> bool:
-    """Return True when frame is effectively black / no signal (VRChat minimized)."""
+    """Return True when frame is effectively black / no signal (VRChat minimized).
+
+    Looks at every 4th pixel each way: np.mean/np.var on a whole 2575x1455 frame
+    took 170 ms (4K: 415 ms) per OCR tick, the sample 17-39 ms.
+    """
     if frame is None:
         return True
     try:
-        mean = float(np.mean(frame))
-        var = float(np.var(frame))
+        # ponytail: sampled, so detail only between sample points is not seen; a real scene is never that sparse
+        sample = frame[::4, ::4]
+        mean = float(np.mean(sample))
+        var = float(np.var(sample))
     except Exception:
         return True
     return mean < mean_threshold or var < var_threshold
