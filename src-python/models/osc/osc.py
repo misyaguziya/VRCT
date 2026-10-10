@@ -44,11 +44,14 @@ except Exception:
     Zeroconf = None  # type: ignore
 
 try:
-    from utils import errorLogging
+    from utils import errorLogging, printLog
 except Exception:
     def errorLogging() -> None:
         import traceback
         print("Error occurred:", traceback.format_exc())
+
+    def printLog(log: str, data: Any = None) -> None:
+        print(log, data)
 
 
 class _VrchatOscQueryFoundListener(ServiceListener):
@@ -64,6 +67,7 @@ class _VrchatOscQueryFoundListener(ServiceListener):
         self._target_name = target_name
         self._on_found = on_found
         self._fired = False
+        self._logged: set = set()  # サービス名ごとに1回だけ記録する (起動順のミュート同期の切り分け用)
 
     def add_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
         self._check(zc, type_, name)
@@ -74,19 +78,28 @@ class _VrchatOscQueryFoundListener(ServiceListener):
     def remove_service(self, zc: "Zeroconf", type_: str, name: str) -> None:
         pass
 
+    def _log(self, name: str, reason: str) -> None:
+        if (name, reason) not in self._logged:
+            self._logged.add((name, reason))
+            printLog("OSCQuery: service seen while waiting for VRChat", {"service": name, "result": reason})
+
     def _check(self, zc: "Zeroconf", type_: str, name: str) -> None:
         if self._fired or type_ != "_oscjson._tcp.local." or OSCQueryClient is None:
             return
         try:
             info = zc.get_service_info(type_, name)
             if info is None:
+                self._log(name, "no service info yet")
                 return
             host_info = OSCQueryClient(info).get_host_info()
             if host_info is None or self._target_name not in host_info.name:
+                self._log(name, f"not VRChat ({None if host_info is None else host_info.name})")
                 return
-        except Exception:
+        except Exception as error:
             errorLogging()
+            self._log(name, f"host info failed: {error!r}")
             return
+        printLog("OSCQuery: VRChat found after VRCT started", {"service": name})
         # 二重発火を避ける (add_service/update_service が同じサービスに
         # 対して連続して呼ばれることがある)。
         self._fired = True
@@ -220,6 +233,9 @@ class OSCHandler:
                 sleep(1)  # 初回のみスリープ
 
             service = self.browser.find_service_by_name(self.osc_server_name)
+            if service is None:
+                printLog("OSCQuery: query got no value", {"address": address, "reason": "service not in the browser",
+                                                           "known": list(self.browser.listener.oscjson_services)})
             if service is not None:
                 osc_query_client = OSCQueryClient(service)
                 mute_self_node = osc_query_client.query_node(address)
@@ -228,10 +244,12 @@ class OSCHandler:
                 # or an empty list. Guard against those cases to avoid
                 # AttributeError: 'NoneType' object has no attribute 'value'
                 if mute_self_node is None:
+                    printLog("OSCQuery: query got no value", {"address": address, "reason": "no such node (404)"})
                     return None
                 # prefer explicit checks rather than relying on exceptions
                 node_value = getattr(mute_self_node, 'value', None)
                 if not node_value:
+                    printLog("OSCQuery: query got no value", {"address": address, "reason": "node has no value"})
                     return None
                 value = node_value[0]
         except Exception:
