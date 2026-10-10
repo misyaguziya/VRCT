@@ -364,3 +364,4 @@
 - 修正: VRChatがアバター読込(起動・再起動・アバター変更)ごとに送る `/avatar/change` を受け、同期ONならその場でMuteSelfを問い合わせて同期する(実機で読込の23ms後に値を取得)。状態の確認と更新は Model._mute_status_lock の中で行う(MuteSelf と /avatar/change は別スレッドで届き、/avatar/change は2通続けて来る)。問い合わせはそのパケットのスレッドで行いマイクのキューを止めない。テスト5件追加。
 - 実機(ユーザー実施): VRCT先起動→VRChat起動でミュートと文字起こしが連動、アバター変更後も連動。VRChat先起動・VRChat再起動は未確認。VRChatのHUD通知がVRCT先起動で出ないのはVRChat側の表示で、受信自体はできている(ランダムポートにMuteSelfが届く)。
 - 調査用ログ: OSCQueryの問い合わせが値を返さなかった理由、VRChat出現の検知、アバター読込時に読んだ値を printLog に残す(いずれも発生時のみ)。「VRChatが現れたら問い合わせる」見張り(_VrchatOscQueryFoundListener)は役目が無くなったが、外すかはユーザーと相談。
+- 見張り(_VrchatOscQueryFoundListener / waitForVrchatOscQueryConnectionAsync / _retryMuteSelfStatusOnceVrchatFound)を削除(ユーザー承認)。VRChatがmDNSに現れた瞬間はアバター読込前でMuteSelfが必ず404になり役目が無いため。起動時に読めなければ /avatar/change で決める。実機(ユーザー実施): VRCT先起動・VRChat先起動ともミュート同期OK。VRChatのOSCQuery HUD通知はVRChat先起動で表示・VRCT先起動で非表示で、削除前と同じ(削除の影響なし)。
