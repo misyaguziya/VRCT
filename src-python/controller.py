@@ -4459,6 +4459,7 @@ class Controller:
         if model.mic_mute_status is not None:
             model.changeMicTranscriptStatus()
         else:
+            printLog("OSCQuery: VRChat not found at start, waiting for it", {"osc_query": model.osc_handler.getIsOscQueryEnabled()})
             model.watchForVrchatOscQueryConnection(self._retryMuteSelfStatusOnceVrchatFound)
 
     def _retryMuteSelfStatusOnceVrchatFound(self) -> None:
@@ -4468,6 +4469,7 @@ class Controller:
         """
         try:
             model.setMuteSelfStatus()
+            printLog("OSCQuery: MuteSelf read after VRChat appeared", {"mute": model.mic_mute_status})
             model.changeMicTranscriptStatus()
         except Exception:
             errorLogging()
