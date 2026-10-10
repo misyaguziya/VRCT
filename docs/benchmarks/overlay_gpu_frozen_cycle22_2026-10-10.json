@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-10",
+  "scope": "Re-verification after ee804c24 (FrameArrived newest-frame, flush): validation builds from the production specs, frozen runs with real Whisper and the in-exe vrct_graphics self-check",
+  "pyd_sha256": "70077e7b0df5ea0636505568f31180945d0b51c604af54cffa64f9603c61848d",
+  "runs": {
+    "cpu-c22": {
+      "status": "PASS",
+      "graphics_check_ok": true,
+      "compute_mode": "cpu",
+      "stderr_bytes": 0,
+      "error_log_only_expected_http": true,
+      "utterances": [
+        {
+          "reference": "今日はいい天気ですね。散歩に行きましょう。",
+          "text": "今日はいい天気ですね。3歩に行きましょう。",
+          "cer": 0.0476,
+          "latency_s": 3.856
+        },
+        {
+          "reference": "この音声認識のテストは正常に動作していますか。",
+          "text": "この音声認識のテストは正常に動作していますか。",
+          "cer": 0.0,
+          "latency_s": 3.857
+        },
+        {
+          "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+          "text": "VRチャットで友達と一緒に遊びたいです。",
+          "cer": 0.2174,
+          "latency_s": 3.313
+        }
+      ]
+    },
+    "cpu-c22vad": {
+      "status": "PASS",
+      "graphics_check_ok": true,
+      "compute_mode": "cpu",
+      "stderr_bytes": 0,
+      "error_log_only_expected_http": true,
+      "utterances": [
+        {
+          "reference": "今日はいい天気ですね。散歩に行きましょう。",
+          "text": "今日はいい天気ですね。3歩に行きましょう",
+          "cer": 0.0952,
+          "latency_s": 0.841
+        },
+        {
+          "reference": "この音声認識のテストは正常に動作していますか。",
+          "text": "この音声認識のテストは正常に動作していますか。",
+          "cer": 0.0,
+          "latency_s": 0.951
+        },
+        {
+          "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+          "text": "VRチャットで友達と一緒に遊びたいです。",
+          "cer": 0.2174,
+          "latency_s": 0.892
+        }
+      ]
+    },
+    "cuda-c22": {
+      "status": "PASS",
+      "graphics_check_ok": true,
+      "compute_mode": "cuda",
+      "stderr_bytes": 0,
+      "error_log_only_expected_http": true,
+      "utterances": [
+        {
+          "reference": "今日はいい天気ですね。散歩に行きましょう。",
+          "text": "今日はいい天気ですね。3歩に行きましょう。",
+          "cer": 0.0476,
+          "latency_s": 4.325
+        },
+        {
+          "reference": "この音声認識のテストは正常に動作していますか。",
+          "text": "この音声認識のテストは正常に動作していますか。",
+          "cer": 0.0,
+          "latency_s": 3.404
+        },
+        {
+          "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+          "text": "VRチャットで友達と一緒に遊びたいです。",
+          "cer": 0.2174,
+          "latency_s": 2.626
+        }
+      ]
+    },
+    "cuda-c22vad": {
+      "status": "PASS",
+      "graphics_check_ok": true,
+      "compute_mode": "cuda",
+      "stderr_bytes": 0,
+      "error_log_only_expected_http": true,
+      "utterances": [
+        {
+          "reference": "今日はいい天気ですね。散歩に行きましょう。",
+          "text": "今日はいい天気ですね。3歩に行きましょう",
+          "cer": 0.0952,
+          "latency_s": 0.215
+        },
+        {
+          "reference": "この音声認識のテストは正常に動作していますか。",
+          "text": "この音声認識のテストは正常に動作していますか。",
+          "cer": 0.0,
+          "latency_s": 0.513
+        },
+        {
+          "reference": "ブイアールチャットで友達と一緒に遊びたいです。",
+          "text": "VRチャットで友達と一緒に遊びたいです。",
+          "cer": 0.2174,
+          "latency_s": 0.345
+        }
+      ]
+    }
+  },
+  "build": {
+    "cpu_files": 3180,
+    "cuda_files": 3191,
+    "pyd_bundled_matches": true,
+    "build_errors": [
+      "Hidden import 'models.transcription.audio_pipeline' not found (known)"
+    ]
+  }
+}
