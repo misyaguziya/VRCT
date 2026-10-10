@@ -77,7 +77,8 @@ export const VrTooltip = ({ atlasRef, layout }) => {
             mode = nextMode;
             snapshot = content;
             if (target && dismissed !== target) {
-                timer = setTimeout(show, mode === "focus" || !isNewTarget ? 0 : 300);
+                // 新しいボタンにホバーしたら少し待つ (横切っただけで吹き出しが次々に出ないように)
+                timer = setTimeout(show, mode === "focus" || !isNewTarget ? 0 : 150);
             }
         };
         const focus = () => {
