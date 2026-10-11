@@ -175,7 +175,11 @@ class OSCHandler:
         osc_dispatcher = dispatcher.Dispatcher()
         for filter, target in self.dict_filter_and_target.items():
             osc_dispatcher.map(filter, target)
-        self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher)
+        # 受信は oscServerServe の1本のスレッドで順に処理する。ThreadingOSCUDPServer はパケットごとに
+        # スレッドを起こし、VRChat が送り続けるアバターのパラメータ (登録していないものも) だけで
+        # 受信スレッドが約0.1コアを使っていた (実測、起動からスレッド約32万本)。
+        # 登録する処理は受信を止めないよう、待たずに戻ること (待つ処理は別スレッドへ。model.py の startReceiveOSC)
+        self.osc_server = osc_server.BlockingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher)
         Thread(target=self.oscServerServe, daemon=True).start()
 
         max_retries = 5
@@ -215,7 +219,7 @@ class OSCHandler:
 
     def oscServerStop(self) -> None:
         """Stop and clean up any running OSC server and OSCQuery service."""
-        if isinstance(self.osc_server, osc_server.ThreadingOSCUDPServer):
+        if isinstance(self.osc_server, osc_server.OSCUDPServer):
             try:
                 self.osc_server.shutdown()
             except Exception:

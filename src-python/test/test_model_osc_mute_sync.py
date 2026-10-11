@@ -157,7 +157,12 @@ class OscMuteHandlerRoutesThroughWorkerTests(unittest.TestCase):
         self.model.osc_handler.getOSCParameterMuteSelf.return_value = mute
         self.model.startReceiveOSC()
         (dict_filter_and_target,), _ = self.model.osc_handler.setDictFilterAndTarget.call_args
-        return dict_filter_and_target["/avatar/change"]
+        callback = dict_filter_and_target["/avatar/change"]
+
+        def call_and_wait(*args):
+            callback(*args)
+            Model._avatar_query_executor.submit(lambda: None).result(timeout=5)  # 問い合わせのスレッドを待つ
+        return call_and_wait
 
     def test_avatar_load_settles_an_unknown_state_and_syncs(self) -> None:
         self.model.mic_mute_status = None
@@ -184,6 +189,22 @@ class OscMuteHandlerRoutesThroughWorkerTests(unittest.TestCase):
         callback("/avatar/change", "avtr_x")
         self.model.osc_handler.getOSCParameterMuteSelf.assert_not_called()
         self.assertEqual(self.enqueued, [])
+
+    def test_avatar_change_returns_without_waiting_for_the_query(self) -> None:
+        # 受信は1本のスレッドで順に処理する (osc.py)。問い合わせ (HTTP) を待つと、その間すべての受信が止まる
+        self.model.mic_mute_status = None
+        release = threading.Event()
+        self.model.osc_handler.getOSCParameterMuteSelf.side_effect = lambda: release.wait(5) and True
+        self.model.startReceiveOSC()
+        (dict_filter_and_target,), _ = self.model.osc_handler.setDictFilterAndTarget.call_args
+        callback = dict_filter_and_target["/avatar/change"]
+        started = threading.Event()
+        threading.Thread(target=lambda: (callback("/avatar/change", "avtr_x"), started.set())).start()
+        self.assertTrue(started.wait(1))  # returned while the query is still waiting
+        release.set()
+        Model._avatar_query_executor.submit(lambda: None).result(timeout=5)
+        self.assertIs(self.model.mic_mute_status, True)
+        self.assertEqual(len(self.enqueued), 1)
 
     def test_duplicate_avatar_change_syncs_once(self) -> None:
         # VRChat は同じ /avatar/change を続けて送ることがあり、パケットごとに別スレッドで届く
