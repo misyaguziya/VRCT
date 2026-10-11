@@ -13,15 +13,28 @@ serde_yaml = "0.9"
 regex = "1"
 sha2 = "0.10"
 # reqwest's runtime: downloads with a read timeout (the blocking client has only a total one) and the WebSocket server
-tokio = { version = "1", features = ["rt", "net", "time", "sync", "macros"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "time", "sync", "macros"] }
 # The WebSocket server for the OBS browser source
 tokio-tungstenite = "0.24"
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 getrandom = "0.2"
+# OSC / OSCQuery with VRChat (mDNS discovery as VRChat does it)
+vrchat_osc = "=2.2.0"
 serde_json = { version = "1", features = ["preserve_order"] }
-# GetLocalTime (Python's date.today() / datetime.now())
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_SystemInformation"] }
+# GetLocalTime (Python's date.today() / datetime.now()), the clipboard and window focus
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_DataExchange",
+    "Win32_System_Memory",
+    "Win32_System_Ole",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+vrct-audio = { path = "../vrct-audio" }
 vrct-ct2 = { path = "../vrct-ct2" }
+vrct-ocr = { path = "../vrct-ocr" }
 vrct-webtranslate = { path = "../vrct-webtranslate" }
 # The same tokenizers as the Python backend's (tokenizers 0.19.1 wraps this crate). esaxx (training
 # only) is built with the static CRT, which cannot be mixed with the /MD CTranslate2 shim.
@@ -33,5 +46,7 @@ sentencepiece = "0.14"
 sudachi = { git = "https://github.com/WorksApplications/sudachi.rs", tag = "v0.6.10" }
 
 [dev-dependencies]
+# Python writes floats with repr(); read back bit for bit
+serde_json = { version = "1", features = ["float_roundtrip"] }
 tiny_http = "0.12"
 sha2 = "0.10"

@@ -1,12 +1,14 @@
 //! OCR of VRChat chat bubbles, as models/ocr does it: the YOLOX bubble detector
 //! (ocr_bubble_detector.py) and RapidOCR 3.9.2 with VRCT's settings (ocr_engine_rapidocr.py,
 //! ocr_languages.py). OpenCV / numpy / RapidOCR are ported so the results match bit for bit; the
-//! Apache-2.0 notices are in cv.rs and rapidocr.rs (LICENSE-APACHE-2.0).
+//! Apache-2.0 notices are in cv.rs and rapidocr.rs (LICENSE-APACHE-2.0). Also the other ONNX model of
+//! the backend, Silero VAD (silero.rs), on the same onnxruntime.
 pub mod cv;
 pub mod detector;
 pub mod engine;
 pub mod npy;
 pub mod rapidocr;
+pub mod silero;
 
 use ort::session::Session;
 use std::path::Path;

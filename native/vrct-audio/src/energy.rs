@@ -2,7 +2,6 @@
 //! Derived behavior: see src-python/models/transcription/google_speech_LICENSE.txt.
 use std::collections::VecDeque;
 
-use pyo3::{exceptions::PyValueError, prelude::*, types::PyBytes};
 
 const MAX_BUFFER_BYTES: usize = 64 * 1024 * 1024;
 
@@ -32,14 +31,7 @@ pub fn rms(pcm: &[u8]) -> Result<u32, &'static str> {
     Ok((sum / (pcm.len() / 2) as f64).sqrt() as u32)
 }
 
-#[pyfunction]
-pub fn rms_pcm16(pcm: &Bound<'_, PyBytes>) -> PyResult<u32> {
-    rms(pcm.as_bytes()).map_err(PyValueError::new_err)
-}
-
-#[pyclass]
 pub struct EnergyDetector {
-    #[pyo3(get)]
     energy_threshold: f64,
     dynamic: bool,
     damping: f64,
@@ -320,13 +312,10 @@ mod tests {
     }
 }
 
-#[pymethods]
 impl EnergyDetector {
-    #[new]
-    #[pyo3(signature = (sample_rate, chunk, energy_threshold, dynamic=false, phrase_time_limit=0.0, record_timeout=f64::INFINITY, wait_timeout=1.0, pause_threshold=0.8, phrase_threshold=0.3, non_speaking_duration=0.5, damping=0.15, ratio=1.5))]
     // These parameters mirror existing Recognizer settings; no new app settings.
     #[allow(clippy::too_many_arguments)]
-    fn new(
+    pub fn new(
         sample_rate: u32,
         chunk: usize,
         energy_threshold: f64,
@@ -339,7 +328,7 @@ impl EnergyDetector {
         non_speaking_duration: f64,
         damping: f64,
         ratio: f64,
-    ) -> PyResult<Self> {
+    ) -> Result<Self, &'static str> {
         if sample_rate == 0
             || chunk == 0
             || chunk > MAX_BUFFER_BYTES / 2
@@ -359,7 +348,7 @@ impl EnergyDetector {
             || record_timeout.is_nan()
             || wait_timeout.is_nan()
         {
-            return Err(PyValueError::new_err("invalid energy detector settings"));
+            return Err("invalid energy detector settings");
         }
         let seconds = chunk as f64 / f64::from(sample_rate);
         Ok(Self {
@@ -389,36 +378,33 @@ impl EnergyDetector {
     }
 
     /// Called once before each read. RETRY is a listen boundary for pause handling.
-    fn before_read<'py>(
-        &mut self,
-        py: Python<'py>,
-        now: f64,
-    ) -> PyResult<(&'static str, Option<Bound<'py, PyBytes>>)> {
+    pub fn before_read(&mut self, now: f64) -> Result<(&'static str, Option<Vec<u8>>), &'static str> {
         if !now.is_finite() {
-            return Err(PyValueError::new_err("invalid monotonic time"));
+            return Err("invalid monotonic time");
         }
-        let (action, audio) = self.step(now);
-        Ok((action, audio.map(|audio| PyBytes::new(py, &audio))))
+        Ok(self.step(now))
     }
 
     /// PCM is interleaved for speakers, matching audioop.rms on the legacy input.
-    fn push(&mut self, pcm: &Bound<'_, PyBytes>, now: f64) -> PyResult<u32> {
-        self.push_pcm(pcm.as_bytes(), now)
-            .map_err(PyValueError::new_err)
+    pub fn push(&mut self, pcm: &[u8], now: f64) -> Result<u32, &'static str> {
+        self.push_pcm(pcm, now)
     }
 
-    fn calibrate(&mut self, energy: u32) {
+    pub fn calibrate(&mut self, energy: u32) {
         self.energy_threshold = self.energy_threshold * self.damping
             + f64::from(energy) * self.ratio * (1.0 - self.damping);
     }
 
-    #[getter]
-    fn waiting(&self) -> bool {
+    pub fn waiting(&self) -> bool {
         !self.recording
     }
 
-    fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.clear_phrase();
         self.elapsed = 0.0;
+    }
+
+    pub fn energy_threshold(&self) -> f64 {
+        self.energy_threshold
     }
 }

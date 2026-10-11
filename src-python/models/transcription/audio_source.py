@@ -8,6 +8,8 @@ import math
 
 import pyaudiowpatch as pyaudio
 
+from .native_audio import get_rust_devices
+
 
 class _CaptureStream:
     def __init__(self, stream):
@@ -33,7 +35,7 @@ class AudioCaptureSource:
     SAMPLE_WIDTH = 2
 
     def __init__(self, device_index=None, sample_rate=None, chunk_size=1024,
-                 speaker=False, channels=1):
+                 speaker=False, channels=1, device_name=None):
         if device_index is not None and (type(device_index) is not int or device_index < 0):
             raise ValueError("device_index must be a nonnegative integer or None")
         if sample_rate is not None and (type(sample_rate) is not int or sample_rate <= 0):
@@ -42,6 +44,14 @@ class AudioCaptureSource:
             raise ValueError("chunk_size must be a positive integer")
         if type(channels) is not int or channels <= 0:
             raise ValueError("channels must be a positive integer")
+        self._rust = get_rust_devices()
+        self.device_name = device_name if device_index is not None else None
+        if self._rust is not None and sample_rate is None:
+            listed = self._rust.list_devices()
+            default = next((d for d in listed["inputs"] if d["name"] == listed["default_input"]), None)
+            if default is None:
+                raise OSError("no default input device")
+            sample_rate = int(default["defaultSampleRate"])
         if sample_rate is None:
             audio = pyaudio.PyAudio()
             try:
@@ -76,6 +86,14 @@ class AudioCaptureSource:
     def __enter__(self):
         if self.audio is not None or self.stream is not None:
             raise RuntimeError("capture source is already open")
+        if self._rust is not None:
+            stream = self._rust.Capture(self.device_name)
+            if stream.sample_rate != self.SAMPLE_RATE or stream.channels != self.channels:
+                # the device's format changed since it was listed
+                stream.close()
+                raise OSError("the audio device's format changed")
+            self.stream = _CaptureStream(stream)
+            return self
         audio = pyaudio.PyAudio()
         try:
             self._validate_index(audio, self.device_index)

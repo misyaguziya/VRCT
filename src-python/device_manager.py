@@ -24,6 +24,7 @@ except Exception:  # pragma: no cover - optional runtime
 
 from utils import errorLogging, printLog
 from active_endpoint_tracker import ActiveEndpointTracker
+from models.transcription.native_audio import RUST_HOST_NAME, get_rust_devices
 
 # pauseMicEndpointTracker/pauseSpeakerEndpointTracker のバリア待ちの上限。
 # tracker の COM 呼び出し (Activate/GetPeakValue 等) には現状タイムアウトが
@@ -274,6 +275,30 @@ class DeviceManager:
         buffer_speaker_devices: List[Dict[str, Any]] = []
         buffer_default_speaker_device: Dict[str, Any] = {"device": {"index": -1, "name": "NoDevice"}}
 
+        rust = get_rust_devices()
+        if rust is not None:
+            try:
+                listed = rust.list_devices()
+                host = {"index": 0, "name": RUST_HOST_NAME}
+                if listed["inputs"]:
+                    buffer_mic_devices = {RUST_HOST_NAME: listed["inputs"]}
+                for device in listed["inputs"]:
+                    if device["name"] == listed["default_input"]:
+                        buffer_default_mic_device = {"host": host, "device": device}
+                buffer_speaker_devices = listed["loopbacks"]
+                for device in listed["loopbacks"]:
+                    if device["name"] == listed["default_loopback"]:
+                        buffer_default_speaker_device = {"device": device}
+            except Exception:
+                errorLogging()
+            self._device_snapshot = _DeviceSnapshot(
+                mic_devices=buffer_mic_devices or {"NoHost": [{"index": -1, "name": "NoDevice"}]},
+                default_mic_device=buffer_default_mic_device,
+                speaker_devices=buffer_speaker_devices or [{"index": -1, "name": "NoDevice"}],
+                default_speaker_device=buffer_default_speaker_device,
+            )
+            return
+
         if PyAudio is None:
             # PyAudio not available; leave defaults in place
             self._device_snapshot = _DeviceSnapshot(
@@ -427,7 +452,15 @@ class DeviceManager:
         com_registered = False
         cb = None
         enumerator = None
-        if comtypes is not None and AudioUtilities is not None:
+        rust = get_rust_devices()
+        rust_watcher = None
+        if rust is not None:
+            try:
+                rust_watcher = rust.DeviceWatcher(self._notify_event.set)
+                com_registered = True
+            except Exception:
+                errorLogging()
+        elif comtypes is not None and AudioUtilities is not None:
             try:
                 comtypes.CoInitialize()
                 com_initialized = True
@@ -485,7 +518,12 @@ class DeviceManager:
         except Exception:
             errorLogging()
         finally:
-            if com_registered:
+            if rust_watcher is not None:
+                try:
+                    rust_watcher.stop()
+                except Exception:
+                    errorLogging()
+            elif com_registered:
                 try:
                     enumerator.UnregisterEndpointNotificationCallback(cb)
                 except Exception:
@@ -607,7 +645,9 @@ class DeviceManager:
                 return
             # timeout 後に保持していた tracker の COM cleanup が完了済み。
             self._speaker_endpoint_tracker = None
-        tracker = ActiveEndpointTracker("render", com_lock=pyaudio_op_lock)
+        rust = get_rust_devices()
+        tracker_class = rust.ActiveEndpointTracker if rust is not None else ActiveEndpointTracker
+        tracker = tracker_class("render", com_lock=pyaudio_op_lock)
         tracker.set_on_change_callback(self._onActiveSpeakerEndpointChanged)
         tracker.start()
         self._speaker_endpoint_tracker = tracker
