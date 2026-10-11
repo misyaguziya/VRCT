@@ -1,0 +1,46 @@
+# バックエンドが同梱するネイティブライブラリ。今の Python 版と同じバイナリを、同じ版の wheel から取り出す。
+# `cargo xtask fetch-native [--cuda]` が native/third_party/<name>/ に置く (git 管理外)。
+#
+# 版を上げるとき: version / wheel / sha256 を書き換える (sha256 は PyPI の JSON の digests.sha256)
+# → fetch-native → ビルド → 回帰テスト。CTranslate2 はヘッダーも同じ版のタグに合わせる。
+#
+# files はアーカイブ内のパス。末尾の * は前方一致 (DLL の名前に版やハッシュが入るもの)。
+
+[ctranslate2]
+version = "4.6.0"
+wheel = "ctranslate2-4.6.0-cp311-cp311-win_amd64.whl"
+sha256 = "865649cebae240fe8c5b3e868354ea6c611d2ec17f335848caf890fca6c62d71"
+files = ["ctranslate2/ctranslate2.dll", "ctranslate2/libiomp5md.dll", "ctranslate2/cudnn64_9.dll"]
+# 受け口 (vrct-ct2 の shim) をコンパイルするための同じ版のヘッダー
+headers_url = "https://github.com/OpenNMT/CTranslate2/archive/refs/tags/v4.6.0.tar.gz"
+headers_sha256 = "9421d846668573466ceb713b27f71fb16fed8486ed7bdb654583c48c3c20621b"
+headers_dir = "CTranslate2-4.6.0/include/"
+
+[numpy]
+# メル特徴量の行列積に使う OpenBLAS (numpy が呼んでいるものと同じ cblas_sgemm64_)
+version = "1.26.4"
+wheel = "numpy-1.26.4-cp311-cp311-win_amd64.whl"
+sha256 = "cd25bcecc4974d09257ffcd1f098ee778f7834c3ad767fe5db785be9a4aa9cb2"
+files = ["numpy.libs/libopenblas64_*"]
+
+[onnxruntime]
+version = "1.30.0"
+wheel = "onnxruntime-1.30.0-cp311-cp311-win_amd64.whl"
+sha256 = "0edd0145a6e3fce8a1276491dc784d615e3c58bcb952c9b4e5c876d5c6a12ad7"
+files = ["onnxruntime/capi/onnxruntime.dll", "onnxruntime/capi/onnxruntime_providers_shared.dll"]
+
+# 以下は CUDA 版だけ (--cuda)。requirements_cuda.txt と同じ版。
+
+[nvidia-cublas-cu12]
+cuda = true
+version = "12.8.4.1"
+wheel = "nvidia_cublas_cu12-12.8.4.1-py3-none-win_amd64.whl"
+sha256 = "47e9b82132fa8d2b4944e708049229601448aaad7e6f296f630f2d1a32de35af"
+files = ["nvidia/cublas/bin/*"]
+
+[nvidia-cudnn-cu12]
+cuda = true
+version = "9.7.1.26"
+wheel = "nvidia_cudnn_cu12-9.7.1.26-py3-none-win_amd64.whl"
+sha256 = "7b805b9a4cf9f3da7c5f4ea4a9dff7baf62d1a612d6154a7e0d2ea51ed296241"
+files = ["nvidia/cudnn/bin/*"]

@@ -1,0 +1,11 @@
+# Rust バックエンドのワークスペース (docs/rust_backend_design_2026-10-11.md)。
+# 既存の PyO3 クレート (vrct-audio / vrct-graphics) と PoC は、今のビルド (pip wheel) を変えないよう外す。
+[workspace]
+resolver = "2"
+members = ["xtask", "vrct-contract"]
+exclude = ["vrct-audio", "vrct-graphics", "poc-ct2", "poc-ct2dll", "poc-ort", "poc-oscquery"]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.88"
+publish = false

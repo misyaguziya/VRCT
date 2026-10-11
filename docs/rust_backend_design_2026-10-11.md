@@ -104,7 +104,7 @@ stderr に出うるものを全部止める。
 - Rust の panic: panic フックで error.log と `crash_trace.log` に書き、stdout に `{"status": 500, ...}` を出してから終了する（UI は 500 を通知する）。
 - CTranslate2: 受け口の初期化で `set_log_level(off)`（`CT2_VERBOSE` を開発時だけ通す）。
 - onnxruntime: 環境のログ水準を致命のみにする（RapidOCR の `log_severity_level = 4` と同じ）。
-- それでも残るもの（ドライバー等）に備え、起動直後に CRT の `stderr` を `error.log` へ付け替える（受け口の C++ 側で `freopen`。DLL 群は同じ UCRT を共有するので効く見込み。P0 で、各 DLL に stderr へ書かせて確かめる）。
+- それでも残るもの（ドライバー等）に備え、起動直後に CRT の `stderr` を `error.log` へ付け替える（受け口の C++ 側で `freopen`。P0 で確認済み: `CT2_VERBOSE=1` の CTranslate2 のログ 14 行が、付け替え後は stderr に 0 行、ファイルに 14 行）。onnxruntime はログの水準で止める。
 
 ### 3.4 終了と watchdog
 
@@ -136,7 +136,7 @@ App
 
 ### 4.3 エラーコード
 
-`errors.py` の `ErrorCode`（約 100 件）と `ERROR_METADATA`（カテゴリー・既定メッセージ・深刻度）を、スクリプトで Rust の表に変換して取り込む（手で写さない）。契約テストで、同じ入力に同じ `error_code` / `message` / `category` / `severity` が返ることを確かめる。`register_error_report_hook`（テレメトリーへの報告）も同じ位置に置く。
+`errors.py` の `ErrorCode`（88 件）と `ERROR_METADATA`（カテゴリー・既定メッセージ・深刻度）を、`native/reference/export_error_codes.py` で `native/data/error_codes.json` に書き出し、Rust 版はそれを取り込む（手で写さない）。契約テストで、同じ入力に同じ `error_code` / `message` / `category` / `severity` が返ることを確かめる。`register_error_report_hook`（テレメトリーへの報告）も同じ位置に置く。
 
 ## 5. 実行モデル
 
@@ -257,7 +257,7 @@ App
 
 | 段階 | 内容 | 完了条件 |
 |---|---|---|
-| P0 土台 | ワークスペース、`third_party.toml` と `fetch-native`、契約テストの枠（Python 版に当てて通す）、基準データの書き出しスクリプト、ErrorCode の変換 | 契約テストが Python 版で全件通る |
+| P0 土台 | ワークスペース、`third_party.toml` と `fetch-native`、契約テストの枠（Python 版に当てて通す）、基準データの書き出しスクリプト、ErrorCode の変換 | 契約テストが Python 版で全件通る。**2026-10-11 完了**: 191 件に応答・期待の status との違い 0・stderr 0 行、Python 同士の比較で差 0。取得した DLL は venv のものと同一、それでのビルドと stderr の付け替えを確認 |
 | P1 推論 | `vrct-ct2`・`vrct-whisper`（transcribe の全経路）・翻訳（NLLB / M2M100）・`vrct-ocr`（bidi 追加）・Sudachi | §8 の N がコーパスで全件一致 |
 | P2 外部 API・ファイル | ASR / 翻訳の API、DeepL、Web 翻訳（`vrct-webtranslate`）、重み・更新、テレメトリー、WebSocket、OBS | §8 の外部 API の比較が一致、サーバーの再発防止テスト |
 | P3 デバイス | 録音・デバイス管理・既定の追跡・OSC/OSCQuery・オーバーレイ（OpenVR・文字描画）・キャプチャ・クリップボード。PyO3 で今の Python 版に組み込んで実機確認 | 実機の確認表がすべて合格 |

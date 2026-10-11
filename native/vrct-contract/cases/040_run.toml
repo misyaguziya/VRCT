@@ -1,0 +1,26 @@
+# /run/* のうち、機器や外部を動かさないもの。
+# チャットの送信は、VRChat が起動していると本当にチャットボックスへ届くので、先に送信を OFF にする。
+
+[[case]]
+name = "disable send_message_to_vrc (before sending chat)"
+endpoint = "/set/disable/send_message_to_vrc"
+expect_status = 200
+
+[[case]]
+name = "swap your language and target language"
+endpoint = "/run/swap_your_language_and_target_language"
+
+[[case]]
+name = "swap back"
+endpoint = "/run/swap_your_language_and_target_language"
+
+[[case]]
+name = "chat message (Japanese, offline: CTranslate2 + romaji/hiragana)"
+endpoint = "/run/send_message_box"
+data = { id = "contract-1", message = "こんにちは。今日はとてもいい天気ですね。" }
+
+[[case]]
+name = "chat message empty"
+endpoint = "/run/send_message_box"
+data = { id = "contract-2", message = "" }
+

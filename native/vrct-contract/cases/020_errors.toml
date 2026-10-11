@@ -1,0 +1,47 @@
+# 異常系の契約: 未知のエンドポイント、壊れた data、検証で拒否される値。
+
+[[case]]
+name = "unknown endpoint"
+endpoint = "/get/data/no_such_endpoint"
+expect_status = 404
+
+[[case]]
+name = "data that is not base64"
+endpoint = "/set/data/transparency"
+raw_data = "%%% not base64 %%%"
+
+[[case]]
+name = "transparency not a number"
+endpoint = "/set/data/transparency"
+data = "abc"
+expect_status = 400
+
+[[case]]
+name = "ui_language not selectable"
+endpoint = "/set/data/ui_language"
+data = "xx"
+expect_status = 400
+
+[[case]]
+name = "osc ip address invalid"
+endpoint = "/set/data/osc_ip_address"
+data = "not-an-ip"
+expect_status = 400
+
+[[case]]
+name = "websocket port not a number"
+endpoint = "/set/data/websocket_port"
+data = "abc"
+expect_status = 400
+
+[[case]]
+name = "mic avg_logprob not a number"
+endpoint = "/set/data/mic_avg_logprob"
+data = "abc"
+expect_status = 400
+
+[[case]]
+name = "main window geometry wrong keys"
+endpoint = "/set/data/main_window_geometry"
+data = { width = 1 }
+expect_status = 400

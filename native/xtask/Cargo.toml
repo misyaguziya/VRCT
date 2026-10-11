@@ -1,0 +1,17 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Build helpers for the Rust backend (cargo xtask ...)"
+
+[dependencies]
+anyhow = "1"
+flate2 = "1"
+serde = { version = "1", features = ["derive"] }
+sha2 = "0.10"
+tar = "0.4"
+toml = "0.8"
+ureq = { version = "2", features = ["json"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
