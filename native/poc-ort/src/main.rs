@@ -4,11 +4,15 @@
 //!   poc-ort <vad|yolox|ocr|all> --venv <.venv> --data <tmp/poc-ort> [--ort-dll <onnxruntime.dll>]
 //!           [--ep cpu|cuda|dml] [--threads N]
 //!
-//! 比較相手は scripts/make_reference.py が書く *_py.json (先に実行しておく)。ビルド:
+//! 比較相手は scripts/make_reference.py が書く *_py.json と、scripts/rapidocr_stages.py が書く
+//! stages_<auto|Korean>.json (OCR の段階ごとの途中結果。ocr はリポジトリ直下で実行する)。
+//! OCR は RapidOCR 3.9.2 の前後処理を src/rapidocr.rs に、OpenCV 4.11 の該当処理を src/cv.rs に、
+//! numpy 1.26 の並べ替え・平均・丸めを src/npy.rs に移植したもの (Apache-2.0 / BSD-3 の表示は各ファイル)。
+//! unclip は pyclipper と同じ Clipper 6.4.2 (third_party/clipper、Boost) を使う。ビルド:
 //!   $env:CARGO_TARGET_DIR = "<repo>\tmp\target-poc-ort"
-//!   cargo +1.95 build --release --manifest-path native\poc-ort\Cargo.toml
+//!   cargo build --release --manifest-path native\poc-ort\Cargo.toml
 //!     (既定: load-dynamic。--ort-dll 省略時は <venv>\...\onnxruntime\capi\onnxruntime.dll を読む)
-//!   cargo +1.95 build --release --no-default-features --features download --manifest-path ...
+//!   cargo build --release --no-default-features --features download --manifest-path ...
 //!     (ort が CDN から onnxruntime 1.28 を取得して静的リンクする版)
 
 use std::error::Error;
@@ -389,103 +393,88 @@ fn run_yolox(args: &Args, yolox: &mut Session) -> R<Value> {
     }))
 }
 
-// ---------------------------------------------------------------- PP-OCR (oar-ocr)
+// ---------------------------------------------------------------- PP-OCR (RapidOCR port)
 
-use oar_ocr::core::config::{OrtExecutionProvider, OrtSessionConfig};
-use oar_ocr::domain::tasks::{TextDetectionConfig, TextRecognitionConfig};
-use oar_ocr::oarocr::{OAROCR, OAROCRBuilder};
-use oar_ocr::processors::LimitType;
+mod cv;
+mod npy;
+mod rapidocr;
 
-fn ocr_pipeline(args: &Args, det: &str, rec: &str, dict: &str) -> R<OAROCR> {
+/// rapidocr with VRCT's models for a language: auto = PP-OCRv6 small, Korean = PP-OCRv5 mobile.
+fn rapidocr(args: &Args, language: &str) -> R<rapidocr::RapidOcr> {
     let models = args.venv.join("Lib/site-packages/rapidocr/models");
-    let mut ort_config = OrtSessionConfig::new().with_intra_threads(args.threads);
-    ort_config.inter_threads = Some(1);
-    ort_config.execution_providers = Some(match args.ep {
-        Ep::Cpu => vec![OrtExecutionProvider::CPU],
-        Ep::Cuda => vec![OrtExecutionProvider::CUDA { device_id: Some(0), gpu_mem_limit: None, arena_extend_strategy: None, cudnn_conv_algo_search: None, cudnn_conv_use_max_workspace: None }],
-        Ep::Dml => vec![OrtExecutionProvider::DirectML { device_id: Some(0) }],
-    });
-    // ocr_engine_rapidocr.py / rapidocr の config.yaml に寄せる。
-    let det_config = TextDetectionConfig {
-        score_threshold: 0.3,
-        box_threshold: 0.5,
-        unclip_ratio: 1.6,
-        max_candidates: 1000,
-        limit_side_len: Some(320),
-        limit_type: Some(LimitType::Min),
-        max_side_len: None,
+    let (det, rec) = match language {
+        "auto" => ("PP-OCRv6_det_small.onnx", "PP-OCRv6_rec_small.onnx"),
+        "Korean" => ("ch_PP-OCRv5_det_mobile.onnx", "korean_PP-OCRv5_rec_mobile.onnx"),
+        other => return Err(format!("no models for {other}").into()),
     };
-    Ok(OAROCRBuilder::new(models.join(det), models.join(rec), args.data.join(dict))
-        .ort_session(ort_config)
-        .text_detection_config(det_config)
-        .text_recognition_config(TextRecognitionConfig { score_threshold: 0.0 })
-        .build()?)
+    let open = |name: &str| session(&models.join(name), args.threads, args.ep);
+    Ok(rapidocr::RapidOcr::new(open(det)?, open("ch_ppocr_mobile_v2.0_cls_mobile.onnx")?, open(rec)?,
+                               rapidocr::Params::default())?)
 }
 
-fn run_ocr(args: &Args, ocr: &OAROCR, reference: &str) -> R<Value> {
-    let reference = read_json(&args.data.join(reference))?;
-    let mut report = Vec::new();
-    let (mut exact, mut same_chars, mut total, mut elapsed) = (0, 0, 0, 0.0);
-    for item in reference["crops"].as_array().ok_or("crops")? {
-        let path = item["path"].as_str().ok_or("path")?;
-        let image = image::open(path)?.to_rgb8();
-        let start = Instant::now();
-        let result = ocr.predict(vec![image])?.remove(0);
-        elapsed += start.elapsed().as_secs_f64() * 1000.0;
-        // rapidocr と同じ後処理: 空文字と text_score(0.5) 未満を落とす。順序は oar-ocr の並び。
-        let rust: Vec<(String, f32)> = result
-            .text_regions
-            .iter()
-            .filter_map(|r| Some((r.text.as_ref()?.trim().to_string(), r.confidence?)))
-            .filter(|(t, s)| !t.is_empty() && *s >= 0.5)
-            .collect();
-        // VRCT の readtext_bgr と同じく前後の空白は落としてから比べる。
-        let py: Vec<String> = serde_json::from_value::<Vec<String>>(item["txts"].clone())?
-            .into_iter()
-            .map(|t| t.trim().to_string())
-            .filter(|t| !t.is_empty())
-            .collect();
-        let rust_text: Vec<&str> = rust.iter().map(|(t, _)| t.as_str()).collect();
-        // lines: 行の分け方まで一致。chars: 空白を除いた文字列が一致 (行の切り方・並び・空白の違いは許す)。
-        let lines_equal = py.join("\n") == rust_text.join("\n");
-        let squash = |v: Vec<&str>| v.concat().chars().filter(|c| !c.is_whitespace()).collect::<String>();
-        let chars_equal = squash(py.iter().map(String::as_str).collect()) == squash(rust_text.clone());
-        total += 1;
-        exact += lines_equal as usize;
-        same_chars += chars_equal as usize;
-        report.push(json!({
-            "path": path, "lines_equal": lines_equal, "chars_equal": chars_equal, "py": py, "py_scores": item["scores"],
-            "rust": rust_text, "rust_scores": rust.iter().map(|(_, s)| s).collect::<Vec<_>>(),
-        }));
-    }
-    Ok(json!({
-        "crops": total, "lines_equal": exact, "chars_equal": same_chars,
-        "rust_ms": elapsed, "py_ms": reference["elapsed_ms"], "detail": report,
-    }))
+fn read_bgr(path: &str) -> R<cv::Img> {
+    let rgb = image::open(path)?.to_rgb8();
+    let (w, h) = (rgb.width() as usize, rgb.height() as usize);
+    Ok(cv::Img { w, h, c: 3, data: rgb.pixels().flat_map(|p| [p[2], p[1], p[0]]).collect() })
 }
 
-/// rec 単体: rapidocr が det+cls で切り出した行画像を1枚ずつ認識させて比べる。
-fn run_rec(args: &Args) -> R<Value> {
-    let reference = read_json(&args.data.join("rec_py.json"))?;
-    let rec = oar_ocr::predictors::TextRecognitionPredictor::builder()
-        .dict_path(args.data.join("dict_PP-OCRv6_rec_small.txt"))
-        .build(args.venv.join("Lib/site-packages/rapidocr/models/PP-OCRv6_rec_small.onnx"))?;
-    let (mut equal, mut total, mut max_score_diff) = (0, 0, 0f64);
+/// Compares every stage with scripts/rapidocr_stages.py's stages_<language>.json.
+fn run_ocr(args: &Args, ocr: &mut rapidocr::RapidOcr, language: &str) -> R<Value> {
+    let reference = read_json(&args.data.join(format!("stages_{language}.json")))?;
+    let (mut total, mut final_equal, mut elapsed) = (0, 0, 0.0);
+    let mut first_diff: std::collections::BTreeMap<&str, usize> = Default::default();
     let mut mismatches = Vec::new();
-    for item in reference["lines"].as_array().ok_or("lines")? {
+    for item in reference.as_array().ok_or("stages")? {
         let path = item["path"].as_str().ok_or("path")?;
-        let out = rec.predict(vec![image::open(path)?.to_rgb8()])?;
-        let (text, score) = (&out.texts[0], out.scores[0] as f64);
-        let py = item["txt"].as_str().unwrap_or_default();
+        let img = read_bgr(path)?;
+        let mut st = rapidocr::Stages::default();
+        let start = Instant::now();
+        let out = ocr.run(&img, &mut st)?;
+        elapsed += start.elapsed().as_secs_f64() * 1000.0;
         total += 1;
-        if text == py {
-            equal += 1;
-            max_score_diff = max_score_diff.max((score - item["score"].as_f64().unwrap_or(0.0)).abs());
+        let pre = &item["pre"];
+        let py_pre = (pre["shape"][0].as_u64(), pre["shape"][1].as_u64(), pre["ratio_h"].as_f64(), pre["ratio_w"].as_f64(),
+                      pre["pad_top"].as_u64());
+        let rs_pre = (Some(st.pre.0 as u64), Some(st.pre.1 as u64), Some(st.pre.2), Some(st.pre.3), Some(st.pre.4 as u64));
+        let det_in = &item["det"]["input"];
+        let py_boxes: Vec<[[f32; 2]; 4]> = serde_json::from_value(item["det"]["boxes"].clone())?;
+        let py_lines: Vec<(usize, usize, String)> = item["lines"].as_array().map(|l| l.iter().map(|x| {
+            (x["shape"][0].as_u64().unwrap() as usize, x["shape"][1].as_u64().unwrap() as usize,
+             x["cls"][0].as_str().unwrap().to_string())
+        }).collect()).unwrap_or_default();
+        let py_rec: Vec<(String, f64)> = serde_json::from_value(item["rec"].clone()).unwrap_or_default();
+        let py_final = rapidocr::OcrOutput {
+            txts: serde_json::from_value(item["final"]["txts"].clone())?,
+            scores: serde_json::from_value(item["final"]["scores"].clone())?,
+            boxes: serde_json::from_value(item["final"]["boxes"].clone())?,
+        };
+        let rs_lines: Vec<(usize, usize, String)> = st.lines.iter().map(|l| (l.0, l.1, l.2.clone())).collect();
+        let stage = if py_pre != rs_pre {
+            "pre"
+        } else if det_in[2].as_u64() != Some(st.det_input.0 as u64) || det_in[3].as_u64() != Some(st.det_input.1 as u64) {
+            "det_input"
+        } else if py_boxes != st.det_boxes {
+            "det_boxes"
+        } else if py_lines != rs_lines {
+            "lines"
+        } else if py_rec != st.rec {
+            "rec"
+        } else if py_final.txts != out.txts || py_final.scores != out.scores || py_final.boxes != out.boxes {
+            "final"
         } else {
-            mismatches.push(json!({"path": path, "py": py, "rust": text}));
+            ""
+        };
+        if stage.is_empty() {
+            final_equal += 1;
+        } else {
+            *first_diff.entry(stage).or_default() += 1;
+            mismatches.push(json!({"path": path, "first_diff": stage,
+                "py": {"pre": item["pre"], "det_boxes": py_boxes, "lines": py_lines, "rec": py_rec, "final": py_final},
+                "rust": {"pre": st.pre, "det_input": st.det_input, "det_boxes": st.det_boxes, "lines": rs_lines, "rec": st.rec, "final": out}}));
         }
     }
-    Ok(json!({"lines": total, "equal": equal, "max_score_diff_when_equal": max_score_diff, "mismatches": mismatches}))
+    fs::write(args.data.join(format!("stages_{language}_rust_mismatches.json")), serde_json::to_string_pretty(&mismatches)?)?;
+    Ok(json!({"crops": total, "all_stages_equal": final_equal, "first_diff_stage": first_diff, "rust_ms": elapsed}))
 }
 
 // ---------------------------------------------------------------- main
@@ -504,32 +493,31 @@ fn main() -> R<()> {
             summary.insert("yolox".into(), run_yolox(&args, &mut yolox)?);
         }
         "ocr" => {
-            summary.insert("rec_only".into(), run_rec(&args)?);
-            let ocr = ocr_pipeline(&args, "PP-OCRv6_det_small.onnx", "PP-OCRv6_rec_small.onnx", "dict_PP-OCRv6_rec_small.txt")?;
-            summary.insert("ocr".into(), run_ocr(&args, &ocr, "ocr_py.json")?);
-            let korean = ocr_pipeline(&args, "ch_PP-OCRv5_det_mobile.onnx", "korean_PP-OCRv5_rec_mobile.onnx", "dict_korean_PP-OCRv5_rec_mobile.txt")?;
-            summary.insert("ocr_korean".into(), run_ocr(&args, &korean, "ocr_py_korean.json")?);
+            for language in ["auto", "Korean"] {
+                if args.data.join(format!("stages_{language}.json")).exists() {
+                    let mut ocr = rapidocr(&args, language)?;
+                    summary.insert(format!("ocr_{language}"), run_ocr(&args, &mut ocr, language)?);
+                }
+            }
         }
         "all" => {
             // 1プロセスで3つを初期化し、別スレッドで同時に回す (Environment は共有)。
             let start = Instant::now();
             let mut vad = Silero::new(&args.venv, args.ep)?;
             let mut yolox = yolox_session(&args)?;
-            let ocr = ocr_pipeline(&args, "PP-OCRv6_det_small.onnx", "PP-OCRv6_rec_small.onnx", "dict_PP-OCRv6_rec_small.txt")?;
+            let mut ocr = rapidocr(&args, "auto")?;
             summary.insert("init_ms".into(), json!(start.elapsed().as_secs_f64() * 1000.0));
             let start = Instant::now();
             let (v, y, o) = std::thread::scope(|s| {
                 let v = s.spawn(|| run_vad(&args, &mut vad));
                 let y = s.spawn(|| run_yolox(&args, &mut yolox));
-                let o = s.spawn(|| run_ocr(&args, &ocr, "ocr_py.json"));
+                let o = s.spawn(|| run_ocr(&args, &mut ocr, "auto"));
                 (v.join().unwrap(), y.join().unwrap(), o.join().unwrap())
             });
             summary.insert("concurrent_wall_ms".into(), json!(start.elapsed().as_secs_f64() * 1000.0));
             summary.insert("vad".into(), v?);
             summary.insert("yolox".into(), y?);
-            let mut o = o?;
-            o.as_object_mut().unwrap().remove("detail");
-            summary.insert("ocr".into(), o);
+            summary.insert("ocr".into(), o?);
         }
         other => return Err(format!("unknown command {other}").into()),
     }
