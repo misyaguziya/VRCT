@@ -1,5 +1,6 @@
 """Load the optional audio extension on first use, never at application import."""
 
+import os
 from functools import lru_cache
 from importlib import import_module
 
@@ -14,6 +15,18 @@ def get_native_audio():
         # Source checkouts can run before the local wheel has been built.
         # A broken installed extension must surface instead of silently falling back.
         return None
+
+
+def get_rust_devices():
+    """VRCT_RUST_AUDIO=1: recording devices through vrct_audio (cpal / WASAPI, the Rust backend's)
+    instead of PyAudioWPatch / pycaw, for checking it on real devices."""
+    if os.environ.get("VRCT_RUST_AUDIO") != "1":
+        return None
+    native = get_native_audio()
+    return native if native is not None and hasattr(native, "list_devices") else None
+
+
+RUST_HOST_NAME = "Windows WASAPI"
 
 
 def require_native_audio():

@@ -1,0 +1,171 @@
+//! Copy to the clipboard and paste into VRChat (models/clipboard/clipboard.py): the window whose
+//! title (or process name) contains the app name is brought to the front, the text is copied and
+//! Ctrl+V is sent to it. Win32 in place of `clip`, ctypes and keybd_event from Python.
+//! The app name (the running SteamVR app) comes from OpenVR, with the overlay's session.
+use std::time::Duration;
+use windows_sys::core::BOOL;
+use windows_sys::Win32::Foundation::{CloseHandle, GlobalFree, HWND, LPARAM};
+use windows_sys::Win32::System::DataExchange::{CloseClipboard, EmptyClipboard, OpenClipboard, SetClipboardData};
+use windows_sys::Win32::System::Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE};
+use windows_sys::Win32::System::Ole::CF_UNICODETEXT;
+use windows_sys::Win32::System::Threading::{
+    AttachThreadInput, GetCurrentThreadId, OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+};
+use windows_sys::Win32::UI::Input::KeyboardAndMouse::{keybd_event, KEYEVENTF_KEYUP, VK_CONTROL};
+use windows_sys::Win32::UI::WindowsAndMessaging::{
+    BringWindowToTop, EnumWindows, GetForegroundWindow, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
+    SetForegroundWindow, ShowWindow, SW_RESTORE,
+};
+
+const VK_V: u8 = 0x56;
+
+/// Every top-level window, with its title and process id
+fn windows() -> Vec<(HWND, String, u32)> {
+    unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
+        let out = &mut *(lparam as *mut Vec<(HWND, String, u32)>);
+        let len = GetWindowTextLengthW(hwnd);
+        let mut title = vec![0u16; len as usize + 1];
+        let n = GetWindowTextW(hwnd, title.as_mut_ptr(), title.len() as i32);
+        let mut pid = 0;
+        GetWindowThreadProcessId(hwnd, &mut pid);
+        out.push((hwnd, String::from_utf16_lossy(&title[..n.max(0) as usize]), pid));
+        1
+    }
+    let mut out = vec![];
+    unsafe { EnumWindows(Some(collect), &mut out as *mut _ as LPARAM) };
+    out
+}
+
+/// The executable's file name of a process (psutil.Process(pid).name())
+fn process_name(pid: u32) -> Option<String> {
+    unsafe {
+        let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
+        if process.is_null() {
+            return None;
+        }
+        let mut buf = [0u16; 1024];
+        let mut len = buf.len() as u32;
+        let ok = QueryFullProcessImageNameW(process, 0, buf.as_mut_ptr(), &mut len);
+        CloseHandle(process);
+        if ok == 0 {
+            return None;
+        }
+        let path = String::from_utf16_lossy(&buf[..len as usize]);
+        path.rsplit(['\\', '/']).next().map(String::from)
+    }
+}
+
+/// Windows with a title containing `substring` (case-insensitive, as `in title.lower()`)
+pub fn find_windows_by_title(substring: &str) -> Vec<HWND> {
+    let wanted = substring.to_lowercase();
+    windows().into_iter().filter(|(_, title, _)| !title.is_empty() && title.to_lowercase().contains(&wanted)).map(|w| w.0).collect()
+}
+
+/// Windows of a process named `name` (case-insensitive)
+pub fn find_windows_by_process(name: &str) -> Vec<HWND> {
+    let wanted = name.to_lowercase();
+    windows().into_iter().filter(|(_, _, pid)| process_name(*pid).is_some_and(|n| n.to_lowercase() == wanted)).map(|w| w.0).collect()
+}
+
+/// Restores the window and brings it to the front, borrowing the foreground thread's input
+fn focus_window(hwnd: HWND) -> bool {
+    unsafe {
+        ShowWindow(hwnd, SW_RESTORE);
+        let current = GetCurrentThreadId();
+        let foreground = GetForegroundWindow();
+        let foreground_thread = if foreground.is_null() { 0 } else { GetWindowThreadProcessId(foreground, std::ptr::null_mut()) };
+        let attached = foreground_thread != 0 && foreground_thread != current
+            && AttachThreadInput(current, foreground_thread, 1) != 0;
+        BringWindowToTop(hwnd);
+        let result = SetForegroundWindow(hwnd);
+        if attached {
+            AttachThreadInput(current, foreground_thread, 0);
+        }
+        result != 0
+    }
+}
+
+/// Puts `text` on the clipboard as Unicode text (retrying while another program holds it)
+pub fn copy(text: &str) -> bool {
+    let utf16: Vec<u16> = text.encode_utf16().chain([0]).collect();
+    for _ in 0..10 {
+        unsafe {
+            if OpenClipboard(std::ptr::null_mut()) == 0 {
+                std::thread::sleep(Duration::from_millis(20));
+                continue;
+            }
+            let copied = (|| {
+                if EmptyClipboard() == 0 {
+                    return false;
+                }
+                let memory = GlobalAlloc(GMEM_MOVEABLE, utf16.len() * 2);
+                if memory.is_null() {
+                    return false;
+                }
+                let target = GlobalLock(memory) as *mut u16;
+                if target.is_null() {
+                    GlobalFree(memory);
+                    return false;
+                }
+                std::ptr::copy_nonoverlapping(utf16.as_ptr(), target, utf16.len());
+                GlobalUnlock(memory);
+                // the clipboard owns the memory once this succeeds
+                if SetClipboardData(CF_UNICODETEXT as u32, memory).is_null() {
+                    GlobalFree(memory);
+                    return false;
+                }
+                true
+            })();
+            CloseClipboard();
+            return copied;
+        }
+    }
+    false
+}
+
+/// Ctrl+V to the focused window
+pub fn paste() {
+    unsafe {
+        keybd_event(VK_CONTROL as u8, 0, 0, 0);
+        keybd_event(VK_V, 0, 0, 0);
+        keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0);
+        keybd_event(VK_CONTROL as u8, 0, KEYEVENTF_KEYUP, 0);
+    }
+}
+
+/// Clipboard.copy_and_paste: focus the window of `window_name` (by title, then by process name),
+/// copy, and paste. False when the copy failed or no window took the focus (the text is copied).
+pub fn copy_and_paste(message: &str, window_name: Option<&str>, log: &dyn Fn(String)) -> bool {
+    let mut focused = false;
+    if let Some(name) = window_name {
+        log(format!("paste: attempting to focus window matching '{name}'"));
+        focused = find_windows_by_title(name).into_iter().any(focus_window)
+            || find_windows_by_process(name).into_iter().any(focus_window);
+        if focused {
+            std::thread::sleep(Duration::from_millis(200));
+        } else {
+            log(format!("copy_and_paste: could not focus a window matching '{name}'; copying only"));
+        }
+    }
+    if !copy(message) {
+        log("copy_and_paste: failed to copy to clipboard".into());
+        return false;
+    }
+    if focused {
+        paste();
+    }
+    focused
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // read-only: copy / paste would change the user's clipboard and type into their window
+    #[test]
+    fn finds_windows_without_touching_them() {
+        assert!(!windows().is_empty());
+        assert!(find_windows_by_title("no window has this title 0a9f3c").is_empty());
+        assert!(find_windows_by_process("no-such-process-0a9f3c.exe").is_empty());
+    }
+}

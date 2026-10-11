@@ -18,6 +18,8 @@ From the repository root in PowerShell:
     .\\.venv\\Scripts\\python.exe tools/check_audio_capture.py hotplug --output tmp/capture-hotplug.json
 
 Add --vad for SelectedMicVadRecorder and --speaker to also watch the default loopback.
+With $env:VRCT_RUST_AUDIO="1" the devices are the Rust backend's (vrct_audio / cpal) instead of
+PyAudioWPatch / pycaw; the report says which.
 """
 import argparse
 from collections import Counter
@@ -46,6 +48,12 @@ sys.path.insert(0, str(ROOT / 'src-python'))
 
 
 def devices():
+    if os.environ.get('VRCT_RUST_AUDIO') == '1':
+        # the Rust backend's devices (vrct_audio / cpal), as device_manager lists them then
+        listed = import_module('vrct_audio').list_devices()
+        mic = next(d for d in listed['inputs'] if d['name'] == listed['default_input'])
+        speaker = next(d for d in listed['loopbacks'] if d['name'] == listed['default_loopback'])
+        return mic, speaker
     with pa.PyAudio() as api:
         mic = api.get_default_input_device_info()
         host = api.get_host_api_info_by_type(pa.paWASAPI)
@@ -468,6 +476,7 @@ def environment():
              'src-python/device_manager.py',
              'tools/check_audio_capture.py']
     result = {'python': platform.python_version(), 'platform': platform.platform(),
+              'rust_audio': os.environ.get('VRCT_RUST_AUDIO') == '1',
               'source_sha256': {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
                                 for name in paths}}
     if 'vrct_audio' in sys.modules:

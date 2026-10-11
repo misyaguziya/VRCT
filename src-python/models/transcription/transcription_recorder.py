@@ -608,6 +608,7 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             {},
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
+            device_name=device.get("name"),
         )
         super().__init__(
             source=source,
@@ -634,6 +635,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
             channels=int(device.get("maxInputChannels", 1)),
+            device_name=device.get("name"),
         )
         super().__init__(
             source=source,
@@ -651,6 +653,7 @@ class SelectedMicVadRecorder(BaseVadAndAudioRecorder):
             {},
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
+            device_name=device.get("name"),
         )
         super().__init__(source=source, record_timeout=record_timeout, label="mic")
 
@@ -663,5 +666,6 @@ class SelectedSpeakerVadRecorder(BaseVadAndAudioRecorder):
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
             channels=int(device.get("maxInputChannels", 1)),
+            device_name=device.get("name"),
         )
         super().__init__(source=source, record_timeout=record_timeout, label="speaker")

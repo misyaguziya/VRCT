@@ -11,6 +11,7 @@ license = "MIT"
 
 [tool.maturin]
 locked = true
+features = ["python"]
 include = [
     { path = "THIRD_PARTY_LICENSES.txt", format = ["sdist", "wheel"] },
     { path = "LICENSE", format = ["sdist", "wheel"] },

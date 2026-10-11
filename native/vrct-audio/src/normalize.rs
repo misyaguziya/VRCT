@@ -1,10 +1,9 @@
 //! Integer width conversion and VAD downmix; resampling stays in audioop.ratecv.
 use dasp_sample::{Sample, I24};
-use pyo3::{exceptions::PyValueError, prelude::*, types::PyBytes};
 
 use crate::{MAX_CHANNELS, MAX_PCM_BYTES};
 
-fn validate(len: usize, width: usize, channels: usize) -> Result<(), &'static str> {
+pub(crate) fn validate(len: usize, width: usize, channels: usize) -> Result<(), &'static str> {
     if !(1..=4).contains(&width) {
         return Err("sample width must be between 1 and 4 bytes");
     }
@@ -60,28 +59,16 @@ fn normalize<const WIDTH: usize>(pcm: &[u8], channels: usize) -> Vec<u8> {
 }
 
 /// Convert signed PCM8/16/24/32LE to mono PCM16LE. Drop incomplete channel frames.
-#[pyfunction]
-pub fn normalize_pcm16<'py>(
-    py: Python<'py>,
-    pcm: &Bound<'py, PyBytes>,
-    sample_width: usize,
-    channels: usize,
-) -> PyResult<Bound<'py, PyBytes>> {
-    let input = pcm.as_bytes();
-    validate(input.len(), sample_width, channels).map_err(PyValueError::new_err)?;
-    if sample_width == 2 && channels == 1 {
-        // bytes is immutable; retain the Python reference without copying PCM.
-        return Ok(pcm.clone());
-    }
-    // Immutable PyBytes remains alive until this synchronous call returns.
-    let output = py.allow_threads(|| match sample_width {
-        1 => normalize::<1>(input, channels),
-        2 => normalize::<2>(input, channels),
-        3 => normalize::<3>(input, channels),
-        4 => normalize::<4>(input, channels),
+pub fn normalize_pcm16(pcm: &[u8], sample_width: usize, channels: usize) -> Result<Vec<u8>, &'static str> {
+    validate(pcm.len(), sample_width, channels)?;
+    Ok(match sample_width {
+        1 => normalize::<1>(pcm, channels),
+        2 if channels == 1 => pcm.to_vec(),
+        2 => normalize::<2>(pcm, channels),
+        3 => normalize::<3>(pcm, channels),
+        4 => normalize::<4>(pcm, channels),
         _ => unreachable!("validated sample width"),
-    });
-    Ok(PyBytes::new(py, &output))
+    })
 }
 
 #[cfg(test)]

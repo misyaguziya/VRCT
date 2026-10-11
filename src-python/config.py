@@ -42,6 +42,7 @@ except Exception:  # pragma: no cover - optional runtime
     ocr_selectable_languages = ()  # type: ignore
 
 from utils import errorLogging, printLog, validateDictStructure, getComputeDeviceList, isValidIpAddress, isWildcardBindAddress
+from models.transcription.native_audio import RUST_HOST_NAME, get_rust_devices
 
 # NOTE: MIC_VAD_FILTER/SPEAKER_VAD_FILTER/MIC_VAD_PARAMETERS/SPEAKER_VAD_PARAMETERS と
 # 対応する migration ヘルパは ADR-0004 でストリーミング/VAD 独自実装を撤退した際に
@@ -638,6 +639,9 @@ def _selected_translation_compute_type_validator(val, inst):
         return val
     return None
 
+_PORTAUDIO_HOSTS = ("MME", "Windows DirectSound", "Windows WDM-KS", "Windows WASAPI")
+
+
 def _mic_host_validator(val, inst):
     if device_manager is None:
         return None
@@ -649,6 +653,9 @@ def _mic_host_validator(val, inst):
     if val == "NoHost":
         return val
     hosts = list(device_manager.getMicDevices().keys())
+    if get_rust_devices() is not None and val in _PORTAUDIO_HOSTS and RUST_HOST_NAME in hosts:
+        # the Rust backend has WASAPI only: MME / DirectSound / WDM-KS settings move there
+        return RUST_HOST_NAME
     return val if val in hosts else None
 
 def _mic_device_validator(val, inst):
@@ -663,6 +670,9 @@ def _mic_device_validator(val, inst):
     try:
         devices = device_manager.getMicDevices().get(inst.SELECTED_MIC_HOST, [])
         names = [d.get('name') for d in devices]
+        if val not in names and get_rust_devices() is not None:
+            # an MME name is cut at 31 characters: the WASAPI device it starts
+            return next((n for n in names if isinstance(n, str) and n.startswith(val)), None)
         return val if val in names else None
     except Exception:
         return None

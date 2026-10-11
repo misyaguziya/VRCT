@@ -1,12 +1,19 @@
 //! Short-clip audio processing. No recording devices, networking or model loading.
+//! The `python` feature builds the extension module the Python backend imports (`vrct_audio`).
 use flacenc::{bitsink::ByteSink, component::BitRepr, error::Verify};
-use pyo3::{
-    exceptions::{PyOverflowError, PyValueError},
-    prelude::*,
-    types::PyBytes,
-};
+pub mod audioop;
+#[cfg(feature = "devices")]
+pub mod devices;
 mod energy;
+#[cfg(feature = "devices")]
+pub mod endpoints;
 mod normalize;
+pub mod vad;
+#[cfg(feature = "python")]
+mod python;
+
+pub use energy::{rms, EnergyDetector};
+pub use normalize::normalize_pcm16;
 
 // This limits the input, not the total memory used by the encoder.
 const MAX_PCM_BYTES: usize = 64 * 1024 * 1024;
@@ -72,24 +79,13 @@ fn mix_speaker_frames(pcm: &[u8], channels: usize) -> Result<Vec<u8>, &'static s
     Ok(out)
 }
 
-#[pyfunction]
-fn speaker_downmix_pcm16<'py>(
-    py: Python<'py>,
-    pcm: &Bound<'py, PyBytes>,
-    channels: usize,
-) -> PyResult<Bound<'py, PyBytes>> {
-    let input = pcm.as_bytes();
-    validate_pcm(input.len(), channels).map_err(PyValueError::new_err)?;
+/// The speaker transcription downmix (3 to 256 channels), as pydub's set_channels(1)
+pub fn speaker_downmix_pcm16(pcm: &[u8], channels: usize) -> Result<Vec<u8>, &'static str> {
+    validate_pcm(pcm.len(), channels)?;
     if channels < 3 {
-        return Err(PyValueError::new_err(
-            "speaker downmix requires 3 to 256 channels",
-        ));
+        return Err("speaker downmix requires 3 to 256 channels");
     }
-    // The borrowed immutable bytes stay alive for this synchronous call.
-    let output = py
-        .allow_threads(|| mix_speaker_frames(input, channels))
-        .map_err(PyOverflowError::new_err)?;
-    Ok(PyBytes::new(py, &output))
+    mix_speaker_frames(pcm, channels)
 }
 
 fn encode_samples(pcm: &[u8], sample_rate: u32) -> Result<Vec<u8>, String> {
@@ -114,44 +110,15 @@ fn encode_samples(pcm: &[u8], sample_rate: u32) -> Result<Vec<u8>, String> {
 }
 
 /// Encode mono PCM16LE to a complete FLAC stream without an external process.
-#[pyfunction]
-fn encode_flac<'py>(
-    py: Python<'py>,
-    pcm: &Bound<'py, PyBytes>,
-    sample_rate: u32,
-) -> PyResult<Bound<'py, PyBytes>> {
-    let input = pcm.as_bytes();
-    validate_flac(input.len(), sample_rate).map_err(PyValueError::new_err)?;
-    // PyBytes is immutable and its owner outlives the synchronous GIL release.
-    let output = py
-        .allow_threads(|| encode_samples(input, sample_rate))
-        .map_err(PyValueError::new_err)?;
-    Ok(PyBytes::new(py, &output))
+pub fn encode_flac(pcm: &[u8], sample_rate: u32) -> Result<Vec<u8>, String> {
+    validate_flac(pcm.len(), sample_rate)?;
+    encode_samples(pcm, sample_rate)
 }
 
 /// VAD downmix, deliberately different from the legacy speaker sum-and-clip.
-#[pyfunction]
-fn downmix_pcm16<'py>(
-    py: Python<'py>,
-    pcm: &Bound<'py, PyBytes>,
-    channels: usize,
-) -> PyResult<Bound<'py, PyBytes>> {
-    let input = pcm.as_bytes();
-    validate_pcm(input.len(), channels).map_err(PyValueError::new_err)?;
-    // Borrow only the byte slice; no Python API is used while detached.
-    let output = py.allow_threads(|| mix_frames(input, channels));
-    Ok(PyBytes::new(py, &output))
-}
-
-#[pymodule]
-fn vrct_audio(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(encode_flac, m)?)?;
-    m.add_function(wrap_pyfunction!(downmix_pcm16, m)?)?;
-    m.add_function(wrap_pyfunction!(normalize::normalize_pcm16, m)?)?;
-    m.add_function(wrap_pyfunction!(speaker_downmix_pcm16, m)?)?;
-    m.add_function(wrap_pyfunction!(energy::rms_pcm16, m)?)?;
-    m.add_class::<energy::EnergyDetector>()?;
-    Ok(())
+pub fn downmix_pcm16(pcm: &[u8], channels: usize) -> Result<Vec<u8>, &'static str> {
+    validate_pcm(pcm.len(), channels)?;
+    Ok(mix_frames(pcm, channels))
 }
 
 #[cfg(test)]
