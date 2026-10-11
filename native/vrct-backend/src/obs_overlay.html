@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VRCT OBS Browser Source</title>
+    <style>
+      :root {
+        --font-size: @@OBS_BROWSER_SOURCE_FONT_SIZE@@px;
+        --font-color: @@OBS_BROWSER_SOURCE_FONT_COLOR@@;
+        --outline-size: @@OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS@@px;
+        --outline-color: @@OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR@@;
+        --display-duration: @@OBS_BROWSER_SOURCE_DISPLAY_DURATION@@s;
+        --fadeout-duration: @@OBS_BROWSER_SOURCE_FADEOUT_DURATION@@s;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+        color: var(--font-color);
+        font-family:
+          "Noto Sans CJK JP",
+          "Noto Sans JP",
+          "Noto Sans CJK",
+          "Noto Sans",
+          "Segoe UI",
+          "Meiryo",
+          system-ui,
+          sans-serif;
+        font-weight: 600;
+        text-shadow: 0 2px 10px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.95);
+      }
+
+      #root {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 32px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        pointer-events: none;
+      }
+
+      .msg {
+        font-size: var(--font-size);
+        line-height: 1.2;
+        white-space: pre-wrap;
+        opacity: 1;
+        transform: translateY(0);
+        animation: fadeout var(--fadeout-duration) ease var(--display-duration) forwards;
+      }
+
+      .msg, .msg * {
+        -webkit-text-stroke-width: var(--outline-size);
+        -webkit-text-stroke-color: var(--outline-color);
+      }
+
+      .msg .translation {
+        font-weight: 700;
+      }
+
+      .msg .original {
+        margin-top: 4px;
+        font-size: calc(var(--font-size) * 0.75);
+        opacity: 0.9;
+      }
+
+      @keyframes fadeout {
+        to {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      (() => {
+        const SETTINGS = {
+          wsPort: @@WEBSOCKET_PORT@@,
+          wsToken: "@@ws_token@@",
+          maxMessages: @@OBS_BROWSER_SOURCE_MAX_MESSAGES@@,
+          displayDurationMs: @@OBS_BROWSER_SOURCE_DISPLAY_DURATION@@ * 1000,
+          fadeoutDurationMs: @@OBS_BROWSER_SOURCE_FADEOUT_DURATION@@ * 1000,
+        };
+
+        const root = document.getElementById("root");
+        let reconnectDelayMs = 500;
+        let reconnectTimer = null;
+
+        const asString = (v) => (typeof v === "string" ? v : "");
+        const asStringArray = (v) =>
+          Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.length > 0) : [];
+
+        const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+        const applySettings = (settings) => {
+          if (!settings || typeof settings !== "object") return;
+          const style = document.documentElement.style;
+
+          if (Number.isFinite(settings.maxMessages) && settings.maxMessages > 0) {
+            SETTINGS.maxMessages = settings.maxMessages;
+          }
+          if (Number.isFinite(settings.displayDuration) && settings.displayDuration >= 0) {
+            SETTINGS.displayDurationMs = settings.displayDuration * 1000;
+            style.setProperty("--display-duration", `${settings.displayDuration}s`);
+          }
+          if (Number.isFinite(settings.fadeoutDuration) && settings.fadeoutDuration >= 0) {
+            SETTINGS.fadeoutDurationMs = settings.fadeoutDuration * 1000;
+            style.setProperty("--fadeout-duration", `${settings.fadeoutDuration}s`);
+          }
+          if (Number.isFinite(settings.fontSize) && settings.fontSize > 0) {
+            style.setProperty("--font-size", `${settings.fontSize}px`);
+          }
+          if (typeof settings.fontColor === "string" && HEX_COLOR_RE.test(settings.fontColor)) {
+            style.setProperty("--font-color", settings.fontColor);
+          }
+          if (Number.isFinite(settings.outlineThickness) && settings.outlineThickness >= 0) {
+            style.setProperty("--outline-size", `${settings.outlineThickness}px`);
+          }
+          if (typeof settings.outlineColor === "string" && HEX_COLOR_RE.test(settings.outlineColor)) {
+            style.setProperty("--outline-color", settings.outlineColor);
+          }
+        };
+
+        const addMessage = (payload) => {
+          const type = asString(payload?.type) || "MESSAGE";
+          const message = asString(payload?.message);
+          const translations = asStringArray(payload?.translation);
+
+          const translationText = translations.join("\n");
+          const primaryText = translationText || message;
+          if (!primaryText) return;
+
+          const msgEl = document.createElement("div");
+          msgEl.className = `msg msg-${type.toLowerCase()}`;
+
+          const translationEl = document.createElement("div");
+          translationEl.className = "translation";
+          translationEl.textContent = primaryText;
+          msgEl.appendChild(translationEl);
+
+          if (translationText && message && message !== translationText) {
+            const originalEl = document.createElement("div");
+            originalEl.className = "original";
+            originalEl.textContent = message;
+            msgEl.appendChild(originalEl);
+          }
+
+          root.appendChild(msgEl);
+
+          while (root.childNodes.length > SETTINGS.maxMessages) {
+            root.removeChild(root.firstChild);
+          }
+
+          window.setTimeout(() => {
+            msgEl.remove();
+          }, SETTINGS.displayDurationMs + SETTINGS.fadeoutDurationMs + 250);
+        };
+
+        const scheduleReconnect = () => {
+          if (reconnectTimer) return;
+          reconnectTimer = window.setTimeout(() => {
+            reconnectTimer = null;
+            connect();
+          }, reconnectDelayMs);
+          reconnectDelayMs = Math.min(reconnectDelayMs * 1.5, 8000);
+        };
+
+        const connect = () => {
+          const wsUrl = SETTINGS.wsToken
+            ? `ws://${location.hostname}:${SETTINGS.wsPort}/?token=${encodeURIComponent(SETTINGS.wsToken)}`
+            : `ws://${location.hostname}:${SETTINGS.wsPort}`;
+          let ws;
+          try {
+            ws = new WebSocket(wsUrl);
+          } catch (e) {
+            scheduleReconnect();
+            return;
+          }
+
+          ws.addEventListener("open", () => {
+            reconnectDelayMs = 500;
+          });
+
+          ws.addEventListener("message", (event) => {
+            try {
+              const payload = JSON.parse(event.data);
+              if (asString(payload?.type) === "SETTINGS_UPDATED") {
+                applySettings(payload?.settings);
+                return;
+              }
+              addMessage(payload);
+            } catch (e) {
+              // ignore malformed messages
+            }
+          });
+
+          ws.addEventListener("close", () => {
+            scheduleReconnect();
+          });
+
+          ws.addEventListener("error", () => {
+            try { ws.close(); } catch (e) {}
+          });
+        };
+
+        connect();
+      })();
+    </script>
+  </body>
+</html>

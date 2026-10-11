@@ -1,0 +1,345 @@
+{
+ "steps": [
+  {
+   "step": "auth_bad",
+   "result": false,
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key bad-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "71",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-US",
+       "text": [
+        " "
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "auth_free",
+   "result": true,
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key free-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "71",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-US",
+       "text": [
+        " "
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate Japanese->English (United States)",
+   "result": "[EN-US] こんにちは、\n世界！ & <tag>",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key free-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "155",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-US",
+       "source_lang": "JA",
+       "text": [
+        "こんにちは、\n世界！ & <tag>"
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate Japanese->English (Japan)",
+   "result": "[EN-GB] こんにちは、\n世界！ & <tag>",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key free-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "155",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-GB",
+       "source_lang": "JA",
+       "text": [
+        "こんにちは、\n世界！ & <tag>"
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate English->Portuguese (Portugal)",
+   "result": "[PT-PT] こんにちは、\n世界！ & <tag>",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key free-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "155",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "PT-PT",
+       "source_lang": "EN",
+       "text": [
+        "こんにちは、\n世界！ & <tag>"
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate English->Portuguese (Brazil)",
+   "result": "[PT-BR] こんにちは、\n世界！ & <tag>",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key free-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "155",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "PT-BR",
+       "source_lang": "EN",
+       "text": [
+        "こんにちは、\n世界！ & <tag>"
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate English->Chinese Simplified (China)",
+   "result": "[ZH] こんにちは、\n世界！ & <tag>",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key free-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "152",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "ZH",
+       "source_lang": "EN",
+       "text": [
+        "こんにちは、\n世界！ & <tag>"
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate English->Japanese (Japan)",
+   "result": "[JA] こんにちは、\n世界！ & <tag>",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api-free.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key free-key:fx",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "152",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "JA",
+       "source_lang": "EN",
+       "text": [
+        "こんにちは、\n世界！ & <tag>"
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate Japanese->Klingon (Japan)",
+   "result": null,
+   "requests": []
+  },
+  {
+   "step": "translate English->English (Japan)",
+   "result": "こんにちは、\n世界！ & <tag>",
+   "requests": []
+  },
+  {
+   "step": "auth_pro",
+   "result": true,
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key pro-key",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "71",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-US",
+       "text": [
+        " "
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate_pro",
+   "result": "[EN-GB] テスト",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key pro-key",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "109",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-GB",
+       "source_lang": "JA",
+       "text": [
+        "テスト"
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "auth_quota",
+   "result": false,
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key quota-key",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "71",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-US",
+       "text": [
+        " "
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  },
+  {
+   "step": "translate_no_client",
+   "result": false,
+   "requests": []
+  },
+  {
+   "step": "auth_busy",
+   "result": true,
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://api.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key busy-key",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "71",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-US",
+       "text": [
+        " "
+       ],
+       "show_billed_characters": true
+      }
+     }
+    },
+    {
+     "method": "POST",
+     "url": "https://api.deepl.com/v2/translate",
+     "headers": {
+      "authorization": "DeepL-Auth-Key busy-key",
+      "user-agent": "deepl-python/1.22.0 (Windows-10-10.0.26200-SP0) python/3.11.5 requests/2.34.2",
+      "content-length": "71",
+      "content-type": "application/json"
+     },
+     "body": {
+      "json": {
+       "target_lang": "EN-US",
+       "text": [
+        " "
+       ],
+       "show_billed_characters": true
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

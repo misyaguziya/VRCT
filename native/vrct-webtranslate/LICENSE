@@ -1,0 +1,85 @@
+VRCT Translator Engines License
+
+Copyright (c) 2026 misyaguziya. All rights reserved.
+
+This software is source-available, not open source. Read it freely; use it
+only as described below.
+
+1. DEFINITIONS
+
+   "Software" means this package (translator-engines), including its source
+   code, documentation, and any modification or derivative work of it.
+
+   "Copyright Holder" means misyaguziya, the author of the Software.
+
+   "VRCT" means the application VRCT as published by the Copyright Holder at
+   https://github.com/misyaguziya/VRCT, and the binary releases of that
+   application made by the Copyright Holder. Forks, ports, rebrands, and
+   other derivatives of VRCT not published by the Copyright Holder are NOT
+   VRCT for the purposes of this license.
+
+2. GRANT
+
+   Permission is granted, free of charge, to any person obtaining a copy of
+   the Software to:
+
+   (a) read, study, and audit the Software;
+   (b) use, copy, and modify the Software solely as a component of VRCT,
+       including building VRCT from source for personal use; and
+   (c) distribute the Software only as a bundled component of an official
+       distribution of VRCT.
+
+3. RESTRICTIONS
+
+   All rights not expressly granted in Section 2 are reserved. Without prior
+   written permission from the Copyright Holder, you may not:
+
+   (a) use the Software in, or as a component of, any software other than
+       VRCT, including forks and derivatives of VRCT;
+   (b) distribute the Software on its own, or as part of anything other than
+       an official distribution of VRCT;
+   (c) sublicense, sell, rent, lease, or offer the Software as a service;
+   (d) remove or alter this license or any copyright or license notice
+       contained in the Software.
+
+   Quoting portions of the Software for the purpose of discussing it,
+   reporting a bug, or proposing a change to it is permitted.
+
+4. CONTRIBUTIONS
+
+   By submitting a contribution to the Software, you grant the Copyright
+   Holder a perpetual, worldwide, irrevocable, royalty-free license to use,
+   modify, and distribute that contribution under this license or any other
+   terms the Copyright Holder chooses.
+
+5. TERMINATION
+
+   The permissions in Section 2 terminate automatically if you breach this
+   license. They may be restored by the Copyright Holder in writing.
+
+6. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+   OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+7. THIRD-PARTY SERVICES AND TRADEMARKS
+
+   The Software calls undocumented endpoints operated by Google, Microsoft,
+   and Naver, the same ones their public web front ends use. This license
+   grants no rights in those services; each operator's own terms govern your
+   use of them, and calling these endpoints from outside those front ends is
+   not a use those operators provide for.
+
+   The Copyright Holder is not affiliated with, endorsed by, or sponsored by
+   Google LLC, Microsoft Corporation, or NAVER Corporation. "Google", "Google
+   Translate", "Bing", "Microsoft Translator", "Papago", and "NAVER" are
+   trademarks of their respective owners. This license grants no rights in
+   any trademark; those names appear in the Software only to identify which
+   service a given request is sent to.
+
+For permission to use the Software outside VRCT, contact the Copyright Holder.

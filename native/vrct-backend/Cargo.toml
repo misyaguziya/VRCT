@@ -8,8 +8,21 @@ description = "VRCT backend (sidecar): IPC, state, pipeline and the features"
 
 [dependencies]
 anyhow = "1"
+reqwest = { version = "0.12", features = ["blocking", "json", "multipart"] }
+serde_yaml = "0.9"
+regex = "1"
+sha2 = "0.10"
+# reqwest's runtime: downloads with a read timeout (the blocking client has only a total one) and the WebSocket server
+tokio = { version = "1", features = ["rt", "net", "time", "sync", "macros"] }
+# The WebSocket server for the OBS browser source
+tokio-tungstenite = "0.24"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+getrandom = "0.2"
 serde_json = { version = "1", features = ["preserve_order"] }
+# GetLocalTime (Python's date.today() / datetime.now())
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_SystemInformation"] }
 vrct-ct2 = { path = "../vrct-ct2" }
+vrct-webtranslate = { path = "../vrct-webtranslate" }
 # The same tokenizers as the Python backend's (tokenizers 0.19.1 wraps this crate). esaxx (training
 # only) is built with the static CRT, which cannot be mixed with the /MD CTranslate2 shim.
 tokenizers = { version = "=0.19.1", default-features = false, features = ["onig"] }
@@ -18,3 +31,7 @@ sentencepiece = "0.14"
 # SudachiPy 0.6.10 is this crate at the same tag. Its dependencies are pinned in Cargo.lock to the
 # tag's Cargo.lock (unicode-normalization, regex, ...), so the text normalization is the same.
 sudachi = { git = "https://github.com/WorksApplications/sudachi.rs", tag = "v0.6.10" }
+
+[dev-dependencies]
+tiny_http = "0.12"
+sha2 = "0.10"

@@ -30,6 +30,13 @@ pub const WEIGHTS: [Weight; 5] = [
              directory_name: "nllb-200-3.3B-ct2-int8", tokenizer: "facebook/nllb-200-3.3B" },
 ];
 
+impl Weight {
+    /// The files of `tokenizer` that `Ct2Translator::load` reads
+    pub fn tokenizer_files(&self) -> &'static [&'static str] {
+        if self.weight_type.starts_with("m2m100") { &["sentencepiece.bpe.model", "vocab.json"] } else { &["tokenizer.json"] }
+    }
+}
+
 pub fn weight(weight_type: &str) -> Result<&'static Weight> {
     WEIGHTS.iter().find(|w| w.weight_type == weight_type).ok_or_else(|| anyhow!("unknown weight type {weight_type}"))
 }

@@ -1,0 +1,730 @@
+{
+ "app_key": "A-EU-0000000000",
+ "steps": [
+  {
+   "step": "first run",
+   "status": 200,
+   "before": null,
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E2"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "860"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "app_started",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {}
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E1"
+        }
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "second run same day",
+   "status": 200,
+   "before": null,
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E3"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\",\n      \"E3\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "291"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E3"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "disabled",
+   "status": 200,
+   "before": null,
+   "calls": [
+    [
+     "init",
+     false
+    ],
+    [
+     "track_error",
+     "E4"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\",\n      \"E3\"\n    ]\n  }\n}",
+   "requests": []
+  },
+  {
+   "step": "enabled later",
+   "status": 200,
+   "before": null,
+   "calls": [
+    [
+     "init",
+     false
+    ],
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E5"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\",\n      \"E3\",\n      \"E5\"\n    ]\n  }\n}",
+   "requests": []
+  },
+  {
+   "step": "disabled later",
+   "status": 200,
+   "before": null,
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "init",
+     false
+    ],
+    [
+     "track_error",
+     "E6"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\",\n      \"E3\",\n      \"E5\"\n    ]\n  }\n}",
+   "requests": []
+  },
+  {
+   "step": "restart in run",
+   "status": 200,
+   "before": null,
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "shutdown"
+    ],
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E7"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\",\n      \"E3\",\n      \"E5\",\n      \"E7\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "291"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E7"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "server error",
+   "status": 500,
+   "before": "{\"last_app_started_date\": \"<yesterday>\", \"errors_sent\": {\"<yesterday>\": [\"E1\"]}}",
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E8"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E8\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "570"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "app_started",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {}
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E8"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "yesterday",
+   "status": 200,
+   "before": "{\"last_app_started_date\": \"<yesterday>\", \"errors_sent\": {\"<yesterday>\": [\"E1\"], \"<today>\": [\"E2\"]}}",
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E2"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E2\",\n      \"E1\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "570"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "app_started",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {}
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E1"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "corrupt",
+   "status": 200,
+   "before": "{not json",
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E2"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "860"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "app_started",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {}
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E1"
+        }
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "root not dict",
+   "status": 200,
+   "before": "[1, 2]",
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E2"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "860"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "app_started",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {}
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E1"
+        }
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "step": "odd values",
+   "status": 200,
+   "before": "{\"last_app_started_date\": 5, \"errors_sent\": null, \"extra\": 1}",
+   "calls": [
+    [
+     "init",
+     true
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E1"
+    ],
+    [
+     "track_error",
+     "E2"
+    ],
+    [
+     "shutdown"
+    ]
+   ],
+   "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\"\n    ]\n  }\n}",
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "860"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "app_started",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {}
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E1"
+        }
+       },
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E2"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
