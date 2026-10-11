@@ -59,9 +59,9 @@ VRCT-sidecar.exe (Rust)
 | クレート | 中身 | 由来 |
 |---|---|---|
 | `vrct-backend`（bin） | ipc / app / pipeline / asr / translate / translit / osc / net / platform | 新規 |
-| `vrct-ct2` | CTranslate2 の受け口（`shim/ct2_shim.cpp`、`build.rs` で DLL からインポートライブラリを生成）と安全な Rust の型 | `native/poc-ct2dll` を育てる |
-| `vrct-whisper` | faster-whisper 1.1.1 の移植（メル特徴量、`transcribe` のループ、抑止トークン、言語判定） | `native/poc-ct2/src/mel.rs` ほか |
-| `vrct-ocr` | YOLOX・RapidOCR・OpenCV / numpy の移植、Clipper | `native/poc-ort` を育てる |
+| `vrct-ct2` | CTranslate2 の受け口（`shim/ct2_shim.cpp`、`build.rs` で DLL からインポートライブラリを生成）と安全な Rust の型 | `native/poc-ct2dll` を育てた（P1） |
+| `vrct-whisper` | faster-whisper 1.1.1 の移植（メル特徴量、`transcribe` のループ、抑止トークン、言語判定） | `native/poc-ct2/src/mel.rs` ほか（P1） |
+| `vrct-ocr` | YOLOX・RapidOCR・OpenCV / numpy の移植、Clipper、bidi | `native/poc-ort` を育てた（P1） |
 | `vrct-audio` | 既存。PyO3 部分を feature に分け、録音・デバイス管理を追加 | 既存 |
 | `vrct-graphics` | 既存。VR UI の GPU 経路。オーバーレイ全体の土台へ | 既存 |
 | `vrct-webtranslate` | Web 翻訳（Google / Bing / Papago）。別リポジトリ `translator_engines` のソースを取り込み、PyO3 の入口（`lib.rs` の 5 関数）を外して Rust の関数として公開する（ユーザー承認済み） | `D:\WORKSPACE\WORK\VRChatProject\translator_engines` |
@@ -159,7 +159,7 @@ App
 | PyAudioWPatch（PortAudio + WASAPI ループバック） | **`cpal`（WASAPI）**。ループバックは出力デバイスに入力ストリームを開く（`cpal` 0.16 で動作確認済み） | 下の「デバイス名の互換」 |
 | pycaw / comtypes（既定デバイス・変更通知） | `windows` クレートで `IMMDeviceEnumerator` / `IMMNotificationClient` | 通知はコールバックからキューへ積むだけにする |
 | `active_endpoint_tracker` | 同じ判定を移植 | 後始末のタイムアウトは今の値 |
-| エネルギー・区切り（`vrct-audio`）・Silero VAD（ort、一致確認済み） | そのまま使う | 3 秒境界・語尾の扱いは今の Rust 側の修正を引き継ぐ |
+| エネルギー・区切り（`vrct-audio`）・Silero VAD（ort、PoC で一致確認済み） | そのまま使う。Silero VAD は録音と一緒に P3 で `vrct-audio` へ移す（PoC のコードは git の履歴 `native/poc-ort/src/main.rs`） | 3 秒境界・語尾の扱いは今の Rust 側の修正を引き継ぐ |
 | `audioop` / `pydub` / `av`（形式変換） | `vrct-audio` の PCM 変換・FLAC | 16 kHz / 16 bit への変換の丸めを Python と比べる |
 
 **デバイス名の互換**（2026-10-11、同じ PC で PyAudioWPatch と `cpal` を比べた結果）:
@@ -258,7 +258,7 @@ App
 | 段階 | 内容 | 完了条件 |
 |---|---|---|
 | P0 土台 | ワークスペース、`third_party.toml` と `fetch-native`、契約テストの枠（Python 版に当てて通す）、基準データの書き出しスクリプト、ErrorCode の変換 | 契約テストが Python 版で全件通る。**2026-10-11 完了**: 191 件に応答・期待の status との違い 0・stderr 0 行、Python 同士の比較で差 0。取得した DLL は venv のものと同一、それでのビルドと stderr の付け替えを確認 |
-| P1 推論 | `vrct-ct2`・`vrct-whisper`（transcribe の全経路）・翻訳（NLLB / M2M100）・`vrct-ocr`（bidi 追加）・Sudachi | §8 の N がコーパスで全件一致 |
+| P1 推論 | `vrct-ct2`・`vrct-whisper`（transcribe の全経路）・翻訳（NLLB / M2M100）・`vrct-ocr`（bidi 追加）・Sudachi | §8 の N がコーパスで全件一致。**2026-10-11 完了**（Silero VAD は P3 へ）: NLLB 600M・M2M100 418M（分割・翻訳・復号）、Whisper base（58 ケース、80 / 128 メルの特徴量、30 秒超を含む）を CPU（int8）と CUDA（int8_float16）で、OCR（合成画像 54 枚と実際の画面 80 枚、6 言語のモデル、bidi）と音訳（85 文、カタカナ列 500）を CPU で、すべて違い 0。基準は `native/testdata/`、作り方は `native/reference/`。1.3B / 3.3B / 1.2B / Whisper の他の大きさは重みが手元に無く未照合（同じ処理） |
 | P2 外部 API・ファイル | ASR / 翻訳の API、DeepL、Web 翻訳（`vrct-webtranslate`）、重み・更新、テレメトリー、WebSocket、OBS | §8 の外部 API の比較が一致、サーバーの再発防止テスト |
 | P3 デバイス | 録音・デバイス管理・既定の追跡・OSC/OSCQuery・オーバーレイ（OpenVR・文字描画）・キャプチャ・クリップボード。PyO3 で今の Python 版に組み込んで実機確認 | 実機の確認表がすべて合格 |
 | P4 土台の差し替え | `ipc` / `app`（設定・エラー・起動/終了・watchdog）/ `pipeline` / 330 エンドポイントの本体を Rust で実装し、P1〜P3 の部品をつなぐ | 契約テストが Rust 版で全件通る、実機の通し確認 |
@@ -291,14 +291,14 @@ P1〜P3 は互いに独立していて並行できる。P4 は P1〜P3 がそろ
 
 ### 残っている確認（P0〜P1 の最初に行う）
 
-| 項目 | 確認の内容 | 外れた場合 |
-|---|---|---|
-| M2M100 のトークナイザー | `M2M100Tokenizer`（sentencepiece 0.2.1 + `vocab.json`）と同じ ID 列になるか。NLLB もコーパスを広げる | 自前の処理を足す |
-| transformers の `decode` | 空白の掃除などの既定の処理が、文のコーパスで一致するか | 自前の処理を足す |
-| LLM の要求 | langchain が付ける既定値を含め、各社の要求の本文が一致するか | 既定値を写す |
-| stderr の付け替え | `freopen` が各 DLL の出力に効くか | 別の方法で止める |
-| 重みのフォルダ | Hugging Face から取ったときのフォルダ構成と `.weight_verified.json` を再現できるか | 既存の重みを読む移行処理を足す |
-| ort | 2.0 が rc のまま | 版を固定し、安定版が出たら上げる |
+| 項目 | 確認の内容 | 外れた場合 | 結果 |
+|---|---|---|---|
+| M2M100 のトークナイザー | `M2M100Tokenizer`（sentencepiece 0.2.1 + `vocab.json`）と同じ ID 列になるか。NLLB もコーパスを広げる | 自前の処理を足す | **済**（2026-10-11）。sentencepiece は `sentencepiece-sys` 0.14（0.2.1 を同梱）、`M2M100Tokenizer` の分割・ID 化・追加トークンの扱いを移植。M2M100 418M で分割 414・翻訳 170・復号 570 件が一致 |
+| transformers の `decode` | 空白の掃除などの既定の処理が、文のコーパスで一致するか | 自前の処理を足す | **済**。NLLB は tokenizers を Python と同じ 0.19.1 に固定し、`clean_up_tokenization` を足す。M2M100 は遅いトークナイザーの `_decode`（言語トークンを空白でつなぐ扱いを含む）を移植。語彙からの乱択 400 件を含めて一致 |
+| LLM の要求 | langchain が付ける既定値を含め、各社の要求の本文が一致するか | 既定値を写す | P2 |
+| stderr の付け替え | `freopen` が各 DLL の出力に効くか | 別の方法で止める | **済**（P0） |
+| 重みのフォルダ | Hugging Face から取ったときのフォルダ構成と `.weight_verified.json` を再現できるか | 既存の重みを読む移行処理を足す | **読む側は済**。CTranslate2 の重みは `weights/ctranslate2/<dir>/`、トークナイザーは HF のキャッシュの形（`<dir>/tokenizer/models--org--name/snapshots/<refs/main>/`）。Rust はこの形を読む（`vrct-backend::hf_cache`）。書く側（取得）は P2 で同じ形にする |
+| ort | 2.0 が rc のまま | 版を固定し、安定版が出たら上げる | `=2.0.0-rc.13` に固定 |
 
 ## 12. 付録
 

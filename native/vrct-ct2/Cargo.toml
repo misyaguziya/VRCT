@@ -1,0 +1,14 @@
+[package]
+name = "vrct-ct2"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "The Python wheel's ctranslate2.dll through a C shim, with safe Rust types"
+
+[dependencies]
+anyhow = "1"
+
+[build-dependencies]
+cc = "1"
+object = { version = "0.36", default-features = false, features = ["read_core", "pe", "std"] }

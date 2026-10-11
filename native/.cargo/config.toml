@@ -1,2 +1,8 @@
 [alias]
 xtask = "run -q -p xtask --"
+
+[env]
+# sentencepiece-sys は cmake (Visual Studio ジェネレーター) でビルドする。MSBuild の FileTracker は
+# 長いパス (worktree の target/release/build/...) で FTK1011 になるので切る (MSBuild は環境変数を
+# プロパティとして読む)。
+TrackFileAccess = "false"

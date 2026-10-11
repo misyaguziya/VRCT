@@ -1,0 +1,20 @@
+[package]
+name = "vrct-backend"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "VRCT backend (sidecar): IPC, state, pipeline and the features"
+
+[dependencies]
+anyhow = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
+vrct-ct2 = { path = "../vrct-ct2" }
+# The same tokenizers as the Python backend's (tokenizers 0.19.1 wraps this crate). esaxx (training
+# only) is built with the static CRT, which cannot be mixed with the /MD CTranslate2 shim.
+tokenizers = { version = "=0.19.1", default-features = false, features = ["onig"] }
+# Bundles sentencepiece 0.2.1, the version of the Python backend's sentencepiece (M2M100)
+sentencepiece = "0.14"
+# SudachiPy 0.6.10 is this crate at the same tag. Its dependencies are pinned in Cargo.lock to the
+# tag's Cargo.lock (unicode-normalization, regex, ...), so the text normalization is the same.
+sudachi = { git = "https://github.com/WorksApplications/sudachi.rs", tag = "v0.6.10" }
