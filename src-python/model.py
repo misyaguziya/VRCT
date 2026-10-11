@@ -893,6 +893,9 @@ class Model:
     # mic_mute_status の確認と更新を一度に行う (OSC はパケットごとに別スレッドで届き、/avatar/change は
     # 同じものが続けて届くことがある)
     _mute_status_lock = Lock()
+    # /avatar/change で MuteSelf を問い合わせるスレッド。問い合わせ (HTTP、時間制限なし) を OSC の受信スレッドで
+    # 行うと、その間すべての OSC 受信が止まる
+    _avatar_query_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="osc_avatar_query")
 
     def __new__(cls):
         if cls._instance is None:
@@ -1647,8 +1650,8 @@ class Model:
     def startReceiveOSC(self):
         self.ensure_initialized()
         def changeHandlerMute(address, osc_arguments):
-            # ThreadingOSCUDPServer は受信メッセージごとに新しいスレッドを
-            # 起こすため、ここはロックを一切持たない任意のスレッドで走る。
+            # OSC の受信スレッド (osc.py の oscServerServe) で走る。受信を止めないよう、
+            # ここで待つ処理をしないこと。
             # changeMicTranscriptStatus() を直接ここで呼ぶと、Auto Mic
             # Select のデバイス切替や mainloop ワーカーが直接呼ぶ
             # start/stop 系 (_stop()/_start() を実行中) と
@@ -1676,20 +1679,26 @@ class Model:
             # アバターを読み込んだ (VRChat の起動・再起動・アバター変更)。ミュートの状態はアバターの
             # パラメータなので、読み込むまで OSCQuery に無い (VRChat が現れた直後の問い合わせは 404)。
             # ここで読み直して同期する。VRCT を先に起動した場合も、ここで初めて状態が決まる。
-            # このパケットのスレッドで問い合わせる (マイクのキューを HTTP の待ちで止めない)
+            # 問い合わせは専用のスレッドで行う (OSC の受信スレッドもマイクのキューも HTTP の待ちで止めない)
             if config.VRC_MIC_MUTE_SYNC is not True:
                 return
-            mute = self.osc_handler.getOSCParameterMuteSelf()
-            printLog("OSC: MuteSelf read on avatar change", {"mute": mute})
-            if mute is None:
-                return
-            with self._mute_status_lock:
-                if mute == self.mic_mute_status:
+            self._avatar_query_executor.submit(syncMuteSelfAfterAvatarLoad)
+
+        def syncMuteSelfAfterAvatarLoad():
+            try:  # executor の中の例外は黙って捨てられるので記録する
+                mute = self.osc_handler.getOSCParameterMuteSelf()
+                printLog("OSC: MuteSelf read on avatar change", {"mute": mute})
+                if mute is None:
                     return
-                self.mic_mute_status = mute
-                self.mic_lifecycle_worker.enqueue(
-                    self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
-                )
+                with self._mute_status_lock:
+                    if mute == self.mic_mute_status:
+                        return
+                    self.mic_mute_status = mute
+                    self.mic_lifecycle_worker.enqueue(
+                        self.mic_mute_status_change_callback or self.changeMicTranscriptStatus
+                    )
+            except Exception:
+                errorLogging()
 
         dict_filter_and_target = {
             self.osc_handler.osc_parameter_muteself: changeHandlerMute,
