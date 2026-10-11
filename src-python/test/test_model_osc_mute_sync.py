@@ -149,6 +149,74 @@ class OscMuteHandlerRoutesThroughWorkerTests(unittest.TestCase):
         # ロック付きラッパーが使われていること。
         self.assertNotIn(self.model.changeMicTranscriptStatus, self.enqueued)
 
+    # --- /avatar/change: アバターを読み込んだときにミュートの状態を読み直す ---
+    # VRCT を先に起動すると、VRChat が現れた直後の問い合わせはアバターの読み込み前で 404 になり、
+    # 状態が None のまま決まらなかった (実機)。読み込み時の問い合わせは値を返した (実機)。
+
+    def _avatar_callback(self, mute):
+        self.model.osc_handler.getOSCParameterMuteSelf.return_value = mute
+        self.model.startReceiveOSC()
+        (dict_filter_and_target,), _ = self.model.osc_handler.setDictFilterAndTarget.call_args
+        callback = dict_filter_and_target["/avatar/change"]
+
+        def call_and_wait(*args):
+            callback(*args)
+            Model._avatar_query_executor.submit(lambda: None).result(timeout=5)  # 問い合わせのスレッドを待つ
+        return call_and_wait
+
+    def test_avatar_load_settles_an_unknown_state_and_syncs(self) -> None:
+        self.model.mic_mute_status = None
+        self._avatar_callback(True)("/avatar/change", "avtr_x")
+        self.assertIs(self.model.mic_mute_status, True)
+        self.assertEqual(len(self.enqueued), 1)
+        self.enqueued[0]()
+        self.model._mic_session.pause.assert_called_once()
+
+    def test_avatar_load_with_the_same_state_does_nothing(self) -> None:
+        self.model.mic_mute_status = True
+        self._avatar_callback(True)("/avatar/change", "avtr_x")
+        self.assertEqual(self.enqueued, [])
+
+    def test_avatar_load_without_a_readable_value_keeps_the_state(self) -> None:
+        self.model.mic_mute_status = None
+        self._avatar_callback(None)("/avatar/change", "avtr_x")
+        self.assertIsNone(self.model.mic_mute_status)
+        self.assertEqual(self.enqueued, [])
+
+    def test_avatar_load_is_ignored_while_sync_is_off(self) -> None:
+        config_module.config.VRC_MIC_MUTE_SYNC = False
+        callback = self._avatar_callback(True)
+        callback("/avatar/change", "avtr_x")
+        self.model.osc_handler.getOSCParameterMuteSelf.assert_not_called()
+        self.assertEqual(self.enqueued, [])
+
+    def test_avatar_change_returns_without_waiting_for_the_query(self) -> None:
+        # 受信は1本のスレッドで順に処理する (osc.py)。問い合わせ (HTTP) を待つと、その間すべての受信が止まる
+        self.model.mic_mute_status = None
+        release = threading.Event()
+        self.model.osc_handler.getOSCParameterMuteSelf.side_effect = lambda: release.wait(5) and True
+        self.model.startReceiveOSC()
+        (dict_filter_and_target,), _ = self.model.osc_handler.setDictFilterAndTarget.call_args
+        callback = dict_filter_and_target["/avatar/change"]
+        started = threading.Event()
+        threading.Thread(target=lambda: (callback("/avatar/change", "avtr_x"), started.set())).start()
+        self.assertTrue(started.wait(1))  # returned while the query is still waiting
+        release.set()
+        Model._avatar_query_executor.submit(lambda: None).result(timeout=5)
+        self.assertIs(self.model.mic_mute_status, True)
+        self.assertEqual(len(self.enqueued), 1)
+
+    def test_duplicate_avatar_change_syncs_once(self) -> None:
+        # VRChat は同じ /avatar/change を続けて送ることがあり、パケットごとに別スレッドで届く
+        self.model.mic_mute_status = None
+        callback = self._avatar_callback(True)
+        threads = [threading.Thread(target=callback, args=("/avatar/change", "avtr_x")) for _ in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(len(self.enqueued), 1)
+
 
 class ControllerRegistersLockedMuteCallbackTests(unittest.TestCase):
     """Controller が起動時に mic_lifecycle_lock 付きラッパーを Model へ
