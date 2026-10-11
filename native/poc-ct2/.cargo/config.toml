@@ -1,0 +1,3 @@
+# CTranslate2 is built with the static CRT (/MT); the rest must match (ct2rs README, Windows).
+[build]
+rustflags = ["-C", "target-feature=+crt-static"]

@@ -1,0 +1,24 @@
+[package]
+name = "poc-ort"
+version = "0.0.0"
+edition = "2024"
+# oar-ocr 0.7 以降が 1.95 を要求する (ort 2.0.0-rc.13 自体は 1.88)。
+rust-version = "1.95"
+publish = false
+
+[features]
+# 既定は onnxruntime.dll を実行時に読む (Python 同梱の DLL を流用できるかの確認)。
+default = ["dynamic", "gpu"]
+dynamic = ["ort/load-dynamic"]
+# ort がビルド時に pyke の CDN から onnxruntime を取ってきてリンクする方式。
+# gpu と組み合わせると CUDA 13 + TensorRT + DirectML 入りの大きい版が選ばれる。
+download = ["ort/download-binaries", "ort/copy-dylibs", "ort/tls-native", "oar-ocr/download-binaries"]
+# CUDA / DirectML の EP を登録する API を有効にする (DLL 側が対応している必要がある)。
+gpu = ["ort/cuda", "ort/directml", "oar-ocr/cuda", "oar-ocr/directml"]
+
+[dependencies]
+# rc なので完全一致で固定する。oar-ocr-core 0.10.0 も =2.0.0-rc.13 を要求する。
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std"] }
+oar-ocr = { version = "=0.10.0", default-features = false }
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde_json = "1"
