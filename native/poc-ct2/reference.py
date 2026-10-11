@@ -1,6 +1,7 @@
 """PoC reference: the current Python backend's Whisper and NLLB results, with VRCT's settings.
 
-    python native/poc-ct2/reference.py <repo>/tmp/poc-ct2   ->  <dir>/python.json
+    python native/poc-ct2/reference.py <repo>/tmp/poc-ct2 [cpu|cuda] [compute type]
+        ->  <dir>/python.json (cpu, int8) or <dir>/python-cuda.json
 
 Whisper: faster-whisper, base, cpu int8, cpu_threads=4, beam 5, temperature 0, without timestamps,
 language detection (force_language off). Segments keep avg_logprob / no_speech_prob so the Rust
@@ -31,10 +32,14 @@ def read_wav(path):
         return np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768.0
 
 
+DEVICE = sys.argv[2] if len(sys.argv) > 2 else "cpu"
+COMPUTE = sys.argv[3] if len(sys.argv) > 3 else "int8"
+
+
 def whisper(out_dir):
     from faster_whisper import WhisperModel
 
-    model = WhisperModel(str(WEIGHTS / "whisper" / "base"), device="cpu", compute_type="int8", cpu_threads=4,
+    model = WhisperModel(str(WEIGHTS / "whisper" / "base"), device=DEVICE, compute_type=COMPUTE, cpu_threads=4,
                          num_workers=1, local_files_only=True)
     from faster_whisper.tokenizer import Tokenizer
     from faster_whisper.transcribe import get_suppressed_tokens
@@ -67,7 +72,7 @@ def translation():
     import transformers
 
     directory = WEIGHTS / "ctranslate2" / "nllb-200-distilled-600M-ct2-int8"
-    translator = ctranslate2.Translator(str(directory), device="cpu", compute_type="int8", inter_threads=1,
+    translator = ctranslate2.Translator(str(directory), device=DEVICE, compute_type=COMPUTE, inter_threads=1,
                                         intra_threads=4)
     tokenizer = transformers.AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M",
                                                            cache_dir=str(directory / "tokenizer"))
@@ -85,7 +90,7 @@ def translation():
 if __name__ == "__main__":
     out_dir = Path(sys.argv[1])
     report = {"whisper": whisper(out_dir), "nllb": translation()}
-    (out_dir / "python.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+    (out_dir / ("python.json" if DEVICE == "cpu" else f"python-{DEVICE}.json")).write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
     for name, r in report["whisper"].items():
         print(name, r["language"], round(r["language_probability"], 3), repr(r["text"]))
     for r in report["nllb"]:

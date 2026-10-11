@@ -11,94 +11,13 @@ use anyhow::{anyhow, Context, Result};
 use ct2rs::sys::{
     ComputeType, Config, Device, StorageView, TranslationOptions, Translator, Whisper, WhisperOptions,
 };
-use rustfft::{num_complex::Complex32, FftPlanner};
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 use tokenizers::Tokenizer;
 
-const SAMPLE_RATE: usize = 16000;
-const N_FFT: usize = 400;
-const HOP: usize = 160;
-const N_MELS: usize = 80;
-const N_FRAMES: usize = 3000;
-
-/// Mel filter bank of FeatureExtractor.get_mel_filters (Slaney scale, slaney norm), [n_mels][n_fft/2+1].
-fn mel_filters() -> Vec<Vec<f64>> {
-    let n_freq = N_FFT / 2 + 1;
-    let fftfreqs: Vec<f64> = (0..n_freq).map(|i| i as f64 * SAMPLE_RATE as f64 / N_FFT as f64).collect();
-    let (min_mel, max_mel) = (0.0f64, 45.245640471924965f64);
-    let mels: Vec<f64> = (0..N_MELS + 2).map(|i| min_mel + (max_mel - min_mel) * i as f64 / (N_MELS + 1) as f64).collect();
-    let f_sp = 200.0 / 3.0;
-    let min_log_hz = 1000.0;
-    let min_log_mel = min_log_hz / f_sp;
-    let logstep = (6.4f64).ln() / 27.0;
-    let freqs: Vec<f64> = mels
-        .iter()
-        .map(|&m| if m >= min_log_mel { min_log_hz * (logstep * (m - min_log_mel)).exp() } else { f_sp * m })
-        .collect();
-    (0..N_MELS)
-        .map(|m| {
-            let enorm = 2.0 / (freqs[m + 2] - freqs[m]);
-            fftfreqs
-                .iter()
-                .map(|&f| {
-                    let lower = -(freqs[m] - f) / (freqs[m + 1] - freqs[m]);
-                    let upper = (freqs[m + 2] - f) / (freqs[m + 2] - freqs[m + 1]);
-                    lower.min(upper).max(0.0) * enorm
-                })
-                .collect()
-        })
-        .collect()
-}
-
-/// FeatureExtractor.__call__(audio, padding=160, chunk_length=30), then the first window padded
-/// to 3000 frames (pad_or_trim). Returns [n_mels * 3000] row-major.
-fn log_mel(audio: &[f32]) -> Vec<f32> {
-    let mut wave = audio.to_vec();
-    wave.extend(std::iter::repeat(0.0).take(HOP)); // padding=160
-    // center=True, reflect padding of n_fft/2 on both sides
-    let pad = N_FFT / 2;
-    let mut padded = Vec::with_capacity(wave.len() + 2 * pad);
-    padded.extend((1..=pad).rev().map(|i| wave[i]));
-    padded.extend_from_slice(&wave);
-    padded.extend((1..=pad).map(|i| wave[wave.len() - 1 - i]));
-    let n_frames = 1 + (padded.len() - N_FFT) / HOP;
-    // np.hanning(n_fft + 1)[:-1]
-    let window: Vec<f32> = (0..N_FFT)
-        .map(|i| (0.5 - 0.5 * (2.0 * std::f64::consts::PI * i as f64 / N_FFT as f64).cos()) as f32)
-        .collect();
-    let fft = FftPlanner::<f32>::new().plan_fft_forward(N_FFT);
-    let filters = mel_filters();
-    let n_freq = N_FFT / 2 + 1;
-    let frames = n_frames - 1; // magnitudes = |stft[..., :-1]|^2
-    let mut mel = vec![0f32; N_MELS * frames];
-    let mut buf = vec![Complex32::new(0.0, 0.0); N_FFT];
-    for t in 0..frames {
-        for i in 0..N_FFT {
-            buf[i] = Complex32::new(padded[t * HOP + i] * window[i], 0.0);
-        }
-        fft.process(&mut buf);
-        let power: Vec<f32> = buf[..n_freq].iter().map(|c| c.norm_sqr()).collect();
-        for m in 0..N_MELS {
-            let s: f32 = filters[m].iter().zip(&power).map(|(w, p)| *w as f32 * p).sum();
-            mel[m * frames + t] = s.max(1e-10).log10();
-        }
-    }
-    let max = mel.iter().cloned().fold(f32::MIN, f32::max);
-    for v in mel.iter_mut() {
-        *v = (v.max(max - 8.0) + 4.0) / 4.0;
-    }
-    // content_frames = features.shape[-1] - 1, first window, zero-padded to 3000
-    let content = frames - 1;
-    let mut out = vec![0f32; N_MELS * N_FRAMES];
-    for m in 0..N_MELS {
-        for t in 0..content.min(N_FRAMES) {
-            out[m * N_FRAMES + t] = mel[m * frames + t];
-        }
-    }
-    out
-}
+mod mel;
+use mel::{log_mel, matmul_fma, window, N_FRAMES, N_MELS};
 
 fn read_wav(path: &Path) -> Result<Vec<f32>> {
     let mut reader = hound::WavReader::open(path)?;
@@ -112,7 +31,8 @@ fn read_wav(path: &Path) -> Result<Vec<f32>> {
 fn config(device: Device) -> Config {
     Config {
         device,
-        compute_type: ComputeType::INT8,
+        // POC_COMPUTE=f32 isolates the int8 GEMM from the rest of the computation
+        compute_type: if std::env::var("POC_COMPUTE").is_ok_and(|v| v == "f32") { ComputeType::FLOAT32 } else { ComputeType::INT8 },
         num_threads_per_replica: 4,
         ..Default::default()
     }
@@ -135,7 +55,8 @@ fn whisper(data: &Path, weights: &Path, device: Device) -> Result<Value> {
     for wav in wavs {
         let name = wav.file_stem().unwrap().to_string_lossy().to_string();
         let started = Instant::now();
-        let mut mel = log_mel(&read_wav(&wav)?);
+        let (full, frames) = log_mel(&read_wav(&wav)?, &matmul_fma);
+        let mut mel = window(&full, frames, 0, frames - 1);
         // compare with the features faster-whisper computed
         let reference: Option<Vec<f32>> = std::fs::read(data.join(format!("{name}.mel.f32")))
             .ok()
@@ -194,8 +115,19 @@ fn nllb(data: &Path, weights: &Path, device: Device) -> Result<Value> {
         source.extend(enc.get_tokens().iter().cloned());
         source.push("</s>".to_string());
         let started = Instant::now();
+        let debug = std::env::var("POC_ONLY").is_ok();
+        let options = if debug {
+            TranslationOptions { num_hypotheses: 2, return_scores: true, ..Default::default() }
+        } else {
+            TranslationOptions::default()
+        };
         let result = translator.translate_batch_with_target_prefix(
-            &[source.clone()], &[vec![tgt.to_string()]], &TranslationOptions::default(), None)?;
+            &[source.clone()], &[vec![tgt.to_string()]], &options, None)?;
+        if debug {
+            for (h, s) in result[0].hypotheses.iter().zip(&result[0].scores) {
+                println!("  {s:.5} {}", h[1..h.len().min(4)].join(" "));
+            }
+        }
         let hypothesis = result[0].hypotheses[0].clone();
         let ids: Vec<u32> = hypothesis[1..].iter().filter_map(|t| tokenizer.token_to_id(t)).collect();
         let translation = tokenizer.decode(&ids, false).map_err(|e| anyhow!("{e}"))?;
@@ -213,8 +145,10 @@ fn main() -> Result<()> {
         Some("cuda") => Device::CUDA,
         _ => Device::CPU,
     };
-    let report = json!({"device": format!("{device:?}"), "whisper": whisper(&data, &weights, device)?,
-                        "nllb": nllb(&data, &weights, device)?});
+    // POC_ONLY=nllb skips Whisper (to check that running it first does not change NLLB)
+    let only_nllb = std::env::var("POC_ONLY").is_ok_and(|v| v == "nllb");
+    let whisper = if only_nllb { Value::Null } else { whisper(&data, &weights, device)? };
+    let report = json!({"device": format!("{device:?}"), "whisper": whisper, "nllb": nllb(&data, &weights, device)?});
     let name = if device == Device::CUDA { "rust-cuda.json" } else { "rust.json" };
     std::fs::write(data.join(name), serde_json::to_string_pretty(&report)?)?;
     println!("wrote {}", data.join(name).display());

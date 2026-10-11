@@ -1,0 +1,11 @@
+[package]
+name = "poc-oscquery"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "PoC: VRChat OSC/OSCQuery through the vrchat_osc crate (replacement for python-osc + tinyoscquery)"
+
+[dependencies]
+vrchat_osc = "=2.2.0"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time"] }
+anyhow = "1"

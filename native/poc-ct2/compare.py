@@ -1,6 +1,6 @@
 """Compare poc-ct2's rust.json (or rust-cuda.json) with reference.py's python.json.
 
-    python native/poc-ct2/compare.py <data dir> [rust.json]
+    python native/poc-ct2/compare.py <data dir> [rust.json] [python.json]
 """
 
 import json
@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 data = Path(sys.argv[1])
-py = json.loads((data / "python.json").read_text(encoding="utf-8"))
+py = json.loads((data / (sys.argv[3] if len(sys.argv) > 3 else "python.json")).read_text(encoding="utf-8"))
 rs = json.loads((data / (sys.argv[2] if len(sys.argv) > 2 else "rust.json")).read_text(encoding="utf-8"))
 ok = True
 
@@ -20,10 +20,11 @@ for name, p in py["whisper"].items():
     same_tokens = ps is not None and ps["tokens"] == [t for t in rseg["tokens"]]
     line = (f"{name:8s} lang {p['language']}/{r['language']} p {p['language_probability']:.4f}/{r['language_probability']:.4f}"
             f" text={'same' if same_text else 'DIFF'} tokens={'same' if same_tokens else 'diff'}"
-            f" mel_diff={r['mel_max_abs_diff']:.2e} {r['ms']} ms")
+            f" mel_diff={r['mel_max_abs_diff'] if r['mel_max_abs_diff'] is None else format(r['mel_max_abs_diff'], '.2e')}"
+            f" {r['ms']} ms")
     if ps is not None:
-        line += (f" avg_logprob {ps['avg_logprob']:.4f}/{rseg['avg_logprob']:.4f}"
-                 f" no_speech {ps['no_speech_prob']:.4f}/{rseg['no_speech_prob']:.4f}")
+        line += (f" avg_logprob {ps['avg_logprob']:.6f}/{rseg['avg_logprob']:.6f}"
+                 f" no_speech {ps['no_speech_prob']:.6f}/{rseg['no_speech_prob']:.6f}")
     print(line)
     if not same_text:
         ok = False

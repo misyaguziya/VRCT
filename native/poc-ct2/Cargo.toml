@@ -6,9 +6,18 @@ publish = false
 description = "PoC: Whisper and NLLB through ct2rs, compared with the Python backend"
 
 [dependencies]
-ct2rs = { version = "=0.10.1", default-features = false, features = ["whisper", "dnnl", "openmp-runtime-comp"] }
+ct2rs = { version = "=0.10.1", default-features = false, features = ["whisper"] }
 tokenizers = "0.22"
 rustfft = "6"
 anyhow = "1"
 serde_json = "1"
 hound = "3"
+
+# Matrix backend of CTranslate2: pick one with --features (ruy is ct2rs' fallback and 4-7x slower).
+[features]
+default = ["dnnl"]
+dnnl = ["ct2rs/dnnl", "ct2rs/openmp-runtime-comp"]
+# What the Python wheel uses on Windows (MKL + oneDNN + Intel OpenMP). Needs nuget.exe on PATH and
+# libiomp5md.lib (NuGet intelopenmp.devel.win) on CMAKE_LIBRARY_PATH and LIBRARY_PATH.
+mkl = ["ct2rs/mkl", "ct2rs/dnnl", "ct2rs/openmp-runtime-intel"]
+cuda = ["ct2rs/cuda", "ct2rs/cudnn"]

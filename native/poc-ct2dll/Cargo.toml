@@ -1,0 +1,19 @@
+[package]
+name = "poc-ct2dll"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "PoC: Whisper and NLLB through the Python wheel's ctranslate2.dll, compared with the Python backend"
+
+[dependencies]
+# esaxx (training only) is built with the static CRT, which cannot be mixed with the /MD shim
+tokenizers = { version = "0.22", default-features = false, features = ["onig"] }
+rustfft = "6"
+anyhow = "1"
+serde_json = "1"
+hound = "3"
+libloading = "0.8"
+
+[build-dependencies]
+cc = "1"
+object = { version = "0.36", default-features = false, features = ["read_core", "pe", "std"] }
