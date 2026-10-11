@@ -45,6 +45,13 @@ class TestFallbackToDesktopWindow(unittest.TestCase):
             capture.get()
         capture._openvr.capture.assert_called_once()
 
+    def test_only_a_truly_uniform_vr_frame_is_dropped(self) -> None:
+        dark = np.zeros((1455, 2575, 3), np.uint8)
+        with patch("models.ocr.ocr_capture._isSteamvrRunning", return_value=True):
+            self.assertIsNone(self._make(dark).get())
+            dark[700, 1001] = 1  # a night world: one pixel off a uniform frame is still a scene
+            self.assertIs(self._make(dark).get(), dark)
+
 
 class TestVrchatSceneCheck(unittest.TestCase):
     """VRChat 以外 (SteamVR Home 等) のシーンは読まない。判定は収集ツールで実機確認済みの方法。"""
@@ -98,6 +105,19 @@ class TestVrchatSceneCheck(unittest.TestCase):
             # 描画プロセスとフォーカスが食い違う (切り替え途中) ときは読まない。
             self.assertFalse(self._make(renderer=100, focus=200)._isVrchatScene())
             self.assertFalse(self._make(renderer=0, focus=0)._isVrchatScene())
+
+
+class FrameBlankTest(unittest.TestCase):
+    def test_black_and_uniform_frames_are_blank_but_a_dark_scene_with_text_is_not(self):
+        from models.ocr.ocr_capture_hwnd import isFrameBlank
+
+        black = np.zeros((1455, 2575, 3), np.uint8)
+        self.assertTrue(isFrameBlank(black))
+        self.assertTrue(isFrameBlank(black + 2))
+        scene = black.copy()
+        scene[500:800, 900:1700] = 255  # a chat bubble in a night window (the whole-frame mean stays above 3)
+        self.assertFalse(isFrameBlank(scene))
+        self.assertFalse(isFrameBlank(np.random.default_rng(0).integers(0, 256, (1455, 2575, 3), dtype=np.uint8)))
 
 
 if __name__ == "__main__":
