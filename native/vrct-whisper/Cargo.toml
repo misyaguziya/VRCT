@@ -1,0 +1,22 @@
+[package]
+name = "vrct-whisper"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "faster-whisper 1.1.1's transcribe (the path VRCT uses) on vrct-ct2"
+
+[dependencies]
+anyhow = "1"
+libloading = "0.8"
+rustfft = "6"
+serde_json = "1"
+vrct-ct2 = { path = "../vrct-ct2" }
+# The same tokenizers as faster-whisper's (Python tokenizers 0.19.1 wraps this crate)
+tokenizers = { version = "=0.19.1", default-features = false, features = ["onig"] }
+
+[dev-dependencies]
+hound = "3"
+# the reference JSON is compared to the last bit
+serde_json = { version = "1", features = ["float_roundtrip"] }
+sha2 = "0.10"

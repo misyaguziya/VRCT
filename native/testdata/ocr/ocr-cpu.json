@@ -1,0 +1,1645 @@
+{
+ "frames": [
+  {
+   "image": "frame_0",
+   "boxes": [
+    [
+     532,
+     308,
+     314,
+     73
+    ],
+    [
+     618,
+     568,
+     320,
+     63
+    ]
+   ],
+   "lines": [
+    [
+     {
+      "text": "这个世界的风景真漂亮。",
+      "confidence": 0.99978,
+      "left": 1.0,
+      "right": 295.0,
+      "top": 25.0
+     }
+    ],
+    []
+   ]
+  },
+  {
+   "image": "frame_1",
+   "boxes": [],
+   "lines": []
+  },
+  {
+   "image": "frame_2",
+   "boxes": [
+    [
+     584,
+     814,
+     404,
+     162
+    ],
+    [
+     60,
+     1259,
+     468,
+     79
+    ]
+   ],
+   "lines": [
+    [
+     {
+      "text": "Die Aussicht i",
+      "confidence": 0.95087,
+      "left": 33.0,
+      "right": 310.0,
+      "top": 25.0
+     },
+     {
+      "text": "st wunderschön.",
+      "confidence": 0.99988,
+      "left": 31.0,
+      "right": 357.0,
+      "top": 84.0
+     }
+    ],
+    [
+     {
+      "text": ",   .",
+      "confidence": 0.91558,
+      "left": 4.0,
+      "right": 450.0,
+      "top": 20.0
+     }
+    ]
+   ]
+  }
+ ],
+ "crops": [
+  {
+   "image": "crop_Arabic_00",
+   "language": "Arabic",
+   "lines": [
+    {
+     "text": "،ابحرم",
+     "confidence": 0.94501,
+     "left": 17.0,
+     "right": 82.0,
+     "top": 16.0
+    },
+    {
+     "text": "5P12",
+     "confidence": 0.56461,
+     "left": 129.0,
+     "right": 187.0,
+     "top": 12.0
+    }
+   ],
+   "auto_lines": []
+  },
+  {
+   "image": "crop_Arabic_01",
+   "language": "Arabic",
+   "lines": [
+    {
+     "text": "IS",
+     "confidence": 0.54342,
+     "left": 20.0,
+     "right": 52.0,
+     "top": 10.0
+    },
+    {
+     "text": "هل وقت",
+     "confidence": 0.82812,
+     "left": 124.0,
+     "right": 208.0,
+     "top": 10.0
+    },
+    {
+     "text": "ام",
+     "confidence": 0.51832,
+     "left": 100.0,
+     "right": 124.0,
+     "top": 19.0
+    }
+   ],
+   "auto_lines": []
+  },
+  {
+   "image": "crop_Arabic_02",
+   "language": "Arabic",
+   "lines": [
+    {
+     "text": "اذه",
+     "confidence": 0.88679,
+     "left": 16.0,
+     "right": 65.0,
+     "top": 7.0
+    },
+    {
+     "text": "ملاعلا",
+     "confidence": 0.81303,
+     "left": 49.0,
+     "right": 150.0,
+     "top": 3.0
+    },
+    {
+     "text": "ليمج",
+     "confidence": 0.8812,
+     "left": 24.0,
+     "right": 114.0,
+     "top": 52.0
+    },
+    {
+     "text": "ادج",
+     "confidence": 0.99652,
+     "left": 106.0,
+     "right": 165.0,
+     "top": 55.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": ".",
+     "confidence": 0.58053,
+     "left": 23.0,
+     "right": 167.0,
+     "top": 52.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_00",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "こんにちは。今日はと",
+     "confidence": 0.99986,
+     "left": 18.0,
+     "right": 372.0,
+     "top": 5.0
+    },
+    {
+     "text": "てもいい天気ですね。",
+     "confidence": 0.99996,
+     "left": 16.0,
+     "right": 358.0,
+     "top": 51.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "こんにちは。今日はと",
+     "confidence": 0.99986,
+     "left": 18.0,
+     "right": 372.0,
+     "top": 5.0
+    },
+    {
+     "text": "てもいい天気ですね。",
+     "confidence": 0.99996,
+     "left": 16.0,
+     "right": 358.0,
+     "top": 51.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_01",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "このワールド、夜景がすごくきれい!",
+     "confidence": 0.99806,
+     "left": 23.0,
+     "right": 325.0,
+     "top": 5.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "このワールド、夜景がすごくきれい!",
+     "confidence": 0.99806,
+     "left": 23.0,
+     "right": 325.0,
+     "top": 5.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_02",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "ちょっと待って、マイクの調子が悪いみたい。",
+     "confidence": 0.9999,
+     "left": 17.0,
+     "right": 388.0,
+     "top": 6.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "ちょっと待って、マイクの調子が悪いみたい。",
+     "confidence": 0.9999,
+     "left": 17.0,
+     "right": 388.0,
+     "top": 6.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_03",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "明日の夜9時にまた集まりましょう。",
+     "confidence": 0.99984,
+     "left": 6.0,
+     "right": 360.0,
+     "top": 4.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "明日の夜9時にまた集まりましょう。",
+     "confidence": 0.99984,
+     "left": 6.0,
+     "right": 360.0,
+     "top": 4.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_04",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "初めまして、日本から来まし",
+     "confidence": 0.99995,
+     "left": 17.0,
+     "right": 304.0,
+     "top": 11.0
+    },
+    {
+     "text": "た。よろしくお願いします。",
+     "confidence": 0.99991,
+     "left": 18.0,
+     "right": 293.0,
+     "top": 41.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "初めまして、日本から来まし",
+     "confidence": 0.99995,
+     "left": 17.0,
+     "right": 304.0,
+     "top": 11.0
+    },
+    {
+     "text": "た。よろしくお願いします。",
+     "confidence": 0.99991,
+     "left": 18.0,
+     "right": 293.0,
+     "top": 41.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_05",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "それ、本当に面白いね(笑)",
+     "confidence": 0.9663,
+     "left": 9.0,
+     "right": 363.0,
+     "top": 5.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "それ、本当に面白いね(笑)",
+     "confidence": 0.9663,
+     "left": 9.0,
+     "right": 363.0,
+     "top": 5.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_06",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Hello, how a",
+     "confidence": 0.97973,
+     "left": 9.0,
+     "right": 218.0,
+     "top": 10.0
+    },
+    {
+     "text": "re you today?",
+     "confidence": 0.96654,
+     "left": 6.0,
+     "right": 235.0,
+     "top": 57.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Hello, how a",
+     "confidence": 0.97973,
+     "left": 9.0,
+     "right": 218.0,
+     "top": 10.0
+    },
+    {
+     "text": "re you today?",
+     "confidence": 0.96654,
+     "left": 6.0,
+     "right": 235.0,
+     "top": 57.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_07",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "I can't believe it",
+     "confidence": 0.97666,
+     "left": 11.0,
+     "right": 166.0,
+     "top": 13.0
+    },
+    {
+     "text": "'s already October.",
+     "confidence": 0.97736,
+     "left": 10.0,
+     "right": 196.0,
+     "top": 42.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "I can't believe it",
+     "confidence": 0.97666,
+     "left": 11.0,
+     "right": 166.0,
+     "top": 13.0
+    },
+    {
+     "text": "'s already October.",
+     "confidence": 0.97736,
+     "left": 10.0,
+     "right": 196.0,
+     "top": 42.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_08",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "We're going to the stor",
+     "confidence": 0.99628,
+     "left": 16.0,
+     "right": 202.0,
+     "top": 10.0
+    },
+    {
+     "text": "e; do you need anything?",
+     "confidence": 0.99621,
+     "left": 16.0,
+     "right": 222.0,
+     "top": 35.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "We're going to the stor",
+     "confidence": 0.99628,
+     "left": 16.0,
+     "right": 202.0,
+     "top": 10.0
+    },
+    {
+     "text": "e; do you need anything?",
+     "confidence": 0.99621,
+     "left": 16.0,
+     "right": 222.0,
+     "top": 35.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_09",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "The meeting starts at 3:30 PM, so don't be late!",
+     "confidence": 0.99259,
+     "left": 12.0,
+     "right": 617.0,
+     "top": 5.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "The meeting starts at 3:30 PM, so don't be late!",
+     "confidence": 0.99259,
+     "left": 12.0,
+     "right": 617.0,
+     "top": 5.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_10",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "She said \"it's fine",
+     "confidence": 0.9989,
+     "left": 23.0,
+     "right": 162.0,
+     "top": 10.0
+    },
+    {
+     "text": "\" but I'm not sure.",
+     "confidence": 0.98955,
+     "left": 23.0,
+     "right": 164.0,
+     "top": 34.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "She said \"it's fine",
+     "confidence": 0.9989,
+     "left": 23.0,
+     "right": 162.0,
+     "top": 10.0
+    },
+    {
+     "text": "\" but I'm not sure.",
+     "confidence": 0.98955,
+     "left": 23.0,
+     "right": 164.0,
+     "top": 34.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_11",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Let's meet at the station",
+     "confidence": 0.9997,
+     "left": 13.0,
+     "right": 401.0,
+     "top": 12.0
+    },
+    {
+     "text": "in front of the big clock.",
+     "confidence": 0.99922,
+     "left": 12.0,
+     "right": 387.0,
+     "top": 58.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Let's meet at the station",
+     "confidence": 0.9997,
+     "left": 13.0,
+     "right": 401.0,
+     "top": 12.0
+    },
+    {
+     "text": "in front of the big clock.",
+     "confidence": 0.99922,
+     "left": 12.0,
+     "right": 387.0,
+     "top": 58.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_12",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "你好，",
+     "confidence": 0.9569,
+     "left": 14.0,
+     "right": 91.0,
+     "top": 12.0
+    },
+    {
+     "text": "很高兴认识你。",
+     "confidence": 0.99991,
+     "left": 94.0,
+     "right": 285.0,
+     "top": 10.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "你好，",
+     "confidence": 0.9569,
+     "left": 14.0,
+     "right": 91.0,
+     "top": 12.0
+    },
+    {
+     "text": "很高兴认识你。",
+     "confidence": 0.99991,
+     "left": 94.0,
+     "right": 285.0,
+     "top": 10.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_13",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "我们明天晚上再见吧！",
+     "confidence": 0.9959,
+     "left": 13.0,
+     "right": 361.0,
+     "top": 14.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "我们明天晚上再见吧！",
+     "confidence": 0.9959,
+     "left": 13.0,
+     "right": 361.0,
+     "top": 14.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_14",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "这个世界的风景真漂亮。",
+     "confidence": 0.99982,
+     "left": 5.0,
+     "right": 301.0,
+     "top": 17.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "这个世界的风景真漂亮。",
+     "confidence": 0.99982,
+     "left": 5.0,
+     "right": 301.0,
+     "top": 17.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_15",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "你能听到我的声音吗？",
+     "confidence": 0.99598,
+     "left": 5.0,
+     "right": 281.0,
+     "top": 10.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "你能听到我的声音吗？",
+     "confidence": 0.99598,
+     "left": 5.0,
+     "right": 281.0,
+     "top": 10.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_16",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "我正在用翻译软件和你说话。",
+     "confidence": 0.99986,
+     "left": 19.0,
+     "right": 371.0,
+     "top": 18.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "我正在用翻译软件和你说话。",
+     "confidence": 0.99986,
+     "left": 19.0,
+     "right": 371.0,
+     "top": 18.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_17",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Bonjour, comment",
+     "confidence": 0.99918,
+     "left": 16.0,
+     "right": 262.0,
+     "top": 3.0
+    },
+    {
+     "text": "t ça va ?",
+     "confidence": 0.9816,
+     "left": 240.0,
+     "right": 358.0,
+     "top": 5.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Bonjour, comment",
+     "confidence": 0.99918,
+     "left": 16.0,
+     "right": 262.0,
+     "top": 3.0
+    },
+    {
+     "text": "t ça va ?",
+     "confidence": 0.9816,
+     "left": 240.0,
+     "right": 358.0,
+     "top": 5.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_18",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Je ne comprends p",
+     "confidence": 0.99858,
+     "left": 9.0,
+     "right": 326.0,
+     "top": 14.0
+    },
+    {
+     "text": "as ce que tu dis.",
+     "confidence": 0.97325,
+     "left": 8.0,
+     "right": 273.0,
+     "top": 63.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Je ne comprends p",
+     "confidence": 0.99858,
+     "left": 9.0,
+     "right": 326.0,
+     "top": 14.0
+    },
+    {
+     "text": "as ce que tu dis.",
+     "confidence": 0.97325,
+     "left": 8.0,
+     "right": 273.0,
+     "top": 63.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_19",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "On se retrouve demain soir à 21 h ?",
+     "confidence": 0.9994,
+     "left": 9.0,
+     "right": 300.0,
+     "top": 10.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "On se retrouve demain soir à 21 h ?",
+     "confidence": 0.9994,
+     "left": 9.0,
+     "right": 300.0,
+     "top": 10.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_20",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "C'est vraiment",
+     "confidence": 0.99973,
+     "left": 18.0,
+     "right": 160.0,
+     "top": 6.0
+    },
+    {
+     "text": "magnifique ici !",
+     "confidence": 0.99574,
+     "left": 16.0,
+     "right": 167.0,
+     "top": 35.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "C'est vraiment",
+     "confidence": 0.99973,
+     "left": 18.0,
+     "right": 160.0,
+     "top": 6.0
+    },
+    {
+     "text": "magnifique ici !",
+     "confidence": 0.99574,
+     "left": 16.0,
+     "right": 167.0,
+     "top": 35.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_21",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Guten Abend! W",
+     "confidence": 0.9996,
+     "left": 14.0,
+     "right": 287.0,
+     "top": 11.0
+    },
+    {
+     "text": "ie geht's dir?",
+     "confidence": 0.99977,
+     "left": 11.0,
+     "right": 224.0,
+     "top": 57.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Guten Abend! W",
+     "confidence": 0.9996,
+     "left": 14.0,
+     "right": 287.0,
+     "top": 11.0
+    },
+    {
+     "text": "ie geht's dir?",
+     "confidence": 0.99977,
+     "left": 11.0,
+     "right": 224.0,
+     "top": 57.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_22",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Ich verstehe di",
+     "confidence": 0.99966,
+     "left": 7.0,
+     "right": 128.0,
+     "top": 14.0
+    },
+    {
+     "text": "ch leider nicht.",
+     "confidence": 0.99993,
+     "left": 7.0,
+     "right": 126.0,
+     "top": 38.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Ich verstehe di",
+     "confidence": 0.99966,
+     "left": 7.0,
+     "right": 128.0,
+     "top": 14.0
+    },
+    {
+     "text": "ch leider nicht.",
+     "confidence": 0.99993,
+     "left": 7.0,
+     "right": 126.0,
+     "top": 38.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_23",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Wollen wir morgen",
+     "confidence": 0.97456,
+     "left": 20.0,
+     "right": 326.0,
+     "top": 10.0
+    },
+    {
+     "text": "zusammen spielen?",
+     "confidence": 0.99976,
+     "left": 29.0,
+     "right": 357.0,
+     "top": 60.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Wollen wir morgen",
+     "confidence": 0.97456,
+     "left": 20.0,
+     "right": 326.0,
+     "top": 10.0
+    },
+    {
+     "text": "zusammen spielen?",
+     "confidence": 0.99976,
+     "left": 29.0,
+     "right": 357.0,
+     "top": 60.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_24",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Die Aussicht i",
+     "confidence": 0.9984,
+     "left": 20.0,
+     "right": 158.0,
+     "top": 10.0
+    },
+    {
+     "text": "st wunderschön.",
+     "confidence": 0.99989,
+     "left": 20.0,
+     "right": 180.0,
+     "top": 41.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Die Aussicht i",
+     "confidence": 0.9984,
+     "left": 20.0,
+     "right": 158.0,
+     "top": 10.0
+    },
+    {
+     "text": "st wunderschön.",
+     "confidence": 0.99989,
+     "left": 20.0,
+     "right": 180.0,
+     "top": 41.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_25",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Hola! ¿Cómo estás?",
+     "confidence": 0.99942,
+     "left": 9.0,
+     "right": 286.0,
+     "top": 5.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Hola! ¿Cómo estás?",
+     "confidence": 0.99942,
+     "left": 9.0,
+     "right": 286.0,
+     "top": 5.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_26",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "No entiendo",
+     "confidence": 0.99991,
+     "left": 11.0,
+     "right": 171.0,
+     "top": 16.0
+    },
+    {
+     "text": "lo que dices.",
+     "confidence": 0.98964,
+     "left": 10.0,
+     "right": 176.0,
+     "top": 53.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "No entiendo",
+     "confidence": 0.99991,
+     "left": 11.0,
+     "right": 171.0,
+     "top": 16.0
+    },
+    {
+     "text": "lo que dices.",
+     "confidence": 0.98964,
+     "left": 10.0,
+     "right": 176.0,
+     "top": 53.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_27",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "¿Nos vemos mañana por la noche?",
+     "confidence": 0.99971,
+     "left": 6.0,
+     "right": 296.0,
+     "top": 7.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "¿Nos vemos mañana por la noche?",
+     "confidence": 0.99971,
+     "left": 6.0,
+     "right": 296.0,
+     "top": 7.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_28",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Este mundo es precioso.",
+     "confidence": 0.96264,
+     "left": 15.0,
+     "right": 335.0,
+     "top": 13.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Este mundo es precioso.",
+     "confidence": 0.96264,
+     "left": 15.0,
+     "right": 335.0,
+     "top": 13.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_29",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Xin chào, bn khồe không?",
+     "confidence": 0.96315,
+     "left": 5.0,
+     "right": 454.0,
+     "top": 9.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Xin chào, bn khồe không?",
+     "confidence": 0.96315,
+     "left": 5.0,
+     "right": 454.0,
+     "top": 9.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_30",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Tôi không hiu bn nói gì.",
+     "confidence": 0.98606,
+     "left": 4.0,
+     "right": 432.0,
+     "top": 4.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Tôi không hiu bn nói gì.",
+     "confidence": 0.98606,
+     "left": 4.0,
+     "right": 432.0,
+     "top": 4.0
+    }
+   ]
+  },
+  {
+   "image": "crop_auto_31",
+   "language": "auto",
+   "lines": [
+    {
+     "text": "Th gii n",
+     "confidence": 0.98668,
+     "left": 11.0,
+     "right": 185.0,
+     "top": 10.0
+    },
+    {
+     "text": "ày đp quá!",
+     "confidence": 0.98969,
+     "left": 10.0,
+     "right": 208.0,
+     "top": 64.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "Th gii n",
+     "confidence": 0.98668,
+     "left": 11.0,
+     "right": 185.0,
+     "top": 10.0
+    },
+    {
+     "text": "ày đp quá!",
+     "confidence": 0.98969,
+     "left": 10.0,
+     "right": 208.0,
+     "top": 64.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Hindi_00",
+   "language": "Hindi",
+   "lines": [
+    {
+     "text": "'PHHE",
+     "confidence": 0.60414,
+     "left": 13.0,
+     "right": 86.0,
+     "top": 2.0
+    },
+    {
+     "text": "आप",
+     "confidence": 0.99984,
+     "left": 87.0,
+     "right": 128.0,
+     "top": 12.0
+    },
+    {
+     "text": "है?",
+     "confidence": 0.91931,
+     "left": 169.0,
+     "right": 197.0,
+     "top": 5.0
+    }
+   ],
+   "auto_lines": []
+  },
+  {
+   "image": "crop_Hindi_01",
+   "language": "Hindi",
+   "lines": [
+    {
+     "text": "मुझे",
+     "confidence": 0.99687,
+     "left": 5.0,
+     "right": 46.0,
+     "top": 7.0
+    },
+    {
+     "text": "समझ",
+     "confidence": 0.96701,
+     "left": 43.0,
+     "right": 98.0,
+     "top": 10.0
+    },
+    {
+     "text": "आया।",
+     "confidence": 0.9975,
+     "left": 137.0,
+     "right": 194.0,
+     "top": 12.0
+    }
+   ],
+   "auto_lines": []
+  },
+  {
+   "image": "crop_Korean_00",
+   "language": "Korean",
+   "lines": [],
+   "auto_lines": []
+  },
+  {
+   "image": "crop_Korean_01",
+   "language": "Korean",
+   "lines": [],
+   "auto_lines": []
+  },
+  {
+   "image": "crop_Korean_02",
+   "language": "Korean",
+   "lines": [
+    {
+     "text": "이",
+     "confidence": 0.99979,
+     "left": 18.0,
+     "right": 58.0,
+     "top": 18.0
+    },
+    {
+     "text": "극크룡",
+     "confidence": 0.78121,
+     "left": 56.0,
+     "right": 179.0,
+     "top": 13.0
+    },
+    {
+     "text": "정말",
+     "confidence": 0.99961,
+     "left": 183.0,
+     "right": 264.0,
+     "top": 15.0
+    },
+    {
+     "text": "영A",
+     "confidence": 0.52045,
+     "left": 269.0,
+     "right": 432.0,
+     "top": 12.0
+    }
+   ],
+   "auto_lines": []
+  },
+  {
+   "image": "crop_Korean_03",
+   "language": "Korean",
+   "lines": [
+    {
+     "text": "잠깐만요, 소리가 안 들려요.",
+     "confidence": 0.95843,
+     "left": 19.0,
+     "right": 298.0,
+     "top": 11.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": ".",
+     "confidence": 0.6861,
+     "left": 18.0,
+     "right": 300.0,
+     "top": 11.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Korean_04",
+   "language": "Korean",
+   "lines": [
+    {
+     "text": "한국어를 조금 할 수",
+     "confidence": 0.99561,
+     "left": 23.0,
+     "right": 230.0,
+     "top": 15.0
+    },
+    {
+     "text": "있어요.",
+     "confidence": 0.91332,
+     "left": 228.0,
+     "right": 303.0,
+     "top": 15.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": ".",
+     "confidence": 0.7083,
+     "left": 22.0,
+     "right": 303.0,
+     "top": 14.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Russian_00",
+   "language": "Russian",
+   "lines": [
+    {
+     "text": "Привет!",
+     "confidence": 0.99974,
+     "left": 21.0,
+     "right": 107.0,
+     "top": 4.0
+    },
+    {
+     "text": "Как",
+     "confidence": 0.98805,
+     "left": 106.0,
+     "right": 147.0,
+     "top": 7.0
+    },
+    {
+     "text": "у",
+     "confidence": 0.70688,
+     "left": 21.0,
+     "right": 38.0,
+     "top": 41.0
+    },
+    {
+     "text": "тебя",
+     "confidence": 0.99996,
+     "left": 40.0,
+     "right": 88.0,
+     "top": 37.0
+    },
+    {
+     "text": "дела?",
+     "confidence": 0.99956,
+     "left": 90.0,
+     "right": 156.0,
+     "top": 36.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "!",
+     "confidence": 0.994,
+     "left": 20.0,
+     "right": 148.0,
+     "top": 5.0
+    },
+    {
+     "text": "?",
+     "confidence": 0.87657,
+     "left": 19.0,
+     "right": 158.0,
+     "top": 33.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Russian_01",
+   "language": "Russian",
+   "lines": [
+    {
+     "text": "не",
+     "confidence": 0.99882,
+     "left": 34.0,
+     "right": 60.0,
+     "top": 15.0
+    },
+    {
+     "text": "понимаю",
+     "confidence": 0.99183,
+     "left": 64.0,
+     "right": 159.0,
+     "top": 14.0
+    },
+    {
+     "text": "оIh",
+     "confidence": 0.51858,
+     "left": 169.0,
+     "right": 202.0,
+     "top": 16.0
+    },
+    {
+     "text": "ты",
+     "confidence": 0.90966,
+     "left": 207.0,
+     "right": 235.0,
+     "top": 17.0
+    },
+    {
+     "text": "говоришь.",
+     "confidence": 0.99688,
+     "left": 237.0,
+     "right": 344.0,
+     "top": 14.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": ",   .",
+     "confidence": 0.88615,
+     "left": 10.0,
+     "right": 345.0,
+     "top": 10.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Russian_02",
+   "language": "Russian",
+   "lines": [
+    {
+     "text": "Давай",
+     "confidence": 0.99494,
+     "left": 11.0,
+     "right": 68.0,
+     "top": 10.0
+    },
+    {
+     "text": "встретимся",
+     "confidence": 0.99793,
+     "left": 67.0,
+     "right": 169.0,
+     "top": 12.0
+    },
+    {
+     "text": "завтра",
+     "confidence": 0.97883,
+     "left": 168.0,
+     "right": 228.0,
+     "top": 14.0
+    },
+    {
+     "text": "вечером.",
+     "confidence": 0.99951,
+     "left": 230.0,
+     "right": 308.0,
+     "top": 14.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": ".",
+     "confidence": 0.88998,
+     "left": 9.0,
+     "right": 311.0,
+     "top": 9.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Russian_03",
+   "language": "Russian",
+   "lines": [
+    {
+     "text": "Этот",
+     "confidence": 0.99977,
+     "left": 23.0,
+     "right": 74.0,
+     "top": 17.0
+    },
+    {
+     "text": "мир",
+     "confidence": 0.99961,
+     "left": 75.0,
+     "right": 119.0,
+     "top": 20.0
+    },
+    {
+     "text": "әһо",
+     "confidence": 0.84635,
+     "left": 121.0,
+     "right": 159.0,
+     "top": 20.0
+    },
+    {
+     "text": "нь",
+     "confidence": 0.90974,
+     "left": 22.0,
+     "right": 49.0,
+     "top": 50.0
+    },
+    {
+     "text": "красивый.",
+     "confidence": 0.97653,
+     "left": 50.0,
+     "right": 155.0,
+     "top": 47.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": ".",
+     "confidence": 0.9819,
+     "left": 21.0,
+     "right": 157.0,
+     "top": 47.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Russian_04",
+   "language": "Russian",
+   "lines": [
+    {
+     "text": "Привіт,",
+     "confidence": 0.99986,
+     "left": 16.0,
+     "right": 77.0,
+     "top": 9.0
+    },
+    {
+     "text": "як",
+     "confidence": 0.99444,
+     "left": 83.0,
+     "right": 103.0,
+     "top": 15.0
+    },
+    {
+     "text": "справи?",
+     "confidence": 0.99787,
+     "left": 103.0,
+     "right": 177.0,
+     "top": 10.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": ",  ?",
+     "confidence": 0.87902,
+     "left": 14.0,
+     "right": 179.0,
+     "top": 7.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Russian_05",
+   "language": "Russian",
+   "lines": [
+    {
+     "text": "в",
+     "confidence": 0.77092,
+     "left": 15.0,
+     "right": 30.0,
+     "top": 11.0
+    },
+    {
+     "text": "тебе",
+     "confidence": 0.99169,
+     "left": 32.0,
+     "right": 73.0,
+     "top": 10.0
+    },
+    {
+     "text": "не",
+     "confidence": 0.99807,
+     "left": 76.0,
+     "right": 98.0,
+     "top": 14.0
+    },
+    {
+     "text": "розумію.",
+     "confidence": 0.99681,
+     "left": 99.0,
+     "right": 174.0,
+     "top": 9.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "iι.",
+     "confidence": 0.79614,
+     "left": 12.0,
+     "right": 177.0,
+     "top": 7.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Thai_00",
+   "language": "Thai",
+   "lines": [
+    {
+     "text": "สวัสดีครับ",
+     "confidence": 0.99849,
+     "left": 13.0,
+     "right": 98.0,
+     "top": 11.0
+    },
+    {
+     "text": "ยินดีที",
+     "confidence": 0.99892,
+     "left": 100.0,
+     "right": 161.0,
+     "top": 9.0
+    },
+    {
+     "text": "รูจัก",
+     "confidence": 0.99623,
+     "left": 169.0,
+     "right": 209.0,
+     "top": 13.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "ajaansu juanlajan",
+     "confidence": 0.71832,
+     "left": 9.0,
+     "right": 214.0,
+     "top": 2.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Thai_01",
+   "language": "Thai",
+   "lines": [
+    {
+     "text": "พรุ่งนี้เล่",
+     "confidence": 0.97858,
+     "left": 19.0,
+     "right": 106.0,
+     "top": 16.0
+    },
+    {
+     "text": "นด้วยกันไหม",
+     "confidence": 0.99637,
+     "left": 17.0,
+     "right": 165.0,
+     "top": 48.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "WNULA",
+     "confidence": 0.50925,
+     "left": 18.0,
+     "right": 107.0,
+     "top": 16.0
+    }
+   ]
+  },
+  {
+   "image": "crop_Thai_02",
+   "language": "Thai",
+   "lines": [
+    {
+     "text": "ได้ยินเสีย",
+     "confidence": 0.9618,
+     "left": 16.0,
+     "right": 147.0,
+     "top": 15.0
+    },
+    {
+     "text": "งผมไหมครับ",
+     "confidence": 0.9778,
+     "left": 11.0,
+     "right": 191.0,
+     "top": 63.0
+    }
+   ],
+   "auto_lines": [
+    {
+     "text": "s",
+     "confidence": 0.55255,
+     "left": 17.0,
+     "right": 32.0,
+     "top": 20.0
+    }
+   ]
+  }
+ ]
+}

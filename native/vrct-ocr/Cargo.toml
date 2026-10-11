@@ -1,0 +1,23 @@
+[package]
+name = "vrct-ocr"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+publish.workspace = true
+description = "Chat bubble detection (YOLOX) and RapidOCR 3.9.2, ported to match the Python backend"
+license-file = "LICENSE-APACHE-2.0"
+
+[dependencies]
+# rc: pinned exactly. onnxruntime.dll (the Python backend's, from native/third_party) is loaded at
+# run time.
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic"] }
+serde = { version = "1", features = ["derive"] }
+# python-bidi 0.6.11 is this crate's BidiInfo / reorder_line
+unicode-bidi = "=0.3.18"
+
+[dev-dependencies]
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+
+[build-dependencies]
+cc = "1"
