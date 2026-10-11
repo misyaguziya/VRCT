@@ -2,7 +2,7 @@
 # 既存の PyO3 クレート (vrct-audio / vrct-graphics) と PoC は、今のビルド (pip wheel) を変えないよう外す。
 [workspace]
 resolver = "2"
-members = ["xtask", "vrct-contract", "vrct-ct2", "vrct-whisper", "vrct-ocr", "vrct-backend"]
+members = ["xtask", "vrct-contract", "vrct-ct2", "vrct-whisper", "vrct-ocr", "vrct-webtranslate", "vrct-backend"]
 exclude = ["vrct-audio", "vrct-graphics", "poc-ct2", "poc-oscquery"]
 
 [workspace.package]

@@ -1,0 +1,6281 @@
+{
+ "setup_size": 1060921,
+ "setup_sha256": "fd5f0e938948ca8ab135c779db6992acf789a0b34f4e4cb8bb56757913e757ae",
+ "releases": [
+  {
+   "name": "3.8.0",
+   "tag_name": "v3.8.0",
+   "draft": true,
+   "prerelease": false
+  },
+  {
+   "name": "3.7.0-beta.2",
+   "tag_name": "v3.7.0-beta.2",
+   "prerelease": true,
+   "draft": false,
+   "published_at": "2026-10-04T00:00:00Z",
+   "assets": [
+    {
+     "name": "VRCT_setup.exe",
+     "browser_download_url": "https://github.com/x/v3.7.0-beta.2/VRCT_setup.exe"
+    },
+    {
+     "name": "VRCT_setup.exe.sha256",
+     "browser_download_url": "https://example.com/beta2.sha256"
+    }
+   ]
+  },
+  {
+   "name": "3.6.1",
+   "tag_name": "v3.6.1",
+   "prerelease": false,
+   "draft": false,
+   "published_at": "2026-10-06T00:00:00Z",
+   "assets": [
+    {
+     "name": "VRCT_setup.exe",
+     "browser_download_url": "https://github.com/x/v3.6.1/VRCT_setup.exe"
+    },
+    {
+     "name": "VRCT_setup.exe.sha256",
+     "browser_download_url": "https://example.com/ok.sha256"
+    }
+   ]
+  },
+  {
+   "name": "3.6.1-rc.1",
+   "tag_name": "v3.6.1-rc.1",
+   "prerelease": true,
+   "draft": false,
+   "published_at": "2026-10-02T00:00:00Z",
+   "assets": [
+    {
+     "name": "VRCT_setup.exe",
+     "browser_download_url": "https://github.com/x/v3.6.1-rc.1/VRCT_setup.exe"
+    }
+   ]
+  },
+  {
+   "name": "3.6.0",
+   "tag_name": "v3.6.0",
+   "prerelease": false,
+   "draft": false,
+   "published_at": "2026-10-06T00:00:00Z",
+   "assets": [
+    {
+     "name": "VRCT_setup.exe",
+     "browser_download_url": "https://github.com/x/v3.6.0/VRCT_setup.exe"
+    },
+    {
+     "name": "VRCT_setup.exe.sha256",
+     "browser_download_url": "https://example.com/bad.sha256"
+    }
+   ]
+  },
+  {
+   "name": "3.5.0",
+   "tag_name": "v3.5.0",
+   "prerelease": false,
+   "draft": false,
+   "published_at": "2026-10-06T00:00:00Z",
+   "assets": [
+    {
+     "name": "VRCT_setup.exe",
+     "browser_download_url": "https://github.com/x/v3.5.0/VRCT_setup.exe"
+    },
+    {
+     "name": "VRCT_setup.exe.sha256",
+     "browser_download_url": "https://example.com/broken.sha256"
+    }
+   ]
+  },
+  {
+   "name": "3.4.0",
+   "tag_name": "v3.4.0",
+   "prerelease": false,
+   "draft": false,
+   "published_at": "2026-10-06T00:00:00Z",
+   "assets": [
+    {
+     "name": "VRCT_setup.exe",
+     "browser_download_url": "https://github.com/x/v3.4.0/VRCT_setup.exe"
+    }
+   ]
+  },
+  {
+   "name": 3,
+   "tag_name": "v3"
+  },
+  "not a dict",
+  {
+   "tag_name": "v9"
+  }
+ ],
+ "steps": [
+  {
+   "step": "check stable 3.6.0",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": {
+    "is_update_available": true,
+    "new_version": "3.6.1"
+   },
+   "launched": [],
+   "setup_written": false,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases/latest",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "check stable 3.6.1",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.1"
+   },
+   "result": {
+    "is_update_available": false,
+    "new_version": "3.6.1"
+   },
+   "launched": [],
+   "setup_written": false,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases/latest",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "check beta 3.6.0-beta.1",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "beta",
+    "VERSION": "3.6.0-beta.1"
+   },
+   "result": {
+    "is_update_available": true,
+    "new_version": "3.7.0-beta.2"
+   },
+   "launched": [],
+   "setup_written": false,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "check beta 3.8.0",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "beta",
+    "VERSION": "3.8.0"
+   },
+   "result": {
+    "is_update_available": false,
+    "new_version": "3.7.0-beta.2"
+   },
+   "launched": [],
+   "setup_written": false,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "list releases",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": [
+    {
+     "tag": "v3.7.0-beta.2",
+     "version": "3.7.0-beta.2",
+     "is_prerelease": true,
+     "published_at": "2026-10-04T00:00:00Z"
+    },
+    {
+     "tag": "v3.6.1",
+     "version": "3.6.1",
+     "is_prerelease": false,
+     "published_at": "2026-10-06T00:00:00Z"
+    },
+    {
+     "tag": "v3.6.1-rc.1",
+     "version": "3.6.1-rc.1",
+     "is_prerelease": true,
+     "published_at": "2026-10-02T00:00:00Z"
+    },
+    {
+     "tag": "v3.6.0",
+     "version": "3.6.0",
+     "is_prerelease": false,
+     "published_at": "2026-10-06T00:00:00Z"
+    },
+    {
+     "tag": "v3.5.0",
+     "version": "3.5.0",
+     "is_prerelease": false,
+     "published_at": "2026-10-06T00:00:00Z"
+    }
+   ],
+   "launched": [],
+   "setup_written": false,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu stable None",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "launched",
+   "launched": [
+    {
+     "args": [
+      "VRCT_setup.exe",
+      "/EDITION=cpu",
+      "/UILANG=ja",
+      "/CHANNEL=stable"
+     ],
+     "cwd_is_local": true
+    },
+    "quit"
+   ],
+   "setup_written": true,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases/latest",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/ok.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu beta None",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "beta",
+    "VERSION": "3.6.0"
+   },
+   "result": "launched",
+   "launched": [
+    {
+     "args": [
+      "VRCT_setup.exe",
+      "/EDITION=cpu",
+      "/UILANG=ja",
+      "/CHANNEL=beta"
+     ],
+     "cwd_is_local": true
+    },
+    "quit"
+   ],
+   "setup_written": true,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/beta2.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/main/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu stable 3.6.1",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "launched",
+   "launched": [
+    {
+     "args": [
+      "VRCT_setup.exe",
+      "/EDITION=cpu",
+      "/UILANG=ja",
+      "/CHANNEL=stable",
+      "/VERSION=3.6.1"
+     ],
+     "cwd_is_local": true
+    },
+    "quit"
+   ],
+   "setup_written": true,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/ok.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT/resolve/v3.6.1/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu stable 3.7.0-beta.2",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "launched",
+   "launched": [
+    {
+     "args": [
+      "VRCT_setup.exe",
+      "/EDITION=cpu",
+      "/UILANG=ja",
+      "/CHANNEL=beta",
+      "/VERSION=3.7.0-beta.2"
+     ],
+     "cwd_is_local": true
+    },
+    "quit"
+   ],
+   "setup_written": true,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/beta2.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.7.0-beta.2/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu stable 3.6.0",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "verify_failed",
+   "launched": [],
+   "setup_written": false,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/bad.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT/resolve/v3.6.0/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu stable 3.5.0",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "verify_failed",
+   "launched": [],
+   "setup_written": false,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/broken.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/broken.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/broken.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu stable 3.6.1-rc.1",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "launched",
+   "launched": [
+    {
+     "args": [
+      "VRCT_setup.exe",
+      "/EDITION=cpu",
+      "/UILANG=ja",
+      "/CHANNEL=beta",
+      "/VERSION=3.6.1-rc.1"
+     ],
+     "cwd_is_local": true
+    },
+    "quit"
+   ],
+   "setup_written": true,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.6.1-rc.1/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.6.1-rc.1/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.6.1-rc.1/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.6.1-rc.1/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/v3.6.1-rc.1/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT-beta/resolve/main/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update cpu stable 3.4.0",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "download_failed",
+   "launched": [],
+   "setup_written": false,
+   "requests": []
+  },
+  {
+   "step": "update cpu stable 9.9.9",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "launched",
+   "launched": [
+    {
+     "args": [
+      "VRCT_setup.exe",
+      "/EDITION=cpu",
+      "/UILANG=ja",
+      "/CHANNEL=stable",
+      "/VERSION=9.9.9"
+     ],
+     "cwd_is_local": true
+    },
+    "quit"
+   ],
+   "setup_written": true,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT/resolve/v9.9.9/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "update gpu stable None",
+   "settings": {
+    "SELECTED_RELEASE_CHANNEL": "stable",
+    "VERSION": "3.6.0"
+   },
+   "result": "launched",
+   "launched": [
+    {
+     "args": [
+      "VRCT_setup.exe",
+      "/EDITION=gpu",
+      "/UILANG=ja",
+      "/CHANNEL=stable"
+     ],
+     "cwd_is_local": true
+    },
+    "quit"
+   ],
+   "setup_written": true,
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases/latest",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://example.com/ok.sha256",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/ms-software/VRCT/resolve/main/VRCT_setup.exe",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  }
+ ],
+ "compare": [
+  {
+   "a": "3.6.0",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0-beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0b1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0.beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0_beta_1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0-beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0b1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0.beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0_beta_1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0b1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-rc.1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0rc2",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "3.6.0-1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0.0",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "v3.7.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.7.0-alpha",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.7.0.dev1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.7.0.post1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "3.6.0-1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.10.0",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.10.0",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.10.0",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0-beta.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0b1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.4.3",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0-beta",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0.beta.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0_beta_1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.3",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.4.3",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.4.3",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0-beta.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0b1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.4.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.4.2",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.4.2",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0-beta",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0.beta.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0_beta_1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.4.2",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.4.2",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.4.2",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.7.0-alpha",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.7.0.dev1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3.6.0-1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "v3.7.0",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "v3.7.0",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "v3.7.0",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.7.0.dev1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3.6.0-1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0-alpha",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3.6.0-1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0.dev1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "v3.7.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.7.0-alpha",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.7.0.dev1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3.6.0-1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.7.0.post1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.10.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "v3.7.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.7.0-alpha",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.7.0.dev1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.7.0.post1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "3.6.0-1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "1!1.0",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "1!1.0",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "1!1.0",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0+local.1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0-beta.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0b1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0-beta",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0.beta.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0_beta_1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.10",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-beta.2",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0c1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0pre1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-preview.3",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": " 3.6.0 ",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0-beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0b1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0.beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0_beta_1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0.beta.1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0-beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0b1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0-rc.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0rc2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0+local.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0-beta.10",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0-beta.2",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0c1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0pre1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0-preview.3",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": " 3.6.0 ",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0.beta.1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0_beta_1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0_beta_1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0-beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0b1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0-rc.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0rc2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0.0",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.10.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.4.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.4.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "v3.7.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.7.0-alpha",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.7.0.dev1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.7.0.post1",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "1!1.0",
+   "gt": false,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0+local.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0-beta",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0-beta.10",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0-beta.2",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0c1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0pre1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0-preview.3",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": " 3.6.0 ",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0.beta.1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0_beta_1",
+   "gt": true,
+   "eq": false
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3.6.0-1",
+   "gt": false,
+   "eq": true
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3.6.0-1",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0-beta.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0b1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0-rc.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0rc2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.10.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.4.3",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.4.2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "v3.7.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.7.0-alpha",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.7.0.dev1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.7.0.post1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "1!1.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0+local.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0-beta",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0-beta.10",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0-beta.2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0c1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0pre1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0-preview.3",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": " 3.6.0 ",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0.beta.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0_beta_1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3.6.0-1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "not a version",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0-beta.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0b1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0-rc.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0rc2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.10.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.4.3",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.4.2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "v3.7.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.7.0-alpha",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.7.0.dev1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.7.0.post1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "1!1.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0+local.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0-beta",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0-beta.10",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0-beta.2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0c1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0pre1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0-preview.3",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": " 3.6.0 ",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0.beta.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0_beta_1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3.6.0-1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0-beta.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0b1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0-rc.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0rc2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.10.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.4.3",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.4.2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "v3.7.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.7.0-alpha",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.7.0.dev1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.7.0.post1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "1!1.0",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0+local.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0-beta",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0-beta.10",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0-beta.2",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0c1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0pre1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0-preview.3",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": " 3.6.0 ",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0.beta.1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0_beta_1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3.6.0-1",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "not a version",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "",
+   "gt": null,
+   "eq": null
+  },
+  {
+   "a": "3..6",
+   "b": "3..6",
+   "gt": null,
+   "eq": null
+  }
+ ],
+ "supported": {
+  "3.6.0": true,
+  "3.6.0-beta.1": true,
+  "3.6.0b1": true,
+  "3.6.0-rc.1": true,
+  "3.6.0rc2": true,
+  "3.6.1": true,
+  "3.6": true,
+  "3.6.0.0": true,
+  "3.10.0": true,
+  "3.4.3": true,
+  "3.4.2": false,
+  "v3.7.0": true,
+  "3.7.0-alpha": true,
+  "3.7.0.dev1": true,
+  "3.7.0.post1": true,
+  "1!1.0": true,
+  "3.6.0+local.1": true,
+  "3.6.0-beta": true,
+  "3.6.0-beta.10": true,
+  "3.6.0-beta.2": true,
+  "3.6.0c1": true,
+  "3.6.0pre1": true,
+  "3.6.0-preview.3": true,
+  " 3.6.0 ": true,
+  "3.6.0.beta.1": true,
+  "3.6.0_beta_1": true,
+  "3.6.0-1": true,
+  "not a version": false,
+  "": false,
+  "3..6": false
+ },
+ "channel": {
+  "3.6.0": "stable",
+  "3.6.0-beta.1": "beta",
+  "3.6.0b1": "stable",
+  "3.6.0-rc.1": "beta",
+  "3.6.0rc2": "stable",
+  "3.6.1": "stable",
+  "3.6": "stable",
+  "3.6.0.0": "stable",
+  "3.10.0": "stable",
+  "3.4.3": "stable",
+  "3.4.2": "stable",
+  "v3.7.0": "stable",
+  "3.7.0-alpha": "stable",
+  "3.7.0.dev1": "stable",
+  "3.7.0.post1": "stable",
+  "1!1.0": "stable",
+  "3.6.0+local.1": "stable",
+  "3.6.0-beta": "beta",
+  "3.6.0-beta.10": "beta",
+  "3.6.0-beta.2": "beta",
+  "3.6.0c1": "stable",
+  "3.6.0pre1": "stable",
+  "3.6.0-preview.3": "stable",
+  " 3.6.0 ": "stable",
+  "3.6.0.beta.1": "stable",
+  "3.6.0_beta_1": "stable",
+  "3.6.0-1": "stable",
+  "not a version": "stable",
+  "": "stable",
+  "3..6": "stable"
+ }
+}

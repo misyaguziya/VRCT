@@ -1,0 +1,1616 @@
+{
+ "reply": "  Hello, nice to meet you!\n",
+ "openai_models": [
+  {
+   "id": "gpt-4o-mini"
+  },
+  {
+   "id": "gpt-4o"
+  },
+  {
+   "id": "whisper-1"
+  },
+  {
+   "id": "text-embedding-3-small"
+  },
+  {
+   "id": "gpt-4o-audio-preview"
+  },
+  {
+   "id": "ft:gpt-4o-mini:org::abc",
+   "root": "gpt-4o-mini"
+  },
+  {
+   "id": "ft:davinci:org::x",
+   "root": "davinci"
+  },
+  {
+   "id": "dall-e-3"
+  },
+  {
+   "id": "o1-mini"
+  },
+  {
+   "id": "gpt-image-1"
+  },
+  {
+   "id": "Llama-3.3-70B-Versatile"
+  },
+  {
+   "id": "Whisper-Large-V3"
+  },
+  {
+   "id": "omni-moderation-latest"
+  },
+  {
+   "id": "bge-rerank"
+  },
+  {
+   "id": "gpt-4o-search-preview"
+  }
+ ],
+ "ollama_models": [
+  {
+   "name": "llama3.2:latest"
+  },
+  {
+   "name": "gemma3:4b"
+  }
+ ],
+ "gemini_pages": [
+  {
+   "models": [
+    {
+     "name": "models/gemini-2.5-flash",
+     "supportedGenerationMethods": [
+      "generateContent",
+      "countTokens"
+     ]
+    },
+    {
+     "name": "models/gemini-2.5-flash-image",
+     "supportedGenerationMethods": [
+      "generateContent"
+     ]
+    },
+    {
+     "name": "models/embedding-001",
+     "supportedGenerationMethods": [
+      "embedContent"
+     ]
+    }
+   ],
+   "nextPageToken": "page2"
+  },
+  {
+   "models": [
+    {
+     "name": "models/gemma-3-27b-it",
+     "supportedGenerationMethods": [
+      "generateContent"
+     ]
+    },
+    {
+     "name": "models/gemini-2.5-pro-preview-tts",
+     "supportedGenerationMethods": [
+      "generateContent"
+     ]
+    },
+    {
+     "name": "models/gemini-2.0-flash",
+     "supportedGenerationMethods": [
+      "countTokens"
+     ]
+    }
+   ]
+  }
+ ],
+ "history": [
+  {
+   "source": "chat",
+   "text": "最初の発言",
+   "timestamp": "2026-10-11T09:05:00"
+  },
+  {
+   "source": "ocr",
+   "text": "OCR は対象外",
+   "timestamp": "2026-10-11T09:06:00"
+  },
+  {
+   "source": "mic",
+   "text": "Good morning",
+   "timestamp": "2026-10-11T21:30:15.123456"
+  },
+  {
+   "source": "speaker",
+   "text": "時刻が読めない",
+   "timestamp": "not a time"
+  },
+  {
+   "source": "chat",
+   "text": "時刻なし"
+  },
+  {
+   "source": "mic",
+   "text": "{braces} and 'quotes'",
+   "timestamp": "2026-10-11T23:59:59+09:00"
+  },
+  {
+   "source": "speaker",
+   "text": "最後の発言",
+   "timestamp": "2026-10-12T00:00:01"
+  }
+ ],
+ "engines": [
+  {
+   "engine": "OpenAI_API",
+   "steps": [
+    {
+     "step": "setAuthKey_invalid",
+     "result": false,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.openai.com/v1/models",
+       "headers": {
+        "host": "api.openai.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer invalid-key",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList_no_key",
+     "result": [],
+     "requests": []
+    },
+    {
+     "step": "setAuthKey",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.openai.com/v1/models",
+       "headers": {
+        "host": "api.openai.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini"
+     ],
+     "requests": []
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://api.openai.com/v1/chat/completions",
+       "headers": {
+        "host": "api.openai.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1221"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n",
+           "role": "system"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "gpt-4o-mini",
+         "stream": false
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "translate_no_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://api.openai.com/v1/chat/completions",
+       "headers": {
+        "host": "api.openai.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1068"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n\n",
+           "role": "system"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "gpt-4o-mini",
+         "stream": false
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "getModelList_again",
+     "result": [
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.openai.com/v1/models",
+       "headers": {
+        "host": "api.openai.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "engine": "Groq_API",
+   "steps": [
+    {
+     "step": "setAuthKey_invalid",
+     "result": false,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.groq.com/openai/v1/models",
+       "headers": {
+        "host": "api.groq.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer invalid-key",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList_no_key",
+     "result": [],
+     "requests": []
+    },
+    {
+     "step": "setAuthKey",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.groq.com/openai/v1/models",
+       "headers": {
+        "host": "api.groq.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer gsk_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "bge-rerank",
+      "dall-e-3",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "o1-mini",
+      "omni-moderation-latest"
+     ],
+     "requests": []
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://api.groq.com/openai/v1/chat/completions",
+       "headers": {
+        "host": "api.groq.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer gsk_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1233"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n",
+           "role": "system"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "Llama-3.3-70B-Versatile",
+         "stream": false
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "translate_no_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://api.groq.com/openai/v1/chat/completions",
+       "headers": {
+        "host": "api.groq.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer gsk_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1080"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n\n",
+           "role": "system"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "Llama-3.3-70B-Versatile",
+         "stream": false
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "getModelList_again",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "bge-rerank",
+      "dall-e-3",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "o1-mini",
+      "omni-moderation-latest"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.groq.com/openai/v1/models",
+       "headers": {
+        "host": "api.groq.com",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer gsk_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "engine": "OpenRouter_API",
+   "steps": [
+    {
+     "step": "setAuthKey_invalid",
+     "result": false,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://openrouter.ai/api/v1/auth/key",
+       "headers": {
+        "user-agent": "python-requests/2.34.2",
+        "accept-encoding": "gzip, deflate, zstd",
+        "accept": "*/*",
+        "connection": "keep-alive",
+        "authorization": "Bearer invalid-key"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList_no_key",
+     "result": [],
+     "requests": []
+    },
+    {
+     "step": "setAuthKey",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://openrouter.ai/api/v1/auth/key",
+       "headers": {
+        "user-agent": "python-requests/2.34.2",
+        "accept-encoding": "gzip, deflate, zstd",
+        "accept": "*/*",
+        "connection": "keep-alive",
+        "authorization": "Bearer sk-or-cccccccccccccccccccc"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "bge-rerank",
+      "dall-e-3",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "o1-mini",
+      "omni-moderation-latest"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://openrouter.ai/api/v1/models",
+       "headers": {
+        "host": "openrouter.ai",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-or-cccccccccccccccccccc",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://openrouter.ai/api/v1/chat/completions",
+       "headers": {
+        "host": "openrouter.ai",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-or-cccccccccccccccccccc",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1216"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n",
+           "role": "system"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "gpt-4o",
+         "stream": false
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "translate_no_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://openrouter.ai/api/v1/chat/completions",
+       "headers": {
+        "host": "openrouter.ai",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-or-cccccccccccccccccccc",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1063"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n\n",
+           "role": "system"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "gpt-4o",
+         "stream": false
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "getModelList_again",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "bge-rerank",
+      "dall-e-3",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "o1-mini",
+      "omni-moderation-latest"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://openrouter.ai/api/v1/models",
+       "headers": {
+        "host": "openrouter.ai",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer sk-or-cccccccccccccccccccc",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "engine": "Plamo_API",
+   "steps": [
+    {
+     "step": "setAuthKey_invalid",
+     "result": false,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.platform.preferredai.jp/v1/models",
+       "headers": {
+        "host": "api.platform.preferredai.jp",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer invalid-key",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList_no_key",
+     "result": [],
+     "requests": []
+    },
+    {
+     "step": "setAuthKey",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.platform.preferredai.jp/v1/models",
+       "headers": {
+        "host": "api.platform.preferredai.jp",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "Whisper-Large-V3",
+      "bge-rerank",
+      "dall-e-3",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-audio-preview",
+      "gpt-4o-mini",
+      "gpt-4o-search-preview",
+      "gpt-image-1",
+      "o1-mini",
+      "omni-moderation-latest",
+      "text-embedding-3-small",
+      "whisper-1"
+     ],
+     "requests": []
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://api.platform.preferredai.jp/v1/chat/completions",
+       "headers": {
+        "host": "api.platform.preferredai.jp",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "973"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a translation assistant that uses the `plamo-translate` tool.\nTranslate the following text.Supported languages include:\n['English', 'Japanese', 'Korean', 'French', 'German', 'Spanish', 'Portuguese', 'Russian', 'Italian', 'Dutch', 'Polish', 'Turkish', 'Arabic', 'Hindi', 'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Filipino', 'Swedish', 'Finnish', 'Danish', 'Norwegian', 'Romanian', 'Czech', 'Hungarian', 'Greek', 'Hebrew', 'Chinese Simplified', 'Chinese Traditional']\n\nTranslate the following text from Japanese to English.\noutput only the translated text without any additional commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n",
+           "role": "developer"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "o1-mini",
+         "stream": false,
+         "temperature": 1.0
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "translate_no_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "https://api.platform.preferredai.jp/v1/chat/completions",
+       "headers": {
+        "host": "api.platform.preferredai.jp",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "820"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a translation assistant that uses the `plamo-translate` tool.\nTranslate the following text.Supported languages include:\n['English', 'Japanese', 'Korean', 'French', 'German', 'Spanish', 'Portuguese', 'Russian', 'Italian', 'Dutch', 'Polish', 'Turkish', 'Arabic', 'Hindi', 'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Filipino', 'Swedish', 'Finnish', 'Danish', 'Norwegian', 'Romanian', 'Czech', 'Hungarian', 'Greek', 'Hebrew', 'Chinese Simplified', 'Chinese Traditional']\n\nTranslate the following text from Japanese to English.\noutput only the translated text without any additional commentary.\n\n\nConversation context (recent 5 messages):\n\n",
+           "role": "developer"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "o1-mini",
+         "stream": false,
+         "temperature": 1.0
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "getModelList_again",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "Whisper-Large-V3",
+      "bge-rerank",
+      "dall-e-3",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-audio-preview",
+      "gpt-4o-mini",
+      "gpt-4o-search-preview",
+      "gpt-image-1",
+      "o1-mini",
+      "omni-moderation-latest",
+      "text-embedding-3-small",
+      "whisper-1"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://api.platform.preferredai.jp/v1/models",
+       "headers": {
+        "host": "api.platform.preferredai.jp",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "engine": "OpenAI_Compatible",
+   "steps": [
+    {
+     "step": "setAuthKey_invalid",
+     "result": false,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "http://127.0.0.1:8000/v1/models",
+       "headers": {
+        "host": "127.0.0.1:8000",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer invalid-key",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList_no_key",
+     "result": [],
+     "requests": []
+    },
+    {
+     "step": "setAuthKey",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "http://127.0.0.1:8000/v1/models",
+       "headers": {
+        "host": "127.0.0.1:8000",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer eeeeeeeeee",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "o1-mini"
+     ],
+     "requests": []
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "http://127.0.0.1:8000/v1/chat/completions",
+       "headers": {
+        "host": "127.0.0.1:8000",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer eeeeeeeeee",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1238"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n",
+           "role": "developer"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "o1-mini",
+         "stream": false,
+         "temperature": 1.0
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "translate_no_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "http://127.0.0.1:8000/v1/chat/completions",
+       "headers": {
+        "host": "127.0.0.1:8000",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer eeeeeeeeee",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1085"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n\n",
+           "role": "developer"
+          },
+          {
+           "content": "こんにちは、はじめまして",
+           "role": "user"
+          }
+         ],
+         "model": "o1-mini",
+         "stream": false,
+         "temperature": 1.0
+        }
+       }
+      }
+     ]
+    },
+    {
+     "step": "getModelList_again",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-mini",
+      "o1-mini"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "http://127.0.0.1:8000/v1/models",
+       "headers": {
+        "host": "127.0.0.1:8000",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer eeeeeeeeee",
+        "x-stainless-async": "false",
+        "x-stainless-retry-count": "0",
+        "x-stainless-read-timeout": "600"
+       },
+       "body": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "engine": "LMStudio",
+   "steps": [
+    {
+     "step": "setBaseURL",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "http://127.0.0.1:1234/v1/models",
+       "headers": {
+        "user-agent": "python-requests/2.34.2",
+        "accept-encoding": "gzip, deflate, zstd",
+        "accept": "*/*",
+        "connection": "keep-alive"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "Llama-3.3-70B-Versatile",
+      "Whisper-Large-V3",
+      "bge-rerank",
+      "dall-e-3",
+      "ft:davinci:org::x",
+      "ft:gpt-4o-mini:org::abc",
+      "gpt-4o",
+      "gpt-4o-audio-preview",
+      "gpt-4o-mini",
+      "gpt-4o-search-preview",
+      "gpt-image-1",
+      "o1-mini",
+      "omni-moderation-latest",
+      "text-embedding-3-small",
+      "whisper-1"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "http://127.0.0.1:1234/v1/models",
+       "headers": {
+        "user-agent": "python-requests/2.34.2",
+        "accept-encoding": "gzip, deflate, zstd",
+        "accept": "*/*",
+        "connection": "keep-alive"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "http://127.0.0.1:1234/v1/chat/completions",
+       "headers": {
+        "host": "127.0.0.1:1234",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "user-agent": "OpenAI/Python 1.109.1",
+        "x-stainless-lang": "python",
+        "x-stainless-package-version": "1.109.1",
+        "x-stainless-os": "Windows",
+        "x-stainless-arch": "other:amd64",
+        "x-stainless-runtime": "CPython",
+        "x-stainless-runtime-version": "3.11.5",
+        "authorization": "Bearer lmstudio",
+        "x-stainless-async": "false",
+        "x-stainless-raw-response": "true",
+        "x-stainless-retry-count": "0",
+        "content-length": "1195"
+       },
+       "body": {
+        "json": {
+         "messages": [
+          {
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n",
+           "role": "system"
+          },
+          {
+           "content": "こんにちは",
+           "role": "user"
+          }
+         ],
+         "model": "gpt-4o",
+         "stream": false
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "engine": "Ollama",
+   "steps": [
+    {
+     "step": "authenticationCheck",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "http://localhost:11434/",
+       "headers": {
+        "user-agent": "python-requests/2.34.2",
+        "accept-encoding": "gzip, deflate, zstd",
+        "accept": "*/*",
+        "connection": "keep-alive"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "gemma3:4b",
+      "llama3.2:latest"
+     ],
+     "requests": [
+      {
+       "method": "GET",
+       "url": "http://localhost:11434/",
+       "headers": {
+        "user-agent": "python-requests/2.34.2",
+        "accept-encoding": "gzip, deflate, zstd",
+        "accept": "*/*",
+        "connection": "keep-alive"
+       },
+       "body": null
+      },
+      {
+       "method": "GET",
+       "url": "http://localhost:11434/api/tags",
+       "headers": {
+        "user-agent": "python-requests/2.34.2",
+        "accept-encoding": "gzip, deflate, zstd",
+        "accept": "*/*",
+        "connection": "keep-alive"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [
+      {
+       "method": "POST",
+       "url": "http://localhost:11434/api/chat",
+       "headers": {
+        "host": "localhost:11434",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "content-type": "application/json",
+        "accept": "application/json",
+        "user-agent": "ollama-python/0.6.2 (AMD64 windows) Python/3.11.5",
+        "content-length": "1221"
+       },
+       "body": {
+        "json": {
+         "model": "gemma3:4b",
+         "stream": true,
+         "options": {},
+         "messages": [
+          {
+           "role": "system",
+           "content": "You are a helpful translation assistant.\nSupported languages:\n['Afrikaans', 'Arabic', 'Armenian', 'Azerbaijani', 'Belarusian', 'Bosnian', 'Bulgarian', 'Catalan', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'Galician', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Indonesian', 'Italian', 'Japanese', 'Kannada', 'Kazakh', 'Korean', 'Latvian', 'Lithuanian', 'Macedonian', 'Malay', 'Marathi', 'Maori', 'Nepali', 'Norwegian', 'Persian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swahili', 'Swedish', 'Tagalog', 'Tamil', 'Thai', 'Turkish', 'Ukrainian', 'Urdu', 'Vietnamese', 'Welsh']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n"
+          },
+          {
+           "role": "user",
+           "content": "こんにちは"
+          }
+         ],
+         "tools": []
+        }
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "engine": "Gemini_API",
+   "steps": [
+    {
+     "step": "setAuthKey_invalid",
+     "result": false,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://generativelanguage.googleapis.com/v1beta/models",
+       "headers": {
+        "host": "generativelanguage.googleapis.com",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "content-type": "application/json",
+        "x-goog-api-key": "invalid-key",
+        "user-agent": "google-genai-sdk/1.45.0 gl-python/3.11.5",
+        "x-goog-api-client": "google-genai-sdk/1.45.0 gl-python/3.11.5"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "setAuthKey",
+     "result": true,
+     "requests": [
+      {
+       "method": "GET",
+       "url": "https://generativelanguage.googleapis.com/v1beta/models",
+       "headers": {
+        "host": "generativelanguage.googleapis.com",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "content-type": "application/json",
+        "x-goog-api-key": "fffffffffffffffffffffffffffffffffffffff",
+        "user-agent": "google-genai-sdk/1.45.0 gl-python/3.11.5",
+        "x-goog-api-client": "google-genai-sdk/1.45.0 gl-python/3.11.5"
+       },
+       "body": null
+      },
+      {
+       "method": "GET",
+       "url": "https://generativelanguage.googleapis.com/v1beta/models?pageToken=page2",
+       "headers": {
+        "host": "generativelanguage.googleapis.com",
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, zstd",
+        "connection": "keep-alive",
+        "content-type": "application/json",
+        "x-goog-api-key": "fffffffffffffffffffffffffffffffffffffff",
+        "user-agent": "google-genai-sdk/1.45.0 gl-python/3.11.5",
+        "x-goog-api-client": "google-genai-sdk/1.45.0 gl-python/3.11.5"
+       },
+       "body": null
+      }
+     ]
+    },
+    {
+     "step": "getModelList",
+     "result": [
+      "gemini-2.5-flash",
+      "gemma-3-27b-it"
+     ],
+     "requests": []
+    },
+    {
+     "step": "setModel",
+     "result": true,
+     "requests": []
+    },
+    {
+     "step": "updateClient",
+     "result": null,
+     "requests": []
+    },
+    {
+     "step": "translate_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [],
+     "grpc": [
+      {
+       "request": {
+        "model": "models/gemini-2.5-flash",
+        "contents": [
+         {
+          "parts": [
+           {
+            "text": "こんにちは、はじめまして",
+            "thought": false
+           }
+          ],
+          "role": "user"
+         }
+        ],
+        "generationConfig": {
+         "candidateCount": 1,
+         "temperature": 0.7,
+         "stopSequences": [],
+         "responseMimeType": "",
+         "responseModalities": []
+        },
+        "systemInstruction": {
+         "parts": [
+          {
+           "text": "You are a helpful translation assistant.\nSupported languages:\n['Arabic', 'Bengali', 'Bulgarian', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Indonesian', 'Italian', 'Japanese', 'Korean', 'Latvian', 'Lithuanian', 'Norwegian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swedish', 'Thai', 'Turkish', 'Ukrainian', 'Vietnamese']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n[21:30][mic] Good morning\n[][speaker] 時刻が読めない\n[][chat] 時刻なし\n[23:59][mic] {braces} and 'quotes'\n[00:00][speaker] 最後の発言\n",
+           "thought": false
+          }
+         ],
+         "role": ""
+        },
+        "tools": [],
+        "safetySettings": []
+       },
+       "metadata": []
+      }
+     ]
+    },
+    {
+     "step": "translate_no_history",
+     "result": "Hello, nice to meet you!",
+     "requests": [],
+     "grpc": [
+      {
+       "request": {
+        "model": "models/gemini-2.5-flash",
+        "contents": [
+         {
+          "parts": [
+           {
+            "text": "こんにちは、はじめまして",
+            "thought": false
+           }
+          ],
+          "role": "user"
+         }
+        ],
+        "generationConfig": {
+         "candidateCount": 1,
+         "temperature": 0.7,
+         "stopSequences": [],
+         "responseMimeType": "",
+         "responseModalities": []
+        },
+        "systemInstruction": {
+         "parts": [
+          {
+           "text": "You are a helpful translation assistant.\nSupported languages:\n['Arabic', 'Bengali', 'Bulgarian', 'Chinese Simplified', 'Chinese Traditional', 'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian', 'Finnish', 'French', 'German', 'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Indonesian', 'Italian', 'Japanese', 'Korean', 'Latvian', 'Lithuanian', 'Norwegian', 'Polish', 'Portuguese', 'Romanian', 'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swedish', 'Thai', 'Turkish', 'Ukrainian', 'Vietnamese']\n\nTranslate the user provided text from Japanese to English.\nReturn ONLY the translated text. Do not add quotes or extra commentary.\n\n\nConversation context (recent 5 messages):\n\n",
+           "thought": false
+          }
+         ],
+         "role": ""
+        },
+        "tools": [],
+        "safetySettings": []
+       },
+       "metadata": []
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

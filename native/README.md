@@ -11,7 +11,8 @@ Rust バックエンドのワークスペース（設計: `docs/rust_backend_des
 | `vrct-ct2/` | CTranslate2（wheel の `ctranslate2.dll`）の受け口。C の shim と安全な Rust の型 |
 | `vrct-whisper/` | faster-whisper 1.1.1 の `transcribe`（VRCT が通る経路）。メル特徴量は numpy と同じ計算 |
 | `vrct-ocr/` | 吹き出し検出（YOLOX）と RapidOCR 3.9.2 の移植（OpenCV / numpy の該当処理、Clipper、bidi） |
-| `vrct-backend/` | バックエンド本体。今は翻訳（NLLB / M2M100）と音訳（Sudachi + ヘボン式）、HF のキャッシュの読み方 |
+| `vrct-backend/` | バックエンド本体。今は翻訳（NLLB / M2M100・LLM・DeepL・Web 翻訳の入口）、音訳（Sudachi + ヘボン式）、文字起こしの API、重みとトークナイザーの取得、ソフトの更新、テレメトリー、WebSocket・OBS のサーバー |
+| `vrct-webtranslate/` | Web 翻訳（Google / Bing / Papago）。`translator_engines` のソースを取り込み、PyO3 の入口を外したもの |
 | `data/error_codes.json` | `errors.py` のエラーコード表（`reference/export_error_codes.py` で作る。Rust 版はこれを取り込む） |
 | `data/sudachi/` | SudachiPy 0.6.10 と同じリソース（sudachi.rs v0.6.10、Apache-2.0）。辞書（`system.dic`）は別 |
 | `reference/` | Python から基準データを書き出すスクリプトと、照合用の文（`corpus/`） |
@@ -34,15 +35,27 @@ Python 版が出した基準（`testdata/`）と、Rust 版の出力が完全に
 ```powershell
 cd native
 $env:VRCT_WEIGHTS_ROOTS = "D:\WORKSPACE\WORK\VRChatProject\VRCT\src-python;<M2M100 を置いた weights の親>"
-$env:VRCT_SUDACHI_DICT = "<venv>\Lib\site-packages\sudachidict_fullesources\system.dic"
-$env:VRCT_RAPIDOCR_MODELS = "<venv>\Lib\site-packagesapidocr\models"
-$env:VRCT_OCR_DATASET_REF = "<repo>	mp\ocr-dataset-cpu.json"   # 実際のスクリーンショットの基準 (任意、リポジトリに置かない)
+$env:VRCT_SUDACHI_DICT = "<venv>\Lib\site-packages\sudachidict_full\resources\system.dic"
+$env:VRCT_RAPIDOCR_MODELS = "<venv>\Lib\site-packages\rapidocr\models"
+$env:VRCT_OCR_DATASET_REF = "<repo>\tmp\ocr-dataset-cpu.json"   # 実際のスクリーンショットの基準 (任意、リポジトリに置かない)
 cargo test --release -p vrct-whisper -p vrct-ocr -p vrct-backend -- --nocapture
 ```
 
 - `VRCT_TEST_CUDA=1` で `*-cuda.json` も比べる。cuBLAS / cuDNN（`fetch-native --cuda`）を PATH に入れておく。
 - 基準の作り直し: `reference/export_{nmt,whisper,ocr,translit}.py`（各ファイルの先頭に使い方）。音声は `reference/make_audio_corpus.ps1`、画像は `reference/make_ocr_corpus.py` で作る（声やフォントは PC で違うので、作り直したら基準も作り直す）。
 - 数値の一致は AVX2 / FMA を持つ x64 CPU が前提（numpy・OpenBLAS が CPU で計算方法を変えるため）。
+
+## 外部 API・ファイルの照合（P2）
+
+Python 版が送る HTTP の要求を、送る直前（httpx / requests / urllib）で横取りして記録したもの（`testdata/{llm,deepl,transcription,update,weights,telemetry,obs}/`）と、Rust 版がローカルの模擬サーバーへ送った要求を比べる。外部へは何も送らない。
+
+```powershell
+cd native
+cargo test -p vrct-backend -p vrct-webtranslate
+```
+
+- 基準の作り直し: `reference/export_{llm,deepl,transcription,update,weights,telemetry,obs}.py`（記録の仕組みは `reference/http_capture.py`）。`export_transcription.py` は `PYTHONPATH=tmp/native-site` で動かす。`export_update.py` はインストーラを起動せず、`src-python/config.json` は退避して戻す。`export_obs.py` は OBS のページのテンプレート（`vrct-backend/src/obs_overlay.html`）も書く。
+- 記録に秘密を残さない: `export_weights.py` は huggingface_hub が PC の Hugging Face のトークンを付けないよう `HF_HUB_DISABLE_IMPLICIT_TOKEN=1` で動かす。鍵は偽物を使う。
 
 ## 契約テスト
 
