@@ -6,6 +6,7 @@
 // version must all match the DLL. Each call mirrors what python/cpp/{translator,whisper}.cc and
 // replica_pool.h do for the Python binding. Errors are returned as nullptr / -1 and the message
 // is kept per thread (ct2_last_error).
+#include <cstdio>
 #include <cstring>
 #include <exception>
 #include <string>
@@ -62,6 +63,12 @@ static Pool* new_pool(const char* model_path, const char* device, int device_ind
 extern "C" {
 
 const char* ct2_last_error() { return last_error.c_str(); }
+
+// Points the C runtime's stderr (shared by the DLLs built with the same UCRT, ctranslate2.dll
+// included) at a file, so nothing reaches the UI's stderr pipe. Returns false on failure.
+bool ct2_redirect_stderr(const char* path) {
+  return std::freopen(path, "a", stderr) != nullptr;
+}
 
 int ct2_cuda_device_count() {
   return guard([] { return get_gpu_count(); }, 0);
