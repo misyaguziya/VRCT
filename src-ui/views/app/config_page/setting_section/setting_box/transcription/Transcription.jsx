@@ -27,7 +27,6 @@ export const Transcription = () => {
             <Mic_Container />
             <Speaker_Container />
             <TranscriptionEngine_Container />
-            <Advanced_Container />
         </div>
     );
 };
@@ -207,6 +206,10 @@ const TranscriptionEngine_Container = () => {
                 <>
                     <WhisperWeightType_Box />
                     <TranscriptionComputeDevice_Box />
+                    <MicAvgLogprobContainer />
+                    <MicNoSpeechProbContainer />
+                    <SpeakerAvgLogprobContainer />
+                    <SpeakerNoSpeechProbContainer />
                 </>
             )}
         </div>
@@ -302,27 +305,13 @@ const TranscriptionComputeDevice_Box = () => {
 
 
 
-const Advanced_Container = () => {
-    const { t } = useI18n();
-    return (
-        <div>
-            <SectionLabelComponent label="Advanced Settings (Whisper Model)" />
-            <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
-            <MicAvgLogprobContainer />
-            <MicNoSpeechProbContainer />
-            <SpeakerAvgLogprobContainer />
-            <SpeakerNoSpeechProbContainer />
-        </div>
-    );
-};
-
-export const MicAvgLogprobContainer = () => {
+const MicAvgLogprobContainer = () => {
     const { t } = useI18n();
     const { currentMicAvgLogprob, setMicAvgLogprob } = useTranscription();
     return (
         <SliderContainer
             label="Mic Avg Logprob"
-            desc="Default: -0.8"
+            desc={t("config_page.transcription.mic_avg_logprob.desc")}
             variable={currentMicAvgLogprob.data}
             setterFunction={setMicAvgLogprob}
             min={-2}
@@ -333,14 +322,14 @@ export const MicAvgLogprobContainer = () => {
     );
 };
 
-export const MicNoSpeechProbContainer = () => {
+const MicNoSpeechProbContainer = () => {
     const { t } = useI18n();
     const { currentMicNoSpeechProb, setMicNoSpeechProb } = useTranscription();
 
     return (
         <SliderContainer
             label="Mic No Speech Prob"
-            desc="Default: 0.6"
+            desc={t("config_page.transcription.mic_no_speech_prob.desc")}
             variable={currentMicNoSpeechProb.data}
             setterFunction={setMicNoSpeechProb}
             min={0}
@@ -350,14 +339,14 @@ export const MicNoSpeechProbContainer = () => {
     );
 };
 
-export const SpeakerAvgLogprobContainer = () => {
+const SpeakerAvgLogprobContainer = () => {
     const { t } = useI18n();
     const { currentSpeakerAvgLogprob, setSpeakerAvgLogprob } = useTranscription();
 
     return (
         <SliderContainer
             label="Speaker Avg Logprob"
-            desc="Default: -0.8"
+            desc={t("config_page.transcription.speaker_avg_logprob.desc")}
             variable={currentSpeakerAvgLogprob.data}
             setterFunction={setSpeakerAvgLogprob}
             min={-2}
@@ -368,14 +357,14 @@ export const SpeakerAvgLogprobContainer = () => {
     );
 };
 
-export const SpeakerNoSpeechProbContainer = () => {
+const SpeakerNoSpeechProbContainer = () => {
     const { t } = useI18n();
     const { currentSpeakerNoSpeechProb, setSpeakerNoSpeechProb } = useTranscription();
 
     return (
         <SliderContainer
             label="Speaker No Speech Prob"
-            desc="Default: 0.6"
+            desc={t("config_page.transcription.speaker_no_speech_prob.desc")}
             variable={currentSpeakerNoSpeechProb.data}
             setterFunction={setSpeakerNoSpeechProb}
             min={0}
