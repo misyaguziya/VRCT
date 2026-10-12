@@ -9,6 +9,7 @@ import HeadphonesSvg from "@images/headphones.svg?react";
 import {
     useDevice,
 } from "@logics_configs";
+import { useI18n } from "@useI18n";
 
 export const ThresholdComponent = (props) => {
     return (
@@ -22,6 +23,7 @@ export const ThresholdComponent = (props) => {
 };
 
 const MicComponent = (props) => {
+    const { t } = useI18n();
     const {
         currentMicThreshold,
         setMicThreshold,
@@ -36,12 +38,12 @@ const MicComponent = (props) => {
 
 
     useEffect(() => {
-        if (currentEnableAutomaticMicThreshold.data === true) {
-            setUiThreshold("Auto");
+        if (currentEnableAutomaticMicThreshold.data === true || props.is_vad_active === true) {
+            setUiThreshold(t("config_page.device.mic_dynamic_energy_threshold.option_auto"));
         } else {
             setUiThreshold(currentMicThreshold.data);
         }
-    }, [currentMicThreshold.data, currentEnableAutomaticMicThreshold]);
+    }, [currentMicThreshold.data, currentEnableAutomaticMicThreshold, props.is_vad_active]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);
@@ -50,7 +52,7 @@ const MicComponent = (props) => {
         setMicThreshold(payload_threshold);
     };
 
-    const is_disable = currentEnableAutomaticMicThreshold.data === true ? true : false;
+    const is_disable = currentEnableAutomaticMicThreshold.data === true || props.is_vad_active === true ? true : false;
 
     return (
         <>
@@ -79,6 +81,7 @@ const MicComponent = (props) => {
 };
 
 const SpeakerComponent = (props) => {
+    const { t } = useI18n();
     const {
         currentSpeakerThreshold,
         setSpeakerThreshold,
@@ -92,12 +95,12 @@ const SpeakerComponent = (props) => {
     } = useVolume();
 
     useEffect(() => {
-        if (currentEnableAutomaticSpeakerThreshold.data === true) {
-            setUiThreshold("Auto");
+        if (currentEnableAutomaticSpeakerThreshold.data === true || props.is_vad_active === true) {
+            setUiThreshold(t("config_page.device.speaker_dynamic_energy_threshold.option_auto"));
         } else {
             setUiThreshold(currentSpeakerThreshold.data);
         }
-    }, [currentSpeakerThreshold.data, currentEnableAutomaticSpeakerThreshold]);
+    }, [currentSpeakerThreshold.data, currentEnableAutomaticSpeakerThreshold, props.is_vad_active]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);
@@ -106,7 +109,7 @@ const SpeakerComponent = (props) => {
         setSpeakerThreshold(payload_threshold);
     };
 
-    const is_disable = currentEnableAutomaticSpeakerThreshold.data === true ? true : false;
+    const is_disable = currentEnableAutomaticSpeakerThreshold.data === true || props.is_vad_active === true ? true : false;
 
     return (
         <>
