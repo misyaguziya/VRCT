@@ -61,6 +61,23 @@ pub enum Error {
     Invalid(&'static str),
 }
 
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Windows(err) => write!(f, "{err} (HRESULT 0x{:08X})", err.code().0 as u32),
+            Error::Invalid(message) => f.write_str(message),
+        }
+    }
+}
+
+impl std::fmt::Debug for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self, f)
+    }
+}
+
+impl std::error::Error for Error {}
+
 impl From<windows::core::Error> for Error {
     fn from(err: windows::core::Error) -> Self {
         Self::Windows(err)

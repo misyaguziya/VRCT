@@ -254,6 +254,7 @@ pub mod render_models {
 }
 
 /// (structure, size, [(field, offset)]) as ctypes lays them out on Windows x64
+#[allow(clippy::type_complexity)]
 pub const LAYOUTS: &[(&str, usize, &[(&str, usize)])] = &[
     ("HmdMatrix34_t", 48, &[("m", 0)]),
     ("HmdVector2_t", 8, &[("v", 0)]),

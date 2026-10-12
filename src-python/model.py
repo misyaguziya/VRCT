@@ -50,6 +50,7 @@ from models.transcription.transcription_deepgram import (
 from models.transliteration.transliteration_transliterator import Transliterator
 from models.overlay.overlay import LAUNCHER, PANEL, POPUP, Overlay, launcherNearestInReach, launcherOutOfReach
 from models.overlay.overlay_image import OverlayImage
+from models.overlay.rust_overlay import RustOverlay, native_overlay
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
 from models.obs.obs_browser_source_server import ObsBrowserSourceServer
@@ -991,7 +992,11 @@ class Model:
                 "ui_scaling": 0.36, "tracker": "Playspace",
             },
         }
-        self.overlay = Overlay(overlay_settings)
+        if native_overlay() is not None:
+            # VRCT_RUST_OVERLAY=1: the Rust overlay (native/vrct-overlay), for checking it in VR
+            self.overlay = RustOverlay(overlay_settings)
+        else:
+            self.overlay = Overlay(overlay_settings)
         self.overlay.launcher_defaults = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_mute_status = None

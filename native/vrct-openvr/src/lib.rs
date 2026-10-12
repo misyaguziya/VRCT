@@ -157,12 +157,25 @@ struct Api {
     init_error_description: unsafe extern "C" fn(i32) -> *const c_char,
 }
 
-/// openvr_api.dll from the executable's folder, once
+static DLL_PATH: OnceLock<std::path::PathBuf> = OnceLock::new();
+
+/// Another copy of the same DLL to load instead (before the first use): inside the Python backend,
+/// pyopenvr's, so both use one connection. False when too late.
+pub fn use_dll(path: std::path::PathBuf) -> bool {
+    DLL_PATH.set(path).is_ok()
+}
+
+/// openvr_api.dll from the executable's folder (or use_dll's), once
 fn api() -> Result<&'static Api, Error> {
     static API: OnceLock<Result<Api, Error>> = OnceLock::new();
     API.get_or_init(|| unsafe {
-        let exe = std::env::current_exe().map_err(|e| err(-1, &e.to_string()))?;
-        let path = exe.parent().map(|d| d.join("openvr_api.dll")).ok_or_else(|| err(-1, "no executable folder"))?;
+        let path = match DLL_PATH.get() {
+            Some(path) => path.clone(),
+            None => {
+                let exe = std::env::current_exe().map_err(|e| err(-1, &e.to_string()))?;
+                exe.parent().map(|d| d.join("openvr_api.dll")).ok_or_else(|| err(-1, "no executable folder"))?
+            }
+        };
         let wide: Vec<u16> = path.as_os_str().encode_wide_null();
         let module = LoadLibraryW(wide.as_ptr());
         if module.is_null() {
@@ -170,10 +183,11 @@ fn api() -> Result<&'static Api, Error> {
         }
         let get = |name: &CStr| GetProcAddress(module, name.as_ptr() as *const u8).ok_or_else(|| err(-1, &format!("{name:?} missing")));
         Ok(Api {
-            init: std::mem::transmute::<unsafe extern "system" fn() -> isize, _>(get(c"VR_InitInternal2")?),
-            shutdown: std::mem::transmute::<unsafe extern "system" fn() -> isize, _>(get(c"VR_ShutdownInternal")?),
-            interface: std::mem::transmute::<unsafe extern "system" fn() -> isize, _>(get(c"VR_GetGenericInterface")?),
-            init_error_description: std::mem::transmute::<unsafe extern "system" fn() -> isize, _>(
+            init: std::mem::transmute::<unsafe extern "system" fn() -> isize, unsafe extern "C" fn(*mut i32, i32, *const c_char) -> u32>(get(c"VR_InitInternal2")?),
+            shutdown: std::mem::transmute::<unsafe extern "system" fn() -> isize, unsafe extern "C" fn()>(get(c"VR_ShutdownInternal")?),
+            interface: std::mem::transmute::<unsafe extern "system" fn() -> isize, unsafe extern "C" fn(*const c_char, *mut i32) -> *mut c_void>(
+                get(c"VR_GetGenericInterface")?),
+            init_error_description: std::mem::transmute::<unsafe extern "system" fn() -> isize, unsafe extern "C" fn(i32) -> *const c_char>(
                 get(c"VR_GetVRInitErrorAsEnglishDescription")?),
         })
     }).as_ref().map_err(Clone::clone)
@@ -187,6 +201,41 @@ impl WideNull for std::ffi::OsStr {
     fn encode_wide_null(&self) -> Vec<u16> {
         use std::os::windows::ffi::OsStrExt;
         self.encode_wide().chain([0]).collect()
+    }
+}
+
+/// SteamVR is running (vrmonitor.exe), from a Toolhelp snapshot (psutil's process list took ~2 s
+/// on a PC with 460 processes, this ~15 ms). False when it cannot be told.
+pub fn is_steamvr_running() -> bool {
+    is_process_running("vrmonitor.exe")
+}
+
+/// A process named `name` (case-insensitive) is running
+pub fn is_process_running(name: &str) -> bool {
+    use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
+    };
+    let wanted = name.to_lowercase();
+    unsafe {
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snapshot == INVALID_HANDLE_VALUE || snapshot.is_null() {
+            return false;
+        }
+        let mut entry: PROCESSENTRY32W = std::mem::zeroed();
+        entry.dwSize = size_of::<PROCESSENTRY32W>() as u32;
+        let mut found = Process32FirstW(snapshot, &mut entry) != 0;
+        let mut running = false;
+        while found {
+            let len = entry.szExeFile.iter().position(|&c| c == 0).unwrap_or(entry.szExeFile.len());
+            if String::from_utf16_lossy(&entry.szExeFile[..len]).to_lowercase() == wanted {
+                running = true;
+                break;
+            }
+            found = Process32NextW(snapshot, &mut entry) != 0;
+        }
+        CloseHandle(snapshot);
+        running
     }
 }
 
@@ -507,8 +556,11 @@ impl Overlay<'_> {
 pub struct Compositor<'s>(Table<'s>);
 
 impl Compositor<'_> {
-    /// The compositor's mirror of `eye` as a shader resource view on `device` (ID3D11Device*)
-    pub fn mirror_texture_d3d11(&self, eye: i32, device: *mut c_void) -> Result<*mut c_void, Error> {
+    /// The compositor's mirror of `eye` as a shader resource view on `device`
+    ///
+    /// # Safety
+    /// `device` is a live ID3D11Device*; the view is released with `release_mirror_texture_d3d11`.
+    pub unsafe fn mirror_texture_d3d11(&self, eye: i32, device: *mut c_void) -> Result<*mut c_void, Error> {
         let mut view = std::ptr::null_mut();
         let code = unsafe {
             let f: unsafe extern "C" fn(i32, *mut c_void, *mut *mut c_void) -> u32 = self.0.f(tables::compositor::GET_MIRROR_TEXTURE_D3D11);
@@ -523,7 +575,9 @@ impl Compositor<'_> {
         Ok(view)
     }
 
-    pub fn release_mirror_texture_d3d11(&self, view: *mut c_void) {
+    /// # Safety
+    /// `view` came from `mirror_texture_d3d11` and is released once.
+    pub unsafe fn release_mirror_texture_d3d11(&self, view: *mut c_void) {
         unsafe {
             let f: unsafe extern "C" fn(*mut c_void) = self.0.f(tables::compositor::RELEASE_MIRROR_TEXTURE_D3D11);
             f(view)

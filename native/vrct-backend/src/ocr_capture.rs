@@ -229,7 +229,7 @@ impl D3d11Mirror {
             D3D11CreateDevice(&adapter, D3D_DRIVER_TYPE_UNKNOWN, Default::default(), D3D11_CREATE_DEVICE_FLAG(0), None,
                               D3D11_SDK_VERSION, Some(&mut device), None, Some(&mut context))?;
             let (device, context) = (device.unwrap(), context.unwrap());
-            let view = session.compositor()?.mirror_texture_d3d11(eye, device.as_raw())?;
+            let view = session.compositor()?.mirror_texture_d3d11(eye, device.as_raw())?; // the device lives in Self
             let mirror = (|| -> anyhow::Result<Self> {
                 // the view belongs to the compositor (released with ReleaseMirrorTextureD3D11)
                 let srv = ID3D11ShaderResourceView::from_raw_borrowed(&view).unwrap();
@@ -296,7 +296,8 @@ impl D3d11Mirror {
 
     fn close(self, session: &Session) {
         if let Ok(compositor) = session.compositor() {
-            compositor.release_mirror_texture_d3d11(self.view);
+            // SAFETY: the view from mirror_texture_d3d11, released only here
+            unsafe { compositor.release_mirror_texture_d3d11(self.view) };
         }
     }
 }
