@@ -286,6 +286,18 @@ config_page:
             desc: "Larger models have higher accuracy, but they also consume more CPU or GPU resources.\nEspecially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU."
         transcription_compute_device:
             label: "Processing Device Used For AI transcription"
+        mic_avg_logprob:
+            label: "Mic Avg Logprob"
+            desc: "Threshold for transcription confidence (avg_logprob). Closer to 0 means only high-confidence speech is accepted, suppressing hallucinations. (Default: -0.8)"
+        mic_no_speech_prob:
+            label: "Mic No Speech Prob"
+            desc: "Threshold for the probability that no speech is present (no_speech_prob). Segments exceeding this are treated as silence. Closer to 0 means stricter detection, so even faint speech gets transcribed. (Default: 0.6)"
+        speaker_avg_logprob:
+            label: "Speaker Avg Logprob"
+            desc: "Threshold for transcription confidence (avg_logprob). Closer to 0 means only high-confidence speech is accepted, suppressing hallucinations. (Default: -0.8)"
+        speaker_no_speech_prob:
+            label: "Speaker No Speech Prob"
+            desc: "Threshold for the probability that no speech is present (no_speech_prob). Segments exceeding this are treated as silence. Closer to 0 means stricter detection, so even faint speech gets transcribed. (Default: 0.6)"
 
     vr:
         single_line: "Single line"
