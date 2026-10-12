@@ -38,6 +38,7 @@ def main():
         out.append("}")
         out.append("")
     out.append("/// (structure, size, [(field, offset)]) as ctypes lays them out on Windows x64")
+    out.append("#[allow(clippy::type_complexity)]")
     out.append("pub const LAYOUTS: &[(&str, usize, &[(&str, usize)])] = &[")
     for s in STRUCTS:
         c = getattr(openvr, s)

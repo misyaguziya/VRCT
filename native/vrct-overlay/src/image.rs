@@ -150,6 +150,7 @@ impl Sized<'_> {
 
     /// draw.text / draw.multiline_text with a vertical "m" anchor and horizontal anchor `anchor`
     /// ("l", "m" or "r"), lines `align`ed (spacing 4)
+    #[allow(clippy::too_many_arguments)] // Pillow's arguments
     fn draw(&self, image: &mut Image, x: f64, y: f64, anchor: Align, align: Align, text: &str, color: Rgb) {
         let lines: Vec<&str> = text.split('\n').collect();
         let widths: Vec<f64> = lines.iter().map(|l| self.length(l)).collect();

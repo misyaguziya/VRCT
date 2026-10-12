@@ -22,6 +22,17 @@ from typing import Any, Optional
 import openvr
 
 _lock = threading.Lock()
+
+
+def _native():
+    """VRCT_RUST_OVERLAY=1: the Rust overlay holds the connection (with pyopenvr's DLL); its count is shared."""
+    try:
+        from models.overlay.rust_overlay import native_overlay
+    except ImportError:
+        from overlay.rust_overlay import native_overlay
+    return native_overlay()
+
+
 _ref_count = 0
 _system: Optional[Any] = None
 
@@ -40,7 +51,12 @@ def acquire(application_type: int = openvr.VRApplication_Background) -> Any:
     global _ref_count, _system
     with _lock:
         if _ref_count == 0:
-            _system = openvr.init(application_type)
+            native = _native()
+            if native is not None:
+                native.acquire_session(int(application_type))
+                _system = openvr.VRSystem()
+            else:
+                _system = openvr.init(application_type)
         _ref_count += 1
         return _system
 
@@ -59,7 +75,11 @@ def release() -> None:
         _ref_count -= 1
         if _ref_count == 0:
             try:
-                openvr.shutdown()
+                native = _native()
+                if native is not None:
+                    native.release_session()
+                else:
+                    openvr.shutdown()
             finally:
                 # 閉じるのに失敗しても、次の acquire() で作り直せるようにする
                 _system = None

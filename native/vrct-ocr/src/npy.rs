@@ -13,7 +13,8 @@ pub fn argsort(v: &[f64]) -> Vec<usize> {
     if num < 2 {
         return tosort;
     }
-    let less = |a: f64, b: f64| a < b || (b != b && a == a);
+    // numpy's LT: NaN sorts last
+    let less = |a: f64, b: f64| a < b || (b.is_nan() && !a.is_nan());
     // ponytail: the depth limit's heapsort fallback is not ported (needs > 2*log2(n) bad splits;
     // never reached with a few dozen text lines)
     let mut stack: Vec<(usize, usize)> = Vec::new();

@@ -7,4 +7,4 @@ publish.workspace = true
 description = "OpenVR 1.26.7 (the Python backend's openvr_api) through its C function tables, for the overlay, OCR capture and clipboard"
 
 [dependencies]
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_LibraryLoader"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_LibraryLoader"] }

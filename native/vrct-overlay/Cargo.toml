@@ -6,9 +6,39 @@ rust-version.workspace = true
 publish.workspace = true
 description = "VRCT's SteamVR overlays: the log images (overlay_image.py) and the overlays themselves"
 
+[lib]
+name = "vrct_overlay"
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
+# The extension module for the Python backend (pyproject.toml builds with it)
+pyo3 = { version = "=0.24.2", features = ["extension-module", "abi3-py310"], optional = true }
+vrct-openvr = { path = "../vrct-openvr" }
+# The VR UI's capture (Windows.Graphics.Capture into a D3D11 texture) and its composing
+vrct-graphics = { path = "../vrct-graphics", default-features = false }
+serde_json = "1"
+# The VR view's window: its size, PrintWindow, posted mouse input
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Gdi",
+    "Win32_Storage_Xps",
+    "Win32_System_Threading",
+    "Win32_UI_HiDpi",
+    "Win32_UI_WindowsAndMessaging",
+] }
 ab_glyph = "0.2"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
+anyhow = "1"
+windows = { version = "=0.61.1", features = [
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
+] }
+
+[features]
+python = ["dep:pyo3"]
 
 [dev-dependencies]
-serde_json = "1"
+serde_json = { version = "1", features = ["float_roundtrip"] }

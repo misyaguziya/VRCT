@@ -1,0 +1,13 @@
+[build-system]
+requires = ["maturin==1.8.3"]
+build-backend = "maturin"
+
+[project]
+name = "vrct-overlay"
+version = "0.1.0"
+requires-python = ">=3.10"
+description = "VRCT's SteamVR overlays in Rust, for checking them inside the Python backend (VRCT_RUST_OVERLAY=1)"
+
+[tool.maturin]
+locked = true
+features = ["python"]
