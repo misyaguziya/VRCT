@@ -1,16 +1,12 @@
 //! Copy to the clipboard and paste into VRChat (models/clipboard/clipboard.py): the window whose
 //! title (or process name) contains the app name is brought to the front, the text is copied and
-//! Ctrl+V is sent to it. Win32 in place of `clip`, ctypes and keybd_event from Python.
+//! Ctrl+V is sent to it. arboard for the clipboard (in place of `clip`), Win32 for the focus and keys.
 //! The app name (the running SteamVR app) comes from OpenVR, with the overlay's session.
 use std::time::Duration;
 use windows_sys::core::BOOL;
-use windows_sys::Win32::Foundation::{CloseHandle, GlobalFree, HWND, LPARAM};
-use windows_sys::Win32::System::DataExchange::{CloseClipboard, EmptyClipboard, OpenClipboard, SetClipboardData};
-use windows_sys::Win32::System::Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE};
-use windows_sys::Win32::System::Ole::CF_UNICODETEXT;
-use windows_sys::Win32::System::Threading::{
-    AttachThreadInput, GetCurrentThreadId, OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
-};
+use crate::platform::process_name;
+use windows_sys::Win32::Foundation::{HWND, LPARAM};
+use windows_sys::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows_sys::Win32::UI::Input::KeyboardAndMouse::{keybd_event, KEYEVENTF_KEYUP, VK_CONTROL};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     BringWindowToTop, EnumWindows, GetForegroundWindow, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
@@ -34,25 +30,6 @@ fn windows() -> Vec<(HWND, String, u32)> {
     let mut out = vec![];
     unsafe { EnumWindows(Some(collect), &mut out as *mut _ as LPARAM) };
     out
-}
-
-/// The executable's file name of a process (psutil.Process(pid).name())
-fn process_name(pid: u32) -> Option<String> {
-    unsafe {
-        let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
-        if process.is_null() {
-            return None;
-        }
-        let mut buf = [0u16; 1024];
-        let mut len = buf.len() as u32;
-        let ok = QueryFullProcessImageNameW(process, 0, buf.as_mut_ptr(), &mut len);
-        CloseHandle(process);
-        if ok == 0 {
-            return None;
-        }
-        let path = String::from_utf16_lossy(&buf[..len as usize]);
-        path.rsplit(['\\', '/']).next().map(String::from)
-    }
 }
 
 /// Windows with a title containing `substring` (case-insensitive, as `in title.lower()`)
@@ -85,42 +62,9 @@ fn focus_window(hwnd: HWND) -> bool {
     }
 }
 
-/// Puts `text` on the clipboard as Unicode text (retrying while another program holds it)
+/// Puts `text` on the clipboard (arboard retries while another program holds it)
 pub fn copy(text: &str) -> bool {
-    let utf16: Vec<u16> = text.encode_utf16().chain([0]).collect();
-    for _ in 0..10 {
-        unsafe {
-            if OpenClipboard(std::ptr::null_mut()) == 0 {
-                std::thread::sleep(Duration::from_millis(20));
-                continue;
-            }
-            let copied = (|| {
-                if EmptyClipboard() == 0 {
-                    return false;
-                }
-                let memory = GlobalAlloc(GMEM_MOVEABLE, utf16.len() * 2);
-                if memory.is_null() {
-                    return false;
-                }
-                let target = GlobalLock(memory) as *mut u16;
-                if target.is_null() {
-                    GlobalFree(memory);
-                    return false;
-                }
-                std::ptr::copy_nonoverlapping(utf16.as_ptr(), target, utf16.len());
-                GlobalUnlock(memory);
-                // the clipboard owns the memory once this succeeds
-                if SetClipboardData(CF_UNICODETEXT as u32, memory).is_null() {
-                    GlobalFree(memory);
-                    return false;
-                }
-                true
-            })();
-            CloseClipboard();
-            return copied;
-        }
-    }
-    false
+    arboard::Clipboard::new().and_then(|mut c| c.set_text(text)).is_ok()
 }
 
 /// Ctrl+V to the focused window

@@ -30,6 +30,7 @@ windows = { version = "=0.61.1", optional = true, features = [
 windows-core = { version = "0.61", optional = true }
 
 [dev-dependencies]
+base64 = "0.22"
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 
 [features]

@@ -18,47 +18,15 @@ const STOP_WAIT: Duration = Duration::from_secs(5);
 
 /// secrets.token_urlsafe(32): 32 random bytes in URL-safe base64 without padding
 pub fn new_auth_token() -> String {
-    const T: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    use base64::Engine;
     let mut bytes = [0u8; 32];
     getrandom::getrandom(&mut bytes).expect("the OS random number generator failed");
-    let mut out = String::new();
-    for chunk in bytes.chunks(3) {
-        let n = chunk.iter().enumerate().fold(0u32, |acc, (i, &b)| acc | (b as u32) << (16 - 8 * i));
-        for i in 0..=chunk.len() {
-            out.push(T[(n >> (18 - 6 * i) & 63) as usize] as char);
-        }
-    }
-    out
+    base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes)
 }
 
-/// urllib.parse.unquote_plus
-fn unquote_plus(s: &str) -> String {
-    let b = s.as_bytes();
-    let mut out = vec![];
-    let mut i = 0;
-    while i < b.len() {
-        let hex = |c: u8| (c as char).to_digit(16);
-        match b[i] {
-            b'+' => out.push(b' '),
-            b'%' if i + 2 < b.len() => match (hex(b[i + 1]), hex(b[i + 2])) {
-                (Some(h), Some(l)) => {
-                    out.push((h * 16 + l) as u8);
-                    i += 2;
-                }
-                _ => out.push(b'%'),
-            },
-            c => out.push(c),
-        }
-        i += 1;
-    }
-    String::from_utf8_lossy(&out).into_owned()
-}
-
-/// parse_qs(query).get("token", [None])[0]: the first non-empty value
+/// parse_qs(query).get("token", [None])[0]: the first non-empty value ('+' is a space)
 fn query_token(query: Option<&str>) -> Option<String> {
-    query?.split('&').filter_map(|pair| pair.split_once('='))
-        .find(|(k, v)| unquote_plus(k) == "token" && !v.is_empty())
-        .map(|(_, v)| unquote_plus(v))
+    form_urlencoded::parse(query?.as_bytes()).find(|(k, v)| k == "token" && !v.is_empty()).map(|(_, v)| v.into_owned())
 }
 
 pub struct WebSocketServer {

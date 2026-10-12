@@ -6,30 +6,16 @@ mod support;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use support::{compare_requests, Mock};
+
+fn unbase64(s: &str) -> Vec<u8> {
+    use base64::Engine;
+    base64::engine::general_purpose::STANDARD.decode(s).unwrap()
+}
 use vrct_backend::asr::{self, Deepgram, Languages, WhisperApi};
 use vrct_backend::net::Http;
 
 fn native() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("..")
-}
-
-fn unbase64(s: &str) -> Vec<u8> {
-    let value = |c: u8| match c {
-        b'A'..=b'Z' => c - b'A',
-        b'a'..=b'z' => c - b'a' + 26,
-        b'0'..=b'9' => c - b'0' + 52,
-        b'+' => 62,
-        _ => 63,
-    } as u32;
-    let bytes: Vec<u8> = s.bytes().filter(|&c| c != b'=').collect();
-    let mut out = vec![];
-    for chunk in bytes.chunks(4) {
-        let n = chunk.iter().enumerate().fold(0u32, |acc, (i, &c)| acc | value(c) << (18 - 6 * i));
-        for i in 0..chunk.len() - 1 {
-            out.push((n >> (16 - 8 * i)) as u8);
-        }
-    }
-    out
 }
 
 /// export_transcription.responder

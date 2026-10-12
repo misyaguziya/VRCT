@@ -1,7 +1,7 @@
 //! cargo xtask fetch-native [--cuda]
 //!
-//! native/third_party.toml の wheel (PyPI) とヘッダー (GitHub のタグ) を取ってきて SHA-256 を照合し、
-//! 指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
+//! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
+//! SHA-256 を照合し、指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
 //! native/third_party/.cache/ に残し、次回は照合だけする。
 use anyhow::{bail, Context, Result};
 use serde::Deserialize;
@@ -14,9 +14,15 @@ use std::path::{Path, PathBuf};
 #[derive(Deserialize)]
 struct Entry {
     version: String,
+    /// a wheel on PyPI and the files to take out of it ...
+    #[serde(default)]
     wheel: String,
-    sha256: String,
+    #[serde(default)]
     files: Vec<String>,
+    /// ... or one file to download as it is (`file` is its name in third_party/<name>/)
+    url: Option<String>,
+    file: Option<String>,
+    sha256: String,
     #[serde(default)]
     cuda: bool,
     headers_url: Option<String>,
@@ -137,9 +143,15 @@ fn fetch_native(cuda: bool) -> Result<()> {
             fs::remove_dir_all(&dest)?; // stale files of an older version must not stay
         }
         fs::create_dir_all(&dest)?;
-        let url = wheel_url(name, &e.version, &e.wheel)?;
-        let wheel = fetch(&url, &e.wheel, &e.sha256, &cache)?;
-        extract_wheel(&wheel, &e.files, &dest)?;
+        if let (Some(url), Some(file)) = (&e.url, &e.file) {
+            let cached = fetch(url, &format!("{name}-{}-{file}", e.version), &e.sha256, &cache)?;
+            fs::copy(&cached, dest.join(file))?;
+            println!("  {}", dest.join(file).display());
+        } else {
+            let url = wheel_url(name, &e.version, &e.wheel)?;
+            let wheel = fetch(&url, &e.wheel, &e.sha256, &cache)?;
+            extract_wheel(&wheel, &e.files, &dest)?;
+        }
         if let (Some(url), Some(sha), Some(dir)) = (&e.headers_url, &e.headers_sha256, &e.headers_dir) {
             let tarball = fetch(url, &format!("{name}-{}-headers.tar.gz", e.version), sha, &cache)?;
             extract_headers(&tarball, dir, &dest)?;

@@ -19,17 +19,19 @@ const SESSION_TIMEOUT: Duration = Duration::from_secs(3600);
 /// Python waited 5 s for the client to stop and 5 s for its loop to end
 const STOP_WAIT: Duration = Duration::from_secs(10);
 
-/// (year, month, day, hour, minute, second, millisecond) now, in local time
-fn local_now() -> (u16, u16, u16, u16, u16, u16, u16) {
-    let mut t = unsafe { std::mem::zeroed() };
-    unsafe { windows_sys::Win32::System::SystemInformation::GetLocalTime(&mut t) };
-    (t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds)
-}
-
 /// date.today().isoformat()
 pub fn today() -> String {
-    let (y, m, d, ..) = local_now();
-    format!("{y:04}-{m:02}-{d:02}")
+    chrono::Local::now().format("%Y-%m-%d").to_string()
+}
+
+/// datetime.now().isoformat() (the microseconds left out when they are 0)
+fn local_iso_now() -> String {
+    let now = chrono::Local::now();
+    let fraction = match now.timestamp_subsec_micros() {
+        0 => String::new(),
+        us => format!(".{us:06}"),
+    };
+    format!("{}{fraction}", now.format("%Y-%m-%dT%H:%M:%S"))
 }
 
 /// The daily dedup state (models/telemetry/state.py)
@@ -154,10 +156,8 @@ impl Client {
             }
         };
         self.session = Some((session.clone(), now));
-        let (y, mo, d, h, mi, s, ms) = local_now();
-        let fraction = if ms == 0 { String::new() } else { format!(".{:06}", ms as u32 * 1000) };
         let event = json!({
-            "timestamp": format!("{y:04}-{mo:02}-{d:02}T{h:02}:{mi:02}:{s:02}{fraction}Z"),
+            "timestamp": format!("{}Z", local_iso_now()),
             "sessionId": session,
             "eventName": name,
             "systemProps": {"locale": "en-US", "osName": "Windows", "osVersion": "10", "deviceModel": "AMD64",

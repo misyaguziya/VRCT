@@ -1,0 +1,10 @@
+[package]
+name = "vrct-openvr"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+publish.workspace = true
+description = "OpenVR 1.26.7 (the Python backend's openvr_api) through its C function tables, for the overlay, OCR capture and clipboard"
+
+[dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_LibraryLoader"] }

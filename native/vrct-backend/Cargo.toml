@@ -18,16 +18,20 @@ tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "time", "sy
 tokio-tungstenite = "0.24"
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 getrandom = "0.2"
+base64 = "0.22"
+form_urlencoded = "1"
+percent-encoding = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+arboard = { version = "3", default-features = false }
 # OSC / OSCQuery with VRChat (mDNS discovery as VRChat does it)
 vrchat_osc = "=2.2.0"
 serde_json = { version = "1", features = ["preserve_order"] }
-# GetLocalTime (Python's date.today() / datetime.now()), the clipboard and window focus
+# window focus and paste, PrintWindow, process names
 windows-sys = { version = "0.61", features = [
     "Win32_Foundation",
-    "Win32_System_DataExchange",
-    "Win32_System_Memory",
-    "Win32_System_Ole",
-    "Win32_System_SystemInformation",
+    "Win32_Graphics_Gdi",
+    "Win32_Storage_Xps",
+    "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_Threading",
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_WindowsAndMessaging",
@@ -35,6 +39,14 @@ windows-sys = { version = "0.61", features = [
 vrct-audio = { path = "../vrct-audio" }
 vrct-ct2 = { path = "../vrct-ct2" }
 vrct-ocr = { path = "../vrct-ocr" }
+vrct-openvr = { path = "../vrct-openvr" }
+# D3D11 for SteamVR's mirror texture (OCR)
+windows = { version = "=0.61.1", features = [
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
+] }
 vrct-webtranslate = { path = "../vrct-webtranslate" }
 # The same tokenizers as the Python backend's (tokenizers 0.19.1 wraps this crate). esaxx (training
 # only) is built with the static CRT, which cannot be mixed with the /MD CTranslate2 shim.
@@ -46,6 +58,7 @@ sentencepiece = "0.14"
 sudachi = { git = "https://github.com/WorksApplications/sudachi.rs", tag = "v0.6.10" }
 
 [dev-dependencies]
+base64 = "0.22"
 # Python writes floats with repr(); read back bit for bit
 serde_json = { version = "1", features = ["float_roundtrip"] }
 tiny_http = "0.12"

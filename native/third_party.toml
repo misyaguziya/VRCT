@@ -29,6 +29,14 @@ wheel = "onnxruntime-1.30.0-cp311-cp311-win_amd64.whl"
 sha256 = "0edd0145a6e3fce8a1276491dc784d615e3c58bcb952c9b4e5c876d5c6a12ad7"
 files = ["onnxruntime/capi/onnxruntime.dll", "onnxruntime/capi/onnxruntime_providers_shared.dll"]
 
+[openvr]
+# Valve の OpenVR 1.26.7 の openvr_api.dll。今の Python 版の pyopenvr 1.26.701 が同梱しているものとバイト単位で同じ。
+# vrct-openvr が関数テーブルで呼ぶ (openvr_sys クレートは SDK 2.x をソースからビルドし、CMake と libclang が要るため使わない)
+version = "1.26.7"
+url = "https://github.com/ValveSoftware/openvr/raw/v1.26.7/bin/win64/openvr_api.dll"
+file = "openvr_api.dll"
+sha256 = "5e591aa3f4a991edcc8910921833edafa67a1b117849bbb4e235df9833bed7a3"
+
 # 以下は CUDA 版だけ (--cuda)。requirements_cuda.txt と同じ版。
 
 [nvidia-cublas-cu12]
