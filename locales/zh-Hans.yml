@@ -142,17 +142,23 @@ config_page:
         mic_host_device:
             label: "麦克风 (设备)"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "麦克风输入阈值(当前设置:自动)"
+            label: "麦克风输入阈值"
             desc_for_automatic: "自动调整麦克风输入阈值"
-            label_for_manual: "麦克风输入阈值(当前设置:手动)"
             desc_for_manual: "使用滑杆手动确定麦克风输入灵敏度。按下麦克风图标输入语音，并在监控音量的同时调节灵敏度。"
+            option_vad: "VAD (自动)"
+            option_auto: "自动"
+            option_manual: "手动"
+            desc_for_vad: "使用AI(Silero VAD)检测语音，每次说完话就将音频发送至语音识别。可减少拾取背景音乐和环境音的情况。"
         speaker_device:
             label: "他人语音 （设备）"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "他人语音接收阈值(当前设置:自动)"
+            label: "他人语音接收阈值"
             desc_for_automatic: "自动调节他人语音接收阈值"
-            label_for_manual: "他人语音接收阈值(当前设置:手动)"
             desc_for_manual: "使用滑杆手动调整他人语音接收阈值.在按下耳机按钮时,请根据实际听到的声音调整该大小"
+            option_vad: "VAD (自动)"
+            option_auto: "自动"
+            option_manual: "手动"
+            desc_for_vad: "使用AI(Silero VAD)检测他人语音，每次说完话就将音频发送至语音识别。可减少拾取BGM和游戏音效的情况。"
 
     appearance:
         transparency:
