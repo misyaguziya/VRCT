@@ -135,6 +135,8 @@ config_page:
         ocr: "聊天讀取"
 
     device:
+        section_label_mic: "麥克風"
+        section_label_speaker: "揚聲器"
         check_volume: "音量檢查"
         label_auto_select: "自動選擇"
         label_host: "主機/驅動程式"

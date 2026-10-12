@@ -135,6 +135,8 @@ config_page:
         ocr: "채팅 읽기"
 
     device:
+        section_label_mic: "마이크"
+        section_label_speaker: "스피커"
         check_volume: "음량 확인"
         label_auto_select: "자동 선택"
         label_host: "호스트/드라이버"

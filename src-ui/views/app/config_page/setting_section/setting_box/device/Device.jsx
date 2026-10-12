@@ -12,6 +12,7 @@ import {
 } from "../_templates/Templates";
 
 import {
+    SectionLabelComponent,
     LabelComponent,
     DropdownMenu,
     ThresholdComponent,
@@ -21,10 +22,10 @@ import {
 
 export const Device = () => {
     return (
-        <>
+        <div className={styles.container}>
             <MicContainer />
             <SpeakerContainer />
-        </>
+        </div>
     );
 };
 
@@ -82,10 +83,10 @@ const MicContainer = () => {
 
     return (
         <div className={styles.mic_container}>
+            <SectionLabelComponent label={t("config_page.device.section_label_mic")} />
             <MultiDropdownMenuContainer
                 setting_id="mic_host_device"
                 label={t("config_page.device.mic_host_device.label")}
-                remove_border_bottom={true}
                 dropdown_settings={[
                     {
                         insert_component: SwitchBox,
@@ -205,6 +206,7 @@ const SpeakerContainer = () => {
 
     return (
         <div className={styles.speaker_container}>
+            <SectionLabelComponent label={t("config_page.device.section_label_speaker")} />
             <div className={device_container_class} data-setting-id="speaker_device">
                 <LabelComponent label={t("config_page.device.speaker_device.label")} />
                 <div className={styles.device_contents}>
