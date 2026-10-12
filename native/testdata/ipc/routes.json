@@ -1,0 +1,1843 @@
+{
+ "routes": [
+  {
+   "endpoint": "/set/enable/translation",
+   "during_init": false,
+   "handler": "setEnableTranslation"
+  },
+  {
+   "endpoint": "/set/disable/translation",
+   "during_init": false,
+   "handler": "setDisableTranslation"
+  },
+  {
+   "endpoint": "/set/enable/transcription_send",
+   "during_init": false,
+   "handler": "setEnableTranscriptionSend"
+  },
+  {
+   "endpoint": "/set/disable/transcription_send",
+   "during_init": false,
+   "handler": "setDisableTranscriptionSend"
+  },
+  {
+   "endpoint": "/set/enable/transcription_receive",
+   "during_init": false,
+   "handler": "setEnableTranscriptionReceive"
+  },
+  {
+   "endpoint": "/set/disable/transcription_receive",
+   "during_init": false,
+   "handler": "setDisableTranscriptionReceive"
+  },
+  {
+   "endpoint": "/set/enable/ocr_capture",
+   "during_init": false,
+   "handler": "setEnableOcrCapture"
+  },
+  {
+   "endpoint": "/set/disable/ocr_capture",
+   "during_init": false,
+   "handler": "setDisableOcrCapture"
+  },
+  {
+   "endpoint": "/set/enable/foreground",
+   "during_init": true,
+   "handler": "setEnableForeground"
+  },
+  {
+   "endpoint": "/set/disable/foreground",
+   "during_init": true,
+   "handler": "setDisableForeground"
+  },
+  {
+   "endpoint": "/get/data/selected_tab_no",
+   "during_init": true,
+   "handler": "getSelectedTabNo"
+  },
+  {
+   "endpoint": "/set/data/selected_tab_no",
+   "during_init": true,
+   "handler": "setSelectedTabNo"
+  },
+  {
+   "endpoint": "/get/data/main_window_sidebar_compact_mode",
+   "during_init": true,
+   "handler": "getMainWindowSidebarCompactMode"
+  },
+  {
+   "endpoint": "/set/enable/main_window_sidebar_compact_mode",
+   "during_init": true,
+   "handler": "setEnableMainWindowSidebarCompactMode"
+  },
+  {
+   "endpoint": "/set/disable/main_window_sidebar_compact_mode",
+   "during_init": true,
+   "handler": "setDisableMainWindowSidebarCompactMode"
+  },
+  {
+   "endpoint": "/get/data/selectable_translation_engines",
+   "during_init": true,
+   "handler": "getTranslationEngines"
+  },
+  {
+   "endpoint": "/get/data/selectable_language_list",
+   "during_init": true,
+   "handler": "getListLanguageAndCountry"
+  },
+  {
+   "endpoint": "/get/data/selected_translation_engines",
+   "during_init": false,
+   "handler": "getSelectedTranslationEngines"
+  },
+  {
+   "endpoint": "/set/data/selected_translation_engines",
+   "during_init": true,
+   "handler": "setSelectedTranslationEngines"
+  },
+  {
+   "endpoint": "/get/data/selected_your_languages",
+   "during_init": true,
+   "handler": "getSelectedYourLanguages"
+  },
+  {
+   "endpoint": "/set/data/selected_your_languages",
+   "during_init": true,
+   "handler": "setSelectedYourLanguages"
+  },
+  {
+   "endpoint": "/get/data/selected_target_languages",
+   "during_init": true,
+   "handler": "getSelectedTargetLanguages"
+  },
+  {
+   "endpoint": "/set/data/selected_target_languages",
+   "during_init": true,
+   "handler": "setSelectedTargetLanguages"
+  },
+  {
+   "endpoint": "/get/data/selectable_transcription_engines",
+   "during_init": false,
+   "handler": "getTranscriptionEngines"
+  },
+  {
+   "endpoint": "/get/data/selected_transcription_engine",
+   "during_init": false,
+   "handler": "getSelectedTranscriptionEngine"
+  },
+  {
+   "endpoint": "/set/data/selected_transcription_engine",
+   "during_init": false,
+   "handler": "setSelectedTranscriptionEngine"
+  },
+  {
+   "endpoint": "/get/data/groq_whisper_auth_key",
+   "during_init": true,
+   "handler": "getGroqWhisperAuthKey"
+  },
+  {
+   "endpoint": "/set/data/groq_whisper_auth_key",
+   "during_init": true,
+   "handler": "setGroqWhisperAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/groq_whisper_auth_key",
+   "during_init": true,
+   "handler": "delGroqWhisperAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_groq_whisper_model_list",
+   "during_init": true,
+   "handler": "getGroqWhisperModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_groq_whisper_model",
+   "during_init": true,
+   "handler": "getGroqWhisperModel"
+  },
+  {
+   "endpoint": "/set/data/selected_groq_whisper_model",
+   "during_init": true,
+   "handler": "setGroqWhisperModel"
+  },
+  {
+   "endpoint": "/get/data/openai_whisper_auth_key",
+   "during_init": true,
+   "handler": "getOpenAIWhisperAuthKey"
+  },
+  {
+   "endpoint": "/set/data/openai_whisper_auth_key",
+   "during_init": true,
+   "handler": "setOpenAIWhisperAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/openai_whisper_auth_key",
+   "during_init": true,
+   "handler": "delOpenAIWhisperAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_openai_whisper_model_list",
+   "during_init": true,
+   "handler": "getOpenAIWhisperModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_openai_whisper_model",
+   "during_init": true,
+   "handler": "getOpenAIWhisperModel"
+  },
+  {
+   "endpoint": "/set/data/selected_openai_whisper_model",
+   "during_init": true,
+   "handler": "setOpenAIWhisperModel"
+  },
+  {
+   "endpoint": "/get/data/custom_whisper_auth_key",
+   "during_init": true,
+   "handler": "getCustomWhisperAuthKey"
+  },
+  {
+   "endpoint": "/set/data/custom_whisper_auth_key",
+   "during_init": true,
+   "handler": "setCustomWhisperAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/custom_whisper_auth_key",
+   "during_init": true,
+   "handler": "delCustomWhisperAuthKey"
+  },
+  {
+   "endpoint": "/get/data/custom_whisper_url",
+   "during_init": true,
+   "handler": "getCustomWhisperURL"
+  },
+  {
+   "endpoint": "/set/data/custom_whisper_url",
+   "during_init": true,
+   "handler": "setCustomWhisperURL"
+  },
+  {
+   "endpoint": "/get/data/selectable_custom_whisper_model_list",
+   "during_init": true,
+   "handler": "getCustomWhisperModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_custom_whisper_model",
+   "during_init": true,
+   "handler": "getCustomWhisperModel"
+  },
+  {
+   "endpoint": "/set/data/selected_custom_whisper_model",
+   "during_init": true,
+   "handler": "setCustomWhisperModel"
+  },
+  {
+   "endpoint": "/get/data/deepgram_auth_key",
+   "during_init": true,
+   "handler": "getDeepgramAuthKey"
+  },
+  {
+   "endpoint": "/set/data/deepgram_auth_key",
+   "during_init": true,
+   "handler": "setDeepgramAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/deepgram_auth_key",
+   "during_init": true,
+   "handler": "delDeepgramAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_deepgram_model_list",
+   "during_init": true,
+   "handler": "getDeepgramModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_deepgram_model",
+   "during_init": true,
+   "handler": "getDeepgramModel"
+  },
+  {
+   "endpoint": "/set/data/selected_deepgram_model",
+   "during_init": true,
+   "handler": "setDeepgramModel"
+  },
+  {
+   "endpoint": "/get/data/selectable_release_channels",
+   "during_init": true,
+   "handler": "getSelectableReleaseChannels"
+  },
+  {
+   "endpoint": "/get/data/release_channel",
+   "during_init": true,
+   "handler": "getSelectedReleaseChannel"
+  },
+  {
+   "endpoint": "/set/data/release_channel",
+   "during_init": true,
+   "handler": "setSelectedReleaseChannel"
+  },
+  {
+   "endpoint": "/get/data/available_releases",
+   "during_init": true,
+   "handler": "listAvailableReleases"
+  },
+  {
+   "endpoint": "/run/send_message_box",
+   "during_init": false,
+   "handler": "sendMessageBox"
+  },
+  {
+   "endpoint": "/run/typing_message_box",
+   "during_init": false,
+   "handler": "typingMessageBox"
+  },
+  {
+   "endpoint": "/run/stop_typing_message_box",
+   "during_init": false,
+   "handler": "stopTypingMessageBox"
+  },
+  {
+   "endpoint": "/run/send_text_overlay",
+   "during_init": true,
+   "handler": "sendTextOverlay"
+  },
+  {
+   "endpoint": "/get/data/telemetry",
+   "during_init": true,
+   "handler": "getTelemetry"
+  },
+  {
+   "endpoint": "/set/enable/telemetry",
+   "during_init": true,
+   "handler": "setEnableTelemetry"
+  },
+  {
+   "endpoint": "/set/disable/telemetry",
+   "during_init": true,
+   "handler": "setDisableTelemetry"
+  },
+  {
+   "endpoint": "/run/shutdown",
+   "during_init": true,
+   "handler": "shutdown"
+  },
+  {
+   "endpoint": "/run/swap_your_language_and_target_language",
+   "during_init": true,
+   "handler": "swapYourLanguageAndTargetLanguage"
+  },
+  {
+   "endpoint": "/run/update_software",
+   "during_init": true,
+   "handler": "updateSoftware"
+  },
+  {
+   "endpoint": "/run/update_cuda_software",
+   "during_init": true,
+   "handler": "updateCudaSoftware"
+  },
+  {
+   "endpoint": "/get/data/version",
+   "during_init": true,
+   "handler": "getVersion"
+  },
+  {
+   "endpoint": "/get/data/transparency",
+   "during_init": true,
+   "handler": "getTransparency"
+  },
+  {
+   "endpoint": "/set/data/transparency",
+   "during_init": true,
+   "handler": "setTransparency"
+  },
+  {
+   "endpoint": "/get/data/ui_scaling",
+   "during_init": true,
+   "handler": "getUiScaling"
+  },
+  {
+   "endpoint": "/set/data/ui_scaling",
+   "during_init": true,
+   "handler": "setUiScaling"
+  },
+  {
+   "endpoint": "/get/data/textbox_ui_scaling",
+   "during_init": true,
+   "handler": "getTextboxUiScaling"
+  },
+  {
+   "endpoint": "/set/data/textbox_ui_scaling",
+   "during_init": true,
+   "handler": "setTextboxUiScaling"
+  },
+  {
+   "endpoint": "/get/data/message_box_ratio",
+   "during_init": true,
+   "handler": "getMessageBoxRatio"
+  },
+  {
+   "endpoint": "/set/data/message_box_ratio",
+   "during_init": true,
+   "handler": "setMessageBoxRatio"
+  },
+  {
+   "endpoint": "/get/data/send_message_button_type",
+   "during_init": true,
+   "handler": "getSendMessageButtonType"
+  },
+  {
+   "endpoint": "/set/data/send_message_button_type",
+   "during_init": true,
+   "handler": "setSendMessageButtonType"
+  },
+  {
+   "endpoint": "/get/data/show_resend_button",
+   "during_init": true,
+   "handler": "getShowResendButton"
+  },
+  {
+   "endpoint": "/set/enable/show_resend_button",
+   "during_init": true,
+   "handler": "setEnableShowResendButton"
+  },
+  {
+   "endpoint": "/set/disable/show_resend_button",
+   "during_init": true,
+   "handler": "setDisableShowResendButton"
+  },
+  {
+   "endpoint": "/get/data/font_family",
+   "during_init": true,
+   "handler": "getFontFamily"
+  },
+  {
+   "endpoint": "/set/data/font_family",
+   "during_init": true,
+   "handler": "setFontFamily"
+  },
+  {
+   "endpoint": "/get/data/ui_language",
+   "during_init": true,
+   "handler": "getUiLanguage"
+  },
+  {
+   "endpoint": "/set/data/ui_language",
+   "during_init": true,
+   "handler": "setUiLanguage"
+  },
+  {
+   "endpoint": "/get/data/main_window_geometry",
+   "during_init": true,
+   "handler": "getMainWindowGeometry"
+  },
+  {
+   "endpoint": "/set/data/main_window_geometry",
+   "during_init": true,
+   "handler": "setMainWindowGeometry"
+  },
+  {
+   "endpoint": "/get/data/compute_mode",
+   "during_init": true,
+   "handler": "getComputeMode"
+  },
+  {
+   "endpoint": "/get/data/selectable_translation_compute_device_list",
+   "during_init": true,
+   "handler": "getComputeDeviceList"
+  },
+  {
+   "endpoint": "/get/data/selected_translation_compute_device",
+   "during_init": true,
+   "handler": "getSelectedTranslationComputeDevice"
+  },
+  {
+   "endpoint": "/set/data/selected_translation_compute_device",
+   "during_init": true,
+   "handler": "setSelectedTranslationComputeDevice"
+  },
+  {
+   "endpoint": "/get/data/selectable_transcription_compute_device_list",
+   "during_init": true,
+   "handler": "getComputeDeviceList"
+  },
+  {
+   "endpoint": "/get/data/selected_transcription_compute_device",
+   "during_init": true,
+   "handler": "getSelectedTranscriptionComputeDevice"
+  },
+  {
+   "endpoint": "/set/data/selected_transcription_compute_device",
+   "during_init": true,
+   "handler": "setSelectedTranscriptionComputeDevice"
+  },
+  {
+   "endpoint": "/get/data/selectable_ctranslate2_weight_type_dict",
+   "during_init": true,
+   "handler": "getSelectableCtranslate2WeightTypeDict"
+  },
+  {
+   "endpoint": "/get/data/selected_ctranslate2_weight_type",
+   "during_init": true,
+   "handler": "getCtranslate2WeightType"
+  },
+  {
+   "endpoint": "/set/data/selected_ctranslate2_weight_type",
+   "during_init": true,
+   "handler": "setCtranslate2WeightType"
+  },
+  {
+   "endpoint": "/get/data/selected_translation_compute_type",
+   "during_init": true,
+   "handler": "getSelectedTranslationComputeType"
+  },
+  {
+   "endpoint": "/set/data/selected_translation_compute_type",
+   "during_init": true,
+   "handler": "setSelectedTranslationComputeType"
+  },
+  {
+   "endpoint": "/run/download_ctranslate2_weight",
+   "during_init": true,
+   "handler": "downloadCtranslate2Weight"
+  },
+  {
+   "endpoint": "/get/data/deepl_auth_key",
+   "during_init": false,
+   "handler": "getDeepLAuthKey"
+  },
+  {
+   "endpoint": "/set/data/deepl_auth_key",
+   "during_init": false,
+   "handler": "setDeeplAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/deepl_auth_key",
+   "during_init": false,
+   "handler": "delDeeplAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_plamo_model_list",
+   "during_init": false,
+   "handler": "getPlamoModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_plamo_model",
+   "during_init": false,
+   "handler": "getPlamoModel"
+  },
+  {
+   "endpoint": "/set/data/selected_plamo_model",
+   "during_init": false,
+   "handler": "setPlamoModel"
+  },
+  {
+   "endpoint": "/get/data/plamo_auth_key",
+   "during_init": false,
+   "handler": "getPlamoAuthKey"
+  },
+  {
+   "endpoint": "/set/data/plamo_auth_key",
+   "during_init": false,
+   "handler": "setPlamoAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/plamo_auth_key",
+   "during_init": false,
+   "handler": "delPlamoAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_gemini_model_list",
+   "during_init": true,
+   "handler": "getGeminiModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_gemini_model",
+   "during_init": true,
+   "handler": "getGeminiModel"
+  },
+  {
+   "endpoint": "/set/data/selected_gemini_model",
+   "during_init": true,
+   "handler": "setGeminiModel"
+  },
+  {
+   "endpoint": "/get/data/gemini_auth_key",
+   "during_init": true,
+   "handler": "getGeminiAuthKey"
+  },
+  {
+   "endpoint": "/set/data/gemini_auth_key",
+   "during_init": true,
+   "handler": "setGeminiAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/gemini_auth_key",
+   "during_init": true,
+   "handler": "delGeminiAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_openai_model_list",
+   "during_init": true,
+   "handler": "getOpenAIModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_openai_model",
+   "during_init": true,
+   "handler": "getOpenAIModel"
+  },
+  {
+   "endpoint": "/set/data/selected_openai_model",
+   "during_init": true,
+   "handler": "setOpenAIModel"
+  },
+  {
+   "endpoint": "/get/data/openai_auth_key",
+   "during_init": true,
+   "handler": "getOpenAIAuthKey"
+  },
+  {
+   "endpoint": "/set/data/openai_auth_key",
+   "during_init": true,
+   "handler": "setOpenAIAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/openai_auth_key",
+   "during_init": true,
+   "handler": "delOpenAIAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_groq_model_list",
+   "during_init": true,
+   "handler": "getGroqModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_groq_model",
+   "during_init": true,
+   "handler": "getGroqModel"
+  },
+  {
+   "endpoint": "/set/data/selected_groq_model",
+   "during_init": true,
+   "handler": "setGroqModel"
+  },
+  {
+   "endpoint": "/get/data/groq_auth_key",
+   "during_init": true,
+   "handler": "getGroqAuthKey"
+  },
+  {
+   "endpoint": "/set/data/groq_auth_key",
+   "during_init": true,
+   "handler": "setGroqAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/groq_auth_key",
+   "during_init": true,
+   "handler": "delGroqAuthKey"
+  },
+  {
+   "endpoint": "/get/data/selectable_openrouter_model_list",
+   "during_init": true,
+   "handler": "getOpenRouterModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_openrouter_model",
+   "during_init": true,
+   "handler": "getOpenRouterModel"
+  },
+  {
+   "endpoint": "/set/data/selected_openrouter_model",
+   "during_init": true,
+   "handler": "setOpenRouterModel"
+  },
+  {
+   "endpoint": "/get/data/openrouter_auth_key",
+   "during_init": true,
+   "handler": "getOpenRouterAuthKey"
+  },
+  {
+   "endpoint": "/set/data/openrouter_auth_key",
+   "during_init": true,
+   "handler": "setOpenRouterAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/openrouter_auth_key",
+   "during_init": true,
+   "handler": "delOpenRouterAuthKey"
+  },
+  {
+   "endpoint": "/get/data/connected_lmstudio",
+   "during_init": true,
+   "handler": "getTranslatorLMStudioConnection"
+  },
+  {
+   "endpoint": "/run/lmstudio_connection",
+   "during_init": true,
+   "handler": "checkTranslatorLMStudioConnection"
+  },
+  {
+   "endpoint": "/get/data/selectable_lmstudio_model_list",
+   "during_init": true,
+   "handler": "getTranslatorLMStudioModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_lmstudio_model",
+   "during_init": true,
+   "handler": "getTranslatorLMStudioModel"
+  },
+  {
+   "endpoint": "/set/data/selected_lmstudio_model",
+   "during_init": true,
+   "handler": "setTranslatorLMStudioModel"
+  },
+  {
+   "endpoint": "/get/data/lmstudio_url",
+   "during_init": true,
+   "handler": "getTranslatorLMStudioURL"
+  },
+  {
+   "endpoint": "/set/data/lmstudio_url",
+   "during_init": true,
+   "handler": "setTranslatorLMStudioURL"
+  },
+  {
+   "endpoint": "/get/data/openai_compatible_auth_key",
+   "during_init": true,
+   "handler": "getOpenAICompatibleAuthKey"
+  },
+  {
+   "endpoint": "/set/data/openai_compatible_auth_key",
+   "during_init": true,
+   "handler": "setOpenAICompatibleAuthKey"
+  },
+  {
+   "endpoint": "/delete/data/openai_compatible_auth_key",
+   "during_init": true,
+   "handler": "delOpenAICompatibleAuthKey"
+  },
+  {
+   "endpoint": "/get/data/openai_compatible_url",
+   "during_init": true,
+   "handler": "getOpenAICompatibleURL"
+  },
+  {
+   "endpoint": "/set/data/openai_compatible_url",
+   "during_init": true,
+   "handler": "setOpenAICompatibleURL"
+  },
+  {
+   "endpoint": "/get/data/selectable_openai_compatible_model_list",
+   "during_init": true,
+   "handler": "getOpenAICompatibleModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_openai_compatible_model",
+   "during_init": true,
+   "handler": "getOpenAICompatibleModel"
+  },
+  {
+   "endpoint": "/set/data/selected_openai_compatible_model",
+   "during_init": true,
+   "handler": "setOpenAICompatibleModel"
+  },
+  {
+   "endpoint": "/get/data/connected_ollama",
+   "during_init": true,
+   "handler": "getTranslatorOllamaConnection"
+  },
+  {
+   "endpoint": "/run/ollama_connection",
+   "during_init": true,
+   "handler": "checkTranslatorOllamaConnection"
+  },
+  {
+   "endpoint": "/get/data/selectable_ollama_model_list",
+   "during_init": true,
+   "handler": "getTranslatorOllamaModelList"
+  },
+  {
+   "endpoint": "/get/data/selected_ollama_model",
+   "during_init": true,
+   "handler": "getTranslatorOllamaModel"
+  },
+  {
+   "endpoint": "/set/data/selected_ollama_model",
+   "during_init": true,
+   "handler": "setTranslatorOllamaModel"
+  },
+  {
+   "endpoint": "/get/data/convert_message_to_romaji",
+   "during_init": true,
+   "handler": "getConvertMessageToRomaji"
+  },
+  {
+   "endpoint": "/set/enable/convert_message_to_romaji",
+   "during_init": true,
+   "handler": "setEnableConvertMessageToRomaji"
+  },
+  {
+   "endpoint": "/set/disable/convert_message_to_romaji",
+   "during_init": true,
+   "handler": "setDisableConvertMessageToRomaji"
+  },
+  {
+   "endpoint": "/get/data/convert_message_to_hiragana",
+   "during_init": true,
+   "handler": "getConvertMessageToHiragana"
+  },
+  {
+   "endpoint": "/set/enable/convert_message_to_hiragana",
+   "during_init": true,
+   "handler": "setEnableConvertMessageToHiragana"
+  },
+  {
+   "endpoint": "/set/disable/convert_message_to_hiragana",
+   "during_init": true,
+   "handler": "setDisableConvertMessageToHiragana"
+  },
+  {
+   "endpoint": "/get/data/selectable_mic_host_list",
+   "during_init": true,
+   "handler": "getMicHostList"
+  },
+  {
+   "endpoint": "/get/data/selectable_mic_device_list",
+   "during_init": true,
+   "handler": "getMicDeviceList"
+  },
+  {
+   "endpoint": "/get/data/selectable_speaker_device_list",
+   "during_init": true,
+   "handler": "getSpeakerDeviceList"
+  },
+  {
+   "endpoint": "/get/data/auto_mic_select",
+   "during_init": true,
+   "handler": "getAutoMicSelect"
+  },
+  {
+   "endpoint": "/set/enable/auto_mic_select",
+   "during_init": true,
+   "handler": "setEnableAutoMicSelect"
+  },
+  {
+   "endpoint": "/set/disable/auto_mic_select",
+   "during_init": true,
+   "handler": "setDisableAutoMicSelect"
+  },
+  {
+   "endpoint": "/get/data/selected_mic_host",
+   "during_init": true,
+   "handler": "getSelectedMicHost"
+  },
+  {
+   "endpoint": "/set/data/selected_mic_host",
+   "during_init": true,
+   "handler": "setSelectedMicHost"
+  },
+  {
+   "endpoint": "/get/data/selected_mic_device",
+   "during_init": true,
+   "handler": "getSelectedMicDevice"
+  },
+  {
+   "endpoint": "/set/data/selected_mic_device",
+   "during_init": true,
+   "handler": "setSelectedMicDevice"
+  },
+  {
+   "endpoint": "/get/data/mic_threshold",
+   "during_init": true,
+   "handler": "getMicThreshold"
+  },
+  {
+   "endpoint": "/set/data/mic_threshold",
+   "during_init": true,
+   "handler": "setMicThreshold"
+  },
+  {
+   "endpoint": "/get/data/mic_automatic_threshold",
+   "during_init": true,
+   "handler": "getMicAutomaticThreshold"
+  },
+  {
+   "endpoint": "/set/enable/mic_automatic_threshold",
+   "during_init": true,
+   "handler": "setEnableMicAutomaticThreshold"
+  },
+  {
+   "endpoint": "/set/disable/mic_automatic_threshold",
+   "during_init": true,
+   "handler": "setDisableMicAutomaticThreshold"
+  },
+  {
+   "endpoint": "/get/data/mic_record_timeout",
+   "during_init": true,
+   "handler": "getMicRecordTimeout"
+  },
+  {
+   "endpoint": "/set/data/mic_record_timeout",
+   "during_init": true,
+   "handler": "setMicRecordTimeout"
+  },
+  {
+   "endpoint": "/get/data/mic_phrase_timeout",
+   "during_init": true,
+   "handler": "getMicPhraseTimeout"
+  },
+  {
+   "endpoint": "/set/data/mic_phrase_timeout",
+   "during_init": true,
+   "handler": "setMicPhraseTimeout"
+  },
+  {
+   "endpoint": "/get/data/mic_max_phrases",
+   "during_init": true,
+   "handler": "getMicMaxPhrases"
+  },
+  {
+   "endpoint": "/set/data/mic_max_phrases",
+   "during_init": true,
+   "handler": "setMicMaxPhrases"
+  },
+  {
+   "endpoint": "/get/data/hotkeys",
+   "during_init": true,
+   "handler": "getHotkeys"
+  },
+  {
+   "endpoint": "/set/data/hotkeys",
+   "during_init": true,
+   "handler": "setHotkeys"
+  },
+  {
+   "endpoint": "/get/data/mic_avg_logprob",
+   "during_init": true,
+   "handler": "getMicAvgLogprob"
+  },
+  {
+   "endpoint": "/set/data/mic_avg_logprob",
+   "during_init": true,
+   "handler": "setMicAvgLogprob"
+  },
+  {
+   "endpoint": "/get/data/mic_no_speech_prob",
+   "during_init": true,
+   "handler": "getMicNoSpeechProb"
+  },
+  {
+   "endpoint": "/set/data/mic_no_speech_prob",
+   "during_init": true,
+   "handler": "setMicNoSpeechProb"
+  },
+  {
+   "endpoint": "/set/enable/check_mic_threshold",
+   "during_init": true,
+   "handler": "setEnableCheckMicThreshold"
+  },
+  {
+   "endpoint": "/set/disable/check_mic_threshold",
+   "during_init": true,
+   "handler": "setDisableCheckMicThreshold"
+  },
+  {
+   "endpoint": "/get/data/mic_word_filter",
+   "during_init": true,
+   "handler": "getMicWordFilter"
+  },
+  {
+   "endpoint": "/set/data/mic_word_filter",
+   "during_init": true,
+   "handler": "setMicWordFilter"
+  },
+  {
+   "endpoint": "/get/data/auto_speaker_select",
+   "during_init": true,
+   "handler": "getAutoSpeakerSelect"
+  },
+  {
+   "endpoint": "/set/enable/auto_speaker_select",
+   "during_init": true,
+   "handler": "setEnableAutoSpeakerSelect"
+  },
+  {
+   "endpoint": "/set/disable/auto_speaker_select",
+   "during_init": true,
+   "handler": "setDisableAutoSpeakerSelect"
+  },
+  {
+   "endpoint": "/get/data/selected_speaker_device",
+   "during_init": true,
+   "handler": "getSelectedSpeakerDevice"
+  },
+  {
+   "endpoint": "/set/data/selected_speaker_device",
+   "during_init": true,
+   "handler": "setSelectedSpeakerDevice"
+  },
+  {
+   "endpoint": "/get/data/speaker_threshold",
+   "during_init": true,
+   "handler": "getSpeakerThreshold"
+  },
+  {
+   "endpoint": "/set/data/speaker_threshold",
+   "during_init": true,
+   "handler": "setSpeakerThreshold"
+  },
+  {
+   "endpoint": "/get/data/speaker_automatic_threshold",
+   "during_init": true,
+   "handler": "getSpeakerAutomaticThreshold"
+  },
+  {
+   "endpoint": "/set/enable/speaker_automatic_threshold",
+   "during_init": true,
+   "handler": "setEnableSpeakerAutomaticThreshold"
+  },
+  {
+   "endpoint": "/set/disable/speaker_automatic_threshold",
+   "during_init": true,
+   "handler": "setDisableSpeakerAutomaticThreshold"
+  },
+  {
+   "endpoint": "/get/data/speaker_record_timeout",
+   "during_init": true,
+   "handler": "getSpeakerRecordTimeout"
+  },
+  {
+   "endpoint": "/set/data/speaker_record_timeout",
+   "during_init": true,
+   "handler": "setSpeakerRecordTimeout"
+  },
+  {
+   "endpoint": "/get/data/speaker_phrase_timeout",
+   "during_init": true,
+   "handler": "getSpeakerPhraseTimeout"
+  },
+  {
+   "endpoint": "/set/data/speaker_phrase_timeout",
+   "during_init": true,
+   "handler": "setSpeakerPhraseTimeout"
+  },
+  {
+   "endpoint": "/get/data/speaker_max_phrases",
+   "during_init": true,
+   "handler": "getSpeakerMaxPhrases"
+  },
+  {
+   "endpoint": "/set/data/speaker_max_phrases",
+   "during_init": true,
+   "handler": "setSpeakerMaxPhrases"
+  },
+  {
+   "endpoint": "/get/data/speaker_avg_logprob",
+   "during_init": true,
+   "handler": "getSpeakerAvgLogprob"
+  },
+  {
+   "endpoint": "/set/data/speaker_avg_logprob",
+   "during_init": true,
+   "handler": "setSpeakerAvgLogprob"
+  },
+  {
+   "endpoint": "/get/data/speaker_no_speech_prob",
+   "during_init": true,
+   "handler": "getSpeakerNoSpeechProb"
+  },
+  {
+   "endpoint": "/set/data/speaker_no_speech_prob",
+   "during_init": true,
+   "handler": "setSpeakerNoSpeechProb"
+  },
+  {
+   "endpoint": "/set/enable/check_speaker_threshold",
+   "during_init": true,
+   "handler": "setEnableCheckSpeakerThreshold"
+  },
+  {
+   "endpoint": "/set/disable/check_speaker_threshold",
+   "during_init": true,
+   "handler": "setDisableCheckSpeakerThreshold"
+  },
+  {
+   "endpoint": "/get/data/selectable_whisper_weight_type_dict",
+   "during_init": true,
+   "handler": "getSelectableWhisperWeightTypeDict"
+  },
+  {
+   "endpoint": "/get/data/selected_whisper_weight_type",
+   "during_init": true,
+   "handler": "getWhisperWeightType"
+  },
+  {
+   "endpoint": "/set/data/selected_whisper_weight_type",
+   "during_init": true,
+   "handler": "setWhisperWeightType"
+  },
+  {
+   "endpoint": "/get/data/selected_transcription_compute_type",
+   "during_init": true,
+   "handler": "getSelectedTranscriptionComputeType"
+  },
+  {
+   "endpoint": "/set/data/selected_transcription_compute_type",
+   "during_init": true,
+   "handler": "setSelectedTranscriptionComputeType"
+  },
+  {
+   "endpoint": "/run/download_whisper_weight",
+   "during_init": true,
+   "handler": "downloadWhisperWeight"
+  },
+  {
+   "endpoint": "/get/data/overlay_small_log",
+   "during_init": true,
+   "handler": "getOverlaySmallLog"
+  },
+  {
+   "endpoint": "/set/enable/overlay_small_log",
+   "during_init": true,
+   "handler": "setEnableOverlaySmallLog"
+  },
+  {
+   "endpoint": "/set/disable/overlay_small_log",
+   "during_init": true,
+   "handler": "setDisableOverlaySmallLog"
+  },
+  {
+   "endpoint": "/get/data/overlay_small_log_settings",
+   "during_init": true,
+   "handler": "getOverlaySmallLogSettings"
+  },
+  {
+   "endpoint": "/run/vr_panel_tooltip",
+   "during_init": false,
+   "handler": "setVrPanelTooltip"
+  },
+  {
+   "endpoint": "/run/vr_panel_windows",
+   "during_init": false,
+   "handler": "setVrPanelWindows"
+  },
+  {
+   "endpoint": "/run/vr_panel_recall_log",
+   "during_init": false,
+   "handler": "recallVrPanelLog"
+  },
+  {
+   "endpoint": "/run/vr_launcher_reset",
+   "during_init": false,
+   "handler": "resetVrLauncher"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_panel_opacity",
+   "during_init": true,
+   "handler": "getOverlayVrPanelOpacity"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_panel_anchor",
+   "during_init": true,
+   "handler": "getOverlayVrPanelAnchor"
+  },
+  {
+   "endpoint": "/get/data/vr_panel_layout",
+   "during_init": true,
+   "handler": "getVrPanelLayout"
+  },
+  {
+   "endpoint": "/run/vr_panel_layout_rendered",
+   "during_init": true,
+   "handler": "setVrPanelLayoutRendered"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_panel_anchor",
+   "during_init": true,
+   "handler": "setOverlayVrPanelAnchor"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_panel_locked",
+   "during_init": true,
+   "handler": "getOverlayVrPanelLocked"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_panel_font_size",
+   "during_init": true,
+   "handler": "getOverlayVrPanelFontSize"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_launcher_hand",
+   "during_init": true,
+   "handler": "getOverlayVrLauncherHand"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_launcher_hand",
+   "during_init": true,
+   "handler": "setOverlayVrLauncherHand"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_launcher_auto_hide",
+   "during_init": true,
+   "handler": "getOverlayVrLauncherAutoHide"
+  },
+  {
+   "endpoint": "/set/enable/overlay_vr_launcher_auto_hide",
+   "during_init": true,
+   "handler": "setEnableOverlayVrLauncherAutoHide"
+  },
+  {
+   "endpoint": "/set/disable/overlay_vr_launcher_auto_hide",
+   "during_init": true,
+   "handler": "setDisableOverlayVrLauncherAutoHide"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_tooltip",
+   "during_init": true,
+   "handler": "getOverlayVrTooltip"
+  },
+  {
+   "endpoint": "/set/enable/overlay_vr_tooltip",
+   "during_init": true,
+   "handler": "setEnableOverlayVrTooltip"
+  },
+  {
+   "endpoint": "/set/disable/overlay_vr_tooltip",
+   "during_init": true,
+   "handler": "setDisableOverlayVrTooltip"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_panel_font_size",
+   "during_init": true,
+   "handler": "setOverlayVrPanelFontSize"
+  },
+  {
+   "endpoint": "/set/enable/overlay_vr_panel_locked",
+   "during_init": true,
+   "handler": "setEnableOverlayVrPanelLocked"
+  },
+  {
+   "endpoint": "/set/disable/overlay_vr_panel_locked",
+   "during_init": true,
+   "handler": "setDisableOverlayVrPanelLocked"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_panel_opacity",
+   "during_init": true,
+   "handler": "setOverlayVrPanelOpacity"
+  },
+  {
+   "endpoint": "/set/data/overlay_small_log_settings",
+   "during_init": true,
+   "handler": "setOverlaySmallLogSettings"
+  },
+  {
+   "endpoint": "/get/data/overlay_large_log",
+   "during_init": true,
+   "handler": "getOverlayLargeLog"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_panel",
+   "during_init": true,
+   "handler": "getOverlayVrPanel"
+  },
+  {
+   "endpoint": "/set/enable/overlay_vr_panel",
+   "during_init": true,
+   "handler": "setEnableOverlayVrPanel"
+  },
+  {
+   "endpoint": "/set/disable/overlay_vr_panel",
+   "during_init": true,
+   "handler": "setDisableOverlayVrPanel"
+  },
+  {
+   "endpoint": "/set/enable/overlay_large_log",
+   "during_init": true,
+   "handler": "setEnableOverlayLargeLog"
+  },
+  {
+   "endpoint": "/set/disable/overlay_large_log",
+   "during_init": true,
+   "handler": "setDisableOverlayLargeLog"
+  },
+  {
+   "endpoint": "/get/data/overlay_large_log_settings",
+   "during_init": true,
+   "handler": "getOverlayLargeLogSettings"
+  },
+  {
+   "endpoint": "/set/data/overlay_large_log_settings",
+   "during_init": true,
+   "handler": "setOverlayLargeLogSettings"
+  },
+  {
+   "endpoint": "/get/data/overlay_show_only_translated_messages",
+   "during_init": true,
+   "handler": "getOverlayShowOnlyTranslatedMessages"
+  },
+  {
+   "endpoint": "/set/enable/overlay_show_only_translated_messages",
+   "during_init": true,
+   "handler": "setEnableOverlayShowOnlyTranslatedMessages"
+  },
+  {
+   "endpoint": "/set/disable/overlay_show_only_translated_messages",
+   "during_init": true,
+   "handler": "setDisableOverlayShowOnlyTranslatedMessages"
+  },
+  {
+   "endpoint": "/get/data/send_message_format_parts",
+   "during_init": true,
+   "handler": "getSendMessageFormatParts"
+  },
+  {
+   "endpoint": "/set/data/send_message_format_parts",
+   "during_init": true,
+   "handler": "setSendMessageFormatParts"
+  },
+  {
+   "endpoint": "/get/data/received_message_format_parts",
+   "during_init": true,
+   "handler": "getReceivedMessageFormatParts"
+  },
+  {
+   "endpoint": "/set/data/received_message_format_parts",
+   "during_init": true,
+   "handler": "setReceivedMessageFormatParts"
+  },
+  {
+   "endpoint": "/get/data/auto_clear_message_box",
+   "during_init": true,
+   "handler": "getAutoClearMessageBox"
+  },
+  {
+   "endpoint": "/set/enable/auto_clear_message_box",
+   "during_init": true,
+   "handler": "setEnableAutoClearMessageBox"
+  },
+  {
+   "endpoint": "/set/disable/auto_clear_message_box",
+   "during_init": true,
+   "handler": "setDisableAutoClearMessageBox"
+  },
+  {
+   "endpoint": "/get/data/send_only_translated_messages",
+   "during_init": true,
+   "handler": "getSendOnlyTranslatedMessages"
+  },
+  {
+   "endpoint": "/set/enable/send_only_translated_messages",
+   "during_init": true,
+   "handler": "setEnableSendOnlyTranslatedMessages"
+  },
+  {
+   "endpoint": "/set/disable/send_only_translated_messages",
+   "during_init": true,
+   "handler": "setDisableSendOnlyTranslatedMessages"
+  },
+  {
+   "endpoint": "/get/data/logger_feature",
+   "during_init": true,
+   "handler": "getLoggerFeature"
+  },
+  {
+   "endpoint": "/set/enable/logger_feature",
+   "during_init": true,
+   "handler": "setEnableLoggerFeature"
+  },
+  {
+   "endpoint": "/set/disable/logger_feature",
+   "during_init": true,
+   "handler": "setDisableLoggerFeature"
+  },
+  {
+   "endpoint": "/run/open_filepath_logs",
+   "during_init": true,
+   "handler": "openFilepathLogs"
+  },
+  {
+   "endpoint": "/get/data/vrc_mic_mute_sync",
+   "during_init": true,
+   "handler": "getVrcMicMuteSync"
+  },
+  {
+   "endpoint": "/set/enable/vrc_mic_mute_sync",
+   "during_init": true,
+   "handler": "setEnableVrcMicMuteSync"
+  },
+  {
+   "endpoint": "/set/disable/vrc_mic_mute_sync",
+   "during_init": true,
+   "handler": "setDisableVrcMicMuteSync"
+  },
+  {
+   "endpoint": "/get/data/send_message_to_vrc",
+   "during_init": true,
+   "handler": "getSendMessageToVrc"
+  },
+  {
+   "endpoint": "/set/enable/send_message_to_vrc",
+   "during_init": true,
+   "handler": "setEnableSendMessageToVrc"
+  },
+  {
+   "endpoint": "/set/disable/send_message_to_vrc",
+   "during_init": true,
+   "handler": "setDisableSendMessageToVrc"
+  },
+  {
+   "endpoint": "/get/data/send_received_message_to_vrc",
+   "during_init": true,
+   "handler": "getSendReceivedMessageToVrc"
+  },
+  {
+   "endpoint": "/set/enable/send_received_message_to_vrc",
+   "during_init": true,
+   "handler": "setEnableSendReceivedMessageToVrc"
+  },
+  {
+   "endpoint": "/set/disable/send_received_message_to_vrc",
+   "during_init": true,
+   "handler": "setDisableSendReceivedMessageToVrc"
+  },
+  {
+   "endpoint": "/get/data/websocket_host",
+   "during_init": true,
+   "handler": "getWebSocketHost"
+  },
+  {
+   "endpoint": "/set/data/websocket_host",
+   "during_init": true,
+   "handler": "setWebSocketHost"
+  },
+  {
+   "endpoint": "/get/data/websocket_port",
+   "during_init": true,
+   "handler": "getWebSocketPort"
+  },
+  {
+   "endpoint": "/set/data/websocket_port",
+   "during_init": true,
+   "handler": "setWebSocketPort"
+  },
+  {
+   "endpoint": "/get/data/websocket_auth_token",
+   "during_init": true,
+   "handler": "getWebSocketAuthToken"
+  },
+  {
+   "endpoint": "/get/data/websocket_server",
+   "during_init": true,
+   "handler": "getWebSocketServer"
+  },
+  {
+   "endpoint": "/set/enable/websocket_server",
+   "during_init": true,
+   "handler": "setEnableWebSocketServer"
+  },
+  {
+   "endpoint": "/set/disable/websocket_server",
+   "during_init": true,
+   "handler": "setDisableWebSocketServer"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source",
+   "during_init": true,
+   "handler": "getObsBrowserSource"
+  },
+  {
+   "endpoint": "/set/enable/obs_browser_source",
+   "during_init": true,
+   "handler": "setEnableObsBrowserSource"
+  },
+  {
+   "endpoint": "/set/disable/obs_browser_source",
+   "during_init": true,
+   "handler": "setDisableObsBrowserSource"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_port",
+   "during_init": true,
+   "handler": "getObsBrowserSourcePort"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_port",
+   "during_init": true,
+   "handler": "setObsBrowserSourcePort"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_max_messages",
+   "during_init": true,
+   "handler": "getObsBrowserSourceMaxMessages"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_max_messages",
+   "during_init": true,
+   "handler": "setObsBrowserSourceMaxMessages"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_display_duration",
+   "during_init": true,
+   "handler": "getObsBrowserSourceDisplayDuration"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_display_duration",
+   "during_init": true,
+   "handler": "setObsBrowserSourceDisplayDuration"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_fadeout_duration",
+   "during_init": true,
+   "handler": "getObsBrowserSourceFadeoutDuration"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_fadeout_duration",
+   "during_init": true,
+   "handler": "setObsBrowserSourceFadeoutDuration"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_font_size",
+   "during_init": true,
+   "handler": "getObsBrowserSourceFontSize"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_font_size",
+   "during_init": true,
+   "handler": "setObsBrowserSourceFontSize"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_font_color",
+   "during_init": true,
+   "handler": "getObsBrowserSourceFontColor"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_font_color",
+   "during_init": true,
+   "handler": "setObsBrowserSourceFontColor"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_font_outline_thickness",
+   "during_init": true,
+   "handler": "getObsBrowserSourceFontOutlineThickness"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_font_outline_thickness",
+   "during_init": true,
+   "handler": "setObsBrowserSourceFontOutlineThickness"
+  },
+  {
+   "endpoint": "/get/data/obs_browser_source_font_outline_color",
+   "during_init": true,
+   "handler": "getObsBrowserSourceFontOutlineColor"
+  },
+  {
+   "endpoint": "/set/data/obs_browser_source_font_outline_color",
+   "during_init": true,
+   "handler": "setObsBrowserSourceFontOutlineColor"
+  },
+  {
+   "endpoint": "/get/data/clipboard",
+   "during_init": true,
+   "handler": "getClipboard"
+  },
+  {
+   "endpoint": "/set/enable/clipboard",
+   "during_init": true,
+   "handler": "setEnableClipboard"
+  },
+  {
+   "endpoint": "/set/disable/clipboard",
+   "during_init": true,
+   "handler": "setDisableClipboard"
+  },
+  {
+   "endpoint": "/get/data/selectable_ocr_source_languages",
+   "during_init": true,
+   "handler": "getSelectableOcrSourceLanguages"
+  },
+  {
+   "endpoint": "/get/data/ocr_source_language",
+   "during_init": true,
+   "handler": "getOcrSourceLanguage"
+  },
+  {
+   "endpoint": "/set/data/ocr_source_language",
+   "during_init": true,
+   "handler": "setOcrSourceLanguage"
+  },
+  {
+   "endpoint": "/get/data/ocr_window_title",
+   "during_init": true,
+   "handler": "getOcrWindowTitle"
+  },
+  {
+   "endpoint": "/set/data/ocr_window_title",
+   "during_init": true,
+   "handler": "setOcrWindowTitle"
+  },
+  {
+   "endpoint": "/get/data/ocr_poll_interval_ms",
+   "during_init": true,
+   "handler": "getOcrPollIntervalMs"
+  },
+  {
+   "endpoint": "/set/data/ocr_poll_interval_ms",
+   "during_init": true,
+   "handler": "setOcrPollIntervalMs"
+  },
+  {
+   "endpoint": "/get/data/ocr_min_confidence",
+   "during_init": true,
+   "handler": "getOcrMinConfidence"
+  },
+  {
+   "endpoint": "/set/data/ocr_min_confidence",
+   "during_init": true,
+   "handler": "setOcrMinConfidence"
+  },
+  {
+   "endpoint": "/get/data/ocr_bubble_min_text_length",
+   "during_init": true,
+   "handler": "getOcrBubbleMinTextLength"
+  },
+  {
+   "endpoint": "/set/data/ocr_bubble_min_text_length",
+   "during_init": true,
+   "handler": "setOcrBubbleMinTextLength"
+  },
+  {
+   "endpoint": "/get/data/osc_ip_address",
+   "during_init": true,
+   "handler": "getOscIpAddress"
+  },
+  {
+   "endpoint": "/set/data/osc_ip_address",
+   "during_init": true,
+   "handler": "setOscIpAddress"
+  },
+  {
+   "endpoint": "/get/data/osc_port",
+   "during_init": true,
+   "handler": "getOscPort"
+  },
+  {
+   "endpoint": "/set/data/osc_port",
+   "during_init": true,
+   "handler": "setOscPort"
+  },
+  {
+   "endpoint": "/get/data/notification_vrc_sfx",
+   "during_init": true,
+   "handler": "getNotificationVrcSfx"
+  },
+  {
+   "endpoint": "/set/enable/notification_vrc_sfx",
+   "during_init": true,
+   "handler": "setEnableNotificationVrcSfx"
+  },
+  {
+   "endpoint": "/set/disable/notification_vrc_sfx",
+   "during_init": true,
+   "handler": "setDisableNotificationVrcSfx"
+  },
+  {
+   "endpoint": "/run/open_filepath_config_file",
+   "during_init": true,
+   "handler": "openFilepathConfigFile"
+  },
+  {
+   "endpoint": "/run/feed_watchdog",
+   "during_init": true,
+   "handler": "feedWatchdog"
+  }
+ ],
+ "run_mapping": {
+  "enable_translation": "/run/enable_translation",
+  "enable_transcription_send": "/run/enable_transcription_send",
+  "enable_transcription_receive": "/run/enable_transcription_receive",
+  "disable_transcription_send": "/set/disable/transcription_send",
+  "disable_transcription_receive": "/set/disable/transcription_receive",
+  "disable_check_mic_threshold": "/set/disable/check_mic_threshold",
+  "disable_check_speaker_threshold": "/set/disable/check_speaker_threshold",
+  "connected_network": "/run/connected_network",
+  "enable_ai_models": "/run/enable_ai_models",
+  "update_software": "/run/update_software",
+  "update_cuda_software": "/run/update_cuda_software",
+  "transcription_mic": "/run/transcription_send_mic_message",
+  "transcription_speaker": "/run/transcription_receive_speaker_message",
+  "transcription_ocr": "/run/transcription_ocr_message",
+  "enable_ocr_capture": "/run/enable_ocr_capture",
+  "check_mic_volume": "/run/check_mic_volume",
+  "check_speaker_volume": "/run/check_speaker_volume",
+  "error_device": "/run/error_device",
+  "error_translation_engine": "/run/error_translation_engine",
+  "error_translation_chat_vram_overflow": "/run/error_translation_chat_vram_overflow",
+  "error_translation_mic_vram_overflow": "/run/error_translation_mic_vram_overflow",
+  "error_translation_speaker_vram_overflow": "/run/error_translation_speaker_vram_overflow",
+  "error_transcription_mic_vram_overflow": "/run/error_transcription_mic_vram_overflow",
+  "error_transcription_speaker_vram_overflow": "/run/error_transcription_speaker_vram_overflow",
+  "word_filter": "/run/word_filter",
+  "transcription_recognition_error": "/run/transcription_recognition_error",
+  "download_progress_ctranslate2_weight": "/run/download_progress_ctranslate2_weight",
+  "downloaded_ctranslate2_weight": "/run/downloaded_ctranslate2_weight",
+  "error_ctranslate2_weight": "/run/error_ctranslate2_weight",
+  "download_progress_whisper_weight": "/run/download_progress_whisper_weight",
+  "downloaded_whisper_weight": "/run/downloaded_whisper_weight",
+  "error_whisper_weight": "/run/error_whisper_weight",
+  "selected_mic_host": "/run/selected_mic_host",
+  "selected_mic_device": "/run/selected_mic_device",
+  "selected_speaker_device": "/run/selected_speaker_device",
+  "selected_translation_engines": "/run/selected_translation_engines",
+  "translation_engines": "/run/translation_engines",
+  "selected_your_languages": "/run/selected_your_languages",
+  "selected_target_languages": "/run/selected_target_languages",
+  "selectable_language_list": "/run/selectable_language_list",
+  "selected_translation_compute_type": "/run/selected_translation_compute_type",
+  "selected_transcription_compute_type": "/run/selected_transcription_compute_type",
+  "selectable_plamo_model_list": "/run/selectable_plamo_model_list",
+  "selected_plamo_model": "/run/selected_plamo_model",
+  "selectable_gemini_model_list": "/run/selectable_gemini_model_list",
+  "selected_gemini_model": "/run/selected_gemini_model",
+  "selectable_openai_model_list": "/run/selectable_openai_model_list",
+  "selected_openai_model": "/run/selected_openai_model",
+  "selectable_groq_model_list": "/run/selectable_groq_model_list",
+  "selected_groq_model": "/run/selected_groq_model",
+  "selectable_openrouter_model_list": "/run/selectable_openrouter_model_list",
+  "selected_openrouter_model": "/run/selected_openrouter_model",
+  "selectable_lmstudio_model_list": "/run/selectable_lmstudio_model_list",
+  "selected_lmstudio_model": "/run/selected_lmstudio_model",
+  "selectable_openai_compatible_model_list": "/run/selectable_openai_compatible_model_list",
+  "selected_openai_compatible_model": "/run/selected_openai_compatible_model",
+  "selectable_ollama_model_list": "/run/selectable_ollama_model_list",
+  "selected_ollama_model": "/run/selected_ollama_model",
+  "selectable_groq_whisper_model_list": "/run/selectable_groq_whisper_model_list",
+  "selected_groq_whisper_model": "/run/selected_groq_whisper_model",
+  "selectable_openai_whisper_model_list": "/run/selectable_openai_whisper_model_list",
+  "selected_openai_whisper_model": "/run/selected_openai_whisper_model",
+  "selectable_custom_whisper_model_list": "/run/selectable_custom_whisper_model_list",
+  "selected_custom_whisper_model": "/run/selected_custom_whisper_model",
+  "selectable_deepgram_model_list": "/run/selectable_deepgram_model_list",
+  "selected_deepgram_model": "/run/selected_deepgram_model",
+  "overlay_small_log_settings": "/run/overlay_small_log_settings",
+  "vr_panel_pointer": "/run/vr_panel_pointer",
+  "vr_panel_log_out_of_view": "/run/vr_panel_log_out_of_view",
+  "overlay_vr_launcher_hand": "/run/overlay_vr_launcher_hand",
+  "vr_panel_launcher_intro": "/run/vr_panel_launcher_intro",
+  "overlay_vr_panel_anchor": "/run/overlay_vr_panel_anchor",
+  "vr_panel_layout": "/run/vr_panel_layout",
+  "overlay_large_log_settings": "/run/overlay_large_log_settings",
+  "selectable_mic_host_list": "/run/selectable_mic_host_list",
+  "selectable_mic_device_list": "/run/selectable_mic_device_list",
+  "selectable_speaker_device_list": "/run/selectable_speaker_device_list",
+  "software_update_info": "/run/software_update_info",
+  "initialization_progress": "/run/initialization_progress",
+  "initialization_complete": "/run/initialization_complete",
+  "enable_osc_query": "/run/enable_osc_query"
+ },
+ "simple_getters": {
+  "getVersion": "VERSION",
+  "getComputeMode": "COMPUTE_MODE",
+  "getComputeDeviceList": "SELECTABLE_COMPUTE_DEVICE_LIST",
+  "getSelectedTranslationComputeDevice": "SELECTED_TRANSLATION_COMPUTE_DEVICE",
+  "getSelectableCtranslate2WeightTypeDict": "SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT",
+  "getSelectedTranscriptionComputeDevice": "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE",
+  "getSelectedTabNo": "SELECTED_TAB_NO",
+  "getSelectedTranslationEngines": "SELECTED_TRANSLATION_ENGINES",
+  "getSelectedYourLanguages": "SELECTED_YOUR_LANGUAGES",
+  "getSelectedTargetLanguages": "SELECTED_TARGET_LANGUAGES",
+  "getSelectedTranscriptionEngine": "SELECTED_TRANSCRIPTION_ENGINE",
+  "getGroqWhisperModelList": "SELECTABLE_GROQ_WHISPER_MODEL_LIST",
+  "getGroqWhisperModel": "SELECTED_GROQ_WHISPER_MODEL",
+  "getOpenAIWhisperModelList": "SELECTABLE_OPENAI_WHISPER_MODEL_LIST",
+  "getOpenAIWhisperModel": "SELECTED_OPENAI_WHISPER_MODEL",
+  "getCustomWhisperURL": "TRANSCRIPTION_CUSTOM_URL",
+  "getCustomWhisperModelList": "SELECTABLE_CUSTOM_WHISPER_MODEL_LIST",
+  "getCustomWhisperModel": "SELECTED_CUSTOM_WHISPER_MODEL",
+  "getDeepgramModelList": "SELECTABLE_DEEPGRAM_MODEL_LIST",
+  "getDeepgramModel": "SELECTED_DEEPGRAM_MODEL",
+  "getSelectableReleaseChannels": "SELECTABLE_RELEASE_CHANNEL_LIST",
+  "getSelectedReleaseChannel": "SELECTED_RELEASE_CHANNEL",
+  "getConvertMessageToRomaji": "CONVERT_MESSAGE_TO_ROMAJI",
+  "getConvertMessageToHiragana": "CONVERT_MESSAGE_TO_HIRAGANA",
+  "getMainWindowSidebarCompactMode": "MAIN_WINDOW_SIDEBAR_COMPACT_MODE",
+  "getTransparency": "TRANSPARENCY",
+  "getUiScaling": "UI_SCALING",
+  "getTextboxUiScaling": "TEXTBOX_UI_SCALING",
+  "getMessageBoxRatio": "MESSAGE_BOX_RATIO",
+  "getSendMessageButtonType": "SEND_MESSAGE_BUTTON_TYPE",
+  "getShowResendButton": "SHOW_RESEND_BUTTON",
+  "getFontFamily": "FONT_FAMILY",
+  "getUiLanguage": "UI_LANGUAGE",
+  "getMainWindowGeometry": "MAIN_WINDOW_GEOMETRY",
+  "getAutoMicSelect": "AUTO_MIC_SELECT",
+  "getSelectedMicHost": "SELECTED_MIC_HOST",
+  "getSelectedMicDevice": "SELECTED_MIC_DEVICE",
+  "getMicThreshold": "MIC_THRESHOLD",
+  "getMicAutomaticThreshold": "MIC_AUTOMATIC_THRESHOLD",
+  "getMicRecordTimeout": "MIC_RECORD_TIMEOUT",
+  "getMicPhraseTimeout": "MIC_PHRASE_TIMEOUT",
+  "getMicMaxPhrases": "MIC_MAX_PHRASES",
+  "getMicWordFilter": "MIC_WORD_FILTER",
+  "getMicAvgLogprob": "MIC_AVG_LOGPROB",
+  "getMicNoSpeechProb": "MIC_NO_SPEECH_PROB",
+  "getAutoSpeakerSelect": "AUTO_SPEAKER_SELECT",
+  "getSelectedSpeakerDevice": "SELECTED_SPEAKER_DEVICE",
+  "getSpeakerThreshold": "SPEAKER_THRESHOLD",
+  "getSpeakerAutomaticThreshold": "SPEAKER_AUTOMATIC_THRESHOLD",
+  "getSpeakerRecordTimeout": "SPEAKER_RECORD_TIMEOUT",
+  "getSpeakerPhraseTimeout": "SPEAKER_PHRASE_TIMEOUT",
+  "getSpeakerMaxPhrases": "SPEAKER_MAX_PHRASES",
+  "getHotkeys": "HOTKEYS",
+  "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
+  "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
+  "getOscIpAddress": "OSC_IP_ADDRESS",
+  "getOscPort": "OSC_PORT",
+  "getNotificationVrcSfx": "NOTIFICATION_VRC_SFX",
+  "getTranslatorLMStudioURL": "LMSTUDIO_URL",
+  "getOpenAICompatibleURL": "OPENAI_COMPATIBLE_URL",
+  "getOpenAICompatibleModelList": "SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST",
+  "getOpenAICompatibleModel": "SELECTED_OPENAI_COMPATIBLE_MODEL",
+  "getCtranslate2WeightType": "CTRANSLATE2_WEIGHT_TYPE",
+  "getSelectedTranslationComputeType": "SELECTED_TRANSLATION_COMPUTE_TYPE",
+  "getWhisperWeightType": "WHISPER_WEIGHT_TYPE",
+  "getSelectedTranscriptionComputeType": "SELECTED_TRANSCRIPTION_COMPUTE_TYPE",
+  "getSendMessageFormatParts": "SEND_MESSAGE_FORMAT_PARTS",
+  "getReceivedMessageFormatParts": "RECEIVED_MESSAGE_FORMAT_PARTS",
+  "getAutoClearMessageBox": "AUTO_CLEAR_MESSAGE_BOX",
+  "getSendOnlyTranslatedMessages": "SEND_ONLY_TRANSLATED_MESSAGES",
+  "getOverlaySmallLog": "OVERLAY_SMALL_LOG",
+  "getOverlaySmallLogSettings": "OVERLAY_SMALL_LOG_SETTINGS",
+  "getOverlayLargeLog": "OVERLAY_LARGE_LOG",
+  "getOverlayVrPanel": "OVERLAY_VR_PANEL",
+  "getOverlayVrPanelLocked": "OVERLAY_VR_PANEL_LOCKED",
+  "getOverlayVrPanelFontSize": "OVERLAY_VR_PANEL_FONT_SIZE",
+  "getOverlayVrLauncherAutoHide": "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
+  "getOverlayVrTooltip": "OVERLAY_VR_TOOLTIP",
+  "getOverlayLargeLogSettings": "OVERLAY_LARGE_LOG_SETTINGS",
+  "getOverlayShowOnlyTranslatedMessages": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
+  "getSendMessageToVrc": "SEND_MESSAGE_TO_VRC",
+  "getSendReceivedMessageToVrc": "SEND_RECEIVED_MESSAGE_TO_VRC",
+  "getLoggerFeature": "LOGGER_FEATURE",
+  "getVrcMicMuteSync": "VRC_MIC_MUTE_SYNC",
+  "getTelemetry": "ENABLE_TELEMETRY",
+  "getWebSocketHost": "WEBSOCKET_HOST",
+  "getWebSocketPort": "WEBSOCKET_PORT",
+  "getWebSocketServer": "WEBSOCKET_SERVER",
+  "getObsBrowserSource": "OBS_BROWSER_SOURCE",
+  "getObsBrowserSourcePort": "OBS_BROWSER_SOURCE_PORT",
+  "getObsBrowserSourceMaxMessages": "OBS_BROWSER_SOURCE_MAX_MESSAGES",
+  "getObsBrowserSourceDisplayDuration": "OBS_BROWSER_SOURCE_DISPLAY_DURATION",
+  "getObsBrowserSourceFadeoutDuration": "OBS_BROWSER_SOURCE_FADEOUT_DURATION",
+  "getObsBrowserSourceFontSize": "OBS_BROWSER_SOURCE_FONT_SIZE",
+  "getObsBrowserSourceFontColor": "OBS_BROWSER_SOURCE_FONT_COLOR",
+  "getObsBrowserSourceFontOutlineThickness": "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS",
+  "getObsBrowserSourceFontOutlineColor": "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR",
+  "getClipboard": "ENABLE_CLIPBOARD",
+  "getSelectableOcrSourceLanguages": "SELECTABLE_OCR_SOURCE_LANGUAGE_LIST",
+  "getOcrSourceLanguage": "OCR_SOURCE_LANGUAGE",
+  "getOcrWindowTitle": "OCR_WINDOW_TITLE",
+  "getOcrPollIntervalMs": "OCR_POLL_INTERVAL_MS",
+  "getOcrMinConfidence": "OCR_MIN_CONFIDENCE",
+  "getOcrBubbleMinTextLength": "OCR_BUBBLE_MIN_TEXT_LENGTH"
+ }
+}

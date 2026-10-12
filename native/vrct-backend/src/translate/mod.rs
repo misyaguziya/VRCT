@@ -118,6 +118,24 @@ impl Translator {
         }
     }
 
+    /// A client prepared without the translator's lock (the start-up checks run side by side):
+    /// kept when Some, as authenticate_llm / set_lmstudio_url / check_ollama would keep it
+    pub fn put_client(&mut self, engine: Engine, client: Option<LlmClient>) {
+        match engine {
+            Engine::LmStudio => self.lmstudio_connected = client.is_some(),
+            Engine::Ollama => self.ollama_connected = client.is_some(),
+            _ => {}
+        }
+        match client {
+            Some(c) => self.llm.insert(engine.key(), c),
+            None => self.llm.remove(engine.key()),
+        };
+    }
+
+    pub fn settings_dir(&self) -> &Path {
+        &self.settings_dir
+    }
+
     pub fn llm_client(&self, engine: Engine) -> Option<&LlmClient> {
         self.llm.get(engine.key())
     }

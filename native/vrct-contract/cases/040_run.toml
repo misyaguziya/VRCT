@@ -24,3 +24,30 @@ name = "chat message empty"
 endpoint = "/run/send_message_box"
 data = { id = "contract-2", message = "" }
 
+
+[[case]]
+name = "typing (sending to VRChat is off)"
+endpoint = "/run/typing_message_box"
+
+[[case]]
+name = "stop typing (sending to VRChat is off)"
+endpoint = "/run/stop_typing_message_box"
+
+[[case]]
+name = "enable translation (loads CTranslate2)"
+endpoint = "/set/enable/translation"
+expect_status = 200
+
+[[case]]
+name = "chat message translated (CTranslate2)"
+endpoint = "/run/send_message_box"
+data = { id = "contract-3", message = "こんにちは。今日はとてもいい天気ですね。" }
+
+[[case]]
+name = "chat message translated, same text again (chat has no repeat filter)"
+endpoint = "/run/send_message_box"
+data = { id = "contract-4", message = "こんにちは。今日はとてもいい天気ですね。" }
+
+[[case]]
+name = "disable translation"
+endpoint = "/set/disable/translation"

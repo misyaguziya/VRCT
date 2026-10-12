@@ -19,6 +19,15 @@ impl Languages {
         Ok(Self(serde_json::from_slice(&std::fs::read(path)?)?))
     }
 
+    pub fn new(table: Value) -> Self {
+        Self(table)
+    }
+
+    /// The whole table (language -> country -> engine -> code), in its order
+    pub fn table(&self) -> &Value {
+        &self.0
+    }
+
     pub fn code(&self, language: &str, country: &str, engine: &str) -> Option<&str> {
         self.0.get(language)?.get(country)?.get(engine)?.as_str()
     }

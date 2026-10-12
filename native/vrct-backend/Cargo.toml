@@ -6,6 +6,10 @@ rust-version.workspace = true
 publish.workspace = true
 description = "VRCT backend (sidecar): IPC, state, pipeline and the features"
 
+[[bin]]
+name = "VRCT-sidecar"
+path = "src/main.rs"
+
 [dependencies]
 anyhow = "1"
 reqwest = { version = "0.12", features = ["blocking", "json", "multipart"] }
@@ -18,6 +22,8 @@ tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "time", "sy
 tokio-tungstenite = "0.24"
 futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
 getrandom = "0.2"
+# SO_REUSEADDR for the server port check (isAvailableWebSocketServer)
+socket2 = "0.6"
 base64 = "0.22"
 form_urlencoded = "1"
 percent-encoding = "2"
@@ -32,13 +38,15 @@ windows-sys = { version = "0.61", features = [
     "Win32_Graphics_Gdi",
     "Win32_Storage_Xps",
     "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_LibraryLoader",
     "Win32_System_Threading",
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_WindowsAndMessaging",
 ] }
-vrct-audio = { path = "../vrct-audio" }
+vrct-audio = { path = "../vrct-audio", features = ["devices"] }
 vrct-ct2 = { path = "../vrct-ct2" }
 vrct-ocr = { path = "../vrct-ocr" }
+vrct-whisper = { path = "../vrct-whisper" }
 vrct-openvr = { path = "../vrct-openvr" }
 # D3D11 for SteamVR's mirror texture (OCR)
 windows = { version = "=0.61.1", features = [

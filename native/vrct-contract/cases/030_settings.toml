@@ -152,3 +152,61 @@ endpoint = "/set/enable/convert_message_to_romaji"
 [[case]]
 name = "enable convert_message_to_hiragana"
 endpoint = "/set/enable/convert_message_to_hiragana"
+
+[[case]]
+name = "set websocket host (server off)"
+endpoint = "/set/data/websocket_host"
+data = "127.0.0.1"
+
+[[case]]
+name = "get websocket auth token"
+endpoint = "/get/data/websocket_auth_token"
+rule = "shape"
+
+[[case]]
+name = "set obs font outline color (lower case)"
+endpoint = "/set/data/obs_browser_source_font_outline_color"
+data = " #abcdef "
+
+[[case]]
+name = "set obs fadeout duration (float string)"
+endpoint = "/set/data/obs_browser_source_fadeout_duration"
+data = " 7 "
+
+[[case]]
+name = "set mic word filter from a string"
+endpoint = "/set/data/mic_word_filter"
+data = "abca"
+
+[[case]]
+name = "set ocr window title (stripped)"
+endpoint = "/set/data/ocr_window_title"
+data = "  VRChat  "
+
+[[case]]
+name = "disable convert to romaji"
+endpoint = "/set/disable/convert_message_to_romaji"
+
+[[case]]
+name = "enable convert to romaji"
+endpoint = "/set/enable/convert_message_to_romaji"
+
+[[case]]
+name = "enable logger"
+endpoint = "/set/enable/logger_feature"
+
+[[case]]
+name = "disable logger"
+endpoint = "/set/disable/logger_feature"
+
+[[case]]
+name = "enable clipboard"
+endpoint = "/set/enable/clipboard"
+
+[[case]]
+name = "disable clipboard"
+endpoint = "/set/disable/clipboard"
+
+[[case]]
+name = "disable telemetry"
+endpoint = "/set/disable/telemetry"

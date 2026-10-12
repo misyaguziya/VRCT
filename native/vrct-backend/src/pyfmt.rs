@@ -115,65 +115,9 @@ pub fn repr_float(x: f64) -> String {
     format!("{sign}{body}")
 }
 
-/// json.dumps(value) with the defaults: ", " and ": ", every character from U+007F as \uXXXX
+/// json.dumps(value) with the defaults: ", " and ": ", every character from U+007F escaped
 pub fn json_dumps(value: &serde_json::Value) -> String {
-    use serde_json::Value;
-    fn string(s: &str, out: &mut String) {
-        out.push('"');
-        for c in s.chars() {
-            match c {
-                '"' => out.push_str("\\\""),
-                '\\' => out.push_str("\\\\"),
-                '\n' => out.push_str("\\n"),
-                '\r' => out.push_str("\\r"),
-                '\t' => out.push_str("\\t"),
-                '\u{8}' => out.push_str("\\b"),
-                '\u{c}' => out.push_str("\\f"),
-                ' '..='\u{7e}' => out.push(c),
-                _ => {
-                    let mut units = [0u16; 2];
-                    for u in c.encode_utf16(&mut units) {
-                        out.push_str(&format!("\\u{u:04x}"));
-                    }
-                }
-            }
-        }
-        out.push('"');
-    }
-    fn write(v: &Value, out: &mut String) {
-        match v {
-            Value::Null => out.push_str("null"),
-            Value::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
-            Value::Number(n) if n.is_f64() => out.push_str(&repr_float(n.as_f64().unwrap())),
-            Value::Number(n) => out.push_str(&n.to_string()),
-            Value::String(s) => string(s, out),
-            Value::Array(items) => {
-                out.push('[');
-                for (i, item) in items.iter().enumerate() {
-                    if i > 0 {
-                        out.push_str(", ");
-                    }
-                    write(item, out);
-                }
-                out.push(']');
-            }
-            Value::Object(map) => {
-                out.push('{');
-                for (i, (k, item)) in map.iter().enumerate() {
-                    if i > 0 {
-                        out.push_str(", ");
-                    }
-                    string(k, out);
-                    out.push_str(": ");
-                    write(item, out);
-                }
-                out.push('}');
-            }
-        }
-    }
-    let mut out = String::new();
-    write(value, &mut out);
-    out
+    crate::pyjson::dumps(value, None, true)
 }
 
 #[cfg(test)]
