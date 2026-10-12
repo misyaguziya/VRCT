@@ -111,6 +111,7 @@ export const STATIC_ROUTE_META_LIST = [
 
     // Language Selector
     { endpoint: "/get/data/selectable_language_list", ns: main, hook_name: "useLanguageSettings", method_name: "updateSelectableLanguageList" },
+    { endpoint: "/run/selectable_language_list", ns: main, hook_name: "useLanguageSettings", method_name: "updateSelectableLanguageList" },
 
 
     // Message Input Box
