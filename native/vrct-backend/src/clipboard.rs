@@ -1,7 +1,9 @@
 //! Copy to the clipboard and paste into VRChat (models/clipboard/clipboard.py): the window whose
 //! title (or process name) contains the app name is brought to the front, the text is copied and
 //! Ctrl+V is sent to it. arboard for the clipboard (in place of `clip`), Win32 for the focus and keys.
-//! The app name (the running SteamVR app) comes from OpenVR, with the overlay's session.
+//! The app name (AppName: a Steam app OpenVR lists) comes from OpenVR, with the overlay's session.
+use crate::platform::is_steamvr_running;
+use std::sync::{mpsc, Arc, Mutex};
 use std::time::Duration;
 use windows_sys::core::BOOL;
 use crate::platform::process_name;
@@ -99,6 +101,52 @@ pub fn copy_and_paste(message: &str, window_name: Option<&str>, log: &dyn Fn(Str
         paste();
     }
     focused
+}
+
+/// Clipboard's app_name: once SteamVR runs (looked for every 10 s), the name of the first Steam app
+/// OpenVR lists (keys "steam.app.*"), through the shared session. Looked up once, as the Python
+/// version does; None when it fails.
+pub struct AppName {
+    name: Arc<Mutex<Option<String>>>,
+    // dropped: the watching thread ends at once
+    _stop: mpsc::Sender<()>,
+}
+
+impl AppName {
+    pub fn watch(log: impl Fn(String) + Send + 'static) -> Self {
+        let name = Arc::new(Mutex::new(None));
+        let (stop, stopped) = mpsc::channel::<()>();
+        let found = name.clone();
+        std::thread::spawn(move || {
+            log("Clipboard: VR monitor thread started.".into());
+            loop {
+                if is_steamvr_running() {
+                    log("Clipboard: SteamVR detected. Setting up app info.".into());
+                    match steam_app_name() {
+                        Ok(app) => *found.lock().unwrap() = app,
+                        Err(e) => log(format!("Clipboard: Error setting up VR app name: {e}")),
+                    }
+                    break;
+                }
+                if stopped.recv_timeout(Duration::from_secs(10)) != Err(mpsc::RecvTimeoutError::Timeout) {
+                    break;
+                }
+            }
+            log("Clipboard: VR monitor thread ended.".into());
+        });
+        Self { name, _stop: stop }
+    }
+
+    pub fn get(&self) -> Option<String> {
+        self.name.lock().unwrap().clone()
+    }
+}
+
+fn steam_app_name() -> Result<Option<String>, vrct_openvr::Error> {
+    let session = vrct_openvr::acquire(vrct_openvr::ApplicationType::Background)?;
+    let apps = session.applications()?;
+    Ok((0..apps.application_count()).map(|i| apps.application_key_by_index(i)).find(|key| key.starts_with("steam.app"))
+        .map(|key| apps.application_property_string(&key, vrct_openvr::APPLICATION_PROPERTY_NAME_STRING)))
 }
 
 #[cfg(test)]
