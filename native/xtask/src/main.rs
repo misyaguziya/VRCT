@@ -1,4 +1,5 @@
 //! cargo xtask fetch-native [--cuda]
+//! cargo xtask stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>]
 //!
 //! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
 //! SHA-256 を照合し、指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
@@ -182,10 +183,57 @@ mod serde_json_lite {
     }
 }
 
+fn copy_dir(src: &Path, dst: &Path) -> Result<()> {
+    fs::create_dir_all(dst)?;
+    for entry in fs::read_dir(src).with_context(|| src.display().to_string())? {
+        let entry = entry?;
+        let to = dst.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            if entry.file_name() != "__pycache__" {
+                copy_dir(&entry.path(), &to)?;
+            }
+        } else {
+            fs::copy(entry.path(), &to)?;
+        }
+    }
+    Ok(())
+}
+
+/// The sidecar with what it reads beside it: the DLLs of the build, the translators' settings,
+/// SudachiPy's resources with SudachiDict-full's system.dic, the overlay's fonts
+fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>) -> Result<()> {
+    let native = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
+    let built = native.join("target").join(if release { "release" } else { "debug" });
+    let models = native.join("../src-python/models");
+    fs::create_dir_all(out)?;
+    fs::copy(built.join("VRCT-sidecar.exe"), out.join("VRCT-sidecar.exe")).context("build VRCT-sidecar first")?;
+    for entry in fs::read_dir(&built)? {
+        let path = entry?.path();
+        if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("dll")) {
+            fs::copy(&path, out.join(path.file_name().unwrap()))?;
+        }
+    }
+    copy_dir(&models.join("translation/translation_settings"), &out.join("translation_settings"))?;
+    copy_dir(&models.join("overlay/fonts"), &out.join("fonts"))?;
+    copy_dir(&native.join("data/sudachi"), &out.join("sudachi"))?;
+    let dict = sudachi_dict.or_else(|| std::env::var_os("VRCT_SUDACHI_DICT").map(PathBuf::from))
+        .context("--sudachi-dict or VRCT_SUDACHI_DICT: SudachiDict-full's system.dic")?;
+    fs::copy(&dict, out.join("sudachi/system.dic")).with_context(|| dict.display().to_string())?;
+    println!("staged {}", out.display());
+    Ok(())
+}
+
+fn arg(args: &[String], flag: &str) -> Option<String> {
+    args.iter().position(|a| a == flag).and_then(|i| args.get(i + 1)).cloned()
+}
+
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("fetch-native") => fetch_native(args.iter().any(|a| a == "--cuda")),
-        _ => bail!("usage: cargo xtask fetch-native [--cuda]"),
+        Some("stage-sidecar") => stage_sidecar(&PathBuf::from(arg(&args, "--out").context("--out <dir>")?),
+                                               args.iter().any(|a| a == "--release"),
+                                               arg(&args, "--sudachi-dict").map(PathBuf::from)),
+        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>]"),
     }
 }

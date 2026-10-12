@@ -1,7 +1,14 @@
 //! VRCT backend (docs/rust_backend_design_2026-10-11.md). The modules are filled in phase by phase.
+pub mod app;
 pub mod asr;
 pub mod clipboard;
+pub mod compute;
+pub mod config;
+pub mod errors;
 pub mod hf_cache;
+pub mod ipc;
+pub mod keywords;
+pub mod logs;
 pub mod net;
 pub mod obs;
 pub mod ocr_capture;
@@ -9,6 +16,7 @@ pub mod openai;
 pub mod osc;
 pub mod platform;
 pub mod pyfmt;
+pub mod pyjson;
 pub mod translate;
 pub mod telemetry;
 pub mod translit;

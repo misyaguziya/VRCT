@@ -63,11 +63,15 @@ cargo test -p vrct-backend -p vrct-webtranslate
 cd native
 cargo build -p vrct-contract
 $repo = (Resolve-Path ..).Path
-# Python 版 (このブランチの vrct_audio / vrct_graphics を使う)
-.\target\debug\vrct-contract.exe run --python D:\WORKSPACE\WORK\VRChatProject\VRCT\.venv\Scripts\python.exe `
+# Python 版 (このブランチの vrct_audio / vrct_graphics を使う。デバイス一覧を Rust 版と揃えるため VRCT_RUST_AUDIO=1)
+$env:VRCT_RUST_AUDIO = "1"
+.\target\debug\vrct-contract.exe run --python "$repo\.venv\Scripts\python.exe" `
   --src "$repo\src-python" --pythonpath "$repo\tmp\native-site;$repo\tmp\graphics-site" --name python --out target\contract\python.json
-# Rust 版 (P4 以降)
-.\target\debug\vrct-contract.exe run --exe <VRCT-sidecar.exe> --weights "$repo\src-python\weights" --name rust --out target\contract\rust.json
+Remove-Item Env:VRCT_RUST_AUDIO
+# Rust 版: ビルドして、DLL・翻訳設定・Sudachi の辞書・フォントと一緒に並べる
+cargo build -p vrct-backend --bin VRCT-sidecar
+cargo xtask stage-sidecar --out target\sidecar-stage --sudachi-dict "$repo\.venv\Lib\site-packages\sudachidict_full\resources\system.dic"
+.\target\debug\vrct-contract.exe run --exe target\sidecar-stage\VRCT-sidecar.exe --weights <src-python\weights> --name rust --out target\contract\rust.json
 .\target\debug\vrct-contract.exe compare target\contract\python.json target\contract\rust.json
 ```
 

@@ -1,0 +1,2276 @@
+{
+ "properties": [
+  {
+   "name": "VERSION",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "3.6.0-beta.1"
+  },
+  {
+   "name": "PATH_LOCAL",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "env": true
+  },
+  {
+   "name": "PATH_CONFIG",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "env": true
+  },
+  {
+   "name": "PATH_LOGS",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "env": true
+  },
+  {
+   "name": "GITHUB_URL",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
+  },
+  {
+   "name": "GITHUB_RELEASES_LIST_URL",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "https://api.github.com/repos/misyaguziya/VRCT/releases"
+  },
+  {
+   "name": "MIN_SUPPORTED_VERSION",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "3.4.3"
+  },
+  {
+   "name": "SELECTABLE_RELEASE_CHANNEL_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "stable",
+    "beta"
+   ]
+  },
+  {
+   "name": "MAX_MIC_THRESHOLD",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 2000
+  },
+  {
+   "name": "MAX_SPEAKER_THRESHOLD",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 2000
+  },
+  {
+   "name": "WATCHDOG_TIMEOUT",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 60
+  },
+  {
+   "name": "WATCHDOG_INTERVAL",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 20
+  },
+  {
+   "name": "SELECTABLE_TAB_NO_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "1",
+    "2",
+    "3"
+   ]
+  },
+  {
+   "name": "SELECTED_TAB_TARGET_LANGUAGES_NO_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "1",
+    "2",
+    "3"
+   ]
+  },
+  {
+   "name": "SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "m2m100_418M-ct2-int8",
+    "m2m100_1.2B-ct2-int8",
+    "nllb-200-distilled-600M-ct2-int8",
+    "nllb-200-distilled-1.3B-ct2-int8",
+    "nllb-200-3.3B-ct2-int8"
+   ]
+  },
+  {
+   "name": "SELECTABLE_WHISPER_WEIGHT_TYPE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "tiny",
+    "base",
+    "small",
+    "medium",
+    "large-v1",
+    "large-v2",
+    "large-v3",
+    "large-v3-turbo-int8",
+    "large-v3-turbo"
+   ]
+  },
+  {
+   "name": "SELECTABLE_TRANSLATION_ENGINE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "DeepL_API",
+    "Google",
+    "Bing",
+    "Papago",
+    "CTranslate2",
+    "Plamo_API",
+    "Gemini_API",
+    "OpenAI_API",
+    "LMStudio",
+    "OpenAI_Compatible",
+    "Ollama",
+    "Groq_API",
+    "OpenRouter_API"
+   ]
+  },
+  {
+   "name": "SELECTABLE_TRANSCRIPTION_ENGINE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "Google",
+    "Whisper",
+    "Groq_Whisper",
+    "OpenAI_Whisper",
+    "Custom_Whisper",
+    "Deepgram"
+   ]
+  },
+  {
+   "name": "SELECTABLE_UI_LANGUAGE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "en",
+    "ja",
+    "ko",
+    "zh-Hant",
+    "zh-Hans"
+   ]
+  },
+  {
+   "name": "SELECTABLE_OCR_SOURCE_LANGUAGE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "auto",
+    "Arabic",
+    "Hindi",
+    "Korean",
+    "Russian",
+    "Thai",
+    "Ukrainian"
+   ]
+  },
+  {
+   "name": "COMPUTE_MODE",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "env": true
+  },
+  {
+   "name": "SELECTABLE_COMPUTE_DEVICE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "env": true
+  },
+  {
+   "name": "SEND_MESSAGE_BUTTON_TYPE_LIST",
+   "kind": "managed",
+   "type": null,
+   "allowed": null,
+   "readonly": true,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": [
+    "show",
+    "hide",
+    "show_and_disable_enter_key"
+   ]
+  },
+  {
+   "name": "ENABLE_TRANSLATION",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "ENABLE_TRANSCRIPTION_SEND",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "ENABLE_TRANSCRIPTION_RECEIVE",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "ENABLE_OCR_CAPTURE",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "ENABLE_FOREGROUND",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "ENABLE_CHECK_ENERGY_SEND",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "ENABLE_CHECK_ENERGY_RECEIVE",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT",
+   "kind": "managed",
+   "type": [
+    "dict"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": {
+    "m2m100_418M-ct2-int8": false,
+    "m2m100_1.2B-ct2-int8": false,
+    "nllb-200-distilled-600M-ct2-int8": false,
+    "nllb-200-distilled-1.3B-ct2-int8": false,
+    "nllb-200-3.3B-ct2-int8": false
+   }
+  },
+  {
+   "name": "SELECTABLE_WHISPER_WEIGHT_TYPE_DICT",
+   "kind": "managed",
+   "type": [
+    "dict"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": {
+    "tiny": false,
+    "base": false,
+    "small": false,
+    "medium": false,
+    "large-v1": false,
+    "large-v2": false,
+    "large-v3": false,
+    "large-v3-turbo-int8": false,
+    "large-v3-turbo": false
+   }
+  },
+  {
+   "name": "SELECTABLE_TRANSLATION_ENGINE_STATUS",
+   "kind": "managed",
+   "type": [
+    "dict"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": {
+    "DeepL_API": false,
+    "Google": false,
+    "Bing": false,
+    "Papago": false,
+    "CTranslate2": false,
+    "Plamo_API": false,
+    "Gemini_API": false,
+    "OpenAI_API": false,
+    "LMStudio": false,
+    "OpenAI_Compatible": false,
+    "Ollama": false,
+    "Groq_API": false,
+    "OpenRouter_API": false
+   }
+  },
+  {
+   "name": "SELECTABLE_TRANSCRIPTION_ENGINE_STATUS",
+   "kind": "managed",
+   "type": [
+    "dict"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": {
+    "Google": false,
+    "Whisper": false,
+    "Groq_Whisper": false,
+    "OpenAI_Whisper": false,
+    "Custom_Whisper": false,
+    "Deepgram": false
+   }
+  },
+  {
+   "name": "SELECTABLE_PLAMO_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_GEMINI_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_OPENAI_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_GROQ_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_OPENROUTER_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_LMSTUDIO_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_OPENAI_COMPATIBLE_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_OLLAMA_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_GROQ_WHISPER_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_OPENAI_WHISPER_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_CUSTOM_WHISPER_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "SELECTABLE_DEEPGRAM_MODEL_LIST",
+   "kind": "managed",
+   "type": [
+    "list"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": []
+  },
+  {
+   "name": "DEEPGRAM_MODEL_LANGUAGES",
+   "kind": "managed",
+   "type": [
+    "dict"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": false,
+   "immediate_save": false,
+   "mutable_tracking": true,
+   "default": {}
+  },
+  {
+   "name": "CONVERT_MESSAGE_TO_ROMAJI",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "CONVERT_MESSAGE_TO_HIRAGANA",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "MAIN_WINDOW_SIDEBAR_COMPACT_MODE",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "TRANSPARENCY",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 100
+  },
+  {
+   "name": "UI_SCALING",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 100
+  },
+  {
+   "name": "TEXTBOX_UI_SCALING",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 100
+  },
+  {
+   "name": "MESSAGE_BOX_RATIO",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": true,
+   "mutable_tracking": false,
+   "default": 10
+  },
+  {
+   "name": "SEND_MESSAGE_BUTTON_TYPE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "show"
+  },
+  {
+   "name": "SHOW_RESEND_BUTTON",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "FONT_FAMILY",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "Yu Gothic UI"
+  },
+  {
+   "name": "UI_LANGUAGE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "en"
+  },
+  {
+   "name": "MAIN_WINDOW_GEOMETRY",
+   "kind": "validated",
+   "validator": "_main_window_geometry_validator",
+   "serialize": true,
+   "immediate_save": true,
+   "default": {
+    "x_pos": 0,
+    "y_pos": 0,
+    "width": 870,
+    "height": 654
+   }
+  },
+  {
+   "name": "MIC_THRESHOLD",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 300
+  },
+  {
+   "name": "MIC_AUTOMATIC_THRESHOLD",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "MIC_RECORD_TIMEOUT",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 3
+  },
+  {
+   "name": "MIC_PHRASE_TIMEOUT",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 3
+  },
+  {
+   "name": "MIC_MAX_PHRASES",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 10
+  },
+  {
+   "name": "MIC_AVG_LOGPROB",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": -0.8
+  },
+  {
+   "name": "MIC_NO_SPEECH_PROB",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 0.6
+  },
+  {
+   "name": "MIC_NO_REPEAT_NGRAM_SIZE",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 0
+  },
+  {
+   "name": "HOTKEYS",
+   "kind": "validated",
+   "validator": "<lambda>",
+   "serialize": true,
+   "immediate_save": true,
+   "default": {
+    "toggle_vrct_visibility": null,
+    "toggle_translation": null,
+    "toggle_transcription_send": null,
+    "toggle_transcription_receive": null
+   }
+  },
+  {
+   "name": "SPEAKER_THRESHOLD",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 300
+  },
+  {
+   "name": "SPEAKER_AUTOMATIC_THRESHOLD",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "SPEAKER_RECORD_TIMEOUT",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 3
+  },
+  {
+   "name": "SPEAKER_PHRASE_TIMEOUT",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 3
+  },
+  {
+   "name": "SPEAKER_MAX_PHRASES",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 10
+  },
+  {
+   "name": "SPEAKER_AVG_LOGPROB",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": -0.8
+  },
+  {
+   "name": "SPEAKER_NO_SPEECH_PROB",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 0.6
+  },
+  {
+   "name": "SPEAKER_NO_REPEAT_NGRAM_SIZE",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 0
+  },
+  {
+   "name": "MIC_ENABLE_VAD",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "SPEAKER_ENABLE_VAD",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "AUTH_KEYS",
+   "kind": "validated",
+   "validator": "<lambda>",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "DeepL_API": null,
+    "Plamo_API": null,
+    "Gemini_API": null,
+    "OpenAI_API": null,
+    "OpenAI_Compatible": null,
+    "Groq_API": null,
+    "OpenRouter_API": null
+   }
+  },
+  {
+   "name": "LMSTUDIO_URL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "http://127.0.0.1:1234/v1"
+  },
+  {
+   "name": "OPENAI_COMPATIBLE_URL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "https://api.openai.com/v1"
+  },
+  {
+   "name": "TRANSCRIPTION_AUTH_KEYS",
+   "kind": "validated",
+   "validator": "<lambda>",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "Groq_Whisper": null,
+    "OpenAI_Whisper": null,
+    "Custom_Whisper": null,
+    "Deepgram": null
+   }
+  },
+  {
+   "name": "TRANSCRIPTION_CUSTOM_URL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": ""
+  },
+  {
+   "name": "SELECTED_TRANSCRIPTION_COMPUTE_TYPE",
+   "kind": "validated",
+   "validator": "_selected_transcription_compute_type_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": "auto"
+  },
+  {
+   "name": "OVERLAY_SMALL_LOG_SETTINGS",
+   "kind": "validated",
+   "validator": "_overlay_small_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "x_pos": 0.0,
+    "y_pos": 0.0,
+    "z_pos": 0.0,
+    "x_rotation": 0.0,
+    "y_rotation": 0.0,
+    "z_rotation": 0.0,
+    "display_duration": 5,
+    "fadeout_duration": 2,
+    "opacity": 1.0,
+    "ui_scaling": 1.0,
+    "tracker": "HMD"
+   }
+  },
+  {
+   "name": "OVERLAY_LARGE_LOG_SETTINGS",
+   "kind": "validated",
+   "validator": "_overlay_large_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "x_pos": 0.0,
+    "y_pos": 0.0,
+    "z_pos": 0.0,
+    "x_rotation": 0.0,
+    "y_rotation": 0.0,
+    "z_rotation": 0.0,
+    "display_duration": 5,
+    "fadeout_duration": 2,
+    "opacity": 1.0,
+    "ui_scaling": 1.0,
+    "tracker": "LeftHand"
+   }
+  },
+  {
+   "name": "OVERLAY_VR_PANEL_SETTINGS",
+   "kind": "validated",
+   "validator": "validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "width": 900,
+    "height": 700,
+    "x_pos": 0.0,
+    "y_pos": 1.4,
+    "z_pos": 0.7,
+    "x_rotation": 0.0,
+    "y_rotation": 0.0,
+    "z_rotation": 0.0,
+    "display_duration": 5,
+    "fadeout_duration": 0,
+    "opacity": 1.0,
+    "ui_scaling": 0.4,
+    "tracker": "Playspace"
+   }
+  },
+  {
+   "name": "OVERLAY_VR_LAUNCHER_SETTINGS",
+   "kind": "validated",
+   "validator": "validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "x_pos": 0.0,
+    "y_pos": 0.0,
+    "z_pos": 0.0,
+    "x_rotation": 0.0,
+    "y_rotation": 0.0,
+    "z_rotation": 0.0,
+    "display_duration": 5,
+    "fadeout_duration": 0,
+    "opacity": 1.0,
+    "ui_scaling": 0.303,
+    "tracker": "LeftHand"
+   }
+  },
+  {
+   "name": "SEND_MESSAGE_FORMAT_PARTS",
+   "kind": "validated",
+   "validator": "_format_validator_send",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "message": {
+     "prefix": "",
+     "suffix": ""
+    },
+    "separator": "\n",
+    "translation": {
+     "prefix": "",
+     "separator": "\n",
+     "suffix": ""
+    },
+    "translation_first": false
+   }
+  },
+  {
+   "name": "RECEIVED_MESSAGE_FORMAT_PARTS",
+   "kind": "validated",
+   "validator": "_format_validator_received",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "message": {
+     "prefix": "",
+     "suffix": ""
+    },
+    "separator": "\n",
+    "translation": {
+     "prefix": "",
+     "separator": "\n",
+     "suffix": ""
+    },
+    "translation_first": false
+   }
+  },
+  {
+   "name": "WEBSOCKET_SERVER",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OSC_IP_ADDRESS",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "127.0.0.1"
+  },
+  {
+   "name": "OSC_PORT",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 9000
+  },
+  {
+   "name": "AUTO_CLEAR_MESSAGE_BOX",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "SEND_ONLY_TRANSLATED_MESSAGES",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OVERLAY_SMALL_LOG",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OVERLAY_LARGE_LOG",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OVERLAY_VR_PANEL",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OVERLAY_VR_PANEL_LOCKED",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OVERLAY_VR_PANEL_FONT_SIZE",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 17
+  },
+  {
+   "name": "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "OVERLAY_VR_TOOLTIP",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "SEND_MESSAGE_TO_VRC",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "SEND_RECEIVED_MESSAGE_TO_VRC",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "LOGGER_FEATURE",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "VRC_MIC_MUTE_SYNC",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "NOTIFICATION_VRC_SFX",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "WEBSOCKET_HOST",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "127.0.0.1"
+  },
+  {
+   "name": "WEBSOCKET_PORT",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 2231
+  },
+  {
+   "name": "WEBSOCKET_AUTH_TOKEN",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "env": true
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_PORT",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 2232
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_MAX_MESSAGES",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 14
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_DISPLAY_DURATION",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 60
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_FADEOUT_DURATION",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 12
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_FONT_SIZE",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 40
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_FONT_COLOR",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "#FFFFFF"
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 3
+  },
+  {
+   "name": "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "#000000"
+  },
+  {
+   "name": "ENABLE_TELEMETRY",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "SELECTED_TAB_NO",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "1"
+  },
+  {
+   "name": "SELECTED_TRANSCRIPTION_ENGINE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "Google"
+  },
+  {
+   "name": "SELECTED_RELEASE_CHANNEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "stable"
+  },
+  {
+   "name": "CTRANSLATE2_WEIGHT_TYPE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "nllb-200-distilled-600M-ct2-int8"
+  },
+  {
+   "name": "WHISPER_WEIGHT_TYPE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "base"
+  },
+  {
+   "name": "SELECTED_PLAMO_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_GEMINI_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_OPENAI_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_GROQ_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_OPENROUTER_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_LMSTUDIO_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_OPENAI_COMPATIBLE_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_OLLAMA_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_GROQ_WHISPER_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_OPENAI_WHISPER_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_CUSTOM_WHISPER_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "SELECTED_DEEPGRAM_MODEL",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": null
+  },
+  {
+   "name": "MIC_WORD_FILTER",
+   "kind": "validated",
+   "validator": "_mic_word_filter_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": []
+  },
+  {
+   "name": "SELECTED_TRANSLATION_ENGINES",
+   "kind": "validated",
+   "validator": "_selected_translation_engines_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "1": "CTranslate2",
+    "2": "CTranslate2",
+    "3": "CTranslate2"
+   }
+  },
+  {
+   "name": "SELECTED_YOUR_LANGUAGES",
+   "kind": "validated",
+   "validator": "_selected_your_languages_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "1": {
+     "1": {
+      "language": "Japanese",
+      "country": "Japan",
+      "enable": true
+     }
+    },
+    "2": {
+     "1": {
+      "language": "Japanese",
+      "country": "Japan",
+      "enable": true
+     }
+    },
+    "3": {
+     "1": {
+      "language": "Japanese",
+      "country": "Japan",
+      "enable": true
+     }
+    }
+   }
+  },
+  {
+   "name": "SELECTED_TARGET_LANGUAGES",
+   "kind": "validated",
+   "validator": "_selected_target_languages_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "1": {
+     "1": {
+      "language": "English",
+      "country": "United States",
+      "enable": true
+     },
+     "2": {
+      "language": "English",
+      "country": "United States",
+      "enable": false
+     },
+     "3": {
+      "language": "English",
+      "country": "United States",
+      "enable": false
+     }
+    },
+    "2": {
+     "1": {
+      "language": "English",
+      "country": "United States",
+      "enable": true
+     },
+     "2": {
+      "language": "English",
+      "country": "United States",
+      "enable": false
+     },
+     "3": {
+      "language": "English",
+      "country": "United States",
+      "enable": false
+     }
+    },
+    "3": {
+     "1": {
+      "language": "English",
+      "country": "United States",
+      "enable": true
+     },
+     "2": {
+      "language": "English",
+      "country": "United States",
+      "enable": false
+     },
+     "3": {
+      "language": "English",
+      "country": "United States",
+      "enable": false
+     }
+    }
+   }
+  },
+  {
+   "name": "SELECTED_TRANSLATION_COMPUTE_TYPE",
+   "kind": "validated",
+   "validator": "_selected_translation_compute_type_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": "auto"
+  },
+  {
+   "name": "AUTO_MIC_SELECT",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "AUTO_SPEAKER_SELECT",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "SELECTED_MIC_HOST",
+   "kind": "validated",
+   "validator": "_mic_host_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "env": true
+  },
+  {
+   "name": "SELECTED_MIC_DEVICE",
+   "kind": "validated",
+   "validator": "_mic_device_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "env": true
+  },
+  {
+   "name": "SELECTED_SPEAKER_DEVICE",
+   "kind": "validated",
+   "validator": "_speaker_device_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "env": true
+  },
+  {
+   "name": "SELECTED_TRANSLATION_COMPUTE_DEVICE",
+   "kind": "validated",
+   "validator": "_compute_device_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "env": true
+  },
+  {
+   "name": "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE",
+   "kind": "validated",
+   "validator": "_compute_device_validator",
+   "serialize": true,
+   "immediate_save": false,
+   "env": true
+  },
+  {
+   "name": "ENABLE_CLIPBOARD",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OCR_SOURCE_LANGUAGE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "auto"
+  },
+  {
+   "name": "OCR_WINDOW_TITLE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "VRChat"
+  },
+  {
+   "name": "OCR_POLL_INTERVAL_MS",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 750
+  },
+  {
+   "name": "OCR_MIN_CONFIDENCE",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 0.85
+  },
+  {
+   "name": "OCR_BUBBLE_MIN_TEXT_LENGTH",
+   "kind": "managed",
+   "type": [
+    "int"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 2
+  }
+ ],
+ "serialized_order": [
+  "CONVERT_MESSAGE_TO_ROMAJI",
+  "CONVERT_MESSAGE_TO_HIRAGANA",
+  "MAIN_WINDOW_SIDEBAR_COMPACT_MODE",
+  "TRANSPARENCY",
+  "UI_SCALING",
+  "TEXTBOX_UI_SCALING",
+  "MESSAGE_BOX_RATIO",
+  "SEND_MESSAGE_BUTTON_TYPE",
+  "SHOW_RESEND_BUTTON",
+  "FONT_FAMILY",
+  "UI_LANGUAGE",
+  "MAIN_WINDOW_GEOMETRY",
+  "MIC_THRESHOLD",
+  "MIC_AUTOMATIC_THRESHOLD",
+  "MIC_RECORD_TIMEOUT",
+  "MIC_PHRASE_TIMEOUT",
+  "MIC_MAX_PHRASES",
+  "MIC_AVG_LOGPROB",
+  "MIC_NO_SPEECH_PROB",
+  "MIC_NO_REPEAT_NGRAM_SIZE",
+  "HOTKEYS",
+  "SPEAKER_THRESHOLD",
+  "SPEAKER_AUTOMATIC_THRESHOLD",
+  "SPEAKER_RECORD_TIMEOUT",
+  "SPEAKER_PHRASE_TIMEOUT",
+  "SPEAKER_MAX_PHRASES",
+  "SPEAKER_AVG_LOGPROB",
+  "SPEAKER_NO_SPEECH_PROB",
+  "SPEAKER_NO_REPEAT_NGRAM_SIZE",
+  "MIC_ENABLE_VAD",
+  "SPEAKER_ENABLE_VAD",
+  "AUTH_KEYS",
+  "LMSTUDIO_URL",
+  "OPENAI_COMPATIBLE_URL",
+  "TRANSCRIPTION_AUTH_KEYS",
+  "TRANSCRIPTION_CUSTOM_URL",
+  "SELECTED_TRANSCRIPTION_COMPUTE_TYPE",
+  "OVERLAY_SMALL_LOG_SETTINGS",
+  "OVERLAY_LARGE_LOG_SETTINGS",
+  "OVERLAY_VR_PANEL_SETTINGS",
+  "OVERLAY_VR_LAUNCHER_SETTINGS",
+  "SEND_MESSAGE_FORMAT_PARTS",
+  "RECEIVED_MESSAGE_FORMAT_PARTS",
+  "WEBSOCKET_SERVER",
+  "OSC_IP_ADDRESS",
+  "OSC_PORT",
+  "AUTO_CLEAR_MESSAGE_BOX",
+  "SEND_ONLY_TRANSLATED_MESSAGES",
+  "OVERLAY_SMALL_LOG",
+  "OVERLAY_LARGE_LOG",
+  "OVERLAY_VR_PANEL",
+  "OVERLAY_VR_PANEL_LOCKED",
+  "OVERLAY_VR_PANEL_FONT_SIZE",
+  "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
+  "OVERLAY_VR_TOOLTIP",
+  "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES",
+  "SEND_MESSAGE_TO_VRC",
+  "SEND_RECEIVED_MESSAGE_TO_VRC",
+  "LOGGER_FEATURE",
+  "VRC_MIC_MUTE_SYNC",
+  "NOTIFICATION_VRC_SFX",
+  "WEBSOCKET_HOST",
+  "WEBSOCKET_PORT",
+  "WEBSOCKET_AUTH_TOKEN",
+  "OBS_BROWSER_SOURCE",
+  "OBS_BROWSER_SOURCE_PORT",
+  "OBS_BROWSER_SOURCE_MAX_MESSAGES",
+  "OBS_BROWSER_SOURCE_DISPLAY_DURATION",
+  "OBS_BROWSER_SOURCE_FADEOUT_DURATION",
+  "OBS_BROWSER_SOURCE_FONT_SIZE",
+  "OBS_BROWSER_SOURCE_FONT_COLOR",
+  "OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS",
+  "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR",
+  "ENABLE_TELEMETRY",
+  "SELECTED_TAB_NO",
+  "SELECTED_TRANSCRIPTION_ENGINE",
+  "SELECTED_RELEASE_CHANNEL",
+  "CTRANSLATE2_WEIGHT_TYPE",
+  "WHISPER_WEIGHT_TYPE",
+  "SELECTED_PLAMO_MODEL",
+  "SELECTED_GEMINI_MODEL",
+  "SELECTED_OPENAI_MODEL",
+  "SELECTED_GROQ_MODEL",
+  "SELECTED_OPENROUTER_MODEL",
+  "SELECTED_LMSTUDIO_MODEL",
+  "SELECTED_OPENAI_COMPATIBLE_MODEL",
+  "SELECTED_OLLAMA_MODEL",
+  "SELECTED_GROQ_WHISPER_MODEL",
+  "SELECTED_OPENAI_WHISPER_MODEL",
+  "SELECTED_CUSTOM_WHISPER_MODEL",
+  "SELECTED_DEEPGRAM_MODEL",
+  "MIC_WORD_FILTER",
+  "SELECTED_TRANSLATION_ENGINES",
+  "SELECTED_YOUR_LANGUAGES",
+  "SELECTED_TARGET_LANGUAGES",
+  "SELECTED_TRANSLATION_COMPUTE_TYPE",
+  "AUTO_MIC_SELECT",
+  "AUTO_SPEAKER_SELECT",
+  "SELECTED_MIC_HOST",
+  "SELECTED_MIC_DEVICE",
+  "SELECTED_SPEAKER_DEVICE",
+  "SELECTED_TRANSLATION_COMPUTE_DEVICE",
+  "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE",
+  "ENABLE_CLIPBOARD",
+  "OCR_SOURCE_LANGUAGE",
+  "OCR_WINDOW_TITLE",
+  "OCR_POLL_INTERVAL_MS",
+  "OCR_MIN_CONFIDENCE",
+  "OCR_BUBBLE_MIN_TEXT_LENGTH"
+ ]
+}

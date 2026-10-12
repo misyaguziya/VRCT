@@ -45,3 +45,39 @@ name = "main window geometry wrong keys"
 endpoint = "/set/data/main_window_geometry"
 data = { width = 1 }
 expect_status = 400
+
+[[case]]
+name = "websocket host wildcard"
+endpoint = "/set/data/websocket_host"
+data = "0.0.0.0"
+expect_status = 400
+
+[[case]]
+name = "osc port not a number"
+endpoint = "/set/data/osc_port"
+data = "abc"
+expect_status = 400
+
+[[case]]
+name = "obs font color not a color"
+endpoint = "/set/data/obs_browser_source_font_color"
+data = "#12345"
+expect_status = 400
+
+[[case]]
+name = "obs port not a number"
+endpoint = "/set/data/obs_browser_source_port"
+data = "abc"
+expect_status = 400
+
+[[case]]
+name = "obs max messages not a number"
+endpoint = "/set/data/obs_browser_source_max_messages"
+data = "many"
+expect_status = 400
+
+[[case]]
+name = "ocr poll interval not a number"
+endpoint = "/set/data/ocr_poll_interval_ms"
+data = "abc"
+expect_status = 400
