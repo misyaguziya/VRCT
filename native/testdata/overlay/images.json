@@ -1,0 +1,643 @@
+{
+ "small": [
+  {
+   "name": "hello",
+   "message": "Hello, World!",
+   "language": "English",
+   "translation": [],
+   "target_language": [],
+   "transliteration_message": [],
+   "transliteration_translation": [],
+   "size": [
+    3940,
+    304
+   ]
+  },
+  {
+   "name": "translated",
+   "message": "Hello, World!",
+   "language": "English",
+   "translation": [
+    "こんにちは、世界！"
+   ],
+   "target_language": [
+    "Japanese"
+   ],
+   "transliteration_message": [],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    3940,
+    508
+   ]
+  },
+  {
+   "name": "three",
+   "message": "Hi",
+   "language": "English",
+   "translation": [
+    "こんにちは",
+    "안녕하세요",
+    "你好"
+   ],
+   "target_language": [
+    "Japanese",
+    "Korean",
+    "Chinese Simplified"
+   ],
+   "transliteration_message": [],
+   "transliteration_translation": [
+    [],
+    [],
+    []
+   ],
+   "size": [
+    3940,
+    916
+   ]
+  },
+  {
+   "name": "ruby",
+   "message": "慮る",
+   "language": "Japanese",
+   "translation": [
+    "慮る",
+    "慮る"
+   ],
+   "target_language": [
+    "Japanese",
+    "Japanese"
+   ],
+   "transliteration_message": [
+    {
+     "orig": "慮",
+     "hira": "おもんぱか",
+     "hepburn": "omonpaka"
+    },
+    {
+     "orig": "る",
+     "hira": "る",
+     "hepburn": "ru"
+    }
+   ],
+   "transliteration_translation": [
+    [
+     {
+      "orig": "慮",
+      "hira": "おもんぱか",
+      "hepburn": "omonpaka"
+     },
+     {
+      "orig": "る",
+      "hira": "る",
+      "hepburn": "ru"
+     }
+    ],
+    [
+     {
+      "orig": "慮",
+      "hira": "おもんぱか",
+      "hepburn": "omonpaka"
+     },
+     {
+      "orig": "る",
+      "hira": "る",
+      "hepburn": "ru"
+     }
+    ]
+   ],
+   "size": [
+    3940,
+    724
+   ]
+  },
+  {
+   "name": "ruby_message",
+   "message": "慮る",
+   "language": "Japanese",
+   "translation": [],
+   "target_language": [],
+   "transliteration_message": [
+    {
+     "orig": "慮",
+     "hira": "おもんぱか",
+     "hepburn": "omonpaka"
+    },
+    {
+     "orig": "る",
+     "hira": "る",
+     "hepburn": "ru"
+    }
+   ],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    3940,
+    310
+   ]
+  },
+  {
+   "name": "long",
+   "message": "これは非常に長いテキストです。表示幅を超えると折り返しが発生します。これは非常に長いテキストです。表示幅を超えると折り返しが発生します。",
+   "language": "Japanese",
+   "translation": [],
+   "target_language": [],
+   "transliteration_message": [],
+   "transliteration_translation": [],
+   "size": [
+    3940,
+    488
+   ]
+  },
+  {
+   "name": "long_ruby",
+   "message": "これは非常に長いテキストです。表示幅を超えると折り返しが発生します。これは非常に長いテキストです。表示幅を超えると折り返しが発生します。",
+   "language": "Japanese",
+   "translation": [],
+   "target_language": [],
+   "transliteration_message": [
+    {
+     "orig": "これは",
+     "hira": "これは",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "非常に",
+     "hira": "非常に",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "長い",
+     "hira": "長い",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "テキスト",
+     "hira": "テキスト",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "です",
+     "hira": "です",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "表示幅",
+     "hira": "表示幅",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "を",
+     "hira": "を",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "超える",
+     "hira": "超える",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "と",
+     "hira": "と",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "折り返し",
+     "hira": "折り返し",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "が",
+     "hira": "が",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "発生",
+     "hira": "発生",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "します",
+     "hira": "します",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "これは",
+     "hira": "これは",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "非常に",
+     "hira": "非常に",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "長い",
+     "hira": "長い",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "テキスト",
+     "hira": "テキスト",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "です",
+     "hira": "です",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "表示幅",
+     "hira": "表示幅",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "を",
+     "hira": "を",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "超える",
+     "hira": "超える",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "と",
+     "hira": "と",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "折り返し",
+     "hira": "折り返し",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "が",
+     "hira": "が",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "発生",
+     "hira": "発生",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "します",
+     "hira": "します",
+     "hepburn": "aaaaa"
+    }
+   ],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    3940,
+    520
+   ]
+  },
+  {
+   "name": "long_en",
+   "message": "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. ",
+   "language": "English",
+   "translation": [],
+   "target_language": [],
+   "transliteration_message": [],
+   "transliteration_translation": [],
+   "size": [
+    3940,
+    580
+   ]
+  },
+  {
+   "name": "empty_translation",
+   "message": "",
+   "language": "English",
+   "translation": [
+    "訳"
+   ],
+   "target_language": [
+    "Japanese"
+   ],
+   "transliteration_message": [],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    3940,
+    304
+   ]
+  }
+ ],
+ "large": [
+  {
+   "name": "send",
+   "message_type": "send",
+   "message": "Hello, World!",
+   "language": "English",
+   "translation": [
+    "こんにちは、世界！"
+   ],
+   "target_language": [
+    "Japanese"
+   ],
+   "transliteration_message": [],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    1010,
+    150
+   ]
+  },
+  {
+   "name": "receive_ruby",
+   "message_type": "receive",
+   "message": "こんにちは、世界！",
+   "language": "Japanese",
+   "translation": [
+    "Hello, World!"
+   ],
+   "target_language": [
+    "English"
+   ],
+   "transliteration_message": [
+    {
+     "orig": "慮",
+     "hira": "おもんぱか",
+     "hepburn": "omonpaka"
+    },
+    {
+     "orig": "る",
+     "hira": "る",
+     "hepburn": "ru"
+    }
+   ],
+   "transliteration_translation": [
+    [
+     {
+      "orig": "慮",
+      "hira": "おもんぱか",
+      "hepburn": "omonpaka"
+     },
+     {
+      "orig": "る",
+      "hira": "る",
+      "hepburn": "ru"
+     }
+    ]
+   ],
+   "size": [
+    1010,
+    314
+   ]
+  },
+  {
+   "name": "send_long",
+   "message_type": "send",
+   "message": "これは非常に長いテキストです。表示幅を超えると折り返しが発生します。これは非常に長いテキストです。表示幅を超えると折り返しが発生します。",
+   "language": "Japanese",
+   "translation": [],
+   "target_language": [],
+   "transliteration_message": [
+    {
+     "orig": "これは",
+     "hira": "これは",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "非常に",
+     "hira": "非常に",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "長い",
+     "hira": "長い",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "テキスト",
+     "hira": "テキスト",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "です",
+     "hira": "です",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "表示幅",
+     "hira": "表示幅",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "を",
+     "hira": "を",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "超える",
+     "hira": "超える",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "と",
+     "hira": "と",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "折り返し",
+     "hira": "折り返し",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "が",
+     "hira": "が",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "発生",
+     "hira": "発生",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "します",
+     "hira": "します",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "これは",
+     "hira": "これは",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "非常に",
+     "hira": "非常に",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "長い",
+     "hira": "長い",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "テキスト",
+     "hira": "テキスト",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "です",
+     "hira": "です",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "表示幅",
+     "hira": "表示幅",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "を",
+     "hira": "を",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "超える",
+     "hira": "超える",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "と",
+     "hira": "と",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "折り返し",
+     "hira": "折り返し",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "が",
+     "hira": "が",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "発生",
+     "hira": "発生",
+     "hepburn": "aaaaa"
+    },
+    {
+     "orig": "します",
+     "hira": "します",
+     "hepburn": "aaaaa"
+    }
+   ],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    1010,
+    616
+   ]
+  },
+  {
+   "name": "receive_three",
+   "message_type": "receive",
+   "message": "慮る",
+   "language": "Japanese",
+   "translation": [
+    "Hello",
+    "Hello",
+    "Hello"
+   ],
+   "target_language": [
+    "English",
+    "English",
+    "English"
+   ],
+   "transliteration_message": [
+    {
+     "orig": "慮",
+     "hira": "おもんぱか",
+     "hepburn": "omonpaka"
+    },
+    {
+     "orig": "る",
+     "hira": "る",
+     "hepburn": "ru"
+    }
+   ],
+   "transliteration_translation": [
+    [
+     {
+      "orig": "慮",
+      "hira": "おもんぱか",
+      "hepburn": "omonpaka"
+     },
+     {
+      "orig": "る",
+      "hira": "る",
+      "hepburn": "ru"
+     }
+    ],
+    [],
+    [
+     {
+      "orig": "慮",
+      "hira": "おもんぱか",
+      "hepburn": "omonpaka"
+     },
+     {
+      "orig": "る",
+      "hira": "る",
+      "hepburn": "ru"
+     }
+    ]
+   ],
+   "size": [
+    1010,
+    904
+   ]
+  },
+  {
+   "name": "send_korean",
+   "message_type": "send",
+   "message": "안녕하세요 반갑습니다",
+   "language": "Korean",
+   "translation": [
+    "はじめまして"
+   ],
+   "target_language": [
+    "Japanese"
+   ],
+   "transliteration_message": [],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    1010,
+    1024
+   ]
+  },
+  {
+   "name": "receive_six",
+   "message_type": "receive",
+   "message": "6つ目で最初の行が消える",
+   "language": "Japanese",
+   "translation": [
+    "sixth"
+   ],
+   "target_language": [
+    "English"
+   ],
+   "transliteration_message": [],
+   "transliteration_translation": [
+    []
+   ],
+   "size": [
+    1010,
+    1024
+   ]
+  }
+ ]
+}

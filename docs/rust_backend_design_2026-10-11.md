@@ -204,7 +204,7 @@ App
 
 ### 6.7 VR オーバーレイ（`overlay` / `vrct-graphics`）— B
 
-- OpenVR: `openvr_sys` の上に、使っている約 40 の API だけの薄い安全な層を作る（オーバーレイの作成・位置・テクスチャ・イベント・コントローラー入力）。
+- OpenVR: `vrct-openvr`。今の Python 版と同じ Valve の openvr_api 1.26.7（pyopenvr 1.26.701 が同梱する DLL とバイト単位で同じ。`third_party.toml` で Valve の GitHub のタグから取る）を、C の関数テーブル（`FnTable:IVROverlay_027` など。並びは `native/reference/gen_openvr_tables.py` が pyopenvr の定義から生成）で呼び、使う約 30 の関数だけを安全な型で包む。オーバーレイ・OCR・クリップボードは参照カウント付きの 1 つのセッションを共有する。`openvr` / `openvr_sys` クレート（SDK 2.15.6）は、インターフェースの版が上がって挙動が変わりうることと、ビルドに CMake と libclang が要ることから使わない（2026-10-12、ユーザー判断）。
 - VR UI（ランチャー・ログウィンドウ）: 既存の GPU 経路（WGC → D3D11 → SteamVR）だけを使う。OpenGL の退避経路（`VRCT_OVERLAY_GPU=0`）は持ち込まない。
 - 文字の描画（小さいログ・大きいログ・ふりがな）: 最終的には VR UI へ切り替える前提なので、**機能が動けば十分**（画像の一致は求めない）。FreeType 系のクレートで `overlay_image.py` の配置（折り返し・ふりがな・色・大きさ）を移植し、実機で見て確認する。
 

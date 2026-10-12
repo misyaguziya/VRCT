@@ -116,13 +116,12 @@ pub fn list_repo_files(http: &Http, repo: &str) -> Result<Vec<String>> {
         .collect())
 }
 
-/// huggingface_hub.hf_hub_url (the file name quoted with "/" kept, as urllib.parse.quote)
+/// huggingface_hub.hf_hub_url: the file name quoted as urllib.parse.quote (letters, digits and
+/// "_.-~/" kept)
 pub fn hf_hub_url(repo: &str, filename: &str) -> String {
-    let quoted: String = filename.bytes().map(|b| match b {
-        b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'_' | b'.' | b'-' | b'~' | b'/' => (b as char).to_string(),
-        _ => format!("%{b:02X}"),
-    }).collect();
-    format!("https://huggingface.co/{repo}/resolve/main/{quoted}")
+    use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
+    const QUOTE: &percent_encoding::AsciiSet = &NON_ALPHANUMERIC.remove(b'_').remove(b'.').remove(b'-').remove(b'~').remove(b'/');
+    format!("https://huggingface.co/{repo}/resolve/main/{}", utf8_percent_encode(filename, QUOTE))
 }
 
 /// downloadFile: up to 3 attempts, none more after a 4xx other than 429; a failed attempt's file is removed
