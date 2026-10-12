@@ -16,6 +16,7 @@ import {
     DropdownMenu,
     ThresholdComponent,
     SwitchBox,
+    RadioButton,
 } from "../_components";
 
 export const Device = () => {
@@ -40,6 +41,8 @@ const MicContainer = () => {
         currentSelectedMicDevice,
         setSelectedMicDevice,
 
+        currentMicVadFilter,
+        toggleMicVadFilter,
         currentEnableAutomaticMicThreshold,
         toggleEnableAutomaticMicThreshold,
     } = useDevice();
@@ -54,18 +57,42 @@ const MicContainer = () => {
 
     const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.state === "pending";
 
-    const getLabels = () => {
-        if (currentEnableAutomaticMicThreshold.data === true) {
-            return {
-                label: t("config_page.device.mic_dynamic_energy_threshold.label_for_automatic"),
-                desc: t("config_page.device.mic_dynamic_energy_threshold.desc_for_automatic"),
-            };
-        } else {
-            return {
-                label: t("config_page.device.mic_dynamic_energy_threshold.label_for_manual"),
-                desc: t("config_page.device.mic_dynamic_energy_threshold.desc_for_manual"),
-            };
+    const getMicSensitivityMode = () => {
+        if (currentMicVadFilter.data === true) return "vad";
+        if (currentEnableAutomaticMicThreshold.data === true) return "auto";
+        return "manual";
+    };
+
+    const setMicSensitivityMode = (id) => {
+        if (id === "vad") {
+            if (!currentMicVadFilter.data) toggleMicVadFilter();
+            return;
         }
+        if (currentMicVadFilter.data) toggleMicVadFilter();
+        if (currentEnableAutomaticMicThreshold.data !== (id === "auto")) {
+            toggleEnableAutomaticMicThreshold();
+        }
+    };
+
+    const getLabels = () => {
+        let desc = "";
+        if (currentMicVadFilter.data === true) {
+            desc = t("config_page.device.mic_dynamic_energy_threshold.desc_for_vad");
+        } else if (currentEnableAutomaticMicThreshold.data === true) {
+            desc = t("config_page.device.mic_dynamic_energy_threshold.desc_for_automatic");
+        } else {
+            desc = t("config_page.device.mic_dynamic_energy_threshold.desc_for_manual");
+        }
+        return {
+            label: t("config_page.device.mic_dynamic_energy_threshold.label"),
+            desc,
+        };
+    };
+
+    const mic_sensitivity_mode = getMicSensitivityMode();
+    const mic_sensitivity_variable = {
+        data: mic_sensitivity_mode,
+        state: currentMicVadFilter.state === "pending" || currentEnableAutomaticMicThreshold.state === "pending" ? "pending" : currentMicVadFilter.state,
     };
 
     return (
@@ -107,9 +134,15 @@ const MicContainer = () => {
             <div className={styles.threshold_container} data-setting-id="mic_dynamic_energy_threshold">
                 <div className={styles.threshold_switch_section}>
                     <LabelComponent {...getLabels()} />
-                    <SwitchBox
-                        variable={currentEnableAutomaticMicThreshold}
-                        toggleFunction={toggleEnableAutomaticMicThreshold}
+                    <RadioButton
+                        name="mic_sensitivity_mode"
+                        checked_variable={mic_sensitivity_variable}
+                        selectFunction={setMicSensitivityMode}
+                        options={[
+                            { id: "vad", label: t("config_page.device.mic_dynamic_energy_threshold.option_vad") },
+                            { id: "auto", label: t("config_page.device.mic_dynamic_energy_threshold.option_auto") },
+                            { id: "manual", label: t("config_page.device.mic_dynamic_energy_threshold.option_manual") },
+                        ]}
                     />
                 </div>
                 <div className={styles.threshold_section}>
@@ -117,6 +150,7 @@ const MicContainer = () => {
                         id="mic_threshold"
                         min={ui_configs.mic_threshold_min}
                         max={ui_configs.mic_threshold_max}
+                        is_vad_active={currentMicVadFilter.data === true}
                     />
                 </div>
             </div>
@@ -132,6 +166,8 @@ const SpeakerContainer = () => {
         currentSpeakerDeviceList,
         currentSelectedSpeakerDevice,
         setSelectedSpeakerDevice,
+        currentSpeakerVadFilter,
+        toggleSpeakerVadFilter,
         currentEnableAutomaticSpeakerThreshold,
         toggleEnableAutomaticSpeakerThreshold,
     } = useDevice();
@@ -142,25 +178,48 @@ const SpeakerContainer = () => {
 
     const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.state === "pending";
 
-    const getLabels = () => {
-        if (currentEnableAutomaticSpeakerThreshold.data === true) {
-            return {
-                label: t("config_page.device.speaker_dynamic_energy_threshold.label_for_automatic"),
-                desc: t("config_page.device.speaker_dynamic_energy_threshold.desc_for_automatic"),
-            };
-        } else {
-            return {
-                label: t("config_page.device.speaker_dynamic_energy_threshold.label_for_manual"),
-                desc: t("config_page.device.speaker_dynamic_energy_threshold.desc_for_manual"),
-            };
-        }
+    const getSpeakerSensitivityMode = () => {
+        if (currentSpeakerVadFilter.data === true) return "vad";
+        if (currentEnableAutomaticSpeakerThreshold.data === true) return "auto";
+        return "manual";
+    };
 
+    const setSpeakerSensitivityMode = (id) => {
+        if (id === "vad") {
+            if (!currentSpeakerVadFilter.data) toggleSpeakerVadFilter();
+            return;
+        }
+        if (currentSpeakerVadFilter.data) toggleSpeakerVadFilter();
+        if (currentEnableAutomaticSpeakerThreshold.data !== (id === "auto")) {
+            toggleEnableAutomaticSpeakerThreshold();
+        }
+    };
+
+    const getLabels = () => {
+        let desc = "";
+        if (currentSpeakerVadFilter.data === true) {
+            desc = t("config_page.device.speaker_dynamic_energy_threshold.desc_for_vad");
+        } else if (currentEnableAutomaticSpeakerThreshold.data === true) {
+            desc = t("config_page.device.speaker_dynamic_energy_threshold.desc_for_automatic");
+        } else {
+            desc = t("config_page.device.speaker_dynamic_energy_threshold.desc_for_manual");
+        }
+        return {
+            label: t("config_page.device.speaker_dynamic_energy_threshold.label"),
+            desc,
+        };
     };
 
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
     const device_container_class = clsx(styles.device_container, {
         [styles.is_break_point]: currentIsBreakPoint.data,
     });
+
+    const speaker_sensitivity_mode = getSpeakerSensitivityMode();
+    const speaker_sensitivity_variable = {
+        data: speaker_sensitivity_mode,
+        state: currentSpeakerVadFilter.state === "pending" || currentEnableAutomaticSpeakerThreshold.state === "pending" ? "pending" : currentSpeakerVadFilter.state,
+    };
 
     return (
         <div className={styles.speaker_container}>
@@ -187,9 +246,15 @@ const SpeakerContainer = () => {
             <div className={styles.threshold_container} data-setting-id="speaker_dynamic_energy_threshold">
                 <div className={styles.threshold_switch_section}>
                     <LabelComponent {...getLabels()}/>
-                    <SwitchBox
-                        variable={currentEnableAutomaticSpeakerThreshold}
-                        toggleFunction={toggleEnableAutomaticSpeakerThreshold}
+                    <RadioButton
+                        name="speaker_sensitivity_mode"
+                        checked_variable={speaker_sensitivity_variable}
+                        selectFunction={setSpeakerSensitivityMode}
+                        options={[
+                            { id: "vad", label: t("config_page.device.speaker_dynamic_energy_threshold.option_vad") },
+                            { id: "auto", label: t("config_page.device.speaker_dynamic_energy_threshold.option_auto") },
+                            { id: "manual", label: t("config_page.device.speaker_dynamic_energy_threshold.option_manual") },
+                        ]}
                     />
                 </div>
                 <div className={styles.threshold_section}>
@@ -197,6 +262,7 @@ const SpeakerContainer = () => {
                         id="speaker_threshold"
                         min={ui_configs.speaker_threshold_min}
                         max={ui_configs.speaker_threshold_max}
+                        is_vad_active={currentSpeakerVadFilter.data === true}
                     />
                 </div>
             </div>

@@ -119,7 +119,7 @@ const ThresholdEntryInput = (props) => {
     return (
         <_Entry
             width="6rem"
-            type="number"
+            type={props.is_disable || props.is_disabled ? "text" : "number"}
             ui_variable={inputValue}
             onChange={onChangeFunction}
             onFocus={onFocusFunction}

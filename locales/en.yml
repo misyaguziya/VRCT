@@ -142,17 +142,23 @@ config_page:
         mic_host_device:
             label: "Mic Device"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "Mic Sensitivity Settings (Current Setting: Automatic)"
+            label: "Mic Sensitivity Settings"
             desc_for_automatic: "Automatically control mic input sensitivity."
-            label_for_manual: "Mic Sensitivity Settings (Current Setting: Manual)"
             desc_for_manual: "Input sensitivity can be manually adjusted using the slider. Click the mic icon to test your voice input and adjust the level while monitoring the volume."
+            option_vad: "VAD (Auto)"
+            option_auto: "Auto"
+            option_manual: "Manual"
+            desc_for_vad: "Detects speech using AI (Silero VAD) and sends audio to transcription each time you finish speaking. Reduces background music and ambient noise."
         speaker_device:
             label: "Speaker Device"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "Speaker Input Sensitivity Adjustment (Current Setting: Automatic)"
+            label: "Speaker Input Sensitivity Adjustment"
             desc_for_automatic: "Automatically control speaker input sensitivity."
-            label_for_manual: "Speaker Input Sensitivity Adjustment (Current Setting: Manual)"
             desc_for_manual: "Input sensitivity can be manually adjusted using the slider. Click the headphone icon to listen to the audio and adjust the level while checking the volume."
+            option_vad: "VAD (Auto)"
+            option_auto: "Auto"
+            option_manual: "Manual"
+            desc_for_vad: "Detects speech using AI (Silero VAD) and sends audio to transcription each time speech ends. Reduces background music and ambient noise."
 
     appearance:
         transparency:

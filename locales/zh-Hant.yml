@@ -142,17 +142,23 @@ config_page:
         mic_host_device:
             label: "麥克風裝置"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "麥克風能量閾值（當前設置：自動）"
+            label: "麥克風能量閾值"
             desc_for_automatic: "自動判定麥克風輸入靈敏度。"
-            label_for_manual: "麥克風能量閾值（當前設置：手動）"
             desc_for_manual: "使用滑桿調整麥克風輸入靈敏度，你可以按下麥克風圖示來測試。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "使用AI(Silero VAD)檢測語音，每次說完話就將音訊發送至語音辨識。可減少拾取背景音樂和環境音的情況。"
         speaker_device:
             label: "喇叭裝置"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "喇叭能量閾值（當前設置：自動）"
+            label: "喇叭能量閾值"
             desc_for_automatic: "自動確定喇叭輸入靈敏度。"
-            label_for_manual: "喇叭能量閾值（當前設置：手動）"
             desc_for_manual: "使用滑桿調整喇叭輸入靈敏度，你可以按下喇叭圖示來測試。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "使用AI(Silero VAD)檢測他人語音，每次說完話就將音訊發送至語音辨識。可減少拾取BGM和遊戲音效的情況。"
 
     appearance:
         transparency:
