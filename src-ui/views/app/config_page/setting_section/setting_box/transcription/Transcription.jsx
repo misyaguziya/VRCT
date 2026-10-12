@@ -317,7 +317,8 @@ const MicAvgLogprobContainer = () => {
             min={-2}
             max={0}
             step={0.1}
-            marks_step={0.2}
+            marks_step={0.1}
+            show_label_values={[-2, -1.8, -1.6, -1.4, -1.2, -1, -0.8, -0.6, -0.4, -0.2, 0]}
         />
     );
 };
@@ -335,6 +336,8 @@ const MicNoSpeechProbContainer = () => {
             min={0}
             max={1}
             step={0.1}
+            marks_step={0.1}
+            show_label_values={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]}
         />
     );
 };
@@ -352,7 +355,8 @@ const SpeakerAvgLogprobContainer = () => {
             min={-2}
             max={0}
             step={0.1}
-            marks_step={0.2}
+            marks_step={0.1}
+            show_label_values={[-2, -1.8, -1.6, -1.4, -1.2, -1, -0.8, -0.6, -0.4, -0.2, 0]}
         />
     );
 };
@@ -370,6 +374,8 @@ const SpeakerNoSpeechProbContainer = () => {
             min={0}
             max={1}
             step={0.1}
+            marks_step={0.1}
+            show_label_values={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]}
         />
     );
 };

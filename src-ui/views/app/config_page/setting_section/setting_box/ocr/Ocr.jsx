@@ -123,7 +123,7 @@ const OcrPollIntervalMs_Box = () => {
             min={100}
             max={5000}
             step={50}
-            marks_step={500}
+            show_label_values={[100, 1000, 2000, 3000, 4000, 5000]}
             valueLabelFormat={(v) => `${v} ms`}
         />
     );
@@ -143,6 +143,7 @@ const OcrMinConfidence_Box = () => {
             max={0.99}
             step={0.01}
             marks_step={0.1}
+            show_label_values={[0.1, 0.3, 0.5, 0.7, 0.9]}
         />
     );
 };
@@ -160,7 +161,7 @@ const OcrBubbleMinTextLength_Box = () => {
             min={1}
             max={50}
             step={1}
-            marks_step={5}
+            show_label_values={[1, 10, 20, 30, 40, 50]}
             remove_border_bottom={true}
         />
     );
