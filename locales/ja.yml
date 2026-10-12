@@ -135,6 +135,8 @@ config_page:
         ocr: "チャット読み取り"
 
     device:
+        section_label_mic: "マイク"
+        section_label_speaker: "スピーカー"
         check_volume: "音量チェック"
         label_auto_select: "自動選択"
         label_host: "ホスト/ドライバー"

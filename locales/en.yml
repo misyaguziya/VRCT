@@ -135,6 +135,8 @@ config_page:
         ocr: "Chat Transcribe"
 
     device:
+        section_label_mic: "Mic"
+        section_label_speaker: "Speaker"
         check_volume: "Check Volume"
         label_auto_select: "Auto Select"
         label_host: "Host/Driver"
