@@ -135,6 +135,8 @@ config_page:
         ocr: "チャット読み取り"
 
     device:
+        section_label_mic: "マイク"
+        section_label_speaker: "スピーカー"
         check_volume: "音量チェック"
         label_auto_select: "自動選択"
         label_host: "ホスト/ドライバー"
@@ -142,17 +144,23 @@ config_page:
         mic_host_device:
             label: "マイク （デバイス）"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "マイク入力感度の調整 （現在の設定: 自動）"
+            label: "マイク入力感度の調整"
             desc_for_automatic: "マイクの入力感度を自動的に調節する。"
-            label_for_manual: "マイク入力感度の調整 （現在の設定: 手動）"
             desc_for_manual: "スライダーを調整して入力感度を手動で決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "AI（Silero VAD）を用いて人の声を検出し、話し終わるごとに音声認識へ送信します。BGMや環境音の誤認識を抑えやすくなります。"
         speaker_device:
             label: "スピーカー （デバイス）"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "スピーカー入力感度の調整 （現在の設定: 自動）"
+            label: "スピーカー入力感度の調整"
             desc_for_automatic: "スピーカーの入力感度を自動的に調節する。"
-            label_for_manual: "スピーカー入力感度の調整 （現在の設定: 手動）"
             desc_for_manual: "スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実際に音声を聞き取り、音量を確認しながら調節できます。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "AI（Silero VAD）を用いて人の声を検出し、話し終わるごとに音声認識へ送信します。BGMやゲーム音の誤認識を抑えやすくなります。"
 
     appearance:
         transparency:

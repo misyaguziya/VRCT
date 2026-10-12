@@ -219,6 +219,7 @@ _SIMPLE_CONFIG_GETTERS = {
     "getMicWordFilter": "MIC_WORD_FILTER",
     "getMicAvgLogprob": "MIC_AVG_LOGPROB",
     "getMicNoSpeechProb": "MIC_NO_SPEECH_PROB",
+    "getMicVadFilter": "MIC_ENABLE_VAD",
     "getAutoSpeakerSelect": "AUTO_SPEAKER_SELECT",
     "getSelectedSpeakerDevice": "SELECTED_SPEAKER_DEVICE",
     "getSpeakerThreshold": "SPEAKER_THRESHOLD",
@@ -229,6 +230,7 @@ _SIMPLE_CONFIG_GETTERS = {
     "getHotkeys": "HOTKEYS",
     "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
     "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
+    "getSpeakerVadFilter": "SPEAKER_ENABLE_VAD",
     "getOscIpAddress": "OSC_IP_ADDRESS",
     "getOscPort": "OSC_PORT",
     "getNotificationVrcSfx": "NOTIFICATION_VRC_SFX",
@@ -2293,6 +2295,20 @@ class Controller:
             config.MIC_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
+    # VAD は録音開始時に recorder を選ぶので、次回の文字起こし開始から効く
+    # (設定画面を開いている間は文字起こしが止まり、閉じると再開される)
+    @staticmethod
+    def setEnableMicVadFilter(*args, **kwargs) -> dict:
+        if config.MIC_ENABLE_VAD is False:
+            config.MIC_ENABLE_VAD = True
+        return {"status":200, "result":config.MIC_ENABLE_VAD}
+
+    @staticmethod
+    def setDisableMicVadFilter(*args, **kwargs) -> dict:
+        if config.MIC_ENABLE_VAD is True:
+            config.MIC_ENABLE_VAD = False
+        return {"status":200, "result":config.MIC_ENABLE_VAD}
+
 
     @staticmethod
     def setMicRecordTimeout(data, *args, **kwargs) -> dict:
@@ -2475,6 +2491,18 @@ class Controller:
         if config.SPEAKER_AUTOMATIC_THRESHOLD is True:
             config.SPEAKER_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
+
+    @staticmethod
+    def setEnableSpeakerVadFilter(*args, **kwargs) -> dict:
+        if config.SPEAKER_ENABLE_VAD is False:
+            config.SPEAKER_ENABLE_VAD = True
+        return {"status":200, "result":config.SPEAKER_ENABLE_VAD}
+
+    @staticmethod
+    def setDisableSpeakerVadFilter(*args, **kwargs) -> dict:
+        if config.SPEAKER_ENABLE_VAD is True:
+            config.SPEAKER_ENABLE_VAD = False
+        return {"status":200, "result":config.SPEAKER_ENABLE_VAD}
 
 
     @staticmethod

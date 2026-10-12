@@ -23,15 +23,17 @@ export const SliderAndMeter = (props) => {
 const ThresholdVolumeMeter_Mic = (props) => {
     const { currentMicVolume } = useStore_MicVolume();
 
-    const { currentEnableAutomaticMicThreshold } = useDevice();
+    const { currentEnableAutomaticMicThreshold, currentMicVadFilter } = useDevice();
 
     const currentVolumeVariable = Math.min(currentMicVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
 
+    const is_slider_hidden = currentEnableAutomaticMicThreshold.data === true || currentMicVadFilter.data === true;
+
     return (
         <>
             <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={props.ui_threshold}/>
-            {currentEnableAutomaticMicThreshold.data === false &&
+            {is_slider_hidden === false &&
                 <input
                     type="range"
                     min={props.min}
@@ -49,15 +51,17 @@ const ThresholdVolumeMeter_Mic = (props) => {
 const ThresholdVolumeMeter_Speaker = (props) => {
     const { currentSpeakerVolume } = useStore_SpeakerVolume();
 
-    const { currentEnableAutomaticSpeakerThreshold } = useDevice();
+    const { currentEnableAutomaticSpeakerThreshold, currentSpeakerVadFilter } = useDevice();
 
     const currentVolumeVariable = Math.min(currentSpeakerVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
 
+    const is_slider_hidden = currentEnableAutomaticSpeakerThreshold.data === true || currentSpeakerVadFilter.data === true;
+
     return (
         <>
             <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={props.ui_threshold} />
-            {currentEnableAutomaticSpeakerThreshold.data === false &&
+            {is_slider_hidden === false &&
                 <input
                     type="range"
                     min={props.min}
