@@ -3537,6 +3537,7 @@ dependencies = [
  "vrct-ct2",
  "vrct-ocr",
  "vrct-openvr",
+ "vrct-overlay",
  "vrct-webtranslate",
  "vrct-whisper",
  "windows 0.61.1",

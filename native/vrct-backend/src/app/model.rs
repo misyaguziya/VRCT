@@ -61,6 +61,10 @@ pub struct Model {
     pub app_name: AppName,
     /// the chat-bubble OCR while it runs
     pub ocr: Mutex<Option<crate::ocr_pipeline::OcrPipeline>>,
+    /// the VR overlays and the log images
+    pub overlays: super::overlay::Overlays,
+    /// where the overlay's events go (set when the app is made)
+    pub overlay_app: Arc<std::sync::OnceLock<std::sync::Weak<super::App>>>,
 }
 
 impl Model {
@@ -69,6 +73,8 @@ impl Model {
         let yaml: serde_yaml::Value = serde_yaml::from_slice(&std::fs::read(settings.join("languages").join("languages.yml"))?)?;
         let translation_lang = serde_json::to_value(yaml)?;
         let translator = Translator::new(http.clone(), &settings)?;
+        let overlay_app: Arc<std::sync::OnceLock<std::sync::Weak<super::App>>> = Arc::default();
+        let overlays = super::overlay::Overlays::new(config, resources.dir.join("fonts"), overlay_app.clone());
         Ok(Model {
             resources,
             translation_lang,
@@ -87,6 +93,8 @@ impl Model {
             previous_send_message: Mutex::default(),
             previous_receive_message: Mutex::default(),
             ocr: Mutex::new(None),
+            overlays,
+            overlay_app,
             app_name: {
                 crate::ipc::log("Clipboard initialized. Waiting for SteamVR.");
                 AppName::watch(crate::ipc::log)

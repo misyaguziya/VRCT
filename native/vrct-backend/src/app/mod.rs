@@ -9,9 +9,8 @@ mod features;
 pub mod init;
 mod model;
 mod ocr;
-mod overlay;
+pub mod overlay;
 mod pipeline;
-mod pending;
 mod services;
 mod transcription_api;
 mod translation_api;
@@ -34,9 +33,9 @@ pub mod handlers {
     pub use super::features::*;
     pub use super::init::shutdown;
     pub use super::ocr::*;
+    pub use super::overlay::*;
     pub use super::pipeline::{send_message_box, set_enable_translation};
     pub use super::getters::*;
-    pub use super::pending::*;
     pub use super::transcription_api::*;
     pub use super::translation_api::*;
 }
@@ -51,7 +50,10 @@ pub struct App {
 
 impl App {
     pub fn new(config: Config, model: Model) -> Arc<App> {
-        Arc::new_cyclic(|me| App { config, model, audio: audio::Audio::default(), me: me.clone() })
+        Arc::new_cyclic(|me| {
+            let _ = model.overlay_app.set(me.clone());
+            App { config, model, audio: audio::Audio::default(), me: me.clone() }
+        })
     }
 
     /// For the threads and callbacks that outlive a request
