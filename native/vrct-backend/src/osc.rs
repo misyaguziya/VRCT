@@ -5,7 +5,7 @@
 //!
 //! Unlike tinyoscquery, vrchat_osc listens for OSC on every interface (the OSCQuery HTTP server
 //! did so in Python too).
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, ToSocketAddrs, UdpSocket};
+use std::net::{Ipv4Addr, SocketAddr, ToSocketAddrs, UdpSocket};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use vrchat_osc::models::OscRootNode;
@@ -81,7 +81,12 @@ fn dispatch(packet: OscPacket, on_event: &(dyn Fn(OscEvent) + Send + Sync)) {
 pub struct OscReceiver {
     runtime: tokio::runtime::Runtime,
     osc: Arc<VRChatOSC>,
+    started: std::time::Instant,
 }
+
+/// The mDNS answers to the query sent at the start come in within this (OSCQueryBrowser's
+/// first sleep(1) in Python): VRChat's service is not known before
+const DISCOVERY_WAIT: Duration = Duration::from_secs(1);
 
 impl OscReceiver {
     /// Advertises the service and calls `on_event` (from the OSC receive task: keep it short).
@@ -92,8 +97,11 @@ impl OscReceiver {
         }
         let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(1).thread_name("osc").enable_all().build()?;
         let on_event: Arc<dyn Fn(OscEvent) + Send + Sync> = Arc::new(on_event);
+        let started = std::time::Instant::now();
         let osc = runtime.block_on(async {
-            let osc = VRChatOSC::new(Some(IpAddr::V4(Ipv4Addr::LOCALHOST))).await?;
+            // as the crate documents for VRChat on this PC: None picks a non-loopback interface to
+            // advertise on (VRChat listens for mDNS there, not on 127.0.0.1)
+            let osc = VRChatOSC::new(None).await?;
             // the address space the Python version advertised (READWRITE_VALUE for each filter)
             let root = OscRootNode::new().with_avatar();
             // tinyoscquery's service creation was retried 5 times, a second apart
@@ -111,14 +119,19 @@ impl OscReceiver {
             }
             Err(anyhow::anyhow!("OSCQuery service: {:?}", last))
         })?;
-        Ok(Some(Self { runtime, osc }))
+        Ok(Some(Self { runtime, osc, started }))
     }
 
     /// MuteSelf from VRChat's OSCQuery service (getOSCParameterMuteSelf); None when VRChat is not
-    /// found or the avatar has not loaded yet (404) or the node has no value
-    pub fn mute_self(&self) -> Result<Option<bool>, String> {
+    /// found or the avatar has not loaded yet (404) or the node has no value. Waits until VRChat's
+    /// service can be known (DISCOVERY_WAIT after the start).
+    pub fn mute_self(&self, log: &dyn Fn(String)) -> Result<Option<bool>, String> {
+        std::thread::sleep(DISCOVERY_WAIT.saturating_sub(self.started.elapsed()));
         let found = self.runtime.block_on(self.osc.get_parameter(MUTE_SELF, "VRChat-Client-*")).map_err(|e| e.to_string())?;
-        let Some((_, node)) = found.into_iter().next() else { return Ok(None) };
+        let Some((_, node)) = found.into_iter().next() else {
+            log(format!("OSCQuery: query got no value {{'address': '{MUTE_SELF}', 'reason': 'service not in the browser'}}"));
+            return Ok(None);
+        };
         Ok(node.value.and_then(|values| values.into_iter().next()).and_then(|v| match v {
             vrchat_osc::models::OscValue::Bool(b) => Some(b),
             _ => None,

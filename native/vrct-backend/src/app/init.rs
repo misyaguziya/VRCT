@@ -28,22 +28,6 @@ fn connected_network(app: &App) -> bool {
     app.model.http.get("http://www.google.com", &[], Some(Duration::from_secs(3))).is_ok_and(|r| r.status() == 200)
 }
 
-/// backwardCompatibleRenameWeightsDir: the weight folders of old versions take the new names
-/// (or go, when the new one is there)
-fn rename_legacy_weights(app: &App) {
-    let root = app.config.env().path_local.join("weights").join("ctranslate2");
-    for (old, new) in [("m2m100_418M", "m2m100_418M-ct2-int8"), ("m2m100_12b", "m2m100_1.2B-ct2-int8")] {
-        let (old, new) = (root.join(old), root.join(new));
-        if !old.is_dir() {
-            continue;
-        }
-        let result = if new.is_dir() { std::fs::remove_dir_all(&old) } else { std::fs::rename(&old, &new) };
-        if let Err(e) = result {
-            logs::error("rename legacy weights", &e);
-        }
-    }
-}
-
 /// downloadXWeight(weight_type, False) on its own thread; the receiver hears when it ended
 fn download_in_background(app: &App, whisper: bool, weight_type: String) -> mpsc::Receiver<()> {
     let (done, rx) = mpsc::channel();
@@ -73,8 +57,8 @@ fn prepare_weights(app: &App, online: bool) -> (bool, bool) {
     let whisper_type = || app.config.get_str("WHISPER_WEIGHT_TYPE");
     let (mut ct2_pre, mut whisper_pre) = (None, None);
     if online {
+        // the weight folders' names before v3.6 are not renamed any more (only v3.6.x is supported)
         ipc::log("Download CTranslate2 Model Weight");
-        rename_legacy_weights(app);
         ct2_pre = Some(ctranslate2_weight_ok(app, &ct2_type()));
         let ct2_job = (ct2_pre == Some(false)).then(|| download_in_background(app, false, ct2_type()));
         ipc::log("Download Whisper Model Weight");

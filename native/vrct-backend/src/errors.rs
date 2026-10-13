@@ -32,6 +32,11 @@ pub fn is_code(code: &str) -> bool {
     table().contains_key(code)
 }
 
+/// ERROR_METADATA[code]["message"]
+pub fn message(code: &str) -> String {
+    table().get(code).map(|m| m.message.clone()).unwrap_or_default()
+}
+
 type Hook = Box<dyn Fn(&str) + Send + Sync>;
 
 fn hooks() -> &'static Mutex<Vec<Hook>> {

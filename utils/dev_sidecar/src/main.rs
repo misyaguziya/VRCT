@@ -8,6 +8,9 @@
 // against src-python/mainloop.py directly, so a Python edit only costs a
 // process restart.
 // VRCT_DEV_VENV selects .venv (default) or .venv_cuda at runtime.
+// VRCT_DEV_BACKEND=rust runs the Rust backend instead: the one staged by
+// `cargo xtask stage-sidecar --out target\sidecar-stage` under native/ (its
+// config.json and logs stay in that folder).
 //
 // Behaviour parity with the frozen backend:
 //   - stdin/stdout/stderr are inherited so the Tauri <-> sidecar JSON
@@ -68,6 +71,33 @@ fn main() {
         }
     };
 
+    let forwarded_args: Vec<String> = env::args().skip(1).collect();
+
+    if env::var("VRCT_DEV_BACKEND").as_deref() == Ok("rust") {
+        let exe = root.join("native").join("target").join("sidecar-stage").join("VRCT-sidecar.exe");
+        if !exe.exists() {
+            eprintln!(
+                "dev-sidecar: the Rust backend is not staged at {}. Run cargo xtask stage-sidecar in native/ first.",
+                exe.display()
+            );
+            std::process::exit(127);
+        }
+        let status = Command::new(&exe)
+            .args(&forwarded_args)
+            .current_dir(exe.parent().unwrap())
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status();
+        match status {
+            Ok(s) => std::process::exit(s.code().unwrap_or(1)),
+            Err(e) => {
+                eprintln!("dev-sidecar: failed to launch {}: {}", exe.display(), e);
+                std::process::exit(127);
+            }
+        }
+    }
+
     let python = root.join(venv).join("Scripts").join("python.exe");
     let cwd: PathBuf = root.join("src-python");
     let script = cwd.join("mainloop.py");
@@ -83,8 +113,6 @@ fn main() {
         eprintln!("dev-sidecar: mainloop.py not found at {}", script.display());
         std::process::exit(127);
     }
-
-    let forwarded_args: Vec<String> = env::args().skip(1).collect();
 
     let mut cmd = Command::new(&python);
     cmd.arg("-u")
