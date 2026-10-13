@@ -2,9 +2,9 @@
 //! day and "error" once a day per error code, deduplicated with the state file v3.6.x wrote
 //! (telemetry_state.json). Events are queued and sent in batches of up to 25 every 10 s and at shutdown.
 //!
-//! Kept as the Python version sends it: the event timestamp is local time with a "Z" (the SDK's
-//! `datetime.now().isoformat() + "Z"`), and osVersion is "10" (Python 3.11's platform.release() on
-//! Windows 10 and 11).
+//! Kept as the Python version sends it: osVersion is "10" (Python 3.11's platform.release() on
+//! Windows 10 and 11). Changed from it: the event timestamp is UTC (the SDK sent local time with a
+//! "Z"), and enabling telemetry while running starts sending (the SDK started only on the first init).
 use crate::net::{Body, Http};
 use reqwest::Method;
 use serde_json::{json, Map, Value};
@@ -24,14 +24,9 @@ pub fn today() -> String {
     chrono::Local::now().format("%Y-%m-%d").to_string()
 }
 
-/// datetime.now().isoformat() (the microseconds left out when they are 0)
-fn local_iso_now() -> String {
-    let now = chrono::Local::now();
-    let fraction = match now.timestamp_subsec_micros() {
-        0 => String::new(),
-        us => format!(".{us:06}"),
-    };
-    format!("{}{fraction}", now.format("%Y-%m-%dT%H:%M:%S"))
+/// The event's time: UTC, ISO 8601 with microseconds and "Z"
+fn utc_iso_now() -> String {
+    chrono::Utc::now().format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string()
 }
 
 /// The daily dedup state (models/telemetry/state.py)
@@ -157,7 +152,7 @@ impl Client {
         };
         self.session = Some((session.clone(), now));
         let event = json!({
-            "timestamp": format!("{}Z", local_iso_now()),
+            "timestamp": utc_iso_now(),
             "sessionId": session,
             "eventName": name,
             "systemProps": {"locale": "en-US", "osName": "Windows", "osVersion": "10", "deviceModel": "AMD64",
@@ -198,7 +193,6 @@ fn send_batch<'a>(lock: &'a Mutex<Queue>, mut queue: MutexGuard<'a, Queue>, http
 
 struct Inner {
     enabled: bool,
-    init_called: bool,
     state: State,
     client: Option<Client>,
 }
@@ -213,30 +207,37 @@ pub struct Telemetry {
 impl Telemetry {
     /// `app_key`: the build's Aptabase key (none in forks and local builds: nothing is sent)
     pub fn new(http: Http, app_key: Option<String>) -> Self {
-        let inner = Inner { enabled: true, init_called: false, state: State::load(None), client: None };
+        let inner = Inner { enabled: true, state: State::load(None), client: None };
         Self { http, app_key, inner: Mutex::new(inner) }
     }
 
-    /// Starts sending when enabled, with "app_started" unless it was sent today. Called again it
-    /// only sets the flag (as in Python, so enabling it then sends nothing until a shutdown and init).
+    /// Starts sending when enabled (if not sending yet), with "app_started" unless it was sent
+    /// today; when disabled, stops sending and drops what is queued.
     pub fn init(&self, enabled: bool, app_version: &str, storage_path: Option<&Path>) {
-        let mut i = self.inner.lock().unwrap();
-        if let Some(path) = storage_path {
-            i.state = State::load(Some(path.to_path_buf()));
-        }
-        i.enabled = enabled;
-        if i.init_called {
-            return;
-        }
-        i.init_called = true;
-        if enabled {
-            i.client = Client::start(&self.http, self.app_key.as_deref(), app_version);
-            if i.state.should_send_app_started_today() {
-                if let Some(c) = &mut i.client {
-                    c.track("app_started", json!({}));
-                }
-                i.state.mark_app_started_sent_today();
+        let stopped = {
+            let mut i = self.inner.lock().unwrap();
+            if let Some(path) = storage_path {
+                i.state = State::load(Some(path.to_path_buf()));
             }
+            i.enabled = enabled;
+            if !enabled {
+                i.client.take()
+            } else {
+                if i.client.is_none() {
+                    i.client = Client::start(&self.http, self.app_key.as_deref(), app_version);
+                    if i.state.should_send_app_started_today() {
+                        if let Some(c) = &mut i.client {
+                            c.track("app_started", json!({}));
+                        }
+                        i.state.mark_app_started_sent_today();
+                    }
+                }
+                None
+            }
+        };
+        // outside the lock: the thread may be in the middle of a send
+        if let Some(c) = stopped {
+            c.stop(false);
         }
     }
 
@@ -244,7 +245,6 @@ impl Telemetry {
     pub fn shutdown(&self) {
         let (client, enabled) = {
             let mut i = self.inner.lock().unwrap();
-            i.init_called = false;
             (i.client.take(), i.enabled)
         };
         if let Some(c) = client {

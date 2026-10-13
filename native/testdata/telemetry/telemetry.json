@@ -199,7 +199,44 @@
     ]
    ],
    "state_file": "{\n  \"last_app_started_date\": \"<today>\",\n  \"errors_sent\": {\n    \"<today>\": [\n      \"E1\",\n      \"E2\",\n      \"E3\",\n      \"E5\"\n    ]\n  }\n}",
-   "requests": []
+   "requests": [
+    {
+     "method": "POST",
+     "url": "https://eu.aptabase.com/api/v0/events",
+     "headers": {
+      "host": "eu.aptabase.com",
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, zstd",
+      "connection": "keep-alive",
+      "user-agent": "python-httpx/0.28.1",
+      "app-key": "A-EU-0000000000",
+      "content-type": "application/json",
+      "content-length": "291"
+     },
+     "body": {
+      "json": [
+       {
+        "timestamp": "<timestamp>",
+        "sessionId": "<session>",
+        "eventName": "error",
+        "systemProps": {
+         "locale": "en-US",
+         "osName": "Windows",
+         "osVersion": "10",
+         "deviceModel": "AMD64",
+         "isDebug": false,
+         "appVersion": "3.6.0",
+         "sdkVersion": "aptabase-python@0.1.0"
+        },
+        "props": {
+         "error_code": "E5"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "note": "Python sent nothing here (its SDK started only on the first init); the Rust version starts sending when enabled later"
   },
   {
    "step": "disabled later",
