@@ -263,7 +263,16 @@ impl Session {
             }
             error
         };
-        let recorder = match create_recorder(app, kind, &device, self.transcript, self.energy) {
+        let opened = create_recorder(app, kind, &device, self.transcript, self.energy).or_else(|e| {
+            // the selected device does not open: the default one is selected (and told) instead
+            let Some(default) = default_device(kind, &device) else { return Err(e) };
+            logs::error(&format!("open {} {device:?}", kind.label()), &format!("{e:#}"));
+            ipc::log(format!("{} device {device:?} could not be opened; the default {:?} is selected", capitalized(kind), default.1));
+            select_device(app, kind, &default)?;
+            self.active_device = Some(default.1.clone());
+            create_recorder(app, kind, &default.1, self.transcript, self.energy)
+        });
+        let recorder = match opened {
             Ok(r) => Arc::new(r),
             Err(e) => return Err(fail(self, Failure { code: "AUDIO_OPEN_ERROR", stage: "recording" }, e)),
         };
@@ -304,6 +313,25 @@ impl Session {
         self.transcript = false;
         self.energy = false;
         timed_out
+    }
+}
+
+/// The default device to move to when `device` does not open: (host, device), or None when there
+/// is no other device
+fn default_device(kind: Kind, device: &str) -> Option<(String, String)> {
+    let s = devices::snapshot();
+    let default = match kind {
+        Kind::Mic => s.default_mic,
+        Kind::Speaker => (String::new(), s.default_speaker),
+    };
+    (default.1 != NO_DEVICE && default.1 != device).then_some(default)
+}
+
+/// The selection moved to `device` and told to the UI (as when a selected device goes away)
+fn select_device(app: &App, kind: Kind, (host, device): &(String, String)) -> Result<()> {
+    match kind {
+        Kind::Mic => update_selected_mic_device(app, host, device),
+        Kind::Speaker => update_selected_speaker_device(app, device),
     }
 }
 

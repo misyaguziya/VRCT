@@ -113,15 +113,14 @@ pub struct Recorder {
     thread: Mutex<Option<std::thread::JoinHandle<()>>>,
 }
 
-/// _create_microphone: the device (or, failing that, the default input), given up after 8 s
+/// _create_microphone: the device, given up after 8 s (the session moves to the default device
+/// when it cannot be opened)
 fn open_capture(name: &str, log: &dyn Fn(String)) -> Result<Capture, String> {
     let (tx, rx) = mpsc::channel();
     let device = name.to_string();
     std::thread::Builder::new().name("mic-open".into()).spawn(move || {
         let _ops = DEVICE_OPS.lock().unwrap_or_else(|e| e.into_inner());
-        let opened = Capture::open(Some(&device))
-            .or_else(|_| Capture::open(None))
-            .map_err(|e| format!("Selected and default audio devices could not be opened: {e}"));
+        let opened = Capture::open(Some(&device)).map_err(|e| format!("{device:?} could not be opened: {e}"));
         // after the timeout nobody receives: the capture is dropped here, under the lock
         let _ = tx.send(opened);
     }).map_err(|e| e.to_string())?;
