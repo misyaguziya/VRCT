@@ -270,20 +270,23 @@ class AudioTranscriber:
         もう一度送信して確定・リセットする (finalize)。パディングは
         finalize/interim_send のどちらでも同じ (1) の仕組みで適用される
         (呼び出しのたびに last_sample のコピーへ付与し、蓄積用の
-        last_sample 自体は無加工のまま保つ)。Whisper 等の他エンジンは
-        引き続き「確定してから1回だけ送る」方式のまま変更しない (Google
-        ほど個々の呼び出しの信頼性が低くなく、呼び出し回数を増やす必要が
-        無いため)。
+        last_sample 自体は無加工のまま保つ)。
+
+        2026-10-13、全エンジン (ローカル Whisper・有料 API 系も) を
+        interim_send 方式にした (Whisper はリリース版 3.5.1 と同じ動き、
+        ユーザー判断)。確定を待つと VAD OFF (既定) では話し終わりから
+        表示まで phrase_timeout (既定3秒) 余計にかかりレスポンスが悪いため。
+        API 系は同じ音声を送り直す分だけ課金が増える (15秒の発話で
+        約3倍) が、リアルタイム性を優先する。
         """
         source_info = self.audio_sources
         transcribed = False
         # last_sample に「まだ一度も送信していない追記」があるか。
-        # Google の interim_send をキューのドレイン単位で1回に畳む
+        # interim_send をキューのドレイン単位で1回に畳む
         # (下記参照) にあたり、reset_only() が前提にしている
         # 「この last_sample は直前に送信済み」が崩れるため、それを
         # 明示的に追跡して取りこぼしを防ぐ。
         unsent = False
-        is_google = self.transcription_engine == "Google"
         kind = "speaker" if self.speaker else "mic"
 
         def send_current_buffer() -> bool:
@@ -312,7 +315,7 @@ class AudioTranscriber:
             unsent = False
 
         def interim_send() -> None:
-            # Google 専用: finalize と異なり last_sample/phrase_started_at を
+            # finalize と異なり last_sample/phrase_started_at を
             # リセットしない。次のチャンクが来たら、今回よりさらに育った
             # 同じ発話の累積バッファを再送信することになる (v3.5.0 と同じ)。
             nonlocal transcribed, unsent
@@ -321,7 +324,7 @@ class AudioTranscriber:
             unsent = False
 
         def reset_only() -> None:
-            # Google 専用: interim_send() で直前に送信済みの内容を
+            # interim_send() で直前に送信済みの内容を
             # もう一度 _finalizeAndTranscribe に通すと無駄な二重送信に
             # なるため、次のフレーズのための状態リセットだけ行う。
             nonlocal unsent
@@ -365,20 +368,20 @@ class AudioTranscriber:
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
                     )
                     finalize()
-                elif is_google and audio_queue.empty():
+                elif audio_queue.empty():
                     # 非VAD経路と同じドレイン単位の畳み込み (下記ループの
                     # 同じ判定を参照)。キューに次の segment が控えている
                     # 状態で送っても、後でより完全なテキストに置き換わる
                     # だけの中間結果に ASR 1回分と翻訳1回分を払うことに
                     # なる。控えている間は下の else と同じく蓄積を続ける。
                     printLog(
-                        f"[VAD-merge][{kind}] interim-send (Google) reason={reason!r} "
+                        f"[VAD-merge][{kind}] interim-send ({self.transcription_engine}) reason={reason!r} "
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
                     )
                     interim_send()
                 else:
-                    # reason == "max_duration" かつ上記安全弁未到達 →
-                    # 単独送信せず蓄積を継続する (次のアイテムへ)。
+                    # reason == "max_duration" かつキューに次の segment が
+                    # 控えている → 送らず蓄積を継続する (次のアイテムへ)。
                     printLog(
                         f"[VAD-merge][{kind}] accumulate reason={reason!r} "
                         f"accumulated={accumulated_sec:.2f}s bytes={len(source_info['last_sample'])}"
@@ -407,13 +410,13 @@ class AudioTranscriber:
                 source_info["last_spoken"] is not None
                 and time_spoken - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout)
             ):
-                # Google の場合、ここに残っている last_sample は通常
+                # ここに残っている last_sample は通常
                 # 直前のループで既に interim_send() 済みなので、再送信せず
                 # リセットだけする (無駄な二重送信を避ける)。ただし
                 # ドレイン畳み込み (下記) で送信を飛ばしていた場合は
                 # 未送信のまま捨てることになるので、その時は送ってから
                 # リセットする。
-                if is_google and not unsent:
+                if not unsent:
                     reset_only()
                 else:
                     finalize()
@@ -434,7 +437,7 @@ class AudioTranscriber:
             # 見るものなので、そちらは時刻のままで正しい。
             if _bufferedSeconds(source_info) >= MAX_PHRASE_DURATION_SECONDS:
                 finalize()
-            elif is_google and audio_queue.empty():
+            elif audio_queue.empty():
                 # ドレイン単位で1回に畳む。interim_send() は「育っていく
                 # 累積バッファ」を毎回まるごと ASR に投げるため、キューに
                 # 既に次のチャンクが控えている状態で送るのは、後でより
@@ -463,11 +466,11 @@ class AudioTranscriber:
             and source_info["last_spoken"] is not None
             and datetime.now() - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout)
         ):
-            # Google はループ内の interim_send() でこの時点の last_sample を
+            # ループ内の interim_send() でこの時点の last_sample を
             # 通常は既に送信済み (末尾のチャンクが来た回のループで送られて
             # いる) なので、再送信せずリセットだけする。未送信で残って
             # いる場合だけ送ってからリセットする。
-            if is_google and not unsent:
+            if not unsent:
                 reset_only()
             else:
                 finalize()
