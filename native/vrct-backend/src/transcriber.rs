@@ -219,17 +219,16 @@ impl Transcriber {
         Ok(true)
     }
 
-    /// transcribeAudioQueue: the queued phrases gathered; sent when the phrase is complete (a
-    /// pause of phrase_timeout, 15 s of speech, VAD's natural end), Google and Whisper also while
-    /// it grows. True when something was sent.
+    /// transcribeAudioQueue: the queued phrases gathered and sent as the phrase grows, every engine
+    /// as Python's Google (real time first, the user's choice; Python's develop sends the other
+    /// engines once per complete phrase): each time the queue empties, and once more when the
+    /// phrase completes (a pause of phrase_timeout, 15 s of speech, VAD's natural end) if the last
+    /// part was not sent yet. True when something was sent.
     // `unsent` is read in the energy path only (the macros set it in both)
     #[allow(unused_assignments)]
     pub fn transcribe_queue(&mut self, recorder: &Recorder, languages: &Languages, candidates: &[(String, String)],
                             avg_logprob: f64, no_speech_prob: f64, no_repeat_ngram_size: usize,
                             log: &dyn Fn(String)) -> Result<bool, Failure> {
-        // sent while the phrase grows: Google, and Whisper on this PC as VRCT 3.5.1 did (the user's
-        // choice; Python's develop waits for the complete phrase). The paid APIs once per phrase.
-        let interim = matches!(self.engine, Engine::Google | Engine::Whisper(_));
         let mut transcribed = false;
         let mut unsent = false;
         let kind = if self.speaker { "speaker" } else { "mic" };
@@ -276,7 +275,7 @@ impl Transcriber {
                 } else if seconds >= MAX_PHRASE_DURATION_SECONDS {
                     log(format!("[VAD-merge][{kind}] safety-net finalize reason={reason:?} accumulated={seconds:.2}s bytes={bytes}"));
                     finalize!();
-                } else if interim && !recorder.has_phrase() {
+                } else if !recorder.has_phrase() {
                     log(format!("[VAD-merge][{kind}] interim-send ({}) reason={reason:?} accumulated={seconds:.2}s bytes={bytes}", self.engine.name()));
                     if send_current!() {
                         transcribed = true;
@@ -294,7 +293,7 @@ impl Transcriber {
         let timeout = Duration::from_secs_f64(self.phrase_timeout.max(0.0));
         while let Some(phrase) = recorder.take_phrase() {
             if self.last_spoken.is_some_and(|last| phrase.at.saturating_duration_since(last) > timeout) {
-                if interim && !unsent {
+                if !unsent {
                     self.last_sample.clear();
                     self.phrase_started = None;
                 } else {
@@ -307,7 +306,7 @@ impl Transcriber {
             unsent = true;
             if self.buffered_seconds() >= MAX_PHRASE_DURATION_SECONDS {
                 finalize!();
-            } else if interim && !recorder.has_phrase() {
+            } else if !recorder.has_phrase() {
                 if send_current!() {
                     transcribed = true;
                 }
@@ -318,7 +317,7 @@ impl Transcriber {
             }
         }
         if !self.last_sample.is_empty() && self.last_spoken.is_some_and(|last| last.elapsed() > timeout) {
-            if interim && !unsent {
+            if !unsent {
                 self.last_sample.clear();
                 self.phrase_started = None;
             } else {
