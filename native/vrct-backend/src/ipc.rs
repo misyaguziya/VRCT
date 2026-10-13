@@ -34,9 +34,8 @@ impl PolledStdin {
 
 impl std::io::Read for PolledStdin {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        use std::os::windows::io::AsRawHandle;
         // not a pipe (a console, a file) or a closed one: read as it is
-        while crate::platform::pipe_available(self.0.as_raw_handle()) == Some(0) {
+        while crate::platform::pipe_available(&self.0) == Some(0) {
             std::thread::sleep(STDIN_POLL);
         }
         self.0.read(buf)
