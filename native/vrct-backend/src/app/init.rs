@@ -128,7 +128,7 @@ const REGISTRY: [(Engine, &str); 5] = [(Engine::Plamo, "PLAMO"), (Engine::Gemini
 
 fn check_translation_engine(app: &App, engine: &str, ct2: bool, online: bool) -> Result<Found> {
     let mut f = Found::default();
-    let settings = app.model.translator.lock().unwrap().settings_dir().to_path_buf();
+    let settings = app.model.translator.write().unwrap().settings_dir().to_path_buf();
     let http = app.model.http.clone();
     // a client with the models listed and the selected one set (models empty: no selection)
     let with_models = |f: &mut Found, engine: Engine, x: &str, mut client: LlmClient, need_models: bool| -> Result<()> {
@@ -150,7 +150,7 @@ fn check_translation_engine(app: &App, engine: &str, ct2: bool, online: bool) ->
         "DeepL_API" => {
             if let Some(key) = key_of(app, "AUTH_KEYS", engine) {
                 // ponytail: under the translator's lock (one request), a client outside it if this slows the start
-                match app.model.translator.lock().unwrap().authenticate_deepl(&key) {
+                match app.model.translator.write().unwrap().authenticate_deepl(&key) {
                     Ok(true) => f.status = true,
                     _ => f.key_invalid = true,
                 }
@@ -300,7 +300,7 @@ fn init_translation_engines(app: &App, ct2: bool, online: bool) {
         let applying = Instant::now();
         ipc::log(format!("Start check {engine}"));
         if let Some((e, client)) = f.client.take() {
-            app.model.translator.lock().unwrap().put_client(e, f.status.then_some(client));
+            app.model.translator.write().unwrap().put_client(e, f.status.then_some(client));
         }
         app.config.put_item("SELECTABLE_TRANSLATION_ENGINE_STATUS", engine, json!(f.status));
         if f.key_invalid {

@@ -165,7 +165,7 @@ impl Translator {
     /// translate(translator_name, weight_type, source, target, target_country, message,
     /// context_history)
     #[allow(clippy::too_many_arguments)]
-    pub fn translate(&mut self, translator: &str, weight_type: &str, source_language: &str, target_language: &str,
+    pub fn translate(&self, translator: &str, weight_type: &str, source_language: &str, target_language: &str,
                      target_country: &str, message: &str, context_history: &[HistoryItem]) -> Translation {
         if source_language == target_language {
             return Translation::Text(message.to_string());
@@ -184,7 +184,7 @@ impl Translator {
                 None => return Translation::Failed("no CTranslate2 model".into()),
                 Some(t) => t.translate(message, &source, &target),
             },
-            name => match self.llm.get_mut(name) {
+            name => match self.llm.get(name) {
                 None => return Translation::Failed(format!("{name} has no client")),
                 Some(client) => {
                     if !context_history.is_empty() {

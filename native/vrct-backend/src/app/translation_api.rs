@@ -104,7 +104,7 @@ fn take_models(app: &App, x: &str, models: Vec<String>) -> Result<()> {
 /// The selected model on the engine's client (setXModel)
 fn use_selected_model(app: &App, engine: Engine, x: &str) -> Result<bool> {
     let model = app.config.get_str(&selected_name(x));
-    app.model.translator.lock().unwrap().set_model(engine, &model)
+    app.model.translator.write().unwrap().set_model(engine, &model)
 }
 
 /// create_exception_error_response: "Error: {e}", the exception's type
@@ -123,12 +123,12 @@ fn set_registry_auth_key(app: &App, spec: &KeySpec, data: Data) -> Result<Reply>
         if !(data.starts_with(spec.prefix) && data.chars().count() >= spec.min_length) {
             return Ok(errors::error(spec.error_auth_invalid, Value::Null));
         }
-        if !app.model.translator.lock().unwrap().authenticate_llm(spec.engine, &data, None)? {
+        if !app.model.translator.write().unwrap().authenticate_llm(spec.engine, &data, None)? {
             return Ok(errors::error(spec.error_auth_failed, Value::Null));
         }
         set_auth_key(app, key, json!(data))?;
         status(app, key, true);
-        let models = app.model.translator.lock().unwrap().get_model_list(spec.engine)?;
+        let models = app.model.translator.write().unwrap().get_model_list(spec.engine)?;
         take_models(app, spec.list, models)?;
         use_selected_model(app, spec.engine, spec.selected)?;
         push_selected(app, spec.selected)?;
@@ -164,7 +164,7 @@ fn set_engine_model(app: &App, engine: Engine, x: &str, error_model_invalid: &st
     ipc::print_log(&format!("Set {} Model", display_name(engine)), &data);
     let data = py_str(&data);
     let attempt = || -> Result<Reply> {
-        if !app.model.translator.lock().unwrap().set_model(engine, &data)? {
+        if !app.model.translator.write().unwrap().set_model(engine, &data)? {
             return Ok(errors::error(error_model_invalid, app.config.get(&selected_name(x))));
         }
         app.config.set(&selected_name(x), json!(data))?;
@@ -214,7 +214,7 @@ fn server_unavailable(app: &App, spec: &ServerSpec) -> Result<()> {
 /// The server answered: its models, the selected one on the client, the engines updated
 fn server_available(app: &App, spec: &ServerSpec) -> Result<()> {
     status(app, spec.engine.key(), true);
-    let models = app.model.translator.lock().unwrap().get_model_list(spec.engine)?;
+    let models = app.model.translator.write().unwrap().get_model_list(spec.engine)?;
     app.config.set(&list_name(spec.list), json!(models))?;
     push_list(app, spec.list)?;
     if models.is_empty() {
@@ -233,9 +233,9 @@ fn check_server(app: &App, spec: &ServerSpec) -> Result<Reply> {
         let connected = match spec.engine {
             Engine::LmStudio => {
                 let url = app.config.get("LMSTUDIO_URL");
-                app.model.translator.lock().unwrap().set_lmstudio_url(url.as_str())?
+                app.model.translator.write().unwrap().set_lmstudio_url(url.as_str())?
             }
-            _ => app.model.translator.lock().unwrap().check_ollama()?,
+            _ => app.model.translator.write().unwrap().check_ollama()?,
         };
         if connected {
             server_available(app, spec)?;
@@ -265,20 +265,20 @@ pub fn check_translator_ollama_connection(app: &App, _: Data) -> Result<Reply> {
 }
 
 pub fn get_translator_lm_studio_connection(app: &App, _: Data) -> Result<Reply> {
-    Ok(Reply::ok(app.model.translator.lock().unwrap().lmstudio_connected))
+    Ok(Reply::ok(app.model.translator.write().unwrap().lmstudio_connected))
 }
 
 pub fn get_translator_ollama_connection(app: &App, _: Data) -> Result<Reply> {
-    Ok(Reply::ok(app.model.translator.lock().unwrap().ollama_connected))
+    Ok(Reply::ok(app.model.translator.write().unwrap().ollama_connected))
 }
 
 /// The server's models now (not the saved list: local servers add and remove models)
 pub fn get_translator_lm_studio_model_list(app: &App, _: Data) -> Result<Reply> {
-    Ok(Reply::ok(json!(app.model.translator.lock().unwrap().get_model_list(Engine::LmStudio)?)))
+    Ok(Reply::ok(json!(app.model.translator.write().unwrap().get_model_list(Engine::LmStudio)?)))
 }
 
 pub fn get_translator_ollama_model_list(app: &App, _: Data) -> Result<Reply> {
-    Ok(Reply::ok(json!(app.model.translator.lock().unwrap().get_model_list(Engine::Ollama)?)))
+    Ok(Reply::ok(json!(app.model.translator.write().unwrap().get_model_list(Engine::Ollama)?)))
 }
 
 pub fn set_translator_lm_studio_model(app: &App, data: Data) -> Result<Reply> {
@@ -295,7 +295,7 @@ pub fn set_translator_lm_studio_url(app: &App, data: Data) -> Result<Reply> {
     ipc::print_log("Set Translator LMStudio URL", &data);
     let data = py_str(&data);
     let attempt = || -> Result<bool> {
-        if !app.model.translator.lock().unwrap().set_lmstudio_url(Some(&data))? {
+        if !app.model.translator.write().unwrap().set_lmstudio_url(Some(&data))? {
             return Ok(false);
         }
         app.config.set("LMSTUDIO_URL", json!(data))?;
@@ -324,7 +324,7 @@ pub fn set_deepl_auth_key(app: &App, data: Data) -> Result<Reply> {
         if ![36, 39].contains(&data.chars().count()) {
             return Ok(errors::error("AUTH_DEEPL_LENGTH", auth_key(app, key)));
         }
-        if app.model.translator.lock().unwrap().authenticate_deepl(&data).is_err() {
+        if app.model.translator.write().unwrap().authenticate_deepl(&data).is_err() {
             return Ok(errors::error("AUTH_DEEPL_FAILED", auth_key(app, key)));
         }
         set_auth_key(app, key, json!(data))?;
@@ -359,10 +359,10 @@ pub fn set_open_ai_compatible_auth_key(app: &App, data: Data) -> Result<Reply> {
             return Ok(errors::error("AUTH_OPENAI_COMPATIBLE_INVALID", Value::Null));
         }
         let url = app.config.get("OPENAI_COMPATIBLE_URL");
-        if !app.model.translator.lock().unwrap().authenticate_llm(Engine::OpenAiCompatible, &data, url.as_str())? {
+        if !app.model.translator.write().unwrap().authenticate_llm(Engine::OpenAiCompatible, &data, url.as_str())? {
             return Ok(errors::error("AUTH_OPENAI_COMPATIBLE_FAILED", Value::Null));
         }
-        let models = app.model.translator.lock().unwrap().get_model_list(Engine::OpenAiCompatible)?;
+        let models = app.model.translator.write().unwrap().get_model_list(Engine::OpenAiCompatible)?;
         if models.is_empty() {
             return Ok(errors::error("AUTH_OPENAI_COMPATIBLE_FAILED", Value::Null));
         }
@@ -418,11 +418,11 @@ pub fn set_open_ai_compatible_url(app: &App, data: Data) -> Result<Reply> {
             app.config.set("OPENAI_COMPATIBLE_URL", json!(data))?;
             return current(app, "OPENAI_COMPATIBLE_URL");
         };
-        if !app.model.translator.lock().unwrap().authenticate_llm(Engine::OpenAiCompatible, key, Some(&data))? {
+        if !app.model.translator.write().unwrap().authenticate_llm(Engine::OpenAiCompatible, key, Some(&data))? {
             unavailable()?;
             return Ok(errors::error("CONNECTION_OPENAI_COMPATIBLE_URL_INVALID", app.config.get("OPENAI_COMPATIBLE_URL")));
         }
-        let models = app.model.translator.lock().unwrap().get_model_list(Engine::OpenAiCompatible)?;
+        let models = app.model.translator.write().unwrap().get_model_list(Engine::OpenAiCompatible)?;
         if models.is_empty() {
             // the URL answers but has no model to translate with
             unavailable()?;
@@ -448,7 +448,7 @@ pub fn set_open_ai_compatible_model(app: &App, data: Data) -> Result<Reply> {
     let data = py_str(&data);
     let selected = selected_name(COMPATIBLE_X);
     let attempt = || -> Result<Reply> {
-        if !app.model.translator.lock().unwrap().set_model(Engine::OpenAiCompatible, &data)? {
+        if !app.model.translator.write().unwrap().set_model(Engine::OpenAiCompatible, &data)? {
             return Ok(errors::error("MODEL_OPENAI_COMPATIBLE_INVALID", app.config.get(&selected)));
         }
         app.config.set(&selected, json!(data))?;
