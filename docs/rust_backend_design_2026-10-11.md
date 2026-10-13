@@ -261,7 +261,7 @@ App
 | P1 推論 | `vrct-ct2`・`vrct-whisper`（transcribe の全経路）・翻訳（NLLB / M2M100）・`vrct-ocr`（bidi 追加）・Sudachi | §8 の N がコーパスで全件一致。**2026-10-11 完了**（Silero VAD は P3 へ）: NLLB 600M・M2M100 418M（分割・翻訳・復号）、Whisper base（58 ケース、80 / 128 メルの特徴量、30 秒超を含む）を CPU（int8）と CUDA（int8_float16）で、OCR（合成画像 54 枚と実際の画面 80 枚、6 言語のモデル、bidi）と音訳（85 文、カタカナ列 500）を CPU で、すべて違い 0。基準は `native/testdata/`、作り方は `native/reference/`。1.3B / 3.3B / 1.2B / Whisper の他の大きさは重みが手元に無く未照合（同じ処理） |
 | P2 外部 API・ファイル | ASR / 翻訳の API、DeepL、Web 翻訳（`vrct-webtranslate`）、重み・更新、テレメトリー、WebSocket、OBS | §8 の外部 API の比較が一致、サーバーの再発防止テスト。**2026-10-12 完了**: Python が送る直前の HTTP の要求（httpx / requests / urllib）を記録し、Rust の要求とメソッド・URL・本文・ヘッダーで比べて違い 0。LLM 8 種（認証・モデル一覧・翻訳、401 を含む）、DeepL（429 の再試行を含む）、文字起こしの API 40 手順と Deepgram の言語の解決 811 件、ソフトの更新 15 手順と版の比較 900 件、重みの取得（範囲外のファイル名・404・500 の再試行を含む）と `.weight_verified.json`（Python が書いた印をそのまま読む）、テレメトリー（起動 11 通りの送信と状態ファイル）、OBS のページ（設定 10 通り）と応答。Web 翻訳は取り込んだ単体テスト 17 件。WebSocket はトークンの検査と、閉じずに切れたクライアントがいても他へ届き続ける再発防止テスト。トークナイザーの取得は B（transformers の要求は写さず、読む側と同じキャッシュの形に書く）。Python と変えた点: Hugging Face のトークンを送らない、トークナイザーがそろっていれば取りに行かない |
 | P3 デバイス | 録音・デバイス管理・既定の追跡・OSC/OSCQuery・オーバーレイ（OpenVR・文字描画）・キャプチャ・クリップボード。PyO3 で今の Python 版に組み込んで実機確認 | 実機の確認表がすべて合格。**2026-10-12 完了**: 音声の前処理・VAD・録音デバイス（`VRCT_RUST_AUDIO=1` で実機の抜き差し・スピーカーの自動切り替え・ミュート同期 OK）、OSC、OpenVR の層（値は pyopenvr と一致）、OCR のキャプチャ（実機でミラー取得）、ログの文字画像（大きさ一致）、ログのオーバーレイと VR UI（`VRCT_RUST_OVERLAY=1` で実機 OK）、クリップボードのアプリ名（実機で Python と同じ名前）。OSCQuery は P4 で VRChat とつないで確かめる |
-| P4 土台の差し替え | `ipc` / `app`（設定・エラー・起動/終了・watchdog）/ `pipeline` / 330 エンドポイントの本体を Rust で実装し、P1〜P3 の部品をつなぐ | 契約テストが Rust 版で全件通る、実機の通し確認 |
+| P4 土台の差し替え | `ipc` / `app`（設定・エラー・起動/終了・watchdog）/ `pipeline` / 330 エンドポイントの本体を Rust で実装し、P1〜P3 の部品をつなぐ | 契約テストが Rust 版で全件通る、実機の通し確認。**2026-10-13 実装完了**（VR の実機確認は後で）: `VRCT-sidecar.exe`（`vrct-backend` の bin）で 330 件すべてを Rust で処理。契約テスト 216 件・起動時の値 144 件で Python との差 0、stderr 0 行。設定の検証は 6181 通りで一致、ルート表と push 名は `mainloop.py` から書き出したものと一致（`tests/routes.rs`）。UI からは `npm run dev-rust-fast`（dev_sidecar の `VRCT_DEV_BACKEND=rust`、配置は `cargo xtask stage-sidecar`）。実機確認済み: チャット・翻訳、音声（一覧・メーター・文字起こし・切り替え・抜き差し・自動選択）、OSC / OSCQuery とミュート同期（両方の起動順）、OCR、終了。未確認: オーバーレイと VR UI |
 | P5 切り替え | 配布（spec・bat・インストーラ）を Rust 版に。まず beta チャンネルで並行運用、`config.json`・重み・ログの互換を確認 | beta で問題なし → stable へ、Python のコードと依存を削除 |
 
 P1〜P3 は互いに独立していて並行できる。P4 は P1〜P3 がそろってから。
@@ -306,7 +306,18 @@ P1〜P3 は互いに独立していて並行できる。P4 は P1〜P3 がそろ
 |---|---|
 | テレメトリー | 送る時刻は現地時刻に「Z」を付けたもの（aptabase 0.1.0 の `datetime.now().isoformat() + "Z"`）。UTC との差の分ずれて記録される |
 | テレメトリー | 起動時に無効で、あとから有効にしても（`init` を 2 回目に呼ぶ）何も送られない。エラーは「送った」と記録だけされる |
-| WebSocket | 待ち受けに失敗しても `checkWebSocketServerAlive` は true を返す（`model.py`）。Rust の `WebSocketServer::start` は失敗を返すので、P4 で状態の扱いを決める |
+| WebSocket | 待ち受けに失敗しても `checkWebSocketServerAlive` は true を返す（`model.py`）。**P4 で決定**: Rust は起動に失敗したら止まっている扱い（記録を残す）。設定（`WEBSOCKET_SERVER`）は Python と同じく ON のまま |
+
+### P4 で Python から変えた点（ユーザーの判断を含む）
+
+| 箇所 | 変えた点 |
+|---|---|
+| OSCQuery | vrchat_osc の説明どおり `VRChatOSC::new(None)`（ループバック以外で告知）。127.0.0.1 を渡すとループバックでしか告知されず、VRChat（mDNS をループバックで受けない）に見つからない。MuteSelf の問い合わせは受信の開始から 1 秒待つ（Python の OSCQueryBrowser の最初の sleep(1) と同じ理由） |
+| ミュート同期 | ミュートした瞬間から、切り出し途中の発話・待ち行列・まとめ途中の音声を捨て、処理中だった結果も出さない。入力は読み続けて音量メーターは動かす（ユーザー要望。Python は区切りで止まり、解除後に溜まった音声を文字起こししていた） |
+| 録音デバイスが開けないとき | マイク・スピーカーとも既定のデバイスへ選択を付け替えて UI に知らせる（ユーザー判断）。Python はスピーカーでも既定のマイクを録音していた |
+| 未知のエンドポイント | 404 / 423 の result は Python と同じ null（最初の実装は文字列を返していた） |
+| 複数の翻訳先 | 1 言語ずつ順に翻訳する（Python は同時。`ponytail:` の印。クラウドで遅さが問題になれば同時にする） |
+| 互換処理 | v3.6.x で要るものだけ（§10）: AUTH_KEYS などの欠けたキーの補完、MME などから WASAPI へのデバイス名の移行、Python が書いた重みの印とトークナイザーのキャッシュ、`installer_language.txt`。重みフォルダの旧名からの改名は持ち込まない |
 | 重み | Python の huggingface_hub は、PC に保存された Hugging Face のトークンを公開リポジトリへの要求にも付けていた。Rust 版は付けない |
 
 ## 12. 付録

@@ -425,6 +425,8 @@ pub fn init(app: &App, escalate: impl Fn() + Send + 'static) -> Result<()> {
     logs::PROCESS.clear();
     ipc::log("Start Initialization");
     let started = Instant::now();
+    // _bootstrapModel: the overlay's callbacks tell their state at once
+    super::overlay::push_initial_state(app)?;
     app.model.watchdog.start(WATCHDOG_TIMEOUT, WATCHDOG_INTERVAL, escalate);
 
     let online = connected_network(app);

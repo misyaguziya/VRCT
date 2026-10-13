@@ -48,6 +48,7 @@ vrct-ct2 = { path = "../vrct-ct2" }
 vrct-ocr = { path = "../vrct-ocr" }
 vrct-whisper = { path = "../vrct-whisper" }
 vrct-openvr = { path = "../vrct-openvr" }
+vrct-overlay = { path = "../vrct-overlay" }
 # D3D11 for SteamVR's mirror texture (OCR)
 windows = { version = "=0.61.1", features = [
     "Win32_Graphics_Direct3D",
