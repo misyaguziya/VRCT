@@ -15,7 +15,7 @@ fn main() -> anyhow::Result<()> {
     println!("advertising VRCT; running {seconds} s");
     while started.elapsed() < Duration::from_secs(seconds) {
         std::thread::sleep(Duration::from_secs(5));
-        println!("[{:6.1}s] MuteSelf query: {:?}", started.elapsed().as_secs_f64(), receiver.mute_self());
+        println!("[{:6.1}s] MuteSelf query: {:?}", started.elapsed().as_secs_f64(), receiver.mute_self(&|l| println!("{l}")));
     }
     receiver.stop();
     println!("stopped");

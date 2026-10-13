@@ -24,7 +24,7 @@ use crate::errors;
 use crate::ipc::{self, Reply};
 use anyhow::{anyhow, Result};
 use serde_json::Value;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Weak};
 
 /// Every handler, by the snake_case of its Controller method's name
 pub mod handlers {
@@ -44,15 +44,14 @@ pub mod handlers {
 pub struct App {
     pub config: Config,
     pub model: Model,
-    /// The microphone's and the speaker's start / stop, one at a time (mic_lifecycle_lock)
-    pub mic_lifecycle: Mutex<()>,
-    pub speaker_lifecycle: Mutex<()>,
+    /// The microphone and the speaker (their sessions are the lifecycle locks)
+    pub audio: audio::Audio,
     me: Weak<App>,
 }
 
 impl App {
     pub fn new(config: Config, model: Model) -> Arc<App> {
-        Arc::new_cyclic(|me| App { config, model, mic_lifecycle: Mutex::new(()), speaker_lifecycle: Mutex::new(()), me: me.clone() })
+        Arc::new_cyclic(|me| App { config, model, audio: audio::Audio::default(), me: me.clone() })
     }
 
     /// For the threads and callbacks that outlive a request

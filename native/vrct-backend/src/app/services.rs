@@ -227,7 +227,7 @@ impl Osc {
     /// getOSCParameterMuteSelf: None when VRChat or the avatar's parameter is not there
     pub fn mute_self(&self) -> Option<bool> {
         let state = self.state.lock().unwrap();
-        state.receiver.as_ref()?.mute_self().unwrap_or_else(|e| {
+        state.receiver.as_ref()?.mute_self(&|l| crate::ipc::log(l)).unwrap_or_else(|e| {
             logs::error("OSC MuteSelf", &e);
             None
         })

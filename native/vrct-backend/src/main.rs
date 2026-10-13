@@ -7,44 +7,13 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use vrct_backend::app::{init, routes, App, Model};
-use vrct_backend::config::{executable_dir, Config, DeviceLists, Env, RUST_HOST_NAME};
+use vrct_backend::config::{executable_dir, Config, Env};
 use vrct_backend::ipc::{self, Dispatcher};
 use vrct_backend::{app, compute, logs, net, websocket};
 
 const WORKERS: usize = 3;
 /// After the UI stopped feeding the watchdog: the process ends this long after the shutdown began
 const WATCHDOG_GRACE: Duration = Duration::from_secs(30);
-
-/// The microphones and speakers now (device_manager.update with the Rust devices)
-fn device_lists() -> DeviceLists {
-    match vrct_audio::devices::list() {
-        Ok(d) => DeviceLists {
-            mic: if d.inputs.is_empty() { vec![] } else { vec![(config_host(), d.inputs.into_iter().map(|i| i.name).collect())] },
-            speaker: d.loopbacks.into_iter().map(|i| i.name).collect(),
-        },
-        Err(e) => {
-            logs::error("list devices", &e);
-            DeviceLists::default()
-        }
-    }
-}
-
-fn config_host() -> String {
-    RUST_HOST_NAME.to_string()
-}
-
-/// The defaults the PC gives (getDefaultMicDevice / getDefaultSpeakerDevice)
-fn default_devices() -> ((String, String), String) {
-    let none = || ("NoHost".to_string(), "NoDevice".to_string());
-    match vrct_audio::devices::list() {
-        Ok(d) => {
-            let mic = d.default_input.filter(|n| d.inputs.iter().any(|i| &i.name == n)).map_or_else(none, |n| (config_host(), n));
-            let speaker = d.default_loopback.filter(|n| d.loopbacks.iter().any(|i| &i.name == n)).unwrap_or_else(|| "NoDevice".into());
-            (mic, speaker)
-        }
-        Err(_) => (none(), "NoDevice".into()),
-    }
-}
 
 /// A panic is logged (error.log, and crash_trace.log as faulthandler did), never printed to stderr
 fn panic_hook() {
@@ -69,13 +38,13 @@ fn main() -> Result<()> {
     vrct_ct2::redirect_stderr(&PathBuf::from("error.log"));
 
     let transcription_lang: Value = serde_json::from_str(include_str!("../../data/transcription_languages.json"))?;
-    let (default_mic, default_speaker) = default_devices();
+    let devices = vrct_backend::devices::snapshot();
     let config = Config::new(Env {
         path_local: local.clone(),
         compute_devices: compute::device_list(),
-        default_mic,
-        default_speaker,
-        devices: Arc::new(device_lists),
+        default_mic: devices.default_mic,
+        default_speaker: devices.default_speaker,
+        devices: Arc::new(|| vrct_backend::devices::snapshot().lists()),
         transcription_lang: transcription_lang.clone(),
         new_token: websocket::new_auth_token,
     });

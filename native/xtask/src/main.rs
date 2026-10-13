@@ -1,5 +1,6 @@
 //! cargo xtask fetch-native [--cuda]
-//! cargo xtask stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>]
+//! cargo xtask stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>] [--silero <faster_whisper/assets>]
+//!   [--weights <src-python/weights>]  (a junction: the sidecar reads the weights from beside it)
 //!
 //! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
 //! SHA-256 を照合し、指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
@@ -200,8 +201,8 @@ fn copy_dir(src: &Path, dst: &Path) -> Result<()> {
 }
 
 /// The sidecar with what it reads beside it: the DLLs of the build, the translators' settings,
-/// SudachiPy's resources with SudachiDict-full's system.dic, the overlay's fonts
-fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>) -> Result<()> {
+/// SudachiPy's resources with SudachiDict-full's system.dic, the overlay's fonts, Silero VAD
+fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>, silero: Option<PathBuf>, weights: Option<PathBuf>) -> Result<()> {
     let native = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
     let built = native.join("target").join(if release { "release" } else { "debug" });
     let models = native.join("../src-python/models");
@@ -219,6 +220,23 @@ fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>) -> Re
     let dict = sudachi_dict.or_else(|| std::env::var_os("VRCT_SUDACHI_DICT").map(PathBuf::from))
         .context("--sudachi-dict or VRCT_SUDACHI_DICT: SudachiDict-full's system.dic")?;
     fs::copy(&dict, out.join("sudachi/system.dic")).with_context(|| dict.display().to_string())?;
+    let silero = silero.or_else(|| std::env::var_os("VRCT_SILERO_ASSETS").map(PathBuf::from))
+        .context("--silero or VRCT_SILERO_ASSETS: faster_whisper's assets (silero_*_v5.onnx)")?;
+    fs::create_dir_all(out.join("silero"))?;
+    for name in ["silero_encoder_v5.onnx", "silero_decoder_v5.onnx"] {
+        fs::copy(silero.join(name), out.join("silero").join(name)).with_context(|| silero.join(name).display().to_string())?;
+    }
+    if let Some(weights) = weights {
+        let link = out.join("weights");
+        if !link.exists() {
+            let ok = std::process::Command::new("cmd").args(["/C", "mklink", "/J"]).arg(&link)
+                .arg(if weights.is_absolute() { weights.clone() } else { std::env::current_dir()?.join(&weights) })
+                .stdout(std::process::Stdio::null()).status()?.success();
+            if !ok {
+                bail!("mklink /J {} failed", link.display());
+            }
+        }
+    }
     println!("staged {}", out.display());
     Ok(())
 }
@@ -233,7 +251,9 @@ fn main() -> Result<()> {
         Some("fetch-native") => fetch_native(args.iter().any(|a| a == "--cuda")),
         Some("stage-sidecar") => stage_sidecar(&PathBuf::from(arg(&args, "--out").context("--out <dir>")?),
                                                args.iter().any(|a| a == "--release"),
-                                               arg(&args, "--sudachi-dict").map(PathBuf::from)),
-        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>]"),
+                                               arg(&args, "--sudachi-dict").map(PathBuf::from),
+                                               arg(&args, "--silero").map(PathBuf::from),
+                                               arg(&args, "--weights").map(PathBuf::from)),
+        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>] [--silero <dir>] [--weights <dir>]"),
     }
 }

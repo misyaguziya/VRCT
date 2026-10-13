@@ -70,7 +70,8 @@ $env:VRCT_RUST_AUDIO = "1"
 Remove-Item Env:VRCT_RUST_AUDIO
 # Rust 版: ビルドして、DLL・翻訳設定・Sudachi の辞書・フォントと一緒に並べる
 cargo build -p vrct-backend --bin VRCT-sidecar
-cargo xtask stage-sidecar --out target\sidecar-stage --sudachi-dict "$repo\.venv\Lib\site-packages\sudachidict_full\resources\system.dic"
+cargo xtask stage-sidecar --out target\sidecar-stage --sudachi-dict "$repo\.venv\Lib\site-packages\sudachidict_full\resources\system.dic" `
+  --silero "$repo\.venv\Lib\site-packages\faster_whisper\assets"
 .\target\debug\vrct-contract.exe run --exe target\sidecar-stage\VRCT-sidecar.exe --weights <src-python\weights> --name rust --out target\contract\rust.json
 .\target\debug\vrct-contract.exe compare target\contract\python.json target\contract\rust.json
 ```
