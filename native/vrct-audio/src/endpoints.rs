@@ -4,7 +4,8 @@
 //! `DeviceWatcher` calls back when an endpoint is added, removed, changes state or the default
 //! changes (IMMNotificationClient). `ActiveEndpointTracker` polls every output's peak level
 //! (IAudioMeterInformation) every 250 ms and names the one that is playing, with the same window and
-//! hysteresis as the Python version (`Selector`).
+//! hysteresis as the Python version (`Selector`). The endpoints are listed again every 2 s (listing
+//! them on every poll was 7/10 of the idle CPU), and at once when a meter fails.
 use std::collections::VecDeque;
 use std::sync::mpsc;
 use std::sync::{Arc, Condvar, Mutex};
@@ -22,6 +23,8 @@ use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CoUninitiali
 /// The peaks seen in the last WINDOW_SEC decide; another endpoint takes over only after being
 /// SWITCH_RATIO times louder for SWITCH_HOLD_SEC; below SILENT_THRESHOLD counts as silent
 pub const POLL_INTERVAL: Duration = Duration::from_millis(250);
+/// how often the endpoints are listed again (a new one is polled from then on)
+const LIST_INTERVAL: Duration = Duration::from_secs(2);
 const WINDOW_SEC: f64 = 3.0;
 const SILENT_THRESHOLD: f64 = 0.001;
 const SWITCH_RATIO: f64 = 2.0;
@@ -221,9 +224,9 @@ pub struct ActiveEndpointTracker {
     thread: Option<std::thread::JoinHandle<()>>,
 }
 
-/// The peak of every active endpoint, with the meters kept between polls (one Activate per endpoint)
-fn collect_peaks(enumerator: &IMMDeviceEnumerator, flow: Flow,
-                 meters: &mut Vec<(String, String, IAudioMeterInformation)>) -> windows::core::Result<Vec<(String, f64)>> {
+/// The meters of the active endpoints of `flow`, the ones already open kept (one Activate per endpoint)
+fn list_meters(enumerator: &IMMDeviceEnumerator, flow: Flow,
+               meters: &mut Vec<(String, String, IAudioMeterInformation)>) -> windows::core::Result<()> {
     let collection = unsafe { enumerator.EnumAudioEndpoints(if flow == Flow::Render { eRender } else { eCapture }, DEVICE_STATE_ACTIVE)? };
     let count = unsafe { collection.GetCount()? };
     let mut devices = vec![];
@@ -233,27 +236,34 @@ fn collect_peaks(enumerator: &IMMDeviceEnumerator, flow: Flow,
         let id = unsafe { id.to_string() }.unwrap_or_default();
         devices.push((id, device));
     }
-    meters.retain(|(id, _, _)| devices.iter().any(|(d, _)| d == id));
-    let mut peaks = vec![];
+    // the listing's order, as before (the selector takes the first of equally loud ones)
+    let mut listed = vec![];
     for (id, device) in devices {
-        let i = match meters.iter().position(|(m, _, _)| *m == id) {
-            Some(i) => i,
+        match meters.iter().position(|(m, _, _)| *m == id) {
+            Some(i) => listed.push(meters.swap_remove(i)),
             None => {
                 let meter: windows::core::Result<IAudioMeterInformation> = unsafe { device.Activate(CLSCTX_ALL, None) };
                 let (Ok(meter), Ok(name)) = (meter, friendly_name(&device)) else { continue };
-                meters.push((id.clone(), name, meter));
-                meters.len() - 1
-            }
-        };
-        match unsafe { meters[i].2.GetPeakValue() } {
-            Ok(p) => peaks.push((meters[i].1.clone(), p as f64)),
-            // try again next time
-            Err(_) => {
-                meters.remove(i);
+                listed.push((id, name, meter));
             }
         }
     }
-    Ok(peaks)
+    *meters = listed;
+    Ok(())
+}
+
+/// The peak of every listed endpoint; false when a meter failed (its endpoint is gone: list again)
+fn collect_peaks(meters: &mut Vec<(String, String, IAudioMeterInformation)>, peaks: &mut Vec<(String, f64)>) -> bool {
+    peaks.clear();
+    let before = meters.len();
+    meters.retain(|(_, name, meter)| match unsafe { meter.GetPeakValue() } {
+        Ok(p) => {
+            peaks.push((name.clone(), p as f64));
+            true
+        }
+        Err(_) => false,
+    });
+    meters.len() == before
 }
 
 impl ActiveEndpointTracker {
@@ -265,6 +275,8 @@ impl ActiveEndpointTracker {
             let Ok(enumerator) = enumerator() else { return };
             let started = Instant::now();
             let mut meters = vec![];
+            let mut peaks = vec![];
+            let mut listed: Option<Instant> = None;
             let mut selector = Selector::default();
             let (lock, wake) = &*s;
             loop {
@@ -277,7 +289,13 @@ impl ActiveEndpointTracker {
                         break;
                     }
                 }
-                if let Ok(peaks) = collect_peaks(&enumerator, flow, &mut meters) {
+                if listed.is_none_or(|t| t.elapsed() >= LIST_INTERVAL) {
+                    listed = list_meters(&enumerator, flow, &mut meters).ok().map(|()| Instant::now());
+                }
+                if listed.is_some() {
+                    if !collect_peaks(&mut meters, &mut peaks) {
+                        listed = None;
+                    }
                     let before = selector.current.clone();
                     let selected = selector.update(&peaks, started.elapsed().as_secs_f64());
                     lock.lock().unwrap().current = selected.clone();
