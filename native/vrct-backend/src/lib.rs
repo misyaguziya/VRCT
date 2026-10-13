@@ -13,6 +13,7 @@ pub mod logs;
 pub mod net;
 pub mod obs;
 pub mod ocr_capture;
+pub mod ocr_pipeline;
 pub mod openai;
 pub mod osc;
 pub mod platform;

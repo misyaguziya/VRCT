@@ -61,6 +61,54 @@ pub fn process_name(pid: u32) -> Option<String> {
     }
 }
 
+/// The ids of this process's threads now
+pub fn thread_ids() -> std::collections::HashSet<u32> {
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Thread32First, Thread32Next, THREADENTRY32,
+                                                           TH32CS_SNAPTHREAD};
+    use windows_sys::Win32::System::Threading::GetCurrentProcessId;
+    let mut ids = std::collections::HashSet::new();
+    unsafe {
+        let me = GetCurrentProcessId();
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+        if snapshot.is_null() || snapshot as isize == -1 {
+            return ids;
+        }
+        let mut entry: THREADENTRY32 = std::mem::zeroed();
+        entry.dwSize = std::mem::size_of::<THREADENTRY32>() as u32;
+        let mut ok = Thread32First(snapshot, &mut entry);
+        while ok != 0 {
+            if entry.th32OwnerProcessID == me {
+                ids.insert(entry.th32ThreadID);
+            }
+            ok = Thread32Next(snapshot, &mut entry);
+        }
+        CloseHandle(snapshot);
+    }
+    ids
+}
+
+/// background_priority: a thread below normal priority (heavy work after VR UI and VRChat)
+pub fn lower_thread(id: u32) -> bool {
+    use windows_sys::Win32::System::Threading::{OpenThread, SetThreadPriority, THREAD_PRIORITY_BELOW_NORMAL, THREAD_SET_INFORMATION};
+    unsafe {
+        let handle = OpenThread(THREAD_SET_INFORMATION, 0, id);
+        if handle.is_null() {
+            return false;
+        }
+        let ok = SetThreadPriority(handle, THREAD_PRIORITY_BELOW_NORMAL) != 0;
+        CloseHandle(handle);
+        ok
+    }
+}
+
+/// lowerCurrentThread
+pub fn lower_current_thread() {
+    use windows_sys::Win32::System::Threading::{GetCurrentThread, SetThreadPriority, THREAD_PRIORITY_BELOW_NORMAL};
+    unsafe {
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+    }
+}
+
 /// _quitApp: the process that started this one (the UI) is ended
 pub fn terminate_parent() {
     use windows_sys::Win32::System::Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Process32FirstW, Process32NextW,
