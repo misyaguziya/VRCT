@@ -1,0 +1,3621 @@
+{
+ "weight_type": "large-v3-turbo-int8",
+ "device": "cuda",
+ "compute_type": "int8_float16",
+ "suppress_tokens": [
+  1,
+  2,
+  7,
+  8,
+  9,
+  10,
+  14,
+  25,
+  26,
+  27,
+  28,
+  29,
+  31,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  90,
+  91,
+  92,
+  93,
+  359,
+  503,
+  522,
+  542,
+  873,
+  893,
+  902,
+  918,
+  922,
+  931,
+  1350,
+  1853,
+  1982,
+  2460,
+  2627,
+  3246,
+  3253,
+  3268,
+  3536,
+  3846,
+  3961,
+  4183,
+  4667,
+  6585,
+  6647,
+  7273,
+  9061,
+  9383,
+  10428,
+  10929,
+  11938,
+  12033,
+  12331,
+  12562,
+  13793,
+  14157,
+  14635,
+  15265,
+  15618,
+  16553,
+  16604,
+  18362,
+  18956,
+  20075,
+  21675,
+  22520,
+  26130,
+  26161,
+  26435,
+  28279,
+  29464,
+  31650,
+  32302,
+  32470,
+  36865,
+  42863,
+  47425,
+  49870,
+  50254,
+  50258,
+  50359,
+  50360,
+  50361,
+  50362
+ ],
+ "features_sha256": {
+  "en00": {
+   "80": "d2f7d84b749d050ce5e58d6465c83ba4fe459926f8b002a3e71304ef146fb168",
+   "128": "6cdab650d8e7caab73cf14b44ab5d97734bef77fe0888cb2d28e1f6320b21d7b"
+  },
+  "en01": {
+   "80": "63e40bbb78bc843f2ef39afc9cdedf58028881751f82fbab5a747a12fe4c01c0",
+   "128": "6c7789bb874b7c2309ffb8304e2ed4eb2ac035937199fa6ec2ae624d92cec6a4"
+  },
+  "en02": {
+   "80": "dc8a0cbb88222758cd2a8e59e16aefbc878092618486052816ac46c6be00c2e0",
+   "128": "a64d00e1f3f6c2c7840450caa019b043eae7d16474911c7641e2626c855f8f5d"
+  },
+  "en03": {
+   "80": "05c845709ccec0b38482a547433395381bc47648fde72f3230f66a97ba3eecbf",
+   "128": "0c140bfefb26d4e7ae2c2641bc551651c6c44383db09b2ae1a8cfa4e189bb1a8"
+  },
+  "en04": {
+   "80": "41b14a2658bef611b80fd8d6f1f217d942166082873859f07e5460c46d01e261",
+   "128": "6f610dbac3479b246bac9dd2fa8d79d16fd2afaa5d78a3f552d3ffd775df2313"
+  },
+  "en05": {
+   "80": "62e3046d62275f670ebd641102b7f0800289e447d0ae7f2ddcea63e87f4bdc82",
+   "128": "e481f44d2a53303b9c3d034574a8e73e8e68f0f7dff5a9d3a163b1c322f4adfb"
+  },
+  "en06": {
+   "80": "94162226c7a1c1e23cbae4c745e3069e71c2c8f38a28c339975e5cda91e2cd1f",
+   "128": "4cdcc33946a5cd4f97e43843f4e9d70a4d8434df74ec5629a04d6823491f6c0d"
+  },
+  "en07": {
+   "80": "8fa1e70759b54dd4797596148919fabb8876cc2cf1bff9db9b417933a99d99ed",
+   "128": "702930f6f29a8d531f55cfb62075a662e0636e7f06793f017407b86e0def68d9"
+  },
+  "en08": {
+   "80": "5c767baf8024d80aa56d6766c718901ca08043cf3411853d4a6227182519da9b",
+   "128": "314001f3547d153c2dcd220aaac96571b613f0687baf99c7344215e6d07a1e3d"
+  },
+  "en09": {
+   "80": "5e51b7066c5f6ba62a6e0091897a9d1bbcb72e85fb8d14e794c57e76beb84fd6",
+   "128": "deba2daac0c1aff4d90d8c64a2b42807156d10cb4e3fa05c62b6ff4d4b0a00bf"
+  },
+  "en10": {
+   "80": "4e04542c693e0d1d8c3c162ac83229ac631fbdb8055ef58901aaedc8d7f4e1a3",
+   "128": "f8dabb181ce048dddd5292c06399f05e23ba8b7836b56eb28d2defbb577286af"
+  },
+  "en11": {
+   "80": "64ffb944ba71a7c4957e5d91b3fb1a9dd2fba095f7b81a854479da730c7c3e0d",
+   "128": "c31e6fe17347afa68690254f87dbbaacfc7a7c15bd8c0a80711b8a66d9ae2ba3"
+  },
+  "ja00": {
+   "80": "77bc41b03a0c21c57dbf308951f6c6d8c70bf49b8ff63f2add122400bfe753ac",
+   "128": "fbb3a4a1249814bd2822a36991229925c7624f5fa743cb39b6a8d78c44846119"
+  },
+  "ja01": {
+   "80": "123709f3494567397ba2f85bfe1b9dd3cbc91189212a851c66c2bb632f9d69ac",
+   "128": "a86da60895e1c2ad8fc56ae8bb693d30521f54fbd4a8d4b80986e6157ba5944f"
+  },
+  "ja02": {
+   "80": "9067be87b7f80c5d64213df1209e9ff29d902fa5595cc08b84fa48c7128cab84",
+   "128": "0b51184cd604e772872530a48103b04e6ef206e68ef8202cba0f8e856f5b12e9"
+  },
+  "ja03": {
+   "80": "ae5ece77fabd4686b1a10f520a272802455116aa527fc051061286a82dc2ff7e",
+   "128": "5269665efefe75c32119231db1e262e1afd146085c8ce832d6170a884c28f0a6"
+  },
+  "ja04": {
+   "80": "d7c952dde7cc90f8a9debe8952d5977869d3917d71f66c8d60119808303b6c5f",
+   "128": "314bbbc3336374138b560737a05540032ad80bc71435529ab0b67c475d26169b"
+  },
+  "ja05": {
+   "80": "85381873317cc24545e8b5ea28d5518f8f27620a9f27a54a01eaff6d7371db79",
+   "128": "bff9d35cc2e9896eb80c26130be5231f5599222f5d13150ed03bda425fc3a7a8"
+  },
+  "ja06": {
+   "80": "dd266a5edfb1f21ba76a1d3bece835546cf7c855fcec2aac8c8227df240e5397",
+   "128": "87694f2b8859bf40425dba7f363cbbcd3084272bc3b2a12aea41522d2bb37c33"
+  },
+  "ja07": {
+   "80": "9b29d136534352fc3f64f583485a1955e139fc7a474ecc9ef070fd1d1291cc0f",
+   "128": "6828f6b1ac5d80ab9f516fe0131879262387aced59af77b04b9d7d7886887a46"
+  },
+  "ja08": {
+   "80": "f3e406f1a842ca0f886f22080dbf2eab165412b5f9e3f299949b3297ddbbb167",
+   "128": "9f62bd86640a344cd5c1f3fb6d2d0355fa80c2a3286a49dc87baf4b35527315d"
+  },
+  "ja09": {
+   "80": "bee61eadad620dbcf408f225a30c1ee024f02d65c981e947933a2ef2deb23150",
+   "128": "9d61bb34bf4426f1ff68fdeb14d9ac00bf0b8e5bc15c6ca8dc20a5db50358578"
+  },
+  "ja10": {
+   "80": "9297dd635a16f64fa0dfc773fa7ec70f41c569772cc56636b15e9e869223a8cd",
+   "128": "178096a27648912bafc07ef8b52d2949b51ce004031a12b6b0d3b07ff828fa09"
+  },
+  "ja11": {
+   "80": "4d215ee8ab0d7d944a0212088e5503e41feb812624363cfbd630a3b7d137e4f3",
+   "128": "4a3b8e154b13eb19cfbd169d8b7c863490054cef4edaddc94472cf31872aa6ea"
+  },
+  "noise": {
+   "80": "e15be229c57219b378f473c5fee10276d678f5e26e63281feda91a1965f242bc",
+   "128": "35336026829ae9269b7dad76f585432178f5c4edb48e0e70f2f6ba4cc65367cd"
+  },
+  "short": {
+   "80": "380671d52b0dbcca456b55ce71a65b55d2946fedfd02a89d57c572a39081d23b",
+   "128": "17f79063d8a1a5d610dbada250099b3b6aec0434e7ee86acf3fa57e6e5f98c24"
+  },
+  "silence": {
+   "80": "f6466cc9c11560b3cad0d9ddc36235a85cb860f8d8b8c24cdae8d3eb5421cd24",
+   "128": "efaca7a26202e34d5e46edb95c4e1f66565c5f5c2e5d93348465e476978a3483"
+  },
+  "tone": {
+   "80": "af1b9a6adfcd3c45b55e374d81971b9315d42644381f42da7a8b4f96f6f2b71f",
+   "128": "fa415ef088e93a0d2d94c47e3eea543b644fa25bd05914f6f62f90cac232a4bd"
+  }
+ },
+ "cases": [
+  {
+   "files": [
+    "en00"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.56,
+     "text": " Hello, how are you today?",
+     "tokens": [
+      2425,
+      11,
+      577,
+      366,
+      291,
+      965,
+      30
+     ],
+     "avg_logprob": -0.07379150111228228,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99169921875,
+    "duration": 2.565
+   },
+   "provider": {
+    "text": " Hello, how are you today?",
+    "language_probability": 0.99169921875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en00"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.56,
+     "text": " Hello, how are you today?",
+     "tokens": [
+      2425,
+      11,
+      577,
+      366,
+      291,
+      965,
+      30
+     ],
+     "avg_logprob": -0.07379150111228228,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 2.565
+   },
+   "provider": {
+    "text": " Hello, how are you today?",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en01"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.95,
+     "text": " I can't believe it's already October",
+     "tokens": [
+      286,
+      393,
+      380,
+      1697,
+      309,
+      311,
+      1217,
+      7617
+     ],
+     "avg_logprob": -0.09749348958333333,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99951171875,
+    "duration": 3.955
+   },
+   "provider": {
+    "text": " I can't believe it's already October",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en01"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.95,
+     "text": " I can't believe it's already October",
+     "tokens": [
+      286,
+      393,
+      380,
+      1697,
+      309,
+      311,
+      1217,
+      7617
+     ],
+     "avg_logprob": -0.09749348958333333,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 3.955
+   },
+   "provider": {
+    "text": " I can't believe it's already October",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en02"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.4,
+     "text": " We're going to the store, do you need anything?",
+     "tokens": [
+      492,
+      434,
+      516,
+      281,
+      264,
+      3531,
+      11,
+      360,
+      291,
+      643,
+      1340,
+      30
+     ],
+     "avg_logprob": -0.09510216346153846,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99951171875,
+    "duration": 2.405
+   },
+   "provider": {
+    "text": " We're going to the store, do you need anything?",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en02"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.4,
+     "text": " We're going to the store, do you need anything?",
+     "tokens": [
+      492,
+      434,
+      516,
+      281,
+      264,
+      3531,
+      11,
+      360,
+      291,
+      643,
+      1340,
+      30
+     ],
+     "avg_logprob": -0.09510216346153846,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 2.405
+   },
+   "provider": {
+    "text": " We're going to the store, do you need anything?",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en03"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.34,
+     "text": " The meeting starts at 3 30 p.m. So don't be late",
+     "tokens": [
+      440,
+      3440,
+      3719,
+      412,
+      805,
+      2217,
+      280,
+      13,
+      76,
+      13,
+      407,
+      500,
+      380,
+      312,
+      3469
+     ],
+     "avg_logprob": -0.16101074405014515,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.9990234375,
+    "duration": 4.345
+   },
+   "provider": {
+    "text": " The meeting starts at 3 30 p.m. So don't be late",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en03"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.34,
+     "text": " The meeting starts at 3 30 p.m. So don't be late",
+     "tokens": [
+      440,
+      3440,
+      3719,
+      412,
+      805,
+      2217,
+      280,
+      13,
+      76,
+      13,
+      407,
+      500,
+      380,
+      312,
+      3469
+     ],
+     "avg_logprob": -0.16101074405014515,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 4.345
+   },
+   "provider": {
+    "text": " The meeting starts at 3 30 p.m. So don't be late",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en04"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.84,
+     "text": " She said it's fine but I'm not sure.",
+     "tokens": [
+      1240,
+      848,
+      309,
+      311,
+      2489,
+      457,
+      286,
+      478,
+      406,
+      988,
+      13
+     ],
+     "avg_logprob": -0.059529622395833336,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1.0,
+    "duration": 3.845
+   },
+   "provider": {
+    "text": " She said it's fine but I'm not sure.",
+    "language_probability": 1.0,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en04"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.84,
+     "text": " She said it's fine but I'm not sure.",
+     "tokens": [
+      1240,
+      848,
+      309,
+      311,
+      2489,
+      457,
+      286,
+      478,
+      406,
+      988,
+      13
+     ],
+     "avg_logprob": -0.059529622395833336,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 3.845
+   },
+   "provider": {
+    "text": " She said it's fine but I'm not sure.",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en05"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.37,
+     "text": " Let's meet at the station in front of the big clock.",
+     "tokens": [
+      961,
+      311,
+      1677,
+      412,
+      264,
+      5214,
+      294,
+      1868,
+      295,
+      264,
+      955,
+      7830,
+      13
+     ],
+     "avg_logprob": -0.05287388499294009,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.9990234375,
+    "duration": 2.37
+   },
+   "provider": {
+    "text": " Let's meet at the station in front of the big clock.",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en05"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.37,
+     "text": " Let's meet at the station in front of the big clock.",
+     "tokens": [
+      961,
+      311,
+      1677,
+      412,
+      264,
+      5214,
+      294,
+      1868,
+      295,
+      264,
+      955,
+      7830,
+      13
+     ],
+     "avg_logprob": -0.05287388499294009,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 2.37
+   },
+   "provider": {
+    "text": " Let's meet at the station in front of the big clock.",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en06"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.75,
+     "text": " This world is so beautiful at night.",
+     "tokens": [
+      639,
+      1002,
+      307,
+      370,
+      2238,
+      412,
+      1818,
+      13
+     ],
+     "avg_logprob": -0.06602647569444445,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99853515625,
+    "duration": 2.755
+   },
+   "provider": {
+    "text": " This world is so beautiful at night.",
+    "language_probability": 0.99853515625,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en06"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.75,
+     "text": " This world is so beautiful at night.",
+     "tokens": [
+      639,
+      1002,
+      307,
+      370,
+      2238,
+      412,
+      1818,
+      13
+     ],
+     "avg_logprob": -0.06602647569444445,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 2.755
+   },
+   "provider": {
+    "text": " This world is so beautiful at night.",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en07"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.74,
+     "text": " I've been playing VR chat for about two years now",
+     "tokens": [
+      286,
+      600,
+      668,
+      2433,
+      13722,
+      5081,
+      337,
+      466,
+      732,
+      924,
+      586
+     ],
+     "avg_logprob": -0.1676432229578495,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99951171875,
+    "duration": 4.745
+   },
+   "provider": {
+    "text": " I've been playing VR chat for about two years now",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en07"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.74,
+     "text": " I've been playing VR chat for about two years now",
+     "tokens": [
+      286,
+      600,
+      668,
+      2433,
+      13722,
+      5081,
+      337,
+      466,
+      732,
+      924,
+      586
+     ],
+     "avg_logprob": -0.1676432229578495,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 4.745
+   },
+   "provider": {
+    "text": " I've been playing VR chat for about two years now",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en08"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.43,
+     "text": " Could you speak a little more slowly, please?",
+     "tokens": [
+      7497,
+      291,
+      1710,
+      257,
+      707,
+      544,
+      5692,
+      11,
+      1767,
+      30
+     ],
+     "avg_logprob": -0.03249289637262171,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.9990234375,
+    "duration": 2.43
+   },
+   "provider": {
+    "text": " Could you speak a little more slowly, please?",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en08"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.43,
+     "text": " Could you speak a little more slowly, please?",
+     "tokens": [
+      7497,
+      291,
+      1710,
+      257,
+      707,
+      544,
+      5692,
+      11,
+      1767,
+      30
+     ],
+     "avg_logprob": -0.03249289637262171,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 2.43
+   },
+   "provider": {
+    "text": " Could you speak a little more slowly, please?",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en09"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.49,
+     "text": " thanks for the help i really appreciate it",
+     "tokens": [
+      3231,
+      337,
+      264,
+      854,
+      741,
+      534,
+      4449,
+      309
+     ],
+     "avg_logprob": -0.2289496527777778,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99951171875,
+    "duration": 3.49
+   },
+   "provider": {
+    "text": " thanks for the help i really appreciate it",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en09"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.49,
+     "text": " thanks for the help i really appreciate it",
+     "tokens": [
+      3231,
+      337,
+      264,
+      854,
+      741,
+      534,
+      4449,
+      309
+     ],
+     "avg_logprob": -0.2289496527777778,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 3.49
+   },
+   "provider": {
+    "text": " thanks for the help i really appreciate it",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en10"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.75,
+     "text": " Wait, what did you just say?",
+     "tokens": [
+      3802,
+      11,
+      437,
+      630,
+      291,
+      445,
+      584,
+      30
+     ],
+     "avg_logprob": -0.1509331597222222,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99853515625,
+    "duration": 3.755
+   },
+   "provider": {
+    "text": " Wait, what did you just say?",
+    "language_probability": 0.99853515625,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en10"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.75,
+     "text": " Wait, what did you just say?",
+     "tokens": [
+      3802,
+      11,
+      437,
+      630,
+      291,
+      445,
+      584,
+      30
+     ],
+     "avg_logprob": -0.1509331597222222,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 3.755
+   },
+   "provider": {
+    "text": " Wait, what did you just say?",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en11"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 1.98,
+     "text": " He's got three cats and two dogs",
+     "tokens": [
+      634,
+      311,
+      658,
+      1045,
+      11111,
+      293,
+      732,
+      7197
+     ],
+     "avg_logprob": -0.07996961805555555,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.99951171875,
+    "duration": 1.98
+   },
+   "provider": {
+    "text": " He's got three cats and two dogs",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en11"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 1.98,
+     "text": " He's got three cats and two dogs",
+     "tokens": [
+      634,
+      311,
+      658,
+      1045,
+      11111,
+      293,
+      732,
+      7197
+     ],
+     "avg_logprob": -0.07996961805555555,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 1.98
+   },
+   "provider": {
+    "text": " He's got three cats and two dogs",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja00"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.05,
+     "text": "こんにちは。今日はとてもいい天気ですね。",
+     "tokens": [
+      38088,
+      1543,
+      43791,
+      3193,
+      2996,
+      4801,
+      13806,
+      6135,
+      25870,
+      14277,
+      1543
+     ],
+     "avg_logprob": -0.019978841301053762,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.99951171875,
+    "duration": 4.05
+   },
+   "provider": {
+    "text": "こんにちは。今日はとてもいい天気ですね。",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja00"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.05,
+     "text": "こんにちは。今日はとてもいい天気ですね。",
+     "tokens": [
+      38088,
+      1543,
+      43791,
+      3193,
+      2996,
+      4801,
+      13806,
+      6135,
+      25870,
+      14277,
+      1543
+     ],
+     "avg_logprob": -0.019978841301053762,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 4.05
+   },
+   "provider": {
+    "text": "こんにちは。今日はとてもいい天気ですね。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja01"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.63,
+     "text": "このワールド、夜景がすごくきれい。",
+     "tokens": [
+      13303,
+      39613,
+      35307,
+      11195,
+      1231,
+      30124,
+      50218,
+      5142,
+      28077,
+      6134,
+      7016,
+      4132,
+      1764,
+      1543
+     ],
+     "avg_logprob": -0.05325520684321721,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 4.63375
+   },
+   "provider": {
+    "text": "このワールド、夜景がすごくきれい。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja01"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.63,
+     "text": "このワールド、夜景がすごくきれい。",
+     "tokens": [
+      13303,
+      39613,
+      35307,
+      11195,
+      1231,
+      30124,
+      50218,
+      5142,
+      28077,
+      6134,
+      7016,
+      4132,
+      1764,
+      1543
+     ],
+     "avg_logprob": -0.05325520684321721,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 4.63375
+   },
+   "provider": {
+    "text": "このワールド、夜景がすごくきれい。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja02"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.75,
+     "text": "ちょっと待って、マイクの調子が悪いみたい。",
+     "tokens": [
+      21888,
+      33393,
+      1231,
+      13258,
+      8040,
+      10825,
+      2972,
+      32943,
+      7626,
+      5142,
+      14696,
+      103,
+      1764,
+      41258,
+      1543
+     ],
+     "avg_logprob": -0.016876219888217747,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.99951171875,
+    "duration": 2.75825
+   },
+   "provider": {
+    "text": "ちょっと待って、マイクの調子が悪いみたい。",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja02"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.75,
+     "text": "ちょっと待って、マイクの調子が悪いみたい。",
+     "tokens": [
+      21888,
+      33393,
+      1231,
+      13258,
+      8040,
+      10825,
+      2972,
+      32943,
+      7626,
+      5142,
+      14696,
+      103,
+      1764,
+      41258,
+      1543
+     ],
+     "avg_logprob": -0.016876219888217747,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 2.75825
+   },
+   "provider": {
+    "text": "ちょっと待って、マイクの調子が悪いみたい。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja03"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.16,
+     "text": "明日の夜9時にまた集まりましょう。",
+     "tokens": [
+      11100,
+      6890,
+      2972,
+      30124,
+      24,
+      6611,
+      4108,
+      24712,
+      26020,
+      41446,
+      26513,
+      1543
+     ],
+     "avg_logprob": -0.00662935682787345,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.99951171875,
+    "duration": 3.16
+   },
+   "provider": {
+    "text": "明日の夜9時にまた集まりましょう。",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja03"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.16,
+     "text": "明日の夜9時にまた集まりましょう。",
+     "tokens": [
+      11100,
+      6890,
+      2972,
+      30124,
+      24,
+      6611,
+      4108,
+      24712,
+      26020,
+      41446,
+      26513,
+      1543
+     ],
+     "avg_logprob": -0.00662935682787345,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 3.16
+   },
+   "provider": {
+    "text": "明日の夜9時にまた集まりましょう。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja04"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 7.82,
+     "text": "はじめまして。日本から来ました。よろしくお願いします。",
+     "tokens": [
+      3065,
+      9257,
+      11429,
+      2889,
+      8822,
+      1543,
+      27311,
+      11046,
+      6912,
+      12072,
+      1543,
+      37457,
+      32420,
+      1543
+     ],
+     "avg_logprob": -0.07949218849341075,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 7.826875
+   },
+   "provider": {
+    "text": "はじめまして。日本から来ました。よろしくお願いします。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja04"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 7.82,
+     "text": "はじめまして。日本から来ました。よろしくお願いします。",
+     "tokens": [
+      3065,
+      9257,
+      11429,
+      2889,
+      8822,
+      1543,
+      27311,
+      11046,
+      6912,
+      12072,
+      1543,
+      37457,
+      32420,
+      1543
+     ],
+     "avg_logprob": -0.07949218849341075,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 7.826875
+   },
+   "provider": {
+    "text": "はじめまして。日本から来ました。よろしくお願いします。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja05"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.7,
+     "text": "それ、本当に面白いね、笑。",
+     "tokens": [
+      13873,
+      1231,
+      37505,
+      4108,
+      8833,
+      13558,
+      1764,
+      5555,
+      1231,
+      11600,
+      1543
+     ],
+     "avg_logprob": -0.0994466170668602,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 2.707625
+   },
+   "provider": {
+    "text": "それ、本当に面白いね、笑。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja05"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.7,
+     "text": "それ、本当に面白いね、笑。",
+     "tokens": [
+      13873,
+      1231,
+      37505,
+      4108,
+      8833,
+      13558,
+      1764,
+      5555,
+      1231,
+      11600,
+      1543
+     ],
+     "avg_logprob": -0.0994466170668602,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 2.707625
+   },
+   "provider": {
+    "text": "それ、本当に面白いね、笑。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja06"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.97,
+     "text": "音声が途切れていますか?聞こえますか?",
+     "tokens": [
+      18034,
+      32045,
+      5142,
+      2215,
+      242,
+      23632,
+      26638,
+      11267,
+      3703,
+      30,
+      25468,
+      3503,
+      6474,
+      5368,
+      3703,
+      30
+     ],
+     "avg_logprob": -0.04440487132352941,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.99951171875,
+    "duration": 3.97
+   },
+   "provider": {
+    "text": "音声が途切れていますか?聞こえますか?",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja06"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.97,
+     "text": "音声が途切れていますか?聞こえますか?",
+     "tokens": [
+      18034,
+      32045,
+      5142,
+      2215,
+      242,
+      23632,
+      26638,
+      11267,
+      3703,
+      30,
+      25468,
+      3503,
+      6474,
+      5368,
+      3703,
+      30
+     ],
+     "avg_logprob": -0.04440487132352941,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 3.97
+   },
+   "provider": {
+    "text": "音声が途切れていますか?聞こえますか?",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja07"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.34,
+     "text": "翻訳ツールを使って話しています。",
+     "tokens": [
+      42716,
+      5396,
+      111,
+      39406,
+      35307,
+      5998,
+      22982,
+      6102,
+      11103,
+      8822,
+      11267,
+      1543
+     ],
+     "avg_logprob": -0.042630710280858554,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 4.345
+   },
+   "provider": {
+    "text": "翻訳ツールを使って話しています。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja07"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 4.34,
+     "text": "翻訳ツールを使って話しています。",
+     "tokens": [
+      42716,
+      5396,
+      111,
+      39406,
+      35307,
+      5998,
+      22982,
+      6102,
+      11103,
+      8822,
+      11267,
+      1543
+     ],
+     "avg_logprob": -0.042630710280858554,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 4.345
+   },
+   "provider": {
+    "text": "翻訳ツールを使って話しています。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja08"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 1.73,
+     "text": "ブルキットは楽しいです。",
+     "tokens": [
+      28889,
+      9405,
+      15535,
+      31978,
+      3065,
+      35479,
+      17121,
+      4767,
+      1543
+     ],
+     "avg_logprob": -0.02362060546875,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 1.732375
+   },
+   "provider": {
+    "text": "ブルキットは楽しいです。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja08"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 1.73,
+     "text": "ブルキットは楽しいです。",
+     "tokens": [
+      28889,
+      9405,
+      15535,
+      31978,
+      3065,
+      35479,
+      17121,
+      4767,
+      1543
+     ],
+     "avg_logprob": -0.02362060546875,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 1.732375
+   },
+   "provider": {
+    "text": "ブルキットは楽しいです。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja09"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.77,
+     "text": "カタカナの半角も混ぜてみる。",
+     "tokens": [
+      10111,
+      12144,
+      10111,
+      26719,
+      2972,
+      30018,
+      29389,
+      4801,
+      48640,
+      20258,
+      2996,
+      11362,
+      4895,
+      1543
+     ],
+     "avg_logprob": -0.012874348958333334,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.99951171875,
+    "duration": 2.775
+   },
+   "provider": {
+    "text": "カタカナの半角も混ぜてみる。",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja09"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.77,
+     "text": "カタカナの半角も混ぜてみる。",
+     "tokens": [
+      10111,
+      12144,
+      10111,
+      26719,
+      2972,
+      30018,
+      29389,
+      4801,
+      48640,
+      20258,
+      2996,
+      11362,
+      4895,
+      1543
+     ],
+     "avg_logprob": -0.012874348958333334,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 2.775
+   },
+   "provider": {
+    "text": "カタカナの半角も混ぜてみる。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja10"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.85,
+     "text": "ありがとうと言いたかっただけです。",
+     "tokens": [
+      21339,
+      3193,
+      12009,
+      17679,
+      25785,
+      36215,
+      4767,
+      1543
+     ],
+     "avg_logprob": -0.025160047743055556,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.99951171875,
+    "duration": 3.854375
+   },
+   "provider": {
+    "text": "ありがとうと言いたかっただけです。",
+    "language_probability": 0.99951171875,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja10"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 3.85,
+     "text": "ありがとうと言いたかっただけです。",
+     "tokens": [
+      21339,
+      3193,
+      12009,
+      17679,
+      25785,
+      36215,
+      4767,
+      1543
+     ],
+     "avg_logprob": -0.025160047743055556,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 3.854375
+   },
+   "provider": {
+    "text": "ありがとうと言いたかっただけです。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja11"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.24,
+     "text": "位置津外の部屋に集合してください。",
+     "tokens": [
+      11160,
+      34719,
+      12136,
+      98,
+      12022,
+      2972,
+      13470,
+      9636,
+      233,
+      4108,
+      26020,
+      14245,
+      8822,
+      25079,
+      1543
+     ],
+     "avg_logprob": -0.1865234412252903,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 2.245875
+   },
+   "provider": {
+    "text": "位置津外の部屋に集合してください。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja11"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.24,
+     "text": "位置津外の部屋に集合してください。",
+     "tokens": [
+      11160,
+      34719,
+      12136,
+      98,
+      12022,
+      2972,
+      13470,
+      9636,
+      233,
+      4108,
+      26020,
+      14245,
+      8822,
+      25079,
+      1543
+     ],
+     "avg_logprob": -0.1865234412252903,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 2.245875
+   },
+   "provider": {
+    "text": "位置津外の部屋に集合してください。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja00",
+    "ja01",
+    "ja02",
+    "ja03",
+    "ja04",
+    "ja05",
+    "ja06",
+    "ja07",
+    "ja08",
+    "ja09",
+    "ja10",
+    "ja11"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 30.0,
+     "text": "こんにちは。今日はとてもいい天気ですね。このワールド、夜景がすごくきれい。ちょっと待って、マイクの調子が悪いみたい。明日の夜9時にまた集まりましょう。はじめまして。日本から来ました。よろしくお願いします。それ、本当に面白いね、わら。音声が途切れていますか?聞こえますか?",
+     "tokens": [
+      38088,
+      1543,
+      43791,
+      3193,
+      2996,
+      4801,
+      13806,
+      6135,
+      25870,
+      14277,
+      1543,
+      13303,
+      39613,
+      35307,
+      11195,
+      1231,
+      30124,
+      50218,
+      5142,
+      28077,
+      6134,
+      7016,
+      4132,
+      1764,
+      1543,
+      21888,
+      33393,
+      1231,
+      13258,
+      8040,
+      10825,
+      2972,
+      32943,
+      7626,
+      5142,
+      14696,
+      103,
+      1764,
+      41258,
+      1543,
+      11100,
+      6890,
+      2972,
+      30124,
+      24,
+      6611,
+      4108,
+      24712,
+      26020,
+      41446,
+      26513,
+      1543,
+      3065,
+      9257,
+      11429,
+      2889,
+      8822,
+      1543,
+      27311,
+      11046,
+      6912,
+      12072,
+      1543,
+      37457,
+      32420,
+      1543,
+      13873,
+      1231,
+      37505,
+      4108,
+      8833,
+      13558,
+      1764,
+      5555,
+      1231,
+      9206,
+      5154,
+      1543,
+      18034,
+      32045,
+      5142,
+      2215,
+      242,
+      23632,
+      26638,
+      11267,
+      3703,
+      30,
+      25468,
+      3503,
+      6474,
+      5368,
+      3703,
+      30
+     ],
+     "avg_logprob": -0.038281248431456714,
+     "no_speech_prob": 0.0
+    },
+    {
+     "id": 2,
+     "seek": 3000,
+     "start": 30.0,
+     "end": 44.05,
+     "text": "ツールを使って話しています。ブルキットは楽しいです。カタカナの半角も混ぜてみる。ありがとうと言いたかっただけです。位置継がいの部屋に集合してください。",
+     "tokens": [
+      39406,
+      35307,
+      5998,
+      22982,
+      6102,
+      11103,
+      8822,
+      11267,
+      1543,
+      28889,
+      9405,
+      15535,
+      31978,
+      3065,
+      35479,
+      17121,
+      4767,
+      1543,
+      10111,
+      12144,
+      10111,
+      26719,
+      2972,
+      30018,
+      29389,
+      4801,
+      48640,
+      20258,
+      2996,
+      11362,
+      4895,
+      1543,
+      21339,
+      3193,
+      12009,
+      17679,
+      25785,
+      36215,
+      4767,
+      1543,
+      11160,
+      34719,
+      9261,
+      247,
+      5142,
+      1764,
+      2972,
+      13470,
+      9636,
+      233,
+      4108,
+      26020,
+      14245,
+      8822,
+      25079,
+      1543
+     ],
+     "avg_logprob": -0.09923245823174193,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 44.059125
+   },
+   "provider": {
+    "text": "こんにちは。今日はとてもいい天気ですね。このワールド、夜景がすごくきれい。ちょっと待って、マイクの調子が悪いみたい。明日の夜9時にまた集まりましょう。はじめまして。日本から来ました。よろしくお願いします。それ、本当に面白いね、わら。音声が途切れていますか?聞こえますか?ツールを使って話しています。ブルキットは楽しいです。カタカナの半角も混ぜてみる。ありがとうと言いたかっただけです。位置継がいの部屋に集合してください。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja00",
+    "ja01",
+    "ja02",
+    "ja03",
+    "ja04",
+    "ja05",
+    "ja06",
+    "ja07",
+    "ja08",
+    "ja09",
+    "ja10",
+    "ja11"
+   ],
+   "language": "ja",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 30.0,
+     "text": "こんにちは。今日はとてもいい天気ですね。このワールド、夜景がすごくきれい。ちょっと待って、マイクの調子が悪いみたい。明日の夜9時にまた集まりましょう。はじめまして。日本から来ました。よろしくお願いします。それ、本当に面白いね、わら。音声が途切れていますか?聞こえますか?",
+     "tokens": [
+      38088,
+      1543,
+      43791,
+      3193,
+      2996,
+      4801,
+      13806,
+      6135,
+      25870,
+      14277,
+      1543,
+      13303,
+      39613,
+      35307,
+      11195,
+      1231,
+      30124,
+      50218,
+      5142,
+      28077,
+      6134,
+      7016,
+      4132,
+      1764,
+      1543,
+      21888,
+      33393,
+      1231,
+      13258,
+      8040,
+      10825,
+      2972,
+      32943,
+      7626,
+      5142,
+      14696,
+      103,
+      1764,
+      41258,
+      1543,
+      11100,
+      6890,
+      2972,
+      30124,
+      24,
+      6611,
+      4108,
+      24712,
+      26020,
+      41446,
+      26513,
+      1543,
+      3065,
+      9257,
+      11429,
+      2889,
+      8822,
+      1543,
+      27311,
+      11046,
+      6912,
+      12072,
+      1543,
+      37457,
+      32420,
+      1543,
+      13873,
+      1231,
+      37505,
+      4108,
+      8833,
+      13558,
+      1764,
+      5555,
+      1231,
+      9206,
+      5154,
+      1543,
+      18034,
+      32045,
+      5142,
+      2215,
+      242,
+      23632,
+      26638,
+      11267,
+      3703,
+      30,
+      25468,
+      3503,
+      6474,
+      5368,
+      3703,
+      30
+     ],
+     "avg_logprob": -0.038281248431456714,
+     "no_speech_prob": 0.0
+    },
+    {
+     "id": 2,
+     "seek": 3000,
+     "start": 30.0,
+     "end": 44.05,
+     "text": "ツールを使って話しています。ブルキットは楽しいです。カタカナの半角も混ぜてみる。ありがとうと言いたかっただけです。位置継がいの部屋に集合してください。",
+     "tokens": [
+      39406,
+      35307,
+      5998,
+      22982,
+      6102,
+      11103,
+      8822,
+      11267,
+      1543,
+      28889,
+      9405,
+      15535,
+      31978,
+      3065,
+      35479,
+      17121,
+      4767,
+      1543,
+      10111,
+      12144,
+      10111,
+      26719,
+      2972,
+      30018,
+      29389,
+      4801,
+      48640,
+      20258,
+      2996,
+      11362,
+      4895,
+      1543,
+      21339,
+      3193,
+      12009,
+      17679,
+      25785,
+      36215,
+      4767,
+      1543,
+      11160,
+      34719,
+      9261,
+      247,
+      5142,
+      1764,
+      2972,
+      13470,
+      9636,
+      233,
+      4108,
+      26020,
+      14245,
+      8822,
+      25079,
+      1543
+     ],
+     "avg_logprob": -0.09923245823174193,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 1,
+    "duration": 44.059125
+   },
+   "provider": {
+    "text": "こんにちは。今日はとてもいい天気ですね。このワールド、夜景がすごくきれい。ちょっと待って、マイクの調子が悪いみたい。明日の夜9時にまた集まりましょう。はじめまして。日本から来ました。よろしくお願いします。それ、本当に面白いね、わら。音声が途切れていますか?聞こえますか?ツールを使って話しています。ブルキットは楽しいです。カタカナの半角も混ぜてみる。ありがとうと言いたかっただけです。位置継がいの部屋に集合してください。",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "ja00",
+    "ja01",
+    "ja02",
+    "ja03",
+    "ja04",
+    "ja05",
+    "ja06",
+    "ja07",
+    "ja08",
+    "ja09",
+    "ja10",
+    "ja11"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "no_repeat_ngram_size": 2,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 30.0,
+     "text": "こんにちは。今日はとてもいい天気ですね。このワールド、夜景がすごくきれい。ちょっと待って、マイクの調子が悪いみたい。明日の夜9時にまた集まりましょう。はじめまして。日本から来ました。よろしくお願いします。それ、本当に面白いね、わら。音声が途切れていますか?聞こえますか。",
+     "tokens": [
+      38088,
+      1543,
+      43791,
+      3193,
+      2996,
+      4801,
+      13806,
+      6135,
+      25870,
+      14277,
+      1543,
+      13303,
+      39613,
+      35307,
+      11195,
+      1231,
+      30124,
+      50218,
+      5142,
+      28077,
+      6134,
+      7016,
+      4132,
+      1764,
+      1543,
+      21888,
+      33393,
+      1231,
+      13258,
+      8040,
+      10825,
+      2972,
+      32943,
+      7626,
+      5142,
+      14696,
+      103,
+      1764,
+      41258,
+      1543,
+      11100,
+      6890,
+      2972,
+      30124,
+      24,
+      6611,
+      4108,
+      24712,
+      26020,
+      41446,
+      26513,
+      1543,
+      3065,
+      9257,
+      11429,
+      2889,
+      8822,
+      1543,
+      27311,
+      11046,
+      6912,
+      12072,
+      1543,
+      37457,
+      32420,
+      1543,
+      13873,
+      1231,
+      37505,
+      4108,
+      8833,
+      13558,
+      1764,
+      5555,
+      1231,
+      9206,
+      5154,
+      1543,
+      18034,
+      32045,
+      5142,
+      2215,
+      242,
+      23632,
+      26638,
+      11267,
+      3703,
+      30,
+      25468,
+      3503,
+      6474,
+      5368,
+      3703,
+      1543
+     ],
+     "avg_logprob": -0.0384662821104652,
+     "no_speech_prob": 0.0
+    },
+    {
+     "id": 2,
+     "seek": 3000,
+     "start": 30.0,
+     "end": 44.05,
+     "text": "通路を使って話しています。ブルキットは楽しいです。カタカナの半角も混ぜてみる。ありがとうと言いたかっただけです.位置継がいの部屋に集合してください。",
+     "tokens": [
+      19550,
+      24658,
+      5998,
+      22982,
+      6102,
+      11103,
+      8822,
+      11267,
+      1543,
+      28889,
+      9405,
+      15535,
+      31978,
+      3065,
+      35479,
+      17121,
+      4767,
+      1543,
+      10111,
+      12144,
+      10111,
+      26719,
+      2972,
+      30018,
+      29389,
+      4801,
+      48640,
+      20258,
+      2996,
+      11362,
+      4895,
+      1543,
+      21339,
+      3193,
+      12009,
+      17679,
+      25785,
+      36215,
+      4767,
+      13,
+      11160,
+      34719,
+      9261,
+      247,
+      5142,
+      1764,
+      2972,
+      13470,
+      9636,
+      233,
+      4108,
+      26020,
+      14245,
+      8822,
+      25079,
+      1543
+     ],
+     "avg_logprob": -0.1357593201754386,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "ja",
+    "language_probability": 0.9990234375,
+    "duration": 44.059125
+   },
+   "provider": {
+    "text": "こんにちは。今日はとてもいい天気ですね。このワールド、夜景がすごくきれい。ちょっと待って、マイクの調子が悪いみたい。明日の夜9時にまた集まりましょう。はじめまして。日本から来ました。よろしくお願いします。それ、本当に面白いね、わら。音声が途切れていますか?聞こえますか。通路を使って話しています。ブルキットは楽しいです。カタカナの半角も混ぜてみる。ありがとうと言いたかっただけです.位置継がいの部屋に集合してください。",
+    "language_probability": 0.9990234375,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en00",
+    "en01",
+    "en02",
+    "en03",
+    "en04",
+    "en05",
+    "en06",
+    "en07",
+    "en08",
+    "en09",
+    "en10",
+    "en11"
+   ],
+   "language": "en",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 30.0,
+     "text": " Hello, how are you today? I can't believe it's already October. We're going to the store, do you need anything? The meeting starts at 3.30pm, so don't be late. She said it's fine but I'm not sure. Let's meet at the station in front of the big clock. This world is so beautiful at night. I've been playing VR chat for about two years now. Could you speak a little more slowly, please?",
+     "tokens": [
+      2425,
+      11,
+      577,
+      366,
+      291,
+      965,
+      30,
+      286,
+      393,
+      380,
+      1697,
+      309,
+      311,
+      1217,
+      7617,
+      13,
+      492,
+      434,
+      516,
+      281,
+      264,
+      3531,
+      11,
+      360,
+      291,
+      643,
+      1340,
+      30,
+      440,
+      3440,
+      3719,
+      412,
+      805,
+      13,
+      3446,
+      14395,
+      11,
+      370,
+      500,
+      380,
+      312,
+      3469,
+      13,
+      1240,
+      848,
+      309,
+      311,
+      2489,
+      457,
+      286,
+      478,
+      406,
+      988,
+      13,
+      961,
+      311,
+      1677,
+      412,
+      264,
+      5214,
+      294,
+      1868,
+      295,
+      264,
+      955,
+      7830,
+      13,
+      639,
+      1002,
+      307,
+      370,
+      2238,
+      412,
+      1818,
+      13,
+      286,
+      600,
+      668,
+      2433,
+      13722,
+      5081,
+      337,
+      466,
+      732,
+      924,
+      586,
+      13,
+      7497,
+      291,
+      1710,
+      257,
+      707,
+      544,
+      5692,
+      11,
+      1767,
+      30
+     ],
+     "avg_logprob": -0.017588090683732713,
+     "no_speech_prob": 0.0
+    },
+    {
+     "id": 2,
+     "seek": 3000,
+     "start": 30.0,
+     "end": 38.64,
+     "text": " With a help, I really appreciate it. Wait, what did you just say? He's got three cats and two dogs.",
+     "tokens": [
+      2022,
+      257,
+      854,
+      11,
+      286,
+      534,
+      4449,
+      309,
+      13,
+      3802,
+      11,
+      437,
+      630,
+      291,
+      445,
+      584,
+      30,
+      634,
+      311,
+      658,
+      1045,
+      11111,
+      293,
+      732,
+      7197,
+      13
+     ],
+     "avg_logprob": -0.07429108796296297,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1.0,
+    "duration": 38.64
+   },
+   "provider": {
+    "text": " Hello, how are you today? I can't believe it's already October. We're going to the store, do you need anything? The meeting starts at 3.30pm, so don't be late. She said it's fine but I'm not sure. Let's meet at the station in front of the big clock. This world is so beautiful at night. I've been playing VR chat for about two years now. Could you speak a little more slowly, please? With a help, I really appreciate it. Wait, what did you just say? He's got three cats and two dogs.",
+    "language_probability": 1.0,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en00",
+    "en01",
+    "en02",
+    "en03",
+    "en04",
+    "en05",
+    "en06",
+    "en07",
+    "en08",
+    "en09",
+    "en10",
+    "en11"
+   ],
+   "language": "en",
+   "force_language": true,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 30.0,
+     "text": " Hello, how are you today? I can't believe it's already October. We're going to the store, do you need anything? The meeting starts at 3.30pm, so don't be late. She said it's fine but I'm not sure. Let's meet at the station in front of the big clock. This world is so beautiful at night. I've been playing VR chat for about two years now. Could you speak a little more slowly, please?",
+     "tokens": [
+      2425,
+      11,
+      577,
+      366,
+      291,
+      965,
+      30,
+      286,
+      393,
+      380,
+      1697,
+      309,
+      311,
+      1217,
+      7617,
+      13,
+      492,
+      434,
+      516,
+      281,
+      264,
+      3531,
+      11,
+      360,
+      291,
+      643,
+      1340,
+      30,
+      440,
+      3440,
+      3719,
+      412,
+      805,
+      13,
+      3446,
+      14395,
+      11,
+      370,
+      500,
+      380,
+      312,
+      3469,
+      13,
+      1240,
+      848,
+      309,
+      311,
+      2489,
+      457,
+      286,
+      478,
+      406,
+      988,
+      13,
+      961,
+      311,
+      1677,
+      412,
+      264,
+      5214,
+      294,
+      1868,
+      295,
+      264,
+      955,
+      7830,
+      13,
+      639,
+      1002,
+      307,
+      370,
+      2238,
+      412,
+      1818,
+      13,
+      286,
+      600,
+      668,
+      2433,
+      13722,
+      5081,
+      337,
+      466,
+      732,
+      924,
+      586,
+      13,
+      7497,
+      291,
+      1710,
+      257,
+      707,
+      544,
+      5692,
+      11,
+      1767,
+      30
+     ],
+     "avg_logprob": -0.017588090683732713,
+     "no_speech_prob": 0.0
+    },
+    {
+     "id": 2,
+     "seek": 3000,
+     "start": 30.0,
+     "end": 38.64,
+     "text": " With a help, I really appreciate it. Wait, what did you just say? He's got three cats and two dogs.",
+     "tokens": [
+      2022,
+      257,
+      854,
+      11,
+      286,
+      534,
+      4449,
+      309,
+      13,
+      3802,
+      11,
+      437,
+      630,
+      291,
+      445,
+      584,
+      30,
+      634,
+      311,
+      658,
+      1045,
+      11111,
+      293,
+      732,
+      7197,
+      13
+     ],
+     "avg_logprob": -0.07429108796296297,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1,
+    "duration": 38.64
+   },
+   "provider": {
+    "text": " Hello, how are you today? I can't believe it's already October. We're going to the store, do you need anything? The meeting starts at 3.30pm, so don't be late. She said it's fine but I'm not sure. Let's meet at the station in front of the big clock. This world is so beautiful at night. I've been playing VR chat for about two years now. Could you speak a little more slowly, please? With a help, I really appreciate it. Wait, what did you just say? He's got three cats and two dogs.",
+    "language_probability": 1,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "en00",
+    "en01",
+    "en02",
+    "en03",
+    "en04",
+    "en05",
+    "en06",
+    "en07",
+    "en08",
+    "en09",
+    "en10",
+    "en11"
+   ],
+   "language": "en",
+   "force_language": false,
+   "no_repeat_ngram_size": 2,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 30.0,
+     "text": " Hello, how are you today? I can't believe it's already October. We're going to the store, do you need anything? The meeting starts at 3.30pm, so don't be late. She said it'd fine but I'm not sure. Let's meet at the station in front of the big clock. This world is so beautiful at night. I've been playing VR chat for about two years now. Could you speak a little more slowly, please?",
+     "tokens": [
+      2425,
+      11,
+      577,
+      366,
+      291,
+      965,
+      30,
+      286,
+      393,
+      380,
+      1697,
+      309,
+      311,
+      1217,
+      7617,
+      13,
+      492,
+      434,
+      516,
+      281,
+      264,
+      3531,
+      11,
+      360,
+      291,
+      643,
+      1340,
+      30,
+      440,
+      3440,
+      3719,
+      412,
+      805,
+      13,
+      3446,
+      14395,
+      11,
+      370,
+      500,
+      380,
+      312,
+      3469,
+      13,
+      1240,
+      848,
+      309,
+      1116,
+      2489,
+      457,
+      286,
+      478,
+      406,
+      988,
+      13,
+      961,
+      311,
+      1677,
+      412,
+      264,
+      5214,
+      294,
+      1868,
+      295,
+      264,
+      955,
+      7830,
+      13,
+      639,
+      1002,
+      307,
+      370,
+      2238,
+      412,
+      1818,
+      13,
+      286,
+      600,
+      668,
+      2433,
+      13722,
+      5081,
+      337,
+      466,
+      732,
+      924,
+      586,
+      13,
+      7497,
+      291,
+      1710,
+      257,
+      707,
+      544,
+      5692,
+      11,
+      1767,
+      30
+     ],
+     "avg_logprob": -0.04233099603835417,
+     "no_speech_prob": 0.0
+    },
+    {
+     "id": 2,
+     "seek": 3000,
+     "start": 30.0,
+     "end": 38.64,
+     "text": " With a help, I really appreciate it. Wait, what did you just say? He's got three cats and two dogs.",
+     "tokens": [
+      2022,
+      257,
+      854,
+      11,
+      286,
+      534,
+      4449,
+      309,
+      13,
+      3802,
+      11,
+      437,
+      630,
+      291,
+      445,
+      584,
+      30,
+      634,
+      311,
+      658,
+      1045,
+      11111,
+      293,
+      732,
+      7197,
+      13
+     ],
+     "avg_logprob": -0.0748697938742461,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 1.0,
+    "duration": 38.64
+   },
+   "provider": {
+    "text": " Hello, how are you today? I can't believe it's already October. We're going to the store, do you need anything? The meeting starts at 3.30pm, so don't be late. She said it'd fine but I'm not sure. Let's meet at the station in front of the big clock. This world is so beautiful at night. I've been playing VR chat for about two years now. Could you speak a little more slowly, please? With a help, I really appreciate it. Wait, what did you just say? He's got three cats and two dogs.",
+    "language_probability": 1.0,
+    "is_definitive": true
+   }
+  },
+  {
+   "files": [
+    "silence"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.0,
+     "text": " you",
+     "tokens": [
+      291
+     ],
+     "avg_logprob": -0.9208984375,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.356689453125,
+    "duration": 2.0
+   },
+   "provider": {
+    "text": "",
+    "language_probability": 0.356689453125,
+    "is_definitive": false
+   }
+  },
+  {
+   "files": [
+    "noise"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.0,
+     "text": " you",
+     "tokens": [
+      291
+     ],
+     "avg_logprob": -0.7578125,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.2120361328125,
+    "duration": 2.0
+   },
+   "provider": {
+    "text": " you",
+    "language_probability": 0.2120361328125,
+    "is_definitive": false
+   }
+  },
+  {
+   "files": [
+    "tone"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 2.0,
+     "text": " . .",
+     "tokens": [
+      2411,
+      2411
+     ],
+     "avg_logprob": -1.1979166666666667,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "en",
+    "language_probability": 0.87060546875,
+    "duration": 2.0
+   },
+   "provider": {
+    "text": "",
+    "language_probability": 0.87060546875,
+    "is_definitive": false
+   }
+  },
+  {
+   "files": [
+    "short"
+   ],
+   "language": "ja",
+   "force_language": false,
+   "avg_logprob": -0.8,
+   "no_speech_prob": 0.6,
+   "no_repeat_ngram_size": 0,
+   "segments": [
+    {
+     "id": 1,
+     "seek": 0,
+     "start": 0.0,
+     "end": 0.05,
+     "text": " Gracias.",
+     "tokens": [
+      26909,
+      13
+     ],
+     "avg_logprob": -0.4752604166666667,
+     "no_speech_prob": 0.0
+    }
+   ],
+   "info": {
+    "language": "es",
+    "language_probability": 0.275390625,
+    "duration": 0.05
+   },
+   "provider": {
+    "text": " Gracias.",
+    "language_probability": 0.275390625,
+    "is_definitive": false
+   }
+  }
+ ]
+}
