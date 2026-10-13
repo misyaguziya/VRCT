@@ -8,12 +8,13 @@ pub use vrct_openvr::{is_process_running, is_steamvr_running};
 use serde_json::Value;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs};
 
-/// Bytes waiting in a pipe; None when `handle` is not a pipe or the pipe is closed
-pub fn pipe_available(handle: std::os::windows::io::RawHandle) -> Option<u32> {
+/// Bytes waiting in a pipe; None when `file` is not a pipe or the pipe is closed
+pub fn pipe_available(file: &std::fs::File) -> Option<u32> {
+    use std::os::windows::io::AsRawHandle;
     use windows_sys::Win32::System::Pipes::PeekNamedPipe;
     let mut available = 0u32;
     let ok = unsafe {
-        PeekNamedPipe(handle, std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut available, std::ptr::null_mut())
+        PeekNamedPipe(file.as_raw_handle(), std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut available, std::ptr::null_mut())
     };
     (ok != 0).then_some(available)
 }
