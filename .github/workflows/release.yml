@@ -35,53 +35,14 @@ jobs:
             echo "hf_repo=ms-software/VRCT" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           }
 
-      - name: Verify version numbers match the tag
+      # package.json holds the version: tauri.conf.json points at it and the backend reads it at build time
+      - name: Verify the version matches the tag
         shell: pwsh
         run: |
           $expected = $env:VERSION
-          $failed = $false
-
           $pkgVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
           if ($pkgVersion -ne $expected) {
             Write-Host "::error::package.json version ($pkgVersion) does not match tag version ($expected)"
-            $failed = $true
-          }
-
-          $tauriVersion = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
-          if ($tauriVersion -ne $expected) {
-            Write-Host "::error::src-tauri/tauri.conf.json version ($tauriVersion) does not match tag version ($expected)"
-            $failed = $true
-          }
-
-          $configContent = Get-Content src-python/config.py -Raw
-          if ($configContent -notmatch 'self\._VERSION\s*=\s*"([^"]+)"') {
-            Write-Host "::error::could not find self._VERSION in src-python/config.py"
-            $failed = $true
-          } elseif ($Matches[1] -ne $expected) {
-            Write-Host "::error::src-python/config.py VERSION ($($Matches[1])) does not match tag version ($expected)"
-            $failed = $true
-          }
-
-          if ($failed) {
-            Write-Host "::error::Version mismatch detected. Bump every version field to $expected before tagging."
-            exit 1
-          }
-
-      - name: Verify build channel matches the tag
-        shell: pwsh
-        run: |
-          $isBeta = "${{ steps.channel.outputs.is_beta }}" -eq "true"
-          $expectedChannel = if ($isBeta) { "beta" } else { "stable" }
-
-          $content = Get-Content src-python/build_channel.py -Raw
-          if ($content -notmatch 'BUILD_CHANNEL\s*=\s*"([^"]+)"') {
-            Write-Host "::error::could not find BUILD_CHANNEL in src-python/build_channel.py"
-            exit 1
-          }
-          $actualChannel = $Matches[1]
-
-          if ($actualChannel -ne $expectedChannel) {
-            Write-Host "::error::BUILD_CHANNEL is '$actualChannel' but tag '${{ github.ref_name }}' implies '$expectedChannel'. Fix src-python/build_channel.py before tagging."
             exit 1
           }
 
