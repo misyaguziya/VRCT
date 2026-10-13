@@ -3408,9 +3408,11 @@ dependencies = [
 name = "vrct-audio"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "cpal",
  "dasp_sample",
  "flacenc",
+ "serde_json",
  "windows 0.61.1",
  "windows-core 0.61.2",
 ]

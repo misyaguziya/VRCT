@@ -1,7 +1,7 @@
 # native/
 
 Rust バックエンドのワークスペース（設計: `docs/rust_backend_design_2026-10-11.md`）。
-`vrct-audio` / `vrct-graphics`（もとは Python 版の拡張で、単独の Cargo.lock を持つ）と `poc-oscquery` はワークスペースの外（それぞれ単独でビルドする）。
+`poc-oscquery` はワークスペースの外（単独でビルドする）。
 
 Python 版のコードは削除した。基準データ（`testdata/`）と契約テストの基準は、削除の前に Python 版から書き出したもの。書き出したスクリプトは git の履歴にある（Python のコードが残っている最後のコミットは `6c68cfd6`。ただし配布用のデータは `c71c465d` で `native/data/` へ移したので、Python 版を動かすならその前の `051aed5d`）。
 
