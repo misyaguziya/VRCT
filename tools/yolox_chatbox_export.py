@@ -1,7 +1,7 @@
 """学習した YOLOX の重みを VRCT が読む .onnx にする。
 
 .\.venv-yolox\Scripts\python.exe -X utf8 tools\yolox_chatbox_export.py \
-    -c runs\chatbox_yolox_tiny\best_ckpt.pth -o src-python\models\ocr\onnx\chatbox_yolox_tiny.onnx
+    -c runs\chatbox_yolox_tiny\best_ckpt.pth -o native\data\ocr\chatbox_yolox_tiny.onnx
 
 .yolox-src\tools\export_onnx.py と同じことをするが、次の2点だけ変えてある。
 
