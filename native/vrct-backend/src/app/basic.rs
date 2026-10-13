@@ -38,6 +38,10 @@ switches! {
     set_enable_show_resend_button, set_disable_show_resend_button => "SHOW_RESEND_BUTTON";
     set_enable_mic_automatic_threshold, set_disable_mic_automatic_threshold => "MIC_AUTOMATIC_THRESHOLD";
     set_enable_speaker_automatic_threshold, set_disable_speaker_automatic_threshold => "SPEAKER_AUTOMATIC_THRESHOLD";
+    // VAD: the recorder is chosen when recording starts, so it applies from the next start (the
+    // settings page stops transcription while open)
+    set_enable_mic_vad_filter, set_disable_mic_vad_filter => "MIC_ENABLE_VAD";
+    set_enable_speaker_vad_filter, set_disable_speaker_vad_filter => "SPEAKER_ENABLE_VAD";
     set_enable_notification_vrc_sfx, set_disable_notification_vrc_sfx => "NOTIFICATION_VRC_SFX";
     set_enable_auto_clear_message_box, set_disable_auto_clear_message_box => "AUTO_CLEAR_MESSAGE_BOX";
     set_enable_send_only_translated_messages, set_disable_send_only_translated_messages => "SEND_ONLY_TRANSLATED_MESSAGES";
