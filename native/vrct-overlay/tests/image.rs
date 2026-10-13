@@ -33,7 +33,7 @@ fn save(image: &Image, name: &str) {
 #[test]
 fn sizes_match_python() {
     let data: Value = serde_json::from_slice(&std::fs::read(native().join("testdata/overlay/images.json")).unwrap()).unwrap();
-    let fonts = native().join("../src-python/models/overlay/fonts");
+    let fonts = native().join("data/fonts");
     let mut problems = vec![];
     let mut overlay = OverlayImage::new(&fonts);
     for c in data["small"].as_array().unwrap() {

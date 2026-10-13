@@ -1,5 +1,5 @@
 //! cargo xtask fetch-native [--cuda]
-//! cargo xtask stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <src-python/weights>]
+//! cargo xtask stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <weights folder>]
 //!   (the installed layout; --weights makes a junction: the sidecar reads the weights from beside it)
 //!
 //! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
@@ -242,7 +242,7 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     let native = native_dir();
     let built = native.join("target").join(if release { "release" } else { "debug" });
     let third_party = native.join("third_party");
-    let models = native.join("../src-python/models");
+    let data = native.join("data");
     fs::create_dir_all(out)?;
     // a fresh _internal; the files of the flat layout staged before go too (config.json, the logs
     // and the weights stay)
@@ -268,9 +268,9 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     for dir in dll_dirs {
         copy_dlls(&third_party.join(dir), &internal)?;
     }
-    copy_dir(&models.join("translation/translation_settings"), &internal.join("translation_settings"))?;
-    copy_dir(&models.join("overlay/fonts"), &internal.join("fonts"))?;
-    copy_dir(&native.join("data/sudachi"), &internal.join("sudachi"))?;
+    copy_dir(&data.join("translation_settings"), &internal.join("translation_settings"))?;
+    copy_dir(&data.join("fonts"), &internal.join("fonts"))?;
+    copy_dir(&data.join("sudachi"), &internal.join("sudachi"))?;
     fs::copy(third_party.join("sudachidict-full/system_full.dic"), internal.join("sudachi/system.dic"))
         .context("sudachidict-full: run fetch-native")?;
     fs::create_dir_all(internal.join("silero"))?;
@@ -278,7 +278,7 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
         fs::copy(third_party.join("faster-whisper").join(name), internal.join("silero").join(name))?;
     }
     // OCR: the bubble detector (with its notices) and RapidOCR's models
-    copy_dir(&models.join("ocr/onnx"), &internal.join("ocr"))?;
+    copy_dir(&data.join("ocr"), &internal.join("ocr"))?;
     let rapidocr = internal.join("ocr").join("rapidocr");
     fs::create_dir_all(&rapidocr)?;
     for dir in ["rapidocr", "rapidocr-ch-det-v5", "rapidocr-korean-rec-v5", "rapidocr-cyrillic-rec-v5", "rapidocr-th-rec-v5",
@@ -305,7 +305,7 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     fs::create_dir_all(&licenses)?;
     for (from, to) in [("vrct-backend/THIRD_PARTY_LICENSES.txt", "rust-crates.txt"),
                        ("vrct-audio/SPEECH_RECOGNITION_LICENSE.txt", "speech_recognition.txt"),
-                       ("../src-python/models/transcription/google_speech_LICENSE.txt", "google_speech.txt"),
+                       ("vrct-backend/GOOGLE_SPEECH_LICENSE.txt", "google_speech.txt"),
                        ("vrct-ocr/LICENSE-APACHE-2.0", "rapidocr-port-apache-2.0.txt")] {
         fs::copy(native.join(from), licenses.join(to)).with_context(|| from.to_string())?;
     }

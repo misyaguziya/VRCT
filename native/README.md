@@ -59,6 +59,11 @@ cargo test -p vrct-backend -p vrct-webtranslate
 
 ## 契約テスト
 
+翻訳設定・フォント・OCR のモデルを `src-python/models/` から `native/data/` へ移した (2026-10-13)
+ので、このブランチの Python 版はもう正しく動かない。Python 版の基準 (`target/contract/python.json`)
+はそれより前に取ったものを使い続ける。取り直すときは、移す前のコミット (`051aed5d`) を別の
+worktree に出して、そこで下の Python 版の手順を実行する。
+
 ```powershell
 cd native
 cargo build -p vrct-contract

@@ -2,7 +2,7 @@
 
 Each trial creates fresh PcmAudio and then prepares 1/3/5 language candidates.
 The previous classes preserve the pre-cache raw/WAV and Whisper preparation.
-Conversion ordering attribution: src-python/models/transcription/google_speech_LICENSE.txt.
+Conversion ordering attribution: native/vrct-backend/GOOGLE_SPEECH_LICENSE.txt.
 """
 
 import argparse

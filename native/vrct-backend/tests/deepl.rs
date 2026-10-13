@@ -38,7 +38,7 @@ fn deepl_matches_python() {
         }).collect();
         reply(200, json!({"translations": translations}))
     }));
-    let settings = native().join("../src-python/models/translation/translation_settings");
+    let settings = native().join("data/translation_settings");
     let mut t = Translator::new(Http::redirected(&mock.root).unwrap(), &settings).unwrap();
     let message = "こんにちは、\n世界！ & <tag>";
     let mut problems = vec![];

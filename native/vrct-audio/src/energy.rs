@@ -1,5 +1,5 @@
 //! Energy phrase detection, matching the pinned SpeechRecognition listener.
-//! Derived behavior: see src-python/models/transcription/google_speech_LICENSE.txt.
+//! Derived behavior: see native/vrct-backend/GOOGLE_SPEECH_LICENSE.txt.
 use std::collections::VecDeque;
 
 
