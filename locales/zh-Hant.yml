@@ -135,6 +135,8 @@ config_page:
         ocr: "聊天讀取"
 
     device:
+        section_label_mic: "麥克風"
+        section_label_speaker: "揚聲器"
         check_volume: "音量檢查"
         label_auto_select: "自動選擇"
         label_host: "主機/驅動程式"
@@ -142,17 +144,23 @@ config_page:
         mic_host_device:
             label: "麥克風裝置"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "麥克風能量閾值（當前設置：自動）"
+            label: "麥克風能量閾值"
             desc_for_automatic: "自動判定麥克風輸入靈敏度。"
-            label_for_manual: "麥克風能量閾值（當前設置：手動）"
             desc_for_manual: "使用滑桿調整麥克風輸入靈敏度，你可以按下麥克風圖示來測試。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "使用AI(Silero VAD)檢測語音，每次說完話就將音訊發送至語音辨識。可減少拾取背景音樂和環境音的情況。"
         speaker_device:
             label: "喇叭裝置"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "喇叭能量閾值（當前設置：自動）"
+            label: "喇叭能量閾值"
             desc_for_automatic: "自動確定喇叭輸入靈敏度。"
-            label_for_manual: "喇叭能量閾值（當前設置：手動）"
             desc_for_manual: "使用滑桿調整喇叭輸入靈敏度，你可以按下喇叭圖示來測試。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "使用AI(Silero VAD)檢測他人語音，每次說完話就將音訊發送至語音辨識。可減少拾取BGM和遊戲音效的情況。"
 
     appearance:
         transparency:
@@ -272,6 +280,18 @@ config_page:
             desc: "容量越大的模型精度越高，但會占用更多 CPU/GPU 資源。\n※特別是比 medium 更大的模型，根據 CPU/GPU 效能可能難以使用。"
         transcription_compute_device:
             label: "AI 語音辨識使用的處理裝置"
+        mic_avg_logprob:
+            label: "Mic Avg Logprob"
+            desc: "語音辨識置信度（avg_logprob）的閾值。越接近0，則僅接受置信度高的語音，從而抑制誤識。（預設值：-0.8）"
+        mic_no_speech_prob:
+            label: "Mic No Speech Prob"
+            desc: "語音不存在的機率（no_speech_prob）的閾值。超過此機率的片段被視為無音而被忽略，從而抑制噪音引起的誤識。越接近0則判定越嚴格，微弱的聲音也會被轉錄。（預設值：0.6）"
+        speaker_avg_logprob:
+            label: "Speaker Avg Logprob"
+            desc: "語音辨識置信度（avg_logprob）的閾值。越接近0，則僅接受置信度高的語音，從而抑制誤識。（預設值：-0.8）"
+        speaker_no_speech_prob:
+            label: "Speaker No Speech Prob"
+            desc: "語音不存在的機率（no_speech_prob）的閾值。超過此機率的片段被視為無音而被忽略，從而抑制噪音引起的誤識。越接近0則判定越嚴格，微弱的聲音也會被轉錄。（預設值：0.6）"
 
     vr:
         single_line: "單行"
