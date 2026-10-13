@@ -17,18 +17,22 @@ use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::Duration;
 
 const LOG_QUEUE_MAX: usize = 200;
+/// how often stdin is looked at: often while the UI is talking, less when it has been quiet
 const STDIN_POLL: Duration = Duration::from_millis(10);
+const STDIN_POLL_IDLE: Duration = Duration::from_millis(50);
+const STDIN_ACTIVE: Duration = Duration::from_secs(2);
 
 /// stdin, read only once something came. A read left waiting on the UI's pipe holds the handle,
 /// so everything else that looks at stdin waits for the UI's next line: OpenBLAS's libgfortran
 /// checks it while loading, which held the first Whisper transcription for up to 20 s.
-struct PolledStdin(std::mem::ManuallyDrop<std::fs::File>);
+struct PolledStdin(std::mem::ManuallyDrop<std::fs::File>, std::time::Instant);
 
 impl PolledStdin {
     fn new() -> Self {
         use std::os::windows::io::{AsRawHandle, FromRawHandle};
         // the process's stdin handle, not closed here
-        Self(std::mem::ManuallyDrop::new(unsafe { std::fs::File::from_raw_handle(std::io::stdin().as_raw_handle()) }))
+        Self(std::mem::ManuallyDrop::new(unsafe { std::fs::File::from_raw_handle(std::io::stdin().as_raw_handle()) }),
+             std::time::Instant::now())
     }
 }
 
@@ -36,8 +40,9 @@ impl std::io::Read for PolledStdin {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         // not a pipe (a console, a file) or a closed one: read as it is
         while crate::platform::pipe_available(&self.0) == Some(0) {
-            std::thread::sleep(STDIN_POLL);
+            std::thread::sleep(if self.1.elapsed() < STDIN_ACTIVE { STDIN_POLL } else { STDIN_POLL_IDLE });
         }
+        self.1 = std::time::Instant::now();
         self.0.read(buf)
     }
 }
