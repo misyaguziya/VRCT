@@ -8,6 +8,16 @@ pub use vrct_openvr::{is_process_running, is_steamvr_running};
 use serde_json::Value;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs};
 
+/// Bytes waiting in a pipe; None when `handle` is not a pipe or the pipe is closed
+pub fn pipe_available(handle: std::os::windows::io::RawHandle) -> Option<u32> {
+    use windows_sys::Win32::System::Pipes::PeekNamedPipe;
+    let mut available = 0u32;
+    let ok = unsafe {
+        PeekNamedPipe(handle, std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut available, std::ptr::null_mut())
+    };
+    (ok != 0).then_some(available)
+}
+
 /// isAvailableWebSocketServer: an IPv4 TCP socket with SO_REUSEADDR binds to host:port (on Windows
 /// that also succeeds on a port another socket listens on without exclusive use, as in Python)
 pub fn is_available_server(host: &str, port: i64) -> bool {
