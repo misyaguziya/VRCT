@@ -286,6 +286,18 @@ config_page:
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
         transcription_compute_device:
             label: "AI音声認識で使用する処理デバイス"
+        mic_avg_logprob:
+            label: "Mic Avg Logprob"
+            desc: "文字起こしの信頼度（有音らしさ）のしきい値です。0に近いほど確信度が高い発話のみを採用し、誤認識を抑えます。（初期値: -0.8）"
+        mic_no_speech_prob:
+            label: "Mic No Speech Prob"
+            desc: "発話が含まれていない確率（無音らしさ）のしきい値です。この確率を超えた区間を無音として無視し、ノイズからの誤認識を抑えます。0に近いほど厳しくなり、わずかな発話も文字起こしされるようになります。（初期値: 0.6）"
+        speaker_avg_logprob:
+            label: "Speaker Avg Logprob"
+            desc: "文字起こしの信頼度（有音らしさ）のしきい値です。0に近いほど確信度が高い発話のみを採用し、誤認識を抑えます。（初期値: -0.8）"
+        speaker_no_speech_prob:
+            label: "Speaker No Speech Prob"
+            desc: "発話が含まれていない確率（無音らしさ）のしきい値です。この確率を超えた区間を無音として無視し、ノイズからの誤認識を抑えます。0に近いほど厳しくなり、わずかな発話も文字起こしされるようになります。（初期値: 0.6）"
 
     vr:
         single_line: "一行"
