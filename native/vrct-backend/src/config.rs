@@ -443,6 +443,10 @@ impl Config {
     pub fn new(env: Env) -> Config {
         let token = (env.new_token)();
         let values = props().iter().map(|p| {
+            // the version of this build (package.json), not the schema's copy from config.py
+            if p.name == "VERSION" {
+                return json!(env!("VRCT_VERSION"));
+            }
             if let Some(d) = &p.default {
                 return d.clone();
             }

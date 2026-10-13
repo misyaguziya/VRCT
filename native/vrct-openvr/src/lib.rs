@@ -165,7 +165,7 @@ pub fn use_dll(path: std::path::PathBuf) -> bool {
     DLL_PATH.set(path).is_ok()
 }
 
-/// openvr_api.dll from the executable's folder (or use_dll's), once
+/// openvr_api.dll from the executable's folder or its `_internal` (or use_dll's), once
 fn api() -> Result<&'static Api, Error> {
     static API: OnceLock<Result<Api, Error>> = OnceLock::new();
     API.get_or_init(|| unsafe {
@@ -173,7 +173,9 @@ fn api() -> Result<&'static Api, Error> {
             Some(path) => path.clone(),
             None => {
                 let exe = std::env::current_exe().map_err(|e| err(-1, &e.to_string()))?;
-                exe.parent().map(|d| d.join("openvr_api.dll")).ok_or_else(|| err(-1, "no executable folder"))?
+                let dir = exe.parent().ok_or_else(|| err(-1, "no executable folder"))?;
+                [dir.join("openvr_api.dll"), dir.join("_internal").join("openvr_api.dll")]
+                    .into_iter().find(|p| p.is_file()).unwrap_or_else(|| dir.join("openvr_api.dll"))
             }
         };
         let wide: Vec<u16> = path.as_os_str().encode_wide_null();

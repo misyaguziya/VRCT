@@ -78,14 +78,15 @@ fn sgemm() -> Result<Sgemm> {
     static SGEMM: OnceLock<std::result::Result<Sgemm, String>> = OnceLock::new();
     SGEMM
         .get_or_init(|| {
-            let dir = std::env::current_exe().map_err(|e| e.to_string())?;
-            let dir = dir.parent().ok_or("no exe dir")?;
-            let dll = std::fs::read_dir(dir)
-                .map_err(|e| e.to_string())?
-                .flatten()
-                .map(|e| e.path())
+            // the executable's folder or its `_internal` (the installed layout)
+            let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+            let dir = exe.parent().ok_or("no exe dir")?;
+            let dll = [dir.to_path_buf(), dir.join("_internal")]
+                .iter()
+                .filter_map(|d| std::fs::read_dir(d).ok())
+                .flat_map(|entries| entries.flatten().map(|e| e.path()))
                 .find(|p| p.file_name().is_some_and(|n| n.to_string_lossy().starts_with("libopenblas64_")))
-                .ok_or_else(|| format!("libopenblas64_*.dll not found in {}", dir.display()))?;
+                .ok_or_else(|| format!("libopenblas64_*.dll not found in {} or its _internal", dir.display()))?;
             load_sgemm(&dll).map_err(|e| format!("{}: {e}", dll.display()))
         })
         .clone()

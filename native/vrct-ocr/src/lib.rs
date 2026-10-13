@@ -16,12 +16,15 @@ use std::sync::OnceLock;
 
 pub type R<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-/// Loads onnxruntime.dll from the executable's folder (once per process; every session shares it).
+/// Loads onnxruntime.dll from the executable's folder or its `_internal` (the installed layout),
+/// once per process; every session shares it.
 pub fn init_ort() -> R<()> {
     static INIT: OnceLock<Result<(), String>> = OnceLock::new();
     INIT.get_or_init(|| {
         let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-        let dll = exe.parent().ok_or("no exe dir")?.join("onnxruntime.dll");
+        let dir = exe.parent().ok_or("no exe dir")?;
+        let dll = [dir.join("onnxruntime.dll"), dir.join("_internal").join("onnxruntime.dll")]
+            .into_iter().find(|p| p.is_file()).unwrap_or_else(|| dir.join("onnxruntime.dll"));
         let builder = ort::init_from(&dll).map_err(|e| format!("{}: {e}", dll.display()))?;
         builder.with_name("vrct").commit();
         Ok(())

@@ -1,6 +1,6 @@
 //! cargo xtask fetch-native [--cuda]
-//! cargo xtask stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>] [--silero <faster_whisper/assets>]
-//!   [--rapidocr <site-packages/rapidocr/models>] [--weights <src-python/weights>]  (a junction: the sidecar reads the weights from beside it)
+//! cargo xtask stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <src-python/weights>]
+//!   (the installed layout; --weights makes a junction: the sidecar reads the weights from beside it)
 //!
 //! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
 //! SHA-256 を照合し、指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
@@ -21,7 +21,8 @@ struct Entry {
     wheel: String,
     #[serde(default)]
     files: Vec<String>,
-    /// ... or one file to download as it is (`file` is its name in third_party/<name>/)
+    /// ... or one file to download as it is (`file` is its name in third_party/<name>/), or a zip
+    /// archive to take `files` out of (no `file`)
     url: Option<String>,
     file: Option<String>,
     sha256: String,
@@ -30,6 +31,12 @@ struct Entry {
     headers_url: Option<String>,
     headers_sha256: Option<String>,
     headers_dir: Option<String>,
+    /// license files to take out of the wheel / zip into third_party/<name>/licenses/ ...
+    #[serde(default)]
+    licenses: Vec<String>,
+    /// ... or one license file to download (when the package has none)
+    license_url: Option<String>,
+    license_sha256: Option<String>,
 }
 
 fn native_dir() -> PathBuf {
@@ -145,14 +152,31 @@ fn fetch_native(cuda: bool) -> Result<()> {
             fs::remove_dir_all(&dest)?; // stale files of an older version must not stay
         }
         fs::create_dir_all(&dest)?;
-        if let (Some(url), Some(file)) = (&e.url, &e.file) {
+        let archive = if let (Some(url), Some(file)) = (&e.url, &e.file) {
             let cached = fetch(url, &format!("{name}-{}-{file}", e.version), &e.sha256, &cache)?;
             fs::copy(&cached, dest.join(file))?;
             println!("  {}", dest.join(file).display());
+            None
+        } else if let Some(url) = &e.url {
+            let archive = url.rsplit('/').next().unwrap_or("archive.zip");
+            let cached = fetch(url, &format!("{name}-{}-{archive}", e.version), &e.sha256, &cache)?;
+            extract_wheel(&cached, &e.files, &dest)?;
+            Some(cached)
         } else {
             let url = wheel_url(name, &e.version, &e.wheel)?;
             let wheel = fetch(&url, &e.wheel, &e.sha256, &cache)?;
             extract_wheel(&wheel, &e.files, &dest)?;
+            Some(wheel)
+        };
+        if !e.licenses.is_empty() || e.license_url.is_some() {
+            fs::create_dir_all(dest.join("licenses"))?;
+        }
+        if !e.licenses.is_empty() {
+            extract_wheel(archive.as_deref().context("licenses need a wheel or zip")?, &e.licenses, &dest.join("licenses"))?;
+        }
+        if let (Some(url), Some(sha)) = (&e.license_url, &e.license_sha256) {
+            let cached = fetch(url, &format!("{name}-{}-LICENSE", e.version), sha, &cache)?;
+            fs::copy(&cached, dest.join("licenses").join("LICENSE"))?;
         }
         if let (Some(url), Some(sha), Some(dir)) = (&e.headers_url, &e.headers_sha256, &e.headers_dir) {
             let tarball = fetch(url, &format!("{name}-{}-headers.tar.gz", e.version), sha, &cache)?;
@@ -200,38 +224,91 @@ fn copy_dir(src: &Path, dst: &Path) -> Result<()> {
     Ok(())
 }
 
-/// The sidecar with what it reads beside it: the DLLs of the build, the translators' settings,
-/// SudachiPy's resources with SudachiDict-full's system.dic, the overlay's fonts, Silero VAD
-fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>, silero: Option<PathBuf>, rapidocr: Option<PathBuf>,
-                 weights: Option<PathBuf>) -> Result<()> {
-    let native = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
-    let built = native.join("target").join(if release { "release" } else { "debug" });
-    let models = native.join("../src-python/models");
-    fs::create_dir_all(out)?;
-    fs::copy(built.join("VRCT-sidecar.exe"), out.join("VRCT-sidecar.exe")).context("build VRCT-sidecar first")?;
-    for entry in fs::read_dir(&built)? {
+/// Copies the DLLs of a third_party folder (fetch-native's) into `dest`
+fn copy_dlls(from: &Path, dest: &Path) -> Result<()> {
+    for entry in fs::read_dir(from).with_context(|| format!("{}: run `cargo xtask fetch-native` first", from.display()))? {
         let path = entry?.path();
         if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("dll")) {
-            fs::copy(&path, out.join(path.file_name().unwrap()))?;
+            fs::copy(&path, dest.join(path.file_name().unwrap()))?;
         }
     }
-    copy_dir(&models.join("translation/translation_settings"), &out.join("translation_settings"))?;
-    copy_dir(&models.join("overlay/fonts"), &out.join("fonts"))?;
-    copy_dir(&native.join("data/sudachi"), &out.join("sudachi"))?;
-    let dict = sudachi_dict.or_else(|| std::env::var_os("VRCT_SUDACHI_DICT").map(PathBuf::from))
-        .context("--sudachi-dict or VRCT_SUDACHI_DICT: SudachiDict-full's system.dic")?;
-    fs::copy(&dict, out.join("sudachi/system.dic")).with_context(|| dict.display().to_string())?;
-    let silero = silero.or_else(|| std::env::var_os("VRCT_SILERO_ASSETS").map(PathBuf::from))
-        .context("--silero or VRCT_SILERO_ASSETS: faster_whisper's assets (silero_*_v5.onnx)")?;
-    fs::create_dir_all(out.join("silero"))?;
+    Ok(())
+}
+
+/// The sidecar as it is installed: `<exe_name>` and `_internal` with the DLLs (CUDA's with --cuda),
+/// the translators' settings, SudachiPy's resources and dictionary, the overlay's fonts, Silero VAD
+/// and the OCR models. Everything but the repository's files comes from fetch-native.
+fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights: Option<PathBuf>) -> Result<()> {
+    let native = native_dir();
+    let built = native.join("target").join(if release { "release" } else { "debug" });
+    let third_party = native.join("third_party");
+    let models = native.join("../src-python/models");
+    fs::create_dir_all(out)?;
+    // a fresh _internal; the files of the flat layout staged before go too (config.json, the logs
+    // and the weights stay)
+    let internal = out.join("_internal");
+    for old in ["_internal", "translation_settings", "fonts", "sudachi", "silero", "ocr"] {
+        let path = out.join(old);
+        if path.is_dir() {
+            fs::remove_dir_all(&path)?;
+        }
+    }
+    for entry in fs::read_dir(out)? {
+        let path = entry?.path();
+        if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("dll")) {
+            fs::remove_file(&path)?;
+        }
+    }
+    fs::create_dir_all(&internal)?;
+    fs::copy(built.join("VRCT-sidecar.exe"), out.join(exe_name)).context("build VRCT-sidecar first")?;
+    let mut dll_dirs = vec!["ctranslate2", "numpy", "onnxruntime", "openvr"];
+    if cuda {
+        dll_dirs.extend(["nvidia-cublas-cu12", "nvidia-cudnn-cu12"]);
+    }
+    for dir in dll_dirs {
+        copy_dlls(&third_party.join(dir), &internal)?;
+    }
+    copy_dir(&models.join("translation/translation_settings"), &internal.join("translation_settings"))?;
+    copy_dir(&models.join("overlay/fonts"), &internal.join("fonts"))?;
+    copy_dir(&native.join("data/sudachi"), &internal.join("sudachi"))?;
+    fs::copy(third_party.join("sudachidict-full/system_full.dic"), internal.join("sudachi/system.dic"))
+        .context("sudachidict-full: run fetch-native")?;
+    fs::create_dir_all(internal.join("silero"))?;
     for name in ["silero_encoder_v5.onnx", "silero_decoder_v5.onnx"] {
-        fs::copy(silero.join(name), out.join("silero").join(name)).with_context(|| silero.join(name).display().to_string())?;
+        fs::copy(third_party.join("faster-whisper").join(name), internal.join("silero").join(name))?;
     }
     // OCR: the bubble detector (with its notices) and RapidOCR's models
-    copy_dir(&models.join("ocr/onnx"), &out.join("ocr"))?;
-    let rapidocr = rapidocr.or_else(|| std::env::var_os("VRCT_RAPIDOCR_MODELS").map(PathBuf::from))
-        .context("--rapidocr or VRCT_RAPIDOCR_MODELS: rapidocr's models folder")?;
-    copy_dir(&rapidocr, &out.join("ocr").join("rapidocr"))?;
+    copy_dir(&models.join("ocr/onnx"), &internal.join("ocr"))?;
+    let rapidocr = internal.join("ocr").join("rapidocr");
+    fs::create_dir_all(&rapidocr)?;
+    for dir in ["rapidocr", "rapidocr-ch-det-v5", "rapidocr-korean-rec-v5", "rapidocr-cyrillic-rec-v5", "rapidocr-th-rec-v5",
+                "rapidocr-arabic-rec-v5", "rapidocr-devanagari-rec-v5"] {
+        for entry in fs::read_dir(third_party.join(dir)).with_context(|| format!("{dir}: run fetch-native"))? {
+            let path = entry?.path();
+            if path.extension().is_some_and(|e| e == "onnx") {
+                fs::copy(&path, rapidocr.join(path.file_name().unwrap()))?;
+            }
+        }
+    }
+    // the notices: each third_party entry's licenses, the Rust crates', and those of the code ported
+    let licenses = internal.join("licenses");
+    for entry in fs::read_dir(&third_party)? {
+        let path = entry?.path();
+        let name = path.file_name().unwrap().to_string_lossy().to_string();
+        if !cuda && name.starts_with("nvidia-") {
+            continue;
+        }
+        if path.join("licenses").is_dir() {
+            copy_dir(&path.join("licenses"), &licenses.join(&name))?;
+        }
+    }
+    fs::create_dir_all(&licenses)?;
+    for (from, to) in [("vrct-backend/THIRD_PARTY_LICENSES.txt", "rust-crates.txt"),
+                       ("vrct-audio/SPEECH_RECOGNITION_LICENSE.txt", "speech_recognition.txt"),
+                       ("../src-python/models/transcription/google_speech_LICENSE.txt", "google_speech.txt"),
+                       ("vrct-ocr/LICENSE-APACHE-2.0", "rapidocr-port-apache-2.0.txt")] {
+        fs::copy(native.join(from), licenses.join(to)).with_context(|| from.to_string())?;
+    }
     if let Some(weights) = weights {
         let link = out.join("weights");
         if !link.exists() {
@@ -257,10 +334,9 @@ fn main() -> Result<()> {
         Some("fetch-native") => fetch_native(args.iter().any(|a| a == "--cuda")),
         Some("stage-sidecar") => stage_sidecar(&PathBuf::from(arg(&args, "--out").context("--out <dir>")?),
                                                args.iter().any(|a| a == "--release"),
-                                               arg(&args, "--sudachi-dict").map(PathBuf::from),
-                                               arg(&args, "--silero").map(PathBuf::from),
-                                               arg(&args, "--rapidocr").map(PathBuf::from),
+                                               args.iter().any(|a| a == "--cuda"),
+                                               &arg(&args, "--exe-name").unwrap_or_else(|| "VRCT-sidecar.exe".into()),
                                                arg(&args, "--weights").map(PathBuf::from)),
-        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>] [--silero <dir>] [--rapidocr <dir>] [--weights <dir>]"),
+        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>]"),
     }
 }

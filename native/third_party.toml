@@ -15,6 +15,8 @@ files = ["ctranslate2/ctranslate2.dll", "ctranslate2/libiomp5md.dll", "ctranslat
 headers_url = "https://github.com/OpenNMT/CTranslate2/archive/refs/tags/v4.6.0.tar.gz"
 headers_sha256 = "9421d846668573466ceb713b27f71fb16fed8486ed7bdb654583c48c3c20621b"
 headers_dir = "CTranslate2-4.6.0/include/"
+license_url = "https://raw.githubusercontent.com/OpenNMT/CTranslate2/v4.6.0/LICENSE"
+license_sha256 = "54aa79d9fe3c09e67a16dcd95b9e88676405a6ec174efda31036983cf7672ecb"
 
 [numpy]
 # メル特徴量の行列積に使う OpenBLAS (numpy が呼んでいるものと同じ cblas_sgemm64_)
@@ -22,12 +24,14 @@ version = "1.26.4"
 wheel = "numpy-1.26.4-cp311-cp311-win_amd64.whl"
 sha256 = "cd25bcecc4974d09257ffcd1f098ee778f7834c3ad767fe5db785be9a4aa9cb2"
 files = ["numpy.libs/libopenblas64_*"]
+licenses = ["numpy-1.26.4.dist-info/LICENSE.txt"]
 
 [onnxruntime]
 version = "1.30.0"
 wheel = "onnxruntime-1.30.0-cp311-cp311-win_amd64.whl"
 sha256 = "0edd0145a6e3fce8a1276491dc784d615e3c58bcb952c9b4e5c876d5c6a12ad7"
 files = ["onnxruntime/capi/onnxruntime.dll", "onnxruntime/capi/onnxruntime_providers_shared.dll"]
+licenses = ["onnxruntime/LICENSE", "onnxruntime/ThirdPartyNotices.txt"]
 
 [openvr]
 # Valve の OpenVR 1.26.7 の openvr_api.dll。今の Python 版の pyopenvr 1.26.701 が同梱しているものとバイト単位で同じ。
@@ -36,6 +40,75 @@ version = "1.26.7"
 url = "https://github.com/ValveSoftware/openvr/raw/v1.26.7/bin/win64/openvr_api.dll"
 file = "openvr_api.dll"
 sha256 = "5e591aa3f4a991edcc8910921833edafa67a1b117849bbb4e235df9833bed7a3"
+license_url = "https://raw.githubusercontent.com/ValveSoftware/openvr/v1.26.7/LICENSE"
+license_sha256 = "f56ff606104d4ef18e617921a75c73ad73b5a1a1d70c69590c29de16919e04ad"
+
+# 配布に同梱するデータ (stage-sidecar が _internal へ並べる)
+
+[sudachidict-full]
+# SudachiPy の辞書 (今の Python 版の sudachidict_full 20250825 と同じ system.dic。PyPI のものは
+# インストール時にこの zip を取ってくるだけなので、元の zip から取る)。Apache-2.0 (LICENSE-2.0.txt, LEGAL)
+version = "20250825"
+url = "https://d2ej7fkh96fzlu.cloudfront.net/sudachidict/sudachi-dictionary-20250825-full.zip"
+sha256 = "7ce16d45e9ff0ccb70a3c8ba70346240ef246e6ad499cfab033fc2c1da4d19b4"
+files = ["sudachi-dictionary-20250825/system_full.dic"]
+licenses = ["sudachi-dictionary-20250825/LEGAL", "sudachi-dictionary-20250825/LICENSE-2.0.txt"]
+
+[faster-whisper]
+# Silero VAD v5 (faster-whisper が同梱しているもの)
+version = "1.1.1"
+wheel = "faster_whisper-1.1.1-py3-none-any.whl"
+sha256 = "5808dc334fb64fb4336921450abccfe5e313a859b31ba61def0ac7f639383d90"
+files = ["faster_whisper/assets/silero_encoder_v5.onnx", "faster_whisper/assets/silero_decoder_v5.onnx"]
+licenses = ["faster_whisper-1.1.1.dist-info/LICENSE"]
+
+[rapidocr]
+# RapidOCR 3.9.2 が同梱しているモデル (PP-OCRv6 small と向きの判定)
+version = "3.9.2"
+wheel = "rapidocr-3.9.2-py3-none-any.whl"
+sha256 = "04d6b8d151f823d930bd91910555f57bea897c0c44fa6794267b94cf9c1ef9a0"
+files = ["rapidocr/models/PP-OCRv6_det_small.onnx", "rapidocr/models/PP-OCRv6_rec_small.onnx",
+         "rapidocr/models/ch_ppocr_mobile_v2.0_cls_mobile.onnx"]
+license_url = "https://raw.githubusercontent.com/RapidAI/RapidOCR/v3.9.2/LICENSE"
+license_sha256 = "3e0af25fdd06aa9586ae97adb00ea927ebe5a3805ac77d2d3a81ce5f55693333"
+
+# RapidOCR が実行時に取りに行く PP-OCRv5 のモデル (URL と SHA256 は rapidocr 3.9.2 の default_models.yaml)
+
+[rapidocr-ch-det-v5]
+version = "3.9.2"
+url = "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-OCRv5/det/ch_PP-OCRv5_det_mobile.onnx"
+file = "ch_PP-OCRv5_det_mobile.onnx"
+sha256 = "4d97c44a20d30a81aad087d6a396b08f786c4635742afc391f6621f5c6ae78ae"
+
+[rapidocr-korean-rec-v5]
+version = "3.9.2"
+url = "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-OCRv5/rec/korean_PP-OCRv5_rec_mobile.onnx"
+file = "korean_PP-OCRv5_rec_mobile.onnx"
+sha256 = "cd6e2ea50f6943ca7271eb8c56a877a5a90720b7047fe9c41a2e541a25773c9b"
+
+[rapidocr-cyrillic-rec-v5]
+version = "3.9.2"
+url = "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-OCRv5/rec/cyrillic_PP-OCRv5_rec_mobile.onnx"
+file = "cyrillic_PP-OCRv5_rec_mobile.onnx"
+sha256 = "90f761b4bfcce0c8c561c0cb5c887b0971d3ec01c32164bdf7374a35b0982711"
+
+[rapidocr-th-rec-v5]
+version = "3.9.2"
+url = "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-OCRv5/rec/th_PP-OCRv5_rec_mobile.onnx"
+file = "th_PP-OCRv5_rec_mobile.onnx"
+sha256 = "de541dd83161c241ff426f7ecfd602a0ba77d686cf3ab9a6c255ea82fd08006e"
+
+[rapidocr-arabic-rec-v5]
+version = "3.9.2"
+url = "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-OCRv5/rec/arabic_PP-OCRv5_rec_mobile.onnx"
+file = "arabic_PP-OCRv5_rec_mobile.onnx"
+sha256 = "c1192e632d0baa9146ae5b756a0e635e3dc63c1733737ebfd1629e87144e9295"
+
+[rapidocr-devanagari-rec-v5]
+version = "3.9.2"
+url = "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-OCRv5/rec/devanagari_PP-OCRv5_rec_mobile.onnx"
+file = "devanagari_PP-OCRv5_rec_mobile.onnx"
+sha256 = "d6f0a906580e3fa6b324a318718f1f31f268b6ea8ef985f91c2012a37f52c91e"
 
 # 以下は CUDA 版だけ (--cuda)。requirements_cuda.txt と同じ版。
 
@@ -45,6 +118,7 @@ version = "12.8.4.1"
 wheel = "nvidia_cublas_cu12-12.8.4.1-py3-none-win_amd64.whl"
 sha256 = "47e9b82132fa8d2b4944e708049229601448aaad7e6f296f630f2d1a32de35af"
 files = ["nvidia/cublas/bin/*"]
+licenses = ["nvidia_cublas_cu12-12.8.4.1.dist-info/License.txt"]
 
 [nvidia-cudnn-cu12]
 cuda = true
@@ -52,3 +126,5 @@ version = "9.7.1.26"
 wheel = "nvidia_cudnn_cu12-9.7.1.26-py3-none-win_amd64.whl"
 sha256 = "7b805b9a4cf9f3da7c5f4ea4a9dff7baf62d1a612d6154a7e0d2ea51ed296241"
 files = ["nvidia/cudnn/bin/*"]
+
+licenses = ["nvidia_cudnn_cu12-9.7.1.26.dist-info/License.txt"]
