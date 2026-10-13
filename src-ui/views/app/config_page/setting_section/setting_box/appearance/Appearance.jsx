@@ -165,7 +165,8 @@ const TransparencyContainer = () => {
             min={40}
             max={100}
             step={1}
-            label_format="value %"
+            marks_step={10}
+            show_label_values={[40, 50, 60, 70, 80, 90, 100]}
         />
     );
 };

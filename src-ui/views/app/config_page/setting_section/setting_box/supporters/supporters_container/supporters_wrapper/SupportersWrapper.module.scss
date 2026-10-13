@@ -16,6 +16,7 @@
     flex-wrap: wrap;
     column-gap: 1.8rem;
     row-gap: 2.6rem;
+    padding-bottom: 2rem;
 }
 
 .supporter_image_container {
@@ -226,9 +227,9 @@
 }
 
 .period_box {
-    width: 1.7rem;
-    height: 0.3rem;
-    border-radius: 0.3rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 0.5rem;
     &.mogu_bar {
         background-color: var(--dark_basic_text_color);
     }
@@ -245,6 +246,7 @@
 
 .tooltip_period_label {
     font-size: 1.4rem;
+    white-space: nowrap;
 }
 
 

@@ -40,6 +40,7 @@ const _Entry = forwardRef((props, ref) => {
             <div className={input_wrapper_class_names}>
                 <input
                     type={props.type || "text"}
+                    inputMode={props.inputMode}
                     ref={inputRef}
                     placeholder={props.placeholder ? props.placeholder : ""}
                     className={input_class_names}

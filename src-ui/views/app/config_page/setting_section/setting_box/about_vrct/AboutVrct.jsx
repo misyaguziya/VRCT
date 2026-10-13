@@ -12,24 +12,14 @@ import contributor_poposuke from "@images/about_vrct/contributor_poposuke.png";
 import contributor_kumaguma from "@images/about_vrct/contributor_kumaguma.png";
 import contributor_riku from "@images/about_vrct/contributor_riku.png";
 
-import localization_section_title from "@images/about_vrct/localization_section_title.png";
-import localization_1 from "@images/about_vrct/localization_1.png";
-import localization_2 from "@images/about_vrct/localization_2.png";
-import localization_3 from "@images/about_vrct/localization_3.png";
-import localization_4 from "@images/about_vrct/localization_4.png";
-import localization_5 from "@images/about_vrct/localization_5.png";
-
 import special_thanks_section_title from "@images/about_vrct/special_thanks_section_title.png";
 import special_thanks_members from "@images/about_vrct/special_thanks_members.png";
 import special_thanks_message_en from "@images/about_vrct/special_thanks_message_en.png";
 import special_thanks_message_ja from "@images/about_vrct/special_thanks_message_ja.png";
 
-import poster_showcase_section_title from "@images/about_vrct/poster_showcase_section_title.png";
-
 import clsx from "clsx";
 import { useI18n } from "@useI18n";
 import { useAppearance } from "@logics_configs";
-import { PosterShowcaseContents } from "./poster_showcase_contents/PosterShowcaseContents";
 
 import { generateLocalizedDocumentUrl } from "@ui_configs";
 
@@ -96,24 +86,6 @@ export const AboutVrct = () => {
                 </div>
             </div>
 
-            <div className={styles.localization_section}>
-                <img src={localization_section_title} className={clsx(styles.section_title, styles.localization)} />
-                <div className={styles.localization_members_wrapper}>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_1} className={styles.localization_members_img} />
-                        <img src={localization_2} className={styles.localization_members_img} />
-                    </div>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_3} className={styles.localization_members_img} />
-                        <img src={localization_4} className={styles.localization_members_img} />
-                    </div>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_5} className={styles.localization_members_img} />
-                        {/* <img src={localization_6} className={styles.localization_members_img} /> */}
-                    </div>
-                </div>
-            </div>
-
             <div className={styles.special_thanks_section}>
                 <img src={special_thanks_section_title} className={clsx(styles.section_title, styles.special_thanks)} />
                 <img src={special_thanks_members} className={styles.special_thanks_members_img} />
@@ -124,11 +96,6 @@ export const AboutVrct = () => {
                 }
             </div>
 
-
-            <div className={styles.poster_showcase_section}>
-                <img src={poster_showcase_section_title} className={clsx(styles.section_title, styles.poster_showcase)} />
-                <PosterShowcaseContents />
-            </div>
 
             <div className={styles.vrchat_disclaimer_section}>
                 <p className={styles.vrchat_disclaimer}>VRCT is not endorsed by VRChat and does not reflect the views or opinions of VRChat or anyone officially involved in producing or managing VRChat properties. VRChat and all associated properties are trademarks or registered trademarks of VRChat Inc. VRChat © VRChat Inc.</p>
