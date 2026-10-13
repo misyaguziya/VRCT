@@ -1,8 +1,7 @@
 """D3D11 mirror primitives for the standalone capture tools.
 
-The reader itself lives in src-python/models/ocr/ocr_capture_d3d11.py so the
-tools and VRCT's OCR share one implementation. It is loaded by path (like
-ocr_capture_hwnd.py in ocr_capture_source.py) so the tools never import VRCT.
+The reader itself lives in tools/ocr_capture/ocr_capture_d3d11.py (the Python OCR's, kept for
+the tools). It is loaded by path, like ocr_capture_hwnd.py in ocr_capture_source.py.
 """
 
 from __future__ import annotations
@@ -18,7 +17,7 @@ def _load_reader():
     if getattr(sys, "frozen", False):
         path = Path(__file__).resolve().parent / "capture/ocr_capture_d3d11.py"
     else:
-        path = Path(__file__).resolve().parents[1] / "src-python/models/ocr/ocr_capture_d3d11.py"
+        path = Path(__file__).resolve().parent / "ocr_capture/ocr_capture_d3d11.py"
     spec = importlib.util.spec_from_file_location("_tools_ocr_capture_d3d11", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

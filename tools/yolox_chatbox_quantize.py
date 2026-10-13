@@ -2,7 +2,7 @@
 
 .\.venv-yolox\Scripts\python.exe -X utf8 tools\yolox_chatbox_quantize.py `
     -i runs\chatbox_yolox_tiny\chatbox_yolox_tiny.onnx `
-    -o src-python\models\ocr\onnx\chatbox_yolox_tiny.onnx --size 736,1280
+    -o native\data\ocr\chatbox_yolox_tiny.onnx --size 736,1280
 
 校正には学習に使った画像を使う (4枚に1枚)。配布物に増える依存は無い。量子化は
 ここ(開発マシン)でやる作業で、VRCT 側は今までどおり onnxruntime で読むだけ。

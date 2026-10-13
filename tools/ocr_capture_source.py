@@ -120,7 +120,7 @@ class CaptureSource:
             if getattr(sys, "frozen", False):
                 path = Path(__file__).resolve().parent / "capture/ocr_capture_hwnd.py"
             else:
-                path = Path(__file__).resolve().parents[1] / "src-python/models/ocr/ocr_capture_hwnd.py"
+                path = Path(__file__).resolve().parent / "ocr_capture/ocr_capture_hwnd.py"
             spec = importlib.util.spec_from_file_location("_collector_hwnd", path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
