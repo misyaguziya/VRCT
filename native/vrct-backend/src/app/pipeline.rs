@@ -107,7 +107,7 @@ pub fn load_ctranslate2(app: &App) -> Result<()> {
     if compute_type == "auto" {
         compute_type = crate::compute::best_compute_type(&name, index as usize);
     }
-    let mut translator = app.model.translator.lock().unwrap();
+    let mut translator = app.model.translator.write().unwrap();
     translator.ctranslate2 = None;
     translator.ctranslate2 = Some(Ct2Translator::load(&app.config.env().path_local, &app.config.get_str("CTRANSLATE2_WEIGHT_TYPE"),
                                                       &name, index as i32, &compute_type)?);
@@ -119,13 +119,13 @@ pub fn load_ctranslate2(app: &App) -> Result<()> {
 fn translate_one(app: &App, engine: &str, source: &str, target: &str, country: &str, message: &str) -> (String, bool) {
     let weight_type = app.config.get_str("CTRANSLATE2_WEIGHT_TYPE");
     let history = app.model.translation_history.lock().unwrap().clone();
-    let first = app.model.translator.lock().unwrap().translate(engine, &weight_type, source, target, country, message, &history);
+    let first = app.model.translator.read().unwrap().translate(engine, &weight_type, source, target, country, message, &history);
     if let Translation::Text(text) = first {
         return (text, true);
     }
     let mut result = first;
     for _ in 0..20 {
-        let mut translator = app.model.translator.lock().unwrap();
+        let translator = app.model.translator.read().unwrap();
         result = translator.translate("CTranslate2", &weight_type, source, target, country, message, &[]);
         match &result {
             Translation::Text(_) | Translation::Unsupported => break,
@@ -162,9 +162,17 @@ fn translate(app: &App, input: bool, message: &str, source: Option<&str>) -> (Ve
         let your = your_language(app);
         (source, vec![(text(&your["language"]), text(&your["country"]))])
     };
-    // ponytail: the targets one after another (Python translates them on a pool at once); a pool
-    // when several cloud targets make a message slow
-    targets.iter().map(|(language, country)| translate_one(app, &engine, &source, language, country, message)).unzip()
+    if targets.len() <= 1 {
+        return targets.iter().map(|(language, country)| translate_one(app, &engine, &source, language, country, message)).unzip();
+    }
+    // the targets at once, as Python's pool (a cloud engine is mostly waiting on the network); the
+    // results in the targets' order
+    std::thread::scope(|s| {
+        let running: Vec<_> = targets.iter()
+            .map(|(language, country)| s.spawn(|| translate_one(app, &engine, &source, language, country, message)))
+            .collect();
+        running.into_iter().map(|t| t.join().unwrap_or_else(|_| (message.to_string(), false))).unzip()
+    })
 }
 
 fn transliterate(app: &App, text: &str) -> Result<Value> {
@@ -375,7 +383,7 @@ pub fn set_enable_translation(app: &App, _: Option<Value>) -> Result<Reply> {
     if app.config.get("ENABLE_TRANSLATION") != json!(false) {
         return current(app, "ENABLE_TRANSLATION");
     }
-    let loaded = app.model.translator.lock().unwrap().ctranslate2.is_some();
+    let loaded = app.model.translator.read().unwrap().ctranslate2.is_some();
     if loaded && !app.model.translator_changed.load(Ordering::SeqCst) {
         app.config.set("ENABLE_TRANSLATION", json!(true))?;
         return current(app, "ENABLE_TRANSLATION");

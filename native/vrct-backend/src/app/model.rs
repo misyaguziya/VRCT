@@ -15,7 +15,7 @@ use anyhow::Result;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 
 /// The files beside the executable (or the folder given)
 pub struct Resources {
@@ -39,7 +39,8 @@ pub struct Model {
     /// translation_lang (languages.yml): engine -> {source, target} (CTranslate2: weight type -> ...)
     pub translation_lang: Value,
     pub transcription_lang: Languages,
-    pub translator: Mutex<Translator>,
+    /// read: translations (several targets at once); write: everything that changes it
+    pub translator: RwLock<Translator>,
     /// isChangedTranslatorParameters: the CTranslate2 model loads again on the next use
     pub translator_changed: AtomicBool,
     pub watchdog: Arc<Watchdog>,
@@ -79,7 +80,7 @@ impl Model {
             resources,
             translation_lang,
             transcription_lang: Languages::new(transcription_lang),
-            translator: Mutex::new(translator),
+            translator: RwLock::new(translator),
             translator_changed: AtomicBool::new(false),
             watchdog: Arc::default(),
             osc: Osc::new(&config.get_str("OSC_IP_ADDRESS"), config.get("OSC_PORT").as_i64().unwrap_or(9000)),

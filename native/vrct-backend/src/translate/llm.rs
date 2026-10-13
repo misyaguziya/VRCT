@@ -98,7 +98,8 @@ pub struct LlmClient {
     prompt_template: String,
     history_cfg: HistoryConfig,
     supported_languages: Vec<String>,
-    history: Vec<HistoryItem>,
+    /// the last context set; translations to several targets share the client
+    history: std::sync::Mutex<Vec<HistoryItem>>,
     recent_models: Option<(Instant, Vec<String>)>,
     auth_models: Option<(Instant, Vec<String>)>,
 }
@@ -290,7 +291,7 @@ impl LlmClient {
             prompt_template: prompt["system_prompt"].as_str().context("system_prompt")?.to_string(),
             history_cfg,
             supported_languages,
-            history: vec![],
+            history: Default::default(),
             recent_models: None,
             auth_models: None,
         })
@@ -473,8 +474,8 @@ impl LlmClient {
         self.http.get(&base, &[], Some(Duration::from_millis(200))).is_ok_and(|r| r.status().as_u16() == 200)
     }
 
-    pub fn set_context_history(&mut self, items: Vec<HistoryItem>) {
-        self.history = items;
+    pub fn set_context_history(&self, items: Vec<HistoryItem>) {
+        *self.history.lock().unwrap() = items;
     }
 
     /// The system prompt translate() builds (the template, then the recent history if enabled).
@@ -484,7 +485,8 @@ impl LlmClient {
             &[("supported_languages", &languages), ("input_lang", input_lang), ("output_lang", output_lang)])?;
         let cfg = &self.history_cfg;
         if cfg.use_history {
-            let filtered: Vec<&HistoryItem> = self.history.iter().filter(|h| cfg.sources.contains(&h.source)).collect();
+            let history = self.history.lock().unwrap();
+            let filtered: Vec<&HistoryItem> = history.iter().filter(|h| cfg.sources.contains(&h.source)).collect();
             let recent = if cfg.max_messages > 0 {
                 &filtered[filtered.len().saturating_sub(cfg.max_messages as usize)..]
             } else {
