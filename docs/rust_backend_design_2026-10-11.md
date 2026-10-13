@@ -262,7 +262,7 @@ App
 | P2 外部 API・ファイル | ASR / 翻訳の API、DeepL、Web 翻訳（`vrct-webtranslate`）、重み・更新、テレメトリー、WebSocket、OBS | §8 の外部 API の比較が一致、サーバーの再発防止テスト。**2026-10-12 完了**: Python が送る直前の HTTP の要求（httpx / requests / urllib）を記録し、Rust の要求とメソッド・URL・本文・ヘッダーで比べて違い 0。LLM 8 種（認証・モデル一覧・翻訳、401 を含む）、DeepL（429 の再試行を含む）、文字起こしの API 40 手順と Deepgram の言語の解決 811 件、ソフトの更新 15 手順と版の比較 900 件、重みの取得（範囲外のファイル名・404・500 の再試行を含む）と `.weight_verified.json`（Python が書いた印をそのまま読む）、テレメトリー（起動 11 通りの送信と状態ファイル）、OBS のページ（設定 10 通り）と応答。Web 翻訳は取り込んだ単体テスト 17 件。WebSocket はトークンの検査と、閉じずに切れたクライアントがいても他へ届き続ける再発防止テスト。トークナイザーの取得は B（transformers の要求は写さず、読む側と同じキャッシュの形に書く）。Python と変えた点: Hugging Face のトークンを送らない、トークナイザーがそろっていれば取りに行かない |
 | P3 デバイス | 録音・デバイス管理・既定の追跡・OSC/OSCQuery・オーバーレイ（OpenVR・文字描画）・キャプチャ・クリップボード。PyO3 で今の Python 版に組み込んで実機確認 | 実機の確認表がすべて合格。**2026-10-12 完了**: 音声の前処理・VAD・録音デバイス（`VRCT_RUST_AUDIO=1` で実機の抜き差し・スピーカーの自動切り替え・ミュート同期 OK）、OSC、OpenVR の層（値は pyopenvr と一致）、OCR のキャプチャ（実機でミラー取得）、ログの文字画像（大きさ一致）、ログのオーバーレイと VR UI（`VRCT_RUST_OVERLAY=1` で実機 OK）、クリップボードのアプリ名（実機で Python と同じ名前）。OSCQuery は P4 で VRChat とつないで確かめる |
 | P4 土台の差し替え | `ipc` / `app`（設定・エラー・起動/終了・watchdog）/ `pipeline` / 330 エンドポイントの本体を Rust で実装し、P1〜P3 の部品をつなぐ | 契約テストが Rust 版で全件通る、実機の通し確認。**2026-10-13 実装完了**（VR の実機確認は後で）: `VRCT-sidecar.exe`（`vrct-backend` の bin）で 330 件すべてを Rust で処理。契約テスト 216 件・起動時の値 144 件で Python との差 0、stderr 0 行。設定の検証は 6181 通りで一致、ルート表と push 名は `mainloop.py` から書き出したものと一致（`tests/routes.rs`）。UI からは `npm run dev-rust-fast`（dev_sidecar の `VRCT_DEV_BACKEND=rust`、配置は `cargo xtask stage-sidecar`）。実機確認済み: チャット・翻訳、音声（一覧・メーター・文字起こし・切り替え・抜き差し・自動選択）、OSC / OSCQuery とミュート同期（両方の起動順）、OCR、終了。未確認: オーバーレイと VR UI |
-| P5 切り替え | 配布（spec・bat・インストーラ）を Rust 版に。まず beta チャンネルで並行運用、`config.json`・重み・ログの互換を確認 | beta で問題なし → stable へ、Python のコードと依存を削除 |
+| P5 切り替え | 配布（spec・bat・インストーラ）を Rust 版に。まず beta チャンネルで並行運用、`config.json`・重み・ログの互換を確認 | beta で問題なし → stable へ、Python のコードと依存を削除。**2026-10-13 配布の組み替え**: `bat/build(_cuda).bat` は `fetch-native` → `cargo build --release` → `cargo xtask stage-sidecar --release` で `src-tauri/bin` に exe と `_internal/`（DLL・翻訳設定・フォント・Sudachi 辞書・Silero・OCR モデル・ライセンス）を置く。DLL は `_internal` から読む（`AddDllDirectory`、ctranslate2 は遅延読み込み）。版は `package.json` からビルド時に、テレメトリーの鍵は CI がタグのチャンネルで選んで渡す。インストーラは上書き時に古い `_internal` を退避して入れ替える。契約テストは `_internal` の配置で差 0。stable は Python のまま（Python のコードは残す） |
 
 P1〜P3 は互いに独立していて並行できる。P4 は P1〜P3 がそろってから。
 
@@ -272,7 +272,7 @@ P1〜P3 は互いに独立していて並行できる。P4 は P1〜P3 がそろ
 - CPU 版 / CUDA 版の 2 つ（今と同じ）。CUDA 版だけ cuBLAS / cuDNN の DLL を足す。
 - 置き場所・ファイル名（`config.json`、`logs/`、`process.log`、`error.log`、`weights/`）は今と同じにして、上書きインストールでそのまま動くようにする。
 - 互換は v3.6.x の `config.json`・重み・ログまで。それより古い版のための処理（重みフォルダの旧名からの改名 `backwardCompatibleTranslatorCTranslate2ModelRenameWeightsDir` など）は持ち込まない。P4 で、Python に残っている互換処理を一つずつ「v3.6.x で要るか」で仕分ける。
-- Python の実行環境（PyInstaller の出力）が無くなる分、配布物は小さくなる見込み（P5 で実測）。
+- Python の実行環境（PyInstaller の出力）が無くなる分、配布物は小さくなる見込み（P5 で実測）。2026-10-13 の CPU 版の実測: 合計 589 MB（重みを除く）。うち Sudachi 辞書 343 MB、exe と DLL 132 MB、OCR モデル 84 MB、フォント 28 MB。
 
 ## 11. 決定事項（2026-10-11、ユーザー）
 

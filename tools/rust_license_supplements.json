@@ -1,0 +1,25 @@
+{
+  "_comment": "Crates whose package has no LICENSE file at its root: the files elsewhere in its source (relative to the crate's folder), or the upstream files at the commit it was published from (.cargo_vcs_info.json).",
+  "sentencepiece-sys 0.14.0": {
+    "files": ["source/LICENSE", "source/third_party/absl/LICENSE", "source/third_party/darts_clone/LICENSE",
+              "source/third_party/esaxx/LICENSE", "source/third_party/protobuf-lite/LICENSE"]
+  },
+  "sudachi 0.6.10": {
+    "files": ["../LICENSE"]
+  },
+  "clipboard-win 5.4.1": {
+    "urls": ["https://raw.githubusercontent.com/DoumanAsh/clipboard-win/3b27cf2bfd1adcfa6e0264eb51c1025ddaf0f342/LICENSE"]
+  },
+  "crc-catalog 2.5.0": {
+    "urls": ["https://raw.githubusercontent.com/akhilles/crc-catalog/ed4ad631f22b05055c21a3a4127eb7cf6d75bb62/LICENSES/MIT.txt",
+             "https://raw.githubusercontent.com/akhilles/crc-catalog/ed4ad631f22b05055c21a3a4127eb7cf6d75bb62/LICENSES/Apache-2.0.txt"]
+  },
+  "dasp_sample 0.11.0": {
+    "urls": ["https://raw.githubusercontent.com/RustAudio/dasp/97c3bb9b2363c0b46ac1633858bf1054fd02a980/LICENSE-MIT",
+             "https://raw.githubusercontent.com/RustAudio/dasp/97c3bb9b2363c0b46ac1633858bf1054fd02a980/LICENSE-APACHE"]
+  },
+  "sentencepiece 0.14.0": {
+    "urls": ["https://raw.githubusercontent.com/danieldk/sentencepiece/ff5626ae0058103e16244b35772d6bb1d655a6df/LICENSE-MIT",
+             "https://raw.githubusercontent.com/danieldk/sentencepiece/ff5626ae0058103e16244b35772d6bb1d655a6df/LICENSE-APACHE"]
+  }
+}

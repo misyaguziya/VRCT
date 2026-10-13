@@ -17,8 +17,8 @@
 ### 必須ソフトウェア
 
 - **Node.js** (npm含む)
-- **Python 3.x**
-- **Rust** (Tauri用)
+- **Python 3.x** (バージョン同期・ZIP 作成などの補助スクリプト用。`dev-fast` で Python 版を動かすときは仮想環境も)
+- **Rust** (Tauri とバックエンド用。MSVC ツールチェーン)
 - **Git**
 
 ### 推奨環境
@@ -42,21 +42,20 @@ cd VRCT
 npm install
 ```
 
-### 3. Python環境のセットアップ
+### 3. バックエンドの依存
 
-以下のコマンドで、CPU版とCUDA版の両方の仮想環境を作成します:
-
-```bash
-npm run setup-python
-```
-
-このコマンドは以下の処理を実行します:
-- `.venv` (CPU版) の作成と依存関係のインストール
-- `.venv_cuda` (CUDA版) の作成と依存関係のインストール
+バックエンドは Rust 製 (`native/vrct-backend`、出力は `VRCT-sidecar.exe`) です。
+DLL (CTranslate2・ONNX Runtime・OpenVR など)、Sudachi の辞書、Silero VAD、
+RapidOCR のモデルは `native/third_party.toml` に版と SHA-256 が書いてあり、
+ビルド時に `cargo xtask fetch-native` が取得・検証して `native/third_party/` に置きます
+（`build-sidecar` の中で自動実行。手動の準備は不要）。
 
 > **注意**: CUDA版を使用する場合は、CUDA 12.8対応のNVIDIA GPUドライバーが必要です。
 > CUDA Toolkit のインストールは不要です。ctranslate2 が使う cuBLAS / cuDNN は
-> `requirements_cuda.txt` の `nvidia-*-cu12` wheel で入り、ビルド時に同梱されます。
+> `fetch-native --cuda` が `nvidia-*-cu12` wheel から取り出し、ビルド時に同梱されます。
+
+Python 版のバックエンド (`src-python`) を `dev-fast` で動かす場合だけ、
+`npm run setup-python` で `.venv` / `.venv_cuda` を作成してください。
 
 ## ビルドの種類
 
@@ -82,7 +81,7 @@ npm run dev
 1. 実行中のプロセスを終了 (`task-kill`)
 2. ビルドファイルのクリーンアップ (`clean`)
 3. バージョン情報の更新 (`update-version`)
-4. Pythonバックエンドのビルド (`build-python`)
+4. バックエンドのビルド (`build-sidecar`)
 5. ViteとTauriの開発サーバー起動
 
 ### CUDA版の開発ビルド
@@ -91,7 +90,7 @@ npm run dev
 npm run dev-cuda
 ```
 
-CPU版と同様ですが、CUDA対応のPythonバックエンドをビルドします。
+CPU版と同様ですが、cuBLAS / cuDNN を同梱したバックエンドをビルドします (`build-sidecar-cuda`)。
 
 ### UIのみの開発
 
@@ -103,9 +102,25 @@ npm run dev-ui
 
 ### 高速開発ビルド（推奨: 日常検証用）
 
-PyInstaller によるバックエンド再パッケージを毎回スキップし、仮想環境の
-Python を直接 sidecar として起動する高速ループです。Python コードを
-修正した検証も、プロセス再起動だけで反映されます（数分 → 数秒）。
+インストーラー用の配置を毎回作らず、dev 用 sidecar ラッパーから
+バックエンドを直接起動する高速ループです。
+
+```bash
+# Rust 版: native/target/sidecar-stage/VRCT-sidecar.exe を起動
+npm run dev-rust-fast
+```
+
+`dev-rust-fast` の前に、`native/` で Rust 版をビルドして配置しておきます
+（設定ファイル・ログは `native/target/sidecar-stage/` に書かれます）:
+
+```bash
+cd native
+cargo xtask fetch-native
+cargo build -p vrct-backend --bin VRCT-sidecar
+cargo xtask stage-sidecar --out target\sidecar-stage
+```
+
+Python 版 (`src-python`) を仮想環境の Python で直接起動する場合:
 
 ```bash
 # 標準環境: .venv/Scripts/python.exe
@@ -140,8 +155,7 @@ npm run dev-cuda-fast
   （`src-python/models/overlay/overlay_image.py` ほか）
 - Tauri 側の sidecar 起動ロジックは共通のまま（EXE ファイル名は不変）
 
-依存ライブラリを追加/更新した場合や、配布形式そのものを確認したい場合は
-従来の `npm run dev` / `npm run build` を使ってください。
+配布形式そのものを確認したい場合は `npm run dev` / `npm run build` を使ってください。
 
 ## リリースビルド
 
@@ -201,6 +215,8 @@ npm run update-version
 - `src-tauri/tauri.conf.json`
 - `src-python/config.py`
 
+Rust のバックエンドはビルド時に `package.json` の `version` を直接読みます (`native/vrct-backend/build.rs`)。
+
 ### どこにバージョンを設定すればReleaseに反映されるか
 
 - **設定箇所**: `package.json` の `version` が唯一のソース・オブ・トゥルース。
@@ -211,31 +227,34 @@ npm run update-version
 	- インストーラー（NSIS）は `tauri.conf.json` の `version` を取り込み、プロダクトバージョンとして反映。
 	- ZIPパッケージ名はスクリプト既定では固定（`VRCT.zip`/`VRCT_cuda.zip`）。ファイル名にバージョンを含めたい場合は、`package.json` の `release` スクリプトを調整してください。
 
-### Pythonバックエンドのビルド
+### バックエンドのビルド
 
 #### CPU版
 
 ```bash
-npm run build-python
+npm run build-sidecar
 ```
 
-実行内容:
+実行内容 (`bat/build.bat`、`native/` で):
 
-- `.venv` 環境をアクティベート
-- PyInstallerで `spec/backend.spec` を使用してビルド
-- 出力先: `src-tauri/bin/`
+- `cargo xtask fetch-native` — DLL・辞書・モデル・ライセンスを取得し SHA-256 を検証
+- `cargo build --release -p vrct-backend --bin VRCT-sidecar`
+- `cargo xtask stage-sidecar --release` — exe と `_internal/` を `src-tauri/bin/` に配置
+
+`_internal/` の中身:
+
+- DLL (ctranslate2・onnxruntime・openvr_api・OpenBLAS など)
+- `translation_settings/`, `fonts/`, `sudachi/` (system.dic), `silero/`, `ocr/` (YOLOX と RapidOCR のモデル)
+- `licenses/` — 同梱物のライセンス。Rust のクレートの分は `native/vrct-backend/THIRD_PARTY_LICENSES.txt`
+  （依存を変えたら `python tools/collect_rust_licenses.py native/vrct-backend` で作り直す）
 
 #### CUDA版
 
 ```bash
-npm run build-python-cuda
+npm run build-sidecar-cuda
 ```
 
-実行内容:
-
-- `.venv_cuda` 環境をアクティベート
-- PyInstallerで `spec/backend_cuda.spec` を使用してビルド
-- 出力先: `src-tauri/bin/`
+CPU版の手順に `--cuda` を付けたもの (`bat/build_cuda.bat`)。cuBLAS / cuDNN の DLL が `_internal/` に加わります。
 
 ### フロントエンドのビルド
 
@@ -296,10 +315,6 @@ jobs:
 			- name: Install dependencies
 				run: |
 					npm ci
-
-			- name: Setup Python envs (.venv/.venv_cuda)
-				run: |
-					npm run setup-python
 
 			- name: Sync versions from package.json
 				run: |
@@ -370,18 +385,6 @@ npm run clean-soft
 
 こちらは `build/`, `dist/`, `src-tauri/bin/` のみを削除します。
 
-### PyInstaller のオプション環境変数
-
-`build-python` / `build-python-cuda` は以下の環境変数で挙動を切り替えられます:
-
-- `VRCT_PYINSTALLER_CLEAN=1` — PyInstaller に `--clean` を渡し、
-  Analysis キャッシュを破棄してからビルド（依存追加時・リリース前確認用）。
-  既定では付与しないので、2 回目以降のビルドは Analysis キャッシュが効いて
-  数倍速くなります。
-- `VRCT_PYINSTALLER_UPX=1` — 生成物を UPX で圧縮（配布サイズを最小化したい
-  リリース時のみ）。既定は無効。UPX 圧縮はビルド時間と初回起動時間の両方を
-  伸ばすため、開発中は無効を推奨します。
-
 ### プロセスの強制終了
 
 ```bash
@@ -395,16 +398,15 @@ VRCTに関連する実行中のプロセスを終了します。
 ```
 VRCT/
 ├── bat/                    # バッチスクリプト
-│   ├── build.bat          # CPU版Pythonビルド
-│   ├── build_cuda.bat     # CUDA版Pythonビルド
-│   ├── install.bat        # Python環境セットアップ
+│   ├── build.bat          # CPU版バックエンドのビルドと配置
+│   ├── build_cuda.bat     # CUDA版バックエンドのビルドと配置
+│   ├── install.bat        # Python環境セットアップ (dev-fast の Python 版用)
 │   └── sidecar_dev.bat    # dev-fast用sidecarラッパービルド
-├── spec/                   # PyInstallerスペックファイル
-│   ├── backend.spec       # CPU版ビルド設定
-│   └── backend_cuda.spec  # CUDA版ビルド設定
-├── src-python/            # Pythonバックエンドソースコード
+├── native/                # Rust バックエンド (vrct-backend) とその部品、xtask
+│   └── third_party.toml  # 同梱する DLL・辞書・モデルの版と SHA-256
+├── src-python/            # Python 版バックエンド (安定版のリリース用に残している)
 ├── src-tauri/             # Tauriアプリケーション設定
-│   ├── bin/              # ビルド済みPythonバイナリ（生成）
+│   ├── bin/              # ビルド済みバックエンドと _internal（生成）
 │   └── target/           # Tauriビルド出力（生成）
 ├── src-ui/               # Reactフロントエンドソースコード
 ├── utils/                # ユーティリティスクリプト
@@ -448,9 +450,8 @@ npm run build
 ### CUDA版が動作しない
 
 - NVIDIA GPUドライバーが最新か確認（CUDA Toolkit のインストールは不要）
-- `requirements_cuda.txt` の依存関係が正しくインストールされているか確認
-- `.venv_cuda/Lib/site-packages/nvidia/{cublas,cudnn}/bin/` にDLLがあるか確認。
-  ctranslate2 はGPU実行時にここの `cublas64_12.dll` / `cudnn64_9.dll` を
+- `_internal/` に `cublas64_12.dll` / `cudnn64_9.dll` などの CUDA の DLL があるか確認
+  (`build-sidecar-cuda` で入る)。ctranslate2 はGPU実行時にこれらを
   実行時ロードする。無ければGPUは計算デバイス一覧に出ない
 
 ### プロセスが残っている
@@ -463,21 +464,11 @@ npm run task-kill
 
 ## 参考情報
 
-### PyInstallerスペックファイル
-
-- `spec/backend.spec` - CPU版の設定
-- `spec/backend_cuda.spec` - CUDA版の設定
-
-これらのファイルでは、以下を設定しています:
-- エントリーポイント: `src-python/mainloop.py`
-- データファイル（フォント、プロンプト、言語ファイル等）のパス
-- 依存ライブラリのパス
-
 ### バージョン管理フロー
 
 1. `package.json` のバージョンを更新
 2. `npm run update-version` を実行
-3. 自動的に `tauri.conf.json` と `config.py` が更新される
+3. 自動的に `tauri.conf.json` と `config.py` が更新される（Rust のバックエンドはビルド時に `package.json` を読む）
 
 ## β版リリース
 
@@ -536,7 +527,7 @@ Hugging Face上に存在しない場合はダウンロードに失敗し、イ�
 
 ZIPファイルには以下が含まれます:
 - `VRCT.exe` - メインアプリケーション
-- `VRCT-sidecar.exe` - Pythonバックエンド
+- `VRCT-sidecar.exe` - バックエンド (Rust)
 - `_internal/` - 必要な依存ファイル
 
 ## ライセンス

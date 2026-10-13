@@ -29,8 +29,22 @@ fn panic_hook() {
     }));
 }
 
+/// The DLLs are in `_internal` (the installed layout): it joins the search path of LoadLibrary and
+/// of the DLLs loaded at first use (ctranslate2.dll and what it needs)
+fn add_dll_directory(dir: &std::path::Path) {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::System::LibraryLoader::{AddDllDirectory, SetDefaultDllDirectories, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS};
+    let wide: Vec<u16> = dir.as_os_str().encode_wide().chain([0]).collect();
+    unsafe {
+        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+        AddDllDirectory(wide.as_ptr());
+    }
+}
+
 fn main() -> Result<()> {
     let local = executable_dir();
+    let resources = local.join("_internal");
+    add_dll_directory(&resources);
     // config.json, the logs and the weights are beside the executable, as the frozen Python build
     std::env::set_current_dir(&local)?;
     panic_hook();
@@ -51,7 +65,7 @@ fn main() -> Result<()> {
     config.load();
 
     let http = net::Http::new()?;
-    let model = Model::new(http, app::Resources { dir: local }, transcription_lang, &config)?;
+    let model = Model::new(http, app::Resources { dir: resources }, transcription_lang, &config)?;
     let app = App::new(config, model);
     app::register_error_hook(&app);
 

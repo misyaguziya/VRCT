@@ -970,6 +970,14 @@ Section Install
   ; multi-GB files), which only surfaces when the unpack fails. So on ANY
   ; failure (download error, or an unpack that yields no ${MAINBINARYNAME}.exe)
   ; we wipe the archive and pull a completely fresh copy.
+  ; The app's own files in _internal are replaced as a whole, so files of the
+  ; installed version (a different backend's, for one) do not stay mixed with
+  ; the new ones. Kept aside until the new package unpacks, put back if it does not.
+  RmDir /r "$INSTDIR\_internal.old"
+  ${If} ${FileExists} "$INSTDIR\_internal\*.*"
+    Rename "$INSTDIR\_internal" "$INSTDIR\_internal.old"
+  ${EndIf}
+
   StrCpy $dl_retries 0
   install_attempt:
     Delete "$TEMP\$file_name"
@@ -1182,6 +1190,10 @@ Section Install
     Delete "$TEMP\$file_name.bad"
     Rename "$TEMP\$file_name" "$TEMP\$file_name.bad"
     DetailPrint "Giving up after 3 attempts; kept archive at $TEMP\$file_name.bad"
+    ${If} ${FileExists} "$INSTDIR\_internal.old\*.*"
+      RmDir /r "$INSTDIR\_internal"
+      Rename "$INSTDIR\_internal.old" "$INSTDIR\_internal"
+    ${EndIf}
     Call CleanupFailedInstall
     MessageBox MB_OK|MB_ICONSTOP "Could not download and unpack $file_name after 3 attempts.$\r$\n$\r$\nYour connection may be unstable or the disk may be full. The last download was kept for troubleshooting at:$\r$\n$TEMP\$file_name.bad$\r$\n$\r$\nPlease try again later." /SD IDOK
     Abort
@@ -1189,6 +1201,7 @@ Section Install
   install_ready:
   ; The archive is no longer needed once it is unpacked; reclaim the space.
   Delete "$TEMP\$file_name"
+  RmDir /r "$INSTDIR\_internal.old"
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
@@ -1382,6 +1395,7 @@ Section Uninstall
 
   ; Delete _internal folder (アプリ本体の一部なので常に削除)
   RmDir /r "$INSTDIR\_internal"
+  RmDir /r "$INSTDIR\_internal.old"
 
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"

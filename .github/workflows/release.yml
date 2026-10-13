@@ -85,7 +85,7 @@ jobs:
             exit 1
           }
 
-      - name: Generate telemetry keys
+      - name: Select the telemetry key of the channel
         env:
           TELEMETRY_KEY_STABLE: ${{ secrets.TELEMETRY_KEY_STABLE }}
           TELEMETRY_KEY_BETA: ${{ secrets.TELEMETRY_KEY_BETA }}
@@ -95,7 +95,9 @@ jobs:
             Write-Host "::error::TELEMETRY_KEY_STABLE / TELEMETRY_KEY_BETA secrets are not set."
             exit 1
           }
-          Set-Content -Path src-python/telemetry_keys.py -Encoding utf8 -Value "APP_KEYS = {'stable': '$env:TELEMETRY_KEY_STABLE', 'beta': '$env:TELEMETRY_KEY_BETA'}"
+          # the Rust backend takes the key at build time (option_env!("VRCT_TELEMETRY_APP_KEY"))
+          $key = if ("${{ steps.channel.outputs.is_beta }}" -eq "true") { $env:TELEMETRY_KEY_BETA } else { $env:TELEMETRY_KEY_STABLE }
+          echo "VRCT_TELEMETRY_APP_KEY=$key" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -116,9 +118,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      - name: Setup Python environment
-        run: npm run setup-python
 
       - name: Install Python script dependencies
         run: pip install tqdm

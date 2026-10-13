@@ -68,11 +68,11 @@ $env:VRCT_RUST_AUDIO = "1"
 .\target\debug\vrct-contract.exe run --python "$repo\.venv\Scripts\python.exe" `
   --src "$repo\src-python" --pythonpath "$repo\tmp\native-site;$repo\tmp\graphics-site" --name python --out target\contract\python.json
 Remove-Item Env:VRCT_RUST_AUDIO
-# Rust 版: ビルドして、DLL・翻訳設定・Sudachi の辞書・フォントと一緒に並べる
+# Rust 版: ビルドして、配布と同じ形 (exe の隣の _internal に DLL・データ・モデル・ライセンス) に並べる
+# DLL・Sudachi の辞書・Silero・RapidOCR のモデルは third_party.toml から (fetch-native が SHA-256 を確かめて取る)
+cargo xtask fetch-native
 cargo build -p vrct-backend --bin VRCT-sidecar
-cargo xtask stage-sidecar --out target\sidecar-stage --sudachi-dict "$repo\.venv\Lib\site-packages\sudachidict_full\resources\system.dic" `
-  --silero "$repo\.venv\Lib\site-packages\faster_whisper\assets" `
-  --rapidocr "$repo\.venv\Lib\site-packages\rapidocr\models"
+cargo xtask stage-sidecar --out target\sidecar-stage
 .\target\debug\vrct-contract.exe run --exe target\sidecar-stage\VRCT-sidecar.exe --weights <src-python\weights> --name rust --out target\contract\rust.json
 .\target\debug\vrct-contract.exe compare target\contract\python.json target\contract\rust.json
 ```
