@@ -1,4 +1,4 @@
-/// package.json's "version" (update_version.py copies it to tauri.conf.json and config.py too)
+/// package.json's "version" (tauri.conf.json points at package.json too)
 fn app_version() -> String {
     let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../package.json");
     println!("cargo:rerun-if-changed={path}");

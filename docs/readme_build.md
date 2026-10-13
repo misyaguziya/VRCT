@@ -17,7 +17,7 @@
 ### 必須ソフトウェア
 
 - **Node.js** (npm含む)
-- **Python 3.x** (バージョン同期・ZIP 作成などの補助スクリプト用。`dev-fast` で Python 版を動かすときは仮想環境も)
+- **Python 3.x** (ZIP 作成・プロセス終了・クリーンアップの補助スクリプト用。`dev-fast` で Python 版を動かすときは仮想環境も)
 - **Rust** (Tauri とバックエンド用。MSVC ツールチェーン)
 - **Git**
 
@@ -80,9 +80,8 @@ npm run dev
 このコマンドは以下を実行します:
 1. 実行中のプロセスを終了 (`task-kill`)
 2. ビルドファイルのクリーンアップ (`clean`)
-3. バージョン情報の更新 (`update-version`)
-4. バックエンドのビルド (`build-sidecar`)
-5. ViteとTauriの開発サーバー起動
+3. バックエンドのビルド (`build-sidecar`)
+4. ViteとTauriの開発サーバー起動
 
 ### CUDA版の開発ビルド
 
@@ -205,26 +204,17 @@ npm run release-all
 
 ### バージョン管理
 
-バージョンは `package.json` で一元管理され、以下のファイルに自動で同期されます:
+バージョンは `package.json` の `version` だけで決まります。書き写す手順はありません。
 
-```bash
-npm run update-version
-```
-
-更新されるファイル:
-- `src-tauri/tauri.conf.json`
-- `src-python/config.py`
-
-Rust のバックエンドはビルド時に `package.json` の `version` を直接読みます (`native/vrct-backend/build.rs`)。
+- Tauri（アプリ・NSISインストーラーの表示とメタデータ）: `src-tauri/tauri.conf.json` の `version` が `"../package.json"` を指していて、ビルド時に読む
+- バックエンド: ビルド時に `package.json` を読む (`native/vrct-backend/build.rs`)
+- CI: タグの版と `package.json` の版が違えばリリースを止める
 
 ### どこにバージョンを設定すればReleaseに反映されるか
 
-- **設定箇所**: `package.json` の `version` が唯一のソース・オブ・トゥルース。
-- **反映方法**: `npm run update-version`（`build`/`build-cuda`/`release`コマンド内でも自動実行）により、
-	- `src-tauri/tauri.conf.json` の `version` に同期（Tauri/NSISインストーラーの表示・メタデータに使用）
-	- `src-python/config.py` の `self._VERSION` に同期（ランタイム表示等に使用）
+- **設定箇所**: `package.json` の `version` だけ。
 - **成果物への影響**:
-	- インストーラー（NSIS）は `tauri.conf.json` の `version` を取り込み、プロダクトバージョンとして反映。
+	- インストーラー（NSIS）は `package.json` の `version` をプロダクトバージョンとして反映。
 	- ZIPパッケージ名はスクリプト既定では固定（`VRCT.zip`/`VRCT_cuda.zip`）。ファイル名にバージョンを含めたい場合は、`package.json` の `release` スクリプトを調整してください。
 
 ### バックエンドのビルド
@@ -316,10 +306,6 @@ jobs:
 				run: |
 					npm ci
 
-			- name: Sync versions from package.json
-				run: |
-					npm run update-version
-
 			- name: Build (CPU)
 				run: |
 					npm run build
@@ -356,7 +342,7 @@ jobs:
 ```
 
 ### ポイント
-- ビルド前に必ず `npm run update-version` を実行して、`tauri.conf.json` と `config.py` にバージョンを同期します。
+- バージョンは `package.json` だけを変えます（`tauri.conf.json` とバックエンドはビルド時にそこから読む）。
 - アーティファクトのパスは既定構成に合わせています：
 	- インストーラー: `src-tauri/target/release/bundle/nsis/`
 	- ZIP: ルート直下の `VRCT.zip`
@@ -413,7 +399,6 @@ VRCT/
 │   ├── clean.py         # クリーンアップスクリプト
 │   ├── dev_sidecar/     # dev-fast用のvenv直起動ラッパー(Rust)
 │   ├── task_kill.py     # プロセス終了スクリプト
-│   ├── update_version.py # バージョン更新スクリプト
 │   └── zip.py           # ZIPパッケージング
 ├── package.json          # Node.js設定とバージョン管理
 ├── requirements.txt      # Python依存関係（CPU版）
@@ -467,8 +452,7 @@ npm run task-kill
 ### バージョン管理フロー
 
 1. `package.json` のバージョンを更新
-2. `npm run update-version` を実行
-3. 自動的に `tauri.conf.json` と `config.py` が更新される（Rust のバックエンドはビルド時に `package.json` を読む）
+2. ビルドすれば、アプリ・インストーラー・バックエンドのすべてに反映される
 
 ## β版リリース
 
@@ -478,8 +462,7 @@ npm run task-kill
 ### リリース手順
 
 1. `package.json` の `version` を `3.5.0-beta.1` のようなpre-release識別子付きの値にする
-2. `npm run update-version` を実行(通常のビルド/リリースコマンド内で自動実行されるため手動実行は不要)
-3. `v3.5.0-beta.1` のようなタグを打ってpush
+2. `v3.5.0-beta.1` のようなタグを打ってpush
 
 ```bash
 git tag v3.5.0-beta.1
