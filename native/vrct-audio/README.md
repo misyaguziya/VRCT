@@ -17,8 +17,9 @@ VAD 用の downmix、非 VAD の speaker の多チャンネル変換、PCM の�
 ## 検証
 
 ```powershell
-cargo test --locked --manifest-path native/vrct-audio/Cargo.toml --all-features
-cargo clippy --locked --manifest-path native/vrct-audio/Cargo.toml --all-targets --all-features -- -D warnings
+cd native
+cargo test -p vrct-audio --all-features
+cargo clippy -p vrct-audio --all-targets --all-features -- -D warnings
 ```
 
 ライセンスは `LICENSE` と `SPEECH_RECOGNITION_LICENSE.txt`。エネルギー判定の互換実装は SpeechRecognition fork の BSD-3-Clause 通知を保持する。依存しているクレートの表記は `native/vrct-backend/THIRD_PARTY_LICENSES.txt` に入る。

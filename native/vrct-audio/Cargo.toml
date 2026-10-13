@@ -35,6 +35,3 @@ serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 # The recording devices (WASAPI); the Rust backend builds with it
 devices = ["dep:cpal", "dep:windows", "dep:windows-core"]
 
-[profile.release]
-lto = "thin"
-codegen-units = 1
