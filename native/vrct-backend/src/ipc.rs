@@ -17,6 +17,31 @@ use std::sync::{Arc, Condvar, Mutex, OnceLock};
 use std::time::Duration;
 
 const LOG_QUEUE_MAX: usize = 200;
+const STDIN_POLL: Duration = Duration::from_millis(10);
+
+/// stdin, read only once something came. A read left waiting on the UI's pipe holds the handle,
+/// so everything else that looks at stdin waits for the UI's next line: OpenBLAS's libgfortran
+/// checks it while loading, which held the first Whisper transcription for up to 20 s.
+struct PolledStdin(std::mem::ManuallyDrop<std::fs::File>);
+
+impl PolledStdin {
+    fn new() -> Self {
+        use std::os::windows::io::{AsRawHandle, FromRawHandle};
+        // the process's stdin handle, not closed here
+        Self(std::mem::ManuallyDrop::new(unsafe { std::fs::File::from_raw_handle(std::io::stdin().as_raw_handle()) }))
+    }
+}
+
+impl std::io::Read for PolledStdin {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        use std::os::windows::io::AsRawHandle;
+        // not a pipe (a console, a file) or a closed one: read as it is
+        while crate::platform::pipe_available(self.0.as_raw_handle()) == Some(0) {
+            std::thread::sleep(STDIN_POLL);
+        }
+        self.0.read(buf)
+    }
+}
 const MAX_CONSECUTIVE_STDOUT_FAILURES: u32 = 50;
 const LOCK_BUSY_RETRY: Duration = Duration::from_millis(50);
 const LOCK_BUSY_MAX_RETRIES: u32 = 400;
@@ -217,12 +242,12 @@ impl<C: Send + Sync + 'static> Dispatcher<C> {
         self.ready.notify_one();
     }
 
-    /// receiver: stdin lines to the queue. At the end of input it keeps waiting (the watchdog ends
+    /// receiver: stdin lines to the queue (read through PolledStdin). At the end of input it keeps waiting (the watchdog ends
     /// the process when the UI is gone).
     pub fn start_receiver(self: &Arc<Self>) {
         let this = self.clone();
         std::thread::Builder::new().name("main_receiver".into()).spawn(move || {
-            let mut stdin = std::io::stdin().lock();
+            let mut stdin = std::io::BufReader::new(PolledStdin::new());
             let mut line = String::new();
             loop {
                 line.clear();
