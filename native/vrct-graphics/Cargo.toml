@@ -8,10 +8,8 @@ description = "VRCT VR UI image path: Windows.Graphics.Capture into a Rust-owned
 
 [lib]
 name = "vrct_graphics"
-crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-pyo3 = { version = "=0.24.2", features = ["extension-module", "abi3-py310"], optional = true }
 windows = { version = "=0.61.1", features = [
     "Foundation",
     "Graphics",
@@ -28,9 +26,6 @@ windows = { version = "=0.61.1", features = [
     "Win32_System_WinRT_Graphics_Capture",
 ] }
 
-[features]
-# The extension module for the Python backend (pyproject.toml builds with it)
-python = ["dep:pyo3"]
 
 [profile.release]
 lto = "thin"

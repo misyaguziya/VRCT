@@ -1,5 +1,4 @@
 //! Short-clip audio processing. No recording devices, networking or model loading.
-//! The `python` feature builds the extension module the Python backend imports (`vrct_audio`).
 use flacenc::{bitsink::ByteSink, component::BitRepr, error::Verify};
 pub mod audioop;
 #[cfg(feature = "devices")]
@@ -9,8 +8,6 @@ mod energy;
 pub mod endpoints;
 mod normalize;
 pub mod vad;
-#[cfg(feature = "python")]
-mod python;
 
 pub use energy::{rms, EnergyDetector};
 pub use normalize::normalize_pcm16;

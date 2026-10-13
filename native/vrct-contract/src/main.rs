@@ -1,9 +1,9 @@
 //! IPC contract tests (docs/rust_backend_design_2026-10-11.md §8).
 //!
-//! The backend is driven only through its stdin / stdout, the way the UI does, so the same cases
-//! run against the Python backend and the Rust sidecar:
+//! The backend is driven only through its stdin / stdout, the way the UI does. The Rust sidecar's
+//! answers are compared with the ones the Python backend gave (a report kept from before the
+//! Python code was removed; native/README.md):
 //!
-//!   vrct-contract run --python <python.exe> --src <src-python> --out <report.json>
 //!   vrct-contract run --exe <VRCT-sidecar.exe> --out <report.json>
 //!   vrct-contract compare <a.json> <b.json>
 //!
@@ -172,7 +172,7 @@ impl Backend {
         for key in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY"] {
             cmd.env(key, "http://127.0.0.1:9");
         }
-        cmd.env("NO_PROXY", "").env("no_proxy", "").env("HF_HUB_OFFLINE", "1").env("PYTHONUNBUFFERED", "1");
+        cmd.env("NO_PROXY", "").env("no_proxy", "");
         let mut child = cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn()?;
         let stdin = Arc::new(Mutex::new(child.stdin.take().unwrap()));
         let (tx, lines) = mpsc::channel();
@@ -377,31 +377,13 @@ fn main() -> Result<()> {
             let out = PathBuf::from(arg(&args, "--out").context("--out")?);
             let name = arg(&args, "--name").unwrap_or_else(|| "backend".into());
             let dir = fresh_run_dir(&name)?;
-            let cmd = if let Some(python) = arg(&args, "--python") {
-                let src = PathBuf::from(arg(&args, "--src").context("--src")?);
-                copy_tree(&src, &dir, &["weights", "__pycache__", ".venv", "test", "logs", ".pytest_cache"])?;
-                if src.join("weights").exists() {
-                    junction(&dir.join("weights"), &fs::canonicalize(src.join("weights"))?)?;
-                }
-                let mut cmd = Command::new(python);
-                cmd.arg(dir.join("mainloop.py")).current_dir(&dir);
-                // the branch's own builds of vrct_audio / vrct_graphics (tmp/native-site, tmp/graphics-site)
-                if let Some(pythonpath) = arg(&args, "--pythonpath") {
-                    cmd.env("PYTHONPATH", pythonpath);
-                }
-                cmd
-            } else if let Some(exe) = arg(&args, "--exe") {
-                let exe = PathBuf::from(exe);
-                copy_tree(exe.parent().unwrap(), &dir, &["weights", "logs"])?;
-                if let Some(weights) = arg(&args, "--weights") {
-                    junction(&dir.join("weights"), Path::new(&weights))?;
-                }
-                let mut cmd = Command::new(dir.join(exe.file_name().unwrap()));
-                cmd.current_dir(&dir);
-                cmd
-            } else {
-                bail!("run needs --python <python.exe> --src <src-python>, or --exe <sidecar.exe>");
-            };
+            let exe = PathBuf::from(arg(&args, "--exe").context("run needs --exe <sidecar.exe>")?);
+            copy_tree(exe.parent().unwrap(), &dir, &["weights", "logs"])?;
+            if let Some(weights) = arg(&args, "--weights") {
+                junction(&dir.join("weights"), Path::new(&weights))?;
+            }
+            let mut cmd = Command::new(dir.join(exe.file_name().unwrap()));
+            cmd.current_dir(&dir);
             run(&name, cmd, &out)
         }
         Some("compare") => {
@@ -411,6 +393,6 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        _ => bail!("usage: vrct-contract run (--python <py> --src <dir> [--pythonpath <p>] | --exe <exe> [--weights <dir>]) --name <n> --out <json>\n       vrct-contract compare <a.json> <b.json>"),
+        _ => bail!("usage: vrct-contract run --exe <exe> [--weights <dir>] --name <n> --out <json>\n       vrct-contract compare <a.json> <b.json>"),
     }
 }

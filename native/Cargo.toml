@@ -1,9 +1,9 @@
 # Rust バックエンドのワークスペース (docs/rust_backend_design_2026-10-11.md)。
-# 既存の PyO3 クレート (vrct-audio / vrct-graphics) と PoC は、今のビルド (pip wheel) を変えないよう外す。
+# vrct-audio / vrct-graphics (もとは Python 版の拡張で、単独の Cargo.lock を持つ) と PoC は外す。
 [workspace]
 resolver = "2"
 members = ["xtask", "vrct-contract", "vrct-ct2", "vrct-whisper", "vrct-ocr", "vrct-openvr", "vrct-overlay", "vrct-webtranslate", "vrct-backend"]
-exclude = ["vrct-audio", "vrct-graphics", "poc-ct2", "poc-oscquery"]
+exclude = ["vrct-audio", "vrct-graphics", "poc-oscquery"]
 
 [workspace.package]
 edition = "2021"

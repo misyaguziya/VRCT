@@ -8,11 +8,8 @@ description = "VRCT's SteamVR overlays: the log images (overlay_image.py) and th
 
 [lib]
 name = "vrct_overlay"
-crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# The extension module for the Python backend (pyproject.toml builds with it)
-pyo3 = { version = "=0.24.2", features = ["extension-module", "abi3-py310"], optional = true }
 vrct-openvr = { path = "../vrct-openvr" }
 # The VR UI's capture (Windows.Graphics.Capture into a D3D11 texture) and its composing
 vrct-graphics = { path = "../vrct-graphics", default-features = false }
@@ -36,9 +33,6 @@ windows = { version = "=0.61.1", features = [
     "Win32_Graphics_Dxgi",
     "Win32_Graphics_Dxgi_Common",
 ] }
-
-[features]
-python = ["dep:pyo3"]
 
 [dev-dependencies]
 serde_json = { version = "1", features = ["float_roundtrip"] }
