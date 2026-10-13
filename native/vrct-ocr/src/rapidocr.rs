@@ -69,7 +69,7 @@ pub struct RapidOcr {
     pub params: Params,
 }
 
-/// Intermediate results, to compare stage by stage with scripts/rapidocr_stages.py.
+/// Intermediate results, to compare stage by stage with RapidOCR's (as was done when porting).
 #[derive(Default, serde::Serialize)]
 pub struct Stages {
     pub pre: (usize, usize, f64, f64, usize), // h, w, ratio_h, ratio_w, pad_top

@@ -5,7 +5,5 @@ pub mod math;
 pub mod overlay;
 mod panel;
 pub mod pose;
-#[cfg(feature = "python")]
-mod python;
 mod vr_ui;
 pub mod window;

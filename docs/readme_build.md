@@ -17,7 +17,7 @@
 ### 必須ソフトウェア
 
 - **Node.js** (npm含む)
-- **Python 3.x** (ZIP 作成・プロセス終了・クリーンアップの補助スクリプト用。`dev-fast` で Python 版を動かすときは仮想環境も)
+- **Python 3.x** (ZIP 作成・プロセス終了・クリーンアップ・ライセンス表の生成の補助スクリプト用)
 - **Rust** (Tauri とバックエンド用。MSVC ツールチェーン)
 - **Git**
 
@@ -53,9 +53,6 @@ RapidOCR のモデルは `native/third_party.toml` に版と SHA-256 が書い�
 > **注意**: CUDA版を使用する場合は、CUDA 12.8対応のNVIDIA GPUドライバーが必要です。
 > CUDA Toolkit のインストールは不要です。ctranslate2 が使う cuBLAS / cuDNN は
 > `fetch-native --cuda` が `nvidia-*-cu12` wheel から取り出し、ビルド時に同梱されます。
-
-Python 版のバックエンド (`src-python`) を `dev-fast` で動かす場合だけ、
-`npm run setup-python` で `.venv` / `.venv_cuda` を作成してください。
 
 ## ビルドの種類
 
@@ -101,16 +98,16 @@ npm run dev-ui
 
 ### 高速開発ビルド（推奨: 日常検証用）
 
-インストーラー用の配置を毎回作らず、dev 用 sidecar ラッパーから
-バックエンドを直接起動する高速ループです。
+インストーラー用の配置を毎回作らず、dev 用 sidecar ラッパーから、`native/` に配置した
+バックエンド（`native/target/sidecar-stage/VRCT-sidecar.exe`）を直接起動する高速ループです。
+バックエンドを作り直したときも、配置し直してアプリを再起動するだけで反映されます。
 
 ```bash
-# Rust 版: native/target/sidecar-stage/VRCT-sidecar.exe を起動
-npm run dev-rust-fast
+npm run dev-fast
 ```
 
-`dev-rust-fast` の前に、`native/` で Rust 版をビルドして配置しておきます
-（設定ファイル・ログは `native/target/sidecar-stage/` に書かれます）:
+`dev-fast` の前に、`native/` でバックエンドをビルドして配置しておきます
+（設定ファイル・ログは `native/target/sidecar-stage/` に書かれます。CUDA 版は `fetch-native` と `stage-sidecar` に `--cuda`）:
 
 ```bash
 cd native
@@ -119,40 +116,12 @@ cargo build -p vrct-backend --bin VRCT-sidecar
 cargo xtask stage-sidecar --out target\sidecar-stage
 ```
 
-Python 版 (`src-python`) を仮想環境の Python で直接起動する場合:
-
-```bash
-# 標準環境: .venv/Scripts/python.exe
-npm run dev-fast
-
-# CUDA環境: .venv_cuda/Scripts/python.exe
-npm run dev-cuda-fast
-```
-
-どちらのコマンドも以下を実行します:
+`dev-fast` は以下を実行します:
 
 1. 実行中のプロセスを終了 (`task-kill`)
 2. dev 用 sidecar ラッパー（`utils/dev_sidecar/`, Rust 製の薄いバイナリ）を
    ビルドして `src-tauri/bin/` に配置 (`sidecar-dev`)
 3. Vite と Tauri の開発サーバー起動 (`dev-ui`)
-
-前提:
-
-- 選択した仮想環境と依存関係が準備済みであること
-  - `dev-fast`: `.venv/Scripts/python.exe`
-  - `dev-cuda-fast`: `.venv_cuda/Scripts/python.exe`（`.venv` は不要）
-- Rust ツールチェーン (`cargo`) が使えること（既に Tauri で必要）
-
-各コマンドが `VRCT_DEV_VENV` を設定し、Tauri 経由で dev 用 sidecar に
-使用する環境を渡します。選択した環境が存在しない場合はエラーで停止し、
-別の仮想環境への自動切り替えは行いません。環境の有効化（activate）は不要です。
-
-配布 EXE と同一挙動になる根拠:
-
-- Python コード側は `_internal/...` バンドルパスと開発ツリー相対パスの
-  両対応が入っており、venv 直起動でもリソース探索が正しく解決される
-  （`src-python/models/overlay/overlay_image.py` ほか）
-- Tauri 側の sidecar 起動ロジックは共通のまま（EXE ファイル名は不変）
 
 配布形式そのものを確認したい場合は `npm run dev` / `npm run build` を使ってください。
 
@@ -386,34 +355,23 @@ VRCT/
 ├── bat/                    # バッチスクリプト
 │   ├── build.bat          # CPU版バックエンドのビルドと配置
 │   ├── build_cuda.bat     # CUDA版バックエンドのビルドと配置
-│   ├── install.bat        # Python環境セットアップ (dev-fast の Python 版用)
 │   └── sidecar_dev.bat    # dev-fast用sidecarラッパービルド
 ├── native/                # Rust バックエンド (vrct-backend) とその部品、xtask
+│   ├── data/             # 配布に入れるデータ (翻訳設定・フォント・OCR モデルなど)
 │   └── third_party.toml  # 同梱する DLL・辞書・モデルの版と SHA-256
-├── src-python/            # Python 版バックエンド (安定版のリリース用に残している)
 ├── src-tauri/             # Tauriアプリケーション設定
 │   ├── bin/              # ビルド済みバックエンドと _internal（生成）
 │   └── target/           # Tauriビルド出力（生成）
 ├── src-ui/               # Reactフロントエンドソースコード
 ├── utils/                # ユーティリティスクリプト
 │   ├── clean.py         # クリーンアップスクリプト
-│   ├── dev_sidecar/     # dev-fast用のvenv直起動ラッパー(Rust)
+│   ├── dev_sidecar/     # dev-fast用の、配置済みバックエンドを起動するラッパー(Rust)
 │   ├── task_kill.py     # プロセス終了スクリプト
 │   └── zip.py           # ZIPパッケージング
-├── package.json          # Node.js設定とバージョン管理
-├── requirements.txt      # Python依存関係（CPU版）
-└── requirements_cuda.txt # Python依存関係（CUDA版。requirements.txt + CUDAライブラリ）
+└── package.json          # Node.js設定とバージョン管理 (版はここだけ)
 ```
 
 ## トラブルシューティング
-
-### Python環境のエラー
-
-仮想環境を再作成してください:
-
-```bash
-npm run setup-python
-```
 
 ### ビルドが失敗する
 

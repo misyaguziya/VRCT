@@ -110,7 +110,7 @@ url = "https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.2/onnx/PP-
 file = "devanagari_PP-OCRv5_rec_mobile.onnx"
 sha256 = "d6f0a906580e3fa6b324a318718f1f31f268b6ea8ef985f91c2012a37f52c91e"
 
-# 以下は CUDA 版だけ (--cuda)。requirements_cuda.txt と同じ版。
+# 以下は CUDA 版だけ (--cuda)。
 
 [nvidia-cublas-cu12]
 cuda = true

@@ -8,12 +8,10 @@ description = "PCM processing and in-process FLAC encoding for VRCT"
 
 [lib]
 name = "vrct_audio"
-crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 dasp_sample = "=0.11.0"
 flacenc = { version = "=0.5.1", default-features = false }
-pyo3 = { version = "=0.24.2", features = ["extension-module", "abi3-py310"], optional = true }
 # Recording devices (WASAPI)
 cpal = { version = "=0.16.0", optional = true }
 windows = { version = "=0.61.1", optional = true, features = [
@@ -34,9 +32,8 @@ base64 = "0.22"
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
 
 [features]
-# The extension module for the Python backend (pyproject.toml builds with it)
+# The recording devices (WASAPI); the Rust backend builds with it
 devices = ["dep:cpal", "dep:windows", "dep:windows-core"]
-python = ["dep:pyo3", "devices"]
 
 [profile.release]
 lto = "thin"

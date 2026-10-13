@@ -4,7 +4,6 @@
   "version": "3.6.0-beta.1",
   "type": "module",
   "scripts": {
-    "setup-python": "bat\\install.bat",
     "build-sidecar": "bat\\build.bat",
     "build-sidecar-cuda": "bat\\build_cuda.bat",
     "sidecar-dev": "bat\\sidecar_dev.bat",
@@ -18,9 +17,7 @@
     "clean-soft": "python utils\\clean.py --soft",
     "dev": "npm run task-kill && npm run clean && npm run build-sidecar && npm run dev-ui",
     "dev-cuda": "npm run task-kill && npm run clean && npm run build-sidecar-cuda && npm run dev-ui",
-    "dev-fast": "set \"VRCT_DEV_VENV=.venv\" && npm run task-kill && npm run sidecar-dev && npm run dev-ui",
-    "dev-cuda-fast": "set \"VRCT_DEV_VENV=.venv_cuda\" && npm run task-kill && npm run sidecar-dev && npm run dev-ui",
-    "dev-rust-fast": "set \"VRCT_DEV_BACKEND=rust\" && npm run task-kill && npm run sidecar-dev && npm run dev-ui",
+    "dev-fast": "npm run task-kill && npm run sidecar-dev && npm run dev-ui",
     "dev-ui": "npm run task-kill && npm-run-all --parallel vite tauri-dev",
     "analyze-error": "node utils/analyze_ui_error.js",
     "build": "npm run task-kill && npm run clean && npm run build-sidecar && npm run vite-build && npm run tauri build",
