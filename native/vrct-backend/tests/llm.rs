@@ -104,7 +104,7 @@ fn without_defaults(v: &Value) -> Option<Value> {
 fn llm_engines_match_python() {
     let data = data();
     let mock = Mock::start(responder(data.clone()));
-    let settings = native().join("../src-python/models/translation/translation_settings");
+    let settings = native().join("data/translation_settings");
     let text = "こんにちは、はじめまして";
     let mut problems = vec![];
     for e in data["engines"].as_array().unwrap() {

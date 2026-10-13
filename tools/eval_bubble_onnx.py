@@ -1,6 +1,6 @@
 """吹き出し検出の .onnx を val 画像で実測する。基盤を載せ替えるときの比較用。
 
-python tools/eval_bubble_onnx.py --model src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx
+python tools/eval_bubble_onnx.py --model native/data/ocr/chatbox_yolox_tiny.onnx
 
 主に見るのは mAP ではなく「取りこぼし / 余分な候補 / CPU レイテンシ」。文字起こしの
 前段なので、実運用で効くのはこの3つ(docs/ocr_yolo_training.md の閾値の表と同じ観点)。

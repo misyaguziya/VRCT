@@ -79,7 +79,7 @@ fn ocr_matches_python() {
         return;
     };
     let mut detector =
-        BubbleDetector::new(&native().join("../src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx")).unwrap();
+        BubbleDetector::new(&native().join("data/ocr/chatbox_yolox_tiny.onnx")).unwrap();
     let mut ocr = Ocr { models, readers: HashMap::new() };
     let testdata = native().join("testdata/ocr");
     let data: Value = serde_json::from_slice(&std::fs::read(testdata.join("ocr-cpu.json")).unwrap()).unwrap();

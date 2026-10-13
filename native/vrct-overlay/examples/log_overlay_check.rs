@@ -9,7 +9,7 @@ use vrct_overlay::overlay::{Overlay, Settings};
 
 fn main() {
     let seconds: u64 = std::env::args().nth(1).and_then(|s| s.parse().ok()).unwrap_or(60);
-    let fonts = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../src-python/models/overlay/fonts");
+    let fonts = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/fonts");
     let defaults = |tracker: &str, ui_scaling: f64| Settings {
         position: [0.0; 6], tracker: tracker.into(), opacity: 1.0, ui_scaling, display_duration: 5.0, fadeout_duration: 2.0,
         panel_size: None,

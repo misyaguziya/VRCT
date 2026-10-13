@@ -9,10 +9,10 @@ BOOTH.
 
 | | |
 |---|---|
-| File (repository) | `src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx` |
+| File (repository) | `native/data/ocr/chatbox_yolox_tiny.onnx` |
 | File (built application) | `_internal/ocr_onnx/chatbox_yolox_tiny.onnx` |
 | Copyright | Copyright (c) 2026 misyaguziya. All rights reserved. |
-| License | VRCT Chat-Bubble Detection Model License Agreement — [`LICENSE.txt`](src-python/models/ocr/onnx/LICENSE.txt) (Japanese, authoritative) / [`LICENSE.en.txt`](src-python/models/ocr/onnx/LICENSE.en.txt) (English translation) |
+| License | VRCT Chat-Bubble Detection Model License Agreement — [`LICENSE.txt`](native/data/ocr/LICENSE.txt) (Japanese, authoritative) / [`LICENSE.en.txt`](native/data/ocr/LICENSE.en.txt) (English translation) |
 
 This file is **not** covered by the MIT License in `LICENSE`. Every other
 file in this repository is, except third-party source and license notices
@@ -94,11 +94,11 @@ carry their own licenses; JavaScript and Rust dependencies are listed in
 
 ## Audio processing dependencies
 
-The Google protocol adapter in `src-python/models/transcription/google_speech.py`,
-the native energy detector, its Python listener, and the PCM16 capture source follow code from
-SpeechRecognition / custom_speech_recognition, under BSD-3-Clause.
-Its original notice is preserved in the adjacent `google_speech_LICENSE.txt` and
-included in the built application under `licenses/`.
+The Google protocol adapter (`src-python/models/transcription/google_speech.py` and its Rust
+port in `native/vrct-backend/src/asr.rs`), the native energy detector, its Python listener, and
+the PCM16 capture source follow code from SpeechRecognition / custom_speech_recognition, under
+BSD-3-Clause. Its original notice is preserved in `native/vrct-backend/GOOGLE_SPEECH_LICENSE.txt`
+and included in the built application under `licenses/`.
 
 The `vrct-audio` extension uses flacenc (Apache-2.0), PyO3 (MIT OR Apache-2.0),
 and their locked dependencies. Its speaker downmix follows pydub 0.25.1 (MIT).
