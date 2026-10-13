@@ -58,10 +58,11 @@ fn check(file: &Path) -> Vec<String> {
     if model.suppress_tokens() != expected {
         problems.push(format!("suppress_tokens {:?} != {expected:?}", model.suppress_tokens()));
     }
-    let mel128 = FeatureExtractor::new(128);
+    // both sizes whatever the model uses (large-v3 and its turbo take 128)
+    let (mel80, mel128) = (FeatureExtractor::new(80), FeatureExtractor::new(128));
     for (clip, hashes) in data["features_sha256"].as_object().unwrap() {
         let audio = read_wav(clip);
-        for (n, got) in [("80", sha256(&model.features(&audio).unwrap().data)), ("128", sha256(&mel128.compute(&audio).unwrap().data))] {
+        for (n, got) in [("80", sha256(&mel80.compute(&audio).unwrap().data)), ("128", sha256(&mel128.compute(&audio).unwrap().data))] {
             if got != hashes[n].as_str().unwrap() {
                 problems.push(format!("features {clip} {n} mels differ"));
             }
