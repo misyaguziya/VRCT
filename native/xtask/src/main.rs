@@ -1,6 +1,6 @@
 //! cargo xtask fetch-native [--cuda]
 //! cargo xtask stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>] [--silero <faster_whisper/assets>]
-//!   [--weights <src-python/weights>]  (a junction: the sidecar reads the weights from beside it)
+//!   [--rapidocr <site-packages/rapidocr/models>] [--weights <src-python/weights>]  (a junction: the sidecar reads the weights from beside it)
 //!
 //! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
 //! SHA-256 を照合し、指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
@@ -202,7 +202,8 @@ fn copy_dir(src: &Path, dst: &Path) -> Result<()> {
 
 /// The sidecar with what it reads beside it: the DLLs of the build, the translators' settings,
 /// SudachiPy's resources with SudachiDict-full's system.dic, the overlay's fonts, Silero VAD
-fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>, silero: Option<PathBuf>, weights: Option<PathBuf>) -> Result<()> {
+fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>, silero: Option<PathBuf>, rapidocr: Option<PathBuf>,
+                 weights: Option<PathBuf>) -> Result<()> {
     let native = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
     let built = native.join("target").join(if release { "release" } else { "debug" });
     let models = native.join("../src-python/models");
@@ -226,6 +227,11 @@ fn stage_sidecar(out: &Path, release: bool, sudachi_dict: Option<PathBuf>, siler
     for name in ["silero_encoder_v5.onnx", "silero_decoder_v5.onnx"] {
         fs::copy(silero.join(name), out.join("silero").join(name)).with_context(|| silero.join(name).display().to_string())?;
     }
+    // OCR: the bubble detector (with its notices) and RapidOCR's models
+    copy_dir(&models.join("ocr/onnx"), &out.join("ocr"))?;
+    let rapidocr = rapidocr.or_else(|| std::env::var_os("VRCT_RAPIDOCR_MODELS").map(PathBuf::from))
+        .context("--rapidocr or VRCT_RAPIDOCR_MODELS: rapidocr's models folder")?;
+    copy_dir(&rapidocr, &out.join("ocr").join("rapidocr"))?;
     if let Some(weights) = weights {
         let link = out.join("weights");
         if !link.exists() {
@@ -253,7 +259,8 @@ fn main() -> Result<()> {
                                                args.iter().any(|a| a == "--release"),
                                                arg(&args, "--sudachi-dict").map(PathBuf::from),
                                                arg(&args, "--silero").map(PathBuf::from),
+                                               arg(&args, "--rapidocr").map(PathBuf::from),
                                                arg(&args, "--weights").map(PathBuf::from)),
-        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>] [--silero <dir>] [--weights <dir>]"),
+        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--sudachi-dict <system.dic>] [--silero <dir>] [--rapidocr <dir>] [--weights <dir>]"),
     }
 }

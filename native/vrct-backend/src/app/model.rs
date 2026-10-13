@@ -59,6 +59,8 @@ pub struct Model {
     pub previous_receive_message: Mutex<String>,
     /// the window the clipboard pastes into (the Steam app SteamVR runs)
     pub app_name: AppName,
+    /// the chat-bubble OCR while it runs
+    pub ocr: Mutex<Option<crate::ocr_pipeline::OcrPipeline>>,
 }
 
 impl Model {
@@ -84,6 +86,7 @@ impl Model {
             translation_history: Mutex::default(),
             previous_send_message: Mutex::default(),
             previous_receive_message: Mutex::default(),
+            ocr: Mutex::new(None),
             app_name: {
                 crate::ipc::log("Clipboard initialized. Waiting for SteamVR.");
                 AppName::watch(crate::ipc::log)
