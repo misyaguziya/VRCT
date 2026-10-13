@@ -16,6 +16,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "=2.2.0", features = [] }
+# package.json's version for the exe's version strings (build.rs)
+serde_json = "1"
 
 [dependencies]
 tauri = { version = "=2.5.1", features = ["devtools"] }
