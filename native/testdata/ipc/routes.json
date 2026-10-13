@@ -931,6 +931,21 @@
    "handler": "setMicNoSpeechProb"
   },
   {
+   "endpoint": "/get/data/mic_vad_filter",
+   "during_init": true,
+   "handler": "getMicVadFilter"
+  },
+  {
+   "endpoint": "/set/enable/mic_vad_filter",
+   "during_init": true,
+   "handler": "setEnableMicVadFilter"
+  },
+  {
+   "endpoint": "/set/disable/mic_vad_filter",
+   "during_init": true,
+   "handler": "setDisableMicVadFilter"
+  },
+  {
    "endpoint": "/set/enable/check_mic_threshold",
    "during_init": true,
    "handler": "setEnableCheckMicThreshold"
@@ -1049,6 +1064,21 @@
    "endpoint": "/set/data/speaker_no_speech_prob",
    "during_init": true,
    "handler": "setSpeakerNoSpeechProb"
+  },
+  {
+   "endpoint": "/get/data/speaker_vad_filter",
+   "during_init": true,
+   "handler": "getSpeakerVadFilter"
+  },
+  {
+   "endpoint": "/set/enable/speaker_vad_filter",
+   "during_init": true,
+   "handler": "setEnableSpeakerVadFilter"
+  },
+  {
+   "endpoint": "/set/disable/speaker_vad_filter",
+   "during_init": true,
+   "handler": "setDisableSpeakerVadFilter"
   },
   {
    "endpoint": "/set/enable/check_speaker_threshold",
@@ -1780,6 +1810,7 @@
   "getMicWordFilter": "MIC_WORD_FILTER",
   "getMicAvgLogprob": "MIC_AVG_LOGPROB",
   "getMicNoSpeechProb": "MIC_NO_SPEECH_PROB",
+  "getMicVadFilter": "MIC_ENABLE_VAD",
   "getAutoSpeakerSelect": "AUTO_SPEAKER_SELECT",
   "getSelectedSpeakerDevice": "SELECTED_SPEAKER_DEVICE",
   "getSpeakerThreshold": "SPEAKER_THRESHOLD",
@@ -1790,6 +1821,7 @@
   "getHotkeys": "HOTKEYS",
   "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
   "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
+  "getSpeakerVadFilter": "SPEAKER_ENABLE_VAD",
   "getOscIpAddress": "OSC_IP_ADDRESS",
   "getOscPort": "OSC_PORT",
   "getNotificationVrcSfx": "NOTIFICATION_VRC_SFX",
