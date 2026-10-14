@@ -25,11 +25,10 @@ const PANEL_ANCHORS: [&str; 4] = ["Playspace", "LeftHand", "RightHand", "HMD"];
 /// the large log's overlay is this part of its setting's width (Model.init)
 const LARGE_SCALE: f64 = 0.25;
 
-/// DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS: the place, turn and width set on the wrist on a real device
-/// (2026-10-14); "reset the launcher" also goes back to these
+/// DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS: the setting's default (native/data/config_schema.json), where
+/// "reset the launcher" also goes back to
 fn default_launcher() -> Value {
-    json!({"x_pos": 0.0641, "y_pos": -0.0416, "z_pos": -0.0063, "x_rotation": 9.3648, "y_rotation": -22.0338, "z_rotation": -17.1646,
-           "display_duration": 5, "fadeout_duration": 0, "opacity": 1.0, "ui_scaling": 0.1984, "tracker": "LeftHand"})
+    crate::config::default_of("OVERLAY_VR_LAUNCHER_SETTINGS").cloned().expect("OVERLAY_VR_LAUNCHER_SETTINGS has a default")
 }
 
 fn num(v: &Value, key: &str) -> f64 {
