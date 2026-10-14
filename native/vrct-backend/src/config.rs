@@ -85,6 +85,12 @@ pub fn props() -> &'static [Prop] {
     &schema().0
 }
 
+/// The schema's default of `name` (None: no such property, or the default depends on the PC)
+pub fn default_of(name: &str) -> Option<&'static Value> {
+    let (props, index) = schema();
+    props[*index.get(name)?].default.as_ref()
+}
+
 /// The microphones by host and the speakers, for the device checks (the device manager's lists)
 #[derive(Clone, Debug, Default)]
 pub struct DeviceLists {
