@@ -99,7 +99,7 @@ _INTRO_FRONT_DISTANCE_M = 0.7  # 正面に出す距離 (目から)
 _INTRO_FRONT_FOLLOW_PER_SEC = 8.0  # 正面にいる間、視線へ追いつく速さ (大きいほど速い。1/秒)
 _LAUNCHER_INTRO_SEC = 4.8
 # ランチャーを見失わないための限度。手首から離れすぎたり、小さすぎ・大きすぎにしたりして放すと、手首へ吸い寄せて初期の位置と大きさに戻す。
-# 位置は手首の基準からの差 (m)。大きさは横幅 (m)。初期値は 0.303 (src-python/config.py の DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
+# 位置は手首の基準からの差 (m)。大きさは横幅 (m)。初期値は src-python/config.py の DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
 _LAUNCHER_REACH_M = 0.15
 _LAUNCHER_WIDTH_RANGE_M = (0.12, 1.0)
 _LAUNCHER_RETURN_SEC = 0.3  # 吸い寄せて戻る長さ
