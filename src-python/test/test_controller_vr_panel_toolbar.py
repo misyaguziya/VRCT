@@ -97,7 +97,7 @@ class TestVrLauncher(unittest.TestCase):
         model.resetVrLauncher.assert_called_once_with()  # VR につながっていれば、手首へ吸い寄せて戻る
         run.assert_called_once_with(200, controller.run_mapping["overlay_vr_launcher_hand"], "LeftHand")  # UI の手の表示も戻す
         config.OVERLAY_VR_LAUNCHER_SETTINGS["x_pos"] = 1.0  # 初期値の元の dict を書き換えない
-        self.assertEqual(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS["x_pos"], 0.0)
+        self.assertNotEqual(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS["x_pos"], 1.0)
 
     def test_a_changed_launcher_position_is_saved_and_the_hand_is_pushed_to_the_ui(self) -> None:
         controller = Controller()

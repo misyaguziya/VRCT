@@ -283,16 +283,17 @@ class ManagedList(list):
 
 # VR UIのランチャーの初期値 (位置は手首の基準からの差。「ランチャーを初期に戻す」でもこの値に戻す)
 DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS = {
-    "x_pos": 0.0,
-    "y_pos": 0.0,
-    "z_pos": 0.0,
-    "x_rotation": 0.0,
-    "y_rotation": 0.0,
-    "z_rotation": 0.0,
+    # 実機で手首に合わせて置いた位置・向き・大きさ (2026-10-14)
+    "x_pos": 0.0641,
+    "y_pos": -0.0416,
+    "z_pos": -0.0063,
+    "x_rotation": 9.3648,
+    "y_rotation": -22.0338,
+    "z_rotation": -17.1646,
     "display_duration": 5,
     "fadeout_duration": 0,  # 常に表示
     "opacity": 1.0,
-    "ui_scaling": 0.303,  # 横幅(m)。952x128px の帯 (左端のマーク込み) で高さ約4cm。ボタンの大きさは 880px 幅で 0.28m のときと同じ
+    "ui_scaling": 0.1984,  # 横幅(m)。952x128px の帯 (左端のマーク込み)
     "tracker": "LeftHand",
 }
 
@@ -1325,12 +1326,13 @@ class Config:
             # ログウィンドウの大きさ (論理px)。角を掴んで伸ばす (600x400〜1400x1000)
             "width": 900,
             "height": 700,
-            "x_pos": 0.0,
-            "y_pos": 1.4,  # ワールド固定の初期位置 (部屋の中心の少し前、目の高さ)
-            "z_pos": 0.7,
-            "x_rotation": 0.0,
-            "y_rotation": 0.0,
-            "z_rotation": 0.0,
+            # ワールド固定の初期位置・向き (実機で置いた位置, 2026-10-14)
+            "x_pos": 0.5209,
+            "y_pos": 0.6442,
+            "z_pos": -0.9509,
+            "x_rotation": 95.0133,
+            "y_rotation": 44.0232,
+            "z_rotation": 42.6138,
             "display_duration": 5,
             "fadeout_duration": 0,  # パネルはフェードさせない
             "opacity": 1.0,
