@@ -25,10 +25,11 @@ const PANEL_ANCHORS: [&str; 4] = ["Playspace", "LeftHand", "RightHand", "HMD"];
 /// the large log's overlay is this part of its setting's width (Model.init)
 const LARGE_SCALE: f64 = 0.25;
 
-/// DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS
+/// DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS: the place, turn and width set on the wrist on a real device
+/// (2026-10-14); "reset the launcher" also goes back to these
 fn default_launcher() -> Value {
-    json!({"x_pos": 0.0, "y_pos": 0.0, "z_pos": 0.0, "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
-           "display_duration": 5, "fadeout_duration": 0, "opacity": 1.0, "ui_scaling": 0.303, "tracker": "LeftHand"})
+    json!({"x_pos": 0.0641, "y_pos": -0.0416, "z_pos": -0.0063, "x_rotation": 9.3648, "y_rotation": -22.0338, "z_rotation": -17.1646,
+           "display_duration": 5, "fadeout_duration": 0, "opacity": 1.0, "ui_scaling": 0.1984, "tracker": "LeftHand"})
 }
 
 fn num(v: &Value, key: &str) -> f64 {
