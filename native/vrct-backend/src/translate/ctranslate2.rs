@@ -46,6 +46,8 @@ pub struct Ct2Translator {
     tokenizer: Tokenizer,
 }
 
+// one per loaded model: the size of the larger variant does not matter
+#[allow(clippy::large_enum_variant)]
 enum Tokenizer {
     Nllb(Nllb),
     M2m100(M2m100),

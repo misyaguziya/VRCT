@@ -117,7 +117,7 @@ impl OscReceiver {
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
             }
-            Err(anyhow::anyhow!("OSCQuery service: {:?}", last))
+            Err(anyhow::anyhow!("OSCQuery service: {last:?}"))
         })?;
         Ok(Some(Self { runtime, osc, started }))
     }

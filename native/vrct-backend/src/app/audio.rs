@@ -378,7 +378,7 @@ fn create_recorder(app: &App, kind: Kind, device: &str, transcript: bool, energy
             }
         }) as Box<dyn Fn(u32) + Send>
     });
-    Recorder::start(device, segmenting, record_timeout, kind.label(), transcript, on_energy, Arc::new(|l| ipc::log(l)))
+    Recorder::start(device, segmenting, record_timeout, kind.label(), transcript, on_energy, Arc::new(ipc::log))
         .map_err(|e| anyhow!(e))
 }
 

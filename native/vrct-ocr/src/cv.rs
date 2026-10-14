@@ -12,6 +12,8 @@
 //! opencv-python 4.11.0 for Windows is built with MSVC 19.0, /fp:precise, SSE3 baseline, no
 //! LAPACK, and IPP disabled for the functions used here (warp/remap by OpenCV, 8-bit linear resize
 //! by ipp_resize's own check, mean by OPENCV_IPP_MEAN being off).
+// the loops index several arrays the way the C++ does, so they read side by side with it
+#![allow(clippy::needless_range_loop)]
 
 /// HWC 8-bit image.
 #[derive(Clone)]
@@ -672,10 +674,10 @@ fn clip_line(w: i64, h: i64, p1: &mut (i64, i64), p2: &mut (i64, i64)) -> bool {
 /// Line(img, pt1, pt2, color, 8): LineIterator with leftToRight, connectivity 8.
 fn draw_line(mask: &mut [u8], w: usize, h: usize, p1: (i64, i64), p2: (i64, i64), color: u8) {
     let (mut p1, mut p2) = ((p1.0 as i32 as i64, p1.1 as i32 as i64), (p2.0 as i32 as i64, p2.1 as i32 as i64));
-    if p1.0 < 0 || p1.0 >= w as i64 || p2.0 < 0 || p2.0 >= w as i64 || p1.1 < 0 || p1.1 >= h as i64 || p2.1 < 0 || p2.1 >= h as i64 {
-        if !clip_line(w as i64, h as i64, &mut p1, &mut p2) {
-            return;
-        }
+    if (p1.0 < 0 || p1.0 >= w as i64 || p2.0 < 0 || p2.0 >= w as i64 || p1.1 < 0 || p1.1 >= h as i64 || p2.1 < 0 || p2.1 >= h as i64)
+        && !clip_line(w as i64, h as i64, &mut p1, &mut p2)
+    {
+        return;
     }
     let (mut delta_x, mut delta_y) = (1i64, 1i64);
     let mut dx = p2.0 - p1.0;

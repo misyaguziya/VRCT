@@ -21,6 +21,9 @@ pub struct Http {
     redirect: Option<String>,
 }
 
+/// gets each chunk of a download with the Content-Length
+pub type OnChunk<'a> = dyn FnMut(&[u8], Option<u64>) -> std::io::Result<()> + 'a;
+
 pub enum DownloadError {
     Status(u16),
     Other(anyhow::Error),
@@ -100,7 +103,7 @@ impl Http {
 
     /// GET `url` and pass the body to `write` chunk by chunk with the Content-Length (requests'
     /// get(stream=True, timeout=(10, 60)) + iter_content). A 4xx/5xx is `DownloadError::Status`.
-    pub fn download(&self, url: &str, write: &mut dyn FnMut(&[u8], Option<u64>) -> std::io::Result<()>)
+    pub fn download(&self, url: &str, write: &mut OnChunk)
                     -> std::result::Result<(), DownloadError> {
         let (target, origin) = self.target(url)?;
         let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;

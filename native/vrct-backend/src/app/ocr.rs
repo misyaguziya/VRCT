@@ -57,7 +57,7 @@ fn start(app: &App) -> Result<bool> {
             ocr_message(&app, text, language);
         }
     });
-    match OcrPipeline::start(ocr_pipeline::models(&app.model.resources.dir), settings(app), on_text, Arc::new(|l| ipc::log(l))) {
+    match OcrPipeline::start(ocr_pipeline::models(&app.model.resources.dir), settings(app), on_text, Arc::new(ipc::log)) {
         Ok(pipeline) => {
             *ocr = Some(pipeline);
             Ok(true)

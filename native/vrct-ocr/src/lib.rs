@@ -42,7 +42,7 @@ pub fn onnx_threads() -> usize {
 pub fn cpu_session(path: &Path) -> R<Session> {
     init_ort()?;
     fn open(path: &Path) -> ort::Result<Session> {
-        Ok(Session::builder()?.with_intra_threads(onnx_threads())?.with_inter_threads(1)?.commit_from_file(path)?)
+        Session::builder()?.with_intra_threads(onnx_threads())?.with_inter_threads(1)?.commit_from_file(path)
     }
     Ok(open(path)?)
 }

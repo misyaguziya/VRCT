@@ -13,6 +13,8 @@ const MAX_PHRASE_DURATION_SECONDS: f64 = 15.0;
 const VAD_PRE_PAD_MS: f64 = 300.0;
 const VAD_POST_PAD_MS: f64 = 500.0;
 
+// one per recorder: the size of the larger variant does not matter
+#[allow(clippy::large_enum_variant)]
 pub enum Engine {
     Google,
     Whisper(WhisperModel),
@@ -225,7 +227,7 @@ impl Transcriber {
     /// phrase completes (a pause of phrase_timeout, 15 s of speech, VAD's natural end) if the last
     /// part was not sent yet. True when something was sent.
     // `unsent` is read in the energy path only (the macros set it in both)
-    #[allow(unused_assignments)]
+    #[allow(unused_assignments, clippy::too_many_arguments)]
     pub fn transcribe_queue(&mut self, recorder: &Recorder, languages: &Languages, candidates: &[(String, String)],
                             avg_logprob: f64, no_speech_prob: f64, no_repeat_ngram_size: usize,
                             log: &dyn Fn(String)) -> Result<bool, Failure> {

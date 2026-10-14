@@ -16,11 +16,11 @@ pub struct SileroVad {
 fn session(path: &Path) -> R<Session> {
     crate::init_ort()?;
     fn open(path: &Path) -> ort::Result<Session> {
-        Ok(Session::builder()?
+        Session::builder()?
             .with_inter_threads(1)?
             .with_intra_threads(1)?
             .with_execution_providers([ep::CPU::default().with_arena_allocator(false).build()])?
-            .commit_from_file(path)?)
+            .commit_from_file(path)
     }
     Ok(open(path)?)
 }
