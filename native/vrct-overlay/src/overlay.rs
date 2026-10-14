@@ -15,6 +15,7 @@ use crate::image::Image;
 use crate::layout::{self, Layout, PointerKind, Region, Tooltip, TooltipShown};
 use crate::math::{position_transform, to_hmd, Mat34, Mat4, Tracker};
 use crate::pose;
+use crate::vr::{VrOverlay, VrRenderModels, VrSystem};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
 use std::sync::{Arc, Mutex};
@@ -516,7 +517,8 @@ impl Worker {
     fn connected(&mut self, session: &Session) -> anyhow::Result<()> {
         let system = session.system()?;
         let (device, context) = device(system.dxgi_output_info())?;
-        let mut run = Run::new(Vr { overlay: session.overlay()?, system, render_models: session.render_models()? }, device, context, self);
+        let vr = Vr { overlay: Box::new(session.overlay()?), system: Box::new(system), render_models: Box::new(session.render_models()?) };
+        let mut run = Run::new(vr, device, context, self);
         let result = run.init(self).map(|()| {
             (self.log)(format!("overlay: 起動しました (vr_panel: {})", run.panel_ready));
             self.publish(true);
@@ -539,11 +541,11 @@ fn device(adapter_index: i32) -> windows::core::Result<(ID3D11Device, ID3D11Devi
     }
 }
 
-/// The OpenVR interfaces while connected
+/// The OpenVR interfaces while connected (SteamVR's, or the tests' made-up one)
 pub(crate) struct Vr<'s> {
-    pub overlay: vrct_openvr::Overlay<'s>,
-    pub system: vrct_openvr::System<'s>,
-    pub render_models: vrct_openvr::RenderModels<'s>,
+    pub overlay: Box<dyn VrOverlay + 's>,
+    pub system: Box<dyn VrSystem + 's>,
+    pub render_models: Box<dyn VrRenderModels + 's>,
 }
 
 /// A grabbed window: its size, the hand and the window seen from the hand
@@ -916,6 +918,25 @@ impl<'s> Run<'s> {
         }
     }
 
+    /// A frame but the VR view's capture: the VR UI on / off, the fades, the overlays whose tracker
+    /// just connected, then the lasers (pointing, grabbing, resizing, the launcher)
+    fn step(&mut self, w: &mut Worker) {
+        self.apply_vr_panel_enabled(w);
+        for i in 0..w.sizes.len() {
+            self.update(w, i);
+        }
+        for i in 0..w.sizes.len() {
+            if self.pending[i] {
+                self.place(w, i);
+            }
+        }
+        if let Err(e) = self.update_grab(w) {
+            self.on_grab_error(w, e);
+        } else {
+            self.grab_error = None;
+        }
+    }
+
     /// mainloop: until SteamVR quits or the overlay is stopped
     fn frames(&mut self, w: &mut Worker) {
         crate::panel::raise_thread_priority();
@@ -926,21 +947,8 @@ impl<'s> Run<'s> {
                     return;
                 }
             }
-            self.apply_vr_panel_enabled(w);
-            for i in 0..w.sizes.len() {
-                self.update(w, i);
-            }
-            for i in 0..w.sizes.len() {
-                if self.pending[i] {
-                    self.place(w, i);
-                }
-            }
             // the laser (pointer, hover) before the capture: it does not wait for it
-            if let Err(e) = self.update_grab(w) {
-                self.on_grab_error(w, e);
-            } else {
-                self.grab_error = None;
-            }
+            self.step(w);
             if let Err(e) = self.update_panel(w) {
                 self.on_panel_error(w, e);
             }
@@ -975,3 +983,7 @@ impl<'s> Run<'s> {
         let _ = w;
     }
 }
+
+#[cfg(test)]
+#[path = "overlay_tests.rs"]
+mod tests;
