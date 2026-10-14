@@ -98,6 +98,9 @@ fn prepare_weights(app: &App, online: bool) -> (bool, bool) {
 // ------------------------------------------------------------------------------ engine checks
 
 /// What a check found (status, the key failed, the model list, the model to select)
+/// keeps a check's model list in `Found` (the engine's "take" step)
+type Take<'a> = dyn FnMut(&mut Found, &str, Vec<String>) -> Result<()> + 'a;
+
 #[derive(Default)]
 struct Found {
     status: bool,
@@ -211,7 +214,7 @@ fn check_transcription_engine(app: &App, engine: &str, whisper: bool, online: bo
         f.models = Some(models);
         Ok(())
     };
-    let whisper_api = |f: &mut Found, take: &mut dyn FnMut(&mut Found, &str, Vec<String>) -> Result<()>, key: &str, url: &str,
+    let whisper_api = |f: &mut Found, take: &mut Take, key: &str, url: &str,
                        x: &str, filter: bool| -> Result<()> {
         if asr::check_whisper_api_key(http, key, url) {
             let keywords = filter.then_some(&asr::TRANSCRIPTION_MODEL_KEYWORDS[..]);

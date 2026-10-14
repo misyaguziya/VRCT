@@ -184,6 +184,103 @@ impl EnergyDetector {
     }
 }
 
+impl EnergyDetector {
+    // These parameters mirror existing Recognizer settings; no new app settings.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        sample_rate: u32,
+        chunk: usize,
+        energy_threshold: f64,
+        dynamic: bool,
+        phrase_time_limit: f64,
+        record_timeout: f64,
+        wait_timeout: f64,
+        pause_threshold: f64,
+        phrase_threshold: f64,
+        non_speaking_duration: f64,
+        damping: f64,
+        ratio: f64,
+    ) -> Result<Self, &'static str> {
+        if sample_rate == 0
+            || chunk == 0
+            || chunk > MAX_BUFFER_BYTES / 2
+            || !energy_threshold.is_finite()
+            || energy_threshold < 0.0
+            || !pause_threshold.is_finite()
+            || !phrase_threshold.is_finite()
+            || !non_speaking_duration.is_finite()
+            || phrase_threshold < 0.0
+            || non_speaking_duration < 0.0
+            || pause_threshold < non_speaking_duration
+            || !damping.is_finite()
+            || !(0.0..=1.0).contains(&damping)
+            || !ratio.is_finite()
+            || ratio < 0.0
+            || phrase_time_limit.is_nan()
+            || record_timeout.is_nan()
+            || wait_timeout.is_nan()
+        {
+            return Err("invalid energy detector settings");
+        }
+        let seconds = chunk as f64 / f64::from(sample_rate);
+        Ok(Self {
+            energy_threshold,
+            dynamic,
+            damping: damping.powf(seconds),
+            ratio,
+            seconds,
+            pause_buffers: (pause_threshold / seconds).ceil() as usize,
+            phrase_buffers: (phrase_threshold / seconds).ceil() as usize,
+            keep_buffers: (non_speaking_duration / seconds).ceil() as usize,
+            phrase_limit: phrase_time_limit,
+            record_timeout,
+            wait_timeout,
+            elapsed: 0.0,
+            started_audio: 0.0,
+            started_wall: 0.0,
+            recording: false,
+            pause_count: 0,
+            phrase_count: 0,
+            frames: VecDeque::new(),
+            buffered_bytes: 0,
+            finished: false,
+            eof: false,
+            continuation: 0,
+        })
+    }
+
+    /// Called once before each read. RETRY is a listen boundary for pause handling.
+    pub fn before_read(&mut self, now: f64) -> Result<(&'static str, Option<Vec<u8>>), &'static str> {
+        if !now.is_finite() {
+            return Err("invalid monotonic time");
+        }
+        Ok(self.step(now))
+    }
+
+    /// PCM is interleaved for speakers, matching audioop.rms on the legacy input.
+    pub fn push(&mut self, pcm: &[u8], now: f64) -> Result<u32, &'static str> {
+        self.push_pcm(pcm, now)
+    }
+
+    pub fn calibrate(&mut self, energy: u32) {
+        self.energy_threshold = self.energy_threshold * self.damping
+            + f64::from(energy) * self.ratio * (1.0 - self.damping);
+    }
+
+    pub fn waiting(&self) -> bool {
+        !self.recording
+    }
+
+    pub fn cancel(&mut self) {
+        self.clear_phrase();
+        self.elapsed = 0.0;
+    }
+
+    pub fn energy_threshold(&self) -> f64 {
+        self.energy_threshold
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -309,102 +406,5 @@ mod tests {
         let mut values = vec![2000; 11];
         values.extend([0; 40]);
         assert_eq!(drive(&mut state, &values), [("PHRASE", 11), ("RETRY", 0)]);
-    }
-}
-
-impl EnergyDetector {
-    // These parameters mirror existing Recognizer settings; no new app settings.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        sample_rate: u32,
-        chunk: usize,
-        energy_threshold: f64,
-        dynamic: bool,
-        phrase_time_limit: f64,
-        record_timeout: f64,
-        wait_timeout: f64,
-        pause_threshold: f64,
-        phrase_threshold: f64,
-        non_speaking_duration: f64,
-        damping: f64,
-        ratio: f64,
-    ) -> Result<Self, &'static str> {
-        if sample_rate == 0
-            || chunk == 0
-            || chunk > MAX_BUFFER_BYTES / 2
-            || !energy_threshold.is_finite()
-            || energy_threshold < 0.0
-            || !pause_threshold.is_finite()
-            || !phrase_threshold.is_finite()
-            || !non_speaking_duration.is_finite()
-            || phrase_threshold < 0.0
-            || non_speaking_duration < 0.0
-            || pause_threshold < non_speaking_duration
-            || !damping.is_finite()
-            || !(0.0..=1.0).contains(&damping)
-            || !ratio.is_finite()
-            || ratio < 0.0
-            || phrase_time_limit.is_nan()
-            || record_timeout.is_nan()
-            || wait_timeout.is_nan()
-        {
-            return Err("invalid energy detector settings");
-        }
-        let seconds = chunk as f64 / f64::from(sample_rate);
-        Ok(Self {
-            energy_threshold,
-            dynamic,
-            damping: damping.powf(seconds),
-            ratio,
-            seconds,
-            pause_buffers: (pause_threshold / seconds).ceil() as usize,
-            phrase_buffers: (phrase_threshold / seconds).ceil() as usize,
-            keep_buffers: (non_speaking_duration / seconds).ceil() as usize,
-            phrase_limit: phrase_time_limit,
-            record_timeout,
-            wait_timeout,
-            elapsed: 0.0,
-            started_audio: 0.0,
-            started_wall: 0.0,
-            recording: false,
-            pause_count: 0,
-            phrase_count: 0,
-            frames: VecDeque::new(),
-            buffered_bytes: 0,
-            finished: false,
-            eof: false,
-            continuation: 0,
-        })
-    }
-
-    /// Called once before each read. RETRY is a listen boundary for pause handling.
-    pub fn before_read(&mut self, now: f64) -> Result<(&'static str, Option<Vec<u8>>), &'static str> {
-        if !now.is_finite() {
-            return Err("invalid monotonic time");
-        }
-        Ok(self.step(now))
-    }
-
-    /// PCM is interleaved for speakers, matching audioop.rms on the legacy input.
-    pub fn push(&mut self, pcm: &[u8], now: f64) -> Result<u32, &'static str> {
-        self.push_pcm(pcm, now)
-    }
-
-    pub fn calibrate(&mut self, energy: u32) {
-        self.energy_threshold = self.energy_threshold * self.damping
-            + f64::from(energy) * self.ratio * (1.0 - self.damping);
-    }
-
-    pub fn waiting(&self) -> bool {
-        !self.recording
-    }
-
-    pub fn cancel(&mut self) {
-        self.clear_phrase();
-        self.elapsed = 0.0;
-    }
-
-    pub fn energy_threshold(&self) -> f64 {
-        self.energy_threshold
     }
 }

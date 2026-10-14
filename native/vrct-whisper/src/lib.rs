@@ -327,7 +327,7 @@ impl WhisperModel {
             }
         } else {
             let mut duration = segment_duration;
-            if let Some(&last) = tokens.iter().filter(|&&t| t >= begin).last() {
+            if let Some(&last) = tokens.iter().filter(|&&t| t >= begin).next_back() {
                 if last != begin {
                     duration = position(last) as f64 * TIME_PRECISION;
                 }

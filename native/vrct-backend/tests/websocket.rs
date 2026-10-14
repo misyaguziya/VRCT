@@ -8,6 +8,7 @@ use vrct_backend::websocket::{new_auth_token, WebSocketServer};
 
 type Client = WebSocket<MaybeTlsStream<TcpStream>>;
 
+#[allow(clippy::result_large_err)] // tungstenite's own error type, in a test
 fn connect(port: u16, query: &str) -> Result<Client, tungstenite::Error> {
     let (ws, _) = tungstenite::connect(format!("ws://127.0.0.1:{port}/{query}"))?;
     if let MaybeTlsStream::Plain(s) = ws.get_ref() {

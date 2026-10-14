@@ -105,8 +105,11 @@ enum Bound<T: Ord> {
     PosInf,
 }
 
+/// _cmpkey: (epoch, release, pre, post, dev, local)
+type Key<'a> = (u64, &'a [u64], Bound<(u8, u64)>, Bound<u64>, Bound<u64>, Bound<Vec<(Bound<u64>, String)>>);
+
 impl Version {
-    fn key(&self) -> (u64, &[u64], Bound<(u8, u64)>, Bound<u64>, Bound<u64>, Bound<Vec<(Bound<u64>, String)>>) {
+    fn key(&self) -> Key<'_> {
         let pre = match (self.pre, self.post, self.dev) {
             (None, None, Some(_)) => Bound::NegInf,
             (None, _, _) => Bound::PosInf,

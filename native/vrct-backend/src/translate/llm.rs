@@ -129,7 +129,7 @@ fn iso_hour_minute(value: &str) -> Option<String> {
     }
     let mut time = std::str::from_utf8(&b[10..]).ok()?.get(1..)?; // any one-char separator
     if let Some(i) = time.find(['+', '-']) {
-        let tz = &time[i + 1..].as_bytes();
+        let tz = &time.as_bytes()[i + 1..];
         if !(tz.len() == 5 && digits(&tz[0..2]) && tz[2] == b':' && digits(&tz[3..5])) {
             return None;
         }
@@ -151,7 +151,7 @@ fn iso_hour_minute(value: &str) -> Option<String> {
             return None;
         }
         let frac = &rest[3..];
-        if !frac.is_empty() && !(frac[0] == b'.' && digits(&frac[1..])) {
+        if !(frac.is_empty() || frac[0] == b'.' && digits(&frac[1..])) {
             return None;
         }
     }

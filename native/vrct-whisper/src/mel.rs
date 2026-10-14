@@ -135,7 +135,7 @@ impl FeatureExtractor {
     /// `stft[..., :-1]`.
     pub fn compute(&self, audio: &[f32]) -> Result<Features> {
         let mut wave = audio.to_vec();
-        wave.extend(std::iter::repeat(0.0).take(HOP)); // padding=160
+        wave.extend(std::iter::repeat_n(0.0, HOP)); // padding=160
         // center=True: reflect padding of n_fft/2 on both sides
         let pad = (N_FFT / 2) as isize;
         let n = wave.len();

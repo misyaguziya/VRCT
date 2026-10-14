@@ -150,6 +150,8 @@ pub struct WhisperApi {
 impl WhisperApi {
     /// transcribe(audio, language, country, avg_logprob, no_speech_prob, force_language):
     /// (text, confidence, is_definitive). `wav` is the 16 kHz / 16 bit WAV.
+    // the parameters of the Python method
+    #[allow(clippy::too_many_arguments)]
     pub fn transcribe(&self, languages: &Languages, wav: &[u8], language: &str, country: &str, avg_logprob: f64,
                       no_speech_prob: f64, force_language: bool) -> Result<(String, f64, bool), ApiError> {
         // ponytail: Python raises KeyError here (outside its try) for a language missing from the

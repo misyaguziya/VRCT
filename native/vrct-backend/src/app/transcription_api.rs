@@ -13,6 +13,8 @@ use anyhow::Result;
 use serde_json::{json, Map, Value};
 
 type Data = Option<Value>;
+/// (model name, its languages)
+type Models = Vec<(String, Vec<String>)>;
 
 const GROQ_WHISPER_BASE_URL: &str = "https://api.groq.com/openai/v1";
 const OPENAI_WHISPER_BASE_URL: &str = "https://api.openai.com/v1";
@@ -87,7 +89,7 @@ fn status(app: &App, api: Api, available: bool) {
 }
 
 /// The key checked at `base_url` (Deepgram: its own API) and its models (name, languages)
-fn models(app: &App, api: Api, api_key: &str, base_url: &str) -> Result<Option<Vec<(String, Vec<String>)>>> {
+fn models(app: &App, api: Api, api_key: &str, base_url: &str) -> Result<Option<Models>> {
     let http = &app.model.http;
     if api == Api::Deepgram {
         if !asr::check_deepgram_key(http, api_key) {
@@ -113,7 +115,7 @@ fn base_url(app: &App, api: Api) -> String {
 }
 
 /// The models in the settings (Deepgram: with their languages), the selected one kept if listed
-fn take_models(app: &App, api: Api, models: Vec<(String, Vec<String>)>) -> Result<()> {
+fn take_models(app: &App, api: Api, models: Models) -> Result<()> {
     let names: Vec<&String> = models.iter().map(|(n, _)| n).collect();
     app.config.set(&list_name(api), json!(names))?;
     if api == Api::Deepgram {
