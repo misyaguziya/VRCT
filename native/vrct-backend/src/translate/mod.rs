@@ -32,6 +32,9 @@ pub struct Translator {
     pub lmstudio_connected: bool,
     pub ollama_connected: bool,
     pub ctranslate2: Option<ctranslate2::Ct2Translator>,
+    /// In the tests: answers every pair the engine knows (engine, target language, message)
+    #[cfg(test)]
+    pub fake: Option<fn(&str, &str, &str) -> Translation>,
 }
 
 impl Translator {
@@ -47,6 +50,8 @@ impl Translator {
             lmstudio_connected: false,
             ollama_connected: false,
             ctranslate2: None,
+            #[cfg(test)]
+            fake: None,
         })
     }
 
@@ -173,6 +178,10 @@ impl Translator {
         let Some((source, target)) = self.language_code(translator, weight_type, target_country, source_language, target_language) else {
             return Translation::Unsupported;
         };
+        #[cfg(test)]
+        if let Some(fake) = self.fake {
+            return fake(translator, target_language, message);
+        }
         let result: Result<String> = match translator {
             "DeepL_API" => match &self.deepl {
                 None => return Translation::Failed("DeepL is not authenticated".into()),

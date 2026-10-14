@@ -585,3 +585,21 @@ pub fn shutdown(app: &App, _: Option<Value>) -> Result<ipc::Reply> {
     app.model.telemetry.shutdown();
     Ok(ipc::Reply::ok(true))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shutdown_with_nothing_running_saves_the_settings_at_once_and_twice_is_fine() {
+        let app = super::super::test_app(9);
+        app.config.set("TRANSPARENCY", json!(80)).unwrap();
+        let started = Instant::now();
+        assert_eq!(shutdown(&app, None).unwrap(), ipc::Reply::ok(true));
+        assert!(started.elapsed() < SERVICE_STOP_WAIT, "{:?}", started.elapsed());
+        let saved: Value = serde_json::from_slice(&std::fs::read(app.config.path_config()).unwrap()).unwrap();
+        assert_eq!(saved["TRANSPARENCY"], json!(80));
+        assert_eq!(shutdown(&app, None).unwrap(), ipc::Reply::ok(true));
+        ipc::take_printed();
+    }
+}

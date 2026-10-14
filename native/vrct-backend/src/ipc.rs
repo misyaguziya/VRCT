@@ -105,13 +105,40 @@ fn writer() {
     }
 }
 
+#[cfg(test)]
+thread_local! {
+    /// In the tests: the lines this thread printed (answers, pushes and logs), instead of stdout
+    static PRINTED: std::cell::RefCell<Vec<String>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// In the tests: what this thread printed since the last call
+#[cfg(test)]
+pub fn take_printed() -> Vec<Value> {
+    PRINTED.with(|p| p.take()).iter().map(|l| serde_json::from_str(l).unwrap()).collect()
+}
+
+/// In the tests: the line kept in PRINTED (true: not written to stdout)
+#[cfg(test)]
+fn printed(line: &str) -> bool {
+    PRINTED.with(|p| p.borrow_mut().push(line.to_string()));
+    true
+}
+
 fn push_answer(line: String) {
+    #[cfg(test)]
+    if printed(&line) {
+        return;
+    }
     let out = out();
     out.lines.lock().unwrap().answers.push_back(line);
     out.ready.notify_one();
 }
 
 fn push_log(line: String) {
+    #[cfg(test)]
+    if printed(&line) {
+        return;
+    }
     let out = out();
     let mut lines = out.lines.lock().unwrap();
     if lines.logs.len() >= LOG_QUEUE_MAX {

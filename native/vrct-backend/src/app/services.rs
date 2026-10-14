@@ -233,3 +233,51 @@ impl Osc {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::AtomicUsize;
+
+    const TIMEOUT: Duration = Duration::from_millis(150);
+    const INTERVAL: Duration = Duration::from_millis(20);
+
+    fn counted(dog: &Arc<Watchdog>) -> Arc<AtomicUsize> {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let c = calls.clone();
+        dog.start(TIMEOUT, INTERVAL, move || {
+            c.fetch_add(1, Ordering::SeqCst);
+        });
+        calls
+    }
+
+    #[test]
+    fn a_fed_watchdog_stays_quiet_and_a_hungry_one_calls() {
+        let dog = Arc::new(Watchdog::default());
+        let calls = counted(&dog);
+        for _ in 0..10 {
+            std::thread::sleep(Duration::from_millis(50));
+            dog.feed();
+        }
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        std::thread::sleep(TIMEOUT * 3);
+        // every check after the timeout calls (main.rs's escalate runs once)
+        assert!(calls.load(Ordering::SeqCst) >= 2);
+        dog.stop();
+    }
+
+    #[test]
+    fn starting_twice_watches_once_and_stop_ends_it() {
+        let dog = Arc::new(Watchdog::default());
+        let first = counted(&dog);
+        let second = counted(&dog);
+        std::thread::sleep(TIMEOUT * 2);
+        assert!(first.load(Ordering::SeqCst) >= 1);
+        assert_eq!(second.load(Ordering::SeqCst), 0);
+        dog.stop();
+        std::thread::sleep(INTERVAL * 3);
+        let after_stop = first.load(Ordering::SeqCst);
+        std::thread::sleep(INTERVAL * 5);
+        assert_eq!(first.load(Ordering::SeqCst), after_stop);
+    }
+}
