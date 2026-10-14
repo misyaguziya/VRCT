@@ -1,0 +1,436 @@
+# 030 に無い設定の書き込み・読み戻し・不正な値。設定を変えるだけのもの (機器・オーバーレイ・
+# サーバーを動かさない)。録音機器の選択は PC によるので入れない。
+
+# --- 設定を変えるだけのスイッチ
+
+[[case]]
+name = "enable foreground"
+endpoint = "/set/enable/foreground"
+expect_status = 200
+
+[[case]]
+name = "disable foreground"
+endpoint = "/set/disable/foreground"
+expect_status = 200
+
+[[case]]
+name = "disable main_window_sidebar_compact_mode"
+endpoint = "/set/disable/main_window_sidebar_compact_mode"
+expect_status = 200
+
+[[case]]
+name = "enable mic_automatic_threshold"
+endpoint = "/set/enable/mic_automatic_threshold"
+expect_status = 200
+
+[[case]]
+name = "get mic_automatic_threshold after enable"
+endpoint = "/get/data/mic_automatic_threshold"
+
+[[case]]
+name = "disable mic_automatic_threshold"
+endpoint = "/set/disable/mic_automatic_threshold"
+expect_status = 200
+
+[[case]]
+name = "enable speaker_automatic_threshold"
+endpoint = "/set/enable/speaker_automatic_threshold"
+expect_status = 200
+
+[[case]]
+name = "disable speaker_automatic_threshold"
+endpoint = "/set/disable/speaker_automatic_threshold"
+expect_status = 200
+
+[[case]]
+name = "enable mic_vad_filter"
+endpoint = "/set/enable/mic_vad_filter"
+expect_status = 200
+
+[[case]]
+name = "get mic_vad_filter after enable"
+endpoint = "/get/data/mic_vad_filter"
+
+[[case]]
+name = "disable mic_vad_filter"
+endpoint = "/set/disable/mic_vad_filter"
+expect_status = 200
+
+[[case]]
+name = "enable speaker_vad_filter"
+endpoint = "/set/enable/speaker_vad_filter"
+expect_status = 200
+
+[[case]]
+name = "get speaker_vad_filter after enable"
+endpoint = "/get/data/speaker_vad_filter"
+
+[[case]]
+name = "disable speaker_vad_filter"
+endpoint = "/set/disable/speaker_vad_filter"
+expect_status = 200
+
+[[case]]
+name = "disable overlay_show_only_translated_messages"
+endpoint = "/set/disable/overlay_show_only_translated_messages"
+expect_status = 200
+
+[[case]]
+name = "disable auto_clear_message_box"
+endpoint = "/set/disable/auto_clear_message_box"
+expect_status = 200
+
+[[case]]
+name = "enable auto_clear_message_box again"
+endpoint = "/set/enable/auto_clear_message_box"
+expect_status = 200
+
+[[case]]
+name = "disable convert_message_to_hiragana"
+endpoint = "/set/disable/convert_message_to_hiragana"
+expect_status = 200
+
+[[case]]
+name = "enable send_received_message_to_vrc"
+endpoint = "/set/enable/send_received_message_to_vrc"
+expect_status = 200
+
+[[case]]
+name = "disable send_received_message_to_vrc"
+endpoint = "/set/disable/send_received_message_to_vrc"
+expect_status = 200
+
+[[case]]
+name = "enable notification_vrc_sfx"
+endpoint = "/set/enable/notification_vrc_sfx"
+expect_status = 200
+
+# --- 数値 (範囲の内外、数でない値)
+
+[[case]]
+name = "set mic_threshold"
+endpoint = "/set/data/mic_threshold"
+data = 500
+
+[[case]]
+name = "set mic_threshold below the range"
+endpoint = "/set/data/mic_threshold"
+data = -1
+
+[[case]]
+name = "set mic_threshold not a number"
+endpoint = "/set/data/mic_threshold"
+data = "abc"
+
+[[case]]
+name = "set speaker_threshold"
+endpoint = "/set/data/speaker_threshold"
+data = 1200
+
+[[case]]
+name = "set speaker_max_phrases"
+endpoint = "/set/data/speaker_max_phrases"
+data = 6
+
+[[case]]
+name = "set speaker_max_phrases not a number"
+endpoint = "/set/data/speaker_max_phrases"
+data = "abc"
+
+[[case]]
+name = "set speaker_avg_logprob"
+endpoint = "/set/data/speaker_avg_logprob"
+data = -1.2
+
+[[case]]
+name = "set speaker_avg_logprob not a number"
+endpoint = "/set/data/speaker_avg_logprob"
+data = "abc"
+
+[[case]]
+name = "set speaker_no_speech_prob"
+endpoint = "/set/data/speaker_no_speech_prob"
+data = 0.5
+
+[[case]]
+name = "set obs_browser_source_display_duration"
+endpoint = "/set/data/obs_browser_source_display_duration"
+data = 30
+
+[[case]]
+name = "set obs_browser_source_display_duration not a number"
+endpoint = "/set/data/obs_browser_source_display_duration"
+data = "abc"
+
+[[case]]
+name = "set obs_browser_source_font_size"
+endpoint = "/set/data/obs_browser_source_font_size"
+data = 32
+
+[[case]]
+name = "set obs_browser_source_font_size zero"
+endpoint = "/set/data/obs_browser_source_font_size"
+data = 0
+
+[[case]]
+name = "set obs_browser_source_font_outline_thickness"
+endpoint = "/set/data/obs_browser_source_font_outline_thickness"
+data = 5
+
+[[case]]
+name = "set ocr_bubble_min_text_length"
+endpoint = "/set/data/ocr_bubble_min_text_length"
+data = 3
+
+[[case]]
+name = "set ocr_bubble_min_text_length negative"
+endpoint = "/set/data/ocr_bubble_min_text_length"
+data = -1
+
+# --- 選択肢
+
+[[case]]
+name = "set selected_tab_no"
+endpoint = "/set/data/selected_tab_no"
+data = "2"
+
+[[case]]
+name = "set selected_tab_no not a tab"
+endpoint = "/set/data/selected_tab_no"
+data = "9"
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "set selected_tab_no back"
+endpoint = "/set/data/selected_tab_no"
+data = "1"
+
+[[case]]
+name = "set ocr_source_language"
+endpoint = "/set/data/ocr_source_language"
+data = "Korean"
+
+[[case]]
+name = "set ocr_source_language not selectable"
+endpoint = "/set/data/ocr_source_language"
+data = "Klingon"
+
+[[case]]
+name = "set release_channel stable"
+endpoint = "/set/data/release_channel"
+data = "stable"
+
+[[case]]
+name = "set release_channel not a channel"
+endpoint = "/set/data/release_channel"
+data = "nightly"
+
+[[case]]
+name = "set release_channel back to beta"
+endpoint = "/set/data/release_channel"
+data = "beta"
+
+[[case]]
+name = "set hotkeys"
+endpoint = "/set/data/hotkeys"
+data = { toggle_vrct_visibility = ["Control", "Shift", "V"], toggle_translation = ["Control", "T"], toggle_transcription_send = [], toggle_transcription_receive = [] }
+
+[[case]]
+name = "set hotkeys with strings (each kept as it was)"
+endpoint = "/set/data/hotkeys"
+data = { toggle_vrct_visibility = "Ctrl+Shift+V", toggle_translation = "", toggle_transcription_send = "", toggle_transcription_receive = "" }
+
+[[case]]
+name = "get hotkeys after set"
+endpoint = "/get/data/hotkeys"
+
+[[case]]
+name = "set hotkeys with an unknown key"
+endpoint = "/set/data/hotkeys"
+data = { no_such_hotkey = "Ctrl+X" }
+
+[[case]]
+name = "set received_message_format_parts"
+endpoint = "/set/data/received_message_format_parts"
+data = { message = { prefix = "<", suffix = ">" }, separator = " | ", translation = { prefix = "", separator = " / ", suffix = "" }, translation_first = true }
+
+[[case]]
+name = "set received_message_format_parts missing keys"
+endpoint = "/set/data/received_message_format_parts"
+data = { separator = " " }
+
+[[case]]
+name = "get received_message_format_parts after set"
+endpoint = "/get/data/received_message_format_parts"
+
+# --- 計算の設定と重みの種類 (重みは選ぶだけで、読み込みもダウンロードもしない)
+
+[[case]]
+name = "set selected_translation_compute_type"
+endpoint = "/set/data/selected_translation_compute_type"
+data = "int8"
+
+[[case]]
+name = "set selected_translation_compute_type not a type"
+endpoint = "/set/data/selected_translation_compute_type"
+data = "float128"
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "set selected_transcription_compute_type"
+endpoint = "/set/data/selected_transcription_compute_type"
+data = "float32"
+
+[[case]]
+name = "set selected_transcription_compute_type not a type"
+endpoint = "/set/data/selected_transcription_compute_type"
+data = "float128"
+
+[[case]]
+name = "set selected_translation_compute_device to the CPU"
+endpoint = "/set/data/selected_translation_compute_device"
+data = { device = "cpu", device_index = 0, device_name = "cpu", compute_types = ["auto", "float32", "int16", "int8", "int8_float32"] }
+pushes = true
+
+[[case]]
+name = "set selected_translation_compute_device not a device"
+endpoint = "/set/data/selected_translation_compute_device"
+data = { device = "tpu", device_index = 7 }
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "set selected_transcription_compute_device to the CPU"
+endpoint = "/set/data/selected_transcription_compute_device"
+data = { device = "cpu", device_index = 0, device_name = "cpu", compute_types = ["auto", "float32", "int16", "int8", "int8_float32"] }
+pushes = true
+
+[[case]]
+name = "set selected_whisper_weight_type"
+endpoint = "/set/data/selected_whisper_weight_type"
+data = "tiny"
+
+[[case]]
+name = "set selected_whisper_weight_type not a weight"
+endpoint = "/set/data/selected_whisper_weight_type"
+data = "huge"
+
+[[case]]
+name = "set selected_whisper_weight_type back"
+endpoint = "/set/data/selected_whisper_weight_type"
+data = "base"
+
+[[case]]
+name = "set selected_ctranslate2_weight_type"
+endpoint = "/set/data/selected_ctranslate2_weight_type"
+data = "m2m100_418M-ct2-int8"
+
+[[case]]
+name = "set selected_ctranslate2_weight_type not a weight"
+endpoint = "/set/data/selected_ctranslate2_weight_type"
+data = "nllb-huge"
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "set selected_ctranslate2_weight_type back"
+endpoint = "/set/data/selected_ctranslate2_weight_type"
+data = "nllb-200-distilled-600M-ct2-int8"
+
+# --- オーバーレイの設定 (オーバーレイは起動しない)
+
+[[case]]
+name = "set overlay_small_log_settings"
+endpoint = "/set/data/overlay_small_log_settings"
+data = { x_pos = 0.1, y_pos = -0.2, z_pos = 0.0, x_rotation = 0.0, y_rotation = 0.0, z_rotation = 0.0, display_duration = 7, fadeout_duration = 3, opacity = 0.8, ui_scaling = 1.2, tracker = "HMD" }
+
+[[case]]
+name = "set overlay_small_log_settings wrong keys"
+endpoint = "/set/data/overlay_small_log_settings"
+data = { x_pos = 0.1 }
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "get overlay_small_log_settings after set"
+endpoint = "/get/data/overlay_small_log_settings"
+
+[[case]]
+name = "set overlay_large_log_settings"
+endpoint = "/set/data/overlay_large_log_settings"
+data = { x_pos = 0.0, y_pos = 0.0, z_pos = 0.0, x_rotation = 0.0, y_rotation = 0.0, z_rotation = 0.0, display_duration = 9, fadeout_duration = 2, opacity = 1.0, ui_scaling = 1.0, tracker = "HMD" }
+
+[[case]]
+name = "set overlay_vr_panel_anchor"
+endpoint = "/set/data/overlay_vr_panel_anchor"
+data = "HMD"
+
+[[case]]
+name = "set overlay_vr_panel_anchor not an anchor"
+endpoint = "/set/data/overlay_vr_panel_anchor"
+data = "Foot"
+
+[[case]]
+name = "set overlay_vr_panel_anchor back"
+endpoint = "/set/data/overlay_vr_panel_anchor"
+data = "Playspace"
+
+[[case]]
+name = "set overlay_vr_panel_font_size"
+endpoint = "/set/data/overlay_vr_panel_font_size"
+data = 20
+
+[[case]]
+name = "set overlay_vr_panel_font_size out of range"
+endpoint = "/set/data/overlay_vr_panel_font_size"
+data = 40
+
+[[case]]
+name = "set overlay_vr_panel_font_size a bool"
+endpoint = "/set/data/overlay_vr_panel_font_size"
+data = true
+
+[[case]]
+name = "set overlay_vr_panel_opacity (rounded)"
+endpoint = "/set/data/overlay_vr_panel_opacity"
+data = 0.555
+
+[[case]]
+name = "set overlay_vr_panel_opacity too low"
+endpoint = "/set/data/overlay_vr_panel_opacity"
+data = 0.1
+
+[[case]]
+name = "get overlay_vr_panel_opacity after set"
+endpoint = "/get/data/overlay_vr_panel_opacity"
+
+[[case]]
+name = "disable overlay_vr_launcher_auto_hide"
+endpoint = "/set/disable/overlay_vr_launcher_auto_hide"
+expect_status = 200
+
+[[case]]
+name = "enable overlay_vr_launcher_auto_hide"
+endpoint = "/set/enable/overlay_vr_launcher_auto_hide"
+expect_status = 200
+
+[[case]]
+name = "disable overlay_vr_tooltip"
+endpoint = "/set/disable/overlay_vr_tooltip"
+expect_status = 200
+
+[[case]]
+name = "enable overlay_vr_tooltip"
+endpoint = "/set/enable/overlay_vr_tooltip"
+expect_status = 200
+
+[[case]]
+name = "enable overlay_vr_panel_locked"
+endpoint = "/set/enable/overlay_vr_panel_locked"
+expect_status = 200
+
+[[case]]
+name = "get overlay_vr_panel_locked after enable"
+endpoint = "/get/data/overlay_vr_panel_locked"
+
+[[case]]
+name = "disable overlay_vr_panel_locked"
+endpoint = "/set/disable/overlay_vr_panel_locked"
+expect_status = 200

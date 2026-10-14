@@ -1,0 +1,65 @@
+# VR UI の画面からの要求。オーバーレイは起動しない (SteamVR が無くても、設定と状態は変わる)。
+
+[[case]]
+name = "set the launcher to the right hand (mirrored)"
+endpoint = "/set/data/overlay_vr_launcher_hand"
+data = "RightHand"
+pushes = true
+
+[[case]]
+name = "get overlay_vr_launcher_hand after set"
+endpoint = "/get/data/overlay_vr_launcher_hand"
+
+[[case]]
+name = "set the launcher to a hand that is not one"
+endpoint = "/set/data/overlay_vr_launcher_hand"
+data = "LeftFoot"
+
+[[case]]
+name = "reset the launcher (back to the left hand and the defaults)"
+endpoint = "/run/vr_launcher_reset"
+pushes = true
+
+[[case]]
+name = "get overlay_vr_launcher_hand after reset"
+endpoint = "/get/data/overlay_vr_launcher_hand"
+
+[[case]]
+name = "the VR panel's windows"
+endpoint = "/run/vr_panel_windows"
+data = { log = true, popup = false }
+
+[[case]]
+name = "the VR panel's windows, not a dict"
+endpoint = "/run/vr_panel_windows"
+data = "log"
+
+[[case]]
+name = "recall the VR log window"
+endpoint = "/run/vr_panel_recall_log"
+
+[[case]]
+name = "a VR tooltip that is not one"
+endpoint = "/run/vr_panel_tooltip"
+data = "x"
+
+[[case]]
+name = "the VR view's rendered size"
+endpoint = "/run/vr_panel_layout_rendered"
+data = [1690, 880]
+
+[[case]]
+name = "the VR view's rendered size, not a size"
+endpoint = "/run/vr_panel_layout_rendered"
+data = "big"
+
+[[case]]
+name = "text to the overlay (the overlays are off)"
+endpoint = "/run/send_text_overlay"
+data = "hello"
+
+[[case]]
+name = "text to the overlay, not a string"
+endpoint = "/run/send_text_overlay"
+data = 1
+expect_status = 500  # Rust 版は文字列でない値を先に断る (Python 版はオーバーレイが OFF なら 200 で返した)

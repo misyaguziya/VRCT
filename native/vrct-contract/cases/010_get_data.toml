@@ -108,6 +108,7 @@ endpoint = "/get/data/telemetry"
 [[case]]
 name = "get version"
 endpoint = "/get/data/version"
+rule = "shape"  # package.json の版 (版を上げるたびに変わる)
 
 [[case]]
 name = "get transparency"
@@ -152,22 +153,27 @@ endpoint = "/get/data/compute_mode"
 [[case]]
 name = "get selectable_translation_compute_device_list"
 endpoint = "/get/data/selectable_translation_compute_device_list"
+rule = "shape"  # PC の GPU による
 
 [[case]]
 name = "get selected_translation_compute_device"
 endpoint = "/get/data/selected_translation_compute_device"
+rule = "shape"  # PC の GPU による
 
 [[case]]
 name = "get selectable_transcription_compute_device_list"
 endpoint = "/get/data/selectable_transcription_compute_device_list"
+rule = "shape"  # PC の GPU による
 
 [[case]]
 name = "get selected_transcription_compute_device"
 endpoint = "/get/data/selected_transcription_compute_device"
+rule = "shape"  # PC の GPU による
 
 [[case]]
 name = "get selectable_ctranslate2_weight_type_dict"
 endpoint = "/get/data/selectable_ctranslate2_weight_type_dict"
+rule = "shape"  # --weights に入っている重みによる
 
 [[case]]
 name = "get selected_ctranslate2_weight_type"
@@ -300,10 +306,12 @@ endpoint = "/get/data/selectable_mic_host_list"
 [[case]]
 name = "get selectable_mic_device_list"
 endpoint = "/get/data/selectable_mic_device_list"
+rule = "shape"  # PC の録音機器による
 
 [[case]]
 name = "get selectable_speaker_device_list"
 endpoint = "/get/data/selectable_speaker_device_list"
+rule = "shape"  # PC の録音機器による
 
 [[case]]
 name = "get auto_mic_select"
@@ -316,6 +324,7 @@ endpoint = "/get/data/selected_mic_host"
 [[case]]
 name = "get selected_mic_device"
 endpoint = "/get/data/selected_mic_device"
+rule = "shape"  # PC の録音機器による
 
 [[case]]
 name = "get mic_threshold"
@@ -360,6 +369,7 @@ endpoint = "/get/data/auto_speaker_select"
 [[case]]
 name = "get selected_speaker_device"
 endpoint = "/get/data/selected_speaker_device"
+rule = "shape"  # PC の録音機器による
 
 [[case]]
 name = "get speaker_threshold"
@@ -392,6 +402,7 @@ endpoint = "/get/data/speaker_no_speech_prob"
 [[case]]
 name = "get selectable_whisper_weight_type_dict"
 endpoint = "/get/data/selectable_whisper_weight_type_dict"
+rule = "shape"  # --weights に入っている重みによる
 
 [[case]]
 name = "get selected_whisper_weight_type"
