@@ -1305,4 +1305,114 @@ mod tests {
         assert_eq!(*log.lock().unwrap(), ["first", "a", "last"]);
         assert!(!worker.enqueue(None, || {}));
     }
+
+    // The tests' App selects "NoDevice" (no recording starts on this PC); OSC goes to a closed port.
+
+    fn app() -> Arc<App> {
+        let app = super::super::test_app(9);
+        ipc::take_printed();
+        app
+    }
+
+    /// (status, endpoint, result) of the pushes, without the logs
+    fn pushes() -> Vec<(i64, String, Value)> {
+        ipc::take_printed().into_iter().filter(|v| v["status"] != 348)
+            .map(|v| (v["status"].as_i64().unwrap(), v["endpoint"].as_str().unwrap_or_default().to_string(), v["result"].clone()))
+            .collect()
+    }
+
+    fn text(text: &str) -> Event {
+        Event::Text(Transcript { text: text.into(), language: Some("Japanese".into()), confidence: 1.0, asr_ms: 10 }, false)
+    }
+
+    #[test]
+    fn transcription_without_a_device_says_so_and_stays_off() {
+        let app = app();
+        let reply = set_enable_transcription_send(&app, None).unwrap();
+        assert_eq!(reply, Reply::ok(false));
+        assert!(!app.config.get_bool("ENABLE_TRANSCRIPTION_SEND"));
+        assert!(!app.audio.mic.lock().unwrap().running());
+        assert_eq!(pushes(), [(400, "/run/error_device".to_string(), json!({"message": "No mic device detected", "data": null}))]);
+        // the speaker the same
+        assert_eq!(set_enable_transcription_receive(&app, None).unwrap(), Reply::ok(false));
+        assert_eq!(pushes()[0].2["message"], json!("No speaker device detected"));
+    }
+
+    #[test]
+    fn the_volume_check_without_a_device_says_so_and_stays_off() {
+        let app = app();
+        set_enable_check_mic_threshold(&app, None).unwrap();
+        let pushes = pushes();
+        assert_eq!((pushes[0].0, pushes[0].1.as_str()), (400, "/run/error_device"));
+        assert_eq!(pushes[0].2["error_code"], json!("DEVICE_NO_MIC"));
+        assert!(!app.audio.mic.lock().unwrap().running());
+    }
+
+    #[test]
+    fn turning_off_what_is_off_does_nothing() {
+        let app = app();
+        assert_eq!(set_disable_transcription_send(&app, None).unwrap(), Reply::ok(false));
+        assert_eq!(set_disable_check_speaker_threshold(&app, None).unwrap(), Reply::ok(false));
+        assert_eq!(pushes(), []);
+    }
+
+    #[test]
+    fn a_mic_message_goes_through_the_pipeline_unless_vrchat_mutes_it() {
+        let app = app();
+        app.config.set("ENABLE_TRANSCRIPTION_SEND", json!(true)).unwrap();
+        app.config.set("SEND_MESSAGE_TO_VRC", json!(false)).unwrap();
+        app.config.set("VRC_MIC_MUTE_SYNC", json!(true)).unwrap();
+        *app.model.mic_mute_status.lock().unwrap() = Some(true);
+        transcript_event(&app, Kind::Mic, text("ミュート中"));
+        assert_eq!(pushes(), []);
+        *app.model.mic_mute_status.lock().unwrap() = Some(false);
+        transcript_event(&app, Kind::Mic, text("話せる"));
+        let pushes = pushes();
+        assert_eq!(pushes[0].1, "/run/transcription_send_mic_message");
+        assert_eq!(pushes[0].2["original"]["message"], json!("話せる"));
+        // nothing heard: nothing to do
+        transcript_event(&app, Kind::Mic, text(""));
+        assert_eq!(super::tests::pushes(), []);
+    }
+
+    #[test]
+    fn a_failed_request_is_told_and_the_message_dropped() {
+        let app = app();
+        app.config.set("ENABLE_TRANSCRIPTION_SEND", json!(true)).unwrap();
+        let failed = Event::Text(Transcript { text: "途中".into(), language: None, confidence: 0.0, asr_ms: 0 }, true);
+        transcript_event(&app, Kind::Mic, failed);
+        assert_eq!(pushes(), [(200, "/run/transcription_recognition_error".to_string(),
+                               json!({"message": "Mic speech recognition request failed. Check your network connection.", "data": null}))]);
+        // told even while VRChat mutes the mic
+        app.config.set("VRC_MIC_MUTE_SYNC", json!(true)).unwrap();
+        *app.model.mic_mute_status.lock().unwrap() = Some(true);
+        transcript_event(&app, Kind::Mic, Event::Text(Transcript { text: String::new(), language: None, confidence: 0.0, asr_ms: 0 }, true));
+        assert_eq!(pushes().len(), 1);
+    }
+
+    #[test]
+    fn a_pipeline_failure_turns_the_transcription_off_and_tells_the_ui() {
+        let app = app();
+        app.config.set("ENABLE_TRANSCRIPTION_RECEIVE", json!(true)).unwrap();
+        transcript_event(&app, Kind::Speaker, Event::Failure(Failure { code: "AUDIO_OPEN_ERROR", stage: "recording" }));
+        assert!(!app.config.get_bool("ENABLE_TRANSCRIPTION_RECEIVE"));
+        let pushes = pushes();
+        // the UI's switch is told as if it had been turned off there
+        assert_eq!(pushes[0], (200, "/set/disable/transcription_receive".to_string(), json!(false)));
+        assert_eq!(pushes[1].1, "/run/transcription_recognition_error");
+        assert_eq!(pushes[1].2["error_code"], json!("AUDIO_OPEN_ERROR"));
+        assert_eq!(pushes[1].2["source"], json!("speaker"));
+        assert_eq!(pushes[1].2["recoverable"], json!(false));
+    }
+
+    #[test]
+    fn a_failure_is_told_once_per_start() {
+        let app = app();
+        let gate = ErrorGate::default();
+        for _ in 0..3 {
+            notify(&app, Kind::Mic, &gate, Failure { code: "AUDIO_OPEN_ERROR", stage: "recording" });
+        }
+        let told = pushes().into_iter().filter(|p| p.1 == "/run/transcription_recognition_error").count();
+        assert_eq!(told, 1);
+    }
 }

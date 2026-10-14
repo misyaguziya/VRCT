@@ -88,6 +88,32 @@ pub fn current(app: &App, name: &str) -> Result<Reply> {
     Ok(Reply::ok(app.config.get(name)))
 }
 
+/// The tests' App: as main.rs makes it, with config.json in a fresh folder, the data from
+/// native/data, OSC to a port on this PC (a socket the test reads) and no devices
+#[cfg(test)]
+pub(crate) fn test_app(osc_port: u16) -> Arc<App> {
+    use crate::config::{DeviceLists, Env};
+    use serde_json::json;
+    static RUN: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = RUN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    let dir = std::env::temp_dir().join(format!("vrct-app-test-{}-{n}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let data = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data");
+    let transcription_lang: Value = serde_json::from_slice(&std::fs::read(data.join("transcription_languages.json")).unwrap()).unwrap();
+    let config = Config::new(Env {
+        path_local: dir,
+        compute_devices: vec![json!({"device": "cpu", "device_index": 0, "device_name": "cpu", "compute_types": ["auto", "int8"]})],
+        default_mic: ("NoHost".into(), "NoDevice".into()),
+        default_speaker: "NoDevice".into(),
+        devices: Arc::new(DeviceLists::default),
+        transcription_lang: transcription_lang.clone(),
+        new_token: || "token".into(),
+    });
+    config.set("OSC_PORT", json!(osc_port)).unwrap();
+    let model = Model::new(crate::net::Http::new().unwrap(), Resources { dir: data }, transcription_lang, &config).unwrap();
+    App::new(config, model)
+}
+
 /// register_error_report_hook(model.telemetryTrackError): every error code goes to telemetry
 pub fn register_error_hook(app: &std::sync::Arc<App>) {
     let me = app.me();

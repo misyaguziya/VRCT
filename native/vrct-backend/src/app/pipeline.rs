@@ -404,3 +404,262 @@ pub fn set_enable_translation(app: &App, _: Option<Value>) -> Result<Reply> {
     }
     current(app, "ENABLE_TRANSLATION")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::translate::Translation;
+    use std::net::UdpSocket;
+    use std::sync::Arc;
+    use vrchat_osc::rosc::{self, OscPacket, OscType};
+
+    /// An App whose OSC goes to `osc` (what VRChat would get)
+    struct Rig {
+        app: Arc<App>,
+        osc: UdpSocket,
+    }
+
+    fn rig() -> Rig {
+        let osc = UdpSocket::bind("127.0.0.1:0").unwrap();
+        osc.set_read_timeout(Some(Duration::from_millis(100))).unwrap();
+        let app = super::super::test_app(osc.local_addr().unwrap().port());
+        ipc::take_printed();
+        Rig { app, osc }
+    }
+
+    impl Rig {
+        fn set(&self, name: &str, value: Value) {
+            self.app.config.set(name, value).unwrap();
+        }
+
+        /// The texts sent to VRChat's chat box
+        fn chatbox(&self) -> Vec<String> {
+            let mut buf = [0u8; 4096];
+            let mut texts = vec![];
+            while let Ok(n) = self.osc.recv(&mut buf) {
+                if let Ok((_, OscPacket::Message(m))) = rosc::decoder::decode_udp(&buf[..n]) {
+                    assert_eq!(m.addr, "/chatbox/input");
+                    if let Some(OscType::String(s)) = m.args.first() {
+                        texts.push(s.clone());
+                    }
+                }
+            }
+            texts
+        }
+
+        /// The pushes since the last call (endpoint, result); the logs are left out
+        fn pushes(&self) -> Vec<(String, Value)> {
+            ipc::take_printed().into_iter().filter(|v| v["status"] != 348)
+                .map(|v| (v["endpoint"].as_str().unwrap_or_default().to_string(), v["result"].clone())).collect()
+        }
+
+        fn process(&self, spec: &Spec, message: &str, language: Option<&str>) -> Option<Value> {
+            process(&self.app, spec, message, language, None, None).unwrap()
+        }
+
+        fn fake(&self, fake: fn(&str, &str, &str) -> Translation) {
+            self.app.model.translator.write().unwrap().fake = Some(fake);
+            self.set("ENABLE_TRANSLATION", json!(true));
+        }
+
+        /// tab 1 translates to English and Korean
+        fn two_targets(&self) {
+            let mut targets = self.app.config.get("SELECTED_TARGET_LANGUAGES");
+            targets["1"]["2"] = json!({"language": "Korean", "country": "South Korea", "enable": true});
+            self.set("SELECTED_TARGET_LANGUAGES", targets);
+        }
+    }
+
+    fn echo(_engine: &str, target: &str, message: &str) -> Translation {
+        Translation::Text(format!("{message} [{target}]"))
+    }
+
+    fn all_fail(engine: &str, _target: &str, _message: &str) -> Translation {
+        Translation::Failed(format!("{engine} failed"))
+    }
+
+    fn only_ctranslate2(engine: &str, target: &str, message: &str) -> Translation {
+        if engine == "CTranslate2" { echo(engine, target, message) } else { all_fail(engine, target, message) }
+    }
+
+    #[test]
+    fn chat_without_translation_sends_the_message_and_answers_it() {
+        let r = rig();
+        let answer = process(&r.app, &CHAT, "hello", None, Some(json!("id-1")), None).unwrap().unwrap();
+        assert_eq!(answer, json!({"id": "id-1", "original": {"message": "hello", "transliteration": []}, "translations": []}));
+        assert_eq!(r.chatbox(), ["hello"]);
+        assert_eq!(r.pushes(), []); // the chat box answers, it does not push
+    }
+
+    #[test]
+    fn chat_is_not_sent_to_vrchat_when_sending_is_off() {
+        let r = rig();
+        r.set("SEND_MESSAGE_TO_VRC", json!(false));
+        assert!(r.process(&CHAT, "hello", None).is_some());
+        assert_eq!(r.chatbox(), Vec::<String>::new());
+    }
+
+    #[test]
+    fn chat_translates_to_every_enabled_target_in_order() {
+        let r = rig();
+        r.two_targets();
+        r.fake(echo);
+        let answer = r.process(&CHAT, "こんにちは", None).unwrap();
+        assert_eq!(answer["translations"], json!([
+            {"message": "こんにちは [English]", "transliteration": []},
+            {"message": "こんにちは [Korean]", "transliteration": []},
+        ]));
+        // messageFormatter's default: the message, a new line, the translations one per line
+        assert_eq!(r.chatbox(), ["こんにちは\nこんにちは [English]\nこんにちは [Korean]"]);
+    }
+
+    #[test]
+    fn only_the_translations_go_to_vrchat_when_asked() {
+        let r = rig();
+        r.fake(echo);
+        r.set("SEND_ONLY_TRANSLATED_MESSAGES", json!(true));
+        r.process(&CHAT, "こんにちは", None);
+        assert_eq!(r.chatbox(), ["こんにちは [English]"]);
+        // with translation off there is nothing else to send: the message
+        r.set("ENABLE_TRANSLATION", json!(false));
+        r.process(&CHAT, "またね", None);
+        assert_eq!(r.chatbox(), ["またね"]);
+    }
+
+    #[test]
+    fn the_format_parts_shape_the_message_to_vrchat() {
+        let r = rig();
+        r.two_targets();
+        r.fake(echo);
+        r.set("SEND_MESSAGE_FORMAT_PARTS", json!({"message": {"prefix": "[", "suffix": "]"}, "separator": " / ",
+            "translation": {"prefix": "(", "separator": ", ", "suffix": ")"}, "translation_first": true}));
+        r.process(&CHAT, "やあ", None);
+        assert_eq!(r.chatbox(), ["(やあ [English], やあ [Korean]) / [やあ]"]);
+    }
+
+    #[test]
+    fn a_failed_engine_falls_back_to_ctranslate2_without_an_error() {
+        let r = rig();
+        r.fake(only_ctranslate2);
+        r.set("SELECTED_TRANSLATION_ENGINES", json!({"1": "DeepL_API", "2": "CTranslate2", "3": "CTranslate2"}));
+        let answer = r.process(&CHAT, "こんにちは", None).unwrap();
+        assert_eq!(answer["translations"][0]["message"], json!("こんにちは [English]"));
+        assert_eq!(r.pushes(), []);
+        assert_eq!(r.app.config.get("SELECTED_TRANSLATION_ENGINES")["1"], json!("DeepL_API"));
+    }
+
+    #[test]
+    fn when_ctranslate2_fails_too_the_engine_switches_and_the_error_is_pushed() {
+        let r = rig();
+        r.fake(all_fail);
+        r.set("SELECTED_TRANSLATION_ENGINES", json!({"1": "DeepL_API", "2": "CTranslate2", "3": "CTranslate2"}));
+        let answer = r.process(&CHAT, "こんにちは", None).unwrap();
+        // the message stands in for its translation
+        assert_eq!(answer["translations"][0]["message"], json!("こんにちは"));
+        assert_eq!(r.app.config.get("SELECTED_TRANSLATION_ENGINES")["1"], json!("CTranslate2"));
+        let pushes = r.pushes();
+        let names: Vec<&str> = pushes.iter().map(|(e, _)| e.as_str()).collect();
+        assert_eq!(names, ["/run/selected_translation_engines", "/run/translation_engines", "/run/error_translation_engine"]);
+        assert_eq!(pushes[2].1["error_code"], json!("TRANSLATION_ENGINE_LIMIT"));
+    }
+
+    #[test]
+    fn the_mic_word_filter_stops_the_message() {
+        let r = rig();
+        r.set("ENABLE_TRANSCRIPTION_SEND", json!(true));
+        r.app.model.keywords.lock().unwrap().add("secret");
+        assert_eq!(r.process(&MIC, "this is secret", None), None);
+        assert_eq!(r.pushes(), [("/run/word_filter".to_string(), json!({"message": "Detected by word filter: this is secret"}))]);
+        assert_eq!(r.chatbox(), Vec::<String>::new());
+        // the chat box has no word filter
+        assert!(r.process(&CHAT, "this is secret", None).is_some());
+    }
+
+    #[test]
+    fn the_same_mic_message_twice_goes_out_once() {
+        let r = rig();
+        r.set("ENABLE_TRANSCRIPTION_SEND", json!(true));
+        r.process(&MIC, "hello", None);
+        r.process(&MIC, "hello", None);
+        assert_eq!(r.chatbox(), ["hello"]);
+        assert_eq!(r.pushes().len(), 1);
+        // the speaker keeps its own last message
+        r.set("ENABLE_TRANSCRIPTION_RECEIVE", json!(true));
+        r.process(&SPEAKER, "hello", Some("English"));
+        r.process(&MIC, "again", None);
+        assert_eq!(r.pushes().len(), 2);
+    }
+
+    #[test]
+    fn the_mic_pushes_its_message_to_the_ui_and_vrchat() {
+        let r = rig();
+        r.set("ENABLE_TRANSCRIPTION_SEND", json!(true));
+        r.fake(echo);
+        assert_eq!(r.process(&MIC, "おはよう", None), None);
+        assert_eq!(r.pushes(), [("/run/transcription_send_mic_message".to_string(), json!({
+            "original": {"message": "おはよう", "transliteration": []},
+            "translations": [{"message": "おはよう [English]", "transliteration": []}],
+        }))]);
+        assert_eq!(r.chatbox(), ["おはよう\nおはよう [English]"]);
+    }
+
+    #[test]
+    fn a_mic_message_while_sending_is_off_goes_nowhere_but_the_history() {
+        let r = rig();
+        r.process(&MIC, "おはよう", None);
+        assert_eq!(r.pushes(), []);
+        assert_eq!(r.chatbox(), Vec::<String>::new());
+        assert_eq!(r.app.model.translation_history.lock().unwrap().last().map(|h| h.text.clone()), Some("おはよう".into()));
+    }
+
+    #[test]
+    fn the_speaker_translates_into_your_language_and_echoes_to_vrchat_only_when_asked() {
+        let r = rig();
+        r.set("ENABLE_TRANSCRIPTION_RECEIVE", json!(true));
+        r.fake(echo);
+        r.process(&SPEAKER, "good morning", Some("English"));
+        let pushes = r.pushes();
+        assert_eq!(pushes[0].0, "/run/transcription_receive_speaker_message");
+        assert_eq!(pushes[0].1["translations"], json!([{"message": "good morning [Japanese]", "transliteration": []}]));
+        assert_eq!(r.chatbox(), Vec::<String>::new());
+        r.set("SEND_RECEIVED_MESSAGE_TO_VRC", json!(true));
+        r.process(&SPEAKER, "good night", Some("English"));
+        assert_eq!(r.chatbox(), ["good night\ngood night [Japanese]"]);
+    }
+
+    #[test]
+    fn ocr_text_is_marked_as_ocr_and_never_sent_to_vrchat() {
+        let r = rig();
+        r.set("ENABLE_OCR_CAPTURE", json!(true));
+        r.set("SEND_RECEIVED_MESSAGE_TO_VRC", json!(true));
+        r.process(&OCR, "안녕하세요", Some("Korean"));
+        let pushes = r.pushes();
+        assert_eq!(pushes[0].0, "/run/transcription_ocr_message");
+        assert_eq!(pushes[0].1["source"], json!("ocr"));
+        assert_eq!(r.chatbox(), Vec::<String>::new());
+        let history = r.app.model.translation_history.lock().unwrap();
+        assert_eq!(history.last().map(|h| h.source.clone()), Some("ocr".into()));
+    }
+
+    #[test]
+    fn the_chat_log_gets_the_message_with_its_kind() {
+        let r = rig();
+        let path = r.app.config.env().path_local.join("chat.log");
+        *r.app.model.logger.lock().unwrap() = Some(crate::logs::LogFile::at(path.to_string_lossy().into(), "log", "INFO"));
+        r.set("LOGGER_FEATURE", json!(true));
+        r.fake(echo);
+        r.process(&CHAT, "やあ", None);
+        let log = std::fs::read_to_string(&path).unwrap();
+        assert!(log.trim_end().ends_with("[CHAT] やあ (やあ [English])"), "{log}");
+    }
+
+    #[test]
+    fn the_latency_line_carries_the_recognition_time() {
+        let r = rig();
+        r.set("ENABLE_TRANSCRIPTION_SEND", json!(true));
+        process(&r.app, &MIC, "hello", None, None, Some(120)).unwrap();
+        let logs: Vec<String> = ipc::take_printed().into_iter().filter(|v| v["status"] == 348)
+            .filter_map(|v| v["log"].as_str().map(String::from)).collect();
+        assert!(logs.iter().any(|l| l.starts_with("[latency][mic] asr=120ms translate=0ms")), "{logs:?}");
+    }
+}
