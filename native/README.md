@@ -9,7 +9,7 @@ Python 版のコードは削除した。基準データ（`testdata/`）と契�
 |---|---|
 | `third_party.toml` | 同梱するネイティブ DLL（CTranslate2・onnxruntime・OpenBLAS・CUDA）と辞書・モデルの版と SHA-256。Python 版が使っていたのと同じ wheel から取り出す |
 | `xtask/` | `cargo xtask fetch-native [--cuda]`: 上の DLL と CTranslate2 のヘッダーを `third_party/`（git 管理外）に置く |
-| `vrct-contract/` | IPC の契約テスト。バックエンドを stdin / stdout だけで動かし、Python 版の応答の記録と比べる |
+| `vrct-contract/` | IPC の契約テスト。バックエンドを stdin / stdout だけで動かし、確認済みの応答 (`baseline.json`) と比べる |
 | `vrct-ct2/` | CTranslate2（wheel の `ctranslate2.dll`）の受け口。C の shim と安全な Rust の型 |
 | `vrct-whisper/` | faster-whisper 1.1.1 の `transcribe`（VRCT が通る経路）。メル特徴量は numpy と同じ計算 |
 | `vrct-ocr/` | 吹き出し検出（YOLOX）と RapidOCR 3.9.2 の移植（OpenCV / numpy の該当処理、Clipper、bidi） |
@@ -59,24 +59,29 @@ cargo test -p vrct-backend -p vrct-webtranslate
 
 ## 契約テスト
 
-Rust 版をいつもの UI と同じく stdin / stdout だけで動かし、Python 版の応答の記録（`target/contract/python.json`、
-Python のコードを消す前にこの PC で取ったもの。デバイス名を含むのでコミットしない）と比べる。取り直すときは、
-Python 版が動くコミット（`051aed5d`）を別の worktree に出し、そこの README の手順で取る。
+Rust 版をいつもの UI と同じく stdin / stdout だけで動かし、確認済みの応答 `vrct-contract/baseline.json` と比べる
+（画面からの操作の回帰テスト）。最初の 216 件は Python 版の応答と一致を確かめたもの、残りは Rust 版の応答を読んで
+確かめたもの。
 
 ```powershell
 cd native
-cargo build -p vrct-contract
+cargo build --release -p vrct-contract
 # 配布と同じ形 (exe の隣の _internal に DLL・データ・モデル・ライセンス) に並べる
 # DLL・Sudachi の辞書・Silero・RapidOCR のモデルは third_party.toml から (fetch-native が SHA-256 を確かめて取る)
 cargo xtask fetch-native
-cargo build -p vrct-backend --bin VRCT-sidecar
-cargo xtask stage-sidecar --out target\sidecar-stage
-.\target\debug\vrct-contract.exe run --exe target\sidecar-stage\VRCT-sidecar.exe --weights <weights のフォルダ> --name rust --out target\contract\rust.json
-.\target\debug\vrct-contract.exe compare target\contract\python.json target\contract\rust.json
+cargo xtask stage-sidecar --out target\sidecar-stage --release
+.\target\release\vrct-contract.exe run --exe target\sidecar-stage\VRCT-sidecar.exe --weights <weights のフォルダ> --name rust --out target\contract\rust.json --against vrct-contract\baseline.json
 ```
 
+- 差が無ければ終了コード 0。差があれば `DIFF` に、ケース名と基準・今回の応答が出る。
+- 重みは CPU 版の `nllb-200-distilled-600M-ct2-int8` が要る（チャットの翻訳の結果を完全一致で比べる。CUDA 版では訳が変わりうる）。
+- 挙動を意図して変えたときは、差が意図どおりか読んでから、基準を取り直す: `.\target\release\vrct-contract.exe accept target\contract\rust.json`（問題のある記録は受け付けない）。
+- 基準には規則で比べるものだけが残る（`shape` の値は形を保って空にし、`status` の結果は捨てる）。デバイス名・GPU・トークンは入らないのでコミットしてよい。
 - バックエンドは `target/contract-run/<name>/` にコピーして動かす（`config.json` やログはそこに書かれ、本物には触れない）。重みはジャンクションで本物を読む。
-- 外部ネットワークは存在しないプロキシで止める（毎回同じ「オフライン」の起動になる）。
-- テストの組は `vrct-contract/cases/*.toml`（ファイル名の順に、上から順に送る）。`rule` は `exact`（既定）/ `shape`（起動ごとに変わる値）/ `status`。`expect_status` はどのバックエンドでも守るべき status。
+- 外部ネットワークは存在しないプロキシで止める（毎回同じ「オフライン」の起動になる）。API キーのケースは、通信できないときの判定を見る。
+- テストの組は `vrct-contract/cases/*.toml`（ファイル名の順に、上から順に送る。状態は前のケースから続く）。
+  - `rule` は `exact`（既定）/ `shape`（起動ごと・PC ごとに変わる値。空の一覧はどの一覧とも一致）/ `status`。
+  - `expect_status` は毎回確かめる status。500 は「問題」として扱うが、`expect_status = 500` のケース（検証の例外を捕まえない handler。Python 版と同じ）は除く。
+  - `pushes = true` のケースは、応答の前に届いた push（endpoint・status・結果）も完全一致で比べる。
 - 機器・外部を動かすもの（録音の開始、更新のインストーラ、エクスプローラーを開く、VRChat へのチャット送信など）は入れない。チャットの送信は、先に VRChat への送信を OFF にしてから。
-- 録音デバイスの一覧は PC の構成で変わる。デバイスを抜き差しした後は、その分の差が出る。
+- 録音デバイス・計算デバイス・重みの有無・版は PC や時期で変わるので `shape` で比べる（どの PC でも同じ基準で回せる）。

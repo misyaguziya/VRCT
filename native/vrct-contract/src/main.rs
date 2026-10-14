@@ -1,17 +1,19 @@
 //! IPC contract tests (docs/rust_backend_design_2026-10-11.md §8).
 //!
-//! The backend is driven only through its stdin / stdout, the way the UI does. The Rust sidecar's
-//! answers are compared with the ones the Python backend gave (a report kept from before the
-//! Python code was removed; native/README.md):
+//! The backend is driven only through its stdin / stdout, the way the UI does. Its answers are
+//! compared with baseline.json, the checked answers of an earlier build (native/README.md):
 //!
-//!   vrct-contract run --exe <VRCT-sidecar.exe> --out <report.json>
+//!   vrct-contract run --exe <VRCT-sidecar.exe> --out <report.json> [--against baseline.json]
 //!   vrct-contract compare <a.json> <b.json>
+//!   vrct-contract accept <report.json>     (writes baseline.json from a checked report)
 //!
 //! `run` copies the backend into a fresh folder under native/target/contract-run/ (its config.json
 //! and logs are written next to it, never into the real install), cuts it off from the network
 //! with a dead proxy (the "offline" start, same every time), waits for
 //! /run/initialization_complete, then sends cases/*.toml in order and records every answer.
 //! `compare` checks two reports case by case with each case's rule (exact / shape / status).
+//! `accept` keeps only what the rules compare (a shape's values blanked, a status's result dropped),
+//! so baseline.json holds nothing of the PC it ran on (device names, the GPU, the weights there).
 use anyhow::{bail, Context, Result};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -35,7 +37,8 @@ enum Rule {
     /// status and result are equal
     #[default]
     Exact,
-    /// status is equal and result has the same JSON shape (types, object keys)
+    /// status is equal and result has the same JSON shape (types, object keys; an empty list
+    /// matches any list)
     Shape,
     /// only the status is equal
     Status,
@@ -53,6 +56,9 @@ struct Case {
     rule: Rule,
     /// the status the backend must answer, checked on every run (not only in compare)
     expect_status: Option<u16>,
+    /// the pushes sent before the answer are compared too (endpoint, status and result, exactly)
+    #[serde(default)]
+    pushes: bool,
 }
 
 #[derive(Deserialize)]
@@ -69,6 +75,10 @@ struct Answer {
     result: Value,
     /// endpoints of the pushes seen while waiting for this answer, in order
     pushes: Vec<String>,
+    /// those pushes in full ({endpoint, status, result}); kept in baseline.json only for a case
+    /// with `pushes = true`
+    #[serde(default)]
+    push_results: Vec<Value>,
     ms: u128,
 }
 
@@ -256,11 +266,14 @@ fn run(backend_name: &str, cmd: Command, out: &Path) -> Result<()> {
     for case in &cases {
         let t = Instant::now();
         send(&backend.stdin, &case.endpoint, case.data.as_ref(), case.raw_data.as_deref())?;
-        let mut pushes = Vec::new();
+        let (mut pushes, mut push_results) = (Vec::new(), Vec::new());
         let answer = loop {
             match backend.next(t + CASE_TIMEOUT)? {
                 Some(v) if v["endpoint"] == case.endpoint.as_str() => break Some(v),
-                Some(v) => pushes.push(v["endpoint"].as_str().unwrap_or("?").to_string()),
+                Some(v) => {
+                    pushes.push(v["endpoint"].as_str().unwrap_or("?").to_string());
+                    push_results.push(json!({"endpoint": v["endpoint"], "status": v["status"], "result": v["result"]}));
+                }
                 None => break None,
             }
         };
@@ -276,11 +289,13 @@ fn run(backend_name: &str, cmd: Command, out: &Path) -> Result<()> {
                 problems.push(format!("{}: status {got}, expected {want}", case.name));
             }
         }
-        if status == Some(500) {
+        // a 500 is a problem unless the case expects it (a bad value the handler does not check,
+        // as in the Python version)
+        if status == Some(500) && case.expect_status != Some(500) {
             problems.push(format!("{}: 500 {result}", case.name));
         }
         answers.push(Answer { name: case.name.clone(), endpoint: case.endpoint.clone(), status, result, pushes,
-                              ms: t.elapsed().as_millis() });
+                              push_results, ms: t.elapsed().as_millis() });
     }
     send(&backend.stdin, "/run/shutdown", None, None)?;
     let mut child = backend.child;
@@ -307,14 +322,19 @@ fn run(backend_name: &str, cmd: Command, out: &Path) -> Result<()> {
 
 // ------------------------------------------------------------------------------------- compare
 
-fn shape(v: &Value) -> Value {
-    match v {
-        Value::Object(m) => Value::Object(m.iter().map(|(k, v)| (k.clone(), shape(v))).collect()),
-        Value::Array(a) => json!(["array", a.first().map(shape)]),
-        Value::String(_) => json!("string"),
-        Value::Number(_) => json!("number"),
-        Value::Bool(_) => json!("bool"),
-        Value::Null => json!("null"),
+/// Same types and object keys; a list is compared by its first item (an empty list matches any)
+fn same_shape(a: &Value, b: &Value) -> bool {
+    match (a, b) {
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| same_shape(v, w)))
+        }
+        (Value::Array(x), Value::Array(y)) => match (x.first(), y.first()) {
+            (Some(p), Some(q)) => same_shape(p, q),
+            _ => true,
+        },
+        (Value::String(_), Value::String(_)) | (Value::Number(_), Value::Number(_))
+        | (Value::Bool(_), Value::Bool(_)) | (Value::Null, Value::Null) => true,
+        _ => false,
     }
 }
 
@@ -322,9 +342,59 @@ fn same(rule: Rule, a: (Option<i64>, &Value), b: (Option<i64>, &Value)) -> bool 
     a.0 == b.0
         && match rule {
             Rule::Exact => a.1 == b.1,
-            Rule::Shape => shape(a.1) == shape(b.1),
+            Rule::Shape => same_shape(a.1, b.1),
             Rule::Status => true,
         }
+}
+
+/// The same shape with the values blanked (a list keeps only its first item)
+fn blank(v: &Value) -> Value {
+    match v {
+        Value::Object(m) => Value::Object(m.iter().map(|(k, v)| (k.clone(), blank(v))).collect()),
+        Value::Array(a) => Value::Array(a.first().map(blank).into_iter().collect()),
+        Value::String(_) => json!(""),
+        Value::Number(_) => json!(0),
+        Value::Bool(_) => json!(false),
+        Value::Null => Value::Null,
+    }
+}
+
+/// What the rule compares, and nothing else
+fn kept(rule: Rule, v: &Value) -> Value {
+    match rule {
+        Rule::Exact => v.clone(),
+        Rule::Shape => blank(v),
+        Rule::Status => Value::Null,
+    }
+}
+
+/// baseline.json from a checked report: only what the rules compare
+fn accept(report: &Path, out: &Path) -> Result<()> {
+    let mut r: Report = serde_json::from_str(&fs::read_to_string(report)?)?;
+    if !r.problems.is_empty() {
+        bail!("{} has problems; fix them first:\n  {}", report.display(), r.problems.join("\n  "));
+    }
+    let by_endpoint: BTreeMap<String, Rule> = r.cases.iter().map(|c| (c.endpoint.clone(), c.rule)).collect();
+    if let Some(init) = r.init.as_object_mut() {
+        for (key, v) in init.iter_mut() {
+            *v = kept(by_endpoint.get(key).copied().unwrap_or_default(), v);
+        }
+    }
+    let by_name: BTreeMap<String, (Rule, bool)> = r.cases.iter().map(|c| (c.name.clone(), (c.rule, c.pushes))).collect();
+    for a in &mut r.answers {
+        let (rule, pushes) = by_name.get(&a.name).copied().unwrap_or_default();
+        a.result = kept(rule, &a.result);
+        if !pushes {
+            a.push_results.clear();
+        }
+        a.ms = 0;
+    }
+    r.backend = "baseline".into();
+    r.init_ms = 0;
+    r.stderr.clear();
+    fs::write(out, serde_json::to_string_pretty(&r)? + "\n")?;
+    println!("{} -> {}", report.display(), out.display());
+    Ok(())
 }
 
 fn compare(a: &Path, b: &Path) -> Result<bool> {
@@ -344,7 +414,12 @@ fn compare(a: &Path, b: &Path) -> Result<bool> {
         }
     }
     for (x, y) in a.answers.iter().zip(&b.answers) {
-        let rule = a.cases.iter().find(|c| c.name == x.name).map(|c| c.rule).unwrap_or_default();
+        let case = a.cases.iter().find(|c| c.name == x.name);
+        let rule = case.map(|c| c.rule).unwrap_or_default();
+        if case.is_some_and(|c| c.pushes) && x.push_results != y.push_results {
+            diffs.push(format!("{} [pushes]:\n    {}: {}\n    {}: {}", x.name, a.backend, json!(x.push_results),
+                               b.backend, json!(y.push_results)));
+        }
         if x.name != y.name {
             bail!("the reports ran different cases ({} / {})", x.name, y.name);
         }
@@ -384,7 +459,13 @@ fn main() -> Result<()> {
             }
             let mut cmd = Command::new(dir.join(exe.file_name().unwrap()));
             cmd.current_dir(&dir);
-            run(&name, cmd, &out)
+            run(&name, cmd, &out)?;
+            if let Some(baseline) = arg(&args, "--against") {
+                if !compare(Path::new(&baseline), &out)? {
+                    std::process::exit(1);
+                }
+            }
+            Ok(())
         }
         Some("compare") => {
             let (a, b) = (args.get(1).context("a.json")?, args.get(2).context("b.json")?);
@@ -393,6 +474,7 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        _ => bail!("usage: vrct-contract run --exe <exe> [--weights <dir>] --name <n> --out <json>\n       vrct-contract compare <a.json> <b.json>"),
+        Some("accept") => accept(Path::new(args.get(1).context("report.json")?), &crate_dir().join("baseline.json")),
+        _ => bail!("usage: vrct-contract run --exe <exe> [--weights <dir>] --name <n> --out <json> [--against <baseline.json>]\n       vrct-contract compare <a.json> <b.json>\n       vrct-contract accept <report.json>"),
     }
 }

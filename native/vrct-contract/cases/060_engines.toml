@@ -1,0 +1,262 @@
+# 言語・翻訳エンジン・文字起こしエンジンの選択と、その連動 (エンジンの一覧、使えないときの
+# フォールバック)。API キーはオフライン (通信できない) での判定。
+
+# --- 言語とエンジンの連動
+
+[[case]]
+name = "set your language to English"
+endpoint = "/set/data/selected_your_languages"
+data = { "1" = { "1" = { language = "English", country = "United States", enable = true } }, "2" = { "1" = { language = "Japanese", country = "Japan", enable = true } }, "3" = { "1" = { language = "Japanese", country = "Japan", enable = true } } }
+pushes = true
+
+[[case]]
+name = "set target languages to Japanese and Korean"
+endpoint = "/set/data/selected_target_languages"
+data = { "1" = { "1" = { language = "Japanese", country = "Japan", enable = true }, "2" = { language = "Korean", country = "South Korea", enable = true }, "3" = { language = "English", country = "United States", enable = false } }, "2" = { "1" = { language = "English", country = "United States", enable = true }, "2" = { language = "English", country = "United States", enable = false }, "3" = { language = "English", country = "United States", enable = false } }, "3" = { "1" = { language = "English", country = "United States", enable = true }, "2" = { language = "English", country = "United States", enable = false }, "3" = { language = "English", country = "United States", enable = false } } }
+pushes = true
+
+[[case]]
+name = "get selectable_translation_engines after the languages"
+endpoint = "/get/data/selectable_translation_engines"
+
+[[case]]
+name = "set your languages not a dict"
+endpoint = "/set/data/selected_your_languages"
+data = "English"
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "set translation engine DeepL without a key (falls back)"
+endpoint = "/set/data/selected_translation_engines"
+data = { "1" = "DeepL", "2" = "CTranslate2", "3" = "CTranslate2" }
+pushes = true
+
+[[case]]
+name = "get selected_translation_engines after DeepL"
+endpoint = "/get/data/selected_translation_engines"
+
+[[case]]
+name = "set translation engine not an engine"
+endpoint = "/set/data/selected_translation_engines"
+data = { "1" = "NoSuchEngine", "2" = "CTranslate2", "3" = "CTranslate2" }
+
+[[case]]
+name = "set translation engines back"
+endpoint = "/set/data/selected_translation_engines"
+data = { "1" = "CTranslate2", "2" = "CTranslate2", "3" = "CTranslate2" }
+
+[[case]]
+name = "set transcription engine Google (offline: not selectable)"
+endpoint = "/set/data/selected_transcription_engine"
+data = "Google"
+pushes = true
+
+[[case]]
+name = "set transcription engine not an engine"
+endpoint = "/set/data/selected_transcription_engine"
+data = "NoSuchEngine"
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "set transcription engine Whisper"
+endpoint = "/set/data/selected_transcription_engine"
+data = "Whisper"
+
+# --- API キー (通信できないので、長さの判定か、認証の失敗になる)
+
+[[case]]
+name = "set deepl_auth_key wrong length"
+endpoint = "/set/data/deepl_auth_key"
+data = "short"
+
+[[case]]
+name = "set deepl_auth_key free key (offline: fails)"
+endpoint = "/set/data/deepl_auth_key"
+data = "00000000-0000-0000-0000-000000000000:fx"
+
+[[case]]
+name = "delete deepl_auth_key"
+endpoint = "/delete/data/deepl_auth_key"
+
+[[case]]
+name = "set gemini_auth_key (offline: fails)"
+endpoint = "/set/data/gemini_auth_key"
+data = "AIzaSy-contract-test-key-000000000000000"
+
+[[case]]
+name = "delete gemini_auth_key"
+endpoint = "/delete/data/gemini_auth_key"
+
+[[case]]
+name = "set selected_gemini_model without a key"
+endpoint = "/set/data/selected_gemini_model"
+data = "gemini-2.5-flash"
+
+[[case]]
+name = "set openai_auth_key (offline: fails)"
+endpoint = "/set/data/openai_auth_key"
+data = "sk-contract-test-key-0000000000000000000000000000"
+
+[[case]]
+name = "delete openai_auth_key"
+endpoint = "/delete/data/openai_auth_key"
+
+[[case]]
+name = "set selected_openai_model without a key"
+endpoint = "/set/data/selected_openai_model"
+data = "gpt-4o-mini"
+
+[[case]]
+name = "set groq_auth_key (offline: fails)"
+endpoint = "/set/data/groq_auth_key"
+data = "gsk_contract-test-key-0000000000000000000000000000"
+
+[[case]]
+name = "delete groq_auth_key"
+endpoint = "/delete/data/groq_auth_key"
+
+[[case]]
+name = "set selected_groq_model without a key"
+endpoint = "/set/data/selected_groq_model"
+data = "llama-3.1-8b-instant"
+
+[[case]]
+name = "set openrouter_auth_key (offline: fails)"
+endpoint = "/set/data/openrouter_auth_key"
+data = "sk-or-contract-test-key-000000000000000000000000"
+
+[[case]]
+name = "delete openrouter_auth_key"
+endpoint = "/delete/data/openrouter_auth_key"
+
+[[case]]
+name = "set selected_openrouter_model without a key"
+endpoint = "/set/data/selected_openrouter_model"
+data = "openai/gpt-4o-mini"
+
+[[case]]
+name = "set plamo_auth_key (offline: fails)"
+endpoint = "/set/data/plamo_auth_key"
+data = "contract-test-key-0000000000000000000000000000"
+
+[[case]]
+name = "delete plamo_auth_key"
+endpoint = "/delete/data/plamo_auth_key"
+
+[[case]]
+name = "set selected_plamo_model without a key"
+endpoint = "/set/data/selected_plamo_model"
+data = "plamo-2.0-prime"
+
+[[case]]
+name = "set openai_compatible_url"
+endpoint = "/set/data/openai_compatible_url"
+data = "http://127.0.0.1:9/v1"
+
+[[case]]
+name = "set openai_compatible_auth_key (offline: fails)"
+endpoint = "/set/data/openai_compatible_auth_key"
+data = "sk-contract-test-key-0000000000000000000000000000"
+
+[[case]]
+name = "delete openai_compatible_auth_key"
+endpoint = "/delete/data/openai_compatible_auth_key"
+
+[[case]]
+name = "set selected_openai_compatible_model without a key"
+endpoint = "/set/data/selected_openai_compatible_model"
+data = "some-model"
+
+[[case]]
+name = "set lmstudio_url (offline: no server)"
+endpoint = "/set/data/lmstudio_url"
+data = "http://127.0.0.1:9/v1"
+
+[[case]]
+name = "check the LM Studio connection (offline)"
+endpoint = "/run/lmstudio_connection"
+
+[[case]]
+name = "set selected_lmstudio_model without a server"
+endpoint = "/set/data/selected_lmstudio_model"
+data = "some-model"
+
+[[case]]
+name = "check the Ollama connection (offline)"
+endpoint = "/run/ollama_connection"
+
+[[case]]
+name = "set selected_ollama_model without a server"
+endpoint = "/set/data/selected_ollama_model"
+data = "some-model"
+
+# --- 文字起こしの API キー
+
+[[case]]
+name = "set groq_whisper_auth_key (offline: fails)"
+endpoint = "/set/data/groq_whisper_auth_key"
+data = "gsk_contract-test-key-0000000000000000000000000000"
+
+[[case]]
+name = "delete groq_whisper_auth_key"
+endpoint = "/delete/data/groq_whisper_auth_key"
+
+[[case]]
+name = "set selected_groq_whisper_model without a key"
+endpoint = "/set/data/selected_groq_whisper_model"
+data = "whisper-large-v3"
+
+[[case]]
+name = "set openai_whisper_auth_key (offline: fails)"
+endpoint = "/set/data/openai_whisper_auth_key"
+data = "sk-contract-test-key-0000000000000000000000000000"
+
+[[case]]
+name = "delete openai_whisper_auth_key"
+endpoint = "/delete/data/openai_whisper_auth_key"
+
+[[case]]
+name = "set selected_openai_whisper_model without a key"
+endpoint = "/set/data/selected_openai_whisper_model"
+data = "whisper-1"
+
+[[case]]
+name = "set custom_whisper_url"
+endpoint = "/set/data/custom_whisper_url"
+data = "http://127.0.0.1:9/v1"
+
+[[case]]
+name = "set custom_whisper_auth_key (offline: fails)"
+endpoint = "/set/data/custom_whisper_auth_key"
+data = "contract-test-key"
+
+[[case]]
+name = "delete custom_whisper_auth_key"
+endpoint = "/delete/data/custom_whisper_auth_key"
+
+[[case]]
+name = "set selected_custom_whisper_model without a key"
+endpoint = "/set/data/selected_custom_whisper_model"
+data = "whisper-1"
+
+[[case]]
+name = "set deepgram_auth_key (offline: fails)"
+endpoint = "/set/data/deepgram_auth_key"
+data = "0000000000000000000000000000000000000000"
+
+[[case]]
+name = "delete deepgram_auth_key"
+endpoint = "/delete/data/deepgram_auth_key"
+
+[[case]]
+name = "set selected_deepgram_model without a key"
+endpoint = "/set/data/selected_deepgram_model"
+data = "nova-3"
+
+[[case]]
+name = "get selectable_transcription_engines after the keys"
+endpoint = "/get/data/selectable_transcription_engines"
+
+[[case]]
+name = "get selectable_translation_engines after the keys"
+endpoint = "/get/data/selectable_translation_engines"

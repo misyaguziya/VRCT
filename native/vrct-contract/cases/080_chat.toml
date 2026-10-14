@@ -1,0 +1,74 @@
+# チャットの流れ: 翻訳 (複数の翻訳先を並列に)、ローマ字・ひらがな、翻訳だけ送る、入れ替え。
+# VRChat へ送るのは 040 で OFF にしたまま (ON に戻さない)。060 で言語は English -> Japanese + Korean。
+
+[[case]]
+name = "enable translation (two targets)"
+endpoint = "/set/enable/translation"
+expect_status = 200
+
+[[case]]
+name = "chat in English to Japanese and Korean"
+endpoint = "/run/send_message_box"
+data = { id = "chat-1", message = "Good morning. The weather is nice today." }
+
+[[case]]
+name = "enable send_only_translated_messages (chat)"
+endpoint = "/set/enable/send_only_translated_messages"
+expect_status = 200
+
+[[case]]
+name = "chat in English with send_only_translated_messages"
+endpoint = "/run/send_message_box"
+data = { id = "chat-2", message = "Thank you." }
+
+[[case]]
+name = "disable send_only_translated_messages (chat)"
+endpoint = "/set/disable/send_only_translated_messages"
+expect_status = 200
+
+[[case]]
+name = "swap the languages (Japanese -> English)"
+endpoint = "/run/swap_your_language_and_target_language"
+pushes = true
+
+[[case]]
+name = "enable hiragana"
+endpoint = "/set/enable/convert_message_to_hiragana"
+expect_status = 200
+
+[[case]]
+name = "chat in Japanese with romaji and hiragana"
+endpoint = "/run/send_message_box"
+data = { id = "chat-3", message = "東京駅で友達に会いました。" }
+
+[[case]]
+name = "chat with only spaces"
+endpoint = "/run/send_message_box"
+data = { id = "chat-4", message = "   " }
+rule = "shape"  # 画面は空白だけを送らない。空白も訳されるが、訳はモデルの作り話なので形だけ
+
+[[case]]
+name = "chat without an id"
+endpoint = "/run/send_message_box"
+data = { message = "hello" }
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "chat that is not a dict"
+endpoint = "/run/send_message_box"
+data = "hello"
+expect_status = 500  # 検証の例外を捕まえない handler (Python 版と同じく 500)
+
+[[case]]
+name = "swap back (English -> Japanese)"
+endpoint = "/run/swap_your_language_and_target_language"
+
+[[case]]
+name = "disable translation (end)"
+endpoint = "/set/disable/translation"
+expect_status = 200
+
+[[case]]
+name = "chat with translation off"
+endpoint = "/run/send_message_box"
+data = { id = "chat-5", message = "No translation." }
