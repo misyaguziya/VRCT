@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { VrWindow } from './VrWindow';
 import settingsStyles from './VrSettingsWindow.module.scss';
-import TranslationSvg from '@images/translation.svg?react';
+import LanguageSvg from '@images/mui_language.svg?react';
 import XMarkSvg from '@images/x_mark.svg?react';
 import WarningSvg from '@images/warning.svg?react';
 import { useLanguageSettings } from '@logics_main';
@@ -208,7 +208,7 @@ export function VrLanguageWindow({ onClose }) {
         else if (row.top < bounds.top) list.scrollTop -= (bounds.top - row.top) * scale;
     }, [status, busy, viewKey]);
 
-    return <VrWindow Icon={TranslationSvg} title={t('vr_panel.window_language')} onClose={onClose}>
+    return <VrWindow Icon={LanguageSvg} title={t('vr_panel.window_language')} onClose={onClose}>
         <div className={clsx(settingsStyles.window_body, styles.language_window)} data-vr-language="" onKeyDown={event => {
             if (event.key === 'Escape' && view.kind !== 'main' && !busy && !locked) { event.preventDefault(); back(); }
         }}>

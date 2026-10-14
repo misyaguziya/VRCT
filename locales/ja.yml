@@ -135,6 +135,8 @@ config_page:
         ocr: "チャット読み取り"
 
     device:
+        section_label_mic: "マイク"
+        section_label_speaker: "スピーカー"
         check_volume: "音量チェック"
         label_auto_select: "自動選択"
         label_host: "ホスト/ドライバー"
@@ -142,17 +144,23 @@ config_page:
         mic_host_device:
             label: "マイク （デバイス）"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "マイク入力感度の調整 （現在の設定: 自動）"
+            label: "マイク入力感度の調整"
             desc_for_automatic: "マイクの入力感度を自動的に調節する。"
-            label_for_manual: "マイク入力感度の調整 （現在の設定: 手動）"
             desc_for_manual: "スライダーを調整して入力感度を手動で決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "AI（Silero VAD）を用いて人の声を検出し、話し終わるごとに音声認識へ送信します。BGMや環境音の誤認識を抑えやすくなります。"
         speaker_device:
             label: "スピーカー （デバイス）"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "スピーカー入力感度の調整 （現在の設定: 自動）"
+            label: "スピーカー入力感度の調整"
             desc_for_automatic: "スピーカーの入力感度を自動的に調節する。"
-            label_for_manual: "スピーカー入力感度の調整 （現在の設定: 手動）"
             desc_for_manual: "スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実際に音声を聞き取り、音量を確認しながら調節できます。"
+            option_vad: "VAD (自動)"
+            option_auto: "自動"
+            option_manual: "手動"
+            desc_for_vad: "AI（Silero VAD）を用いて人の声を検出し、話し終わるごとに音声認識へ送信します。BGMやゲーム音の誤認識を抑えやすくなります。"
 
     appearance:
         transparency:
@@ -278,6 +286,18 @@ config_page:
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
         transcription_compute_device:
             label: "AI音声認識で使用する処理デバイス"
+        mic_avg_logprob:
+            label: "Mic Avg Logprob"
+            desc: "文字起こしの信頼度（有音らしさ）のしきい値です。0に近いほど確信度が高い発話のみを採用し、誤認識を抑えます。（初期値: -0.8）"
+        mic_no_speech_prob:
+            label: "Mic No Speech Prob"
+            desc: "発話が含まれていない確率（無音らしさ）のしきい値です。この確率を超えた区間を無音として無視し、ノイズからの誤認識を抑えます。0に近いほど厳しくなり、わずかな発話も文字起こしされるようになります。（初期値: 0.6）"
+        speaker_avg_logprob:
+            label: "Speaker Avg Logprob"
+            desc: "文字起こしの信頼度（有音らしさ）のしきい値です。0に近いほど確信度が高い発話のみを採用し、誤認識を抑えます。（初期値: -0.8）"
+        speaker_no_speech_prob:
+            label: "Speaker No Speech Prob"
+            desc: "発話が含まれていない確率（無音らしさ）のしきい値です。この確率を超えた区間を無音として無視し、ノイズからの誤認識を抑えます。0に近いほど厳しくなり、わずかな発話も文字起こしされるようになります。（初期値: 0.6）"
 
     vr:
         single_line: "一行"
@@ -489,7 +509,7 @@ vr_panel:
     launcher_auto_hide_desc: "手首を顔に向けたときだけ出ます"
     tooltip_enabled: "操作の吹き出し"
     tooltip_enabled_desc: "ボタンを指したときに、操作名と状態を表示します"
-    locked_by_config_page: "設定を開いています。閉じると操作できます。"
+    locked_by_config_page: "設定を閉じると操作できます"
     log_opacity: "ログの不透明度"
     mic_threshold: "マイクの入力感度"
     speaker_threshold: "スピーカーの入力感度"
@@ -501,7 +521,7 @@ vr_panel:
         translate: "翻訳"
         microphone: "マイク入力"
         listen: "聞き取り"
-        chat_detect: "Chat検出"
+        chat_detect: "チャット読み取り"
         functions_group: "機能のON/OFF"
         windows_group: "ウィンドウ"
         controls_group: "ログの操作"
@@ -511,11 +531,12 @@ vr_panel:
         disable: "押すとOFFにします"
         open: "表示中"
         hidden: "非表示"
-        lost: "見失い中"
-        holding: "押し続けて 呼び戻す"
-        holding_help: "そのまま押し続けてください"
+        lost: "視界の外"
+        holding: "長押し中"
+        holding_help: "そのまま押し続けると呼び戻します"
         click_recall: "押すと呼び戻します"
-        log_help: "押すと開閉 · 長押しで呼び戻す"
+        log_open_help: "押すと開きます · 長押しで呼び戻す"
+        log_close_help: "押すと閉じます · 長押しで呼び戻す"
         close_view: "押すと閉じます"
         open_view: "押すと開きます"
         anchor: "固定先"
@@ -524,13 +545,14 @@ vr_panel:
         choose_anchor: "押すと固定先を変更します"
         recall_help: "呼び戻し後は空間に固定されます"
         unlocked: "移動可能"
-        lock_help: "押すと移動を固定します"
-        unlock_help: "押すと移動固定を解除します"
+        lock_help: "押すとロックします（掴んで動かせなくなります）"
+        unlock_help: "押すとロックを解除します"
         font: "文字サイズ"
         smaller: "文字を小さく"
         larger: "文字を大きく"
         font_limit: "変更できる範囲は14〜28です"
-        font_help: "原文のサイズ · 訳文も一緒に変わります"
+        font_current: "現在: {{size}}（原文）"
+        font_help: "訳文の大きさも合わせて変わります"
         opacity_help: "押すごとに100 → 80 → 60 → 40% → 100%"
     settings:
         processing: "処理設定"

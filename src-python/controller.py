@@ -219,6 +219,7 @@ _SIMPLE_CONFIG_GETTERS = {
     "getMicWordFilter": "MIC_WORD_FILTER",
     "getMicAvgLogprob": "MIC_AVG_LOGPROB",
     "getMicNoSpeechProb": "MIC_NO_SPEECH_PROB",
+    "getMicVadFilter": "MIC_ENABLE_VAD",
     "getAutoSpeakerSelect": "AUTO_SPEAKER_SELECT",
     "getSelectedSpeakerDevice": "SELECTED_SPEAKER_DEVICE",
     "getSpeakerThreshold": "SPEAKER_THRESHOLD",
@@ -229,6 +230,7 @@ _SIMPLE_CONFIG_GETTERS = {
     "getHotkeys": "HOTKEYS",
     "getSpeakerAvgLogprob": "SPEAKER_AVG_LOGPROB",
     "getSpeakerNoSpeechProb": "SPEAKER_NO_SPEECH_PROB",
+    "getSpeakerVadFilter": "SPEAKER_ENABLE_VAD",
     "getOscIpAddress": "OSC_IP_ADDRESS",
     "getOscPort": "OSC_PORT",
     "getNotificationVrcSfx": "NOTIFICATION_VRC_SFX",
@@ -2293,6 +2295,20 @@ class Controller:
             config.MIC_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
+    # VAD は録音開始時に recorder を選ぶので、次回の文字起こし開始から効く
+    # (設定画面を開いている間は文字起こしが止まり、閉じると再開される)
+    @staticmethod
+    def setEnableMicVadFilter(*args, **kwargs) -> dict:
+        if config.MIC_ENABLE_VAD is False:
+            config.MIC_ENABLE_VAD = True
+        return {"status":200, "result":config.MIC_ENABLE_VAD}
+
+    @staticmethod
+    def setDisableMicVadFilter(*args, **kwargs) -> dict:
+        if config.MIC_ENABLE_VAD is True:
+            config.MIC_ENABLE_VAD = False
+        return {"status":200, "result":config.MIC_ENABLE_VAD}
+
 
     @staticmethod
     def setMicRecordTimeout(data, *args, **kwargs) -> dict:
@@ -2475,6 +2491,18 @@ class Controller:
         if config.SPEAKER_AUTOMATIC_THRESHOLD is True:
             config.SPEAKER_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
+
+    @staticmethod
+    def setEnableSpeakerVadFilter(*args, **kwargs) -> dict:
+        if config.SPEAKER_ENABLE_VAD is False:
+            config.SPEAKER_ENABLE_VAD = True
+        return {"status":200, "result":config.SPEAKER_ENABLE_VAD}
+
+    @staticmethod
+    def setDisableSpeakerVadFilter(*args, **kwargs) -> dict:
+        if config.SPEAKER_ENABLE_VAD is True:
+            config.SPEAKER_ENABLE_VAD = False
+        return {"status":200, "result":config.SPEAKER_ENABLE_VAD}
 
 
     @staticmethod
@@ -4443,34 +4471,14 @@ class Controller:
     def _initVrcMicMuteSync(self) -> None:
         """VRC_MIC_MUTE_SYNC が有効な場合の、起動時のミュート状態初期同期。
 
-        `model.setMuteSelfStatus()` はVRChatのOSCQueryサービスへの
-        その場限りの一発勝負の問い合わせ。VRCTがVRChatより先に起動していると
-        これは失敗し (`model.mic_mute_status` が `None` のまま)、
-        `changeHandlerMute` (model.py) 側のガード条件が `None` からは
-        絶対に遷移できない構造になっているため、二度とミュート同期が
-        機能しなくなる不具合があった (VRChatを先に起動していれば問題は
-        起きない、という起動順序依存のバグとして実機で確認済み)。
-
-        ここで諦めず、VRChatのOSCQueryサービスがmDNSで後から現れた瞬間に
-        `_retryMuteSelfStatusOnceVrchatFound()` を呼ぶよう監視を仕込むことで、
-        起動順序に関わらずミュート同期を確立できるようにする。
+        VRChat が先に起動していれば、ここで MuteSelf を読んで同期する。VRCT が先に起動していると
+        読めず (`model.mic_mute_status` は `None`)、VRChat がアバターを読み込んだときに届く
+        `/avatar/change` で読み直して同期する (model.py の startReceiveOSC)。VRChat の OSCQuery が
+        mDNS に現れた瞬間はアバター読み込み前で MuteSelf が 404 になるため、そこでは問い合わせない。
         """
         model.setMuteSelfStatus()
         if model.mic_mute_status is not None:
             model.changeMicTranscriptStatus()
-        else:
-            model.watchForVrchatOscQueryConnection(self._retryMuteSelfStatusOnceVrchatFound)
-
-    def _retryMuteSelfStatusOnceVrchatFound(self) -> None:
-        """VRChatのOSCQueryサービスが後から見つかった際のコールバック
-        (`_initVrcMicMuteSync()` 参照)。zeroconf自身のバックグラウンド
-        スレッドから呼ばれる。
-        """
-        try:
-            model.setMuteSelfStatus()
-            model.changeMicTranscriptStatus()
-        except Exception:
-            errorLogging()
 
     def _bootstrapModel(self) -> None:
         """`model.init()` + ミュート同期コールバック登録 (フェーズ3項目22)。
@@ -4486,8 +4494,8 @@ class Controller:
         タイミング変更とは無関係の既存バグ (起動時1回きりの
         `model.setMuteSelfStatus()` がVRChat未起動時に失敗すると
         `model.mic_mute_status` が `None` のまま二度と回復しない構造的な
-        問題) と判明し、`_VrchatOscQueryFoundListener`
-        (`models/osc/osc.py`) による別修正で解決済み。タイミング変更自体は
+        問題) と判明し、別修正で解決済み (現在は VRChat のアバター読み込み時の
+        `/avatar/change` で読み直す。`_initVrcMicMuteSync` 参照)。タイミング変更自体は
         無罪と確認できたため、改めてここに移動した。
 
         `init()` 本体から切り出したのは、この2行だけを (残り400行超の

@@ -135,6 +135,8 @@ config_page:
         ocr: "Chat Transcribe"
 
     device:
+        section_label_mic: "Mic"
+        section_label_speaker: "Speaker"
         check_volume: "Check Volume"
         label_auto_select: "Auto Select"
         label_host: "Host/Driver"
@@ -142,17 +144,23 @@ config_page:
         mic_host_device:
             label: "Mic Device"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "Mic Sensitivity Settings (Current Setting: Automatic)"
+            label: "Mic Sensitivity Settings"
             desc_for_automatic: "Automatically control mic input sensitivity."
-            label_for_manual: "Mic Sensitivity Settings (Current Setting: Manual)"
             desc_for_manual: "Input sensitivity can be manually adjusted using the slider. Click the mic icon to test your voice input and adjust the level while monitoring the volume."
+            option_vad: "VAD (Auto)"
+            option_auto: "Auto"
+            option_manual: "Manual"
+            desc_for_vad: "Detects speech using AI (Silero VAD) and sends audio to transcription each time you finish speaking. Reduces background music and ambient noise."
         speaker_device:
             label: "Speaker Device"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "Speaker Input Sensitivity Adjustment (Current Setting: Automatic)"
+            label: "Speaker Input Sensitivity Adjustment"
             desc_for_automatic: "Automatically control speaker input sensitivity."
-            label_for_manual: "Speaker Input Sensitivity Adjustment (Current Setting: Manual)"
             desc_for_manual: "Input sensitivity can be manually adjusted using the slider. Click the headphone icon to listen to the audio and adjust the level while checking the volume."
+            option_vad: "VAD (Auto)"
+            option_auto: "Auto"
+            option_manual: "Manual"
+            desc_for_vad: "Detects speech using AI (Silero VAD) and sends audio to transcription each time speech ends. Reduces background music and ambient noise."
 
     appearance:
         transparency:
@@ -278,6 +286,18 @@ config_page:
             desc: "Larger models have higher accuracy, but they also consume more CPU or GPU resources.\nEspecially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU."
         transcription_compute_device:
             label: "Processing Device Used For AI transcription"
+        mic_avg_logprob:
+            label: "Mic Avg Logprob"
+            desc: "Threshold for transcription confidence (avg_logprob). Closer to 0 means only high-confidence speech is accepted, suppressing hallucinations. (Default: -0.8)"
+        mic_no_speech_prob:
+            label: "Mic No Speech Prob"
+            desc: "Threshold for the probability that no speech is present (no_speech_prob). Segments exceeding this are treated as silence. Closer to 0 means stricter detection, so even faint speech gets transcribed. (Default: 0.6)"
+        speaker_avg_logprob:
+            label: "Speaker Avg Logprob"
+            desc: "Threshold for transcription confidence (avg_logprob). Closer to 0 means only high-confidence speech is accepted, suppressing hallucinations. (Default: -0.8)"
+        speaker_no_speech_prob:
+            label: "Speaker No Speech Prob"
+            desc: "Threshold for the probability that no speech is present (no_speech_prob). Segments exceeding this are treated as silence. Closer to 0 means stricter detection, so even faint speech gets transcribed. (Default: 0.6)"
 
     vr:
         single_line: "Single line"
@@ -489,7 +509,7 @@ vr_panel:
     launcher_auto_hide_desc: "Appears only when you turn your wrist toward your face"
     tooltip_enabled: "Button tooltips"
     tooltip_enabled_desc: "Show the name and state of a button while you point at it"
-    locked_by_config_page: "Settings are open. Close them to use these controls."
+    locked_by_config_page: "Close settings to use these controls"
     log_opacity: "Log opacity"
     mic_threshold: "Mic sensitivity"
     speaker_threshold: "Speaker sensitivity"
@@ -501,7 +521,7 @@ vr_panel:
         translate: "Translate"
         microphone: "Microphone"
         listen: "Listen"
-        chat_detect: "Chat detect"
+        chat_detect: "Chat Transcribe"
         functions_group: "Functions"
         windows_group: "Windows"
         controls_group: "Log controls"
@@ -512,10 +532,11 @@ vr_panel:
         open: "Open"
         hidden: "Hidden"
         lost: "Out of view"
-        holding: "Keep holding to recall"
+        holding: "Holding"
         holding_help: "Keep holding to recall"
         click_recall: "Press to recall"
-        log_help: "Press to open/close · Hold to recall"
+        log_open_help: "Press to open · Hold to recall"
+        log_close_help: "Press to close · Hold to recall"
         close_view: "Press to close"
         open_view: "Press to open"
         anchor: "Anchor"
@@ -524,13 +545,14 @@ vr_panel:
         choose_anchor: "Press to change the anchor"
         recall_help: "Recall moves the log to a world anchor"
         unlocked: "Movable"
-        lock_help: "Press to lock movement"
-        unlock_help: "Press to unlock movement"
+        lock_help: "Press to lock (can't be grabbed and moved)"
+        unlock_help: "Press to unlock"
         font: "Text size"
         smaller: "Smaller text"
         larger: "Larger text"
         font_limit: "Text size range: 14–28"
-        font_help: "Original text size · Translation scales too"
+        font_current: "Current: {{size}} (original)"
+        font_help: "Translation size changes with it"
         opacity_help: "Each press: 100 → 80 → 60 → 40% → 100%"
     settings:
         processing: "Processing settings"
