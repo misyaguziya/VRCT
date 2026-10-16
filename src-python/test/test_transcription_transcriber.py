@@ -55,6 +55,18 @@ class TestAudioProcessingSelection(unittest.TestCase):
 
         self.assertEqual(result.get_raw_data(), pcm)
 
+    @patch("models.transcription.transcription_transcriber.checkWhisperWeight", return_value=False)
+    def test_downmixes_stereo_mic_pcm_to_mono(self, _) -> None:
+        source = FakeAudioSource()
+        source.channels = 2
+        transcriber = AudioTranscriber(False, source, 3, 10, "Google")
+        # L にだけ音がある (MOTU の In 1 だけにマイクを挿した状態)
+        transcriber.audio_sources["last_sample"] = np.array([1000, 0, -2000, 0], dtype="<i2").tobytes()
+
+        result = transcriber.processMicData()
+
+        self.assertEqual(result.get_raw_data(), np.array([500, -1000], dtype="<i2").tobytes())
+
 
 class TestGoogleRecognizerTimeout(unittest.TestCase):
     """Issue #63: Google recognition must not block indefinitely on a bad network."""
