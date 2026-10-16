@@ -610,10 +610,18 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         phrase_time_limit: int,
         record_timeout: int = 5,
     ) -> None:
+        # PortAudio の WASAPI はステレオ入力を channels=1 で開くと変換せず
+        # L,R,L,R... のまま半分だけ返し、文字起こしが壊れる (メーターは動く)。
+        # スピーカー側と同じくデバイス本来のチャンネル数で開き、モノラル化は
+        # 文字起こし側 (processMicData / VAD の Pcm16MonoNormalizer) で行う。
+        # custom_speech_recognition の Microphone は speaker=True のときだけ
+        # channels を使って開く (False だと常に 1ch) ため、マイクでも True にする。
         source = _create_microphone(
             {},
+            speaker=True,
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
+            channels=int(device.get("maxInputChannels", 1)),
         )
         super().__init__(
             source=source,
@@ -653,10 +661,13 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
 
 class SelectedMicVadRecorder(BaseVadAndAudioRecorder):
     def __init__(self, device: dict, record_timeout: int = 5) -> None:
+        # speaker/channels は SelectedMicEnergyAndAudioRecorder と同じ理由で指定する
         source = _create_microphone(
             {},
+            speaker=True,
             device_index=int(device.get("index", -1)),
             sample_rate=int(device.get("defaultSampleRate", 16000)),
+            channels=int(device.get("maxInputChannels", 1)),
         )
         super().__init__(source=source, record_timeout=record_timeout, label="mic")
 
