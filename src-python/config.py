@@ -1085,9 +1085,10 @@ class Config:
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._GITHUB_RELEASES_LIST_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases"
-        # VRCT 3.4.2 fails to start (fixed in 3.4.3); exclude it from version
-        # selection/update detection instead of letting users install it.
-        self._MIN_SUPPORTED_VERSION = "3.4.3"
+        # The version picker UI exists from 3.6.0; older releases are hidden so
+        # users can't switch to a build they can't switch back from.
+        # Prereleases of this version (3.6.0-beta.N) are included.
+        self._MIN_SUPPORTED_VERSION = "3.6.0"
         self._SELECTABLE_RELEASE_CHANNEL_LIST = ["stable", "beta"]
         self._SELECTED_RELEASE_CHANNEL = "stable"
 

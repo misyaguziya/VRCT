@@ -355,13 +355,13 @@ class TestPinnedVersionDownload(unittest.TestCase):
     def test_installs_older_version_from_its_own_tag(
         self, requests_get: Mock, popen: Mock, psutil_process: Mock, os_exit: Mock
     ) -> None:
-        target = "3.5.1-beta.1"
+        target = "3.6.0-beta.1"
         # tag_name は GitHub が返したものをそのまま使う ("v"+version と決め打ちしない)
-        tag = "v3.5.1-beta.1-custom"
+        tag = "v3.6.0-beta.1-custom"
         tag_url = config.setupDownloadUrl(target, tag=tag)
         requested: list = []
         requests_get.side_effect = self._fake_get(
-            [self._release("3.5.1-beta.2", "v3.5.1-beta.2", False), self._release(target, tag, True)],
+            [self._release("3.6.0-beta.2", "v3.6.0-beta.2", False), self._release(target, tag, True)],
             {
                 f"https://example.invalid/{target}.sha256": _make_text_response(self.sha256),
                 tag_url: _make_download_response(self.payload),
@@ -388,12 +388,12 @@ class TestPinnedVersionDownload(unittest.TestCase):
     def test_legacy_release_without_tagged_setup_falls_back_to_latest_installer(
         self, requests_get: Mock, popen: Mock, psutil_process: Mock, os_exit: Mock
     ) -> None:
-        # 3.4.3 には .sha256 も HF のタグ上の setup.exe も無い。インストーラは
-        # /VERSION で入れる版を決めるので、main のものを (サイズ検証だけで) 使う
-        target = "3.4.3"
+        # .sha256 も HF のタグ上の setup.exe も無い版 (3.4.3 などの旧版がそうだった)。
+        # インストーラは /VERSION で入れる版を決めるので、main のものを (サイズ検証だけで) 使う
+        target = "3.6.0"
         requested: list = []
         requests_get.side_effect = self._fake_get(
-            [self._release(target, "v3.4.3", False)],
+            [self._release(target, "v3.6.0", False)],
             {self.STABLE_MAIN: _make_download_response(self.payload)},
             requested,
         )
@@ -401,7 +401,7 @@ class TestPinnedVersionDownload(unittest.TestCase):
         with patch("model.errorLogging"):
             self.assertEqual(Model.updateSoftware(target), SETUP_LAUNCHED)
 
-        self.assertIn(config.setupDownloadUrl(target, tag="v3.4.3"), requested)
+        self.assertIn(config.setupDownloadUrl(target, tag="v3.6.0"), requested)
         self.assertIn(self.STABLE_MAIN, requested)
         self.assertIn(f"/VERSION={target}", popen.call_args.args[0])
 
@@ -413,10 +413,10 @@ class TestPinnedVersionDownload(unittest.TestCase):
         # .sha256 が公開されている版でタグ上の setup.exe が取れないとき、main
         # (別の版) を取ってくるとハッシュが合わない。検証できるものを黙って
         # 差し替えない
-        target = "3.5.1-beta.1"
+        target = "3.6.0-beta.1"
         requested: list = []
         requests_get.side_effect = self._fake_get(
-            [self._release(target, "v3.5.1-beta.1", True)],
+            [self._release(target, "v3.6.0-beta.1", True)],
             {
                 f"https://example.invalid/{target}.sha256": _make_text_response(self.sha256),
                 self.BETA_MAIN: _make_download_response(self.payload),
@@ -435,10 +435,10 @@ class TestPinnedVersionDownload(unittest.TestCase):
     def test_hash_mismatch_is_reported_as_verify_failure(
         self, requests_get: Mock, popen: Mock
     ) -> None:
-        target = "3.5.1-beta.1"
-        tag_url = config.setupDownloadUrl(target, tag="v3.5.1-beta.1")
+        target = "3.6.0-beta.1"
+        tag_url = config.setupDownloadUrl(target, tag="v3.6.0-beta.1")
         requests_get.side_effect = self._fake_get(
-            [self._release(target, "v3.5.1-beta.1", True)],
+            [self._release(target, "v3.6.0-beta.1", True)],
             {
                 f"https://example.invalid/{target}.sha256": _make_text_response("0" * 64),
                 tag_url: _make_download_response(self.payload),
@@ -456,9 +456,9 @@ class TestPinnedVersionDownload(unittest.TestCase):
     def test_unreadable_published_sidecar_is_reported_as_verify_failure(
         self, requests_get: Mock, popen: Mock
     ) -> None:
-        target = "3.5.1-beta.1"
+        target = "3.6.0-beta.1"
         requests_get.side_effect = self._fake_get(
-            [self._release(target, "v3.5.1-beta.1", True)], {}, [],
+            [self._release(target, "v3.6.0-beta.1", True)], {}, [],
         )
 
         with patch("model.errorLogging"), patch("model.printLog"):
@@ -474,9 +474,20 @@ class TestPinnedVersionDownload(unittest.TestCase):
         requests_get.side_effect = Exception("network error")
 
         with patch("model.errorLogging"):
-            self.assertEqual(Model.updateSoftware("3.5.1-beta.1"), SETUP_DOWNLOAD_FAILED)
-            self.assertEqual(Model.updateCudaSoftware("3.5.1-beta.1"), SETUP_DOWNLOAD_FAILED)
+            self.assertEqual(Model.updateSoftware("3.6.0-beta.1"), SETUP_DOWNLOAD_FAILED)
+            self.assertEqual(Model.updateCudaSoftware("3.6.0-beta.1"), SETUP_DOWNLOAD_FAILED)
 
+        popen.assert_not_called()
+
+    @patch("model.Popen")
+    @patch("model.requests_get")
+    def test_refuses_versions_older_than_3_6_0(
+        self, requests_get: Mock, popen: Mock
+    ) -> None:
+        # 3.6.0 未満には版の切り替え UI が無く、入れると戻れなくなる
+        self.assertEqual(Model.updateSoftware("3.5.1"), SETUP_DOWNLOAD_FAILED)
+
+        requests_get.assert_not_called()
         popen.assert_not_called()
 
 
@@ -493,7 +504,7 @@ class TestCheckSoftwareUpdatedBetaChannel(unittest.TestCase):
         channel_patcher.start()
         self.addCleanup(channel_patcher.stop)
 
-        version_patcher = patch.object(type(config), "VERSION", "3.5.1-beta.1")
+        version_patcher = patch.object(type(config), "VERSION", "3.6.0-beta.1")
         version_patcher.start()
         self.addCleanup(version_patcher.stop)
 
@@ -504,16 +515,16 @@ class TestCheckSoftwareUpdatedBetaChannel(unittest.TestCase):
         requests_get: Mock,
         error_logging: Mock,
     ) -> None:
-        # Creation-date order: stable 3.5.1 published after (and thus listed
-        # before) beta 3.5.1-beta.2.
+        # Creation-date order: stable 3.6.0 published after (and thus listed
+        # before) beta 3.6.0-beta.2.
         requests_get.return_value = _make_json_response([
-            {"name": "3.5.1", "prerelease": False, "draft": False},
-            {"name": "3.5.1-beta.2", "prerelease": True, "draft": False},
+            {"name": "3.6.0", "prerelease": False, "draft": False},
+            {"name": "3.6.0-beta.2", "prerelease": True, "draft": False},
         ])
 
         result = Model.checkSoftwareUpdated()
 
-        self.assertEqual(result["new_version"], "3.5.1-beta.2")
+        self.assertEqual(result["new_version"], "3.6.0-beta.2")
         self.assertTrue(result["is_update_available"])
         error_logging.assert_not_called()
 
@@ -525,13 +536,34 @@ class TestCheckSoftwareUpdatedBetaChannel(unittest.TestCase):
         error_logging: Mock,
     ) -> None:
         requests_get.return_value = _make_json_response([
-            {"name": "3.5.1", "prerelease": False, "draft": False},
+            {"name": "3.6.0", "prerelease": False, "draft": False},
         ])
 
         result = Model.checkSoftwareUpdated()
 
         self.assertFalse(result["is_update_available"])
         self.assertIsNone(result["new_version"])
+        error_logging.assert_not_called()
+
+
+class ListAvailableReleasesTests(unittest.TestCase):
+    """The version picker only offers releases that have the picker UI (>= 3.6.0)."""
+
+    @patch("model.errorLogging")
+    @patch("model.requests_get")
+    def test_hides_releases_older_than_3_6_0_but_keeps_its_betas(
+        self,
+        requests_get: Mock,
+        error_logging: Mock,
+    ) -> None:
+        requests_get.return_value = _make_json_response([
+            {"name": name, "tag_name": f"v{name}", "prerelease": "-" in name, "draft": False}
+            for name in ["3.6.1", "3.6.0", "3.6.0-beta.1", "3.5.1", "3.5.1-beta.1", "3.4.3"]
+        ])
+
+        versions = [r.version for r in Model.listAvailableReleases()]
+
+        self.assertEqual(versions, ["3.6.1", "3.6.0", "3.6.0-beta.1"])
         error_logging.assert_not_called()
 
 
