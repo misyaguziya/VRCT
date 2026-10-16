@@ -47,6 +47,7 @@ from .transcription_openai_compatible import TRANSCRIPTION_API_ENGINES as _API_T
 # (last_recognition_errorのリセット対象等) で使う。
 _CLOUD_TRANSCRIPTION_ENGINES = _API_TRANSCRIPTION_ENGINES + ("Deepgram",)
 
+import numpy as np
 from pydub import AudioSegment
 from errors import AudioPipelineError, AudioPipelineFailure, ERROR_METADATA, ErrorCode
 from utils import errorLogging, printLog
@@ -625,9 +626,15 @@ class AudioTranscriber:
         return True
 
     def processMicData(self) -> AudioData:
-        audio_data = AudioData(
-            self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"]
-        )
+        data = self.audio_sources["last_sample"]
+        channels = self.audio_sources["channels"]
+        if channels > 1:
+            # マイクはデバイス本来のチャンネル数で開いているので平均してモノラルにする
+            # (VAD 経路の Pcm16MonoNormalizer と同じ。AudioFile の L+R 合計は音割れする)
+            samples = np.frombuffer(data, dtype="<i2")
+            frames = samples[: samples.size - samples.size % channels].reshape(-1, channels)
+            data = np.rint(frames.mean(axis=1)).astype("<i2").tobytes()
+        audio_data = AudioData(data, self.audio_sources["sample_rate"], self.audio_sources["sample_width"])
         return audio_data
 
     def processSpeakerData(self) -> AudioData:

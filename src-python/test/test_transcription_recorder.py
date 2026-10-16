@@ -28,6 +28,7 @@ from models.transcription.transcription_recorder import (
     _create_microphone,
     _LockedAudioSource,
     SelectedMicEnergyAndAudioRecorder,
+    SelectedMicVadRecorder,
     SelectedSpeakerEnergyAndAudioRecorder,
 )
 from device_manager import pyaudio_op_lock
@@ -299,6 +300,38 @@ class TestRecorderChunkSize(unittest.TestCase):
         speaker_kwargs = mock_microphone.call_args_list[1].kwargs
         self.assertNotIn("chunk_size", mic_kwargs)
         self.assertNotIn("chunk_size", speaker_kwargs)
+
+    def test_mic_recorders_open_device_native_channel_count(self) -> None:
+        """PortAudio の WASAPI はステレオ入力を channels=1 で開くと L,R を
+        交互に並べたまま返し、文字起こしが壊れる (2026-10-16 実機報告)。
+        マイクもスピーカーと同じくデバイス本来のチャンネル数で開く。"""
+        source = FakeAudioSource(opens=True)
+        source.SAMPLE_RATE = 48000
+        source.SAMPLE_WIDTH = 2
+        source.channels = 2
+        device = {"index": 1, "defaultSampleRate": 48000, "maxInputChannels": 2}
+
+        with patch(
+            "models.transcription.transcription_recorder.Microphone"
+        ) as mock_microphone, patch(
+            "models.transcription.transcription_recorder.VadRecognizerAdapter"
+        ), patch(
+            "models.transcription.transcription_recorder.VadSegmenter"
+        ):
+            mock_microphone.return_value = source
+            SelectedMicEnergyAndAudioRecorder(
+                device=device,
+                energy_threshold=300,
+                dynamic_energy_threshold=False,
+                phrase_time_limit=3,
+            )
+            SelectedMicVadRecorder(device=device)
+
+        self.assertEqual(len(mock_microphone.call_args_list), 2)
+        for call in mock_microphone.call_args_list:
+            self.assertEqual(call.kwargs["channels"], 2)
+            # custom_speech_recognition は speaker=True のときだけ channels で開く
+            self.assertIs(call.kwargs["speaker"], True)
 
 
 class TestRecorderPipeline(unittest.TestCase):
