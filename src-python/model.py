@@ -1728,10 +1728,11 @@ class Model:
 
     @staticmethod
     def _isVersionSupported(version_str: str) -> bool:
-        # VRCT 3.4.2 fails to start (fixed in 3.4.3); keep it out of both the
-        # update-check comparison and the version picker.
+        # Releases without the version picker UI (< 3.6.0) stay out of both the
+        # update-check comparison and the version picker. Compare release
+        # numbers only so 3.6.0-beta.N (which sorts below 3.6.0) still counts.
         try:
-            return parse(version_str) >= parse(config.MIN_SUPPORTED_VERSION)
+            return parse(version_str).release >= parse(config.MIN_SUPPORTED_VERSION).release
         except Exception:
             return False
 
