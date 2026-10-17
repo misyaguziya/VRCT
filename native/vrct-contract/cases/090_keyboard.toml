@@ -33,15 +33,18 @@ data = "Hello"
 expect_status = 500
 
 [[case]]
-name = "keyboard: send to a place it does not know"
-endpoint = "/run/keyboard_send"
-data = { to = "elsewhere" }
-expect_status = 500
+name = "set keyboard_send_to to a place it does not know"
+endpoint = "/set/data/keyboard_send_to"
+data = "elsewhere"
 
 [[case]]
-name = "keyboard: send through VRCT (translated)"
-endpoint = "/run/keyboard_send"
-data = { to = "vrct", id = "kb-1" }
+name = "get keyboard_send_to"
+endpoint = "/get/data/keyboard_send_to"
+
+[[case]]
+name = "keyboard: Enter sends through VRCT (translated; told by keyboard_sent)"
+endpoint = "/run/keyboard_key"
+data = "Enter"
 rule = "shape"
 
 [[case]]

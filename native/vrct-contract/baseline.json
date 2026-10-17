@@ -3708,23 +3708,27 @@
       "pushes": false
     },
     {
-      "name": "keyboard: send to a place it does not know",
-      "endpoint": "/run/keyboard_send",
-      "data": {
-        "to": "elsewhere"
-      },
+      "name": "set keyboard_send_to to a place it does not know",
+      "endpoint": "/set/data/keyboard_send_to",
+      "data": "elsewhere",
       "raw_data": null,
       "rule": "exact",
-      "expect_status": 500,
+      "expect_status": null,
       "pushes": false
     },
     {
-      "name": "keyboard: send through VRCT (translated)",
-      "endpoint": "/run/keyboard_send",
-      "data": {
-        "to": "vrct",
-        "id": "kb-1"
-      },
+      "name": "get keyboard_send_to",
+      "endpoint": "/get/data/keyboard_send_to",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: Enter sends through VRCT (translated; told by keyboard_sent)",
+      "endpoint": "/run/keyboard_key",
+      "data": "Enter",
       "raw_data": null,
       "rule": "shape",
       "expect_status": null,
@@ -4738,7 +4742,8 @@
     "/get/data/keyboard_language": "ja",
     "/get/data/keyboard_chinese_simplified": false,
     "/get/data/keyboard_key_sound": true,
-    "/get/data/keyboard_typing_indicator": true
+    "/get/data/keyboard_typing_indicator": true,
+    "/get/data/keyboard_send_to": "vrct"
   },
   "init_ms": 0,
   "answers": [
@@ -10645,44 +10650,51 @@
       "ms": 0
     },
     {
-      "name": "keyboard: send to a place it does not know",
-      "endpoint": "/run/keyboard_send",
-      "status": 500,
-      "result": "Internal error",
+      "name": "set keyboard_send_to to a place it does not know",
+      "endpoint": "/set/data/keyboard_send_to",
+      "status": 400,
+      "result": {
+        "error_code": "VALIDATION_CONFIG_VALUE_INVALID",
+        "message": "The provided value was rejected",
+        "data": "elsewhere",
+        "details": {},
+        "category": "validation",
+        "severity": "warning"
+      },
       "pushes": [],
       "push_results": [],
       "ms": 0
     },
     {
-      "name": "keyboard: send through VRCT (translated)",
-      "endpoint": "/run/keyboard_send",
+      "name": "get keyboard_send_to",
+      "endpoint": "/get/data/keyboard_send_to",
+      "status": 200,
+      "result": "vrct",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: Enter sends through VRCT (translated; told by keyboard_sent)",
+      "endpoint": "/run/keyboard_key",
       "status": 200,
       "result": {
-        "to": "",
-        "state": {
-          "status": "",
-          "progress": 0,
-          "language": "",
-          "text": "",
-          "composition": null,
-          "candidates": [],
-          "highlighted": 0,
-          "converting": false,
-          "page": 0,
-          "last_page": false,
-          "syllable": null,
-          "length": 0
-        },
-        "message": {
-          "id": "",
-          "original": {
-            "message": "",
-            "transliteration": []
-          },
-          "translations": []
-        }
+        "status": "",
+        "progress": 0,
+        "language": "",
+        "text": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": null,
+        "length": 0
       },
-      "pushes": [],
+      "pushes": [
+        "/run/keyboard_sent"
+      ],
       "push_results": [],
       "ms": 0
     },

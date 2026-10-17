@@ -1701,11 +1701,6 @@
    "handler": "keyboardClear"
   },
   {
-   "endpoint": "/run/keyboard_send",
-   "during_init": false,
-   "handler": "keyboardSend"
-  },
-  {
    "endpoint": "/get/data/keyboard_language",
    "during_init": true,
    "handler": "getKeyboardLanguage"
@@ -1759,6 +1754,16 @@
    "endpoint": "/set/disable/keyboard_typing_indicator",
    "during_init": true,
    "handler": "setDisableKeyboardTypingIndicator"
+  },
+  {
+   "endpoint": "/get/data/keyboard_send_to",
+   "during_init": true,
+   "handler": "getKeyboardSendTo"
+  },
+  {
+   "endpoint": "/set/data/keyboard_send_to",
+   "during_init": true,
+   "handler": "setKeyboardSendTo"
   }
  ],
  "run_mapping": {
@@ -1843,7 +1848,8 @@
   "initialization_progress": "/run/initialization_progress",
   "initialization_complete": "/run/initialization_complete",
   "enable_osc_query": "/run/enable_osc_query",
-  "keyboard_state": "/run/keyboard_state"
+  "keyboard_state": "/run/keyboard_state",
+  "keyboard_sent": "/run/keyboard_sent"
  },
  "simple_getters": {
   "getVersion": "VERSION",

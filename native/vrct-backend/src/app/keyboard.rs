@@ -10,6 +10,7 @@ use crate::logs;
 use anyhow::{anyhow, bail, Result};
 use serde_json::{json, Value};
 use std::sync::Mutex;
+use std::time::{Duration, Instant};
 use vrct_ime::input::{Input, Key, Language, State};
 use vrct_ime::rime::Rime;
 
@@ -32,12 +33,18 @@ pub struct Keyboard {
     input: Mutex<Input<'static>>,
     /// the typing indicator is on in VRChat
     typing: Mutex<bool>,
+    /// when Enter last committed a word: an Enter right after it is a double press, not a send
+    committed_at: Mutex<Option<Instant>>,
 }
+
+/// An Enter this soon after the one that committed the word does not send
+const SEND_AFTER_COMMIT: Duration = Duration::from_millis(400);
 
 impl Keyboard {
     pub fn new(config: &crate::config::Config) -> Self {
         let language = Language::from_code(&config.get_str("KEYBOARD_LANGUAGE")).unwrap_or(Language::Japanese);
-        Keyboard { status: Mutex::new(Status::Preparing), input: Mutex::new(Input::new(language)), typing: Mutex::default() }
+        Keyboard { status: Mutex::new(Status::Preparing), input: Mutex::new(Input::new(language)), typing: Mutex::default(),
+                   committed_at: Mutex::default() }
     }
 }
 
@@ -167,6 +174,23 @@ pub fn keyboard_key(app: &App, data: Data) -> Result<Reply> {
         }
     };
     let mut input = keyboard(app).input.lock().unwrap();
+    if key == Key::Enter {
+        let mut committed_at = keyboard(app).committed_at.lock().unwrap();
+        if input.composing() {
+            *committed_at = Some(Instant::now());
+        } else {
+            // nothing being composed: Enter sends (KEYBOARD_SEND_TO), told by keyboard_sent
+            let double = committed_at.take().is_some_and(|at| at.elapsed() < SEND_AFTER_COMMIT);
+            drop((committed_at, input));
+            if !double {
+                let sent = send(app, &app.config.get_str("KEYBOARD_SEND_TO"))?;
+                if !sent.is_null() {
+                    app.run(200, "keyboard_sent", sent)?;
+                }
+            }
+            return get_keyboard_state(app, None);
+        }
+    }
     input.key(key);
     Ok(Reply::ok(changed(app, &input)?))
 }
@@ -185,30 +209,40 @@ pub fn keyboard_clear(app: &App, _: Data) -> Result<Reply> {
     Ok(Reply::ok(changed(app, &input)?))
 }
 
-/// {"to": "vrct" | "paste", "id"}: the text (what is being composed included) through VRCT, as the
-/// message box sends it ("message": its answer), or pasted into VRChat ("pasted": false when it
-/// was only copied: no VRChat window took the focus). Nothing typed: nothing is sent.
-pub fn keyboard_send(app: &App, data: Data) -> Result<Reply> {
-    let data = data.unwrap_or(Value::Null);
-    let to = data.get("to").and_then(Value::as_str).unwrap_or_default();
-    if !["vrct", "paste"].contains(&to) {
-        bail!("no destination {to:?}");
-    }
-    let mut input = keyboard(app).input.lock().unwrap();
-    let text = input.take();
-    let state = changed(app, &input)?;
-    drop(input);
-    let mut out = json!({"to": to, "state": state});
+/// The text (Korean's syllable being made included) through VRCT as the message box sends it
+/// ({"to": "vrct", "message": its answer}), or pasted into VRChat ({"to": "paste", "pasted"}).
+/// Null when nothing is typed. What did not go (an error; only copied: no VRChat window took the
+/// focus) is put back, so nothing typed is lost.
+fn send(app: &App, to: &str) -> Result<Value> {
+    let text = keyboard(app).input.lock().unwrap().take();
     if text.trim().is_empty() {
-        return Ok(Reply::ok(out));
+        keyboard(app).input.lock().unwrap().restore(&text);
+        return Ok(Value::Null);
     }
-    if to == "vrct" {
-        out["message"] = process(app, &CHAT, &text, None, Some(data.get("id").cloned().unwrap_or(Value::Null)), None)?.unwrap_or(Value::Null);
-    } else {
+    let put_back = || {
+        let mut input = keyboard(app).input.lock().unwrap();
+        input.restore(&text);
+        changed(app, &input)
+    };
+    let mut out = json!({"to": to});
+    if to == "paste" {
         let window = app.model.app_name.get();
-        out["pasted"] = json!(crate::clipboard::copy_and_paste(&text, window.as_deref(), &|line| ipc::log(line)));
+        let pasted = crate::clipboard::copy_and_paste(&text, window.as_deref(), &|line| ipc::log(line));
+        out["pasted"] = json!(pasted);
+        out["state"] = if pasted { changed(app, &keyboard(app).input.lock().unwrap())? } else { put_back()? };
+        return Ok(out);
     }
-    Ok(Reply::ok(out))
+    match process(app, &CHAT, &text, None, None, None) {
+        Ok(message) => {
+            out["message"] = message.unwrap_or(Value::Null);
+            out["state"] = changed(app, &keyboard(app).input.lock().unwrap())?;
+            Ok(out)
+        }
+        Err(e) => {
+            put_back()?;
+            Err(e)
+        }
+    }
 }
 
 // --------------------------------------------------------------------------------- settings
@@ -258,6 +292,15 @@ pub fn set_enable_keyboard_key_sound(app: &App, _: Data) -> Result<Reply> {
 pub fn set_disable_keyboard_key_sound(app: &App, _: Data) -> Result<Reply> {
     app.config.set("KEYBOARD_KEY_SOUND", json!(false))?;
     current(app, "KEYBOARD_KEY_SOUND")
+}
+
+pub fn get_keyboard_send_to(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_SEND_TO")
+}
+
+/// Where Enter sends: "vrct" (translated, to the chat box) or "paste" (into VRChat's text field)
+pub fn set_keyboard_send_to(app: &App, data: Data) -> Result<Reply> {
+    validated(app, "KEYBOARD_SEND_TO", data.unwrap_or(Value::Null))
 }
 
 pub fn get_keyboard_typing_indicator(app: &App, _: Data) -> Result<Reply> {
@@ -322,15 +365,18 @@ mod tests {
         assert_eq!((state["text"].clone(), state["length"].clone(), state["status"].clone()), (json!("Hi "), json!(3), json!("preparing")));
         assert_eq!(osc_got(&osc), [("/chatbox/typing".to_string(), "true".to_string())]);
 
-        let sent = keyboard_send(&app, Some(json!({"to": "vrct", "id": "k1"}))).unwrap().result;
-        assert_eq!(sent["message"]["id"], json!("k1"));
-        assert_eq!(sent["message"]["original"]["message"], json!("Hi "));
-        assert_eq!(sent["state"]["text"], json!(""));
+        // Enter with nothing being composed sends (KEYBOARD_SEND_TO: vrct by default)
+        ipc::take_printed();
+        assert_eq!(keys(&app, &["Enter"])["text"], json!(""));
+        let sent: Vec<Value> = ipc::take_printed().into_iter().filter(|v| v["endpoint"] == "/run/keyboard_sent").map(|v| v["result"].clone()).collect();
+        assert_eq!(sent.len(), 1, "{sent:?}");
+        assert_eq!((sent[0]["to"].clone(), sent[0]["message"]["original"]["message"].clone()), (json!("vrct"), json!("Hi ")));
         let got = osc_got(&osc);
         assert!(got.contains(&("/chatbox/typing".into(), "false".into())) && got.contains(&("/chatbox/input".into(), "Hi ".into())), "{got:?}");
         // nothing typed: nothing sent
-        keyboard_send(&app, Some(json!({"to": "vrct"}))).unwrap();
+        keys(&app, &["Enter"]);
         assert_eq!(osc_got(&osc), []);
+        assert!(!ipc::take_printed().iter().any(|v| v["endpoint"] == "/run/keyboard_sent"));
     }
 
     #[test]
@@ -346,10 +392,20 @@ mod tests {
         set_keyboard_language(&app, Some(json!("en"))).unwrap();
         assert_eq!(get_keyboard_state(&app, None).unwrap().result["text"], json!("한"));
         assert!(keyboard_key(&app, Some(json!("ab"))).is_err());
-        assert!(keyboard_send(&app, Some(json!({"to": "elsewhere"}))).is_err());
+        assert_eq!(set_keyboard_send_to(&app, Some(json!("elsewhere"))).unwrap().status, 400);
+        assert_eq!(set_keyboard_send_to(&app, Some(json!("paste"))).unwrap().result, json!("paste"));
         keyboard_clear(&app, None).unwrap();
         assert_eq!(get_keyboard_state(&app, None).unwrap().result["length"], json!(0));
         // the typing indicator is off
         assert_eq!(osc_got(&osc), []);
+    }
+
+    #[test]
+    fn enter_sends_the_korean_syllable_being_made_too() {
+        let (app, osc) = rig();
+        app.config.set("SEND_MESSAGE_TO_VRC", json!(true)).unwrap();
+        set_keyboard_language(&app, Some(json!("ko"))).unwrap();
+        keys(&app, &["g", "k", "s", "r", "m", "f", "Enter"]);
+        assert!(osc_got(&osc).contains(&("/chatbox/input".into(), "한글".into())));
     }
 }

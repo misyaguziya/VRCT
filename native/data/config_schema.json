@@ -2217,6 +2217,22 @@
    "immediate_save": false,
    "mutable_tracking": false,
    "default": true
+  },
+  {
+   "name": "KEYBOARD_SEND_TO",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": [
+    "vrct",
+    "paste"
+   ],
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "vrct"
   }
  ],
  "serialized_order": [
@@ -2332,6 +2348,7 @@
   "KEYBOARD_LANGUAGE",
   "KEYBOARD_CHINESE_SIMPLIFIED",
   "KEYBOARD_KEY_SOUND",
-  "KEYBOARD_TYPING_INDICATOR"
+  "KEYBOARD_TYPING_INDICATOR",
+  "KEYBOARD_SEND_TO"
  ]
 }

@@ -124,9 +124,11 @@ pub fn hf_hub_url(repo: &str, filename: &str) -> String {
     format!("https://huggingface.co/{repo}/resolve/main/{}", utf8_percent_encode(filename, QUOTE))
 }
 
-/// downloadFile: up to 3 attempts, none more after a 4xx other than 429; a failed attempt's file is removed
-pub(crate) fn download_file(http: &Http, url: &str, path: &Path, progress: Option<&dyn Fn(f64)>, what: &str,
-                 log: &dyn Fn(&str, &str)) -> bool {
+/// downloadFile: up to 3 attempts, none more after a 4xx other than 429; a failed attempt's file is removed.
+/// `expected`: the size to count `progress` against when the server does not tell it (GitHub's
+/// archives come chunked); up to 0.99 then, as it is only about
+pub(crate) fn download_file(http: &Http, url: &str, path: &Path, progress: Option<&dyn Fn(f64)>, expected: Option<u64>,
+                 what: &str, log: &dyn Fn(&str, &str)) -> bool {
     for attempt in 1..=ATTEMPTS {
         let result = (|| {
             if let Some(parent) = path.parent() {
@@ -137,8 +139,10 @@ pub(crate) fn download_file(http: &Http, url: &str, path: &Path, progress: Optio
             http.download(url, &mut |chunk, length| {
                 file.write_all(chunk)?;
                 total += chunk.len() as u64;
-                if let (Some(f), Some(length @ 1..)) = (progress, length) {
-                    f(total as f64 / length as f64);
+                match (progress, length, expected) {
+                    (Some(f), Some(length @ 1..), _) => f(total as f64 / length as f64),
+                    (Some(f), _, Some(expected @ 1..)) => f((total as f64 / expected as f64).min(0.99)),
+                    _ => {}
                 }
                 Ok(())
             })
@@ -176,7 +180,7 @@ pub fn download_whisper(http: &Http, root: &Path, weight_type: &str, loads: &dyn
         let available = list_repo_files(http, repo).unwrap_or_else(|_| WHISPER_FILES.map(String::from).to_vec());
         for name in WHISPER_FILES.iter().filter(|n| available.iter().any(|a| a == *n)) {
             let progress = (*name == "model.bin").then_some(progress);
-            download_file(http, &hf_hub_url(repo, name), &path.join(name), progress, "Whisper", log);
+            download_file(http, &hf_hub_url(repo, name), &path.join(name), progress, None, "Whisper", log);
         }
     }
     end();
@@ -231,7 +235,7 @@ pub fn download_ctranslate2(http: &Http, root: &Path, weight_type: &str, loads: 
             continue;
         };
         let progress = (name == "model.bin").then_some(progress);
-        all &= download_file(http, &hf_hub_url(w.hf_repo, name), &file, progress, "CTranslate2", log);
+        all &= download_file(http, &hf_hub_url(w.hf_repo, name), &file, progress, None, "CTranslate2", log);
     }
     end();
     Ok(all)
@@ -259,7 +263,7 @@ pub fn download_tokenizer(http: &Http, root: &Path, weight_type: &str, log: &dyn
     let repo = cache.join(format!("models--{}", w.tokenizer.replace('/', "--")));
     for name in files {
         let url = format!("https://huggingface.co/{}/resolve/{commit}/{name}", w.tokenizer);
-        if !download_file(http, &url, &repo.join("snapshots").join(commit).join(name), None, "Tokenizer", log) {
+        if !download_file(http, &url, &repo.join("snapshots").join(commit).join(name), None, None, "Tokenizer", log) {
             bail!("{url}: download failed");
         }
     }

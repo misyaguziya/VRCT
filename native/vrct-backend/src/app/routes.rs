@@ -347,7 +347,6 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/run/keyboard_key", r(true, h::keyboard_key)),
         ("/run/keyboard_select", r(true, h::keyboard_select)),
         ("/run/keyboard_clear", r(true, h::keyboard_clear)),
-        ("/run/keyboard_send", r(false, h::keyboard_send)),
         ("/get/data/keyboard_language", r(true, h::get_keyboard_language)),
         ("/set/data/keyboard_language", r(true, h::set_keyboard_language)),
         ("/get/data/keyboard_chinese_simplified", r(true, h::get_keyboard_chinese_simplified)),
@@ -359,6 +358,8 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/get/data/keyboard_typing_indicator", r(true, h::get_keyboard_typing_indicator)),
         ("/set/enable/keyboard_typing_indicator", r(true, h::set_enable_keyboard_typing_indicator)),
         ("/set/disable/keyboard_typing_indicator", r(true, h::set_disable_keyboard_typing_indicator)),
+        ("/get/data/keyboard_send_to", r(true, h::get_keyboard_send_to)),
+        ("/set/data/keyboard_send_to", r(true, h::set_keyboard_send_to)),
     ]
 }
 
@@ -446,4 +447,5 @@ pub const RUN_MAPPING: &[(&str, &str)] = &[
     ("initialization_complete", "/run/initialization_complete"),
     ("enable_osc_query", "/run/enable_osc_query"),
     ("keyboard_state", "/run/keyboard_state"),
+    ("keyboard_sent", "/run/keyboard_sent"),
 ];

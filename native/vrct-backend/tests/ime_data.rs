@@ -1,5 +1,5 @@
 //! The keyboard dictionaries' download (ime_data::prepare) against a local server serving
-//! GitHub-like archives: only the files listed, checked by SHA-256; the set renamed in when whole.
+//! GitHub-like archives: only the files listed, checked by SHA-256; the set ready once whole.
 mod support;
 
 use sha2::{Digest, Sha256};
@@ -70,12 +70,18 @@ fn the_listed_files_are_taken_checked_and_set_up_once() {
     let zip_a = archive("rime-demo", "aaaa", &[("demo.schema.yaml", schema), ("LICENSE", license), ("README.md", b"not taken")]);
     let zip_b = archive("rime-other", "bbbb", &[("other.dict.yaml", b"dict"), ("LICENSE", b"LGPL")]);
     let sources = vec![
-        Source { repo: "someone/rime-demo", commit: "aaaa", files: leak_files(vec![("demo.schema.yaml", hash(schema)), ("LICENSE", hash(license))]) },
-        Source { repo: "rime/rime-other", commit: "bbbb", files: leak_files(vec![("other.dict.yaml", hash(b"dict")), ("LICENSE", hash(b"LGPL"))]) },
+        Source { repo: "someone/rime-demo", commit: "aaaa", size: zip_a.len() as u64,
+                 files: leak_files(vec![("demo.schema.yaml", hash(schema)), ("LICENSE", hash(license))]) },
+        Source { repo: "rime/rime-other", commit: "bbbb", size: 3 * zip_a.len() as u64,
+                 files: leak_files(vec![("other.dict.yaml", hash(b"dict")), ("LICENSE", hash(b"LGPL"))]) },
     ];
     let server = serve(vec![("someone/rime-demo", "aaaa", zip_a), ("rime/rime-other", "bbbb", zip_b)]);
     let http = Http::redirected(&server.mock.root).unwrap();
     let root = temp("ok");
+    // a stopped earlier run (no marker) and an older build's folder: made again, cleaned away
+    std::fs::create_dir_all(ime_data::shared_dir(&root)).unwrap();
+    std::fs::write(ime_data::shared_dir(&root).join("stale.yaml"), "x").unwrap();
+    std::fs::create_dir_all(root.join("ime").join("shared.part")).unwrap();
     let steps = Mutex::new(vec![]);
     ime_data::prepare(&http, &root, &sources, ime_data::GITHUB_ARCHIVES, &opencc(&root), &|p| steps.lock().unwrap().push(p), &|_, _| {}).unwrap();
 
@@ -84,16 +90,18 @@ fn the_listed_files_are_taken_checked_and_set_up_once() {
     assert_eq!(std::fs::read(shared.join("other.dict.yaml")).unwrap(), b"dict");
     assert_eq!(std::fs::read(shared.join("licenses").join("rime-demo.txt")).unwrap(), license);
     assert!(shared.join("opencc").join("t2s.json").is_file());
-    assert!(!shared.join("README.md").exists());
+    assert!(!shared.join("README.md").exists() && !shared.join("stale.yaml").exists());
     assert!(!root.join("ime").join("shared.part").exists() && !root.join("ime").join("download").exists());
     assert!(ime_data::ready(&root, &sources));
-    assert_eq!(steps.lock().unwrap().last(), Some(&1.0));
+    // by the archives' sizes: the first is a quarter of all
+    let steps = steps.lock().unwrap().clone();
+    assert!(steps.windows(2).all(|w| w[0] <= w[1]) && steps.contains(&0.25) && steps.last() == Some(&1.0), "{steps:?}");
     assert_eq!(server.served.lock().unwrap().len(), 2);
     // there already: nothing is downloaded again
     ime_data::prepare(&http, &root, &sources, ime_data::GITHUB_ARCHIVES, &opencc(&root), &|_| {}, &|_, _| {}).unwrap();
     assert_eq!(server.served.lock().unwrap().len(), 2);
     // another commit: set up again
-    let newer = vec![Source { repo: "someone/rime-demo", commit: "aaab", files: sources[0].files }];
+    let newer = vec![Source { repo: "someone/rime-demo", commit: "aaab", size: 1, files: sources[0].files }];
     assert!(!ime_data::ready(&root, &newer));
     let _ = std::fs::remove_dir_all(&root);
 }
@@ -105,25 +113,24 @@ fn leak_files(v: Vec<(&'static str, &'static str)>) -> &'static [(&'static str, 
 #[test]
 fn a_file_that_does_not_match_its_hash_sets_nothing_up() {
     let zip = archive("rime-demo", "aaaa", &[("demo.schema.yaml", b"changed")]);
-    let sources = vec![Source { repo: "someone/rime-demo", commit: "aaaa", files: leak_files(vec![("demo.schema.yaml", hash(b"original"))]) }];
+    let sources = vec![Source { repo: "someone/rime-demo", commit: "aaaa", size: 1, files: leak_files(vec![("demo.schema.yaml", hash(b"original"))]) }];
     let server = serve(vec![("someone/rime-demo", "aaaa", zip)]);
     let http = Http::redirected(&server.mock.root).unwrap();
     let root = temp("bad");
     let error = ime_data::prepare(&http, &root, &sources, ime_data::GITHUB_ARCHIVES, &opencc(&root), &|_| {}, &|_, _| {}).unwrap_err();
     assert!(format!("{error:#}").contains("sha256"), "{error:#}");
-    assert!(!ime_data::shared_dir(&root).exists());
     assert!(!ime_data::ready(&root, &sources));
     let _ = std::fs::remove_dir_all(&root);
 }
 
 #[test]
 fn a_missing_archive_fails_without_setting_up() {
-    let sources = vec![Source { repo: "someone/rime-gone", commit: "cccc", files: leak_files(vec![("x.yaml", hash(b"x"))]) }];
+    let sources = vec![Source { repo: "someone/rime-gone", commit: "cccc", size: 1, files: leak_files(vec![("x.yaml", hash(b"x"))]) }];
     let server = serve(vec![]);
     let http = Http::redirected(&server.mock.root).unwrap();
     let root = temp("missing");
     assert!(ime_data::prepare(&http, &root, &sources, ime_data::GITHUB_ARCHIVES, &opencc(&root), &|_| {}, &|_, _| {}).is_err());
-    assert!(!ime_data::shared_dir(&root).exists());
+    assert!(!ime_data::ready(&root, &sources));
     let _ = std::fs::remove_dir_all(&root);
 }
 

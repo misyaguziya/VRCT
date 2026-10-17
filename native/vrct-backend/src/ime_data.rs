@@ -3,8 +3,9 @@
 //! their SHA-256 (an archive's own bytes are not stable). Nothing is redistributed by VRCT.
 //!
 //! <root>/ime/shared: the schemas and dictionaries, OpenCC's data (bundled in _internal), the
-//! projects' licenses; .vrct-ime names the set it holds. It is made in shared.part and renamed
-//! when complete, so a stopped download leaves nothing half done.
+//! projects' licenses; .vrct-ime names the set it holds, written last: a folder without it (a
+//! stopped download) is made again. (Not made elsewhere and renamed in: Windows refuses to rename
+//! a folder while a file just written in it is still open, as virus scanners hold them.)
 use crate::net::Http;
 use anyhow::{bail, Context, Result};
 use sha2::{Digest, Sha256};
@@ -15,6 +16,8 @@ use std::path::{Path, PathBuf};
 pub struct Source {
     pub repo: &'static str,
     pub commit: &'static str,
+    /// about the archive's size (GitHub does not tell it): what the progress counts against
+    pub size: u64,
     pub files: &'static [(&'static str, &'static str)],
 }
 
@@ -24,6 +27,7 @@ pub const SOURCES: &[Source] = &[
     Source {
         repo: "rime/rime-prelude",
         commit: "082425ea0684bca36474415d4a0e8db9b016487e",
+        size: 20_307,
         files: &[("default.yaml", "0628ada16651d56c4cdfcb8e45ddba23d4d585cc8be0580a62c4e077c0bcc141"),
                  ("key_bindings.yaml", "ee2476598b4cae89068b823868196eb07b5f72007a600814fe5804b39008b3ed"),
                  ("punctuation.yaml", "d6f89592149098f0a2d0ed3e5c83f49adb6226cdf1d967b0bc0d293f4e5c496a"),
@@ -33,12 +37,14 @@ pub const SOURCES: &[Source] = &[
     Source {
         repo: "rime/rime-essay",
         commit: "054920de4f54c9e5994276a96a4fc2a35cb51aa3",
+        size: 2_577_894,
         files: &[("essay.txt", "3e8512ebaa6657e35961b1f5762060717c647e3bf471d5e3b86e783b4e934ffb"),
                  ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
     },
     Source {
         repo: "rime/rime-luna-pinyin",
         commit: "56b934b099dfbeab842320f13aa8b461a6ab3e42",
+        size: 398_121,
         files: &[("luna_pinyin.schema.yaml", "668b4d4957e4cc8f9cea32ed3f08f0ecf4a7be8cdba058700507487bd96dd5c7"),
                  ("luna_pinyin.dict.yaml", "75bcf6eb3ff62b129882ed89cc22b2d80a5347aa72bcfa2ccc839bac298e7314"),
                  ("pinyin.yaml", "caa220b05172bf35775db07fed6ead7719c742e6139232d9797040dbe65f746c"),
@@ -47,6 +53,7 @@ pub const SOURCES: &[Source] = &[
     Source {
         repo: "lazyfoxchan/rime-jaroomaji",
         commit: "9848e630a8218d77c3636622427d332796abe8f4",
+        size: 25_393_619,
         files: &[("jaroomaji.schema.yaml", "c5602acc778686861f200d397259d0c93cacc2cbfc98391d33c10471c6cbbbd8"),
                  ("jaroomaji.dict.yaml", "bd7053825bb00e7a4839a3aed3f14ffa5ddb847553d802068a0e9a1ec1744f1e"),
                  ("jaroomaji.mozc.dict.yaml", "5bfcd8c81e89d4c6d4dfed6468988f51f4d1ce1537c14fbb9110dcc880f8209a"),
@@ -101,46 +108,48 @@ fn unpack(archive: &Path, source: &Source, dest: &Path) -> Result<()> {
 }
 
 /// Downloads and sets up the data unless it is there (`progress` 0..1 over the archives, by
-/// count). `opencc`: OpenCC's data to copy beside it (rime/opencc in _internal).
+/// their sizes). `opencc`: OpenCC's data to copy beside it (rime/opencc in _internal).
 pub fn prepare(http: &Http, root: &Path, sources: &[Source], base_url: &str, opencc: &Path,
                progress: &dyn Fn(f64), log: &dyn Fn(&str, &str)) -> Result<()> {
     if ready(root, sources) {
         return Ok(());
     }
     let ime = root.join("ime");
-    let part = ime.join("shared.part");
+    let shared = shared_dir(root);
     let downloads = ime.join("download");
-    for dir in [&part, &downloads] {
+    // (shared.part: where older builds made it)
+    let _ = std::fs::remove_dir_all(ime.join("shared.part"));
+    for dir in [&shared, &downloads] {
         if dir.exists() {
-            std::fs::remove_dir_all(dir)?;
+            std::fs::remove_dir_all(dir).with_context(|| format!("remove {}", dir.display()))?;
         }
     }
-    std::fs::create_dir_all(part.join("licenses"))?;
-    std::fs::create_dir_all(&downloads)?;
-    for (i, source) in sources.iter().enumerate() {
+    std::fs::create_dir_all(shared.join("licenses")).with_context(|| format!("create {}", shared.display()))?;
+    std::fs::create_dir_all(&downloads).with_context(|| format!("create {}", downloads.display()))?;
+    let all: u64 = sources.iter().map(|s| s.size.max(1)).sum();
+    let mut done = 0;
+    for source in sources {
         let url = format!("{base_url}/{}/zip/{}", source.repo, source.commit);
         let archive = downloads.join(format!("{}.zip", source.repo.replace('/', "_")));
-        let share = |f: f64| progress((i as f64 + f) / sources.len() as f64);
-        if !crate::weights::download_file(http, &url, &archive, Some(&share), "keyboard dictionary", log) {
+        let size = source.size.max(1);
+        let share = |f: f64| progress((done as f64 + f * size as f64) / all as f64);
+        if !crate::weights::download_file(http, &url, &archive, Some(&share), Some(size), "keyboard dictionary", log) {
             bail!("download {url} failed");
         }
-        unpack(&archive, source, &part)?;
-        std::fs::remove_file(&archive)?;
+        done += size;
+        unpack(&archive, source, &shared).with_context(|| format!("unpack {}", archive.display()))?;
+        let _ = std::fs::remove_file(&archive);
+        progress(done as f64 / all as f64);
     }
-    let to = part.join("opencc");
+    let to = shared.join("opencc");
     std::fs::create_dir_all(&to)?;
     for entry in std::fs::read_dir(opencc).with_context(|| format!("{}: OpenCC's data is missing", opencc.display()))? {
         let path = entry?.path();
         if path.is_file() {
-            std::fs::copy(&path, to.join(path.file_name().unwrap()))?;
+            std::fs::copy(&path, to.join(path.file_name().unwrap())).with_context(|| format!("copy {}", path.display()))?;
         }
     }
-    std::fs::write(part.join(MARKER), set_id(sources))?;
-    let shared = shared_dir(root);
-    if shared.exists() {
-        std::fs::remove_dir_all(&shared)?;
-    }
-    std::fs::rename(&part, &shared)?;
+    std::fs::write(shared.join(MARKER), set_id(sources))?;
     let _ = std::fs::remove_dir_all(&downloads);
     progress(1.0);
     Ok(())
