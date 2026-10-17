@@ -85,13 +85,16 @@
     text-decoration: line-through;
 }
 
-.preedit { border-bottom: 2px solid var(--dark_650_color); }
+// 変換中の語の下線は文字の飾り (text-decoration) で描く: 枠線だと行からはみ出して
+// 「入りきらない」と測られ、字が小さくなる
+.preedit { text-decoration: underline 2px var(--dark_650_color); text-underline-offset: 4px; }
 .selection {
     padding: 0 3px;
-    border-bottom: 4px solid var(--primary_300_color);
     border-radius: 6px 6px 0 0;
     background: var(--primary_600_color_44);
     color: #ffffff;
+    text-decoration: underline 4px var(--primary_300_color);
+    text-underline-offset: 4px;
 }
 .caret {
     display: inline-block;
@@ -178,6 +181,20 @@
     padding: 0 6px;
 }
 .preparing_title { flex: none; font-size: 18px; font-weight: 700; color: var(--dark_basic_text_color); }
+// 辞書を取れなかったとき: もう一度試す
+.retry {
+    @extend %vr_button;
+    flex: none;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 10px;
+    background: var(--primary_300_color);
+    color: var(--dark_1000_color);
+    font-size: 17px;
+    font-weight: 700;
+    @include pointed { background: var(--primary_200_color); box-shadow: inset 0 0 0 3px var(--primary_100_color); }
+    &:active { background: var(--primary_400_color); }
+}
 .progress {
     flex: 1;
     height: 12px;
