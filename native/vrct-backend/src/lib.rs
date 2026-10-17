@@ -7,6 +7,7 @@ pub mod config;
 pub mod devices;
 pub mod errors;
 pub mod hf_cache;
+pub mod ime_data;
 pub mod ipc;
 pub mod keywords;
 pub mod logs;

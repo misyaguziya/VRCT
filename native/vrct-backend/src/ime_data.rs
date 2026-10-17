@@ -1,0 +1,147 @@
+//! The VR keyboard's dictionaries (RIME's shared data), downloaded on the first start: each
+//! project's archive at a fixed commit from GitHub, only the files used taken out and checked by
+//! their SHA-256 (an archive's own bytes are not stable). Nothing is redistributed by VRCT.
+//!
+//! <root>/ime/shared: the schemas and dictionaries, OpenCC's data (bundled in _internal), the
+//! projects' licenses; .vrct-ime names the set it holds. It is made in shared.part and renamed
+//! when complete, so a stopped download leaves nothing half done.
+use crate::net::Http;
+use anyhow::{bail, Context, Result};
+use sha2::{Digest, Sha256};
+use std::io::Read;
+use std::path::{Path, PathBuf};
+
+/// One project's files at a commit: (name in its archive, SHA-256)
+pub struct Source {
+    pub repo: &'static str,
+    pub commit: &'static str,
+    pub files: &'static [(&'static str, &'static str)],
+}
+
+/// Japanese (rime-jaroomaji, Apache-2.0; Mozc's dictionary BSD-3, JMdict and KANJIDIC2 CC BY-SA 4.0),
+/// Chinese (luna_pinyin with essay and prelude, LGPL-3.0)
+pub const SOURCES: &[Source] = &[
+    Source {
+        repo: "rime/rime-prelude",
+        commit: "082425ea0684bca36474415d4a0e8db9b016487e",
+        files: &[("default.yaml", "0628ada16651d56c4cdfcb8e45ddba23d4d585cc8be0580a62c4e077c0bcc141"),
+                 ("key_bindings.yaml", "ee2476598b4cae89068b823868196eb07b5f72007a600814fe5804b39008b3ed"),
+                 ("punctuation.yaml", "d6f89592149098f0a2d0ed3e5c83f49adb6226cdf1d967b0bc0d293f4e5c496a"),
+                 ("symbols.yaml", "6d08969525bd66c67abf1791c99928079356bd0e673386c49c1959d2a52fdbba"),
+                 ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
+    },
+    Source {
+        repo: "rime/rime-essay",
+        commit: "054920de4f54c9e5994276a96a4fc2a35cb51aa3",
+        files: &[("essay.txt", "3e8512ebaa6657e35961b1f5762060717c647e3bf471d5e3b86e783b4e934ffb"),
+                 ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
+    },
+    Source {
+        repo: "rime/rime-luna-pinyin",
+        commit: "56b934b099dfbeab842320f13aa8b461a6ab3e42",
+        files: &[("luna_pinyin.schema.yaml", "668b4d4957e4cc8f9cea32ed3f08f0ecf4a7be8cdba058700507487bd96dd5c7"),
+                 ("luna_pinyin.dict.yaml", "75bcf6eb3ff62b129882ed89cc22b2d80a5347aa72bcfa2ccc839bac298e7314"),
+                 ("pinyin.yaml", "caa220b05172bf35775db07fed6ead7719c742e6139232d9797040dbe65f746c"),
+                 ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
+    },
+    Source {
+        repo: "lazyfoxchan/rime-jaroomaji",
+        commit: "9848e630a8218d77c3636622427d332796abe8f4",
+        files: &[("jaroomaji.schema.yaml", "c5602acc778686861f200d397259d0c93cacc2cbfc98391d33c10471c6cbbbd8"),
+                 ("jaroomaji.dict.yaml", "bd7053825bb00e7a4839a3aed3f14ffa5ddb847553d802068a0e9a1ec1744f1e"),
+                 ("jaroomaji.mozc.dict.yaml", "5bfcd8c81e89d4c6d4dfed6468988f51f4d1ce1537c14fbb9110dcc880f8209a"),
+                 ("jaroomaji.jmdict.dict.yaml", "0a7d7c0f725c5f6b037c3532c65a67a482f2ad24257750a91e3e69866c8c1897"),
+                 ("jaroomaji.kanjidic2.dict.yaml", "6433cd8c4706f285e18e7b59b0e375e905a31f98001135ce8cb8d6a2c0afaf30"),
+                 ("jaroomaji.mozcemoji.dict.yaml", "f48c7e91207a5a9058cd9ffac387a80437b2ac7b2ad871ad824fb11b72c96aca"),
+                 ("jaroomaji.kana_kigou.dict.yaml", "b615f1b902e60953516c9212e2d8a8c18b92c65e74bacc21e854d4dc65c1fc32"),
+                 ("jaroomaji.user.dict.yaml", "4986e940ccff1760a1700f24e52cea5f0369e5eeeef40c364fe676e797d2a631"),
+                 ("LICENSE", "1ad7585641ef7b7f3468b2b954c281061b7c35a470efe63d07b9b35627bda662")],
+    },
+];
+
+pub const GITHUB_ARCHIVES: &str = "https://codeload.github.com";
+const MARKER: &str = ".vrct-ime";
+
+/// What `<root>/ime/shared` must hold for `sources`: the commits, in order
+fn set_id(sources: &[Source]) -> String {
+    sources.iter().map(|s| format!("{}@{}\n", s.repo, s.commit)).collect()
+}
+
+pub fn shared_dir(root: &Path) -> PathBuf {
+    root.join("ime").join("shared")
+}
+
+/// The data for `sources` is there, complete
+pub fn ready(root: &Path, sources: &[Source]) -> bool {
+    std::fs::read_to_string(shared_dir(root).join(MARKER)).is_ok_and(|id| id == set_id(sources))
+}
+
+fn sha256(data: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(data))
+}
+
+/// The files of `source` out of its archive into `dest` (LICENSE as licenses/<project>.txt)
+fn unpack(archive: &Path, source: &Source, dest: &Path) -> Result<()> {
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(archive)?)?;
+    let project = source.repo.rsplit('/').next().unwrap_or(source.repo);
+    // GitHub's archives hold everything under "<project>-<commit>/"
+    let prefix = format!("{project}-{}/", source.commit);
+    for (name, expected) in source.files {
+        let mut member = zip.by_name(&format!("{prefix}{name}")).with_context(|| format!("{} has no {name}", source.repo))?;
+        let mut data = Vec::with_capacity(member.size() as usize);
+        member.read_to_end(&mut data)?;
+        let actual = sha256(&data);
+        if actual != *expected {
+            bail!("{}/{name}: sha256 {actual}, expected {expected}", source.repo);
+        }
+        let out = if *name == "LICENSE" { dest.join("licenses").join(format!("{project}.txt")) } else { dest.join(name) };
+        std::fs::write(out, data)?;
+    }
+    Ok(())
+}
+
+/// Downloads and sets up the data unless it is there (`progress` 0..1 over the archives, by
+/// count). `opencc`: OpenCC's data to copy beside it (rime/opencc in _internal).
+pub fn prepare(http: &Http, root: &Path, sources: &[Source], base_url: &str, opencc: &Path,
+               progress: &dyn Fn(f64), log: &dyn Fn(&str, &str)) -> Result<()> {
+    if ready(root, sources) {
+        return Ok(());
+    }
+    let ime = root.join("ime");
+    let part = ime.join("shared.part");
+    let downloads = ime.join("download");
+    for dir in [&part, &downloads] {
+        if dir.exists() {
+            std::fs::remove_dir_all(dir)?;
+        }
+    }
+    std::fs::create_dir_all(part.join("licenses"))?;
+    std::fs::create_dir_all(&downloads)?;
+    for (i, source) in sources.iter().enumerate() {
+        let url = format!("{base_url}/{}/zip/{}", source.repo, source.commit);
+        let archive = downloads.join(format!("{}.zip", source.repo.replace('/', "_")));
+        let share = |f: f64| progress((i as f64 + f) / sources.len() as f64);
+        if !crate::weights::download_file(http, &url, &archive, Some(&share), "keyboard dictionary", log) {
+            bail!("download {url} failed");
+        }
+        unpack(&archive, source, &part)?;
+        std::fs::remove_file(&archive)?;
+    }
+    let to = part.join("opencc");
+    std::fs::create_dir_all(&to)?;
+    for entry in std::fs::read_dir(opencc).with_context(|| format!("{}: OpenCC's data is missing", opencc.display()))? {
+        let path = entry?.path();
+        if path.is_file() {
+            std::fs::copy(&path, to.join(path.file_name().unwrap()))?;
+        }
+    }
+    std::fs::write(part.join(MARKER), set_id(sources))?;
+    let shared = shared_dir(root);
+    if shared.exists() {
+        std::fs::remove_dir_all(&shared)?;
+    }
+    std::fs::rename(&part, &shared)?;
+    let _ = std::fs::remove_dir_all(&downloads);
+    progress(1.0);
+    Ok(())
+}

@@ -125,7 +125,7 @@ pub fn hf_hub_url(repo: &str, filename: &str) -> String {
 }
 
 /// downloadFile: up to 3 attempts, none more after a 4xx other than 429; a failed attempt's file is removed
-fn download_file(http: &Http, url: &str, path: &Path, progress: Option<&dyn Fn(f64)>, what: &str,
+pub(crate) fn download_file(http: &Http, url: &str, path: &Path, progress: Option<&dyn Fn(f64)>, what: &str,
                  log: &dyn Fn(&str, &str)) -> bool {
     for attempt in 1..=ATTEMPTS {
         let result = (|| {
