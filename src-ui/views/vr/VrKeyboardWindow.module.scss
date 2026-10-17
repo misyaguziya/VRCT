@@ -1,4 +1,9 @@
-// VRキーボード (1120x560 の領域、タイトルバー 56px)。キーは 80px 角 (VRで約 4cm)
+// VRキーボード (1200x560 の領域、タイトルバー 56px)。キーは 72px 幅 (VRで約 3.6cm)、1段 15 キー分。
+// 見た目は平らで暗いキー。指しているキー (左右どちらの手でも) は明るくしてアクセントの枠、
+// 押した瞬間はアクセントで塗る (XSOverlay のように、どこを指しているかが一目でわかる)
+
+// 指している (data-vr-hover: 1本目の手、data-vr-hover2: もう1本の手)
+@mixin pointed { &[data-vr-hover]:not(:disabled), &[data-vr-hover2]:not(:disabled) { @content; } }
 
 %vr_button {
     border: 0;
@@ -7,6 +12,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: background-color 60ms ease-out, box-shadow 60ms ease-out;
     &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
     &:disabled { cursor: default; }
 }
@@ -30,7 +36,7 @@
     font-size: 17px;
     font-weight: 500;
     &[aria-pressed="true"] { background: var(--primary_300_color); color: var(--dark_1000_color); font-weight: 700; }
-    &[data-vr-hover]:not([aria-pressed="true"]) { background: var(--dark_750_color); }
+    @include pointed { box-shadow: inset 0 0 0 2px var(--primary_200_color); color: #ffffff; }
 }
 
 .keyboard {
@@ -43,7 +49,8 @@
 }
 
 .top {
-    height: 72px;
+    // 入力欄は最大4行 (17px の字で全角144文字が入る)
+    height: 92px;
     flex: none;
     display: flex;
     gap: 10px;
@@ -55,7 +62,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 0 20px;
+    padding: 6px 20px;
     border-radius: 14px;
     background: var(--dark_1000_color);
 }
@@ -63,12 +70,18 @@
 .line {
     flex: 1;
     min-width: 0;
+    max-height: 100%;
     overflow: hidden;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
     font-size: 28px;
     color: var(--dark_basic_text_color);
+}
+
+// 144文字目より後ろ (VRChat のチャットボックスでは切れる)
+.over {
+    color: var(--warning_color);
+    text-decoration: line-through;
 }
 
 .preedit { border-bottom: 2px solid var(--dark_650_color); }
@@ -80,9 +93,10 @@
     color: #ffffff;
 }
 .caret {
-    flex: none;
+    display: inline-block;
+    vertical-align: text-bottom;
     width: 3px;
-    height: 34px;
+    height: 1.1em;
     margin-left: 2px;
     border-radius: 2px;
     background: var(--primary_300_color);
@@ -95,29 +109,26 @@
     &.is_over { color: var(--warning_color); font-weight: 700; }
 }
 
-.send {
-    @extend %vr_button;
-    flex-direction: column;
-    gap: 2px;
+// ↵ で送る先 (切り替え)。選んでいる方を色で示す
+.send_to {
+    flex: none;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
     border-radius: 14px;
-    &:disabled { opacity: 0.45; }
+    background: var(--dark_1000_color);
 }
-.send_vrct {
-    width: 196px;
-    background: var(--primary_300_color);
-    color: var(--dark_1000_color);
-    &[data-vr-hover]:not(:disabled) { background: var(--primary_200_color); }
+.send_option {
+    @extend %vr_button;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    background: transparent;
+    color: var(--dark_450_color);
+    &[aria-checked="true"] { background: var(--primary_300_color); color: var(--dark_1000_color); }
+    @include pointed { box-shadow: inset 0 0 0 2px var(--primary_200_color); }
 }
-.send_paste {
-    width: 176px;
-    background: var(--dark_750_color);
-    box-shadow: inset 0 0 0 2px var(--dark_650_color);
-    color: var(--dark_350_color);
-    &[data-vr-hover]:not(:disabled) { background: var(--dark_650_color); }
-}
-.send_title { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 700; }
-.send_icon { width: 22px; height: 22px; fill: currentColor; }
-.send_help { font-size: 15px; font-weight: 500; }
 
 .middle {
     position: relative;
@@ -144,7 +155,8 @@
     font-size: 22px;
     white-space: nowrap;
     &[aria-pressed="true"] { background: var(--primary_600_color_44); box-shadow: inset 0 0 0 2px var(--primary_300_color); color: #ffffff; }
-    &[data-vr-hover] { background: var(--dark_650_color); }
+    @include pointed { background: #4a4c51; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
+    &:active { background: var(--primary_400_color); color: var(--dark_1000_color); }
 }
 
 .spacer { flex: 1; }
@@ -159,7 +171,8 @@
     color: var(--dark_400_color);
     font-size: 28px;
     &:disabled { opacity: 0.35; }
-    &[data-vr-hover]:not(:disabled) { background: var(--dark_650_color); }
+    @include pointed { background: #4a4c51; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
+    &:active:not(:disabled) { background: var(--primary_400_color); color: var(--dark_1000_color); }
 }
 
 .syllable {
@@ -200,7 +213,7 @@
 }
 @keyframes building { from { opacity: 0.45; } to { opacity: 1; } }
 
-// 送った直後の知らせ (候補の段に重ねる)
+// 貼れずにコピーだけしたときの知らせ (候補の段に重ねる)
 .feedback {
     position: absolute;
     inset: 2px auto 2px 50%;
@@ -209,12 +222,12 @@
     align-items: center;
     padding: 0 20px;
     border-radius: 10px;
-    background: var(--primary_800_color);
-    color: #ffffff;
+    background: var(--dark_950_color);
+    color: var(--warning_color);
+    box-shadow: inset 0 0 0 2px var(--warning_color);
     font-size: 18px;
     font-weight: 600;
     white-space: nowrap;
-    &.is_warning { background: var(--dark_950_color); color: var(--warning_color); box-shadow: inset 0 0 0 2px var(--warning_color); }
 }
 
 .keys {
@@ -228,20 +241,75 @@
 
 .row {
     display: flex;
-    gap: 8px;
+    gap: var(--key_gap);
     justify-content: center;
 }
 
+// Tab・Caps Lock などの場所 (置かないキー)
+.gap { flex: none; }
+
 .key {
     @extend %vr_button;
+    position: relative;
     flex: none;
+    flex-direction: column;
     height: 56px;
+    border-radius: 10px;
     font-size: 18px;
     font-weight: 500;
-    &.char { background: var(--dark_750_color); color: var(--dark_350_color); font-size: 24px; }
-    &.mod { background: var(--dark_850_color); color: var(--dark_350_color); }
-    &.act { background: #48545a; color: #ffffff; }
+    // 文字のキー / 修飾キー (⇧ ← ◀ ▶ 切り替え) / 決めるキー (↵ 空白・変換)
+    &.char { background: #34363a; color: #eceef1; font-size: 26px; }
+    &.mod { background: #26272a; color: var(--dark_400_color); }
+    &.act { background: #2c3d3a; color: var(--primary_100_color); }
+    // Shift: 1回 (次の1文字) は枠、ロックは塗り
     &[aria-pressed="true"] { box-shadow: inset 0 0 0 3px var(--primary_300_color); color: var(--primary_100_color); }
-    &[data-vr-hover]:not(:disabled) { background: var(--dark_600_color); color: #ffffff; }
-    &:active:not(:disabled) { background: var(--primary_600_color); }
+    &.is_locked { background: var(--primary_700_color); color: #ffffff; }
+    @include pointed { background: #4f5257; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
+    &:active:not(:disabled) { background: var(--primary_300_color); box-shadow: none; color: var(--dark_1000_color); transition: none; }
+}
+
+// JIS の L 字の Enter: 上の段の部分と下の段の部分を、段のすき間をまたいでつなぐ。
+// どちらかを指す・押すと、両方の部分が一緒に変わる
+// (下の部分は上の部分に枠の太さだけ重ね、上辺の枠を描かない: つなぎ目に線が出ない)
+$row_gap: 8px;
+$ring: 3px;
+.enter_top { border-bottom-right-radius: 0; }
+.enter_bottom {
+    z-index: 1;
+    height: 56px + $row_gap + $ring;
+    margin-top: -($row_gap + $ring);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+.keys:has(.enter_part[data-vr-hover]:not(:disabled)),
+.keys:has(.enter_part[data-vr-hover2]:not(:disabled)) {
+    .enter_part { background: #4f5257; color: #ffffff; }
+    .enter_top { box-shadow: inset 0 0 0 $ring var(--primary_200_color); }
+    .enter_bottom.enter_bottom {
+        box-shadow: inset $ring 0 0 var(--primary_200_color), inset (-$ring) 0 0 var(--primary_200_color), inset 0 (-$ring) 0 var(--primary_200_color);
+    }
+}
+.keys:has(.enter_part:active:not(:disabled)) .enter_part {
+    background: var(--primary_300_color);
+    box-shadow: none;
+    color: var(--dark_1000_color);
+}
+
+// 左上の小さい字 (Shift を押すと入る字。Shift 中は押さないときの字)
+.key_corner {
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--dark_500_color);
+}
+
+// ↵ の下の小さい字 (変換中は「確定」、そうでなければ送る先)
+.key_sub {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.1;
+    opacity: 0.85;
 }

@@ -823,6 +823,15 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "keyboard_language",
     },
     {
+        // VRキーボードで何も変換していないときに Enter で送る先 (vrct: 翻訳してチャットボックスへ / paste: VRChat の入力欄へ貼る)
+        Category: "Vr",
+        Base_Name: "KeyboardSendTo",
+        default_value: "vrct",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_send_to",
+    },
+    {
         // VRキーボードの中国語を簡体字にする (OFF: 繁体字)
         Category: "Vr",
         Base_Name: "IsEnabledKeyboardChineseSimplified",

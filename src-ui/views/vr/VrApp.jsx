@@ -108,17 +108,23 @@ export const VrApp = () => {
 
 // WebView2 はOSの本物のカーソル位置でホバーを判定するため、VRのポインタでは :hover が付かない。
 // Python から届くポインタ位置 (この画面の論理px) にある要素へ data-vr-hover を付けて代わりにする。
+// 両手で指しているときは、もう片方の手の要素に data-vr-hover2 (キーボードが両手で打てるように。
+// 吹き出しは data-vr-hover の方だけを見る)
 const HOVER_TARGET = "button, [data-vr-hoverable]";
 const VrPointerHover = () => {
     useEffect(() => {
-        let hovered = null;
-        const unlisten = listen("vr-panel-pointer", ({ payload }) => {
-            const element = payload ? document.elementFromPoint(payload.x, payload.y) : null;
+        const hovered = { "data-vr-hover": null, "data-vr-hover2": null };
+        const mark = (attribute, xy) => {
+            const element = xy ? document.elementFromPoint(xy.x, xy.y) : null;
             const target = element?.closest(HOVER_TARGET) ?? null;
-            if (target === hovered) return;
-            hovered?.removeAttribute("data-vr-hover");
-            target?.setAttribute("data-vr-hover", "");
-            hovered = target;
+            if (target === hovered[attribute]) return;
+            hovered[attribute]?.removeAttribute(attribute);
+            target?.setAttribute(attribute, "");
+            hovered[attribute] = target;
+        };
+        const unlisten = listen("vr-panel-pointer", ({ payload }) => {
+            mark("data-vr-hover", payload);
+            mark("data-vr-hover2", payload?.second ?? null);
         });
         return () => { unlisten.then(f => f()); };
     }, []);
