@@ -225,21 +225,22 @@ export const VrKeyboardWindow = ({ onClose }) => {
             </button>
         )}
     </div>;
+    // ↵ で送る先 (切り替え)。変換していないときに ↵ を押すと、選んでいる方へ送る。
+    // タイトルバーに置いて、入力欄を端から端まで使う
+    const send_to_switch = <div className={styles.tabs} role="radiogroup" aria-label={t("vr_panel.keyboard.send_to")}>
+        {[["vrct", "send_vrct"], ["paste", "send_paste"]].map(([to, title]) => (
+            <button key={to} type="button" role="radio" aria-checked={send_to === to} className={styles.tab}
+                onMouseDown={press(() => { if (send_to !== to) setKeyboardSendTo(to); })}>
+                {t(`vr_panel.keyboard.${title}`)}
+            </button>
+        ))}
+    </div>;
 
     return (
-        <VrWindow Icon={KeyboardSvg} title={t("vr_panel.keyboard.title")} title_extra={tabs} onClose={onClose}>
+        <VrWindow Icon={KeyboardSvg} title={t("vr_panel.keyboard.title")} title_extra={<>{tabs}{send_to_switch}</>} onClose={onClose}>
             <div className={styles.keyboard}>
                 <div className={styles.top}>
                     <Composition state={state} language={language} />
-                    {/* ↵ で送る先 (切り替え)。変換していないときに ↵ を押すと、選んでいる方へ送る */}
-                    <div className={styles.send_to} role="radiogroup" aria-label={t("vr_panel.keyboard.send_to")}>
-                        {[["vrct", "send_vrct"], ["paste", "send_paste"]].map(([to, title]) => (
-                            <button key={to} type="button" role="radio" aria-checked={send_to === to} className={styles.send_option}
-                                onMouseDown={press(() => { if (send_to !== to) setKeyboardSendTo(to); })}>
-                                {t(`vr_panel.keyboard.${title}`)}
-                            </button>
-                        ))}
-                    </div>
                 </div>
                 <div className={styles.middle}>
                     {!is_ready ? <Preparing state={state} />
