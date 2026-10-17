@@ -1,0 +1,83 @@
+# VR キーボード。辞書はオフラインなので取れない (日本語・中国語は打てない、状態は時間で変わるので shape)。
+# 英語と韓国語は辞書なしで打てる。VRChat へ送るのは 040 で OFF のまま。
+
+[[case]]
+name = "get keyboard_state"
+endpoint = "/get/data/keyboard_state"
+rule = "shape"  # 辞書の取得中か失敗か (時間による)
+
+[[case]]
+name = "get keyboard_language"
+endpoint = "/get/data/keyboard_language"
+
+[[case]]
+name = "set keyboard_language to one it does not have"
+endpoint = "/set/data/keyboard_language"
+data = "fr"
+
+[[case]]
+name = "set keyboard_language to English"
+endpoint = "/set/data/keyboard_language"
+data = "en"
+
+[[case]]
+name = "keyboard: a key"
+endpoint = "/run/keyboard_key"
+data = "H"
+rule = "shape"
+
+[[case]]
+name = "keyboard: a key that is not one"
+endpoint = "/run/keyboard_key"
+data = "Hello"
+expect_status = 500
+
+[[case]]
+name = "keyboard: send to a place it does not know"
+endpoint = "/run/keyboard_send"
+data = { to = "elsewhere" }
+expect_status = 500
+
+[[case]]
+name = "keyboard: send through VRCT (translated)"
+endpoint = "/run/keyboard_send"
+data = { to = "vrct", id = "kb-1" }
+rule = "shape"
+
+[[case]]
+name = "set keyboard_language to Korean"
+endpoint = "/set/data/keyboard_language"
+data = "ko"
+
+[[case]]
+name = "keyboard: Korean jamo"
+endpoint = "/run/keyboard_key"
+data = "g"
+rule = "shape"
+
+[[case]]
+name = "keyboard: clear"
+endpoint = "/run/keyboard_clear"
+rule = "shape"
+
+[[case]]
+name = "keyboard: the candidate index is not a number"
+endpoint = "/run/keyboard_select"
+data = "first"
+expect_status = 500
+
+[[case]]
+name = "enable keyboard_chinese_simplified"
+endpoint = "/set/enable/keyboard_chinese_simplified"
+
+[[case]]
+name = "disable keyboard_key_sound"
+endpoint = "/set/disable/keyboard_key_sound"
+
+[[case]]
+name = "disable keyboard_typing_indicator"
+endpoint = "/set/disable/keyboard_typing_indicator"
+
+[[case]]
+name = "get keyboard_typing_indicator"
+endpoint = "/get/data/keyboard_typing_indicator"

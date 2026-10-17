@@ -2160,6 +2160,63 @@
    "immediate_save": false,
    "mutable_tracking": false,
    "default": 2
+  },
+  {
+   "name": "KEYBOARD_LANGUAGE",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": [
+    "ja",
+    "en",
+    "ko",
+    "zh"
+   ],
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "ja"
+  },
+  {
+   "name": "KEYBOARD_CHINESE_SIMPLIFIED",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "KEYBOARD_KEY_SOUND",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
+  },
+  {
+   "name": "KEYBOARD_TYPING_INDICATOR",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": true
   }
  ],
  "serialized_order": [
@@ -2271,6 +2328,10 @@
   "OCR_WINDOW_TITLE",
   "OCR_POLL_INTERVAL_MS",
   "OCR_MIN_CONFIDENCE",
-  "OCR_BUBBLE_MIN_TEXT_LENGTH"
+  "OCR_BUBBLE_MIN_TEXT_LENGTH",
+  "KEYBOARD_LANGUAGE",
+  "KEYBOARD_CHINESE_SIMPLIFIED",
+  "KEYBOARD_KEY_SOUND",
+  "KEYBOARD_TYPING_INDICATOR"
  ]
 }

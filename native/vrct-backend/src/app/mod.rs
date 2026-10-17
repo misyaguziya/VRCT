@@ -7,6 +7,7 @@ mod basic;
 mod engines;
 mod features;
 pub mod init;
+mod keyboard;
 mod model;
 mod ocr;
 pub mod overlay;
@@ -32,6 +33,7 @@ pub mod handlers {
     pub use super::engines::*;
     pub use super::features::*;
     pub use super::init::shutdown;
+    pub use super::keyboard::*;
     pub use super::ocr::*;
     pub use super::overlay::*;
     pub use super::pipeline::{send_message_box, set_enable_translation};
