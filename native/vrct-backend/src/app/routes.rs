@@ -360,6 +360,7 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/set/disable/keyboard_typing_indicator", r(true, h::set_disable_keyboard_typing_indicator)),
         ("/get/data/keyboard_send_to", r(true, h::get_keyboard_send_to)),
         ("/set/data/keyboard_send_to", r(true, h::set_keyboard_send_to)),
+        ("/run/keyboard_retry", r(true, h::keyboard_retry)),
     ]
 }
 

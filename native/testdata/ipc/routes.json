@@ -1764,6 +1764,11 @@
    "endpoint": "/set/data/keyboard_send_to",
    "during_init": true,
    "handler": "setKeyboardSendTo"
+  },
+  {
+   "endpoint": "/run/keyboard_retry",
+   "during_init": true,
+   "handler": "keyboardRetry"
   }
  ],
  "run_mapping": {

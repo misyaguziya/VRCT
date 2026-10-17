@@ -9,7 +9,7 @@ use crate::ipc::{self, Reply};
 use crate::logs;
 use anyhow::{anyhow, bail, Result};
 use serde_json::{json, Value};
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use vrct_ime::input::{Input, Key, Language, State};
 use vrct_ime::rime::Rime;
@@ -35,6 +35,8 @@ pub struct Keyboard {
     typing: Mutex<bool>,
     /// when Enter last committed a word: an Enter right after it is a double press, not a send
     committed_at: Mutex<Option<Instant>>,
+    /// rime.dll loaded and started (once a process: a retry only builds again)
+    rime: OnceLock<&'static Rime>,
 }
 
 /// An Enter this soon after the one that committed the word does not send
@@ -44,7 +46,7 @@ impl Keyboard {
     pub fn new(config: &crate::config::Config) -> Self {
         let language = Language::from_code(&config.get_str("KEYBOARD_LANGUAGE")).unwrap_or(Language::Japanese);
         Keyboard { status: Mutex::new(Status::Preparing), input: Mutex::new(Input::new(language)), typing: Mutex::default(),
-                   committed_at: Mutex::default() }
+                   committed_at: Mutex::default(), rime: OnceLock::new() }
     }
 }
 
@@ -133,9 +135,15 @@ fn prepare(app: &App) -> Result<()> {
     for (name, contents) in vrct_ime::setup::user_files(&shared)? {
         std::fs::write(user.join(name), contents)?;
     }
-    // the sessions borrow it for as long as the app runs
-    let rime: &'static Rime = Box::leak(Box::new(Rime::load(&resources.join("rime.dll"))?));
-    rime.start(&shared, &user, &local.join("logs"))?;
+    let rime = match keyboard(app).rime.get() {
+        Some(rime) => *rime,
+        None => {
+            // the sessions borrow it for as long as the app runs
+            let rime: &'static Rime = Box::leak(Box::new(Rime::load(&resources.join("rime.dll"))?));
+            rime.start(&shared, &user, &local.join("logs"))?;
+            *keyboard(app).rime.get_or_init(|| rime)
+        }
+    };
     if !rime.deploy(false) {
         bail!("RIME could not build the dictionaries");
     }
@@ -147,6 +155,22 @@ fn prepare(app: &App) -> Result<()> {
 }
 
 // --------------------------------------------------------------------------------- handlers
+
+/// The dictionaries once more, after they failed (a press while they are being made does nothing)
+pub fn keyboard_retry(app: &App, _: Data) -> Result<Reply> {
+    let retry = {
+        let mut status = keyboard(app).status.lock().unwrap();
+        let failed = *status == Status::Failed;
+        if failed {
+            *status = Status::Preparing;
+        }
+        failed
+    };
+    if retry {
+        start(app);
+    }
+    get_keyboard_state(app, None)
+}
 
 pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
     let input = keyboard(app).input.lock().unwrap();
@@ -398,6 +422,14 @@ mod tests {
         assert_eq!(get_keyboard_state(&app, None).unwrap().result["length"], json!(0));
         // the typing indicator is off
         assert_eq!(osc_got(&osc), []);
+    }
+
+    #[test]
+    fn retry_starts_again_only_after_a_failure() {
+        let (app, _osc) = rig();
+        // not failed (being prepared): nothing starts, nothing changes
+        assert_eq!(keyboard_retry(&app, None).unwrap().result["status"], json!("preparing"));
+        assert_eq!(*keyboard(&app).status.lock().unwrap(), Status::Preparing);
     }
 
     #[test]

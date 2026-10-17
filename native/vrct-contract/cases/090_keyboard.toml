@@ -7,6 +7,11 @@ endpoint = "/get/data/keyboard_state"
 rule = "shape"  # 辞書の取得中か失敗か (時間による)
 
 [[case]]
+name = "keyboard: retry the dictionaries (offline: they fail again)"
+endpoint = "/run/keyboard_retry"
+rule = "shape"  # 取得中か失敗か (時間による)
+
+[[case]]
 name = "get keyboard_language"
 endpoint = "/get/data/keyboard_language"
 

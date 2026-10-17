@@ -243,7 +243,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
                     <Composition state={state} language={language} />
                 </div>
                 <div className={styles.middle}>
-                    {!is_ready ? <Preparing state={state} />
+                    {!is_ready ? <Preparing state={state} press={press} />
                         : <Candidates state={state} language={language} press={press} sendKey={sendKey} />}
                     <SentFeedback result={currentKeyboardSendResult.data} />
                 </div>
@@ -358,10 +358,14 @@ const Candidates = ({ state, language, press, sendKey }) => {
 };
 
 // 日本語・中国語の辞書の準備 (初回は取得してから組み立てる)
-const Preparing = ({ state }) => {
+const Preparing = ({ state, press }) => {
     const { t } = useI18n();
+    const { asyncStdoutToPython } = useStdoutToPython();
     if (state.status === "failed") {
         return <div className={styles.preparing}><span className={styles.preparing_title}>{t("vr_panel.keyboard.failed")}</span>
+            <button type="button" className={styles.retry} onMouseDown={press(() => asyncStdoutToPython("/run/keyboard_retry"))}>
+                {t("vr_panel.keyboard.retry")}
+            </button>
             <span className={styles.hint}>{t("vr_panel.keyboard.use_english")}</span></div>;
     }
     const percent = Math.round((state.progress ?? 0) * 100);

@@ -31,6 +31,7 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/keyboard_key", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
     { endpoint: "/run/keyboard_select", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
     { endpoint: "/run/keyboard_clear", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_retry", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
     { endpoint: "/run/keyboard_sent", ns: common, hook_name: "useKeyboard", method_name: "receiveKeyboardSend" },
 
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },

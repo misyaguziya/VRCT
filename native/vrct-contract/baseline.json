@@ -3663,6 +3663,15 @@
       "pushes": false
     },
     {
+      "name": "keyboard: retry the dictionaries (offline: they fail again)",
+      "endpoint": "/run/keyboard_retry",
+      "data": null,
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
       "name": "get keyboard_language",
       "endpoint": "/get/data/keyboard_language",
       "data": null,
@@ -4752,7 +4761,9 @@
       "endpoint": "/get/data/selected_tab_no",
       "status": 200,
       "result": "1",
-      "pushes": [],
+      "pushes": [
+        "/run/selected_speaker_device"
+      ],
       "push_results": [],
       "ms": 0
     },
@@ -5595,7 +5606,6 @@
       "status": 200,
       "result": [],
       "pushes": [
-        "/run/selected_speaker_device",
         "/run/software_update_info"
       ],
       "push_results": [],
@@ -10565,6 +10575,28 @@
     {
       "name": "get keyboard_state",
       "endpoint": "/get/data/keyboard_state",
+      "status": 200,
+      "result": {
+        "status": "",
+        "progress": 0,
+        "language": "",
+        "text": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": null,
+        "length": 0
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: retry the dictionaries (offline: they fail again)",
+      "endpoint": "/run/keyboard_retry",
       "status": 200,
       "result": {
         "status": "",
