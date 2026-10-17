@@ -104,6 +104,11 @@ impl Composer {
         Self::default()
     }
 
+    /// The syllables done (the one being composed not included)
+    pub fn written(&self) -> &str {
+        &self.text
+    }
+
     /// The text so far, the syllable being composed included
     pub fn preedit(&self) -> String {
         self.text.clone() + &self.current.text()

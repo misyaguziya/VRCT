@@ -3487,6 +3487,7 @@ name = "vrct-ime"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "serde_yaml",
  "windows-sys 0.61.2",
 ]
 

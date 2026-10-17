@@ -1,0 +1,354 @@
+//! What the keyboard holds while typing: the text written so far and the word being composed,
+//! by language. English goes in as typed, Korean through the Hangul composer, Japanese and
+//! Chinese through a RIME session (when the dictionaries are ready).
+use crate::hangul::{jamo_of_key, Composer};
+use crate::rime::{keys, Session};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Language {
+    Japanese,
+    English,
+    Korean,
+    Chinese,
+}
+
+impl Language {
+    pub fn from_code(code: &str) -> Option<Language> {
+        Some(match code {
+            "ja" => Language::Japanese,
+            "en" => Language::English,
+            "ko" => Language::Korean,
+            "zh" => Language::Chinese,
+            _ => return None,
+        })
+    }
+
+    pub fn code(self) -> &'static str {
+        match self {
+            Language::Japanese => "ja",
+            Language::English => "en",
+            Language::Korean => "ko",
+            Language::Chinese => "zh",
+        }
+    }
+
+    /// The RIME schema it types with (None: no dictionary needed)
+    pub fn schema(self) -> Option<&'static str> {
+        match self {
+            Language::Japanese => Some("jaroomaji"),
+            Language::Chinese => Some("luna_pinyin"),
+            _ => None,
+        }
+    }
+}
+
+/// A key of the keyboard
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Key {
+    /// a letter, digit or symbol; uppercase when typed with Shift
+    Char(char),
+    Backspace,
+    Space,
+    Enter,
+    Left,
+    Right,
+    PageUp,
+    PageDown,
+}
+
+/// The word being composed (Japanese, Chinese): as shown, the segment being chosen and the caret
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Composition {
+    pub preedit: String,
+    pub selection: (usize, usize),
+    pub cursor: usize,
+}
+
+/// Everything the keyboard shows
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct State {
+    /// written so far (the composition not included)
+    pub text: String,
+    pub composition: Option<Composition>,
+    pub candidates: Vec<String>,
+    /// the candidate 確定 takes (index on the page)
+    pub highlighted: usize,
+    /// Japanese: 変換 was pressed, the segment shows as its highlighted candidate
+    pub converting: bool,
+    pub page: usize,
+    pub last_page: bool,
+    /// Korean: the syllable being made and its jamo
+    pub syllable: Option<(String, Vec<char>)>,
+    /// characters of the text and what is being composed (VRChat's chat box takes 144)
+    pub length: usize,
+}
+
+pub struct Input<'r> {
+    text: String,
+    language: Language,
+    rime: Option<Session<'r>>,
+    hangul: Composer,
+    converting: bool,
+}
+
+impl<'r> Input<'r> {
+    pub fn new(language: Language) -> Self {
+        Self { text: String::new(), language, rime: None, hangul: Composer::new(), converting: false }
+    }
+
+    /// The RIME session, once the dictionaries are ready (Japanese and Chinese type from then on)
+    pub fn attach(&mut self, session: Session<'r>, simplified: bool) {
+        self.rime = Some(session);
+        self.set_simplified(simplified);
+        self.select_schema();
+    }
+
+    pub fn language(&self) -> Language {
+        self.language
+    }
+
+    /// The language can be typed now (Japanese and Chinese need the dictionaries)
+    pub fn available(&self, language: Language) -> bool {
+        language.schema().is_none() || self.rime.is_some()
+    }
+
+    fn select_schema(&self) {
+        if let (Some(s), Some(schema)) = (&self.rime, self.language.schema()) {
+            s.select_schema(schema);
+            // jaroomaji starts in its ASCII mode
+            s.set_option("ascii_mode", false);
+        }
+    }
+
+    /// Switches language; what was being composed is written first
+    pub fn set_language(&mut self, language: Language) {
+        if language != self.language {
+            self.flush();
+            self.language = language;
+            self.select_schema();
+        }
+    }
+
+    pub fn set_simplified(&self, simplified: bool) {
+        if let Some(s) = &self.rime {
+            // luna_pinyin's switch: Simplified through OpenCC (only the Chinese schema has it)
+            s.set_option("zh_hans", simplified);
+        }
+    }
+
+    fn session(&self) -> Option<&Session<'r>> {
+        self.rime.as_ref().filter(|_| self.language.schema().is_some())
+    }
+
+    fn composing(&self) -> bool {
+        self.session().is_some_and(|s| !s.input().is_empty())
+    }
+
+    /// What RIME committed goes into the text
+    fn collect(&mut self) {
+        if let Some(text) = self.session().and_then(|s| s.take_commit()) {
+            self.text += &text;
+        }
+        self.converting &= self.composing();
+    }
+
+    /// The composition as shown (RIME's) or the Korean syllables, into the text: Japanese before
+    /// 変換 is its kana (RIME would write the first candidate)
+    fn flush(&mut self) {
+        let kana = self.language == Language::Japanese && !self.converting;
+        if let Some(s) = self.session() {
+            if !s.input().is_empty() {
+                if kana {
+                    s.key(keys::RETURN, 0);
+                } else {
+                    s.commit_composition();
+                }
+            }
+        }
+        self.collect();
+        self.text += &self.hangul.take();
+    }
+
+    pub fn key(&mut self, key: Key) {
+        match self.language {
+            Language::English => match key {
+                Key::Char(c) => self.text.push(c),
+                Key::Space => self.text.push(' '),
+                Key::Backspace => {
+                    self.text.pop();
+                }
+                _ => {}
+            },
+            Language::Korean => match key {
+                Key::Char(c) => self.hangul.input(jamo_of_key(c).unwrap_or(c)),
+                Key::Space => self.hangul.input(' '),
+                Key::Backspace => {
+                    if !self.hangul.backspace() {
+                        self.text.pop();
+                    }
+                }
+                _ => {}
+            },
+            Language::Japanese | Language::Chinese => self.rime_key(key),
+        }
+    }
+
+    fn rime_key(&mut self, key: Key) {
+        if self.session().is_none() {
+            return;
+        }
+        let composing = self.composing();
+        // what only the text takes
+        match key {
+            // a digit while composing would pick a candidate; the keyboard's own punctuation
+            // (、。，) and anything else RIME does not type: the composition is written first
+            Key::Char(c) if (c.is_ascii_digit() && composing) || !c.is_ascii_graphic() => {
+                self.flush();
+                self.text.push(c);
+                return;
+            }
+            Key::Space if !composing => {
+                self.text.push(' ');
+                return;
+            }
+            Key::Backspace if !composing => {
+                self.text.pop();
+                return;
+            }
+            Key::Enter if !composing => return,
+            _ => {}
+        }
+        // Japanese as Japanese keyboards do: 変換 shows the first candidate, then the next ones;
+        // 確定 takes the one shown, the kana before 変換 (jaroomaji's own Space would commit)
+        let japanese = self.language == Language::Japanese;
+        let converting = self.converting;
+        if let Key::Char(_) | Key::Backspace = key {
+            self.converting = false;
+        }
+        let Some(s) = self.session() else { return };
+        let taken = match key {
+            Key::Char(c) => s.key(c as i32, if c.is_ascii_uppercase() { keys::SHIFT_MASK } else { 0 }),
+            Key::Space if japanese => {
+                if converting {
+                    s.key(keys::DOWN, 0);
+                }
+                self.converting = true;
+                return;
+            }
+            Key::Enter if japanese && converting => s.select(s.context().highlighted),
+            Key::Space => s.key(keys::SPACE, 0),
+            Key::Enter => s.key(keys::RETURN, 0),
+            Key::Backspace => s.key(keys::BACKSPACE, 0),
+            Key::Left => s.key(keys::LEFT, 0),
+            Key::Right => s.key(keys::RIGHT, 0),
+            Key::PageUp => s.key(keys::PAGE_UP, 0),
+            Key::PageDown => s.key(keys::PAGE_DOWN, 0),
+        };
+        if let (Key::Char(c), false) = (key, taken) {
+            self.text.push(c);
+        }
+        self.collect();
+    }
+
+    /// The candidate at `index` of the page shown
+    pub fn select(&mut self, index: usize) {
+        if let Some(s) = self.session() {
+            s.select(index);
+        }
+        // the rest, if any, is being converted
+        self.converting = true;
+        self.collect();
+    }
+
+    /// The whole text (what is being composed included), then empty
+    pub fn take(&mut self) -> String {
+        self.flush();
+        std::mem::take(&mut self.text)
+    }
+
+    pub fn clear(&mut self) {
+        if let Some(s) = &self.rime {
+            s.clear();
+        }
+        self.hangul.take();
+        self.text.clear();
+        self.converting = false;
+    }
+
+    pub fn state(&self) -> State {
+        let mut state = State { text: self.text.clone(), ..Default::default() };
+        let mut composed = 0;
+        if let Some(s) = self.session() {
+            let c = s.context();
+            if !c.preedit.is_empty() {
+                composed = c.preedit.chars().count();
+                state.composition = Some(Composition { preedit: c.preedit, selection: c.selection, cursor: c.cursor });
+                state.candidates = c.candidates;
+                state.highlighted = c.highlighted;
+                state.converting = self.converting;
+                state.page = c.page;
+                state.last_page = c.last_page;
+            }
+        }
+        if self.language == Language::Korean {
+            // the syllables done are text; the one being made shows after it
+            state.text += self.hangul.written();
+            state.syllable = self.hangul.composing();
+            composed = state.syllable.as_ref().map_or(0, |(s, _)| s.chars().count());
+        }
+        state.length = state.text.chars().count() + composed;
+        state
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn typed(input: &mut Input, s: &str) {
+        for c in s.chars() {
+            input.key(if c == ' ' { Key::Space } else { Key::Char(c) });
+        }
+    }
+
+    #[test]
+    fn english_goes_in_as_typed() {
+        let mut i = Input::new(Language::English);
+        typed(&mut i, "Hi there");
+        i.key(Key::Backspace);
+        assert_eq!(i.state().text, "Hi ther");
+        assert_eq!(i.state().length, 7);
+        assert_eq!(i.take(), "Hi ther");
+        assert_eq!(i.state().text, "");
+    }
+
+    #[test]
+    fn korean_composes_and_shows_the_syllable_being_made() {
+        let mut i = Input::new(Language::Korean);
+        typed(&mut i, "dkssudgktpd");
+        let s = i.state();
+        assert_eq!(s.text, "안녕하");
+        assert_eq!(s.syllable, Some(("셍".to_string(), vec!['ㅅ', 'ㅔ', 'ㅇ'])));
+        assert_eq!(s.length, 4);
+        typed(&mut i, "y");
+        assert_eq!(i.take(), "안녕하세요");
+    }
+
+    #[test]
+    fn switching_language_keeps_what_was_written() {
+        let mut i = Input::new(Language::Korean);
+        typed(&mut i, "gksrmf");
+        i.set_language(Language::English);
+        typed(&mut i, " ok");
+        assert_eq!(i.take(), "한글 ok");
+    }
+
+    #[test]
+    fn japanese_waits_for_the_dictionaries() {
+        let mut i = Input::new(Language::Japanese);
+        assert!(!i.available(Language::Japanese));
+        assert!(i.available(Language::English));
+        typed(&mut i, "nihongo");
+        assert_eq!(i.state(), State::default());
+    }
+}

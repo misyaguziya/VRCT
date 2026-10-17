@@ -41,6 +41,7 @@ pub mod keys {
     pub const ESCAPE: i32 = 0xff1b;
     pub const LEFT: i32 = 0xff51;
     pub const RIGHT: i32 = 0xff53;
+    pub const DOWN: i32 = 0xff54;
     pub const PAGE_UP: i32 = 0xff55;
     pub const PAGE_DOWN: i32 = 0xff56;
     pub const SPACE: i32 = 0x20;
