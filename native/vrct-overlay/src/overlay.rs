@@ -75,7 +75,8 @@ pub enum Event {
     /// layout_callback: the VR view should draw this layout
     Layout { layout: Layout, tooltip_epoch: u64 },
     /// pointer_callback: where the pointer is on the VR view (logical px), None off it
-    Pointer(Option<(i32, i32)>),
+    /// where the pointer is on the VR view, and the other hand's when both point at it
+    Pointer(Option<(i32, i32)>, Option<(i32, i32)>),
     /// position_changed_callback: a window was moved / resized in VR (to save)
     Position { size: String, settings: Settings },
     /// panel_out_of_view_callback
@@ -323,6 +324,7 @@ pub(crate) struct Worker {
     pub intro: Intro,
     pub panel_out_of_view: bool,
     pub pointer_notified: Option<(i32, i32)>,
+    pub second_pointer_notified: Option<(i32, i32)>,
 }
 
 /// A random tooltip epoch start in 1..2^47 (secrets.randbelow)
@@ -357,7 +359,7 @@ impl Worker {
             layout, layout_gen: 0,
             // the VR view starts with the default layout
             layout_rendered: layout::PANEL_DEFAULT_SIZE,
-            intro: Intro::Idle, panel_out_of_view: false, pointer_notified: None,
+            intro: Intro::Idle, panel_out_of_view: false, pointer_notified: None, second_pointer_notified: None,
         }
     }
 
@@ -596,6 +598,8 @@ pub(crate) struct Run<'s> {
     /// waiting for the tracker (a controller) to connect
     pub pending: Vec<bool>,
     pub pointers: Vec<(PointerKind, u64, Option<ID3D11Texture2D>)>,
+    /// the other hand's dot (both hands pointing: a dot for each)
+    pub other_dot: Option<(u64, ID3D11Texture2D)>,
     pub toolbar: Option<u64>,
     pub ghost: Option<u64>,
     ghost_texture: Option<ID3D11Texture2D>,
@@ -655,6 +659,11 @@ pub(crate) struct Run<'s> {
     pub panel_input: HashMap<u32, (bool, Option<(i32, i32)>)>,
     /// hands whose trigger is ignored until released (no click after a grab)
     pub trigger_blocked: HashSet<u32>,
+    /// the hand whose press holds the VR view's one mouse button
+    pub mouse_owner: Option<u32>,
+    /// where each hand began pulling its trigger (the keyboard's key goes there: the hand moves as
+    /// the trigger is pulled)
+    pub trigger_aim: HashMap<u32, ((i32, i32), Instant)>,
     pub mouse: crate::window::Mouse,
     /// each controller's tip seen from its pose, and when to look again
     pub tip_offsets: HashMap<u32, (Mat4, Option<Instant>)>,
@@ -671,7 +680,7 @@ impl<'s> Run<'s> {
     fn new(vr: Vr<'s>, device: ID3D11Device, context: ID3D11DeviceContext, w: &Worker) -> Self {
         let now = Instant::now();
         Run {
-            vr, device, context, handles: vec![], textures: vec![], pending: vec![], pointers: vec![], toolbar: None, ghost: None,
+            vr, device, context, handles: vec![], textures: vec![], pending: vec![], pointers: vec![], other_dot: None, toolbar: None, ghost: None,
             ghost_texture: None, tooltip_handle: None, vr_resources_tried: false, hidden: HashSet::new(),
             grip_prev: HashMap::new(), grab_started: now, grabbing: None, grab_last_relative: None, grab_scale: None,
             grab_prev_time: now, grab_smoothed: None, grab_prev_target: None, grab_radius: None, grab_hand_distance: 1.0,
@@ -682,7 +691,7 @@ impl<'s> Run<'s> {
             launcher_intro_front: None, launcher_intro_logged: HashSet::new(), launcher_return: None, first_frame_wait_since: None,
             first_frame_wait_logged: false, tooltip_state: None, tooltip_ready: false, tooltip_shown: false,
             tooltip_manipulating: false, resizing: None, corner_prev: HashMap::new(), ghost_key: None, resize_undo: None,
-            panel_input: HashMap::new(), trigger_blocked: HashSet::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
+            panel_input: HashMap::new(), trigger_blocked: HashSet::new(), mouse_owner: None, trigger_aim: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
             debug_state: HashMap::new(), panel: crate::panel::Panel::new(w), panel_ready: false, poses: vec![],
         }
     }
@@ -718,6 +727,10 @@ impl<'s> Run<'s> {
             let texture = self.texture(handle, &layout::pointer_image(kind))?;
             self.pointers.push((kind, handle, Some(texture)));
         }
+        let handle = self.vr.overlay.create_overlay("VRCT_pointer_dot_other", "VRCT_pointer_dot_other")?;
+        self.vr.overlay.set_overlay_sort_order(handle, 100)?;
+        let texture = self.texture(handle, &layout::pointer_image(PointerKind::Dot))?;
+        self.other_dot = Some((handle, texture));
         // the VR UI's extra overlays only when it is on (no GPU work for subtitle-only users)
         self.vr_resources_tried = false;
         self.apply_vr_panel_enabled(w);
@@ -971,13 +984,14 @@ impl<'s> Run<'s> {
     /// capture after them
     fn teardown(&mut self, w: &mut Worker) {
         self.panel.close_stream();
-        for &handle in self.handles.iter().chain(self.pointers.iter().map(|p| &p.1)).chain(self.toolbar.iter())
+        for &handle in self.handles.iter().chain(self.pointers.iter().map(|p| &p.1)).chain(self.other_dot.iter().map(|d| &d.0)).chain(self.toolbar.iter())
             .chain(self.ghost.iter()).chain(self.tooltip_handle.iter())
         {
             let _ = self.vr.overlay.destroy_overlay(handle);
         }
         self.textures.clear();
         self.pointers.clear();
+        self.other_dot = None;
         self.ghost_texture = None;
         self.panel.close_gpu();
         let _ = w;

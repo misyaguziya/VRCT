@@ -13,7 +13,7 @@ pub const LAUNCHER_WIDTH_PX: u32 = 952;
 pub const PANEL_DEFAULT_SIZE: (u32, u32) = (900, 700);
 pub const PANEL_SIZE_RANGE: ((u32, u32), (u32, u32)) = ((600, 400), (1400, 1000));
 /// The keyboard's size (logical px)
-pub const KEYBOARD_SIZE: (u32, u32) = (1120, 560);
+pub const KEYBOARD_SIZE: (u32, u32) = (1200, 560);
 /// Corner radius of each region (logical px): outside it the capture is clear
 const PANEL_CORNER_RADIUS_PX: f64 = 24.0;
 

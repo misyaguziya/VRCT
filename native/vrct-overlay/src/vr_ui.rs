@@ -52,6 +52,10 @@ const FIRST_FRAME_WARN_SEC: f64 = 10.0;
 // The temporary window: above the launcher, within this horizontal distance of the head
 const POPUP_ABOVE_LAUNCHER_M: f64 = 0.18;
 const POPUP_DISTANCE_RANGE_M: (f64, f64) = (0.45, 0.65);
+/// The trigger's axis, the pull where a press begins, and how long before the click that counts
+const TRIGGER_AXIS: usize = 1;
+const TRIGGER_AIM_START: f32 = 0.15;
+const TRIGGER_AIM_SEC: f64 = 0.4;
 /// A key pressed on the keyboard: this long a vibration (SteamVR takes up to about 4 ms)
 const KEY_HAPTIC_US: u16 = 1500;
 /// The keyboard: this far ahead of the eyes (horizontally) and below them
@@ -282,13 +286,31 @@ impl Run<'_> {
                 let _ = self.vr.overlay.hide_overlay(handle);
             }
         }
+        if hit.is_none() {
+            self.show_other_pointer(None);
+        }
         let (Some(hit), Some(&(_, handle, _))) = (hit, self.pointers.iter().find(|p| p.0 == kind)) else { return };
-        let m = crate::math::to_hmd(&pose::pointer_transform(hit.point, hit.normal));
         let width = POINTER_WIDTH_M * if kind == PointerKind::Dot { 1.0 } else { 2.0 } * scale;
+        self.place_pointer(handle, hit, color, width);
+    }
+
+    fn place_pointer(&self, handle: u64, hit: &Hit, color: [f32; 3], width: f64) {
+        let m = crate::math::to_hmd(&pose::pointer_transform(hit.point, hit.normal));
         let _ = self.vr.overlay.set_overlay_transform_absolute(handle, vrct_openvr::TRACKING_UNIVERSE_STANDING, &m);
         let _ = self.vr.overlay.set_overlay_color(handle, color[0], color[1], color[2]);
         let _ = self.vr.overlay.set_overlay_width_in_meters(handle, width as f32);
         let _ = self.vr.overlay.show_overlay(handle);
+    }
+
+    /// The second hand's dot while both point at the VR UI (None hides it)
+    fn show_other_pointer(&self, hit: Option<&Hit>) {
+        let Some((handle, _)) = &self.other_dot else { return };
+        match hit {
+            Some(hit) => self.place_pointer(*handle, hit, COLOR_POINTER, POINTER_WIDTH_M),
+            None => {
+                let _ = self.vr.overlay.hide_overlay(*handle);
+            }
+        }
     }
 
     pub fn hide_pointer(&self) {
@@ -347,7 +369,7 @@ impl Run<'_> {
             }
             return;
         };
-        self.notify_pointer(w, None);
+        self.notify_pointer(w, None, None);
         let state = self.controller_state(hand);
         let grip = state.is_some_and(|s| s.button_pressed & GRIP_MASK != 0);
         let trigger = state.is_some_and(|s| s.button_pressed & TRIGGER_MASK != 0);
@@ -424,8 +446,13 @@ impl Run<'_> {
 
     /// Pointing with both hands: the pointer, input to the VR UI, the corner to resize and a grip to grab
     fn update_pointing(&mut self, w: &mut Worker, now: Instant) {
+        // a dot for each hand pointing (the first one shows the grab and scale marks too)
         let mut pointer: Option<Hit> = None;
+        let mut other: Option<Hit> = None;
+        let mut point = |hit: Hit| if pointer.is_none() { pointer = Some(hit) } else { other.get_or_insert(hit); };
         let mut hover_xy: Option<(i32, i32)> = None;
+        // the other hand's (its key lights up too)
+        let mut second_xy: Option<(i32, i32)> = None;
         let mut pointing_log = false;
         let mut pointing_launcher = false;
         let panel = w.region_index(Region::Panel);
@@ -510,13 +537,19 @@ impl Run<'_> {
                 let state = self.controller_state(hand);
                 self.handle_panel_input(hand, if corner.is_some() { None } else { xy }, state, on_keyboard);
                 let handle_xy = corner.and_then(|c| self.corner_handle_xy(w, c.0));
+                let logical = match (xy, self.panel.image_size) {
+                    (Some((x, y)), Some(image)) => {
+                        let scale = image.0 as f64 / w.layout.atlas.0 as f64;
+                        Some(((x as f64 / scale).round_ties_even() as i32, (y as f64 / scale).round_ties_even() as i32))
+                    }
+                    _ => None,
+                };
                 if hover_xy.is_none() && handle_xy.is_some() {
                     hover_xy = handle_xy;
-                } else if hover_xy.is_none()
-                    && let (Some((x, y)), Some(image)) = (xy, self.panel.image_size)
-                {
-                    let scale = image.0 as f64 / w.layout.atlas.0 as f64;
-                    hover_xy = Some(((x as f64 / scale).round_ties_even() as i32, (y as f64 / scale).round_ties_even() as i32));
+                } else if hover_xy.is_none() {
+                    hover_xy = logical;
+                } else if second_xy.is_none() && handle_xy.is_none() {
+                    second_xy = logical;
                 }
             }
 
@@ -525,21 +558,21 @@ impl Run<'_> {
                 && !matches!(target, Some((Target::Toolbar, _)))
             {
                 self.grip_prev.insert(hand, grip);
-                pointer.get_or_insert(hit);
+                point(hit);
                 continue;
             }
             // the bar cannot be grabbed: its buttons are clicks on the VR view
             if let Some((Target::Toolbar, hit)) = target {
                 self.grip_prev.insert(hand, grip);
-                pointer.get_or_insert(hit);
+                point(hit);
                 continue;
             }
             let grip_pressed_now = grip && !self.grip_prev.get(&hand).copied().unwrap_or(false);
             self.grip_prev.insert(hand, grip);
             let (Some(index), Some((_, hit))) = (target_index, target) else { continue };
             if !grip_pressed_now {
-                if !grip && self.is_visible(w, index) && pointer.is_none() {
-                    pointer = Some(hit);
+                if !grip && self.is_visible(w, index) {
+                    point(hit);
                 }
                 continue;
             }
@@ -564,20 +597,27 @@ impl Run<'_> {
             self.grab_smoothed = None;
             self.grab_prev_target = None;
             self.show_pointer(Some(&hit), COLOR_POINTER, 1.0, PointerKind::Dot);
+            self.show_other_pointer(None);
             self.set_highlight(w, Some(index), COLOR_GRABBING);
             return;
         }
         self.show_pointer(pointer.as_ref(), COLOR_POINTER, 1.0, PointerKind::Dot);
-        self.notify_pointer(w, hover_xy);
+        self.show_other_pointer(other.as_ref());
+        self.notify_pointer(w, hover_xy, second_xy);
         self.update_toolbar_visibility(w, now, pointing_log);
         self.launcher_pointed = pointing_launcher;
     }
 
     /// handlePanelInput: the trigger clicks, the stick scrolls, where the laser hits the VR view
-    /// (xy in the capture's px; None: off it). A key of the keyboard pressed: a tap in the hand
+    /// (xy in the capture's px; None: off it). A key of the keyboard pressed: a tap in the hand.
+    /// Both hands share the one mouse: a press holds it (the other hand's moves wait), a press of
+    /// the other hand ends it first.
     fn handle_panel_input(&mut self, hand: u32, xy: Option<(i32, i32)>, state: Option<ControllerState>, on_keyboard: bool) {
         let (last_pressed, last_xy) = self.panel_input.get(&hand).copied().unwrap_or((false, None));
         let (Some(hwnd), Some(_), Some(state)) = (self.panel.hwnd, self.panel.image_size, state) else { return };
+        let owns = self.mouse_owner == Some(hand);
+        // (a hand that went away still pressing holds it no more)
+        let other = self.mouse_owner.filter(|&o| o != hand && self.panel_input.get(&o).is_some_and(|p| p.0));
         let mut pressed = state.button_pressed & TRIGGER_MASK != 0;
         if self.trigger_blocked.contains(&hand) {
             if pressed {
@@ -589,27 +629,52 @@ impl Run<'_> {
         let Some((x, y)) = xy else {
             // off the VR view: released outside, so a press begun on a button does not click (no
             // mic turned on by mistake), and the hover goes
-            if last_xy.is_some() {
-                self.mouse.moved(hwnd, OUTSIDE_XY.0, OUTSIDE_XY.1, last_pressed);
-                if last_pressed {
+            if last_xy.is_some() && other.is_none() {
+                self.mouse.moved(hwnd, OUTSIDE_XY.0, OUTSIDE_XY.1, last_pressed && owns);
+                if last_pressed && owns {
                     self.mouse.up(hwnd, OUTSIDE_XY.0, OUTSIDE_XY.1);
                     // coming back still pressed is not a new press (no repeated long presses)
                     self.trigger_blocked.insert(hand);
                 }
             }
+            if owns {
+                self.mouse_owner = None;
+            }
             self.panel_input.remove(&hand);
+            self.trigger_aim.remove(&hand);
             return;
         };
-        if xy != last_xy {
-            self.mouse.moved(hwnd, x, y, pressed);
+        let now = Instant::now();
+        if state.axis[TRIGGER_AXIS][0] < TRIGGER_AIM_START {
+            self.trigger_aim.remove(&hand);
+        } else {
+            self.trigger_aim.entry(hand).or_insert(((x, y), now));
+        }
+        // the other hand's press holds the mouse: this one's moves wait
+        if xy != last_xy && other.is_none() {
+            self.mouse.moved(hwnd, x, y, pressed && owns);
         }
         if pressed && !last_pressed {
-            self.mouse.down(hwnd, x, y);
+            if let Some(o) = other {
+                let (ox, oy) = self.panel_input.get(&o).and_then(|p| p.1).unwrap_or((x, y));
+                self.mouse.up(hwnd, ox, oy);
+                // its release later is not a click
+                self.trigger_blocked.insert(o);
+            }
+            // a key: where the pull began, if it began just now (the press itself shakes the hand)
+            let (px, py) = match self.trigger_aim.get(&hand) {
+                Some(&(at, since)) if on_keyboard && now.duration_since(since).as_secs_f64() < TRIGGER_AIM_SEC => at,
+                _ => (x, y),
+            };
+            self.mouse.moved(hwnd, px, py, false);
+            self.mouse.down(hwnd, px, py);
+            self.mouse_owner = Some(hand);
             if on_keyboard {
                 self.vr.system.trigger_haptic_pulse(hand, KEY_HAPTIC_US);
             }
-        } else if last_pressed && !pressed {
+        } else if last_pressed && !pressed && owns {
             self.mouse.up(hwnd, x, y);
+            self.mouse_owner = None;
         }
         let stick_y = state.axis[0][1] as f64;
         if stick_y.abs() > PANEL_SCROLL_DEADZONE {
@@ -618,23 +683,22 @@ impl Run<'_> {
         self.panel_input.insert(hand, (pressed, xy));
     }
 
-    /// notifyPointer: only when it moved (4 px or more)
-    pub fn notify_pointer(&mut self, w: &mut Worker, xy: Option<(i32, i32)>) {
-        let last = w.pointer_notified;
-        if xy == last {
-            return;
-        }
-        if let (Some(a), Some(b)) = (xy, last)
-            && (a.0 - b.0).abs() < POINTER_NOTIFY_MIN_MOVE_PX && (a.1 - b.1).abs() < POINTER_NOTIFY_MIN_MOVE_PX
-        {
+    /// notifyPointer: only when one moved (4 px or more)
+    pub fn notify_pointer(&mut self, w: &mut Worker, xy: Option<(i32, i32)>, second: Option<(i32, i32)>) {
+        let moved = |now: Option<(i32, i32)>, last: Option<(i32, i32)>| match (now, last) {
+            (Some(a), Some(b)) => (a.0 - b.0).abs() >= POINTER_NOTIFY_MIN_MOVE_PX || (a.1 - b.1).abs() >= POINTER_NOTIFY_MIN_MOVE_PX,
+            (a, b) => a != b,
+        };
+        if !moved(xy, w.pointer_notified) && !moved(second, w.second_pointer_notified) {
             return;
         }
         w.pointer_notified = xy;
+        w.second_pointer_notified = second;
         // the tooltip is matched against the position told (the current one flickers at the edge)
         if self.tooltip_state.is_some() && !self.tooltip_target_matches(w, xy) {
             self.reset_tooltip_epoch(w, true);
         }
-        w.emit(crate::overlay::Event::Pointer(xy));
+        w.emit(crate::overlay::Event::Pointer(xy, second));
     }
 
     // ------------------------------------------------------------------ scaling and resizing
@@ -735,7 +799,7 @@ impl Run<'_> {
             center: (0.0, 0.0),
         });
         self.set_toolbar_visible(w, false);
-        self.notify_pointer(w, None);
+        self.notify_pointer(w, None, None);
         self.set_highlight(w, Some(pi), COLOR_GRABBING);
     }
 

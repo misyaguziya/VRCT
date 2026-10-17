@@ -106,8 +106,8 @@ impl Overlays {
         large.ui_scaling *= LARGE_SCALE;
         let popup = Settings { position: [0.0; 6], tracker: "Playspace".into(), opacity: 1.0, ui_scaling: 0.36,
                                display_duration: 5.0, fadeout_duration: 0.0, panel_size: None };
-        // the keyboard: its keys about 4 cm wide (80 px of 1120)
-        let keyboard = Settings { ui_scaling: 0.56, ..popup.clone() };
+        // the keyboard: its keys about 3.6 cm wide (72 px of 1200)
+        let keyboard = Settings { ui_scaling: 0.6, ..popup.clone() };
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),
@@ -137,7 +137,10 @@ fn overlay(app: &App) -> std::sync::MutexGuard<'_, Overlay> {
 fn on_event(app: &App, event: Event) -> Result<()> {
     match event {
         Event::Layout { layout, tooltip_epoch } => app.run(200, "vr_panel_layout", layout_json(&layout, tooltip_epoch)),
-        Event::Pointer(xy) => app.run(200, "vr_panel_pointer", xy.map_or(Value::Null, |(x, y)| json!({"x": x, "y": y}))),
+        // {"x", "y", "second": the other hand's {"x", "y"} or null}; null when none points at it
+        Event::Pointer(xy, second) => app.run(200, "vr_panel_pointer", xy.map_or(Value::Null, |(x, y)| {
+            json!({"x": x, "y": y, "second": second.map(|(x, y)| json!({"x": x, "y": y}))})
+        })),
         Event::PanelOutOfView(out) => app.run(200, "vr_panel_log_out_of_view", json!(out)),
         Event::LauncherIntro(intro) => app.run(200, "vr_panel_launcher_intro", json!(intro.name())),
         Event::Position { size, settings } => position_changed(app, &size, position_of(&settings)),

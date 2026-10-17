@@ -473,7 +473,7 @@ fn vr_ui() -> Rig {
     let mut panel = settings("Playspace", [PANEL_AT[0], PANEL_AT[1], -PANEL_AT[2], 0.0, 0.0, 0.0], 0.6);
     panel.panel_size = Some((900, 700));
     let mut r = Rig::new(vec![("panel", panel), ("launcher", settings("LeftHand", [0.0; 6], 0.2)),
-                              ("keyboard", settings("Playspace", [0.0; 6], 0.56))]);
+                              ("keyboard", settings("Playspace", [0.0; 6], 0.6))]);
     r.hand(LEFT, translation(WRIST));
     r.run.panel.image_size = Some(r.w.layout.atlas);
     r.run.panel.layout_applied = Some((r.w.layout_gen, r.w.layout));
@@ -621,6 +621,19 @@ fn a_recalled_log_comes_in_front_of_the_eyes() {
 }
 
 #[test]
+fn each_hand_pointing_at_the_vr_ui_shows_its_own_dot() {
+    let mut r = vr_ui();
+    aim_at_panel(&mut r);
+    r.hand(LEFT, aiming([-0.2, 1.2, -0.3], PANEL_AT));
+    r.frame(0);
+    assert!(r.shown("VRCT_pointer_dot") && r.shown("VRCT_pointer_dot_other"));
+    // one hand away: one dot
+    r.hand(LEFT, aiming([-0.2, 1.2, -0.3], [-3.0, 1.2, 0.0]));
+    r.frame(0);
+    assert!(r.shown("VRCT_pointer_dot") && !r.shown("VRCT_pointer_dot_other"));
+}
+
+#[test]
 fn the_keyboard_opens_in_front_of_the_head_below_the_eyes_facing_them() {
     let mut r = vr_ui();
     let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
@@ -648,16 +661,21 @@ fn the_keyboard_opens_in_front_of_the_head_below_the_eyes_facing_them() {
 #[test]
 fn only_pointer_moves_of_4_px_or_more_are_told() {
     let mut r = vr_ui();
-    let told = |r: &Rig| r.events.lock().unwrap().iter().filter(|e| matches!(e, Event::Pointer(_))).count();
+    let told = |r: &Rig| r.events.lock().unwrap().iter().filter(|e| matches!(e, Event::Pointer(..))).count();
     // (the left hand's laser may point at the log already)
     let before = told(&r);
-    r.run.notify_pointer(&mut r.w, Some((100, 100)));
-    r.run.notify_pointer(&mut r.w, Some((103, 102)));
+    r.run.notify_pointer(&mut r.w, Some((100, 100)), None);
+    r.run.notify_pointer(&mut r.w, Some((103, 102)), None);
     assert_eq!(told(&r) - before, 1);
-    r.run.notify_pointer(&mut r.w, Some((104, 100)));
+    r.run.notify_pointer(&mut r.w, Some((104, 100)), None);
     assert_eq!(told(&r) - before, 2);
-    r.run.notify_pointer(&mut r.w, None);
+    r.run.notify_pointer(&mut r.w, None, None);
     assert_eq!(told(&r) - before, 3);
+    // the other hand's moves count too
+    r.run.notify_pointer(&mut r.w, Some((100, 100)), Some((300, 300)));
+    r.run.notify_pointer(&mut r.w, Some((100, 100)), Some((310, 300)));
+    assert_eq!(told(&r) - before, 5);
+    assert!(matches!(r.events.lock().unwrap().last(), Some(Event::Pointer(Some((100, 100)), Some((310, 300))))));
 }
 
 /// The point on the log window `x`, `y` metres from its centre (right, up)
