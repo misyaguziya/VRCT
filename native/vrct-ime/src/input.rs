@@ -140,7 +140,8 @@ impl<'r> Input<'r> {
         self.rime.as_ref().filter(|_| self.language.schema().is_some())
     }
 
-    fn composing(&self) -> bool {
+    /// A word is being composed (Japanese, Chinese): Enter commits it rather than sending
+    pub fn composing(&self) -> bool {
         self.session().is_some_and(|s| !s.input().is_empty())
     }
 
@@ -200,11 +201,16 @@ impl<'r> Input<'r> {
         let composing = self.composing();
         // what only the text takes
         match key {
-            // a digit while composing would pick a candidate; the keyboard's own punctuation
-            // (、。，) and anything else RIME does not type: the composition is written first
-            Key::Char(c) if (c.is_ascii_digit() && composing) || !c.is_ascii_graphic() => {
+            // RIME types the readings (romaji, pinyin; ー, and ' between pinyin syllables). The rest
+            // goes after what is composed: digits (RIME picks a candidate with them), punctuation
+            // (RIME's own pages candidates with . and commits with others, some converted, some
+            // not) and capitals (jaroomaji makes Shift katakana letter by letter)
+            Key::Char(c) if !(c.is_ascii_lowercase() || (c == '-' && self.language == Language::Japanese)
+                || (c == '\'' && self.language == Language::Chinese && composing)) => {
                 self.flush();
-                self.text.push(c);
+                // 1.5 and 1,000 stay as typed
+                let after_digit = self.text.ends_with(|t: char| t.is_ascii_digit());
+                self.text.push(if after_digit && (c == '.' || c == ',') { c } else { full_width(self.language, c) });
                 return;
             }
             Key::Space if !composing => {
@@ -227,7 +233,7 @@ impl<'r> Input<'r> {
         }
         let Some(s) = self.session() else { return };
         let taken = match key {
-            Key::Char(c) => s.key(c as i32, if c.is_ascii_uppercase() { keys::SHIFT_MASK } else { 0 }),
+            Key::Char(c) => s.key(c as i32, 0),
             Key::Space if japanese => {
                 if converting {
                     s.key(keys::DOWN, 0);
@@ -258,6 +264,11 @@ impl<'r> Input<'r> {
         // the rest, if any, is being converted
         self.converting = true;
         self.collect();
+    }
+
+    /// Text that could not be sent goes back, before what was typed since
+    pub fn restore(&mut self, text: &str) {
+        self.text.insert_str(0, text);
     }
 
     /// The whole text (what is being composed included), then empty
@@ -301,6 +312,17 @@ impl<'r> Input<'r> {
     }
 }
 
+/// The punctuation the keyboard types, as Japanese / Chinese text writes it (the rest as typed)
+fn full_width(language: Language, c: char) -> char {
+    let table: &[(char, char)] = match language {
+        Language::Japanese => &[(',', '、'), ('.', '。'), ('?', '？'), ('!', '！'), ('[', '「'), (']', '」'), ('/', '・'), ('~', '〜')],
+        Language::Chinese => &[(',', '，'), ('.', '。'), ('?', '？'), ('!', '！'), ('[', '「'), (']', '」'), (';', '；'), (':', '：'),
+                               ('(', '（'), (')', '）'), ('\\', '、')],
+        _ => &[],
+    };
+    table.iter().find(|(from, _)| *from == c).map_or(c, |(_, to)| *to)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -341,6 +363,16 @@ mod tests {
         i.set_language(Language::English);
         typed(&mut i, " ok");
         assert_eq!(i.take(), "한글 ok");
+    }
+
+    #[test]
+    fn text_not_sent_goes_back_before_what_was_typed_since() {
+        let mut i = Input::new(Language::English);
+        typed(&mut i, "hello");
+        let sent = i.take();
+        typed(&mut i, " again");
+        i.restore(&sent);
+        assert_eq!(i.take(), "hello again");
     }
 
     #[test]

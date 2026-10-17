@@ -114,5 +114,15 @@ fn japanese_and_chinese_convert() {
     i.set_language(Language::Korean);
     typed(&mut i, "gksrmf");
     assert_eq!(i.take(), "にほんごかんじ2かな、に中文한글");
+    // the keyboard's punctuation as Japanese writes it (RIME's own paged with . and converted
+    // with ?), but after digits; capitals as typed (jaroomaji's Shift is katakana)
+    i.set_language(Language::Japanese);
+    for (keys, text) in [("konnichiha.", "こんにちは。"), ("nihongo?", "にほんご？"), ("1.5", "1.5"), ("[a]", "「あ」"), ("VRCTdesu", "VRCTです")] {
+        typed(&mut i, keys);
+        assert_eq!(i.take(), text, "{keys}");
+    }
+    i.set_language(Language::Chinese);
+    typed(&mut i, "nihao,");
+    assert_eq!(i.take(), "你好，");
     let _ = std::fs::remove_dir_all(&user);
 }
