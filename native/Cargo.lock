@@ -3481,6 +3481,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "vrct-ime"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "vrct-ocr"
 version = "0.1.0"
 dependencies = [
