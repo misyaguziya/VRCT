@@ -27,6 +27,12 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/vr_panel_tooltip", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
 
+    // VRキーボード: キー・候補・クリアの応答はキーボードの表示そのもの。送信の応答はログにも出す
+    { endpoint: "/run/keyboard_key", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_select", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_clear", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_send", ns: common, hook_name: "useKeyboard", method_name: "receiveKeyboardSend" },
+
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },
     { endpoint: "/set/data/main_window_geometry", ns: null, hook_name: null, method_name: null },
 

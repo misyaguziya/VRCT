@@ -367,6 +367,14 @@ impl System<'_> {
         ok.then_some(state)
     }
 
+    /// A short vibration of the controller (`axis` 0, up to about 4 ms)
+    pub fn trigger_haptic_pulse(&self, index: u32, axis: u32, duration_us: u16) {
+        unsafe {
+            let f: unsafe extern "C" fn(u32, u32, u16) = self.0.f(tables::system::TRIGGER_HAPTIC_PULSE);
+            f(index, axis, duration_us)
+        }
+    }
+
     pub fn poll_next_event(&self) -> Option<Event> {
         let mut event = Event::default();
         let ok = unsafe {

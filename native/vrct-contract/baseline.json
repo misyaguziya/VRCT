@@ -4630,6 +4630,9 @@
         ],
         "tooltip": [
           0
+        ],
+        "keyboard": [
+          0
         ]
       },
       "tooltip_epoch": 0
@@ -4744,9 +4747,7 @@
       "endpoint": "/get/data/selected_tab_no",
       "status": 200,
       "result": "1",
-      "pushes": [
-        "/run/selected_speaker_device"
-      ],
+      "pushes": [],
       "push_results": [],
       "ms": 0
     },
@@ -5589,6 +5590,7 @@
       "status": 200,
       "result": [],
       "pushes": [
+        "/run/selected_speaker_device",
         "/run/software_update_info"
       ],
       "push_results": [],
@@ -6403,6 +6405,9 @@
             0
           ],
           "tooltip": [
+            0
+          ],
+          "keyboard": [
             0
           ]
         },
@@ -9965,7 +9970,8 @@
       "status": 200,
       "result": {
         "log": true,
-        "popup": false
+        "popup": false,
+        "keyboard": false
       },
       "pushes": [],
       "push_results": [],
@@ -9977,7 +9983,8 @@
       "status": 200,
       "result": {
         "log": false,
-        "popup": false
+        "popup": false,
+        "keyboard": false
       },
       "pushes": [],
       "push_results": [],

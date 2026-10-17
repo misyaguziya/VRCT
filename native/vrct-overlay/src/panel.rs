@@ -560,7 +560,7 @@ impl Run<'_> {
 
     /// The VR UI overlays sharing the texture: the windows, the bar and the tooltip
     fn region_handles(&self, w: &Worker) -> Vec<(Region, u64)> {
-        let mut handles: Vec<(Region, u64)> = [Region::Panel, Region::Launcher, Region::Popup].into_iter()
+        let mut handles: Vec<(Region, u64)> = [Region::Panel, Region::Launcher, Region::Popup, Region::Keyboard].into_iter()
             .filter_map(|r| w.region_index(r).map(|i| (r, self.handles[i]))).collect();
         handles.extend(self.toolbar.map(|h| (Region::Toolbar, h)));
         handles.extend(self.tooltip_handle.map(|h| (Region::Tooltip, h)));

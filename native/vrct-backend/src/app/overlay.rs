@@ -20,6 +20,7 @@ const LARGE: &str = "large";
 const PANEL: &str = "panel";
 const LAUNCHER: &str = "launcher";
 const POPUP: &str = "popup";
+const KEYBOARD: &str = "keyboard";
 const POSITION_KEYS: [&str; 6] = ["x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation"];
 const PANEL_ANCHORS: [&str; 4] = ["Playspace", "LeftHand", "RightHand", "HMD"];
 /// the large log's overlay is this part of its setting's width (Model.init)
@@ -105,12 +106,15 @@ impl Overlays {
         large.ui_scaling *= LARGE_SCALE;
         let popup = Settings { position: [0.0; 6], tracker: "Playspace".into(), opacity: 1.0, ui_scaling: 0.36,
                                display_duration: 5.0, fadeout_duration: 0.0, panel_size: None };
+        // the keyboard: its keys about 4 cm wide (80 px of 1120)
+        let keyboard = Settings { ui_scaling: 0.56, ..popup.clone() };
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),
             (PANEL.into(), settings_of(&config.get("OVERLAY_VR_PANEL_SETTINGS"))),
             (LAUNCHER.into(), settings_of(&launcher)),
             (POPUP.into(), popup),
+            (KEYBOARD.into(), keyboard),
         ];
         let events = move |event: Event| {
             if let Some(app) = app.get().and_then(|w| w.upgrade()) {
@@ -401,12 +405,13 @@ pub fn set_disable_overlay_vr_tooltip(app: &App, _: Data) -> Result<Reply> {
     current(app, "OVERLAY_VR_TOOLTIP")
 }
 
-/// setVrPanelWindows: {"log", "popup"}, anything but true is false
+/// setVrPanelWindows: {"log", "popup", "keyboard"}, anything but true is false
 pub fn set_vr_panel_windows(app: &App, data: Data) -> Result<Reply> {
     let data = data.unwrap_or(Value::Null);
-    let (log, popup) = (data.get("log") == Some(&json!(true)), data.get("popup") == Some(&json!(true)));
-    overlay(app).set_vr_windows(log, popup);
-    Ok(Reply::ok(json!({"log": log, "popup": popup})))
+    let on = |key: &str| data.get(key) == Some(&json!(true));
+    let (log, popup, keyboard) = (on("log"), on("popup"), on("keyboard"));
+    overlay(app).set_vr_windows(log, popup, keyboard);
+    Ok(Reply::ok(json!({"log": log, "popup": popup, "keyboard": keyboard})))
 }
 
 pub fn recall_vr_panel_log(app: &App, _: Data) -> Result<Reply> {

@@ -12,6 +12,8 @@ pub const LAUNCHER_WIDTH_PX: u32 = 952;
 /// The log window's size (logical px): its default and the range of a corner drag
 pub const PANEL_DEFAULT_SIZE: (u32, u32) = (900, 700);
 pub const PANEL_SIZE_RANGE: ((u32, u32), (u32, u32)) = ((600, 400), (1400, 1000));
+/// The keyboard's size (logical px)
+pub const KEYBOARD_SIZE: (u32, u32) = (1120, 560);
 /// Corner radius of each region (logical px): outside it the capture is clear
 const PANEL_CORNER_RADIUS_PX: f64 = 24.0;
 
@@ -27,10 +29,12 @@ pub enum Region {
     /// the bar under the log (moves with it, never saved)
     Toolbar,
     Tooltip,
+    /// the VR keyboard, put in front of the head when opened
+    Keyboard,
 }
 
 impl Region {
-    pub const ALL: [Region; 5] = [Region::Panel, Region::Launcher, Region::Popup, Region::Toolbar, Region::Tooltip];
+    pub const ALL: [Region; 6] = [Region::Panel, Region::Launcher, Region::Popup, Region::Toolbar, Region::Tooltip, Region::Keyboard];
 
     /// The name in the settings and the layout ("panel", ...)
     pub fn name(self) -> &'static str {
@@ -40,6 +44,7 @@ impl Region {
             Region::Popup => "popup",
             Region::Toolbar => "toolbar",
             Region::Tooltip => "tooltip",
+            Region::Keyboard => "keyboard",
         }
     }
 
@@ -52,22 +57,26 @@ impl Region {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Layout {
     pub atlas: (u32, u32),
-    pub regions: [[u32; 4]; 5],
+    pub regions: [[u32; 4]; 6],
 }
 
 impl Layout {
     /// computeVrLayout: the log at the top left, the launcher under it, the temporary window, the
-    /// bar and the tooltip in a column on the right (past the launcher)
+    /// bar and the tooltip in a column on the right (past the launcher); the keyboard under the
+    /// launcher (or the tooltip, whichever is lower)
     pub fn new(width: u32, height: u32) -> Layout {
         let right_x = width.max(LAUNCHER_WIDTH_PX + 10) + 8;
+        let (kw, kh) = KEYBOARD_SIZE;
+        let keyboard_y = (height + 8 + 128).max(880) + 8;
         Layout {
-            atlas: (right_x + 720, (height + 8 + 128).max(880)),
+            atlas: ((right_x + 720).max(kw), keyboard_y + kh),
             regions: [
                 [0, 0, width, height],
                 [10, height + 8, LAUNCHER_WIDTH_PX, 128],
                 [right_x, 0, 720, 640],
                 [right_x, 656, 720, 96],
                 [right_x, 760, 360, 120],
+                [0, keyboard_y, kw, kh],
             ],
         }
     }

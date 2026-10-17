@@ -102,7 +102,7 @@ pub(crate) enum Command {
     Position(String, [f64; 6], String),
     DisplayDuration(String, f64),
     FadeoutDuration(String, f64),
-    VrWindows(bool, bool),
+    VrWindows(bool, bool, bool),
     VrPanelEnabled(bool),
     PanelLocked(bool),
     LauncherAutoHide(bool),
@@ -217,9 +217,9 @@ impl Overlay {
         self.send(Command::FadeoutDuration(size.into(), seconds));
     }
 
-    /// setVrWindows: whether the log window and the temporary window show
-    pub fn set_vr_windows(&self, log: bool, popup: bool) {
-        self.send(Command::VrWindows(log, popup));
+    /// setVrWindows: whether the log window, the temporary window and the keyboard show
+    pub fn set_vr_windows(&self, log: bool, popup: bool, keyboard: bool) {
+        self.send(Command::VrWindows(log, popup, keyboard));
     }
 
     /// setVrPanelEnabled: the VR UI as a whole (off: hidden, not captured)
@@ -307,8 +307,8 @@ pub(crate) struct Worker {
     pub launcher_defaults: Option<Settings>,
     pub launcher_reset_requested: bool,
     pub launcher_reset_keep_hand: bool,
-    /// (log, popup) wanted shown
-    pub vr_windows_wanted: (bool, bool),
+    /// (log, popup, keyboard) wanted shown
+    pub vr_windows_wanted: (bool, bool, bool),
     pub requested_anchor: Option<String>,
     pub recall_requested: Option<Instant>,
     pub tooltip_epoch: u64,
@@ -336,7 +336,7 @@ fn random_epoch() -> u64 {
 impl Worker {
     fn new(sizes: Vec<(String, Settings)>, commands: Receiver<Command>, log: Log, events: Events) -> Self {
         let sizes: Vec<Size> = sizes.into_iter().map(|(name, settings)| Size {
-            region: Region::from_name(&name).filter(|r| matches!(r, Region::Panel | Region::Launcher | Region::Popup)),
+            region: Region::from_name(&name).filter(|r| matches!(r, Region::Panel | Region::Launcher | Region::Popup | Region::Keyboard)),
             name, settings, last_update: Instant::now(), fade_ratio: 1.0, image: None,
         }).collect();
         let panel = sizes.iter().find(|s| s.region == Some(Region::Panel)).and_then(|s| s.settings.panel_size)
@@ -352,7 +352,7 @@ impl Worker {
             sizes, commands, log, events, shared, stopped: false, connect_failure_logged: false,
             vr_panel_enabled: true, panel_enabled_requests: VecDeque::new(), panel_locked: false, launcher_auto_hide: true,
             launcher_defaults: None, launcher_reset_requested: false, launcher_reset_keep_hand: false,
-            vr_windows_wanted: (false, false), requested_anchor: None, recall_requested: None,
+            vr_windows_wanted: (false, false, false), requested_anchor: None, recall_requested: None,
             tooltip_epoch, tooltip_revision: 0, tooltip_requests: VecDeque::new(),
             layout, layout_gen: 0,
             // the VR view starts with the default layout
@@ -439,7 +439,7 @@ impl Worker {
     /// The requests that only set what the next frame does (both with and without SteamVR)
     pub(crate) fn apply_request(&mut self, command: Command) {
         match command {
-            Command::VrWindows(log, popup) => self.vr_windows_wanted = (log, popup),
+            Command::VrWindows(log, popup, keyboard) => self.vr_windows_wanted = (log, popup, keyboard),
             Command::VrPanelEnabled(enabled) => self.panel_enabled_requests.push_back(enabled),
             Command::PanelLocked(locked) => self.panel_locked = locked,
             Command::LauncherAutoHide(enabled) => self.launcher_auto_hide = enabled,

@@ -7,6 +7,7 @@ pub(crate) trait VrSystem {
     fn device_to_absolute_tracking_pose(&self, origin: i32, predicted_seconds: f32) -> Vec<TrackedDevicePose>;
     fn tracked_device_index_for_controller_role(&self, role: i32) -> u32;
     fn controller_state(&self, index: u32) -> Option<ControllerState>;
+    fn trigger_haptic_pulse(&self, index: u32, duration_us: u16);
     fn poll_next_event(&self) -> Option<Event>;
     fn string_tracked_device_property(&self, index: u32, property: u32) -> String;
     fn tracked_device_activity_level(&self, index: u32) -> i32;
@@ -45,6 +46,9 @@ impl VrSystem for vrct_openvr::System<'_> {
     }
     fn controller_state(&self, index: u32) -> Option<ControllerState> {
         self.controller_state(index)
+    }
+    fn trigger_haptic_pulse(&self, index: u32, duration_us: u16) {
+        self.trigger_haptic_pulse(index, 0, duration_us)
     }
     fn poll_next_event(&self) -> Option<Event> {
         self.poll_next_event()

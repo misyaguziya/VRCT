@@ -52,6 +52,11 @@ const FIRST_FRAME_WARN_SEC: f64 = 10.0;
 // The temporary window: above the launcher, within this horizontal distance of the head
 const POPUP_ABOVE_LAUNCHER_M: f64 = 0.18;
 const POPUP_DISTANCE_RANGE_M: (f64, f64) = (0.45, 0.65);
+/// A key pressed on the keyboard: this long a vibration (SteamVR takes up to about 4 ms)
+const KEY_HAPTIC_US: u16 = 1500;
+/// The keyboard: this far ahead of the eyes (horizontally) and below them
+const KEYBOARD_AHEAD_M: f64 = 0.45;
+const KEYBOARD_BELOW_EYES_M: f64 = 0.30;
 // A recall asked for with the log closed waits this long for it to open
 const RECALL_PENDING_SEC: f64 = 1.0;
 // The bar under the log: fixed size (0.4 m per 900 px), this gap, shown after pointing at the
@@ -500,9 +505,10 @@ impl Run<'_> {
                 {
                     xy = self.region_pixel(w, region, hit, &overlay_pose);
                 }
+                let on_keyboard = target.as_ref().and_then(|(t, _)| self.target_region(w, *t)) == Some(Region::Keyboard);
                 // no click or scroll on a corner handle, only its hover
                 let state = self.controller_state(hand);
-                self.handle_panel_input(hand, if corner.is_some() { None } else { xy }, state);
+                self.handle_panel_input(hand, if corner.is_some() { None } else { xy }, state, on_keyboard);
                 let handle_xy = corner.and_then(|c| self.corner_handle_xy(w, c.0));
                 if hover_xy.is_none() && handle_xy.is_some() {
                     hover_xy = handle_xy;
@@ -568,8 +574,8 @@ impl Run<'_> {
     }
 
     /// handlePanelInput: the trigger clicks, the stick scrolls, where the laser hits the VR view
-    /// (xy in the capture's px; None: off it)
-    fn handle_panel_input(&mut self, hand: u32, xy: Option<(i32, i32)>, state: Option<ControllerState>) {
+    /// (xy in the capture's px; None: off it). A key of the keyboard pressed: a tap in the hand
+    fn handle_panel_input(&mut self, hand: u32, xy: Option<(i32, i32)>, state: Option<ControllerState>, on_keyboard: bool) {
         let (last_pressed, last_xy) = self.panel_input.get(&hand).copied().unwrap_or((false, None));
         let (Some(hwnd), Some(_), Some(state)) = (self.panel.hwnd, self.panel.image_size, state) else { return };
         let mut pressed = state.button_pressed & TRIGGER_MASK != 0;
@@ -599,6 +605,9 @@ impl Run<'_> {
         }
         if pressed && !last_pressed {
             self.mouse.down(hwnd, x, y);
+            if on_keyboard {
+                self.vr.system.trigger_haptic_pulse(hand, KEY_HAPTIC_US);
+            }
         } else if last_pressed && !pressed {
             self.mouse.up(hwnd, x, y);
         }
@@ -1170,7 +1179,8 @@ impl Run<'_> {
 
     /// applyVrWindows: shown / hidden as asked; then the log's anchor, recall and out-of-view
     fn apply_vr_windows(&mut self, w: &mut Worker) {
-        let wanted = [(Region::Panel, w.vr_windows_wanted.0), (Region::Popup, w.vr_windows_wanted.1), (Region::Launcher, true)];
+        let (log, popup, keyboard) = w.vr_windows_wanted;
+        let wanted = [(Region::Panel, log), (Region::Popup, popup), (Region::Keyboard, keyboard), (Region::Launcher, true)];
         if !w.vr_panel_enabled {
             // off: not waiting for the VR view
             self.first_frame_wait_since = None;
@@ -1195,6 +1205,9 @@ impl Run<'_> {
             if wanted && hidden {
                 if region == Region::Popup {
                     self.place_popup(w);
+                }
+                if region == Region::Keyboard {
+                    self.place_keyboard(w);
                 }
                 self.hidden.remove(&region);
                 let _ = self.vr.overlay.show_overlay(self.handles[i]);
@@ -1316,6 +1329,27 @@ impl Run<'_> {
         w.sizes[popup].settings.tracker = "Playspace".into();
         self.commit_position(w, popup, &pose::top(&world));
         self.place(w, popup);
+    }
+
+    /// placeKeyboard: in front of the head below the eyes, tilted up to face them (as a desk's
+    /// keyboard), fixed in the room; grabbed to move it, put back there each time it opens
+    fn place_keyboard(&mut self, w: &mut Worker) {
+        let (Some(head), Some(keyboard)) = (self.pose_of(HMD), w.region_index(Region::Keyboard)) else { return };
+        let head_pos = pose::position(&head);
+        let forward = pose::axis(&head, 2);
+        let mut ahead = [-forward[0], 0.0, -forward[2]];
+        let length = pose::norm(ahead);
+        // looking straight up or down: ahead of where the head's top points
+        if length < 1e-6 {
+            let up = pose::axis(&head, 1);
+            ahead = [up[0], 0.0, up[2]];
+        }
+        let ahead = pose::scale(ahead, KEYBOARD_AHEAD_M / pose::norm(ahead).max(1e-6));
+        let p = pose::add(pose::add(head_pos, ahead), [0.0, -KEYBOARD_BELOW_EYES_M, 0.0]);
+        let world = pose::face_head(p, &head);
+        w.sizes[keyboard].settings.tracker = "Playspace".into();
+        self.commit_position(w, keyboard, &pose::top(&world));
+        self.place(w, keyboard);
     }
 
     /// onGrabError: the grab or resize ends (not failing the same way every frame)

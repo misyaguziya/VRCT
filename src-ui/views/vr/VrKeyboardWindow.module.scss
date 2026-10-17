@@ -1,0 +1,247 @@
+// VRキーボード (1120x560 の領域、タイトルバー 56px)。キーは 80px 角 (VRで約 4cm)
+
+%vr_button {
+    border: 0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
+    &:disabled { cursor: default; }
+}
+
+.tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    margin-right: 8px;
+    border-radius: 12px;
+    background: var(--dark_1000_color);
+}
+
+.tab {
+    @extend %vr_button;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--dark_450_color);
+    font-size: 17px;
+    font-weight: 500;
+    &[aria-pressed="true"] { background: var(--primary_300_color); color: var(--dark_1000_color); font-weight: 700; }
+    &[data-vr-hover]:not([aria-pressed="true"]) { background: var(--dark_750_color); }
+}
+
+.keyboard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px 16px;
+    min-width: 0;
+}
+
+.top {
+    height: 72px;
+    flex: none;
+    display: flex;
+    gap: 10px;
+}
+
+.composition {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    border-radius: 14px;
+    background: var(--dark_1000_color);
+}
+
+.line {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    font-size: 28px;
+    color: var(--dark_basic_text_color);
+}
+
+.preedit { border-bottom: 2px solid var(--dark_650_color); }
+.selection {
+    padding: 0 3px;
+    border-bottom: 4px solid var(--primary_300_color);
+    border-radius: 6px 6px 0 0;
+    background: var(--primary_600_color_44);
+    color: #ffffff;
+}
+.caret {
+    flex: none;
+    width: 3px;
+    height: 34px;
+    margin-left: 2px;
+    border-radius: 2px;
+    background: var(--primary_300_color);
+}
+
+.counter {
+    flex: none;
+    font-size: 16px;
+    color: var(--dark_450_color);
+    &.is_over { color: var(--warning_color); font-weight: 700; }
+}
+
+.send {
+    @extend %vr_button;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: 14px;
+    &:disabled { opacity: 0.45; }
+}
+.send_vrct {
+    width: 196px;
+    background: var(--primary_300_color);
+    color: var(--dark_1000_color);
+    &[data-vr-hover]:not(:disabled) { background: var(--primary_200_color); }
+}
+.send_paste {
+    width: 176px;
+    background: var(--dark_750_color);
+    box-shadow: inset 0 0 0 2px var(--dark_650_color);
+    color: var(--dark_350_color);
+    &[data-vr-hover]:not(:disabled) { background: var(--dark_650_color); }
+}
+.send_title { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 700; }
+.send_icon { width: 22px; height: 22px; fill: currentColor; }
+.send_help { font-size: 15px; font-weight: 500; }
+
+.middle {
+    position: relative;
+    height: 52px;
+    flex: none;
+}
+
+.candidates {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+}
+
+.candidate {
+    @extend %vr_button;
+    flex: none;
+    height: 48px;
+    padding: 0 14px;
+    border-radius: 10px;
+    background: var(--dark_750_color);
+    color: var(--dark_350_color);
+    font-size: 22px;
+    white-space: nowrap;
+    &[aria-pressed="true"] { background: var(--primary_600_color_44); box-shadow: inset 0 0 0 2px var(--primary_300_color); color: #ffffff; }
+    &[data-vr-hover] { background: var(--dark_650_color); }
+}
+
+.spacer { flex: 1; }
+
+.page {
+    @extend %vr_button;
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    background: var(--dark_750_color);
+    color: var(--dark_400_color);
+    font-size: 28px;
+    &:disabled { opacity: 0.35; }
+    &[data-vr-hover]:not(:disabled) { background: var(--dark_650_color); }
+}
+
+.syllable {
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    background: var(--dark_1000_color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    color: var(--dark_350_color);
+    b { color: var(--primary_100_color); }
+}
+
+.hint { font-size: 15px; color: var(--dark_450_color); }
+
+.preparing {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 6px;
+}
+.preparing_title { flex: none; font-size: 18px; font-weight: 700; color: var(--dark_basic_text_color); }
+.progress {
+    flex: 1;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--dark_750_color);
+}
+.progress_bar {
+    height: 100%;
+    border-radius: 6px;
+    background: var(--primary_300_color);
+    &.is_building { animation: building 1.2s ease-in-out infinite alternate; }
+}
+@keyframes building { from { opacity: 0.45; } to { opacity: 1; } }
+
+// 送った直後の知らせ (候補の段に重ねる)
+.feedback {
+    position: absolute;
+    inset: 2px auto 2px 50%;
+    translate: -50% 0;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-radius: 10px;
+    background: var(--primary_800_color);
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+    &.is_warning { background: var(--dark_950_color); color: var(--warning_color); box-shadow: inset 0 0 0 2px var(--warning_color); }
+}
+
+.keys {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+    &.is_waiting .key:disabled { opacity: 0.45; }
+}
+
+.row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.key {
+    @extend %vr_button;
+    flex: none;
+    height: 56px;
+    font-size: 18px;
+    font-weight: 500;
+    &.char { background: var(--dark_750_color); color: var(--dark_350_color); font-size: 24px; }
+    &.mod { background: var(--dark_850_color); color: var(--dark_350_color); }
+    &.act { background: #48545a; color: #ffffff; }
+    &[aria-pressed="true"] { box-shadow: inset 0 0 0 3px var(--primary_300_color); color: var(--primary_100_color); }
+    &[data-vr-hover]:not(:disabled) { background: var(--dark_600_color); color: #ffffff; }
+    &:active:not(:disabled) { background: var(--primary_600_color); }
+}

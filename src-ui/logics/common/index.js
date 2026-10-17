@@ -18,3 +18,4 @@ export { useIsVrctAvailable } from "./useIsVrctAvailable";
 export { useLLMConnection } from "./useLLMConnection";
 export { useCopyToClipboard } from "./useCopyToClipboard";
 export { useVrPanelPointer, useVrPanelLogOutOfView, useVrPanelLauncherIntro } from "./useVrPanelPointer";
+export { useKeyboard } from "./useKeyboard";

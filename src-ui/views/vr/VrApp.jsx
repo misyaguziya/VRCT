@@ -14,6 +14,7 @@ import {
 import { useVr } from "@logics_configs";
 import { VrLauncher } from "./VrLauncher";
 import { VrLogWindow } from "./VrLogWindow";
+import { VrKeyboardWindow } from "./VrKeyboardWindow";
 import { VrPopupWindow } from "./VrPopupWindow";
 import { VrToolbar } from "./VrToolbar";
 import { VrTooltip } from "./VrTooltip";
@@ -59,10 +60,11 @@ export const VrApp = () => {
     // 開いているウィンドウはこの画面の中だけで持つ (同期される atom に置くとメインの値で上書きされる)。
     // 表示・非表示の結果だけを Python に伝える。一時ウィンドウは同時に1つだけ
     // 起動時はランチャーだけを出す (ログは必要なときにランチャーから開く)
-    const [windows, setWindows] = useState({ log: false, popup: null });
+    // キーボードは一時ウィンドウとは別に開く (言語・設定と同時に使える)
+    const [windows, setWindows] = useState({ log: false, popup: null, keyboard: false });
     useEffect(() => {
-        asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null });
-    }, [windows.log, windows.popup]);
+        asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null, keyboard: windows.keyboard });
+    }, [windows.log, windows.popup, windows.keyboard]);
 
     // VR設定ウィンドウを開いている間は、デスクトップで設定画面を開いたのと同じ扱いにする
     // (メインがメイン機能を止め、閉じたら戻す。VrPanelSyncController)
@@ -85,6 +87,7 @@ export const VrApp = () => {
     const openLog = () => setWindows(w => ({ ...w, log: true }));
     const togglePopup = (name) => setWindows(w => ({ ...w, popup: w.popup === name ? null : name }));
     const closePopup = () => setWindows(w => ({ ...w, popup: null }));
+    const toggleKeyboard = () => setWindows(w => ({ ...w, keyboard: !w.keyboard }));
 
     return (
         <div ref={atlas} className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>
@@ -94,9 +97,10 @@ export const VrApp = () => {
             <FontFamilyController />
 
             <Region layout={layout} name="panel"><VrLogWindow onClose={toggleLog} /></Region>
-            <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} /></Region>
+            <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} toggleKeyboard={toggleKeyboard} /></Region>
             <Region layout={layout} name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
             <Region layout={layout} name="toolbar"><VrToolbar /></Region>
+            <Region layout={layout} name="keyboard">{windows.keyboard && <VrKeyboardWindow onClose={toggleKeyboard} />}</Region>
             <Region layout={layout} name="tooltip"><VrTooltip atlasRef={atlas} layout={layout} /></Region>
         </div>
     );

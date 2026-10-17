@@ -83,6 +83,8 @@ impl VrSystem for SteamVr {
             _ => vrct_openvr::TRACKED_DEVICE_INDEX_INVALID,
         }
     }
+    // (no clicks reach the VR view here: no window to send them to)
+    fn trigger_haptic_pulse(&self, _index: u32, _duration_us: u16) {}
     fn controller_state(&self, index: u32) -> Option<ControllerState> {
         let steam = self.0.borrow();
         steam.poses.contains_key(&index).then(|| steam.buttons.get(&index).copied().unwrap_or_default())
@@ -470,12 +472,13 @@ const WRIST: Vec3 = [-0.2, 1.0, -0.3];
 fn vr_ui() -> Rig {
     let mut panel = settings("Playspace", [PANEL_AT[0], PANEL_AT[1], -PANEL_AT[2], 0.0, 0.0, 0.0], 0.6);
     panel.panel_size = Some((900, 700));
-    let mut r = Rig::new(vec![("panel", panel), ("launcher", settings("LeftHand", [0.0; 6], 0.2))]);
+    let mut r = Rig::new(vec![("panel", panel), ("launcher", settings("LeftHand", [0.0; 6], 0.2)),
+                              ("keyboard", settings("Playspace", [0.0; 6], 0.56))]);
     r.hand(LEFT, translation(WRIST));
     r.run.panel.image_size = Some(r.w.layout.atlas);
     r.run.panel.layout_applied = Some((r.w.layout_gen, r.w.layout));
     r.run.set_launcher_intro(&mut r.w, Intro::Idle);
-    r.w.vr_windows_wanted = (true, false);
+    r.w.vr_windows_wanted = (true, false, false);
     r.frame(0);
     r
 }
@@ -598,7 +601,7 @@ fn closing_the_log_while_it_is_grabbed_lets_it_go() {
     r.buttons(RIGHT, GRIP);
     r.frame(20);
     assert_eq!(r.grabbed(), Some(r.index("panel")));
-    r.w.vr_windows_wanted = (false, false);
+    r.w.vr_windows_wanted = (false, false, false);
     r.frame(20);
     assert_eq!(r.grabbed(), None);
     let handle = r.run.handles[r.index("panel")];
@@ -615,6 +618,31 @@ fn a_recalled_log_comes_in_front_of_the_eyes() {
     let expected = pose::position(&pose::recall_pose(&head));
     let got = pose::position(&r.world("panel"));
     assert!(pose::norm(pose::sub(got, expected)) < 1e-3, "{got:?} {expected:?}");
+}
+
+#[test]
+fn the_keyboard_opens_in_front_of_the_head_below_the_eyes_facing_them() {
+    let mut r = vr_ui();
+    let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
+    r.hand(HEAD, head);
+    let handle = r.run.handles[r.index("keyboard")];
+    assert!(!r.steam.0.borrow().overlays[handle as usize - 1].visible);
+    r.w.vr_windows_wanted = (true, false, true);
+    r.frame(0);
+    assert!(r.steam.0.borrow().overlays[handle as usize - 1].visible);
+    let keyboard = r.world("keyboard");
+    let at = pose::position(&keyboard);
+    let ahead = pose::scale(pose::axis(&head, 2), -1.0);
+    assert!((at[1] - 1.3).abs() < 1e-3, "{at:?}");
+    let horizontal = [at[0], 0.0, at[2]];
+    assert!((pose::norm(horizontal) - 0.45).abs() < 1e-3 && horizontal[0] * ahead[0] + horizontal[2] * ahead[2] > 0.0, "{at:?}");
+    // its face (+z) toward the eyes, so tilted up
+    let to_eyes = pose::sub([0.0, 1.6, 0.0], at);
+    let face = pose::axis(&keyboard, 2);
+    assert!(face.iter().zip(to_eyes).map(|(a, b)| a * b).sum::<f64>() / pose::norm(to_eyes) > 0.99, "{face:?}");
+    r.w.vr_windows_wanted = (true, false, false);
+    r.frame(0);
+    assert!(!r.steam.0.borrow().overlays[handle as usize - 1].visible);
 }
 
 #[test]
