@@ -101,9 +101,11 @@ const useRepeat = () => {
         clearInterval(timer.current);
         timer.current = null;
     };
+    // (離したことはオーバーレイが必ず送る。窓が切り替わったときも止める)
     useEffect(() => {
         window.addEventListener("mouseup", stop);
-        return () => { stop(); window.removeEventListener("mouseup", stop); };
+        window.addEventListener("blur", stop);
+        return () => { stop(); window.removeEventListener("mouseup", stop); window.removeEventListener("blur", stop); };
     }, []);
     const start = (action) => {
         stop();
@@ -388,6 +390,8 @@ const SentFeedback = ({ result }) => {
     const { t } = useI18n();
     const [shown, setShown] = useState(false);
     useEffect(() => {
+        // 新しい結果が来たら、前の知らせは消す (出ている間に送り直して貼れたとき)
+        setShown(false);
         if (!result || result.to !== "paste" || result.pasted || Date.now() - result.at > SENT_FEEDBACK_MS) return undefined;
         setShown(true);
         const timer = setTimeout(() => setShown(false), SENT_FEEDBACK_MS);
