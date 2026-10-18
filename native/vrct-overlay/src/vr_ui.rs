@@ -342,11 +342,14 @@ impl Run<'_> {
         self.update_launcher_intro_flight(w, now);
         self.update_launcher_return(w, now);
         self.update_toolbar_fade(now);
+        // a window grabbed or resized: the presses on the VR view end (their hands are not followed meanwhile)
         if self.resizing.is_some() {
+            self.release_all_presses();
             self.update_resize(w, now);
             return Ok(());
         }
         if self.grabbing.is_some() {
+            self.release_all_presses();
             self.update_grabbed(w, now);
             return Ok(());
         }
@@ -551,6 +554,9 @@ impl Run<'_> {
                 } else if second_xy.is_none() && handle_xy.is_none() {
                     second_xy = logical;
                 }
+            } else {
+                // grip held or the hand lost: its press on the VR view ends
+                self.release_press(hand);
             }
 
             // on a corner (outside the log too): the pointer; a grip resizes (above)
@@ -608,13 +614,46 @@ impl Run<'_> {
         self.launcher_pointed = pointing_launcher;
     }
 
+    /// A hand's press on the VR view ends where it is not followed (grip held, the hand lost, a
+    /// window grabbed or resized, no VR view): the mouse is let go, so the view does not take the
+    /// key as held (repeating ← until the text is gone), and a trigger still held is no new press
+    fn release_press(&mut self, hand: u32) {
+        self.trigger_aim.remove(&hand);
+        self.trigger_value.remove(&hand);
+        let Some((pressed, xy)) = self.panel_input.remove(&hand) else { return };
+        if pressed && self.mouse_owner == Some(hand) {
+            if let Some(hwnd) = self.panel.hwnd {
+                let (x, y) = xy.unwrap_or(OUTSIDE_XY);
+                self.mouse.up(hwnd, x, y);
+            }
+            self.mouse_owner = None;
+        }
+        if pressed {
+            self.trigger_blocked.insert(hand);
+        }
+    }
+
+    fn release_all_presses(&mut self) {
+        let hands: Vec<u32> = self.panel_input.keys().copied().collect();
+        for hand in hands {
+            self.release_press(hand);
+        }
+    }
+
     /// handlePanelInput: the trigger clicks, the stick scrolls, where the laser hits the VR view
     /// (xy in the capture's px; None: off it). A key of the keyboard pressed: a tap in the hand.
     /// Both hands share the one mouse: a press holds it (the other hand's moves wait), a press of
     /// the other hand ends it first.
     fn handle_panel_input(&mut self, hand: u32, xy: Option<(i32, i32)>, state: Option<ControllerState>, on_keyboard: bool) {
         let (last_pressed, last_xy) = self.panel_input.get(&hand).copied().unwrap_or((false, None));
-        let (Some(hwnd), Some(_), Some(state)) = (self.panel.hwnd, self.panel.image_size, state) else { return };
+        let (Some(hwnd), Some(_)) = (self.panel.hwnd, self.panel.image_size) else {
+            // no VR view: a press it held ends
+            self.release_press(hand);
+            return;
+        };
+        // (a frame without the controller's state changes nothing: a held key goes on; a hand
+        // really lost has no pose, and its press ends there)
+        let Some(state) = state else { return };
         let owns = self.mouse_owner == Some(hand);
         // (a hand that went away still pressing holds it no more)
         let other = self.mouse_owner.filter(|&o| o != hand && self.panel_input.get(&o).is_some_and(|p| p.0));
@@ -629,7 +668,9 @@ impl Run<'_> {
         let Some((x, y)) = xy else {
             // off the VR view: released outside, so a press begun on a button does not click (no
             // mic turned on by mistake), and the hover goes
-            if last_xy.is_some() && other.is_none() {
+            // (the other hand still on the VR view keeps its hover: no move away from it)
+            let other_on_view = self.panel_input.iter().any(|(h, p)| *h != hand && p.1.is_some());
+            if last_xy.is_some() && other.is_none() && (owns || !other_on_view) {
                 self.mouse.moved(hwnd, OUTSIDE_XY.0, OUTSIDE_XY.1, last_pressed && owns);
                 if last_pressed && owns {
                     self.mouse.up(hwnd, OUTSIDE_XY.0, OUTSIDE_XY.1);
@@ -645,10 +686,13 @@ impl Run<'_> {
             return;
         };
         let now = Instant::now();
-        if state.axis[TRIGGER_AXIS][0] < TRIGGER_AIM_START {
+        // where the pull began: as the trigger rises past the start (not again while it stays up)
+        let value = state.axis[TRIGGER_AXIS][0];
+        let previous = self.trigger_value.insert(hand, value).unwrap_or(0.0);
+        if value < TRIGGER_AIM_START {
             self.trigger_aim.remove(&hand);
-        } else {
-            self.trigger_aim.entry(hand).or_insert(((x, y), now));
+        } else if previous < TRIGGER_AIM_START {
+            self.trigger_aim.insert(hand, ((x, y), now));
         }
         // the other hand's press holds the mouse: this one's moves wait
         if xy != last_xy && other.is_none() {
@@ -662,8 +706,9 @@ impl Run<'_> {
                 self.trigger_blocked.insert(o);
             }
             // a key: where the pull began, if it began just now (the press itself shakes the hand)
-            let (px, py) = match self.trigger_aim.get(&hand) {
-                Some(&(at, since)) if on_keyboard && now.duration_since(since).as_secs_f64() < TRIGGER_AIM_SEC => at,
+            // (used once: a next press without letting the trigger down is where the hand is)
+            let (px, py) = match self.trigger_aim.remove(&hand) {
+                Some((at, since)) if on_keyboard && now.duration_since(since).as_secs_f64() < TRIGGER_AIM_SEC => at,
                 _ => (x, y),
             };
             self.mouse.moved(hwnd, px, py, false);

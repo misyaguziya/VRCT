@@ -566,6 +566,20 @@ fn aim_at_panel(r: &mut Rig) {
 }
 
 #[test]
+fn a_press_ends_when_the_grip_is_pressed_and_the_held_trigger_is_no_new_press() {
+    let mut r = vr_ui();
+    aim_at_panel(&mut r);
+    // the right hand holds a press on the VR view (as a held ← key)
+    r.run.panel_input.insert(RIGHT, (true, Some((10, 10))));
+    r.run.mouse_owner = Some(RIGHT);
+    r.buttons(RIGHT, GRIP | TRIGGER);
+    r.frame(0);
+    assert_eq!(r.run.mouse_owner, None);
+    assert!(!r.run.panel_input.contains_key(&RIGHT));
+    assert!(r.run.trigger_blocked.contains(&RIGHT));
+}
+
+#[test]
 fn a_locked_log_window_is_not_grabbed() {
     let mut r = vr_ui();
     aim_at_panel(&mut r);

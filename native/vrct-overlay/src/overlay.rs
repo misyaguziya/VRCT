@@ -664,6 +664,8 @@ pub(crate) struct Run<'s> {
     /// where each hand began pulling its trigger (the keyboard's key goes there: the hand moves as
     /// the trigger is pulled)
     pub trigger_aim: HashMap<u32, ((i32, i32), Instant)>,
+    /// each hand's trigger last frame (the pull's start is where it rises past the start)
+    pub trigger_value: HashMap<u32, f32>,
     pub mouse: crate::window::Mouse,
     /// each controller's tip seen from its pose, and when to look again
     pub tip_offsets: HashMap<u32, (Mat4, Option<Instant>)>,
@@ -691,7 +693,7 @@ impl<'s> Run<'s> {
             launcher_intro_front: None, launcher_intro_logged: HashSet::new(), launcher_return: None, first_frame_wait_since: None,
             first_frame_wait_logged: false, tooltip_state: None, tooltip_ready: false, tooltip_shown: false,
             tooltip_manipulating: false, resizing: None, corner_prev: HashMap::new(), ghost_key: None, resize_undo: None,
-            panel_input: HashMap::new(), trigger_blocked: HashSet::new(), mouse_owner: None, trigger_aim: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
+            panel_input: HashMap::new(), trigger_blocked: HashSet::new(), mouse_owner: None, trigger_aim: HashMap::new(), trigger_value: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
             debug_state: HashMap::new(), panel: crate::panel::Panel::new(w), panel_ready: false, poses: vec![],
         }
     }
