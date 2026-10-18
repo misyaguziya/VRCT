@@ -5,7 +5,9 @@ use super::App;
 use crate::ipc::{Handler, Route};
 
 pub fn routes() -> Vec<(&'static str, Route<App>)> {
-    let r = |during_init: bool, handler: Handler<App>| Route { during_init, handler };
+    let r = |during_init: bool, handler: Handler<App>| Route { during_init, handler, ordered: false };
+    // the VR keyboard's input: in the order typed (keys, candidates, the language it composes in)
+    let o = |handler: Handler<App>| Route { during_init: true, handler, ordered: true };
     vec![
         ("/set/enable/translation", r(false, h::set_enable_translation)),
         ("/set/disable/translation", r(false, h::set_disable_translation)),
@@ -344,14 +346,14 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/run/open_filepath_config_file", r(true, h::open_filepath_config_file)),
         ("/run/feed_watchdog", r(true, h::feed_watchdog)),
         ("/get/data/keyboard_state", r(true, h::get_keyboard_state)),
-        ("/run/keyboard_key", r(true, h::keyboard_key)),
-        ("/run/keyboard_select", r(true, h::keyboard_select)),
-        ("/run/keyboard_clear", r(true, h::keyboard_clear)),
+        ("/run/keyboard_key", o(h::keyboard_key)),
+        ("/run/keyboard_select", o(h::keyboard_select)),
+        ("/run/keyboard_clear", o(h::keyboard_clear)),
         ("/get/data/keyboard_language", r(true, h::get_keyboard_language)),
-        ("/set/data/keyboard_language", r(true, h::set_keyboard_language)),
+        ("/set/data/keyboard_language", o(h::set_keyboard_language)),
         ("/get/data/keyboard_chinese_simplified", r(true, h::get_keyboard_chinese_simplified)),
-        ("/set/enable/keyboard_chinese_simplified", r(true, h::set_enable_keyboard_chinese_simplified)),
-        ("/set/disable/keyboard_chinese_simplified", r(true, h::set_disable_keyboard_chinese_simplified)),
+        ("/set/enable/keyboard_chinese_simplified", o(h::set_enable_keyboard_chinese_simplified)),
+        ("/set/disable/keyboard_chinese_simplified", o(h::set_disable_keyboard_chinese_simplified)),
         ("/get/data/keyboard_key_sound", r(true, h::get_keyboard_key_sound)),
         ("/set/enable/keyboard_key_sound", r(true, h::set_enable_keyboard_key_sound)),
         ("/set/disable/keyboard_key_sound", r(true, h::set_disable_keyboard_key_sound)),

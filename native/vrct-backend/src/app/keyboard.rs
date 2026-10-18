@@ -80,16 +80,31 @@ fn state_json(status: Status, s: &State, language: Language) -> Value {
 }
 
 /// Everything the keyboard shows, after a change: VRChat's typing indicator follows whether
-/// anything is typed
-fn changed(app: &App, input: &Input) -> Result<Value> {
+/// anything is typed (not sent, as when OSC cannot send: logged, the typing goes on)
+fn changed(app: &App, input: &Input) -> Value {
     let s = input.state();
     let typing = s.length > 0 && app.config.get_bool("KEYBOARD_TYPING_INDICATOR") && app.config.get_bool("SEND_MESSAGE_TO_VRC");
+    set_typing(app, typing);
+    state_json(*keyboard(app).status.lock().unwrap(), &s, input.language())
+}
+
+fn set_typing(app: &App, typing: bool) {
     let mut was = keyboard(app).typing.lock().unwrap();
     if *was != typing {
-        app.model.osc.send_typing(typing)?;
+        if let Err(e) = app.model.osc.send_typing(typing) {
+            logs::error("keyboard typing indicator", &format!("{e:#}"));
+        }
         *was = typing;
     }
-    Ok(state_json(*keyboard(app).status.lock().unwrap(), &s, input.language()))
+}
+
+/// The keyboard closed or VRCT ends: VRChat's typing indicator off (what is typed stays)
+pub fn stop_typing(app: &App) {
+    set_typing(app, false);
+}
+
+fn push_state(app: &App, input: &Input) {
+    let _ = app.run(200, "keyboard_state", changed(app, input));
 }
 
 fn set_status(app: &App, status: Status) {
@@ -144,8 +159,13 @@ fn prepare(app: &App) -> Result<()> {
             *keyboard(app).rime.get_or_init(|| rime)
         }
     };
-    if !rime.deploy(false) {
-        bail!("RIME could not build the dictionaries");
+    // false: nothing changed since the last build (or it did not start): the built files tell
+    rime.deploy(false);
+    for schema in ["jaroomaji", "luna_pinyin"] {
+        let built = user.join("build").join(format!("{schema}.prism.bin"));
+        if !built.is_file() {
+            bail!("RIME could not build the dictionaries ({} is missing)", built.display());
+        }
     }
     let session = rime.session()?;
     keyboard(app).input.lock().unwrap().attach(session, app.config.get_bool("KEYBOARD_CHINESE_SIMPLIFIED"));
@@ -205,18 +225,20 @@ pub fn keyboard_key(app: &App, data: Data) -> Result<Reply> {
         } else {
             // nothing being composed: Enter sends (KEYBOARD_SEND_TO), told by keyboard_sent
             let double = committed_at.take().is_some_and(|at| at.elapsed() < SEND_AFTER_COMMIT);
-            drop((committed_at, input));
-            if !double {
-                let sent = send(app, &app.config.get_str("KEYBOARD_SEND_TO"))?;
-                if !sent.is_null() {
-                    app.run(200, "keyboard_sent", sent)?;
-                }
+            drop(committed_at);
+            let text = if double { String::new() } else { input.take() };
+            if text.trim().is_empty() {
+                input.restore(&text);
             }
-            return get_keyboard_state(app, None);
+            drop(input);
+            if !text.trim().is_empty() {
+                send(app, text, &app.config.get_str("KEYBOARD_SEND_TO"))?;
+            }
+            return Ok(Reply::ok(changed(app, &keyboard(app).input.lock().unwrap())));
         }
     }
     input.key(key);
-    Ok(Reply::ok(changed(app, &input)?))
+    Ok(Reply::ok(changed(app, &input)))
 }
 
 /// The candidate at this index of the page shown
@@ -224,25 +246,21 @@ pub fn keyboard_select(app: &App, data: Data) -> Result<Reply> {
     let index = data.as_ref().and_then(Value::as_u64).ok_or_else(|| anyhow!("the index is not a number"))?;
     let mut input = keyboard(app).input.lock().unwrap();
     input.select(index as usize);
-    Ok(Reply::ok(changed(app, &input)?))
+    Ok(Reply::ok(changed(app, &input)))
 }
 
 pub fn keyboard_clear(app: &App, _: Data) -> Result<Reply> {
     let mut input = keyboard(app).input.lock().unwrap();
     input.clear();
-    Ok(Reply::ok(changed(app, &input)?))
+    Ok(Reply::ok(changed(app, &input)))
 }
 
-/// The text (Korean's syllable being made included) through VRCT as the message box sends it
-/// ({"to": "vrct", "message": its answer}), or pasted into VRChat ({"to": "paste", "pasted"}).
-/// Null when nothing is typed. What did not go (an error; only copied: no VRChat window took the
-/// focus) is put back, so nothing typed is lost.
-fn send(app: &App, to: &str) -> Result<Value> {
-    let text = keyboard(app).input.lock().unwrap().take();
-    if text.trim().is_empty() {
-        keyboard(app).input.lock().unwrap().restore(&text);
-        return Ok(Value::Null);
-    }
+/// The text taken out (Korean's syllable being made included), sent: through VRCT as the message box
+/// sends it ({"to": "vrct", "message": its answer}) or pasted into VRChat ({"to": "paste", "pasted"}),
+/// told by keyboard_sent. On the keyboard's ordered worker, as the keys: sends go one at a time in
+/// the order typed, and the keys typed meanwhile wait (never pass them). What did not go (an error;
+/// only copied: no VRChat window took the focus) is put back, so nothing typed is lost.
+fn send(app: &App, text: String, to: &str) -> Result<()> {
     let put_back = || {
         let mut input = keyboard(app).input.lock().unwrap();
         input.restore(&text);
@@ -253,20 +271,21 @@ fn send(app: &App, to: &str) -> Result<Value> {
         let window = app.model.app_name.get();
         let pasted = crate::clipboard::copy_and_paste(&text, window.as_deref(), &|line| ipc::log(line));
         out["pasted"] = json!(pasted);
-        out["state"] = if pasted { changed(app, &keyboard(app).input.lock().unwrap())? } else { put_back()? };
-        return Ok(out);
-    }
-    match process(app, &CHAT, &text, None, None, None) {
-        Ok(message) => {
-            out["message"] = message.unwrap_or(Value::Null);
-            out["state"] = changed(app, &keyboard(app).input.lock().unwrap())?;
-            Ok(out)
+        out["state"] = if pasted { changed(app, &keyboard(app).input.lock().unwrap()) } else { put_back() };
+    } else {
+        match process(app, &CHAT, &text, None, None, None) {
+            Ok(message) => {
+                out["message"] = message.unwrap_or(Value::Null);
+                out["state"] = changed(app, &keyboard(app).input.lock().unwrap());
+            }
+            // the text back on the keyboard, the error to the UI (500, as the message box)
+            Err(e) => {
+                let _ = app.run(200, "keyboard_state", put_back());
+                return Err(e);
+            }
         }
-        Err(e) => {
-            put_back()?;
-            Err(e)
-        }
     }
+    app.run(200, "keyboard_sent", out)
 }
 
 // --------------------------------------------------------------------------------- settings
@@ -281,14 +300,19 @@ pub fn set_keyboard_language(app: &App, data: Data) -> Result<Reply> {
     if let Some(language) = Language::from_code(&app.config.get_str("KEYBOARD_LANGUAGE")) {
         let mut input = keyboard(app).input.lock().unwrap();
         input.set_language(language);
-        changed(app, &input)?;
+        // what was being composed is written now: shown at once (not at the next key)
+        push_state(app, &input);
     }
     Ok(reply)
 }
 
 fn set_simplified(app: &App, on: bool) -> Result<Reply> {
     app.config.set("KEYBOARD_CHINESE_SIMPLIFIED", json!(on))?;
-    keyboard(app).input.lock().unwrap().set_simplified(on);
+    let input = keyboard(app).input.lock().unwrap();
+    input.set_simplified(on);
+    // the candidates shown change script
+    push_state(app, &input);
+    drop(input);
     current(app, "KEYBOARD_CHINESE_SIMPLIFIED")
 }
 
@@ -333,7 +357,7 @@ pub fn get_keyboard_typing_indicator(app: &App, _: Data) -> Result<Reply> {
 
 fn set_typing_indicator(app: &App, on: bool) -> Result<Reply> {
     app.config.set("KEYBOARD_TYPING_INDICATOR", json!(on))?;
-    changed(app, &keyboard(app).input.lock().unwrap())?;
+    changed(app, &keyboard(app).input.lock().unwrap());
     current(app, "KEYBOARD_TYPING_INDICATOR")
 }
 
@@ -413,7 +437,11 @@ mod tests {
         assert_eq!(set_keyboard_language(&app, Some(json!("xx"))).unwrap().status, 400);
         assert_eq!(app.config.get_str("KEYBOARD_LANGUAGE"), "ko");
         // switching writes the syllable being made
+        ipc::take_printed();
         set_keyboard_language(&app, Some(json!("en"))).unwrap();
+        // shown at once (not at the next key)
+        let pushed: Vec<Value> = ipc::take_printed().into_iter().filter(|v| v["endpoint"] == "/run/keyboard_state").collect();
+        assert_eq!(pushed.last().map(|v| v["result"]["text"].clone()), Some(json!("한")));
         assert_eq!(get_keyboard_state(&app, None).unwrap().result["text"], json!("한"));
         assert!(keyboard_key(&app, Some(json!("ab"))).is_err());
         assert_eq!(set_keyboard_send_to(&app, Some(json!("elsewhere"))).unwrap().status, 400);
@@ -430,6 +458,50 @@ mod tests {
         // not failed (being prepared): nothing starts, nothing changes
         assert_eq!(keyboard_retry(&app, None).unwrap().result["status"], json!("preparing"));
         assert_eq!(*keyboard(&app).status.lock().unwrap(), Status::Preparing);
+    }
+
+    #[test]
+    fn a_send_that_fails_puts_the_text_back_and_answers_the_error() {
+        let (app, _osc) = rig();
+        app.config.set("SEND_MESSAGE_TO_VRC", json!(true)).unwrap();
+        // OSC cannot send: the chat box fails, the typing indicator too
+        app.model.osc.clear_sender();
+        set_keyboard_language(&app, Some(json!("en"))).unwrap();
+        // typing goes on though the typing indicator is not sent
+        assert_eq!(keys(&app, &["h", "i"])["text"], json!("hi"));
+        ipc::take_printed();
+        assert!(keyboard_key(&app, Some(json!("Enter"))).is_err());
+        // nothing typed is lost: back in the keyboard, shown at once
+        assert_eq!(get_keyboard_state(&app, None).unwrap().result["text"], json!("hi"));
+        let printed = ipc::take_printed();
+        let pushed: Vec<&Value> = printed.iter().filter(|v| v["endpoint"] == "/run/keyboard_state").collect();
+        assert_eq!(pushed.last().map(|v| v["result"]["text"].clone()), Some(json!("hi")));
+        assert!(!printed.iter().any(|v| v["endpoint"] == "/run/keyboard_sent"));
+    }
+
+    #[test]
+    fn closing_the_keyboard_turns_the_typing_indicator_off_and_keeps_the_text() {
+        let (app, osc) = rig();
+        app.config.set("SEND_MESSAGE_TO_VRC", json!(true)).unwrap();
+        set_keyboard_language(&app, Some(json!("en"))).unwrap();
+        keys(&app, &["h", "i"]);
+        assert_eq!(osc_got(&osc), [("/chatbox/typing".to_string(), "true".to_string())]);
+        super::super::overlay::set_vr_panel_windows(&app, Some(json!({"log": false, "popup": false, "keyboard": false}))).unwrap();
+        assert_eq!(osc_got(&osc), [("/chatbox/typing".to_string(), "false".to_string())]);
+        assert_eq!(get_keyboard_state(&app, None).unwrap().result["text"], json!("hi"));
+        // typing again: on again
+        keys(&app, &["!"]);
+        assert_eq!(osc_got(&osc), [("/chatbox/typing".to_string(), "true".to_string())]);
+    }
+
+    #[test]
+    fn sends_go_one_at_a_time_in_the_order_typed() {
+        let (app, osc) = rig();
+        app.config.set("SEND_MESSAGE_TO_VRC", json!(true)).unwrap();
+        set_keyboard_language(&app, Some(json!("en"))).unwrap();
+        keys(&app, &["o", "n", "e", "Enter", "t", "w", "o", "Enter"]);
+        let sent: Vec<String> = osc_got(&osc).into_iter().filter(|(addr, _)| addr == "/chatbox/input").map(|(_, text)| text).collect();
+        assert_eq!(sent, ["one", "two"]);
     }
 
     #[test]

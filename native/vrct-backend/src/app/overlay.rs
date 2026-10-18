@@ -414,6 +414,10 @@ pub fn set_vr_panel_windows(app: &App, data: Data) -> Result<Reply> {
     let on = |key: &str| data.get(key) == Some(&json!(true));
     let (log, popup, keyboard) = (on("log"), on("popup"), on("keyboard"));
     overlay(app).set_vr_windows(log, popup, keyboard);
+    // the keyboard closed with text in it: VRChat's typing indicator is not left on
+    if !keyboard {
+        super::keyboard::stop_typing(app);
+    }
     Ok(Reply::ok(json!({"log": log, "popup": popup, "keyboard": keyboard})))
 }
 
