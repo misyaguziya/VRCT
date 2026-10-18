@@ -156,7 +156,12 @@ impl Composer {
                 self.history.push(s);
                 self.current = next;
             }
-            None => self.start(Syllable { initial: Some(c), ..Default::default() }),
+            None if INITIALS.contains(&c) => self.start(Syllable { initial: Some(c), ..Default::default() }),
+            // a double final alone (ㄳ ...) begins no syllable: it goes in as it is
+            None => {
+                self.finish();
+                self.text.push(c);
+            }
         }
     }
 
@@ -252,6 +257,14 @@ mod tests {
         assert!(c.backspace());
         assert_eq!(c.preedit(), "");
         assert!(!c.backspace());
+    }
+
+    #[test]
+    fn a_double_final_alone_is_not_an_initial() {
+        let mut c = Composer::new();
+        c.input('ㄳ');
+        c.input('ㅏ');
+        assert_eq!(c.take(), "ㄳㅏ");
     }
 
     #[test]
