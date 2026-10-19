@@ -55,37 +55,47 @@ const PITCH = 78;
 const GAP = 6;
 const widthOf = (units) => units * PITCH - GAP;
 
-// キーの音: 短いノイズの「カチッ」と低い胴鳴り (大きいキーは低め)。鳴らせない環境では何もしない
+// キーの音: 実際のキーボードの1打ずつの録音 (出典は assets/sounds/keyboard/SOURCE.md)。Enter・BackSpace・Space・半/全 は
+// 決まった音、それ以外は残りから選ぶ (同じキーを続けて押した時は同じ音)。鳴らせない環境では何もしない
+const KEYPRESS_URLS = import.meta.glob("../assets/sounds/keyboard/keypress-*.wav", { eager: true, query: "?url", import: "default" });
+const keypressUrl = (number) => KEYPRESS_URLS[`../assets/sounds/keyboard/keypress-${number}.wav`];
+const FIXED_KEY_SOUNDS = { enter: keypressUrl("031"), backspace: keypressUrl("019"), space: keypressUrl("028"), toggle: keypressUrl("029") };
+const SCATTERED_KEY_SOUNDS = Object.values(KEYPRESS_URLS).filter((url) => !Object.values(FIXED_KEY_SOUNDS).includes(url));
+// 文字を打たない Shift と、半/全・◀ ▶・切り替え・タブなどは控えめに
+const KEY_SOUND_GAIN = { shift: 0.05, soft: 0.05, toggle: 0.05 };
+const KEY_SOUND_GAIN_DEFAULT = 0.1;
 let audio_context = null;
-const click_buffers = {};
-const clickBuffer = (context, big) => {
-    const rate = context.sampleRate;
-    const buffer = context.createBuffer(1, Math.floor(rate * 0.035), rate);
-    const data = buffer.getChannelData(0);
-    let previous = 0;
-    for (let i = 0; i < data.length; i++) {
-        const t = i / rate;
-        const noise = Math.random() * 2 - 1;
-        // 差分でノイズの低い音を削る (高い「チッ」だけ残す)
-        const tick = (noise - previous) * Math.exp(-t * (big ? 220 : 320));
-        previous = noise;
-        const body = Math.sin(2 * Math.PI * (big ? 120 : 180) * t) * Math.exp(-t * 110);
-        data[i] = tick * 0.35 + body * 0.45;
+const key_buffers = {};
+// 最後に鳴らしたキーとその音
+let last_key_sound = { id: undefined, url: null };
+const keyBuffer = (url) => key_buffers[url] ??= fetch(url).then((response) => response.arrayBuffer())
+    .then((data) => audio_context.decodeAudioData(data));
+// 最初の1打が遅れないよう、開いた時に読んでおく
+const loadKeySounds = () => {
+    try {
+        audio_context ??= new AudioContext();
+        Object.values(KEYPRESS_URLS).forEach((url) => keyBuffer(url).catch(() => delete key_buffers[url]));
+    } catch {
+        // 音が出せなくても入力は続ける
     }
-    return buffer;
 };
-const playKeySound = (big) => {
+const playKeySound = (name, id) => {
     try {
         audio_context ??= new AudioContext();
         if (audio_context.state === "suspended") audio_context.resume();
-        click_buffers[big] ??= clickBuffer(audio_context, big);
-        const source = audio_context.createBufferSource();
-        source.buffer = click_buffers[big];
-        source.playbackRate.value = 0.95 + Math.random() * 0.1; // 連打で同じ音に聞こえないよう少しずらす
-        const gain = audio_context.createGain();
-        gain.gain.value = 0.5;
-        source.connect(gain).connect(audio_context.destination);
-        source.start();
+        const same_key = id !== undefined && id === last_key_sound.id;
+        const url = FIXED_KEY_SOUNDS[name]
+            ?? (same_key ? last_key_sound.url : SCATTERED_KEY_SOUNDS[Math.floor(Math.random() * SCATTERED_KEY_SOUNDS.length)]);
+        last_key_sound = { id, url };
+        keyBuffer(url).then((buffer) => {
+            const source = audio_context.createBufferSource();
+            source.buffer = buffer;
+            source.playbackRate.value = 0.95 + Math.random() * 0.1; // 連打で同じ音に聞こえないよう少しずらす
+            const gain = audio_context.createGain();
+            gain.gain.value = KEY_SOUND_GAIN[name] ?? KEY_SOUND_GAIN_DEFAULT;
+            source.connect(gain).connect(audio_context.destination);
+            source.start();
+        }).catch(() => delete key_buffers[url]);
     } catch {
         // 音が出せなくても入力は続ける
     }
@@ -135,10 +145,15 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const composing = state.composition !== null;
     const is_shift = shift !== "off";
 
-    const press = (handler, big = false) => (event) => {
+    useEffect(() => {
+        if (currentIsEnabledKeyboardKeySound.data === true) loadKeySounds();
+    }, [currentIsEnabledKeyboardKeySound.data]);
+
+    // id: どのキーか (同じキーを続けて押した時は同じ音にする)
+    const press = (handler, sound = "key", id = undefined) => (event) => {
         if (event.button !== 0) return;
         event.preventDefault();
-        if (currentIsEnabledKeyboardKeySound.data === true) playKeySound(big);
+        if (currentIsEnabledKeyboardKeySound.data === true) playKeySound(sound, id);
         handler();
     };
     const sendKey = (key) => asyncStdoutToPython("/run/keyboard_key", key);
@@ -191,25 +206,25 @@ export const VrKeyboardWindow = ({ onClose }) => {
         const w = widthOf(item.w);
         switch (item.special) {
             case "backspace":
-                return <Key press={press} key="backspace" big label="←" w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready}
+                return <Key press={press} key="backspace" sound="backspace" label="←" w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready}
                     onPress={() => repeat.start(() => sendKey("Backspace"))} onLeave={repeat.stop} />;
             case "enter":
-                return <Key press={press} key="enter" big label="↵" sub={enter_label} w={w} kind="act" aria={t("vr_panel.keyboard.commit")}
+                return <Key press={press} key="enter" sound="enter" label="↵" sub={enter_label} w={w} kind="act" aria={t("vr_panel.keyboard.commit")}
                     onPress={() => sendKey("Enter")} disabled={!is_ready} />;
             // JIS の L 字の Enter: どちらの部分を押しても Enter (印字は上の部分)
             case "enter_top":
-                return <Key press={press} key="enter_top" big label="↵" sub={enter_label} w={w} kind="act" extra={clsx(styles.enter_part, styles.enter_top)}
+                return <Key press={press} key="enter_top" sound="enter" label="↵" sub={enter_label} w={w} kind="act" extra={clsx(styles.enter_part, styles.enter_top)}
                     aria={t("vr_panel.keyboard.commit")} onPress={() => sendKey("Enter")} disabled={!is_ready} />;
             case "enter_bottom":
-                return <Key press={press} key="enter_bottom" big label="" w={w} kind="act" extra={clsx(styles.enter_part, styles.enter_bottom)}
+                return <Key press={press} key="enter_bottom" sound="enter" label="" w={w} kind="act" extra={clsx(styles.enter_part, styles.enter_bottom)}
                     aria={t("vr_panel.keyboard.commit")} onPress={() => sendKey("Enter")} disabled={!is_ready} />;
             case "shift":
                 return <button key={`shift-${index}`} type="button" className={clsx(styles.key, styles.mod, { [styles.is_locked]: shift === "lock" })}
                     style={{ width: w }} aria-label={t("vr_panel.keyboard.shift")} aria-pressed={is_shift}
-                    disabled={!is_ready} onMouseDown={press(pressShift, true)}>{shift === "lock" ? "⇪" : "⇧"}</button>;
+                    disabled={!is_ready} onMouseDown={press(pressShift, "shift", "shift")}>{shift === "lock" ? "⇪" : "⇧"}</button>;
             // JIS の左上 (半角/全角): 英字との切り替え
             case "toggle":
-                return <Key press={press} key="toggle" big label="半/全" w={w} kind="mod" aria={t("vr_panel.keyboard.switch_english")} onPress={toggleEnglish} />;
+                return <Key press={press} key="toggle" sound="toggle" label="半/全" w={w} kind="mod" aria={t("vr_panel.keyboard.switch_english")} onPress={toggleEnglish} />;
             default:
                 return null;
         }
@@ -218,11 +233,11 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const tabs = <div className={styles.tabs} role="group" aria-label={t("vr_panel.keyboard.language")}>
         {LANGUAGES.map(([code, name]) => (
             <button key={code} type="button" lang={code} className={styles.tab} aria-pressed={code === language}
-                onMouseDown={press(() => changeLanguage(code))}>{name}</button>
+                onMouseDown={press(() => changeLanguage(code), "soft", `language:${code}`)}>{name}</button>
         ))}
         {language === "zh" && (
             <button type="button" className={styles.tab} lang="zh" aria-pressed={currentIsEnabledKeyboardChineseSimplified.data === true}
-                aria-label={t("vr_panel.keyboard.simplified")} onMouseDown={press(toggleIsEnabledKeyboardChineseSimplified)}>
+                aria-label={t("vr_panel.keyboard.simplified")} onMouseDown={press(toggleIsEnabledKeyboardChineseSimplified, "soft", "simplified")}>
                 {currentIsEnabledKeyboardChineseSimplified.data === true ? "简" : "繁"}
             </button>
         )}
@@ -232,7 +247,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const send_to_switch = <div className={styles.tabs} role="radiogroup" aria-label={t("vr_panel.keyboard.send_to")}>
         {[["vrct", "send_vrct"], ["paste", "send_paste"]].map(([to, title]) => (
             <button key={to} type="button" role="radio" aria-checked={send_to === to} className={styles.tab}
-                onMouseDown={press(() => { if (send_to !== to) setKeyboardSendTo(to); })}>
+                onMouseDown={press(() => { if (send_to !== to) setKeyboardSendTo(to); }, "soft", `send_to:${to}`)}>
                 {t(`vr_panel.keyboard.${title}`)}
             </button>
         ))}
@@ -254,12 +269,12 @@ export const VrKeyboardWindow = ({ onClose }) => {
                     <div className={styles.row}>
                         {/* 英字との切り替え (準備中でも押せる: 英字に切り替えれば、その間も打てる)。
                             JIS は左上の 半/全 で切り替えるので置かない */}
-                        {language !== "ja" && <Key press={press} big label={mode_label} w={widthOf(1.75)} kind="mod"
+                        {language !== "ja" && <Key press={press} sound="toggle" label={mode_label} w={widthOf(1.75)} kind="mod"
                             aria={t("vr_panel.keyboard.switch_english")} onPress={toggleEnglish} />}
-                        <Key press={press} big label={space_label} w={widthOf(7)} kind="act" onPress={() => sendKey("Space")} disabled={!is_ready} />
-                        <Key press={press} big label="◀" w={widthOf(1)} kind="mod" aria={t("vr_panel.keyboard.left")} disabled={!is_ready}
+                        <Key press={press} sound="space" label={space_label} w={widthOf(7)} kind="act" onPress={() => sendKey("Space")} disabled={!is_ready} />
+                        <Key press={press} sound="soft" label="◀" w={widthOf(1)} kind="mod" aria={t("vr_panel.keyboard.left")} disabled={!is_ready}
                             onPress={() => repeat.start(() => sendKey("Left"))} onLeave={repeat.stop} />
-                        <Key press={press} big label="▶" w={widthOf(1)} kind="mod" aria={t("vr_panel.keyboard.right")} disabled={!is_ready}
+                        <Key press={press} sound="soft" label="▶" w={widthOf(1)} kind="mod" aria={t("vr_panel.keyboard.right")} disabled={!is_ready}
                             onPress={() => repeat.start(() => sendKey("Right"))} onLeave={repeat.stop} />
                     </div>
                 </div>
@@ -269,9 +284,9 @@ export const VrKeyboardWindow = ({ onClose }) => {
 };
 
 // label: 大きい字、corner: 左上の小さい字 (Shift の字)、sub: 下の小さい字 (↵ の送る先)
-const Key = ({ press, label, corner, sub, lang, w = widthOf(1), kind = "char", extra, big = false, aria, onPress, onLeave, disabled = false }) => (
+const Key = ({ press, label, corner, sub, lang, w = widthOf(1), kind = "char", extra, sound = "key", aria, onPress, onLeave, disabled = false }) => (
     <button type="button" className={clsx(styles.key, styles[kind], extra)} style={{ width: w }} aria-label={aria ?? label} lang={lang}
-        disabled={disabled} onMouseDown={press(onPress, big)} onMouseLeave={onLeave}>
+        disabled={disabled} onMouseDown={press(onPress, sound, label)} onMouseLeave={onLeave}>
         {corner && <span className={styles.key_corner} aria-hidden="true">{corner}</span>}
         {label}{sub && <span className={styles.key_sub}>{sub}</span>}
     </button>
@@ -347,14 +362,14 @@ const Candidates = ({ state, language, press, sendKey }) => {
         {state.candidates.map((text, index) => (
             <button key={`${state.page}-${index}`} type="button" className={styles.candidate}
                 aria-pressed={state.converting && index === state.highlighted}
-                onMouseDown={press(() => asyncStdoutToPython("/run/keyboard_select", index))}>{text}</button>
+                onMouseDown={press(() => asyncStdoutToPython("/run/keyboard_select", index), "key", `candidate:${index}`)}>{text}</button>
         ))}
         <span className={styles.spacer} />
         {state.candidates.length > 0 && <>
             <button type="button" className={styles.page} aria-label={t("vr_panel.keyboard.previous_candidates")} disabled={state.page === 0}
-                onMouseDown={press(() => sendKey("PageUp"))}>‹</button>
+                onMouseDown={press(() => sendKey("PageUp"), "soft", "page_up")}>‹</button>
             <button type="button" className={styles.page} aria-label={t("vr_panel.keyboard.next_candidates")} disabled={state.last_page}
-                onMouseDown={press(() => sendKey("PageDown"))}>›</button>
+                onMouseDown={press(() => sendKey("PageDown"), "soft", "page_down")}>›</button>
         </>}
     </div>;
 };
@@ -365,7 +380,7 @@ const Preparing = ({ state, press }) => {
     const { asyncStdoutToPython } = useStdoutToPython();
     if (state.status === "failed") {
         return <div className={styles.preparing}><span className={styles.preparing_title}>{t("vr_panel.keyboard.failed")}</span>
-            <button type="button" className={styles.retry} onMouseDown={press(() => asyncStdoutToPython("/run/keyboard_retry"))}>
+            <button type="button" className={styles.retry} onMouseDown={press(() => asyncStdoutToPython("/run/keyboard_retry"), "key", "retry")}>
                 {t("vr_panel.keyboard.retry")}
             </button>
             <span className={styles.hint}>{t("vr_panel.keyboard.use_english")}</span></div>;
