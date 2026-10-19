@@ -7,15 +7,24 @@ export const OpenQuickSettingButton = (props) => {
     const { t } = useI18n();
     const variable = (typeof props.variable === "boolean") ? props.variable : null;
     const is_available = (typeof props.is_available === "boolean") ? props.is_available : true;
+    const is_pending = props.is_pending === true || props.state === "pending";
 
     const getIndicatorLabelClassName = (base_classnames = []) => {
-        return clsx(...base_classnames, is_available && styles.is_available);
+        return clsx(
+            ...base_classnames,
+            is_available && styles.is_available,
+            is_pending && styles.is_pending
+        );
     };
 
     return (
         <div className={styles.container}>
-            <div className={styles.button_wrapper} onClick={props.onClickFunction}>
-                <p className={styles.button_label}>{props.label}</p>
+            <div
+                className={clsx(styles.button_wrapper, is_pending && styles.is_pending)}
+                onClick={is_pending ? undefined : props.onClickFunction}
+            >
+                {is_pending && <span className={styles.loader}></span>}
+                <p className={clsx(styles.button_label, is_pending && styles.is_pending)}>{props.label}</p>
                 {variable !== null && (
                     props.variable === true ? (
                         <p className={getIndicatorLabelClassName([styles.button_indicator_label, styles.is_enabled])}>

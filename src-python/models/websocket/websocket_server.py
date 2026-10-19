@@ -1,7 +1,9 @@
 import asyncio
 import threading
+from http import HTTPStatus
+from urllib.parse import urlparse, parse_qs
 import websockets
-from websockets.legacy.server import WebSocketServerProtocol
+from websockets.asyncio.server import ServerConnection
 from typing import Callable, Set, Optional
 from utils import errorLogging
 
@@ -14,22 +16,58 @@ class WebSocketServer:
     - メッセージ受信のコールバック処理
     - メッセージのブロードキャスト機能
     - GUIスレッド等からメッセージ送信するためのキュー
+
+    セキュリティ: WebSocket は同一オリジンポリシーの対象外であるため、
+    127.0.0.1 バインドだけでは「同じ PC 上で開いた任意の Web ページの JS が
+    ws://127.0.0.1:PORT に直接接続してマイク/スピーカーの文字起こしを
+    盗聴できる」という問題を防げない。token を要求することで、この
+    トークンを渡されていないクライアント (= VRCT 自身が生成した
+    OBS Browser Source ページ以外) を拒否する。
     """
-    def __init__(self, host: str='127.0.0.1', port: int=8765):
+    def __init__(self, host: str='127.0.0.1', port: int=8765, token: Optional[str] = None):
         """
         サーバーのホスト名とポートを指定して初期化します。
+
+        token を指定すると、接続 URL のクエリパラメータ (?token=...) が
+        一致しないクライアントの WebSocket ハンドシェイクを拒否する。
+        None (デフォルト) の場合は検証を行わない (テスト・後方互換用)。
         """
         self.host = host
         self.port = port
-        self.clients: Set[WebSocketServerProtocol] = set()  # 接続クライアント集合
-        self._message_handler: Optional[Callable[['WebSocketServer', WebSocketServerProtocol, str], None]] = None
+        self.token = token
+        self.clients: Set[ServerConnection] = set()  # 接続クライアント集合
+        self._message_handler: Optional[Callable[['WebSocketServer', ServerConnection, str], None]] = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._server: Optional[websockets.serve] = None
         self._thread: Optional[threading.Thread] = None
         self._send_queue: Optional[asyncio.Queue] = None  # 外部スレッド向け非同期キュー
         self.is_running: bool = False  # サーバーの起動状態を示すフラグ
 
-    def set_message_handler(self, handler: Callable[['WebSocketServer', WebSocketServerProtocol, str], None]):
+    async def _process_request(self, connection: ServerConnection, request):
+        """websockets の asyncio serve() が接続確立前に呼ぶフック。
+
+        token が設定されている場合、クエリパラメータ ?token=... が一致
+        しなければ WebSocket ハンドシェイクへ進める前に 403 で拒否する。
+        None を返すと通常どおりハンドシェイクを継続する。
+
+        新しい asyncio 実装の process_request は (connection, request) を
+        受け取り、拒否する場合は connection.respond() で生成した Response を
+        返す必要がある (legacy の (status, headers, body) タプルは不可)。
+        """
+        if self.token is None:
+            return None
+        try:
+            query = parse_qs(urlparse(request.path).query)
+        except Exception:
+            query = {}
+        supplied = query.get("token", [None])[0]
+        if supplied != self.token:
+            return connection.respond(
+                HTTPStatus.FORBIDDEN, "Forbidden: invalid or missing token\n"
+            )
+        return None
+
+    def set_message_handler(self, handler: Callable[['WebSocketServer', ServerConnection, str], None]):
         """
         クライアントからメッセージ受信時に呼び出すコールバックを設定します。
         コールバックのシグネチャ: (server, websocket, message) -> None
@@ -127,7 +165,10 @@ class WebSocketServer:
 
         async def setup_server():
             # サーバーを起動し、listenを開始
-            self._server = await websockets.serve(self._handler, self.host, self.port)
+            self._server = await websockets.serve(
+                self._handler, self.host, self.port,
+                process_request=self._process_request,
+            )
             # 送信キューを初期化
             self._send_queue = asyncio.Queue()
             # 送信ループタスクを開始
@@ -185,7 +226,7 @@ class WebSocketServer:
 
 if __name__ == "__main__":
     # テスト用の簡単なメッセージハンドラ
-    def message_handler(server: WebSocketServer, websocket: WebSocketServerProtocol, message: str):
+    def message_handler(server: WebSocketServer, websocket: ServerConnection, message: str):
         print(f"Received message from {websocket.remote_address}: {message}")
         server.send(f"Echo: {message}")
 

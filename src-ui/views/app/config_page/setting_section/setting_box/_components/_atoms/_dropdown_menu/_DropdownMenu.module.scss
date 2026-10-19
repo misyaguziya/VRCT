@@ -39,10 +39,20 @@
 .dropdown_content_wrapper {
     display: none;
     position: absolute;
-    top: 100%; // Position it below the toggle button
     right: 0;
     min-width: 20rem;
     z-index: 1;
+
+    &.open_below {
+        top: calc(100% + 0.4rem);
+        bottom: auto;
+    }
+
+    &.open_above {
+        bottom: calc(100% + 0.4rem);
+        top: auto;
+    }
+
     &.is_opened {
         display: block;
     }
@@ -57,6 +67,7 @@
 .dropdown_content {
     background-color: var(--dark_900_color);
     border: 0.1rem solid var(--dark_600_color);
+    border-radius: 0.4rem;
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
@@ -74,6 +85,16 @@
     }
     &:active {
         background-color: var(--dark_900_color);
+    }
+    &.is_selected {
+        background-color: var(--dark_900_color);
+        &:hover {
+            background-color: var(--dark_750_color);
+        }
+        .value_text {
+            color: var(--primary_200_color);
+            font-weight: bold;
+        }
     }
 }
 

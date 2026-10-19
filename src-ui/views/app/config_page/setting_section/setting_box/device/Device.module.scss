@@ -1,12 +1,17 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 6.4rem;
+}
+
 .mic_container {
     display: flex;
     flex-direction: column;
-    border-bottom: solid 0.1rem var(--dark_800_color);
-    padding-bottom: 1rem;
 }
 
 .speaker_container {
-    padding-top: 0rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .device_container {
@@ -16,6 +21,7 @@
     align-items: center;
     padding: 2rem;
     margin-bottom: 0rem;
+    border-bottom: solid 0.1rem var(--dark_800_color);
     &.is_break_point {
         flex-direction: column;
         gap: 2rem;
@@ -40,15 +46,16 @@
     width: 100%;
     flex-direction: column;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
     gap: 2rem;
 }
 
 .threshold_switch_section {
     display: flex;
     width: 100%;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.2rem;
     flex-shrink: 0;
 }
 

@@ -26,8 +26,13 @@ def _normalize_hex_color(value: str, fallback: str = "#FFFFFF") -> str:
     return fallback
 
 
-def _build_overlay_html() -> str:
+def _build_overlay_html(ws_token: str = "") -> str:
     ws_port = _clamp_int(getattr(config, "WEBSOCKET_PORT", 2231), 1, 65535)
+    # WebSocket サーバー側の token 検証 (websocket_server.py 参照) に
+    # 必要な接続トークン。JS 文字列リテラルへそのまま埋め込むが、
+    # secrets.token_urlsafe() の出力は URL-safe base64
+    # ([A-Za-z0-9_-]) のみなので、クォートや HTML/JS を壊す文字は含まない。
+    ws_token_js = ws_token if isinstance(ws_token, str) else ""
 
     max_messages = _clamp_int(
         getattr(config, "OBS_BROWSER_SOURCE_MAX_MESSAGES", 14), 1, 50
@@ -139,6 +144,7 @@ def _build_overlay_html() -> str:
       (() => {{
         const SETTINGS = {{
           wsPort: {ws_port},
+          wsToken: "{ws_token_js}",
           maxMessages: {max_messages},
           displayDurationMs: {display_duration} * 1000,
           fadeoutDurationMs: {fadeout_duration} * 1000,
@@ -228,7 +234,9 @@ def _build_overlay_html() -> str:
         }};
 
         const connect = () => {{
-          const wsUrl = `ws://${{location.hostname}}:${{SETTINGS.wsPort}}`;
+          const wsUrl = SETTINGS.wsToken
+            ? `ws://${{location.hostname}}:${{SETTINGS.wsPort}}/?token=${{encodeURIComponent(SETTINGS.wsToken)}}`
+            : `ws://${{location.hostname}}:${{SETTINGS.wsPort}}`;
           let ws;
           try {{
             ws = new WebSocket(wsUrl);
@@ -272,9 +280,14 @@ def _build_overlay_html() -> str:
 
 
 class ObsBrowserSourceServer:
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, ws_token: str = "") -> None:
         self.host = host
         self.port = port
+        # WebSocketServer 側で検証するトークン (websocket_server.py 参照)。
+        # 生成されたページの JS が最初から知っている状態にすることで、
+        # ユーザーが手動でコピー&ペーストする手間なく token 付き接続を
+        # 実現する。
+        self.ws_token = ws_token
         self._server: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
 
@@ -286,6 +299,8 @@ class ObsBrowserSourceServer:
         if self.is_running:
             return
 
+        ws_token = self.ws_token
+
         class Handler(BaseHTTPRequestHandler):
             def log_message(self, format, *args):  # noqa: A002
                 # Avoid polluting stderr/stdout in production.
@@ -294,7 +309,7 @@ class ObsBrowserSourceServer:
             def do_GET(self):  # noqa: N802
                 parsed = urlparse(self.path)
                 if parsed.path in ("/", "/obs"):
-                    body = _build_overlay_html().encode("utf-8")
+                    body = _build_overlay_html(ws_token).encode("utf-8")
                     self.send_response(200)
                     self.send_header("Content-Type", "text/html; charset=utf-8")
                     self.send_header("Cache-Control", "no-store, max-age=0")

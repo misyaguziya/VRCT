@@ -150,23 +150,49 @@ Function PageChooseLanguage
     ${NSD_CB_AddString} $DropListLanguages "한국어"
     ${NSD_CB_AddString} $DropListLanguages "繁體中文"
     ${NSD_CB_AddString} $DropListLanguages "简体中文"
-    ${NSD_CB_SelectString} $DropListLanguages "English"
-    StrCpy $SelectedLangage "en"
+
+    ; Preselect based on /UILANG= (passed from the app when launched from
+    ; within VRCT). Falls back to English on first-time installs.
+    ${If} $UILang == "ja"
+        ${NSD_CB_SelectString} $DropListLanguages "日本語"
+        StrCpy $SelectedLangage "ja"
+    ${ElseIf} $UILang == "ko"
+        ${NSD_CB_SelectString} $DropListLanguages "한국어"
+        StrCpy $SelectedLangage "ko"
+    ${ElseIf} $UILang == "zh-Hant"
+        ${NSD_CB_SelectString} $DropListLanguages "繁體中文"
+        StrCpy $SelectedLangage "zh-Hant"
+    ${ElseIf} $UILang == "zh-Hans"
+        ${NSD_CB_SelectString} $DropListLanguages "简体中文"
+        StrCpy $SelectedLangage "zh-Hans"
+    ${Else}
+        ${NSD_CB_SelectString} $DropListLanguages "English"
+        StrCpy $SelectedLangage "en"
+    ${EndIf}
     nsDialogs::Show
 FunctionEnd
 
 Function PageLeaveChooseLanguage
+    ; When the user picks a language here, apply it to the rest of the
+    ; installer chrome too (Back/Next/Cancel etc.) by switching $LANGUAGE.
+    ; Pages already rendered before this one stay in their prior language;
+    ; subsequent MUI pages pick up the new $LANGUAGE at render time.
     ${NSD_GetText} $DropListLanguages $0
     ${If} "English" == $0
         StrCpy $SelectedLangage "en"
+        StrCpy $LANGUAGE ${LANG_ENGLISH}
     ${ElseIf} "日本語" == $0
         StrCpy $SelectedLangage "ja"
+        StrCpy $LANGUAGE ${LANG_JAPANESE}
     ${ElseIf} "한국어" == $0
         StrCpy $SelectedLangage "ko"
+        StrCpy $LANGUAGE ${LANG_KOREAN}
     ${ElseIf} "繁體中文" == $0
         StrCpy $SelectedLangage "zh-Hant"
+        StrCpy $LANGUAGE ${LANG_TRADCHINESE}
     ${ElseIf} "简体中文" == $0
         StrCpy $SelectedLangage "zh-Hans"
+        StrCpy $LANGUAGE ${LANG_SIMPCHINESE}
     ${EndIf}
 FunctionEnd
 
@@ -207,6 +233,13 @@ Function PageLeaveChooseEdition
         StrCpy $SelectedEdition "cpu"
     ${EndIf}
 FunctionEnd
+
+; Release channel (stable/beta) and specific-version pinning are controlled
+; only via the /CHANNEL= and /VERSION= CLI flags (set by VRCT's own Updater
+; tab -- see .onInit below and Section Install). Deliberately no GUI page
+; for these: a user who double-clicks setup.exe standalone just gets the
+; latest release of the channel this installer itself was published for,
+; with no extra decisions to make.
 
 !insertmacro MUI_PAGE_COMPONENTS
 
@@ -465,6 +498,9 @@ FunctionEnd
 !macroend
 
 Var PassiveMode
+Var TargetVersion
+Var UILang
+Var SelectedChannel
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode
   IfErrors +2 0
@@ -476,6 +512,53 @@ Function .onInit
   ${GetOptions} $CMDLINE "/EDITION=" $0
   IfErrors +2 0
     StrCpy $SelectedEdition $0
+
+  ; Pin the downloaded app package to a specific released version instead of
+  ; always fetching the latest from the HF "main" revision (e.g.
+  ; "/VERSION=3.4.2" for rollback). Falls back to latest when omitted.
+  ${GetOptions} $CMDLINE "/VERSION=" $0
+  IfErrors +2 0
+    StrCpy $TargetVersion $0
+
+  ; Default the release channel page to whatever channel this very
+  ; installer was itself built/published for (a setup.exe downloaded from
+  ; the beta GitHub release has "-beta"/"-rc" baked into ${VERSION}), so a
+  ; standalone run without any flags still lands on a sensible default.
+  ${StrLoc} $0 "${VERSION}" "-beta" ">"
+  ${If} $0 == ""
+    ${StrLoc} $0 "${VERSION}" "-rc" ">"
+  ${EndIf}
+  ${If} $0 == ""
+    StrCpy $SelectedChannel "stable"
+  ${Else}
+    StrCpy $SelectedChannel "beta"
+  ${EndIf}
+
+  ; Launched from within the app (e.g. the user is on the beta channel and
+  ; clicks "reinstall"/"switch edition"): use VRCT's current channel setting
+  ; instead of the baked-in default above.
+  ${GetOptions} $CMDLINE "/CHANNEL=" $0
+  IfErrors +2 0
+    StrCpy $SelectedChannel $0
+
+  ; Preselect the UI language when launched from within the app (e.g.
+  ; "/UILANG=ja" from the in-app updater). Both the installer chrome
+  ; (via MUI_LANGDLL_REGISTRY_VALUENAME) and the initial value of the
+  ; custom PageChooseLanguage default to it. The page is still shown so
+  ; the user can change their mind before installing.
+  ${GetOptions} $CMDLINE "/UILANG=" $UILang
+  ClearErrors
+  ${If} $UILang == "en"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1033"
+  ${ElseIf} $UILang == "ja"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1041"
+  ${ElseIf} $UILang == "ko"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1042"
+  ${ElseIf} $UILang == "zh-Hant"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "1028"
+  ${ElseIf} $UILang == "zh-Hans"
+    WriteRegStr HKCU "${MANUPRODUCTKEY}" "Installer Language" "2052"
+  ${EndIf}
 
   !if "${DISPLAYLANGUAGESELECTOR}" == "true"
     !insertmacro MUI_LANGDLL_DISPLAY
@@ -580,6 +663,10 @@ Section WebView2
     DetailPrint "$(installingWebview2)"
     ; $6 holds the path to the webview2 installer
     ExecWait "$6 ${WEBVIEW2INSTALLERARGS} /install" $1
+    ; The bootstrapper/offline installer is only needed for this invocation.
+    ; Remove it before handling the exit code so failure paths do not leave a
+    ; stale multi-megabyte installer in %TEMP% either.
+    Delete "$6"
     ${If} $1 == 0
       DetailPrint "$(webview2InstallSuccess)"
     ${Else}
@@ -628,14 +715,25 @@ SectionEnd
   app_check_done:
 !macroend
 
+Var /GLOBAL existing_install
+
 Section Install
-  SetOutPath $INSTDIR
+  ; Remember whether this is an update before SetOutPath can create the
+  ; directory.  A failed update must not remove an existing installation or
+  ; user data that the installer did not create.
+  StrCpy $existing_install "0"
+  ${If} ${FileExists} "$INSTDIR\uninstall.exe"
+  ${OrIf} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+  ${OrIf} ${FileExists} "$INSTDIR\config.json"
+    StrCpy $existing_install "1"
+  ${EndIf}
 
   !insertmacro CheckIfAppIsRunning
 
   !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
   ; 指定のURLからファイルをダウンロード
-  !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
+  !define SOFTWARE_RELEASE_REPO "ms-software/VRCT"
+  !define SOFTWARE_RELEASE_REPO_BETA "ms-software/VRCT-beta"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
 
@@ -659,6 +757,10 @@ Section Install
   Var /GLOBAL dl_tick
   Var /GLOBAL dl_percent
   Var /GLOBAL dl_xfersize
+  Var /GLOBAL release_revision
+  Var /GLOBAL release_repo
+  Var /GLOBAL effective_version
+  Var /GLOBAL beta_marker_pos
   Var /GLOBAL req_dl_mb
   Var /GLOBAL req_extract_mb
   Var /GLOBAL dl_total
@@ -667,6 +769,11 @@ Section Install
   Var /GLOBAL dl_id1
   Var /GLOBAL dl_id2
   Var /GLOBAL dl_id3
+  Var /GLOBAL package_hash_path
+  Var /GLOBAL package_hash_id
+  Var /GLOBAL package_hash_available
+  Var /GLOBAL expected_package_hash
+  Var /GLOBAL actual_package_hash
   ${If} $SelectedEdition == "gpu"
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
     StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_GPU}
@@ -711,8 +818,101 @@ Section Install
     ${EndIf}
   ${EndIf}
 
-  StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
+  ; Pin to a specific released version's HF tag (e.g. "/VERSION=3.4.2" -> tag
+  ; "v3.4.2", or typed into the release-channel page) when requested for
+  ; rollback; otherwise fetch the latest from the selected channel's "main".
+  ${If} $TargetVersion != ""
+    StrCpy $release_revision "v$TargetVersion"
+    StrCpy $effective_version $TargetVersion
+
+    ; Beta versions (e.g. "3.5.0-beta.1") are published to a separate HF repo,
+    ; not the production one -- an explicit pinned version routes by its own
+    ; string, regardless of which channel radio button is selected, since a
+    ; given tag only ever exists in one of the two repos.
+    ${StrLoc} $beta_marker_pos $effective_version "-beta" ">"
+    ${If} $beta_marker_pos == ""
+      ${StrLoc} $beta_marker_pos $effective_version "-rc" ">"
+    ${EndIf}
+    ${If} $beta_marker_pos == ""
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+    ${Else}
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+    ${EndIf}
+  ${Else}
+    ; No specific version pinned -- fetch the latest from whichever channel
+    ; the user picked on the release-channel page.
+    StrCpy $release_revision "main"
+    ${If} $SelectedChannel == "beta"
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO_BETA}"
+    ${Else}
+      StrCpy $release_repo "${SOFTWARE_RELEASE_REPO}"
+    ${EndIf}
+  ${EndIf}
+
+  StrCpy $cmder_dl "https://huggingface.co/$release_repo/resolve/$release_revision/$file_name"
   DetailPrint "Got URL : $cmder_dl"
+
+  ; New releases publish a SHA-256 sidecar next to each package. Download it
+  ; before the large archive so a package can be rejected before extraction.
+  ; A missing sidecar is treated as a legacy release for backward-compatible
+  ; rollback support; other sidecar download failures are fatal.
+  StrCpy $package_hash_path "$TEMP\$file_name.sha256"
+  Delete "$package_hash_path"
+  StrCpy $package_hash_available "0"
+  DetailPrint "Downloading package checksum..."
+  NScurl::http GET "$cmder_dl.sha256" "$package_hash_path" /BACKGROUND /COMPLETETIMEOUT 30s /END
+  Pop $package_hash_id
+  NScurl::wait /ID $package_hash_id /END
+  NScurl::query /ID $package_hash_id "@ERROR@"
+  Pop $0
+  ${If} $0 == "OK"
+    ClearErrors
+    FileOpen $0 "$package_hash_path" r
+    IfErrors package_hash_file_invalid
+    FileRead $0 $expected_package_hash
+    IfErrors package_hash_read_invalid
+    FileClose $0
+    StrLen $1 $expected_package_hash
+    ${If} $1 != 64
+      Goto package_hash_invalid
+    ${EndIf}
+    StrCpy $package_hash_available "1"
+    DetailPrint "Package checksum downloaded"
+    Goto package_hash_ready
+  ${EndIf}
+
+  NScurl::query /ID $package_hash_id "@ERRORTYPE@|@ERRORCODE@"
+  Pop $1
+  ${If} $1 == "HTTP|404"
+    DetailPrint "Package checksum is unavailable; using legacy size-only validation"
+    Delete "$package_hash_path"
+    Goto package_hash_ready
+  ${EndIf}
+  DetailPrint "Could not download package checksum ($1)"
+  Delete "$package_hash_path"
+  MessageBox MB_OK|MB_ICONSTOP "Could not download the package checksum. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+  Abort
+
+  package_hash_file_invalid:
+    Delete "$package_hash_path"
+    DetailPrint "Package checksum could not be read"
+    MessageBox MB_OK|MB_ICONSTOP "The package checksum could not be read. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+    Abort
+
+  package_hash_read_invalid:
+    FileClose $0
+    Delete "$package_hash_path"
+    DetailPrint "Package checksum could not be read"
+    MessageBox MB_OK|MB_ICONSTOP "The package checksum could not be read. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+    Abort
+
+  package_hash_invalid:
+    Delete "$package_hash_path"
+    DetailPrint "Package checksum is invalid"
+    MessageBox MB_OK|MB_ICONSTOP "The package checksum is invalid. Installation was aborted to protect the integrity of the downloaded package." /SD IDOK
+    Abort
+
+  package_hash_ready:
 
   ; The archive is unpacked with Windows' bundled bsdtar (see below). Bail out
   ; early with a clear message if it is missing rather than downloading GBs
@@ -784,11 +984,16 @@ Section Install
       NScurl::http GET "$cmder_dl" "$TEMP\$file_name" /INSIST /RESUME /BACKGROUND /END
       Pop $dl_transfer_id
       StrCpy $dl_tick 0
+      StrCpy $R4 0
       download_wait:
         Sleep 1000
         NScurl::query /ID $dl_transfer_id "@STATUS@"
         Pop $0
-        ${If} $0 != "Complete"
+        ${If} $0 == "Complete"
+          Goto single_download_done
+        ${ElseIf} $0 == "Waiting"
+        ${OrIf} $0 == "Running"
+          IntOp $R4 $R4 + 1
           IntOp $dl_tick $dl_tick + 1
           ${If} $dl_tick >= 5
             StrCpy $dl_tick 0
@@ -798,8 +1003,16 @@ Section Install
             Pop $dl_xfersize
             DetailPrint "Downloading $file_name... $dl_xfersize ($dl_percent%)"
           ${EndIf}
+          ${If} $R4 >= 3600
+            DetailPrint "Download timed out"
+            Goto attempt_failed
+          ${EndIf}
           Goto download_wait
+        ${Else}
+          DetailPrint "Download stopped with status $0"
+          Goto attempt_failed
         ${EndIf}
+      single_download_done:
       NScurl::wait /ID $dl_transfer_id /END
       NScurl::query /ID $dl_transfer_id "@ERROR@"
       Pop $0
@@ -924,6 +1137,20 @@ Section Install
     par_ok:
     ${EndIf}
 
+    ${If} $package_hash_available == "1"
+      NScurl::sha256 -file "$TEMP\$file_name"
+      Pop $actual_package_hash
+      ${If} $actual_package_hash != $expected_package_hash
+        DetailPrint "Package SHA-256 mismatch"
+        Delete "$TEMP\$file_name"
+        Delete "$package_hash_path"
+        MessageBox MB_OK|MB_ICONSTOP "The downloaded package failed SHA-256 verification. Installation was aborted." /SD IDOK
+        Abort
+      ${EndIf}
+      DetailPrint "Package SHA-256 verified"
+    ${EndIf}
+    Delete "$package_hash_path"
+
     DetailPrint "Extracting $file_name ..."
     ; NSIS unzip plugins (nsisunz, and Nsis7z regardless of its embedded 7-Zip
     ; version) use 32-bit file I/O in their glue code and silently fail on
@@ -955,6 +1182,7 @@ Section Install
     Delete "$TEMP\$file_name.bad"
     Rename "$TEMP\$file_name" "$TEMP\$file_name.bad"
     DetailPrint "Giving up after 3 attempts; kept archive at $TEMP\$file_name.bad"
+    Call CleanupFailedInstall
     MessageBox MB_OK|MB_ICONSTOP "Could not download and unpack $file_name after 3 attempts.$\r$\n$\r$\nYour connection may be unstable or the disk may be full. The last download was kept for troubleshooting at:$\r$\n$TEMP\$file_name.bad$\r$\n$\r$\nPlease try again later." /SD IDOK
     Abort
 
@@ -1009,6 +1237,41 @@ Section Install
   ; Auto close this page for passive mode
   ${IfThen} $PassiveMode == 1 ${|} SetAutoClose true ${|}
 SectionEnd
+
+Function CleanupFailedInstall
+  ; Keep the .bad archive for diagnostics, but remove temporary fragments and
+  ; the checksum sidecar regardless of whether this was a new install or an
+  ; update.
+  Delete "$TEMP\$file_name"
+  Delete "$TEMP\$file_name.p0"
+  Delete "$TEMP\$file_name.p1"
+  Delete "$TEMP\$file_name.p2"
+  Delete "$TEMP\$file_name.p3"
+  Delete "$package_hash_path"
+
+  ; Updating in place can leave a mixture of old and new files after a failed
+  ; extraction.  Without a staging directory or rollback manifest, preserving
+  ; the existing tree is safer than deleting user data or the previous app.
+  ${If} $existing_install == "1"
+    DetailPrint "Existing installation preserved after failure"
+    Return
+  ${EndIf}
+
+  ; For a new install, remove only files owned by the generated installer.
+  ; User data is intentionally not targeted here.
+  Delete "$INSTDIR\${MAINBINARYNAME}.exe"
+  {{#each resources}}
+    Delete "$INSTDIR\\{{this.[1]}}"
+  {{/each}}
+  {{#each binaries}}
+    Delete "$INSTDIR\\{{this}}"
+  {{/each}}
+  RmDir /r "$INSTDIR\_internal"
+  {{#each resources_ancestors}}
+    RMDir "$INSTDIR\\{{this}}"
+  {{/each}}
+  RMDir "$INSTDIR"
+FunctionEnd
 
 Function .onInstSuccess
   ; Check for `/R` flag only in silent and passive installers because

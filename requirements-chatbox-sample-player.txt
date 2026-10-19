@@ -1,0 +1,4 @@
+# Build with CPython 3.11 x64 on Windows.
+python-osc==1.9.0
+pyinstaller==6.10.0
+pyinstaller-hooks-contrib==2026.7

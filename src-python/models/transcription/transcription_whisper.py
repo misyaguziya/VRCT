@@ -10,10 +10,19 @@ The functions are defensive: failures are caught and reported by the caller.
 """
 
 from os import path as os_path, makedirs as os_makedirs, remove as os_remove
+from time import sleep
 from requests import get as requests_get
+from requests.exceptions import HTTPError
 from typing import Callable, Optional
 import logging
-from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging
+from utils import getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, errorLogging, printLog
+
+# 起動時の初回ダウンロードで一時的なネットワーク断 (接続リセット・HF Hub の
+# 429/503 等) が起きても、1 回の取りこぼしで「AIモデル未検出。VRCTを再起動して
+# ください」通知に落ちないよう、タイムアウトと指数バックオフ付きの再試行を行う。
+_DOWNLOAD_TIMEOUT = (10, 60)  # (connect, read) 秒
+_DOWNLOAD_MAX_ATTEMPTS = 3
+_DOWNLOAD_RETRY_BACKOFF = 2  # 秒。attempt 番号を掛けて待機 (2s, 4s, ...)
 
 # Optional deps; None fallback lets checkWhisperWeight etc. return False
 # gracefully when the package is missing.
@@ -51,35 +60,52 @@ _FILENAMES = [
     "vocabulary.json",
 ]
 
-def downloadFile(url: str, path: str, func: Optional[Callable[[float], None]] = None) -> None:
+def downloadFile(url: str, path: str, func: Optional[Callable[[float], None]] = None) -> bool:
     """Download a file from `url` to `path`.
 
     Args:
         url: remote URL to download from
         path: local filepath to write
         func: optional callback(progress: float) called with a 0.0-1.0 progress
+
+    Returns:
+        True on success, False if every attempt failed. Transient network
+        errors are retried with a short backoff before giving up so a single
+        connection reset during the first-run model download doesn't leave the
+        app permanently reporting "AI models have not been detected".
     """
-    try:
-        res = requests_get(url, stream=True)
-        res.raise_for_status()
-        file_size = int(res.headers.get('content-length', 0))
-        total_chunk = 0
-        with open(os_path.join(path), 'wb') as file:
-            for chunk in res.iter_content(chunk_size=1024 * 2000):
-                file.write(chunk)
-                if callable(func) and file_size:
-                    total_chunk += len(chunk)
-                    func(total_chunk / file_size)
-    except Exception:
-        errorLogging()
-        # Remove any partial/corrupt file so a retry, or the post-download
-        # WhisperModel verification in checkWhisperWeight, doesn't see stale
-        # truncated bytes left over from the failed attempt.
+    for attempt in range(1, _DOWNLOAD_MAX_ATTEMPTS + 1):
         try:
-            if os_path.exists(path):
-                os_remove(path)
-        except Exception:
-            pass
+            res = requests_get(url, stream=True, timeout=_DOWNLOAD_TIMEOUT)
+            res.raise_for_status()
+            file_size = int(res.headers.get('content-length', 0))
+            total_chunk = 0
+            with open(os_path.join(path), 'wb') as file:
+                for chunk in res.iter_content(chunk_size=1024 * 2000):
+                    file.write(chunk)
+                    if callable(func) and file_size:
+                        total_chunk += len(chunk)
+                        func(total_chunk / file_size)
+            return True
+        except Exception as e:
+            errorLogging()
+            # Remove any partial/corrupt file so the retry below, or the
+            # post-download WhisperModel verification in checkWhisperWeight,
+            # doesn't see stale truncated bytes from the failed attempt.
+            try:
+                if os_path.exists(path):
+                    os_remove(path)
+            except Exception:
+                pass
+            # 404 等の恒久エラー (そのリポジトリに存在しないファイル) は
+            # 再試行しても無駄なので即座に打ち切る。429/5xx や接続エラーのみ再試行。
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            if isinstance(e, HTTPError) and status is not None and 400 <= status < 500 and status != 429:
+                return False
+            if attempt < _DOWNLOAD_MAX_ATTEMPTS:
+                printLog(f"Whisper file download failed, retrying ({attempt}/{_DOWNLOAD_MAX_ATTEMPTS - 1})", url)
+                sleep(_DOWNLOAD_RETRY_BACKOFF * attempt)
+    return False
 
 def checkWhisperWeight(root: str, weight_type: str) -> bool:
     """Return True if a Whisper model for `weight_type` is loadable from disk.

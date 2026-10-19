@@ -7,6 +7,7 @@
 // is dropped into that slot and launches the venv Python interpreter
 // against src-python/mainloop.py directly, so a Python edit only costs a
 // process restart.
+// VRCT_DEV_VENV selects .venv (default) or .venv_cuda at runtime.
 //
 // Behaviour parity with the frozen backend:
 //   - stdin/stdout/stderr are inherited so the Tauri <-> sidecar JSON
@@ -27,6 +28,15 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 fn main() {
+    let venv = match env::var("VRCT_DEV_VENV").as_deref() {
+        Ok(".venv") | Err(env::VarError::NotPresent) => ".venv",
+        Ok(".venv_cuda") => ".venv_cuda",
+        _ => {
+            eprintln!("dev-sidecar: VRCT_DEV_VENV must be .venv or .venv_cuda");
+            std::process::exit(127);
+        }
+    };
+
     #[cfg(windows)]
     unsafe {
         install_kill_on_close_job();
@@ -45,25 +55,26 @@ fn main() {
     //   <root>/src-tauri/target/debug/VRCT-sidecar-<triple>.exe   (tauri dev copies it)
     //   <root>/src-tauri/target/release/VRCT-sidecar-<triple>.exe
     // Walk upward until we find a directory that looks like the project root
-    // (contains both .venv and src-python/mainloop.py).
+    // (contains src-python/mainloop.py). Check the selected venv separately
+    // so CUDA-only checkouts work and missing interpreters get a clear error.
     let root = match find_project_root(&self_exe) {
         Some(p) => p,
         None => {
             eprintln!(
-                "dev-sidecar: could not locate project root above {}. Expected a parent dir containing .venv/ and src-python/mainloop.py.",
+                "dev-sidecar: could not locate project root above {}. Expected a parent dir containing src-python/mainloop.py.",
                 self_exe.display()
             );
             std::process::exit(127);
         }
     };
 
-    let python = root.join(".venv").join("Scripts").join("python.exe");
+    let python = root.join(venv).join("Scripts").join("python.exe");
     let cwd: PathBuf = root.join("src-python");
     let script = cwd.join("mainloop.py");
 
     if !python.exists() {
         eprintln!(
-            "dev-sidecar: venv Python not found at {}. Run `npm run setup-python` first.",
+            "dev-sidecar: {venv} Python not found at {}. Prepare this environment and its dependencies before starting fast development.",
             python.display()
         );
         std::process::exit(127);
@@ -103,11 +114,8 @@ fn main() {
 
 fn find_project_root(start: &Path) -> Option<PathBuf> {
     let mut cursor = start.parent();
-    for _ in 0..10 {
-        let dir = cursor?;
-        if dir.join(".venv").join("Scripts").join("python.exe").exists()
-            && dir.join("src-python").join("mainloop.py").exists()
-        {
+    while let Some(dir) = cursor {
+        if dir.join("src-python").join("mainloop.py").is_file() {
             return Some(dir.to_path_buf());
         }
         cursor = dir.parent();
@@ -119,6 +127,7 @@ fn find_project_root(start: &Path) -> Option<PathBuf> {
 unsafe fn install_kill_on_close_job() {
     use std::mem::{size_of, zeroed};
     use std::ptr::null;
+    use windows_sys::Win32::Foundation::{CloseHandle, GetLastError};
     use windows_sys::Win32::System::JobObjects::{
         AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
         SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
@@ -128,6 +137,10 @@ unsafe fn install_kill_on_close_job() {
 
     let job = CreateJobObjectW(null(), null());
     if job.is_null() {
+        eprintln!(
+            "dev-sidecar: CreateJobObjectW failed (error {})",
+            GetLastError()
+        );
         return;
     }
 
@@ -141,10 +154,22 @@ unsafe fn install_kill_on_close_job() {
         size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
     );
     if ok == 0 {
+        eprintln!(
+            "dev-sidecar: SetInformationJobObject failed (error {})",
+            GetLastError()
+        );
+        CloseHandle(job);
         return;
     }
 
-    AssignProcessToJobObject(job, GetCurrentProcess());
+    if AssignProcessToJobObject(job, GetCurrentProcess()) == 0 {
+        eprintln!(
+            "dev-sidecar: AssignProcessToJobObject failed (error {})",
+            GetLastError()
+        );
+        CloseHandle(job);
+        return;
+    }
     // Intentionally leak the job handle: the OS closes it on process exit,
     // which is exactly when we want the KILL_ON_JOB_CLOSE to fire.
 }

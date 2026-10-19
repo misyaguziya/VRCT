@@ -4,11 +4,12 @@ import styles from "./MainFunctionSwitch.module.scss";
 import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
-import ForegroundSvg from "@images/foreground.svg?react";
+import ChatTranscribeSvg from "@images/chat_transcribe.svg?react";
 import {
     useIsMainPageCompactMode,
     useMainFunction,
 } from "@logics_main";
+import { ToggleSwitch } from "@common_components";
 
 export const MainFunctionSwitch = () => {
     const { t } = useI18n();
@@ -17,7 +18,7 @@ export const MainFunctionSwitch = () => {
         toggleTranslation, currentTranslationStatus,
         toggleTranscriptionSend, currentTranscriptionSendStatus,
         toggleTranscriptionReceive, currentTranscriptionReceiveStatus,
-        toggleForeground, currentForegroundStatus,
+        toggleOcrCapture, currentOcrCaptureStatus,
     } = useMainFunction();
 
 
@@ -44,11 +45,11 @@ export const MainFunctionSwitch = () => {
             toggleFunction: toggleTranscriptionReceive,
         },
         {
-            switch_id: "foreground",
-            label: t("main_page.foreground"),
-            SvgComponent: ForegroundSvg,
-            currentState: currentForegroundStatus,
-            toggleFunction: toggleForeground,
+            switch_id: "ocr",
+            label: t("main_page.ocr"),
+            SvgComponent: ChatTranscribeSvg,
+            currentState: currentOcrCaptureStatus,
+            toggleFunction: toggleOcrCapture,
         },
     ];
 
@@ -69,33 +70,18 @@ export const MainFunctionSwitch = () => {
     );
 };
 
-import { useState } from "react";
-
 export const SwitchContainer = ({ switchLabel, switch_id, children, currentState, toggleFunction, SvgComponent }) => {
-    const [is_hovered, setIsHovered] = useState(false);
-    const [is_mouse_down, setIsMouseDown] = useState(false);
-
     const { currentIsMainPageCompactMode } = useIsMainPageCompactMode();
 
     const getClassNames = (baseClass) => clsx(baseClass, {
         [styles.is_compact_mode]: currentIsMainPageCompactMode.data,
         [styles.is_active]: (currentState.data === true),
         [styles.is_pending]: (currentState.state === "pending"),
-        [styles.is_hovered]: is_hovered,
-        [styles.is_mouse_down]: is_mouse_down,
     });
 
-    const onMouseEnter = () => setIsHovered(true);
-    const onMouseLeave = () => setIsHovered(false);
-    const onMouseDown = () => setIsMouseDown(true);
-    const onMouseUp = () => setIsMouseDown(false);
-
     return (
-        <div className={getClassNames(styles.switch_container)}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
-            onMouseDown={onMouseDown}
-            onMouseUp={onMouseUp}
+        <div
+            className={getClassNames(styles.switch_container)}
             onClick={toggleFunction}
         >
             <div className={styles.label_wrapper}>
@@ -104,15 +90,16 @@ export const SwitchContainer = ({ switchLabel, switch_id, children, currentState
                 {children}
             </div>
 
-            <div className={getClassNames(styles.toggle_control)}>
-                <span className={getClassNames(styles.control)}></span>
-            </div>
+            <ToggleSwitch
+                isActive={currentState.data === true}
+                isPending={currentState.state === "pending"}
+                className={getClassNames(styles.toggle_control)}
+            />
 
             <div className={getClassNames(styles.switch_indicator)}></div>
-            {(currentState.state === "pending")
-                ? <span className={styles.loader}></span>
-                : null
-            }
+            {(currentState.state === "pending") && (
+                <span className={styles.loader}></span>
+            )}
         </div>
     );
 };

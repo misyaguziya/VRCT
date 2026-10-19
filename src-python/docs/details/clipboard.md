@@ -83,7 +83,7 @@ class Clipboard:
 3. Windows 環境下でウィンドウをフォーカス（以下の順序）
    - ウィンドウタイトルで部分一致検索
    - マッチしない場合、プロセス名で検索
-4. ウィンドウフォーカス成功時、`paste_via_pyautogui()` でペースト実行
+4. ウィンドウフォーカス成功時、`paste_via_ctrl_v()` でペースト実行
 
 ### 内部メソッド
 
@@ -117,10 +117,13 @@ SteamVR が起動しているかを確認
 2. 汎用: `pyperclip` ライブラリ
 3. フォールバック: `tkinter` 使用
 
-### `paste_via_pyautogui(countdown: int = 0) -> bool`
-PyAutoGUI を用いたペースト
-- `pyautogui.hotkey('ctrl', 'v')` で Ctrl+V を送信
+### `paste_via_ctrl_v(countdown: int = 0) -> bool`
+Ctrl+V の送出 (Windows 専用)
+- `user32.keybd_event` で Ctrl+V を送信
 - カウントダウン実行
+- 以前は PyAutoGUI を使っていたが、GPLv3+ の MouseInfo を引き込むため
+  ctypes 直呼びに置き換えた (PyAutoGUI の Windows 実装も同じ API を
+  呼んでいるので挙動は同じ)
 
 ### ウィンドウ検索関数（Windows のみ）
 
@@ -137,7 +140,6 @@ PyAutoGUI を用いたペースト
 
 | ライブラリ | 用途 | オプション |
 |-----------|------|----------|
-| pyautogui | キー入力シミュレーション | 必須（ペースト機能） |
 | pyperclip | クリップボード操作 | オプション（フォールバック） |
 | tkinter | クリップボード操作 | オプション（フォールバック） |
 | openvr | VR アプリ名検出 | 必須 |
@@ -166,7 +168,7 @@ Model.setPasteFromClipboard()
      └─ find_windows_by_title_substring() [Windows]
         or find_windows_by_process_name()
      └─ focus_window(hwnd)
-     └─ paste_via_pyautogui(countdown)
+     └─ paste_via_ctrl_v(countdown)
 ```
 
 ## 有効/無効制御
@@ -235,8 +237,8 @@ clipboard.disable()
    - OpenVR が利用可能で SteamVR が起動している必要がある
    - `steam.app` 接頭辞のアプリのみ認識
 
-3. **PyAutoGUI の制限**
-   - キー入力シミュレーションはOS依存
+3. **キー入力シミュレーションの制限**
+   - `user32.keybd_event` を使うため Windows 専用
    - 一部アプリケーションではセキュリティ制限により失敗する可能性あり
 
 4. **クリップボードバッファ**
@@ -245,6 +247,5 @@ clipboard.disable()
 
 ## 参考資料
 
-- [PyAutoGUI 公式ドキュメント](https://pyautogui.readthedocs.io/)
 - [OpenVR Python バインディング](https://github.com/ValvePython/openvr)
 - [psutil ドキュメント](https://psutil.readthedocs.io/)

@@ -1,18 +1,28 @@
 from os import path as os_path
 from os import makedirs as os_makedirs
 from os import rename as os_rename
+from os import remove as os_remove
 from shutil import rmtree as shutil_rmtree
+from time import sleep
 from requests import get as requests_get
+from requests.exceptions import HTTPError
 from typing import Callable
 import yaml
 
 try:
-    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
+    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, printLog
 except Exception:
     import sys
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
-    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache
+    from utils import errorLogging, getBestComputeType, isWeightVerifiedCache, writeWeightVerifiedCache, printLog
+
+# 起動時の初回ダウンロードで一時的なネットワーク断が起きても 1 回の取りこぼしで
+# 「AIモデル未検出。VRCTを再起動してください」通知に落ちないよう、タイムアウトと
+# 指数バックオフ付きの再試行を行う。
+_DOWNLOAD_TIMEOUT = (10, 60)  # (connect, read) 秒
+_DOWNLOAD_MAX_ATTEMPTS = 3
+_DOWNLOAD_RETRY_BACKOFF = 2  # 秒。attempt 番号を掛けて待機 (2s, 4s, ...)
 
 # Optional runtime deps; None fallback disables the corresponding features
 # (check/download/tokenizer) when the package is unavailable.
@@ -109,31 +119,59 @@ def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int
     if hf_hub_url is None or list_repo_files is None:
         return False
     hf_repo = ctranslate2_weights[weight_type]["hf_repo"]
-    files = list_repo_files(repo_id=hf_repo)
     path = os_path.join(root, "weights", "ctranslate2", ctranslate2_weights[weight_type]["directory_name"])
+    # 既にロード検証済みなら以降のネットワークアクセス (list_repo_files) を一切行わない。
+    # list_repo_files は従来 try/except の外にあり、一時的な HF Hub 障害でここから
+    # 例外が伝播してダウンロードスレッドごと死ぬ原因になっていた。
     if checkCTranslate2Weight(root, weight_type):
         return True
+
+    files = None
+    for attempt in range(1, _DOWNLOAD_MAX_ATTEMPTS + 1):
+        try:
+            files = list_repo_files(repo_id=hf_repo)
+            break
+        except Exception:
+            errorLogging()
+            if attempt < _DOWNLOAD_MAX_ATTEMPTS:
+                printLog(f"CTranslate2 repo listing failed, retrying ({attempt}/{_DOWNLOAD_MAX_ATTEMPTS - 1})", hf_repo)
+                sleep(_DOWNLOAD_RETRY_BACKOFF * attempt)
+    if files is None:
+        return False
+
     os_makedirs(path, exist_ok=True)
     base_dir = os_path.abspath(path)
 
     def downloadFile(url: str, file_path: str, func: Callable = None) -> bool:
-        try:
-            res = requests_get(url, stream=True)
-            res.raise_for_status()
-            file_size = int(res.headers.get('content-length', 0))
-            total_chunk = 0
-            os_makedirs(os_path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'wb') as file:
-                for chunk in res.iter_content(chunk_size=1024*2000):
-                    file.write(chunk)
-                    if func is not None:
-                        total_chunk += len(chunk)
-                        if file_size > 0:
-                            func(total_chunk/file_size)
-            return True
-        except Exception:
-            errorLogging()
-            return False
+        for attempt in range(1, _DOWNLOAD_MAX_ATTEMPTS + 1):
+            try:
+                res = requests_get(url, stream=True, timeout=_DOWNLOAD_TIMEOUT)
+                res.raise_for_status()
+                file_size = int(res.headers.get('content-length', 0))
+                total_chunk = 0
+                os_makedirs(os_path.dirname(file_path), exist_ok=True)
+                with open(file_path, 'wb') as file:
+                    for chunk in res.iter_content(chunk_size=1024*2000):
+                        file.write(chunk)
+                        if func is not None:
+                            total_chunk += len(chunk)
+                            if file_size > 0:
+                                func(total_chunk/file_size)
+                return True
+            except Exception as e:
+                errorLogging()
+                try:
+                    if os_path.exists(file_path):
+                        os_remove(file_path)
+                except Exception:
+                    pass
+                status = getattr(getattr(e, "response", None), "status_code", None)
+                if isinstance(e, HTTPError) and status is not None and 400 <= status < 500 and status != 429:
+                    return False
+                if attempt < _DOWNLOAD_MAX_ATTEMPTS:
+                    printLog(f"CTranslate2 file download failed, retrying ({attempt}/{_DOWNLOAD_MAX_ATTEMPTS - 1})", url)
+                    sleep(_DOWNLOAD_RETRY_BACKOFF * attempt)
+        return False
 
     all_succeeded = True
     for filename in files:

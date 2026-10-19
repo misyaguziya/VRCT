@@ -5,8 +5,9 @@ import styles from "./MessageContainer.module.scss";
 import { MessageSubMenuContainer } from "./message_sub_menu_container/MessageSubMenuContainer";
 import { useMessage } from "@logics_common";
 import { useAppearance } from "@logics_configs";
+import { store } from "@store";
 
-export const MessageContainer = ({ messages, status, category, created_at }) => {
+export const MessageContainer = ({ messages, status, category, created_at, source }) => {
     const { t } = useI18n();
     const {
         sendMessage,
@@ -43,10 +44,13 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
     const is_pending = status === "pending";
     const is_sent_message = category === "sent";
     const is_system_message = category === "system";
+    const is_ocr_message = source === "ocr";
     const category_text = is_sent_message
         ? t("main_page.message_log.sent")
         : is_system_message
         ? t("main_page.message_log.system")
+        : is_ocr_message
+        ? t("main_page.message_log.received_ocr", { ocr: t("main_page.ocr") })
         : t("main_page.message_log.received");
 
     const message_type_class_name = clsx({
@@ -64,7 +68,7 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
             <div className={clsx(styles.message_wrapper, message_type_class_name)}>
                 <div className={clsx(styles.info_box, message_type_class_name)}>
                     <p className={styles.time}>{created_at}</p>
-                    <p className={clsx(styles.category, message_type_class_name)}>{category_text}</p>
+                    <p className={clsx(styles.category, message_type_class_name, { [styles.ocr_category]: is_ocr_message })}>{category_text}</p>
                     {is_sent_message && is_pending && <span className={styles.loader}></span>}
                 </div>
                 <div className={clsx(styles.message_box, message_type_class_name)}>
@@ -77,7 +81,8 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
                     )}
                 </div>
             </div>
-            {currentShowResendButton.data && is_sent_message && is_hovered ? (
+            {/* VRパネルでは、レーザーの誤操作で過去のメッセージを再送しないよう出さない */}
+            {currentShowResendButton.data && is_sent_message && is_hovered && !store.is_vr_panel ? (
                 <MessageSubMenuContainer
                     setIsHovered={lockHoverState}
                     resendFunction={resendFunction}

@@ -1,3 +1,5 @@
+@import "@scss_mixins";
+
 .container {
     display: flex;
     justify-content: center;
@@ -14,6 +16,7 @@
     flex-wrap: wrap;
     column-gap: 1.8rem;
     row-gap: 2.6rem;
+    padding-bottom: 2rem;
 }
 
 .supporter_image_container {
@@ -56,8 +59,6 @@
         height: 1.4rem;
     }
 }
-$progress_ease: cubic-bezier(0, 1, 0.75, 1);
-// Duplicated
 .supporter_icon_wrapper {
     height: 4rem;
     aspect-ratio: 1 /1;
@@ -226,9 +227,9 @@ $progress_ease: cubic-bezier(0, 1, 0.75, 1);
 }
 
 .period_box {
-    width: 1.7rem;
-    height: 0.3rem;
-    border-radius: 0.3rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 0.5rem;
     &.mogu_bar {
         background-color: var(--dark_basic_text_color);
     }
@@ -245,6 +246,7 @@ $progress_ease: cubic-bezier(0, 1, 0.75, 1);
 
 .tooltip_period_label {
     font-size: 1.4rem;
+    white-space: nowrap;
 }
 
 

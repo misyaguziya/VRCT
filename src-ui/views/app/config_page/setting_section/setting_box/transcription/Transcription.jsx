@@ -27,7 +27,6 @@ export const Transcription = () => {
             <Mic_Container />
             <Speaker_Container />
             <TranscriptionEngine_Container />
-            <Advanced_Container />
         </div>
     );
 };
@@ -197,12 +196,22 @@ const SpeakerMaxWords_Box = () => {
 
 const TranscriptionEngine_Container = () => {
     const { t } = useI18n();
+    const { currentSelectedTranscriptionEngine } = useTranscription();
+
     return (
         <div>
             <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
             <TranscriptionEngine_Box />
-            <WhisperWeightType_Box />
-            <TranscriptionComputeDevice_Box />
+            {currentSelectedTranscriptionEngine.data === "Whisper" && (
+                <>
+                    <WhisperWeightType_Box />
+                    <TranscriptionComputeDevice_Box />
+                    <MicAvgLogprobContainer />
+                    <MicNoSpeechProbContainer />
+                    <SpeakerAvgLogprobContainer />
+                    <SpeakerNoSpeechProbContainer />
+                </>
+            )}
         </div>
     );
 };
@@ -246,7 +255,7 @@ const WhisperWeightType_Box = () => {
     const whisper_weight_types = currentWhisperWeightTypeStatus.data.map(item => {
         return {
             ...item,
-            label: `${item.id} (${item.capacity})`,
+            label: item.id,
         };
     });
 
@@ -256,7 +265,7 @@ const WhisperWeightType_Box = () => {
                 label={t("config_page.transcription.whisper_weight_type.label")}
                 desc={t(
                     "config_page.transcription.whisper_weight_type.desc",
-                    {translator: t("main_page.translator")}
+                    { translator: t("main_page.translator") }
                 )}
                 name="whisper_weight_type"
                 options={whisper_weight_types}
@@ -296,85 +305,77 @@ const TranscriptionComputeDevice_Box = () => {
 
 
 
-const Advanced_Container = () => {
-    const { t } = useI18n();
-    return (
-        <div>
-            <SectionLabelComponent label="Advanced Settings (Whisper Model)" />
-            <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
-            <MicAvgLogprobContainer />
-            <MicNoSpeechProbContainer />
-            <SpeakerAvgLogprobContainer />
-            <SpeakerNoSpeechProbContainer />
-        </div>
-    );
-};
-
-export const MicAvgLogprobContainer = () => {
+const MicAvgLogprobContainer = () => {
     const { t } = useI18n();
     const { currentMicAvgLogprob, setMicAvgLogprob } = useTranscription();
     return (
         <SliderContainer
             label="Mic Avg Logprob"
-            desc="Default: -0.8"
+            desc={t("config_page.transcription.mic_avg_logprob.desc")}
             variable={currentMicAvgLogprob.data}
             setterFunction={setMicAvgLogprob}
             min={-2}
             max={0}
             step={0.1}
-            marks_step={0.2}
+            marks_step={0.1}
+            show_label_values={[-2, -1.8, -1.6, -1.4, -1.2, -1, -0.8, -0.6, -0.4, -0.2, 0]}
         />
     );
 };
 
-export const MicNoSpeechProbContainer = () => {
+const MicNoSpeechProbContainer = () => {
     const { t } = useI18n();
     const { currentMicNoSpeechProb, setMicNoSpeechProb } = useTranscription();
 
     return (
         <SliderContainer
             label="Mic No Speech Prob"
-            desc="Default: 0.6"
+            desc={t("config_page.transcription.mic_no_speech_prob.desc")}
             variable={currentMicNoSpeechProb.data}
             setterFunction={setMicNoSpeechProb}
             min={0}
             max={1}
             step={0.1}
+            marks_step={0.1}
+            show_label_values={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]}
         />
     );
 };
 
-export const SpeakerAvgLogprobContainer = () => {
+const SpeakerAvgLogprobContainer = () => {
     const { t } = useI18n();
     const { currentSpeakerAvgLogprob, setSpeakerAvgLogprob } = useTranscription();
 
     return (
         <SliderContainer
             label="Speaker Avg Logprob"
-            desc="Default: -0.8"
+            desc={t("config_page.transcription.speaker_avg_logprob.desc")}
             variable={currentSpeakerAvgLogprob.data}
             setterFunction={setSpeakerAvgLogprob}
             min={-2}
             max={0}
             step={0.1}
-            marks_step={0.2}
+            marks_step={0.1}
+            show_label_values={[-2, -1.8, -1.6, -1.4, -1.2, -1, -0.8, -0.6, -0.4, -0.2, 0]}
         />
     );
 };
 
-export const SpeakerNoSpeechProbContainer = () => {
+const SpeakerNoSpeechProbContainer = () => {
     const { t } = useI18n();
     const { currentSpeakerNoSpeechProb, setSpeakerNoSpeechProb } = useTranscription();
 
     return (
         <SliderContainer
             label="Speaker No Speech Prob"
-            desc="Default: 0.6"
+            desc={t("config_page.transcription.speaker_no_speech_prob.desc")}
             variable={currentSpeakerNoSpeechProb.data}
             setterFunction={setSpeakerNoSpeechProb}
             min={0}
             max={1}
             step={0.1}
+            marks_step={0.1}
+            show_label_values={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]}
         />
     );
 };

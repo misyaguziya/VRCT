@@ -1,0 +1,43 @@
+chatbox_yolox_tiny.onnx -- VRChat chat-bubble detection model
+=============================================================
+
+Copyright (c) 2026 misyaguziya. All rights reserved.
+
+This file is NOT covered by the MIT License that applies to the rest of
+VRCT. It is licensed under the VRCT Chat-Bubble Detection Model License
+Agreement -- see LICENSE.txt (Japanese, authoritative) and LICENSE.en.txt
+(English translation) in this directory. See NOTICE.md at the root of the
+VRCT repository for the full statement of scope.
+
+In short: you may run this file as part of VRCT, and as part of a fork of
+VRCT while you develop, test or contribute to VRCT. Forking the repository
+with the file inside it is fine. You may not ship it in a fork's own built
+release, use it in software that is not VRCT or a fork of it, redistribute
+it on its own, make derived models, or train anything from its outputs.
+Contact the copyright holder if you need terms beyond that.
+
+Provenance
+----------
+  Base weights   yolox_tiny.pth (COCO-pretrained, published by Megvii under
+                 Apache-2.0 at Megvii-BaseDetection/YOLOX)
+  Framework      YOLOX 0.3.0 (Apache-2.0)
+  Task           single class detection, class 0 = chat_box
+  Input          dynamic HxW, letterbox with the long side at 1280, top-left
+                 padding, pad colour 114, BGR, unnormalised 0-255
+  Output         [1, anchors, 6] = cx, cy, w, h, objectness, class
+                 (grid/stride decode in-graph, NMS on the VRCT side)
+  Export         ONNX opset 17, INT8 static quantization (QDQ, per-channel);
+                 the prediction convolutions and the decode stay in fp32
+
+The base weights and the training framework are Apache-2.0, which does not
+require the trained result to carry the same terms. The fine-tuned weights
+are the work of misyaguziya, who licenses them as stated above.
+
+Nothing here restricts VRCT itself. VRCT is MIT-licensed and builds and
+runs without this file; only chat-bubble detection in the OCR feature
+becomes unavailable.
+
+Third-party components in this directory
+----------------------------------------
+None. The PP-OCR models used for character recognition are fetched
+separately by tools/fetch_ocr_models.py and are Apache-2.0 (RapidAI).

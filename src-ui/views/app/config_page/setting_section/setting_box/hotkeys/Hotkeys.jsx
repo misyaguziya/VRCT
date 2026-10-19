@@ -3,8 +3,10 @@ import styles from "./Hotkeys.module.scss";
 import { HotkeysEntryContainer } from "../_templates/Templates";
 import { useI18n } from "@useI18n";
 export const Hotkeys = () => {
+    const { t } = useI18n();
     return (
         <div className={styles.container}>
+            <p className={styles.disabled_notice}>{t("config_page.hotkeys.disabled_notice")}</p>
             <HotkeysBoxContainer />
         </div>
     );

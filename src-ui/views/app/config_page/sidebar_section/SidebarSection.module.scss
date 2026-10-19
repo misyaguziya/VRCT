@@ -1,5 +1,5 @@
 .container {
-    width: 12rem;
+    width: 12.8rem;
     flex-shrink: 0;
     padding: 0;
     position: relative;
@@ -9,7 +9,7 @@
     &.is_small {
         width: 4rem;
         &:hover {
-            width: 12rem;
+            width: 12.8rem;
         }
     }
 }
@@ -21,6 +21,7 @@
     height: 100%;
     width: 100%;
     background-color: var(--dark_900_color);
+    padding-top: var(--config_page_content_padding_top);
     padding-bottom: 0.8rem;
     overflow: hidden;
 }
@@ -31,8 +32,11 @@
     justify-content: space-between;
     overflow-y: auto;
     flex: 1;
-    padding-top: var(--config_page_topbar_height); // Ensure alignment with content area
     max-height: 60rem;
+
+    &::-webkit-scrollbar {
+        width: 0.3rem;
+    }
 }
 
 .tabs_wrapper {
@@ -97,6 +101,12 @@
     }
     &.supporters_icon {
         fill: var(--supporters_crown_color);
+    }
+    &.updater_icon {
+        transform: rotate(-30deg);
+    }
+    &.ocr_icon {
+        fill: var(--dark_500_color);
     }
 }
 

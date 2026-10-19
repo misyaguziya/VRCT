@@ -114,6 +114,29 @@ def euler_to_rotation_matrix(angles: Sequence[float]) -> np.ndarray:
                     [0, 0, 1]])
     return np.dot(R_z, np.dot(R_y, R_x))
 
+def matrix_to_position(base_matrix: np.ndarray, relative_matrix: np.ndarray) -> tuple:
+    """Inverse of transform_matrix(): recover (x_pos, y_pos, z_pos, x_rot, y_rot, z_rot).
+
+    transform_matrix() is called with translation (x, y, -z), so z is negated back.
+    Rotation is decomposed as Rz @ Ry @ Rx (degrees).
+    """
+    h = np.linalg.inv(toHomogeneous(base_matrix)) @ toHomogeneous(relative_matrix)
+    r = h[:3, :3]
+    sy = -r[2][0]
+    if abs(sy) < 0.999999:
+        y_rot = np.arcsin(sy)
+        x_rot = np.arctan2(r[2][1], r[2][2])
+        z_rot = np.arctan2(r[1][0], r[0][0])
+    else:
+        # gimbal lock: x and z rotate about the same axis, fold into z
+        y_rot = np.pi / 2 * np.sign(sy)
+        x_rot = 0.0
+        z_rot = np.arctan2(-r[0][1], r[1][1])
+    return (
+        float(h[0][3]), float(h[1][3]), float(-h[2][3]),
+        float(np.degrees(x_rot)), float(np.degrees(y_rot)), float(np.degrees(z_rot)),
+    )
+
 if __name__ == "__main__":
     base_matrix = np.array([
         [1, 0, 0, 1],

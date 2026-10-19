@@ -14,6 +14,7 @@ import {
     useVr,
     useOthers,
 } from "@logics_configs";
+import { useMainFunction } from "@logics_main";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
 import { generateLocalizedDocumentUrl } from "@ui_configs";
@@ -23,8 +24,7 @@ export const RightSideComponents = () => {
 
     return (
         <div className={styles.container}>
-
-            <PluginsQuickSetting />
+            <OpenForegroundQuickSetting />
             <OpenVrcMicMuteSyncQuickSetting />
             <OpenOverlayQuickSetting />
             <SoftwareUpdateAvailableButton />
@@ -37,6 +37,20 @@ export const RightSideComponents = () => {
                 <HelpSvg className={styles.help_svg} />
             </a>
         </div>
+    );
+};
+
+const OpenForegroundQuickSetting = () => {
+    const { t } = useI18n();
+    const { currentForegroundStatus, toggleForeground } = useMainFunction();
+
+    return (
+        <OpenQuickSettingButton
+            label={t("main_page.foreground")}
+            variable={currentForegroundStatus.data}
+            state={currentForegroundStatus.state}
+            onClickFunction={toggleForeground}
+        />
     );
 };
 
@@ -62,36 +76,22 @@ const OpenOverlayQuickSetting = () => {
         />
     );
 };
-const PluginsQuickSetting = () => {
-    const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-
-    const onClickFunction = () => {
-        updateOpenedQuickSetting("plugins");
-    };
-
-    return (
-        <OpenQuickSettingButton
-            label={t("config_page.side_menu_labels.plugins")}
-            onClickFunction={onClickFunction}
-        />
-    );
-};
 
 const OpenVrcMicMuteSyncQuickSetting = () => {
     const { t } = useI18n();
-    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const { currentIsOscAvailable } = useIsOscAvailable();
-    const { currentEnableVrcMicMuteSync } = useOthers();
+    const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useOthers();
 
     const onClickFunction = () => {
-        updateOpenedQuickSetting("vrc_mic_mute_sync");
+        if (currentIsOscAvailable.data === false) return;
+        toggleEnableVrcMicMuteSync();
     };
 
     return (
         <OpenQuickSettingButton
             label={t("config_page.others.vrc_mic_mute_sync.label")}
             variable={currentEnableVrcMicMuteSync.data}
+            state={currentEnableVrcMicMuteSync.state}
             is_available={currentIsOscAvailable.data}
             onClickFunction={onClickFunction}
         />

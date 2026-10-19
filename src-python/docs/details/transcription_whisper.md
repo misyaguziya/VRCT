@@ -355,7 +355,7 @@ def robust_model_loading(root, preferred_type="base"):
 - `utils`: ユーティリティ機能
 
 ### オプション依存関係
-- `torch`: CUDA計算（GPU使用時）
+- `nvidia-cublas-cu12` / `nvidia-cudnn-cu12`: CUDA計算（GPU使用時。ctranslate2 が実行時にロードする）
 
 ## 注意事項
 

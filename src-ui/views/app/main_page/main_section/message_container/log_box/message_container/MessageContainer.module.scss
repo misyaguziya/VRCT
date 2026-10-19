@@ -66,6 +66,9 @@
         align-items: start;
         color: var(--received_300_color);
     }
+    &.ocr_category {
+        color: var(--received_300_color);
+    }
 }
 
 .message_box {
@@ -88,8 +91,8 @@
     overflow-wrap: break-word;
     max-width: 100%;
     // Makes all children selectable under main, but not ruby
-    * { user-select: text; } 
-    rt { user-select: none; }  
+    * { user-select: text; }
+    rt { user-select: none; }
 }
 
 .message_second {

@@ -12,24 +12,14 @@ import contributor_poposuke from "@images/about_vrct/contributor_poposuke.png";
 import contributor_kumaguma from "@images/about_vrct/contributor_kumaguma.png";
 import contributor_riku from "@images/about_vrct/contributor_riku.png";
 
-import localization_section_title from "@images/about_vrct/localization_section_title.png";
-import localization_1 from "@images/about_vrct/localization_1.png";
-import localization_2 from "@images/about_vrct/localization_2.png";
-import localization_3 from "@images/about_vrct/localization_3.png";
-import localization_4 from "@images/about_vrct/localization_4.png";
-import localization_5 from "@images/about_vrct/localization_5.png";
-
 import special_thanks_section_title from "@images/about_vrct/special_thanks_section_title.png";
 import special_thanks_members from "@images/about_vrct/special_thanks_members.png";
 import special_thanks_message_en from "@images/about_vrct/special_thanks_message_en.png";
 import special_thanks_message_ja from "@images/about_vrct/special_thanks_message_ja.png";
 
-import poster_showcase_section_title from "@images/about_vrct/poster_showcase_section_title.png";
-
 import clsx from "clsx";
 import { useI18n } from "@useI18n";
 import { useAppearance } from "@logics_configs";
-import { PosterShowcaseContents } from "./poster_showcase_contents/PosterShowcaseContents";
 
 import { generateLocalizedDocumentUrl } from "@ui_configs";
 
@@ -96,24 +86,6 @@ export const AboutVrct = () => {
                 </div>
             </div>
 
-            <div className={styles.localization_section}>
-                <img src={localization_section_title} className={clsx(styles.section_title, styles.localization)} />
-                <div className={styles.localization_members_wrapper}>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_1} className={styles.localization_members_img} />
-                        <img src={localization_2} className={styles.localization_members_img} />
-                    </div>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_3} className={styles.localization_members_img} />
-                        <img src={localization_4} className={styles.localization_members_img} />
-                    </div>
-                    <div className={styles.localization_members_row_wrapper}>
-                        <img src={localization_5} className={styles.localization_members_img} />
-                        {/* <img src={localization_6} className={styles.localization_members_img} /> */}
-                    </div>
-                </div>
-            </div>
-
             <div className={styles.special_thanks_section}>
                 <img src={special_thanks_section_title} className={clsx(styles.section_title, styles.special_thanks)} />
                 <img src={special_thanks_members} className={styles.special_thanks_members_img} />
@@ -124,11 +96,6 @@ export const AboutVrct = () => {
                 }
             </div>
 
-
-            <div className={styles.poster_showcase_section}>
-                <img src={poster_showcase_section_title} className={clsx(styles.section_title, styles.poster_showcase)} />
-                <PosterShowcaseContents />
-            </div>
 
             <div className={styles.vrchat_disclaimer_section}>
                 <p className={styles.vrchat_disclaimer}>VRCT is not endorsed by VRChat and does not reflect the views or opinions of VRChat or anyone officially involved in producing or managing VRChat properties. VRChat and all associated properties are trademarks or registered trademarks of VRChat Inc. VRChat © VRChat Inc.</p>
@@ -155,7 +122,7 @@ const about_vrct_links = {
     dev_shiina_x: { img: dev_x_icon, href: "https://twitter.com/Shiina_12siy" },
 
     project_link_booth: { img: project_link_booth, href: "https://misyaguziya.booth.pm/items/5155325" },
-    project_link_documents: { img: project_link_documents, href: generateLocalizedDocumentUrl().vrct_document_home_url },
+    project_link_documents: { img: project_link_documents, href: (lang) => generateLocalizedDocumentUrl(lang).vrct_document_home_url },
     project_link_vrct_github: { img: project_link_vrct_github, href: "https://github.com/misyaguziya/VRCT" },
     project_link_contact_us: { img: project_link_contact_us, href: "https://docs.google.com/forms/d/e/1FAIpQLSei-xoydOY60ivXqhOjaTzNN8PiBQIDcNhzfy6cw2sjYkcg_g/viewform" },
 
@@ -169,8 +136,10 @@ const about_vrct_links = {
 };
 
 const OpenLinkContainer = ({className, href_id}) => {
-    const href = about_vrct_links[href_id].href;
-    const img = about_vrct_links[href_id].img;
+    const { currentUiLanguage } = useAppearance();
+    const link = about_vrct_links[href_id];
+    const href = typeof link.href === "function" ? link.href(currentUiLanguage.data) : link.href;
+    const img = link.img;
     return (
         <a className={className} href={href} target="_blank" rel="noreferrer" >
             {/* for adjust size to their parent component's width. */}

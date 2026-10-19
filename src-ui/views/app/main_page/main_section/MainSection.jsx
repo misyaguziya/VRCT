@@ -8,28 +8,11 @@ import { LanguageSelector } from "./language_selector/LanguageSelector";
 import { useStore_IsOpenedLanguageSelector } from "@store";
 import { useLanguageSettings } from "@logics_main";
 import { useEffect } from "react";
-
-import { PluginHost } from "./PluginHost";
-
-import { usePlugins } from "@logics_configs";
-
 export const MainSection = () => {
-    const { currentPluginsData } = usePlugins();
-
-    const render_plugins = currentPluginsData.data.filter((plugin) => (
-        plugin.is_downloaded &&
-        plugin.is_enabled &&
-        plugin.downloaded_plugin_info.is_plugin_supported &&
-        plugin.downloaded_plugin_info.location === "main_section"
-    ));
-
     return (
         <div className={styles.container}>
             <TopBar />
-            {render_plugins.length
-                ? <PluginHost render_components={render_plugins}/>
-                : <MessageContainer />
-            }
+            <MessageContainer />
             <HandleLanguageSelector />
         </div>
     );
@@ -40,6 +23,7 @@ const HandleLanguageSelector = () => {
     const { t } = useI18n();
     const { currentIsOpenedLanguageSelector, updateIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
     const {
+        canChangeLanguageSettings,
         currentSelectedPresetTabNumber,
         currentSelectedYourLanguages,
         setSelectedYourLanguages,
@@ -68,6 +52,7 @@ const HandleLanguageSelector = () => {
 
     if (currentIsOpenedLanguageSelector.data.your_language === true) {
         const onclickFunction_YourLanguage = (payload) => {
+            if (!canChangeLanguageSettings()) return;
             updateIsOpenedLanguageSelector({ your_language: false, target_language: false, target_key: currentIsOpenedLanguageSelector.data.target_key });
             setSelectedYourLanguages({
                 ...payload,
@@ -83,6 +68,7 @@ const HandleLanguageSelector = () => {
         );
     } else if (currentIsOpenedLanguageSelector.data.target_language === true) {
         const onclickFunction_TargetLanguage = (payload) => {
+            if (!canChangeLanguageSettings()) return;
             updateIsOpenedLanguageSelector({ your_language: false, target_language: false, target_key: currentIsOpenedLanguageSelector.data.target_key });
             setSelectedTargetLanguages({
                 ...payload,

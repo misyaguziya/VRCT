@@ -1,0 +1,122 @@
+{
+  "en": [
+    {"text":"Wow!","tags":["reaction"]},
+    {"text":"Yep!","tags":["reaction"]},
+    {"text":"Hey, good to see you!","tags":["greeting"]},
+    {"text":"Which way is the café?","tags":["question","location"]},
+    {"text":"Let's take a photo here.","tags":["photo"]},
+    {"text":"This world feels even calmer when it rains.","tags":["scenery"]},
+    {"text":"I'm waiting by the bridge.\nTake your time getting here!","tags":["multiline","location"]},
+    {"text":"Could you stand a little closer so everyone fits in the photo?","tags":["question","photo"]},
+    {"text":"I was only going to stay for a few minutes, but the view from this rooftop makes me want to watch the whole sunset.","tags":["scenery"]},
+    {"text":"Before we move to another world, does anyone want to explore the little path behind the waterfall with me?","tags":["question","movement"]}
+  ],
+  "es": [
+    {"text":"¡Wow!","tags":["reaction"]},
+    {"text":"Sí.","tags":["reaction"]},
+    {"text":"¡Qué bueno verte por aquí!","tags":["greeting"]},
+    {"text":"¿Dónde nos reunimos?","tags":["question","location"]},
+    {"text":"Vamos a la terraza.","tags":["movement"]},
+    {"text":"La luz de este bosque queda preciosa en las fotos.","tags":["photo"]},
+    {"text":"Estoy junto a la fuente.\nAvísame cuando llegues.","tags":["multiline","location"]},
+    {"text":"¿Te apetece sentarte un rato y escuchar la lluvia?","tags":["question"]},
+    {"text":"Pensaba irme pronto, pero desde aquí se ve toda la ciudad y quiero esperar un poco más para ver cómo se encienden las luces.","tags":["scenery"]},
+    {"text":"Antes de cambiar de mundo, podemos reunirnos en la entrada y hacer una foto de grupo para recordar esta tarde.","tags":["photo","location"]}
+  ],
+  "fr": [
+    {"text":"Wow !","tags":["reaction"]},
+    {"text":"Oui !","tags":["reaction"]},
+    {"text":"Salut, ça fait plaisir !","tags":["greeting"]},
+    {"text":"On se retrouve où ?","tags":["question","location"]},
+    {"text":"Quelle jolie lumière !","tags":["scenery"]},
+    {"text":"Le bruit des vagues me donne envie de rester ici.","tags":["scenery"]},
+    {"text":"Je suis près du pont.\nRejoins-moi quand tu veux !","tags":["multiline","location"]},
+    {"text":"Tu peux te décaler un peu pour qu'on voie tout le monde ?","tags":["question","photo"]},
+    {"text":"Je cherchais juste un endroit tranquille, et ce petit jardin caché derrière la gare est exactement ce qu'il me fallait.","tags":["statement","location"]},
+    {"text":"Avant de partir, on pourrait monter sur la terrasse pour prendre une photo avec les montagnes et le ciel rose derrière nous.","tags":["photo","movement"]}
+  ],
+  "de": [
+    {"text":"Wow!","tags":["reaction"]},
+    {"text":"Ja!","tags":["reaction"]},
+    {"text":"Schön, dich zu sehen!","tags":["greeting"]},
+    {"text":"Wo treffen wir uns?","tags":["question","location"]},
+    {"text":"Komm, wir gehen zum See.","tags":["movement"]},
+    {"text":"Das Licht zwischen den Bäumen sieht richtig schön aus.","tags":["scenery"]},
+    {"text":"Ich warte vor dem Café.\nLass dir ruhig Zeit!","tags":["multiline","location"]},
+    {"text":"Können wir noch ein Foto machen, bevor die anderen gehen?","tags":["question","photo"]},
+    {"text":"Eigentlich wollte ich nur kurz vorbeischauen, aber die Aussicht von dieser Brücke ist so schön, dass ich noch etwas bleibe.","tags":["scenery"]},
+    {"text":"Wenn alle bereit sind, können wir zusammen den Weg hinter dem Wasserfall erkunden und danach eine kleine Pause machen.","tags":["movement","location"]}
+  ],
+  "pt": [
+    {"text":"Uau!","tags":["reaction"]},
+    {"text":"Sim!","tags":["reaction"]},
+    {"text":"Que bom te ver por aqui!","tags":["greeting"]},
+    {"text":"Onde a gente se encontra?","tags":["question","location"]},
+    {"text":"Vamos tirar uma foto?","tags":["question","photo"]},
+    {"text":"Esse cantinho fica ainda mais bonito quando começa a chover.","tags":["scenery"]},
+    {"text":"Estou perto da fonte.\nMe avisa quando chegar!","tags":["multiline","location"]},
+    {"text":"Você quer explorar a trilha ou ficar um pouco na praça?","tags":["question","movement"]},
+    {"text":"Eu ia ficar só alguns minutos, mas esse céu cheio de estrelas e a música tranquila me deram vontade de passar mais tempo aqui.","tags":["scenery"]},
+    {"text":"Antes de mudar de mundo, vamos juntar todo mundo na varanda para tirar uma foto com as montanhas aparecendo ao fundo.","tags":["photo","location"]}
+  ],
+  "it": [
+    {"text":"Wow!","tags":["reaction"]},
+    {"text":"Sì!","tags":["reaction"]},
+    {"text":"Ciao, che bello vederti!","tags":["greeting"]},
+    {"text":"Dove ci incontriamo?","tags":["question","location"]},
+    {"text":"Andiamo sul balcone.","tags":["movement"]},
+    {"text":"La luce tra questi alberi sembra uscita da un sogno.","tags":["scenery"]},
+    {"text":"Ti aspetto vicino al ponte.\nArriva pure con calma!","tags":["multiline","location"]},
+    {"text":"Facciamo una foto di gruppo prima che vadano via tutti?","tags":["question","photo"]},
+    {"text":"Volevo restare solo qualche minuto, ma da questa terrazza si vede tutta la città e mi piacerebbe aspettare il tramonto.","tags":["scenery"]},
+    {"text":"Se vi va, possiamo seguire il sentiero dietro la cascata e vedere dove porta, poi ci fermiamo a chiacchierare vicino al lago.","tags":["movement","location"]}
+  ],
+  "vi": [
+    {"text":"Ồ!","tags":["reaction"]},
+    {"text":"Đẹp!","tags":["reaction"]},
+    {"text":"Chào bạn, lâu rồi mới gặp!","tags":["greeting"]},
+    {"text":"Mình gặp nhau ở đâu nhỉ?","tags":["question","location"]},
+    {"text":"Chụp một tấm ảnh nhé!","tags":["photo"]},
+    {"text":"Ánh nắng xuyên qua tán cây làm khu rừng này đẹp quá.","tags":["scenery"]},
+    {"text":"Mình đang đứng cạnh đài phun nước.\nBạn cứ từ từ nhé!","tags":["multiline","location"]},
+    {"text":"Bạn muốn đi dạo quanh hồ hay ngồi nghe nhạc một lát?","tags":["question","movement"]},
+    {"text":"Mình định chỉ ghé qua một chút thôi, nhưng cảnh thành phố nhìn từ ban công này đẹp quá nên muốn ở lại ngắm thêm.","tags":["scenery"]},
+    {"text":"Trước khi sang thế giới khác, mọi người tập trung ở cây cầu nhé, mình muốn chụp một tấm ảnh có đủ cả nhóm.","tags":["photo","location"]}
+  ],
+  "id": [
+    {"text":"Wah!","tags":["reaction"]},
+    {"text":"Iya!","tags":["reaction"]},
+    {"text":"Hai, akhirnya ketemu lagi!","tags":["greeting"]},
+    {"text":"Kita kumpul di mana?","tags":["question","location"]},
+    {"text":"Yuk, foto bareng di sini!","tags":["photo"]},
+    {"text":"Suara hujan di tempat ini bikin aku betah duduk lama.","tags":["scenery"]},
+    {"text":"Aku tunggu di dekat jembatan.\nSantai saja, nggak usah buru-buru.","tags":["multiline","location"]},
+    {"text":"Mau jalan ke danau dulu atau langsung naik ke menara?","tags":["question","movement"]},
+    {"text":"Tadinya aku cuma mau mampir sebentar, tapi pemandangan kota dari balkon ini bagus banget, jadi ingin menunggu matahari terbenam.","tags":["scenery"]},
+    {"text":"Sebelum pindah dunia, kita kumpul dulu di depan kafe supaya bisa foto bareng dengan taman bunga sebagai latarnya.","tags":["photo","location"]}
+  ],
+  "tr": [
+    {"text":"Vay!","tags":["reaction"]},
+    {"text":"Evet!","tags":["reaction"]},
+    {"text":"Selam, seni görmek güzel!","tags":["greeting"]},
+    {"text":"Nerede buluşalım?","tags":["question","location"]},
+    {"text":"Birlikte fotoğraf çekilelim.","tags":["photo"]},
+    {"text":"Ağaçların arasından süzülen ışık burayı çok güzel gösteriyor.","tags":["scenery"]},
+    {"text":"Köprünün yanında bekliyorum.\nAcele etmene gerek yok!","tags":["multiline","location"]},
+    {"text":"Önce göl kenarında yürüyelim mi, yoksa kuleye mi çıkalım?","tags":["question","movement"]},
+    {"text":"Sadece birkaç dakika kalmayı düşünüyordum ama bu terastan görünen şehir manzarası o kadar güzel ki biraz daha bekleyeceğim.","tags":["scenery"]},
+    {"text":"Başka bir dünyaya geçmeden önce herkes girişte toplansın, arkadaki dağlar da görünecek şekilde bir grup fotoğrafı çekelim.","tags":["photo","location"]}
+  ],
+  "pl": [
+    {"text":"Wow!","tags":["reaction"]},
+    {"text":"Tak!","tags":["reaction"]},
+    {"text":"Cześć, miło cię widzieć!","tags":["greeting"]},
+    {"text":"Gdzie się spotykamy?","tags":["question","location"]},
+    {"text":"Zróbmy tutaj zdjęcie.","tags":["photo"]},
+    {"text":"Światło między drzewami wygląda tutaj naprawdę pięknie.","tags":["scenery"]},
+    {"text":"Czekam obok fontanny.\nNie musisz się spieszyć!","tags":["multiline","location"]},
+    {"text":"Chcesz najpierw przejść się nad jezioro czy wejść na wieżę?","tags":["question","movement"]},
+    {"text":"Miał to być tylko krótki spacer, ale widok miasta z tego tarasu jest tak piękny, że zostanę jeszcze do zachodu słońca.","tags":["scenery"]},
+    {"text":"Zanim przejdziemy do następnego świata, zbierzmy się przy wejściu i zróbmy wspólne zdjęcie z górami widocznymi w tle.","tags":["photo","location"]}
+  ]
+}

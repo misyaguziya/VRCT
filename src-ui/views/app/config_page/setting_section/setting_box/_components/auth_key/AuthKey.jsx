@@ -1,10 +1,8 @@
 import styles from "./AuthKey.module.scss";
 import { useI18n } from "@useI18n";
-import clsx from "clsx";
-import { CircularProgress } from "@common_components";
 import { _Entry } from "../_atoms/_entry/_Entry";
-import { useState, useRef } from "react";
-import { useEffect } from "react";
+import { _SaveButton } from "../_atoms/_save_button/_SaveButton";
+import { useState, useRef, useEffect } from "react";
 
 export const AuthKey = (props) => {
     const { t } = useI18n();
@@ -31,25 +29,22 @@ export const AuthKey = (props) => {
 
     const is_disabled = props.state === "pending";
 
-    const save_button_class_names = clsx(styles.save_button, {
-        [styles.is_disabled]: is_disabled
-    });
+    const handleEnterPressed = (e) => {
+        if (is_disabled) return;
+        saveAuthKey();
+        entryRef.current?.blur();
+    };
 
     return (
         <div className={styles.container}>
             <div className={styles.entry_section_wrapper}>
-                <_Entry ref={entryRef} width="24rem" onChange={onChangeEntryAuthKey} ui_variable={props.variable} is_disabled={is_disabled}/>
-                <button className={save_button_class_names} onClick={saveAuthKey}>
-                    {is_disabled
-                    ? <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }}/>
-                    : <p className={styles.save_button_label}>{t("config_page.translation.deepl_auth_key.save")}</p>
-                }
-                </button>
+                <_Entry ref={entryRef} width="24rem" onChange={onChangeEntryAuthKey} onEnterPressed={handleEnterPressed} ui_variable={props.variable} is_disabled={is_disabled}/>
+                <_SaveButton onClick={saveAuthKey} is_disabled={is_disabled} />
                 {is_editable
                 ? null
                 :
                     <div className={styles.entry_edit_cover} onClick={revealEditAuthKey}>
-                        <button className={styles.edit_button}>{t("config_page.translation.deepl_auth_key.edit")}</button>
+                        <button className={styles.edit_button}>{t("config_page.common.edit_button_label")}</button>
                     </div>
                 }
             </div>

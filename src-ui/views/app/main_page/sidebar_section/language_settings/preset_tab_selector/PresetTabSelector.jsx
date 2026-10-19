@@ -15,8 +15,9 @@ import clsx from "clsx";
 import { useLanguageSettings } from "@logics_main";
 
 const Tab = (props) => {
-    const { currentSelectedPresetTabNumber, setSelectedPresetTabNumber } = useLanguageSettings();
+    const { canChangeLanguageSettings, isLanguageSettingsBusy, currentSelectedPresetTabNumber, setSelectedPresetTabNumber } = useLanguageSettings();
     const onclickFunction = () => {
+        if (!canChangeLanguageSettings()) return;
         setSelectedPresetTabNumber(props.preset_number);
     };
 
@@ -25,7 +26,7 @@ const Tab = (props) => {
     });
 
     return (
-        <div className={class_names} onClick={onclickFunction}>
+        <div className={class_names} aria-disabled={isLanguageSettingsBusy} onClick={onclickFunction}>
             <p className={styles.tab_number}>{props.preset_number}</p>
         </div>
     );

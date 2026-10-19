@@ -31,11 +31,15 @@ except Exception:
     OSCAccess = None  # type: ignore
 
 try:
-    from utils import errorLogging
+    from utils import errorLogging, printLog
 except Exception:
     def errorLogging() -> None:
         import traceback
         print("Error occurred:", traceback.format_exc())
+
+    def printLog(log: str, data: Any = None) -> None:
+        print(log, data)
+
 
 class OSCHandler:
     """Thin wrapper managing OSC send/receive and optional OSCQuery advertising.
@@ -115,6 +119,9 @@ class OSCHandler:
                 sleep(1)  # 初回のみスリープ
 
             service = self.browser.find_service_by_name(self.osc_server_name)
+            if service is None:
+                printLog("OSCQuery: query got no value", {"address": address, "reason": "service not in the browser",
+                                                           "known": list(self.browser.listener.oscjson_services)})
             if service is not None:
                 osc_query_client = OSCQueryClient(service)
                 mute_self_node = osc_query_client.query_node(address)
@@ -123,10 +130,12 @@ class OSCHandler:
                 # or an empty list. Guard against those cases to avoid
                 # AttributeError: 'NoneType' object has no attribute 'value'
                 if mute_self_node is None:
+                    printLog("OSCQuery: query got no value", {"address": address, "reason": "no such node (404)"})
                     return None
                 # prefer explicit checks rather than relying on exceptions
                 node_value = getattr(mute_self_node, 'value', None)
                 if not node_value:
+                    printLog("OSCQuery: query got no value", {"address": address, "reason": "node has no value"})
                     return None
                 value = node_value[0]
         except Exception:
@@ -166,7 +175,11 @@ class OSCHandler:
         osc_dispatcher = dispatcher.Dispatcher()
         for filter, target in self.dict_filter_and_target.items():
             osc_dispatcher.map(filter, target)
-        self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher)
+        # 受信は oscServerServe の1本のスレッドで順に処理する。ThreadingOSCUDPServer はパケットごとに
+        # スレッドを起こし、VRChat が送り続けるアバターのパラメータ (登録していないものも) だけで
+        # 受信スレッドが約0.1コアを使っていた (実測、起動からスレッド約32万本)。
+        # 登録する処理は受信を止めないよう、待たずに戻ること (待つ処理は別スレッドへ。model.py の startReceiveOSC)
+        self.osc_server = osc_server.BlockingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher)
         Thread(target=self.oscServerServe, daemon=True).start()
 
         max_retries = 5
@@ -189,14 +202,24 @@ class OSCHandler:
                 sleep(1)
 
     def oscServerServe(self) -> None:
-        """Run the OSC server loop with a longer poll interval to reduce CPU."""
-        # ポーリング間隔を長くして（2秒から10秒に）CPUの使用率を削減
+        """Run the OSC server loop.
+
+        poll_interval を短くする(10秒→0.5秒、バックエンドレビュー
+        フェーズ4項目30)。`serve_forever(poll_interval)` は内部で
+        `selector.select(timeout=poll_interval)` を使うだけなので、
+        間隔を縮めてもCPU使用率はほぼ変わらない(以前のコメントの
+        「CPU使用率削減のため2秒→10秒に」は根拠が薄いとレビューで
+        指摘された)。一方 `oscServerStop()` が呼ぶ`BaseServer.shutdown()`は
+        このpoll_interval単位でしか停止要求を確認しないため、10秒のままだと
+        OSCのIP/ポート変更(`setOscIpAddress`/`setOscPort`)や、アプリ終了時の
+        `oscServerStop()`呼び出しだけでUIが最大10秒無応答になっていた。
+        """
         if self.osc_server is not None:
-            self.osc_server.serve_forever(10)
+            self.osc_server.serve_forever(0.5)
 
     def oscServerStop(self) -> None:
         """Stop and clean up any running OSC server and OSCQuery service."""
-        if isinstance(self.osc_server, osc_server.ThreadingOSCUDPServer):
+        if isinstance(self.osc_server, osc_server.OSCUDPServer):
             try:
                 self.osc_server.shutdown()
             except Exception:

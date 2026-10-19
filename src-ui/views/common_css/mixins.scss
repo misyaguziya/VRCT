@@ -40,6 +40,10 @@ $default_loader_line_width: 0.2rem !default;
 }
 
 
+// Animation & Transition
+$progress_ease: cubic-bezier(0, 1, 0.75, 1);
+
+
 
 $toggle_background_color_on: var(--primary_400_color);
 $toggle_background_color_off: var(--dark_775_color);
@@ -66,21 +70,28 @@ $toggle_control_ease: ease-out;
 
     .control {
         position: relative;
-        width: $toggle_width;
-        height: $toggle_height;
-        border-radius: $toggle_radius;
-        background-color: $toggle_background_color_off;
-        transition: background-color $toggle_control_speed $toggle_control_ease;
+        width: var(--toggle_width, #{$toggle_width});
+        height: var(--toggle_height, #{$toggle_height});
+        border-radius: calc(var(--toggle_height, #{$toggle_height}) / 2);
+        background-color: var(--toggle_bg_off, #{$toggle_background_color_off});
         &:after {
             content: "";
             position: absolute;
-            top: $toggle_gutter;
-            left: $toggle_gutter;
-            width: $toggle_control_size;
-            height: $toggle_control_size;
-            border-radius: $toggle_radius;
+            top: var(--toggle_gutter, #{$toggle_gutter});
+            left: var(--toggle_gutter, #{$toggle_gutter});
+            width: calc(var(--toggle_height, #{$toggle_height}) - (var(--toggle_gutter, #{$toggle_gutter}) * 2));
+            height: calc(var(--toggle_height, #{$toggle_height}) - (var(--toggle_gutter, #{$toggle_gutter}) * 2));
+            border-radius: calc(var(--toggle_height, #{$toggle_height}) / 2);
             background: $toggle_control_color;
             transition: left $toggle_control_speed $toggle_control_ease;
+        }
+        &:hover {
+            --toggle_bg_off: var(--dark_725_color);
+            --toggle_bg_on: var(--primary_350_color);
+        }
+        &:active {
+            --toggle_bg_off: var(--dark_825_color);
+            --toggle_bg_on: var(--primary_700_color);
         }
         &.is_pending:after {
             background-color: var(--dark_600_color);
@@ -92,7 +103,7 @@ $toggle_control_ease: ease-out;
             background-color: var(--dark_825_color);
         }
         &.is_active {
-            background-color: $toggle_background_color_on;
+            background-color: var(--toggle_bg_on, #{$toggle_background_color_on});
             &.is_hovered {
                 background-color: var(--primary_350_color);
             }
@@ -100,8 +111,20 @@ $toggle_control_ease: ease-out;
                 background-color: var(--primary_700_color);
             }
             &:after {
-                left: $toggle_width - $toggle_control_size - $toggle_gutter;
+                left: calc(var(--toggle_width, #{$toggle_width}) - var(--toggle_height, #{$toggle_height}) + var(--toggle_gutter, #{$toggle_gutter}));
             }
         }
+    }
+}
+
+// 親要素がhover/activeされた時にToggleSwitchの色を連動させるmixin
+@mixin toggle_interactive_parent {
+    &:hover {
+        --toggle_bg_off: var(--dark_725_color);
+        --toggle_bg_on: var(--primary_350_color);
+    }
+    &:active {
+        --toggle_bg_off: var(--dark_825_color);
+        --toggle_bg_on: var(--primary_700_color);
     }
 }

@@ -10,6 +10,8 @@ export const AddRemoveTargetLanguageButtons = () => {
         currentSelectedPresetTabNumber,
         // currentSelectedYourLanguages,
         currentSelectedTargetLanguages,
+        canChangeLanguageSettings,
+        isLanguageSettingsBusy,
         removeTargetLanguage,
         addTargetLanguage,
     } = useLanguageSettings();
@@ -23,10 +25,10 @@ export const AddRemoveTargetLanguageButtons = () => {
 
     return (
         <div className={styles.add_remove_target_language_container}>
-            <div className={remove_button_class} onClick={removeTargetLanguage}>
+            <div className={remove_button_class} aria-disabled={isLanguageSettingsBusy} onClick={() => { if (canChangeLanguageSettings()) removeTargetLanguage(); }}>
                 <RemoveSvg className={styles.remove_svg} />
             </div>
-            <div className={add_button_class} onClick={addTargetLanguage}>
+            <div className={add_button_class} aria-disabled={isLanguageSettingsBusy} onClick={() => { if (canChangeLanguageSettings()) addTargetLanguage(); }}>
                 <AddSvg className={styles.add_svg} />
             </div>
         </div>

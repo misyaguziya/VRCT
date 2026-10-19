@@ -1,0 +1,14 @@
+.sr_only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.marker { position: absolute; left: 0; top: 0; width: 320px; height: 8px; display: flex; pointer-events: none; span { width: 4px; height: 8px; flex-shrink: 0; } }
+.body {
+    position: absolute; top: 8px; left: 0; width: 360px; padding: 10px 14px;
+    border-radius: 12px; background: var(--dark_850_color); color: var(--dark_basic_text_color);
+    box-shadow: inset 0 0 0 2px var(--dark_600_color); pointer-events: none; overflow-wrap: anywhere;
+    &::after { content: ""; position: absolute; left: calc(var(--tip-arrow) - 6px); bottom: -6px; width: 12px; height: 6px; clip-path: polygon(0 0, 100% 0, 50% 100%); background: var(--dark_850_color); }
+    p { margin: 5px 0 0; font-size: 16px; line-height: 20px; color: var(--dark_350_color); }
+}
+.title {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px; line-height: 22px;
+    strong { font-size: 18px; font-weight: 600; }
+    span { font-size: 15px; color: var(--primary_100_color); text-align: right; }
+}

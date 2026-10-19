@@ -1,7 +1,7 @@
 import { useI18n } from "@useI18n";
 import styles from "./WordFilter.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useStore_IsOpenedMicWordFilterList } from "@store";
 import { useTranscription } from "@logics_configs";
 
@@ -12,12 +12,44 @@ export const WordFilter = () => {
     const { currentMicWordFilterList, updateMicWordFilterList, setMicWordFilterList } = useTranscription();
     const { currentIsOpenedMicWordFilterList, updateIsOpenedMicWordFilterList } = useStore_IsOpenedMicWordFilterList();
 
+    const listSectionRef = useRef(null);
+    const shouldScrollToBottomRef = useRef(false);
+
+    const setListSectionRef = useCallback((node) => {
+        listSectionRef.current = node;
+        if (node) {
+            node.scrollTop = node.scrollHeight;
+            requestAnimationFrame(() => {
+                if (listSectionRef.current) {
+                    listSectionRef.current.scrollTop = listSectionRef.current.scrollHeight;
+                }
+            });
+        }
+    }, []);
+
+    useEffect(() => {
+        if (shouldScrollToBottomRef.current) {
+            shouldScrollToBottomRef.current = false;
+            requestAnimationFrame(() => {
+                if (listSectionRef.current) {
+                    listSectionRef.current.scrollTop = listSectionRef.current.scrollHeight;
+                }
+            });
+        }
+    }, [currentMicWordFilterList.data, currentIsOpenedMicWordFilterList.data]);
+
     const onChangeEntry = (e) => {
         setInputValue(e.target.value);
     };
 
+    const handleEnterPressed = () => {
+        if (!input_value || !input_value.trim()) return;
+        addWords();
+    };
+
     const addWords = () => {
         if (input_value === undefined) return;
+        let added = false;
         updateMicWordFilterList((prev_list) => {
             const input_value_array = input_value.split(",");
             let updated_list = [...prev_list.data];
@@ -27,13 +59,19 @@ export const WordFilter = () => {
                     const exists = updated_list.find((item) => item === each_input_value);
                     if (!exists) {
                         updated_list = [...updated_list, each_input_value];
+                        added = true;
                     }
                 }
             }
-            setMicWordFilterList(updated_list);
+            if (added) {
+                setMicWordFilterList(updated_list);
+            }
             return updated_list;
         });
 
+        if (added) {
+            shouldScrollToBottomRef.current = true;
+        }
         updateIsOpenedMicWordFilterList(true);
         setInputValue("");
     };
@@ -51,7 +89,7 @@ export const WordFilter = () => {
     return (
         <div className={styles.container}>
             { currentIsOpenedMicWordFilterList.data && currentMicWordFilterList.data.length > 0 &&
-                <div className={styles.list_section_wrapper}>
+                <div ref={setListSectionRef} className={styles.list_section_wrapper}>
                     {
                         currentMicWordFilterList.data.map((item, index) => {
                             return <WordFilterItem value={item} key={index} deleteAction={deleteAction}/>;
@@ -60,7 +98,7 @@ export const WordFilter = () => {
                 </div>
             }
             <div className={styles.entry_section_wrapper}>
-                <_Entry width="30rem" onChange={onChangeEntry} ui_variable={input_value}/>
+                <_Entry width="30rem" onChange={onChangeEntry} onEnterPressed={handleEnterPressed} ui_variable={input_value}/>
                 <button className={styles.add_button} onClick={addWords}>{t("config_page.transcription.mic_word_filter.add_button_label")}</button>
             </div>
         </div>

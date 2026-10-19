@@ -10,7 +10,7 @@ import {
     FontFamilyController,
     TransparencyController,
     CornerRadiusController,
-    PluginsController,
+    VrPanelSyncController,
 } from "./_app_controllers";
 
 import styles from "./App.module.scss";
@@ -46,6 +46,7 @@ export const App = () => {
                 <FontFamilyController />
                 <TransparencyController />
                 <CornerRadiusController />
+                <VrPanelSyncController />
 
                 {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
                     ? <SplashComponent />
@@ -64,7 +65,6 @@ const Contents = () => {
     return (
         <>
             <WindowGeometryController />
-            <PluginsController />
 
             <WindowTitleBar />
             {currentIsSoftwareUpdating.data === false

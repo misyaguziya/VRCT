@@ -4,6 +4,7 @@ import {
     useStore_TranslationStatus,
     useStore_TranscriptionSendStatus,
     useStore_TranscriptionReceiveStatus,
+    useStore_OcrCaptureStatus,
     useStore_ForegroundStatus,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
@@ -27,8 +28,14 @@ export const useMainFunction = () => {
         pendingTranscriptionReceiveStatus,
     } = useStore_TranscriptionReceiveStatus();
     const {
+        currentOcrCaptureStatus,
+        updateOcrCaptureStatus,
+        pendingOcrCaptureStatus,
+    } = useStore_OcrCaptureStatus();
+    const {
         currentForegroundStatus,
         updateForegroundStatus,
+        pendingForegroundStatus,
     } = useStore_ForegroundStatus();
 
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -69,12 +76,22 @@ export const useMainFunction = () => {
     const { setFn: setTranscriptionReceive, toggleFn: toggleTranscriptionReceive } = createTogglePair(
         pendingTranscriptionReceiveStatus, updateTranscriptionReceiveStatus, "transcription_receive"
     );
+    const { setFn: setOcrCapture, toggleFn: toggleOcrCapture } = createTogglePair(
+        pendingOcrCaptureStatus, updateOcrCaptureStatus, "ocr_capture"
+    );
 
 
     const toggleForeground = async () => {
+        if (currentForegroundStatus.state === "pending") return;
+        pendingForegroundStatus();
         const is_foreground_enabled = !currentForegroundStatus.data;
-        await appWindow.setAlwaysOnTop(is_foreground_enabled);
-        updateForegroundStatus(is_foreground_enabled);
+        try {
+            await appWindow.setAlwaysOnTop(is_foreground_enabled);
+            updateForegroundStatus(is_foreground_enabled);
+        } catch (e) {
+            updateForegroundStatus(currentForegroundStatus.data);
+            console.error(e);
+        }
     };
 
     return {
@@ -95,6 +112,12 @@ export const useMainFunction = () => {
         updateTranscriptionReceiveStatus,
         setTranscriptionReceive,
         pendingTranscriptionReceiveStatus, // Exception.(It shouldn't be used in other function, normally.)
+
+        currentOcrCaptureStatus,
+        toggleOcrCapture,
+        updateOcrCaptureStatus,
+        setOcrCapture,
+        pendingOcrCaptureStatus, // Exception.(It shouldn't be used in other function, normally.)
 
         currentForegroundStatus,
         toggleForeground,
