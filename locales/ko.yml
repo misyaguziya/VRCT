@@ -19,14 +19,14 @@ common_error:
     failed_update_software_verify: "다운로드한 설치 프로그램이 공개된 체크섬과 일치하지 않아 업데이트를 중단했습니다."
     translation_limit: "번역 엔진 사용 제한에 도달했거나 일시적으로 이용 제한이 걸렸습니다."
     deepl_auth_key_invalid_length: "DeepL API 키의 문자 수가 잘못되었습니다."
-    deepl_auth_key_failed_authentication: "API 키가 잘못되었거나 API 사용 제한이 상한에 도달했습니다."
+    deepl_auth_key_failed_authentication: "API 키가 잘못되었거나 API 사용량이 한도에 도달했습니다."
 
-    invalid_value_mic_record_timeout: "0 이상에서 '{{mic_phrase_timeout_label}}'보다 클 수 없습니다."
-    invalid_value_mic_phrase_timeout: "0 이상에서 '{{mic_record_timeout_label}}'보다 작을 수 없습니다."
+    invalid_value_mic_record_timeout: "0 이상이어야 하며 '{{mic_phrase_timeout_label}}'보다 클 수 없습니다."
+    invalid_value_mic_phrase_timeout: "0 이상이어야 하며 '{{mic_record_timeout_label}}'보다 작을 수 없습니다."
     invalid_value_mic_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
 
-    invalid_value_speaker_record_timeout: "0 이상에서 '{{speaker_phrase_timeout_label}}'보다 클 수 없습니다."
-    invalid_value_speaker_phrase_timeout: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
+    invalid_value_speaker_record_timeout: "0 이상이어야 하며 '{{speaker_phrase_timeout_label}}'보다 클 수 없습니다."
+    invalid_value_speaker_phrase_timeout: "0 이상이어야 하며 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
     invalid_value_speaker_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
 
     invalid_hex_color: "유효한 HEX 색상 코드(예: {{brand_color_hex}}) 형식으로 입력해 주세요."
@@ -92,7 +92,7 @@ update_modal:
     no_versions_available: "선택한 채널에서 사용할 수 있는 버전이 없습니다."
     change_col_current: "현재"
     change_col_after: "설치 후"
-    warn_downgrade: "{{from}}에서 {{to}}로의 다운그레이드입니다. 설정 파일의 호환성은 보장되지 않습니다."
+    warn_downgrade: "{{from}} → {{to}} 다운그레이드입니다. 설정 파일의 호환성은 보장되지 않습니다."
     warn_cuda_extra_size: "GPU 버전은 약 5GB의 추가 다운로드가 필요합니다."
     warn_switch_channel: "{{channel}} 채널로 전환됩니다. 이후 업데이트 알림도 {{channel}}을 기준으로 합니다."
 
@@ -125,7 +125,7 @@ config_page:
 
     side_menu_labels:
         device: "장치"
-        appearance: "디자인"
+        appearance: "모양"
         translation: "번역"
         transcription: "음성 인식"
         others: "기타"
@@ -169,8 +169,8 @@ config_page:
         ui_size:
             label: "UI 크기"
         textbox_ui_size:
-            label: "로그 글자 크기"
-            desc: "로그에 표시되는 글자 크기의 배율을 UI 크기에 따라 변경합니다."
+            label: "텍스트 박스 글자 크기"
+            desc: "텍스트 박스(메시지 로그)에 표시되는 글자 크기를 UI 크기 기준 배율로 변경합니다."
         send_message_button_type:
             label: "메시지 전송 버튼"
             hide: "숨김 (Enter 키를 사용하여 전송)"
@@ -199,7 +199,7 @@ config_page:
 
         deepl_auth_key:
             label: "DeepL API 키"
-            desc: "사용할 때는 메인 화면의 {{translator}}를 DeepL_API로 변경해 주세요.\n※ 지원하지 않는 언어도 있습니다."
+            desc: "사용하려면 메인 화면의 {{translator}}에서 DeepL_API를 선택해 주세요.\n※ 지원하지 않는 언어도 있습니다."
 
         plamo_auth_key:
             label: "Plamo API 키"
@@ -257,8 +257,8 @@ config_page:
             label: "최대 인식 시간"
             desc: "설정한 시간(초)마다 음성 인식 처리를 합니다."
         mic_max_phrase:
-            label: "전송할 최소 단어 수"
-            desc: "인식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 VRChat으로 전송하고 로그에 표시합니다."
+            label: "마이크 최소 인식 단어 수"
+            desc: "음성 인식 결과의 최소 단어 수를 설정합니다. 설정한 단어 수 이상인 경우에만 인식 결과가 로그에 표시되고 VRChat으로 전송됩니다."
         mic_word_filter:
             label: "단어 필터"
             desc: "등록된 단어가 감지되면 해당 문장은 전송되지 않습니다.\n',' 쉼표로 구분하면 여러 단어를 추가할 수 있습니다.\n* 중복된 단어는 등록되지 않습니다."
@@ -274,8 +274,8 @@ config_page:
             label: "최대 인식 시간"
             desc: "설정한 시간(초)마다 음성 인식 처리를 합니다."
         speaker_max_phrase:
-            label: "로그에 표시할 최소 단어 수"
-            desc: "인식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다."
+            label: "스피커 최소 인식 단어 수"
+            desc: "음성 인식 결과의 최소 단어 수를 설정합니다. 설정한 단어 수 이상인 경우에만 인식 결과가 로그에 표시됩니다."
         speaker_vad_filter:
             label: "스피커 VAD 필터"
             desc: "무음 구간을 감지한 뒤에 음성을 인식 처리로 보냅니다. 게임 소리나 보이스 채팅이 계속 이어질 때 음성 인식이 멈추거나 '음성 인식 요청에 실패했습니다'라고 표시된다면 이 설정을 꺼 주세요."
@@ -336,7 +336,7 @@ config_page:
             desc: "VR에서 런처를 찾을 수 없을 때 사용하세요. 왼쪽 손목의 기본 위치와 크기로 돌아옵니다."
         voice_typing_mode:
             label: "음성 타이핑 모드"
-            desc: "음성 인식된 텍스트를 현재 활성화된 입력란에 자동으로 붙여 넣습니다.\n※ Windows 기본 클립보드 기능을 사용합니다."
+            desc: "음성 인식된 텍스트를 클립보드에 복사합니다. SteamVR에서 VR 앱 창을 찾아 전환할 수 있을 때만 그 창에 자동으로 붙여 넣습니다.\n※ Windows 기본 클립보드 기능을 사용합니다."
 
     others:
         section_label_sounds: "사운드"
@@ -388,7 +388,7 @@ config_page:
         convert_message_to_hiragana:
             label: "히라가나 표시"
         telemetry:
-            label: "제품 개선에 참여"
+            label: "VRCT 개선에 참여"
             desc: "개발자가 \"다들 잘 써 주고 있구나~\" 하고 흐뭇해하며 기능을 개선할 수 있도록 사용 현황 데이터를 보냅니다.\n※ 대화 내용 등 개인 정보는 일절 보내지 않습니다."
             aptabase_privacy_policy_label: "Aptabase 개인정보 처리방침"
 
@@ -495,7 +495,7 @@ vr_panel:
     window_log: "로그"
     window_language: "언어"
     window_settings: "VR 설정"
-    recall_log: "불러오기"
+    recall_log: "앞으로 가져오기"
     anchor_playspace: "공간"
     anchor_left_hand: "왼손"
     anchor_right_hand: "오른손"
@@ -519,8 +519,8 @@ vr_panel:
     overlay_large_log: "자막 (여러 줄)"
     tooltip:
         translate: "번역"
-        microphone: "마이크 입력"
-        listen: "듣기"
+        microphone: "음성 인식 (마이크)"
+        listen: "음성 인식 (스피커)"
         chat_detect: "채팅 읽기"
         functions_group: "기능 켜기/끄기"
         windows_group: "창"
@@ -533,17 +533,17 @@ vr_panel:
         hidden: "숨김"
         lost: "시야 밖"
         holding: "길게 누르는 중"
-        holding_help: "계속 누르면 불러옵니다"
-        click_recall: "누르면 불러옵니다"
-        log_open_help: "누르면 엽니다 · 길게 눌러 불러오기"
-        log_close_help: "누르면 닫습니다 · 길게 눌러 불러오기"
+        holding_help: "계속 누르면 앞으로 가져옵니다"
+        click_recall: "누르면 앞으로 가져옵니다"
+        log_open_help: "누르면 엽니다 · 길게 눌러 앞으로 가져오기"
+        log_close_help: "누르면 닫습니다 · 길게 눌러 앞으로 가져오기"
         close_view: "누르면 닫습니다"
         open_view: "누르면 엽니다"
         anchor: "고정 위치"
         position: "위치 조작"
         current: "현재"
         choose_anchor: "누르면 고정 위치를 바꿉니다"
-        recall_help: "불러오면 공간에 고정됩니다"
+        recall_help: "앞으로 가져오면 공간에 고정됩니다"
         unlocked: "이동 가능"
         lock_help: "누르면 잠급니다 (잡아서 옮길 수 없게 됩니다)"
         unlock_help: "누르면 잠금을 해제합니다"
@@ -564,7 +564,7 @@ vr_panel:
         types_unavailable: "사용할 수 있는 처리 유형이 없습니다. 선택한 장치를 확인하세요."
         prepare_model: "모델이 없습니다. PC 설정에서 다운로드하세요."
         unavailable: "사용할 수 없습니다. PC 설정을 확인하세요."
-        speaker_adjustments: "구간과 유지할 단어 수 조정"
+        speaker_adjustments: "구간과 최소 인식 단어 수 조정"
         ui_log: "VR UI 로그 창"
         subtitle_overlay: "자막 오버레이 (한 줄 / 여러 줄)"
         decrease: "{{label}} 줄이기"
@@ -590,7 +590,7 @@ vr_panel:
         saved: "저장된 후보"
         saved_hint: "모든 프리셋에 저장된 언어입니다"
         letters_title: "언어의 첫 글자 선택"
-        letter_title: "{{letter}}로 시작하는 언어"
+        letter_title: "{{letter}}(으)로 시작하는 언어"
         selected: "선택됨"
         selected_slots: "상대방 {{n}}번"
         available: "사용 가능한 엔진"
@@ -600,7 +600,7 @@ vr_panel:
         full: "3 / 3 선택됨 · 각 행에서 언어를 변경하세요"
         busy_hint: "변경을 적용하는 동안 이 화면에서 기다려 주세요."
         success: "변경 적용 완료"
-        external: "프리셋 {{n}}로 전환"
+        external: "프리셋 {{n}}번으로 전환"
         sync: "언어 설정 동기화 중…"
         error: "변경을 적용하지 못했습니다. 다시 선택해 주세요."
         same_short: "동일한 언어"
