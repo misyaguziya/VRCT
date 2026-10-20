@@ -9,8 +9,8 @@ common:
     default_label: "기본값"
 
 common_error:
-    no_device_mic: "마이크 디바이스를 찾지 못했습니다."
-    no_device_speaker: "스피커 디바이스를 찾지 못했습니다."
+    no_device_mic: "마이크 장치를 찾지 못했습니다."
+    no_device_speaker: "스피커 장치를 찾지 못했습니다."
     copy_to_clipboard_failed: "클립보드에 복사하지 못했습니다."
     threshold_invalid_value: "{{min}}부터 {{max}}까지의 숫자로 설정할 수 있습니다."
     failed_download_weight_ctranslate2: "CTranslate2 모델 다운로드에 실패했습니다."
@@ -36,21 +36,21 @@ common_warning:
 
 main_page:
     translation: "번역"
-    transcription_send: "음성인식 (마이크)"
-    transcription_receive: "음성인식 (스피커)"
+    transcription_send: "음성 인식 (마이크)"
+    transcription_receive: "음성 인식 (스피커)"
     ocr: "채팅 읽기"
     foreground: "항상 위로"
 
     language_settings: "언어 설정"
-    your_language: "당신의 언어"
+    your_language: "내 언어"
     translate_each_other_label: "양방향으로 번역"
     swap_button_label: "언어 교체"
-    target_language: "상대방의 언어"
+    target_language: "상대방 언어"
     translator: "번역 엔진"
     translator_label_default: "기본값"
 
     translator_selector:
-        is_selected_same_language: "'{{your_language}}'와 '{{target_language}}'에 동일한 언어가 선택되어 있으므로, 「{{ctranslate2}}」만 사용할 수 있습니다."
+        is_selected_same_language: "'{{your_language}}'와 '{{target_language}}'에 동일한 언어가 선택되어 있으므로, '{{ctranslate2}}'만 사용할 수 있습니다."
 
     message_log:
         all: "전체"
@@ -65,8 +65,8 @@ main_page:
     state_text_disabled: "꺼짐"
 
     language_selector:
-        title_your_language: "당신의 언어"
-        title_target_language: "상대방의 언어"
+        title_your_language: "내 언어"
+        title_target_language: "상대방 언어"
 
     update_available: "새로운 버전이 나왔습니다!"
     updating: "업데이트 중..."
@@ -74,8 +74,8 @@ main_page:
 update_modal:
     title: "업데이트"
     summary_up_to_date_desc: "최신 버전을 사용 중입니다. 업데이트가 필요하지 않습니다."
-    channel_stable: "정식판"
-    channel_beta: "베타판"
+    channel_stable: "정식 버전"
+    channel_beta: "베타 버전"
     compute_mode_cpu: "CPU 버전"
     compute_mode_cuda: "GPU 버전 (CUDA)"
     latest_label: "최신"
@@ -84,7 +84,7 @@ update_modal:
     section_pick_variant: "다른 버전 또는 구성 선택"
     refresh_button: "업데이트 확인"
     channel_label: "릴리스 채널"
-    channel_desc: "베타판은 새로운 기능을 먼저 사용할 수 있지만 불안정할 수 있습니다."
+    channel_desc: "베타 버전은 새로운 기능을 먼저 사용할 수 있지만 불안정할 수 있습니다."
     compute_mode_label: "장치 구성"
     compute_mode_desc: "GPU 버전은 NVIDIA GPU에서 빠르게 동작하지만 약 5GB의 디스크 공간이 필요합니다."
     version_label: "설치할 버전"
@@ -125,9 +125,9 @@ config_page:
 
     side_menu_labels:
         device: "장치"
-        appearance: "모양"
+        appearance: "디자인"
         translation: "번역"
-        transcription: "음성인식"
+        transcription: "음성 인식"
         others: "기타"
         hotkeys: "단축키"
         advanced_settings: "고급 설정"
@@ -144,23 +144,23 @@ config_page:
         mic_host_device:
             label: "마이크 장치"
         mic_dynamic_energy_threshold:
-            label: "음성 입력 최소 볼륨"
+            label: "마이크 입력 감도"
             desc_for_automatic: "마이크의 입력 감도를 자동으로 조절합니다."
             desc_for_manual: "슬라이더를 움직여 입력 감도를 수동으로 조절합니다. 마이크 아이콘을 누르면 실제 음성의 볼륨을 확인하며 감도를 조절할 수 있습니다."
             option_vad: "VAD (자동)"
             option_auto: "자동"
             option_manual: "수동"
-            desc_for_vad: "AI(Silero VAD)를 사용하여 음성을 감지하고, 말하기가 끕날 보게 마다로 음성 인식에 전송합니다. 배경 음악이나 환경음을 줘들기 어렵게 됩니다."
+            desc_for_vad: "AI(Silero VAD)로 사람의 목소리를 감지해, 말이 끝날 때마다 음성 인식으로 보냅니다. 배경 음악이나 주변 소리를 잘못 인식하는 일이 줄어듭니다."
         speaker_device:
             label: "스피커 장치"
         speaker_dynamic_energy_threshold:
-            label: "음성 입력 최소 볼륨"
+            label: "스피커 입력 감도"
             desc_for_automatic: "스피커의 입력 감도를 자동으로 조절합니다."
             desc_for_manual: "슬라이더를 움직여 입력 감도를 수동으로 조절합니다. 헤드폰 아이콘을 누르면 실제 음성의 볼륨을 확인하며 감도를 조절할 수 있습니다."
             option_vad: "VAD (자동)"
             option_auto: "자동"
             option_manual: "수동"
-            desc_for_vad: "AI(Silero VAD)를 사용하여 음성을 감지하고, 말하기가 끕날 보게 마다로 음성 인식에 전송합니다. 배경 음악이나 환경음을 줘들기 어렵게 됩니다."
+            desc_for_vad: "AI(Silero VAD)로 사람의 목소리를 감지해, 말이 끝날 때마다 음성 인식으로 보냅니다. 배경 음악이나 게임 소리를 잘못 인식하는 일이 줄어듭니다."
 
     appearance:
         transparency:
@@ -169,7 +169,7 @@ config_page:
         ui_size:
             label: "UI 크기"
         textbox_ui_size:
-            label: "텍스트 박스 글자 크기"
+            label: "로그 글자 크기"
             desc: "로그에 표시되는 글자 크기의 배율을 UI 크기에 따라 변경합니다."
         send_message_button_type:
             label: "메시지 전송 버튼"
@@ -180,7 +180,7 @@ config_page:
             label: "재전송 버튼 표시"
             desc: "보낸 메시지 로그에 마우스를 올리면 재전송 버튼이 표시됩니다. 클릭하면 편집 모드로 전환되며, 길게 누르면 재전송됩니다."
         font_family:
-            label: "폰트"
+            label: "글꼴"
         ui_language:
             label: "UI 언어"
 
@@ -190,8 +190,8 @@ config_page:
         section_label_local_llm: "로컬 LLM / 호환 서버"
 
         ctranslate2_weight_type:
-            label: "번역 모델"
-            desc: "오프라인 번역 시의 번역 모델을 변경합니다."
+            label: "{{ctranslate2}} 모델 종류"
+            desc: "번역 엔진 '{{ctranslate2}}'로 번역할 때 사용할 번역 모델을 선택할 수 있습니다."
             small: "일반 모델 ({{capacity}})"
             large: "정밀 모델 ({{capacity}})"
         translation_compute_device:
@@ -199,7 +199,7 @@ config_page:
 
         deepl_auth_key:
             label: "DeepL API 키"
-            desc: "사용시 메인화면에 있는 {{translator}}를 DeepL_API로 변경해 주세요.\n지원하지 않는 언어도 있습니다."
+            desc: "사용할 때는 메인 화면의 {{translator}}를 DeepL_API로 변경해 주세요.\n※ 지원하지 않는 언어도 있습니다."
 
         plamo_auth_key:
             label: "Plamo API 키"
@@ -255,9 +255,9 @@ config_page:
             desc: "무음을 감지하고 설정된 시간(초)만큼의 시간이 지나면 음성 입력이 종료된 것으로 판단합니다."
         mic_phrase_timeout:
             label: "최대 인식 시간"
-            desc: "설정된 초 단위로 음성인식 처리가 이루어집니다."
+            desc: "설정한 시간(초)마다 음성 인식 처리를 합니다."
         mic_max_phrase:
-            label: "최대 입력 절(phrases) 수"
+            label: "전송할 최소 단어 수"
             desc: "인식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 VRChat으로 전송하고 로그에 표시합니다."
         mic_word_filter:
             label: "단어 필터"
@@ -272,10 +272,10 @@ config_page:
             desc: "무음을 감지하고 설정된 시간(초)만큼의 시간이 지나면 음성 입력이 종료된 것으로 판단합니다."
         speaker_phrase_timeout:
             label: "최대 인식 시간"
-            desc: "설정된 초 단위로 음성인식 처리가 이루어집니다."
+            desc: "설정한 시간(초)마다 음성 인식 처리를 합니다."
         speaker_max_phrase:
-            label: "최대 입력 절(phrases) 수"
-            desc: "식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다."
+            label: "로그에 표시할 최소 단어 수"
+            desc: "인식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다."
         speaker_vad_filter:
             label: "스피커 VAD 필터"
             desc: "무음 구간을 감지한 뒤에 음성을 인식 처리로 보냅니다. 게임 소리나 보이스 채팅이 계속 이어질 때 음성 인식이 멈추거나 '음성 인식 요청에 실패했습니다'라고 표시된다면 이 설정을 꺼 주세요."
@@ -283,7 +283,7 @@ config_page:
             label: "음성 인식에 사용할 엔진"
         whisper_weight_type:
             label: "Whisper 모델 타입"
-            desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. * 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
+            desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다.\n※ 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
         transcription_compute_device:
             label: "AI 음성 인식 처리 장치"
         mic_avg_logprob:
@@ -342,7 +342,7 @@ config_page:
         section_label_sounds: "사운드"
         section_label_message_formats: "메시지 형식"
         auto_clear_the_message_box:
-            label: "챗박스 자동 삭제"
+            label: "전송 후 입력창 비우기"
         send_only_translated_messages:
             label: "번역된 메시지만 전송"
         auto_export_message_logs:
@@ -350,7 +350,7 @@ config_page:
             desc: "logs 폴더에 텍스트 파일로 로그가 저장됩니다."
         vrc_mic_mute_sync:
             label: "VRC 마이크 음소거 동기화"
-            desc: "VRChat의 마이크가 음소거 상태인 동안에는 메시지를 VRChat에 전송하지 않습니다. * 약간의 지연이 발생할 수 있습니다. 또한 눌러서 말하기(Push-To-Talk) 기능은 지원되지 않습니다."
+            desc: "VRChat의 마이크가 음소거 상태인 동안에는 메시지를 VRChat에 전송하지 않습니다.\n※ 약간의 지연이 있을 수 있으며, 눌러서 말하기(Push-To-Talk)는 지원하지 않습니다."
         send_message_to_vrc:
             label: "VRChat에 메시지 전송"
             desc: "VRChat에 메시지를 보내지 않고 사용할 수 있는 방법이 있지만 지원되지 않습니다. VRChat에 메시지를 보내려면 이 기능을 활성화하세요."
@@ -406,10 +406,10 @@ config_page:
             desc: "캡처된 말풍선의 언어입니다. 'auto'는 일본어·영어·중국어와 라틴 문자 계열 언어를 하나의 모델로 자동 인식합니다. 한글·키릴 문자·태국 문자·아랍 문자·데바나가리는 별도 모델이 필요하므로 해당 문자 체계를 선택하세요. OCR 실행 중에 변경해도 바로 전환됩니다. 아랍 문자는 현재 정확도가 낮습니다."
         poll_interval_ms:
             label: "캡처 간격 (밀리초)"
-            desc: "OCR 루프가 새 프レ임을 가져오는 빈도입니다. 값이 작을수록 반응은 빨라지지만 CPU/GPU 부하가 커집니다. 기본값: 750."
+            desc: "OCR 루프가 새 프레임을 가져오는 빈도입니다. 값이 작을수록 반응은 빨라지지만 CPU/GPU 부하가 커집니다. 기본값: 750."
         min_confidence:
             label: "최소 신뢰도"
-            desc: "이 OCR 신뢰도 점수보다 낮은 단어는 무시됩니다. 오탐지를 줄이려면 값을 높이고, 흐릿한 말풍선까지 잡으려면 값을 낮추세요. 기본값: 0.85. PP-OCR은 잘못 읽었을 때도 높은 점수를 반환하므로, EasyOCR 시절의 0.55는 사실상 필터가 되지 않습니다."
+            desc: "이 OCR 신뢰도 점수보다 낮은 단어는 무시됩니다. 오탐지를 줄이려면 값을 높이고, 흐릿한 말풍선까지 잡으려면 값을 낮추세요. 기본값: 0.85."
         bubble_min_text_length:
             label: "최소 텍스트 길이"
             desc: "이 글자 수보다 짧은 말풍선은 무시됩니다. 기본값: 2."
@@ -511,8 +511,8 @@ vr_panel:
     tooltip_enabled_desc: "버튼을 가리킬 때 조작 이름과 상태를 표시합니다"
     locked_by_config_page: "설정을 닫으면 조작할 수 있습니다"
     log_opacity: "로그 불투명도"
-    mic_threshold: "마이크 입력 최소 볼륨"
-    speaker_threshold: "스피커 입력 최소 볼륨"
+    mic_threshold: "마이크 입력 감도"
+    speaker_threshold: "스피커 입력 감도"
     automatic: "자동"
     paused_while_settings: "설정 중에는 번역과 음성 인식을 멈춥니다. 닫으면 다시 시작합니다."
     overlay_small_log: "자막 (한 줄)"
@@ -558,10 +558,10 @@ vr_panel:
         processing: "처리 설정"
         changing: "변경 적용 중…"
         changing_short: "적용 중…"
-        auto_device: "자동 선택을 끄면 기기를 변경할 수 있습니다."
+        auto_device: "자동 선택을 끄면 장치를 변경할 수 있습니다."
         fonts_unavailable: "글꼴 목록을 불러올 수 없습니다. PC 설정을 확인하세요."
-        devices_unavailable: "처리 기기가 없습니다. PC 설정을 확인하세요."
-        types_unavailable: "처리 유형이 없습니다. 선택한 기기를 확인하세요."
+        devices_unavailable: "사용할 수 있는 처리 장치가 없습니다. PC 설정을 확인하세요."
+        types_unavailable: "사용할 수 있는 처리 유형이 없습니다. 선택한 장치를 확인하세요."
         prepare_model: "모델이 없습니다. PC 설정에서 다운로드하세요."
         unavailable: "사용할 수 없습니다. PC 설정을 확인하세요."
         speaker_adjustments: "구간과 유지할 단어 수 조정"
