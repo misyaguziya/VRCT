@@ -14,9 +14,11 @@ import styles from "./VrKeyboardWindow.module.scss";
 // キーは押した瞬間 (mousedown) に送る (離すまで待つと、指すのがずれて別のキーになる)。
 // 変換していないときの ↵ は、選んでいる送る先 (KeyboardSendTo) へ送る (バックエンドが決める)
 const LANGUAGES = [["ja", "日本語"], ["en", "English"], ["ko", "한국어"], ["zh", "中文"]];
-// 英字との切り替えキーの表示 (その言語の字 → A)
-const MODE_MARK = { ja: "あ", ko: "한", zh: "中", en: "A" };
+// 言語キーの字 (中国語は簡・繁)
+const LANGUAGE_MARK = { ja: "あ", ko: "한", en: "A" };
 const CHAT_MAX = 144; // VRChat のチャットボックスの文字数
+// 文字数はこれを超えたときだけ出す (残りが少ないときだけ気にすればよい)
+const COUNTER_FROM = 120;
 const SENT_FEEDBACK_MS = 2500;
 // Shift をこの間に2回押すとロック
 const SHIFT_LOCK_MS = 400;
@@ -29,8 +31,8 @@ const KOREAN_SHIFT = { q: "ㅃ", w: "ㅉ", e: "ㄸ", r: "ㄲ", t: "ㅆ", o: "ㅒ
 
 // キーの並び: 日本語は JIS 配列、英語・中国語・韓国語は US 配列 (韓国語は KS X 5002、並びは US と同じ)。
 // 文字のキーは "通常 Shift" の2文字 (英字は1文字: Shift で大文字)。Tab・Caps Lock・Ctrl・Alt は置かず、
-// その分は空ける (文字のキーの位置は実際のキーボードと同じ)。1段は 15 キー分で左に寄せ、
-// 右に離して別の区画 (言語・送る先と、矢印キーの逆 T 字) を置く (SIDE)
+// その分は空ける (文字のキーの位置は実際のキーボードと同じ)。1段は 15 キー分。
+// 矢印はノートパソコンのように一番下の段の右端に
 // { gap }: 空き、{ special }: 文字以外のキー (w はキー何個分)
 const LETTERS_1 = [..."qwertyuiop"];
 const LETTERS_2 = [..."asdfghjkl"];
@@ -48,9 +50,6 @@ const US = [
     [{ gap: 1.75 }, ...LETTERS_2, ";:", "'\"", { special: "enter", w: 2.25 }],
     [{ special: "shift", w: 2.25 }, ...LETTERS_3, ",<", ".>", "/?", { special: "shift", w: 2.75 }],
 ];
-// 右の区画: 3 キー分の幅。本体との間は1キー分あける (↵ や ← を狙って、言語・送る先を押さないように)
-const SIDE_UNITS = 3;
-const SIDE_GAP_UNITS = 1;
 // 全消去は続けてもう1回押したときだけ (1回目から この間に)
 const CLEAR_CONFIRM_MS = 2000;
 const layoutOf = (language) => (language === "ja" ? JIS : US);
@@ -61,8 +60,8 @@ const SHOWN_AS = {
     ja: { ",": "、", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", "/": "・", "~": "〜" },
     zh: { ",": "，", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", ";": "；", ":": "：", "(": "（", ")": "）" },
 };
-// キー1つ分の間隔 (px): キー 55px + すき間 6px。本体 15 + 間 1 + 右の区画 3 = 19 キー分で 1153px (窓の中は 1168px)
-const PITCH = 61;
+// キー1つ分の間隔 (px): キー 72px + すき間 6px。15 キー分で 1164px (窓の中は 1168px)
+const PITCH = 78;
 const GAP = 6;
 const widthOf = (units) => units * PITCH - GAP;
 
@@ -201,7 +200,10 @@ export const VrKeyboardWindow = ({ onClose }) => {
     };
     const dictating = currentIsEnabledKeyboardDictation.data === true;
     const opacity = Number(currentKeyboardOpacity.data);
-    const nextOpacity = () => OPACITY_STEPS.find(step => step < opacity - 0.01) ?? OPACITY_STEPS[0];
+    // 開いている一覧: "language" (左下の言語キー) / "settings" (タイトルバーの不透明度の印) / null
+    const [menu, setMenu] = useState(null);
+    // 言語キーの字 (中国語は簡体字・繁体字のどちらか)
+    const language_mark = language === "zh" ? (currentIsEnabledKeyboardChineseSimplified.data === true ? "简" : "繁") : LANGUAGE_MARK[language];
     const changeLanguage = (code) => {
         if (code !== language) setKeyboardLanguage(code);
     };
@@ -229,12 +231,10 @@ export const VrKeyboardWindow = ({ onClose }) => {
         if (shifted === normal) return { main: shown(normal), sub: null };
         return is_shift ? { main: shown(shifted), sub: shown(normal) } : { main: shown(normal), sub: shown(shifted) };
     };
-    // Space は何も印字しない (読み上げ用の名前だけ)。↵ は送るときだけ送る先を添える (変換中の確定・Shift との改行は印字しない)
+    // Space と ↵ は何も添えない (読み上げ用の名前だけ。↵ の送る先は入力欄の右端の印)
     const space_name = !composing ? t("vr_panel.keyboard.space")
         : language === "ja" ? t("vr_panel.keyboard.convert") : t("vr_panel.keyboard.select_first");
     const enter_name = composing ? t("vr_panel.keyboard.commit") : is_shift ? t("vr_panel.keyboard.newline") : t("vr_panel.keyboard.send_to");
-    const enter_label = composing || is_shift ? null : send_to === "paste" ? "→ VRChat" : "→ VRCT";
-    const mode_label = language === "en" ? `A → ${MODE_MARK[before_english.current]}` : `${MODE_MARK[language]} → A`;
     // 1つのキー (文字・空き・文字以外)
     const keyOf = (item, index) => {
         if (typeof item === "string") {
@@ -246,14 +246,14 @@ export const VrKeyboardWindow = ({ onClose }) => {
         const w = widthOf(item.w);
         switch (item.special) {
             case "backspace":
-                return <Key press={press} key="backspace" sound="backspace" label="←" w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready}
+                return <Key press={press} key="backspace" sound="backspace" label={<BackspaceIcon />} w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready}
                     onPress={() => repeat.start(() => sendKey("Backspace"))} onLeave={repeat.stop} />;
             case "enter":
-                return <Key press={press} key="enter" sound="enter" label="↵" sub={enter_label} w={w} kind="act" aria={enter_name}
+                return <Key press={press} key="enter" sound="enter" label={<EnterIcon />} w={w} kind="act" aria={enter_name}
                     onPress={pressEnter} disabled={!is_ready} />;
             // JIS の L 字の Enter: どちらの部分を押しても Enter (印字は上の部分)
             case "enter_top":
-                return <Key press={press} key="enter_top" sound="enter" label="↵" sub={enter_label} w={w} kind="act" extra={clsx(styles.enter_part, styles.enter_top)}
+                return <Key press={press} key="enter_top" sound="enter" label={<EnterIcon />} w={w} kind="act" extra={clsx(styles.enter_part, styles.enter_top)}
                     aria={enter_name} onPress={pressEnter} disabled={!is_ready} />;
             case "enter_bottom":
                 return <Key press={press} key="enter_bottom" sound="enter" label="" w={w} kind="act" extra={clsx(styles.enter_part, styles.enter_bottom)}
@@ -270,95 +270,106 @@ export const VrKeyboardWindow = ({ onClose }) => {
         }
     };
 
-    // 右の区画のボタン (言語・送る先): キーと同じ高さ、選んでいるものは枠と字の色 (塗りは ON になっている機能だけに使う)
-    const choice = (key, label, onPress, extra) => (
-        <button key={key} type="button" className={clsx(styles.key, styles.mod, styles.choice)} style={{ width: widthOf(SIDE_UNITS / 2) }}
-            {...extra} onMouseDown={press(onPress, "soft", key)}>{label}</button>
+    // 一覧 (言語・不透明度) の1つの項目。選んでいるものはアクセントの字 (枠は描かない)。選ぶと閉じる
+    const option = (key, label, selected, onPick, extra = {}) => (
+        <button key={key} type="button" className={styles.option} aria-pressed={selected} {...extra}
+            onMouseDown={press(() => { setMenu(null); onPick(); }, "soft", key)}>{label}</button>
     );
-    // 右の区画: 上の3段は言語 (2段) と ↵ で送る先、下の2段は矢印キーの逆 T 字
-    const side = <div className={styles.side} style={{ marginLeft: SIDE_GAP_UNITS * PITCH }}>
-        {[LANGUAGES.slice(0, 2), LANGUAGES.slice(2)].map((pair, r) => (
-            <div key={`languages-${r}`} className={styles.row} role="group" aria-label={t("vr_panel.keyboard.language")}>
-                {pair.map(([code, name]) => choice(`language:${code}`, name, () => changeLanguage(code),
-                    { lang: code, "aria-pressed": code === language }))}
-            </div>
-        ))}
-        <div className={styles.row} role="radiogroup" aria-label={t("vr_panel.keyboard.send_to")}>
-            {/* ↵ で送る先 (短く ↵ VRCT / ↵ VRChat。読み上げは長い名前) */}
-            {[["vrct", "send_vrct", "VRCT"], ["paste", "send_paste", "VRChat"]].map(([to, title, short]) => choice(`send_to:${to}`, `↵ ${short}`,
-                () => { if (send_to !== to) setKeyboardSendTo(to); },
-                { role: "radio", "aria-checked": send_to === to, "aria-label": t(`vr_panel.keyboard.${title}`) }))}
-        </div>
-        <div className={styles.row}>
-            <span className={styles.gap} style={{ width: widthOf(1) }} aria-hidden="true" />
-            {/* ▲ ▼ は送った文の呼び出し、◀ ▶ は文節・文字 */}
-            <Key press={press} sound="soft" label="▲" kind="mod" aria={t("vr_panel.keyboard.history_older")} onPress={() => sendKey("Up")} />
-        </div>
-        <div className={styles.row}>
-            <Key press={press} sound="soft" label="◀" kind="mod" aria={t("vr_panel.keyboard.left")} disabled={!is_ready}
-                onPress={() => repeat.start(() => sendKey("Left"))} onLeave={repeat.stop} />
-            <Key press={press} sound="soft" label="▼" kind="mod" aria={t("vr_panel.keyboard.history_newer")} onPress={() => sendKey("Down")} />
-            <Key press={press} sound="soft" label="▶" kind="mod" aria={t("vr_panel.keyboard.right")} disabled={!is_ready}
-                onPress={() => repeat.start(() => sendKey("Right"))} onLeave={repeat.stop} />
+    const simplified_on = currentIsEnabledKeyboardChineseSimplified.data === true;
+    // 言語の一覧 (左下の言語キーから)。中国語は簡体字・繁体字を別の項目に
+    const pickChinese = (simplified) => {
+        changeLanguage("zh");
+        if (simplified !== simplified_on) toggleIsEnabledKeyboardChineseSimplified();
+    };
+    const language_menu = <div className={clsx(styles.menu, styles.language_menu)} role="menu" aria-label={t("vr_panel.keyboard.language")}>
+        {LANGUAGES.filter(([code]) => code !== "zh").map(([code, name]) => option(`language:${code}`, name, code === language,
+            () => changeLanguage(code), { lang: code }))}
+        {option("language:zh-hans", "简体中文", language === "zh" && simplified_on, () => pickChinese(true), { lang: "zh-Hans" })}
+        {option("language:zh-hant", "繁體中文", language === "zh" && !simplified_on, () => pickChinese(false), { lang: "zh-Hant" })}
+    </div>;
+    const percent = (o) => `${Math.round(o * 100)}%`;
+    // 不透明度: タイトルバーの印から一覧を開いて選ぶ
+    const settings_menu = <div className={clsx(styles.menu, styles.settings_menu)} role="menu" aria-label={t("vr_panel.keyboard.opacity")}>
+        <div className={styles.menu_row}>
+            {OPACITY_STEPS.map((o) => option(`opacity:${o}`, percent(o), Math.abs(o - opacity) < 0.01, () => setKeyboardOpacity(o)))}
         </div>
     </div>;
-    // 中国語の簡体字・繁体字 (中国語のときだけ、タイトルバーに)
-    const simplified = language === "zh" && <div className={styles.tabs}>
-        <button type="button" className={styles.tab} lang="zh" aria-pressed={currentIsEnabledKeyboardChineseSimplified.data === true}
-            aria-label={t("vr_panel.keyboard.simplified")} onMouseDown={press(toggleIsEnabledKeyboardChineseSimplified, "soft", "simplified")}>
-            {currentIsEnabledKeyboardChineseSimplified.data === true ? "简" : "繁"}
-        </button>
-    </div>;
-
-    // 不透明度 (押すたびに 100 → 80 → 60 → 40 → 100%)
-    const opacity_button = <div className={styles.tabs}>
-        <button type="button" className={clsx(styles.tab, styles.opacity)} aria-label={`${t("vr_panel.keyboard.opacity")}: ${Math.round(opacity * 100)}%`}
-            onMouseDown={press(() => setKeyboardOpacity(nextOpacity()), "soft", "opacity")}>
-            {/* ログの窓のツールバーと同じ印 */}
-            <svg className={styles.opacity_icon} viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 12h16M12 4v16" /></svg>
-            {Math.round(opacity * 100)}%
-        </button>
-    </div>;
+    const menu_button = <button type="button" className={styles.menu_button} aria-label={`${t("vr_panel.keyboard.opacity")}: ${percent(opacity)}`}
+        aria-expanded={menu === "settings"} onMouseDown={press(() => setMenu(m => (m === "settings" ? null : "settings")), "soft", "menu")}>
+        <svg className={styles.stroke_icon} viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 12h16M12 4v16" /></svg>
+    </button>;
+    // ↵ で送る先: 入力欄の右端に今の送る先の印だけ。押すたびに切り替わる
+    const send_to_button = <button type="button" className={styles.send_to} aria-label={t(`vr_panel.keyboard.${send_to === "paste" ? "send_paste" : "send_vrct"}`)}
+        onMouseDown={press(() => setKeyboardSendTo(send_to === "paste" ? "vrct" : "paste"), "soft", "send_to")}>
+        <SendToIcon to={send_to} />
+    </button>;
+    // 矢印キー (ノートパソコンの並び): 一番下の段の右端に ◀ ▲▼ ▶。▲ ▼ は1キー分を上下に分ける。
+    // ◀ ▶ はカーソル (変換中は文節)、▲ ▼ は送った文の呼び出し
+    const arrows = <>
+        <Key press={press} sound="soft" label="◀" kind="mod" aria={t("vr_panel.keyboard.left")}
+            onPress={() => repeat.start(() => sendKey("Left"))} onLeave={repeat.stop} />
+        <div className={styles.updown} style={{ width: widthOf(1) }}>
+            <Key press={press} sound="soft" label="▲" kind="mod" extra={styles.half} aria={t("vr_panel.keyboard.history_older")} onPress={() => sendKey("Up")} />
+            <Key press={press} sound="soft" label="▼" kind="mod" extra={styles.half} aria={t("vr_panel.keyboard.history_newer")} onPress={() => sendKey("Down")} />
+        </div>
+        <Key press={press} sound="soft" label="▶" kind="mod" aria={t("vr_panel.keyboard.right")}
+            onPress={() => repeat.start(() => sendKey("Right"))} onLeave={repeat.stop} />
+    </>;
 
     return (
-        <VrWindow Icon={KeyboardSvg} title={t("vr_panel.keyboard.title")} title_extra={<>{simplified}{opacity_button}</>} onClose={onClose}>
+        <VrWindow Icon={KeyboardSvg} title="" title_extra={menu_button} onClose={onClose}>
             <div className={styles.keyboard}>
+                {/* 一覧を開いている間は、外を押すと閉じる (その押下はキーに届かない) */}
+                {menu && <div className={styles.backdrop} onMouseDown={(e) => { e.preventDefault(); setMenu(null); }} aria-hidden="true" />}
+                {menu === "settings" && settings_menu}
+                {menu === "language" && language_menu}
                 <div className={styles.top}>
-                    <Composition state={state} language={language} />
+                    <Composition state={state} language={language} clear_armed={clear_armed} onClear={press(pressClear, "soft", "clear")}
+                        send_to_button={send_to_button} />
                 </div>
                 <div className={styles.middle}>
                     {!is_ready ? <Preparing state={state} press={press} />
                         : <Candidates state={state} language={language} press={press} sendKey={sendKey} />}
                     <SentFeedback result={currentKeyboardSendResult.data} />
                 </div>
-                <div className={clsx(styles.keys_area, { [styles.is_waiting]: !is_ready })} style={{ "--key_gap": `${GAP}px` }}>
-                    <div className={styles.keys}>
-                        {layoutOf(language).map((row, r) => <div key={r} className={styles.row}>{row.map(keyOf)}</div>)}
-                        <div className={styles.row}>
-                            {/* 英字との切り替え (準備中でも押せる: 英字に切り替えれば、その間も打てる)。
-                                JIS は左上の 半/全 で切り替えるので置かず、全消去を左端に。Space は実際のキーボードと同じ辺り */}
-                            {language !== "ja" && <Key press={press} sound="toggle" label={mode_label} w={widthOf(1.75)} kind="mod"
-                                aria={t("vr_panel.keyboard.switch_english")} onPress={toggleEnglish} />}
-                            <Key press={press} sound="soft" label={t(clear_armed ? "vr_panel.keyboard.clear_confirm" : "vr_panel.keyboard.clear")}
-                                w={widthOf(1.75)} kind="mod" extra={clsx(styles.clear, { [styles.is_armed]: clear_armed })}
-                                disabled={state.length === 0} onPress={pressClear} />
-                            <span className={styles.gap} style={{ width: widthOf(language === "ja" ? 2 : 0.25) }} aria-hidden="true" />
-                            <Key press={press} sound="space" label="" w={widthOf(7)} kind="act" aria={space_name}
-                                onPress={() => sendKey("Space")} disabled={!is_ready} />
-                            {/* マイク: 聞き取った文を入力欄に入れる (送らない。直して ↵ で送る) */}
-                            <button type="button" className={clsx(styles.key, styles.mod, { [styles.is_locked]: dictating })}
-                                style={{ width: widthOf(1.25) }} aria-label={t("vr_panel.keyboard.dictation")} aria-pressed={dictating}
-                                onMouseDown={press(toggleIsEnabledKeyboardDictation, "soft", "dictation")}>
-                                <MicSvg className={styles.mic_icon} aria-hidden="true" />
-                            </button>
-                        </div>
+                <div className={clsx(styles.keys, { [styles.is_waiting]: !is_ready })} style={{ "--key_gap": `${GAP}px` }}>
+                    {layoutOf(language).map((row, r) => <div key={r} className={styles.row}>{row.map(keyOf)}</div>)}
+                    <div className={styles.row}>
+                        {/* 言語: 今の言語の字だけを出し、押すと一覧 (準備中でも押せる: 英字に切り替えれば、その間も打てる) */}
+                        <Key press={press} sound="toggle" label={language_mark} w={widthOf(1.75)} kind="mod" extra={styles.mark} lang={language}
+                            aria={t("vr_panel.keyboard.language")} onPress={() => setMenu(m => (m === "language" ? null : "language"))} />
+                        <Key press={press} sound="space" label="" w={widthOf(9)} kind="act" aria={space_name}
+                            onPress={() => sendKey("Space")} disabled={!is_ready} />
+                        {/* マイク: 聞き取った文を入力欄に入れる (送らない。直して ↵ で送る) */}
+                        <button type="button" className={clsx(styles.key, styles.mod, { [styles.is_locked]: dictating })}
+                            style={{ width: widthOf(1.25) }} aria-label={t("vr_panel.keyboard.dictation")} aria-pressed={dictating}
+                            onMouseDown={press(toggleIsEnabledKeyboardDictation, "soft", "dictation")}>
+                            <MicSvg className={styles.mic_icon} aria-hidden="true" />
+                        </button>
+                        {arrows}
                     </div>
-                    {side}
                 </div>
             </div>
         </VrWindow>
     );
 };
+
+// BackSpace と ↵ の印: 字の ← ↵ は細くて小さく見えるので、線で太く・大きく描く
+const BackspaceIcon = () => (
+    <svg className={styles.backspace_icon} viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5M11 5l-7 7 7 7" /></svg>
+);
+const EnterIcon = () => (
+    <svg className={styles.enter_icon} viewBox="0 0 24 24" aria-hidden="true"><path d="M19 4v8a3 3 0 0 1-3 3H5M10 10l-5 5 5 5" /></svg>
+);
+
+// ↵ で送る先の印: VRCT で送る = チャットボックスの吹き出し、VRChat に貼る = クリップボード
+const SendToIcon = ({ to }) => (
+    <svg className={styles.stroke_icon} viewBox="0 0 24 24" aria-hidden="true">
+        {to === "paste"
+            ? <path d="M9 4h6v3H9zM8 5.5H6v15h12v-15h-2M9.5 12h5M9.5 16h5" />
+            : <path d="M4 5h16v11h-9l-5 4v-4H4zM8 9.5h8M8 12.5h5" />}
+    </svg>
+);
 
 // Shift の印 (字の ⇧ ⇪ はフォントによって色付きの絵文字になり、左右で色が揃わないので線で描く)。ロック中は塗って下に線
 const ShiftIcon = ({ locked }) => (
@@ -367,12 +378,12 @@ const ShiftIcon = ({ locked }) => (
     </svg>
 );
 
-// label: 大きい字、corner: 左上の小さい字 (Shift の字)、sub: 下の小さい字 (↵ の送る先)
-const Key = ({ press, label, corner, sub, lang, w = widthOf(1), kind = "char", extra, sound = "key", aria, onPress, onLeave, disabled = false }) => (
+// label: 大きい字、corner: 左上の小さい字 (Shift の字)
+const Key = ({ press, label, corner, lang, w = widthOf(1), kind = "char", extra, sound = "key", aria, onPress, onLeave, disabled = false }) => (
     <button type="button" className={clsx(styles.key, styles[kind], extra)} style={{ width: w }} aria-label={aria ?? label} lang={lang}
         disabled={disabled} onMouseDown={press(onPress, sound, label)} onMouseLeave={onLeave}>
         {corner && <span className={styles.key_corner} aria-hidden="true">{corner}</span>}
-        {label}{sub && <span className={styles.key_sub}>{sub}</span>}
+        {label}
     </button>
 );
 
@@ -394,7 +405,9 @@ const splitAtLimit = (parts) => {
     });
 };
 
-const Composition = ({ state, language }) => {
+// 右端: 残りが少ないときだけ文字数、↵ で送る先の印、何か入っていれば × (1回目で注意の色、続けてもう1回で全部消す)
+const Composition = ({ state, language, clear_armed, onClear, send_to_button }) => {
+    const { t } = useI18n();
     const line = useRef(null);
     // 入る大きさのうち一番大きい字に (それでも入らなければ最後を見せる)
     useLayoutEffect(() => {
@@ -409,7 +422,8 @@ const Composition = ({ state, language }) => {
     const c = state.composition;
     const preedit = c ? [...c.preedit] : [];
     const [start, end] = c ? c.selection : [0, 0];
-    const parts = splitAtLimit([
+    // カーソルまで・変換中の語・カーソルの後 (カーソルは変換中の語のすぐ後ろ)
+    const pieces = [
         { text: state.text },
         ...(c ? [
             { text: preedit.slice(0, start).join(""), className: styles.preedit },
@@ -417,31 +431,35 @@ const Composition = ({ state, language }) => {
             { text: preedit.slice(end).join(""), className: styles.preedit },
         ] : []),
         ...(state.syllable ? [{ text: state.syllable.text, className: styles.selection }] : []),
-    ]);
+        { text: state.after ?? "" },
+    ];
+    const after_key = String(pieces.length - 1);
+    const all = splitAtLimit(pieces);
+    const parts = all.filter(p => p.key.split("-")[0] !== after_key);
+    const after_parts = all.filter(p => p.key.split("-")[0] === after_key);
     return (
         <div className={styles.composition}>
             <div ref={line} className={styles.line} lang={language}>
                 {parts.map(p => <span key={p.key} className={p.className}>{p.text}</span>)}
                 <span className={styles.caret} aria-hidden="true" />
+                {after_parts.map(p => <span key={p.key} className={p.className}>{p.text}</span>)}
             </div>
-            <span className={clsx(styles.counter, { [styles.is_over]: state.length > CHAT_MAX })}>{state.length} / {CHAT_MAX}</span>
+            {state.length > COUNTER_FROM &&
+                <span className={clsx(styles.counter, { [styles.is_over]: state.length > CHAT_MAX })}>{CHAT_MAX - state.length}</span>}
+            {send_to_button}
+            {state.length > 0 && <button type="button" className={clsx(styles.clear, { [styles.is_armed]: clear_armed })}
+                aria-label={t("vr_panel.keyboard.clear")} onMouseDown={onClear}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+            </button>}
         </div>
     );
 };
 
-// 変換の候補 (押して選ぶ)。韓国語は組み立て中の字の字母、英語は何も出さない
+// 変換の候補 (押して選ぶ)。英語・韓国語は候補がないので何も出さない
 const Candidates = ({ state, language, press, sendKey }) => {
     const { t } = useI18n();
     const { asyncStdoutToPython } = useStdoutToPython();
-    if (language === "ko") {
-        return <div className={styles.candidates} lang="ko">
-            {state.syllable && <span className={styles.syllable}>
-                <b>{state.syllable.text}</b> = {state.syllable.jamo.join(" + ")}
-            </span>}
-            <span className={styles.hint}>{t("vr_panel.keyboard.korean_hint")}</span>
-        </div>;
-    }
-    if (language === "en") return <div className={styles.candidates} />;
+    if (language === "en" || language === "ko") return <div className={styles.candidates} />;
     return <div className={styles.candidates} lang={language}>
         {state.candidates.map((text, index) => (
             <button key={`${state.page}-${index}`} type="button" className={styles.candidate}
@@ -458,28 +476,23 @@ const Candidates = ({ state, language, press, sendKey }) => {
     </div>;
 };
 
-// 日本語・中国語の辞書の準備 (初回は取得してから組み立てる)
+// 日本語・中国語の辞書の準備 (初回は取得してから組み立てる): 進み具合の線だけ。失敗したら「もう一度試す」だけ
 const Preparing = ({ state, press }) => {
     const { t } = useI18n();
     const { asyncStdoutToPython } = useStdoutToPython();
     if (state.status === "failed") {
-        return <div className={styles.preparing}><span className={styles.preparing_title}>{t("vr_panel.keyboard.failed")}</span>
-            <button type="button" className={styles.retry} onMouseDown={press(() => asyncStdoutToPython("/run/keyboard_retry"), "key", "retry")}>
-                {t("vr_panel.keyboard.retry")}
-            </button>
-            <span className={styles.hint}>{t("vr_panel.keyboard.use_english")}</span></div>;
+        return <div className={styles.preparing}>
+            <button type="button" className={styles.retry} aria-description={t("vr_panel.keyboard.failed")}
+                onMouseDown={press(() => asyncStdoutToPython("/run/keyboard_retry"), "key", "retry")}>{t("vr_panel.keyboard.retry")}</button>
+        </div>;
     }
-    const percent = Math.round((state.progress ?? 0) * 100);
+    const building = state.status === "building";
+    const percent = building ? 100 : Math.round((state.progress ?? 0) * 100);
     return <div className={styles.preparing}>
-        <span className={styles.preparing_title}>
-            {state.status === "building" ? t("vr_panel.keyboard.building") : t("vr_panel.keyboard.downloading", { percent })}
-        </span>
-        <div className={styles.progress} role="progressbar" aria-valuemin={0} aria-valuemax={100}
-            aria-valuenow={state.status === "building" ? 100 : percent}>
-            <div className={clsx(styles.progress_bar, { [styles.is_building]: state.status === "building" })}
-                style={{ width: `${state.status === "building" ? 100 : percent}%` }} />
+        <div className={styles.progress} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}
+            aria-label={building ? t("vr_panel.keyboard.building") : t("vr_panel.keyboard.downloading", { percent })}>
+            <div className={clsx(styles.progress_bar, { [styles.is_building]: building })} style={{ width: `${percent}%` }} />
         </div>
-        <span className={styles.hint}>{t("vr_panel.keyboard.use_english")}</span>
     </div>;
 };
 

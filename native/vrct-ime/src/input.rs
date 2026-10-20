@@ -67,8 +67,10 @@ pub struct Composition {
 /// Everything the keyboard shows
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct State {
-    /// written so far (the composition not included)
+    /// written so far, up to the cursor (the composition not included: it is at the cursor)
     pub text: String,
+    /// written after the cursor
+    pub after: String,
     pub composition: Option<Composition>,
     pub candidates: Vec<String>,
     /// the candidate 確定 takes (index on the page)
@@ -79,12 +81,15 @@ pub struct State {
     pub last_page: bool,
     /// Korean: the syllable being made and its jamo
     pub syllable: Option<(String, Vec<char>)>,
-    /// characters of the text and what is being composed (VRChat's chat box takes 144)
+    /// characters of the text (both sides of the cursor) and what is being composed (VRChat's chat box takes 144)
     pub length: usize,
 }
 
 pub struct Input<'r> {
+    /// written up to the cursor: what is typed goes here (at the cursor)
     text: String,
+    /// written after the cursor (◀ ▶ move characters between the two)
+    after: String,
     language: Language,
     rime: Option<Session<'r>>,
     hangul: Composer,
@@ -93,7 +98,7 @@ pub struct Input<'r> {
 
 impl<'r> Input<'r> {
     pub fn new(language: Language) -> Self {
-        Self { text: String::new(), language, rime: None, hangul: Composer::new(), converting: false }
+        Self { text: String::new(), after: String::new(), language, rime: None, hangul: Composer::new(), converting: false }
     }
 
     /// The RIME session, once the dictionaries are ready (Japanese and Chinese type from then on)
@@ -178,6 +183,7 @@ impl<'r> Input<'r> {
                 Key::Backspace => {
                     self.text.pop();
                 }
+                Key::Left | Key::Right => self.move_cursor(key == Key::Left),
                 _ => {}
             },
             Language::Korean => match key {
@@ -187,6 +193,11 @@ impl<'r> Input<'r> {
                     if !self.hangul.backspace() {
                         self.text.pop();
                     }
+                }
+                // the syllable being made is written first, then the cursor moves
+                Key::Left | Key::Right => {
+                    self.text += &self.hangul.take();
+                    self.move_cursor(key == Key::Left);
                 }
                 _ => {}
             },
@@ -222,6 +233,11 @@ impl<'r> Input<'r> {
                 return;
             }
             Key::Enter if !composing => return,
+            // while composing, RIME moves between the segments
+            Key::Left | Key::Right if !composing => {
+                self.move_cursor(key == Key::Left);
+                return;
+            }
             _ => {}
         }
         // Japanese as Japanese keyboards do: 変換 shows the first candidate, then the next ones;
@@ -256,6 +272,18 @@ impl<'r> Input<'r> {
         self.collect();
     }
 
+    /// A character across the cursor
+    fn move_cursor(&mut self, left: bool) {
+        if left {
+            if let Some(c) = self.text.pop() {
+                self.after.insert(0, c);
+            }
+        } else if let Some(c) = self.after.chars().next() {
+            self.after.remove(0);
+            self.text.push(c);
+        }
+    }
+
     /// The candidate at `index` of the page shown
     pub fn select(&mut self, index: usize) {
         if let Some(s) = self.session() {
@@ -277,8 +305,8 @@ impl<'r> Input<'r> {
         self.text = text.into();
     }
 
-    /// Text from elsewhere (what the microphone heard) after what is written, with a space between
-    /// words of Latin letters; what is being composed stays after it
+    /// Text from elsewhere (what the microphone heard) at the cursor, with a space between words
+    /// of Latin letters; what is being composed stays after it
     pub fn append(&mut self, text: &str) {
         let text = text.trim();
         let ends_word = self.text.chars().last().is_some_and(|c| c.is_ascii_alphanumeric() || ".,!?".contains(c));
@@ -291,7 +319,7 @@ impl<'r> Input<'r> {
     /// The whole text (what is being composed included), then empty
     pub fn take(&mut self) -> String {
         self.flush();
-        std::mem::take(&mut self.text)
+        std::mem::take(&mut self.text) + &std::mem::take(&mut self.after)
     }
 
     pub fn clear(&mut self) {
@@ -300,11 +328,12 @@ impl<'r> Input<'r> {
         }
         self.hangul.take();
         self.text.clear();
+        self.after.clear();
         self.converting = false;
     }
 
     pub fn state(&self) -> State {
-        let mut state = State { text: self.text.clone(), ..Default::default() };
+        let mut state = State { text: self.text.clone(), after: self.after.clone(), ..Default::default() };
         let mut composed = 0;
         if let Some(s) = self.session() {
             let c = s.context();
@@ -324,7 +353,7 @@ impl<'r> Input<'r> {
             state.syllable = self.hangul.composing();
             composed = state.syllable.as_ref().map_or(0, |(s, _)| s.chars().count());
         }
-        state.length = state.text.chars().count() + composed;
+        state.length = state.text.chars().count() + state.after.chars().count() + composed;
         state
     }
 }
@@ -419,6 +448,35 @@ mod tests {
         i.set_text("日本");
         i.append("語");
         assert_eq!(i.take(), "日本語");
+    }
+
+    #[test]
+    fn left_and_right_move_the_cursor_and_typing_goes_there() {
+        let mut i = Input::new(Language::English);
+        typed(&mut i, "helo");
+        i.key(Key::Left);
+        typed(&mut i, "l");
+        i.key(Key::Left);
+        i.key(Key::Left);
+        i.key(Key::Backspace);
+        let s = i.state();
+        assert_eq!((s.text.as_str(), s.after.as_str(), s.length), ("h", "llo", 4));
+        // past the ends: nothing moves
+        for _ in 0..3 {
+            i.key(Key::Left);
+        }
+        typed(&mut i, "H");
+        for _ in 0..9 {
+            i.key(Key::Right);
+        }
+        typed(&mut i, "!");
+        assert_eq!(i.take(), "Hhllo!");
+        // Korean: the syllable being made is written before the cursor moves
+        let mut i = Input::new(Language::Korean);
+        typed(&mut i, "gksrmf");
+        i.key(Key::Left);
+        typed(&mut i, "dk");
+        assert_eq!(i.take(), "한아글");
     }
 
     #[test]

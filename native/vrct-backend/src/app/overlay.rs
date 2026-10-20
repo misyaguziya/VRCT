@@ -106,8 +106,8 @@ impl Overlays {
         large.ui_scaling *= LARGE_SCALE;
         let popup = Settings { position: [0.0; 6], tracker: "Playspace".into(), opacity: 1.0, ui_scaling: 0.36,
                                display_duration: 5.0, fadeout_duration: 0.0, panel_size: None };
-        // the keyboard: 0.76 m, its keys about 3.5 cm wide (55 px of 1200: 15 keys a row, a key apart, the block on its right)
-        let keyboard = Settings { ui_scaling: 0.76, opacity: config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), ..popup.clone() };
+        // the keyboard: 0.6 m, its keys about 3.6 cm wide (72 px of 1200: 15 keys a row, the arrows in the bottom one)
+        let keyboard = Settings { ui_scaling: 0.6, opacity: config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), ..popup.clone() };
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),

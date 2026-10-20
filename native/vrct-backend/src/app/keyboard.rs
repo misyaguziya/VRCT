@@ -114,6 +114,7 @@ fn state_json(status: Status, s: &State, language: Language) -> Value {
         "progress": progress,
         "language": language.code(),
         "text": s.text,
+        "after": s.after,
         "composition": s.composition.as_ref().map(|c| json!({"preedit": c.preedit, "selection": [c.selection.0, c.selection.1], "cursor": c.cursor})),
         "candidates": s.candidates,
         "highlighted": s.highlighted,
