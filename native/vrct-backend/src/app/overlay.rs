@@ -106,8 +106,8 @@ impl Overlays {
         large.ui_scaling *= LARGE_SCALE;
         let popup = Settings { position: [0.0; 6], tracker: "Playspace".into(), opacity: 1.0, ui_scaling: 0.36,
                                display_duration: 5.0, fadeout_duration: 0.0, panel_size: None };
-        // the keyboard: its keys about 3.6 cm wide (72 px of 1200)
-        let keyboard = Settings { ui_scaling: 0.6, ..popup.clone() };
+        // the keyboard: 0.76 m, its keys about 3.5 cm wide (55 px of 1200: 15 keys a row, a key apart, the block on its right)
+        let keyboard = Settings { ui_scaling: 0.76, opacity: config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), ..popup.clone() };
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),
@@ -348,6 +348,10 @@ fn panel_switch(app: &App, on: bool) -> Result<Reply> {
     if app.config.get("OVERLAY_VR_PANEL") == json!(!on) {
         app.config.set("OVERLAY_VR_PANEL", json!(on))?;
         sync_overlay_running(app)?;
+        // the VR UI gone: its keyboard with it
+        if !on {
+            super::keyboard::hidden(app);
+        }
     }
     current(app, "OVERLAY_VR_PANEL")
 }
@@ -414,9 +418,8 @@ pub fn set_vr_panel_windows(app: &App, data: Data) -> Result<Reply> {
     let on = |key: &str| data.get(key) == Some(&json!(true));
     let (log, popup, keyboard) = (on("log"), on("popup"), on("keyboard"));
     overlay(app).set_vr_windows(log, popup, keyboard);
-    // the keyboard closed with text in it: VRChat's typing indicator is not left on
     if !keyboard {
-        super::keyboard::stop_typing(app);
+        super::keyboard::hidden(app);
     }
     Ok(Reply::ok(json!({"log": log, "popup": popup, "keyboard": keyboard})))
 }
@@ -500,6 +503,18 @@ pub fn set_overlay_vr_panel_opacity(app: &App, data: Data) -> Result<Reply> {
     app.config.set("OVERLAY_VR_PANEL_SETTINGS", panel)?;
     overlay(app).update_opacity(PANEL, num(&app.config.get("OVERLAY_VR_PANEL_SETTINGS"), "opacity"), false);
     Ok(Reply::ok(setting_of(app, "OVERLAY_VR_PANEL_SETTINGS", "opacity")))
+}
+
+pub fn get_keyboard_opacity(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_OPACITY")
+}
+
+/// The VR keyboard's opacity: 0.2–1.0 (as the log window's)
+pub fn set_keyboard_opacity(app: &App, data: Data) -> Result<Reply> {
+    let rounded = data.as_ref().and_then(py_float).map_or(Value::Null, |o| json!(vrct_overlay::pose::round_to(o, 2)));
+    let reply = super::basic::validated(app, "KEYBOARD_OPACITY", rounded)?;
+    overlay(app).update_opacity(KEYBOARD, app.config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), false);
+    Ok(reply)
 }
 
 /// getVrPanelLayout: the layout the VR view draws (the overlay's)

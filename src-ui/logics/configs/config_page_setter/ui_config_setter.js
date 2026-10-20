@@ -859,6 +859,24 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "keyboard_typing_indicator",
     },
     {
+        // VRキーボードのマイク: 聞き取った文を送らずに入力欄へ入れる (保存しない。キーボードを閉じると OFF)
+        Category: "Vr",
+        Base_Name: "IsEnabledKeyboardDictation",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "keyboard_dictation",
+    },
+    {
+        // VRキーボードの不透明度 (0.2〜1.0)。キーボードのタイトルバーで変える
+        Category: "Vr",
+        Base_Name: "KeyboardOpacity",
+        default_value: 1.0,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_opacity",
+    },
+    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

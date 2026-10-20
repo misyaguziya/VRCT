@@ -4752,7 +4752,9 @@
     "/get/data/keyboard_chinese_simplified": false,
     "/get/data/keyboard_key_sound": true,
     "/get/data/keyboard_typing_indicator": true,
-    "/get/data/keyboard_send_to": "vrct"
+    "/get/data/keyboard_send_to": "vrct",
+    "/get/data/keyboard_dictation": false,
+    "/get/data/keyboard_opacity": 1.0
   },
   "init_ms": 0,
   "answers": [
@@ -4761,9 +4763,7 @@
       "endpoint": "/get/data/selected_tab_no",
       "status": 200,
       "result": "1",
-      "pushes": [
-        "/run/selected_speaker_device"
-      ],
+      "pushes": [],
       "push_results": [],
       "ms": 0
     },

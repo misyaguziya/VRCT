@@ -363,6 +363,11 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/get/data/keyboard_send_to", r(true, h::get_keyboard_send_to)),
         ("/set/data/keyboard_send_to", r(true, h::set_keyboard_send_to)),
         ("/run/keyboard_retry", r(true, h::keyboard_retry)),
+        ("/get/data/keyboard_dictation", r(true, h::get_keyboard_dictation)),
+        ("/set/enable/keyboard_dictation", o(h::set_enable_keyboard_dictation)),
+        ("/set/disable/keyboard_dictation", o(h::set_disable_keyboard_dictation)),
+        ("/get/data/keyboard_opacity", r(true, h::get_keyboard_opacity)),
+        ("/set/data/keyboard_opacity", r(true, h::set_keyboard_opacity)),
     ]
 }
 

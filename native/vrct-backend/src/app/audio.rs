@@ -532,6 +532,11 @@ fn handle_transcript(app: &App, kind: Kind, event: Event) -> Result<()> {
             let message = if kind == Kind::Mic { "No mic device detected" } else { "No speaker device detected" };
             app.run(400, "error_device", json!({"message": message, "data": null}))
         }
+        // the VR keyboard's microphone: what was heard goes into its text, to be sent from there
+        Event::Text(t, _) if !t.text.is_empty() && kind == Kind::Mic && super::keyboard::keyboard_dictating(app) => {
+            super::keyboard::dictated(app, &t.text);
+            Ok(())
+        }
         Event::Text(t, _) if !t.text.is_empty() => {
             let spec = if kind == Kind::Mic { &pipeline::MIC } else { &pipeline::SPEAKER };
             pipeline::process(app, spec, &t.text, t.language.as_deref(), None, Some(t.asr_ms as i64)).map(|_| ())
@@ -548,6 +553,9 @@ fn disable_after_pipeline_error(app: &App, kind: Kind) -> Result<()> {
     };
     app.config.set(name, json!(false))?;
     app.run_or(200, endpoint, default, json!(false));
+    if kind == Kind::Mic {
+        super::keyboard::transcription_stopped(app);
+    }
     Ok(())
 }
 
@@ -1239,6 +1247,9 @@ fn transcription_switch(app: &App, kind: Kind, name: &str, on: bool) -> Result<R
     } else if !on && app.config.get_bool(name) {
         stop_transcription(app, kind)?;
         app.config.set(name, json!(false))?;
+        if kind == Kind::Mic {
+            super::keyboard::transcription_stopped(app);
+        }
     }
     current(app, name)
 }
@@ -1373,6 +1384,32 @@ mod tests {
         // nothing heard: nothing to do
         transcript_event(&app, Kind::Mic, text(""));
         assert_eq!(super::tests::pushes(), []);
+    }
+
+    #[test]
+    fn while_the_keyboard_dictates_what_the_mic_hears_goes_into_its_text() {
+        use super::super::keyboard::{keyboard_dictating, set_disable_keyboard_dictation, set_enable_keyboard_dictation};
+        let app = app();
+        // no device: the microphone does not start, nor does dictation
+        assert_eq!(set_enable_keyboard_dictation(&app, None).unwrap(), Reply::ok(false));
+        pushes();
+        // the microphone already on: what it hears goes into the keyboard, not sent
+        app.config.set("ENABLE_TRANSCRIPTION_SEND", json!(true)).unwrap();
+        assert_eq!(set_enable_keyboard_dictation(&app, None).unwrap(), Reply::ok(true));
+        transcript_event(&app, Kind::Mic, text("こんにちは"));
+        let got = pushes();
+        assert_eq!(got.iter().map(|p| p.1.as_str()).collect::<Vec<_>>(), ["/run/keyboard_state"]);
+        assert_eq!(got[0].2["text"], json!("こんにちは"));
+        // turned off: the microphone stays as it was before (on)
+        assert_eq!(set_disable_keyboard_dictation(&app, None).unwrap(), Reply::ok(false));
+        assert!(app.config.get_bool("ENABLE_TRANSCRIPTION_SEND"));
+        transcript_event(&app, Kind::Mic, text("送る"));
+        assert_eq!(pushes()[0].1, "/run/transcription_send_mic_message");
+        // the microphone turned off ends dictation, and the keyboard's button is told
+        set_enable_keyboard_dictation(&app, None).unwrap();
+        set_disable_transcription_send(&app, None).unwrap();
+        assert!(!keyboard_dictating(&app));
+        assert!(pushes().contains(&(200, "/set/disable/keyboard_dictation".to_string(), json!(false))));
     }
 
     #[test]

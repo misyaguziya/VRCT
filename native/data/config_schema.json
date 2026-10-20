@@ -2233,6 +2233,20 @@
    "immediate_save": false,
    "mutable_tracking": false,
    "default": "vrct"
+  },
+  {
+   "name": "KEYBOARD_OPACITY",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 1.0
   }
  ],
  "serialized_order": [
@@ -2349,6 +2363,7 @@
   "KEYBOARD_CHINESE_SIMPLIFIED",
   "KEYBOARD_KEY_SOUND",
   "KEYBOARD_TYPING_INDICATOR",
-  "KEYBOARD_SEND_TO"
+  "KEYBOARD_SEND_TO",
+  "KEYBOARD_OPACITY"
  ]
 }

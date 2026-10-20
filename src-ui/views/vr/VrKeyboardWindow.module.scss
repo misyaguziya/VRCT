@@ -74,6 +74,8 @@
     max-height: 100%;
     overflow: hidden;
     overflow-wrap: anywhere;
+    // Shift+↵ の改行と、続けた空白をそのまま見せる
+    white-space: pre-wrap;
     line-height: 1.15;
     font-size: 28px;
     color: var(--dark_basic_text_color);
@@ -109,7 +111,7 @@
 .counter {
     flex: none;
     font-size: 16px;
-    color: var(--dark_450_color);
+    color: var(--dark_400_color);
     &.is_over { color: var(--warning_color); font-weight: 700; }
 }
 
@@ -227,19 +229,32 @@
     white-space: nowrap;
 }
 
-.keys {
+// 本体 (左に寄せる) と、離して右に置く区画 (言語・送る先・矢印)
+.keys_area {
     flex: 1;
+    display: flex;
+    align-items: flex-end;
+    &.is_waiting .key:disabled { opacity: 0.45; }
+}
+
+.keys, .side {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     gap: 8px;
-    &.is_waiting .key:disabled { opacity: 0.45; }
+}
+
+// 右の区画は一段暗い面に載せて、文字を打つキーとは別のまとまりに見せる
+// (面は外側へ影で広げる: 段の高さは本体と揃えたまま)
+.side {
+    border-radius: 10px;
+    background: var(--dark_1000_color);
+    box-shadow: 0 0 0 8px var(--dark_1000_color);
 }
 
 .row {
     display: flex;
     gap: var(--key_gap);
-    justify-content: center;
 }
 
 // Tab・Caps Lock などの場所 (置かないキー)
@@ -264,6 +279,44 @@
     @include pointed { background: #4f5257; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
     &:active:not(:disabled) { background: var(--primary_300_color); box-shadow: none; color: var(--dark_1000_color); transition: none; }
 }
+
+// 右の区画の言語・送る先: 選んでいるものは枠とアクセントの字 (塗りは ON になっている機能 = マイク・Shift のロックだけ)
+.key.choice {
+    padding: 0 4px;
+    font-size: 15px;
+    line-height: 1.1;
+    text-align: center;
+    &[aria-pressed="true"], &[aria-checked="true"] {
+        box-shadow: inset 0 0 0 2px var(--primary_300_color);
+        color: var(--primary_100_color);
+        font-weight: 700;
+    }
+}
+
+// Shift の印: 線で描く。ロック中は塗る
+.shift_icon {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    &.is_locked path:first-child { fill: currentColor; }
+}
+
+// 全消去: 1回目で「もう一度で消す」に変わる (注意の色)
+.key.clear {
+    font-size: 15px;
+    &.is_armed { box-shadow: inset 0 0 0 2px var(--warning_color); color: var(--warning_color); }
+}
+
+// タイトルバーの不透明度: 印と割合
+.opacity { display: flex; align-items: center; gap: 6px; }
+.opacity_icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+// マイク (聞き取った文を入力欄へ)。ON の間は塗る
+.mic_icon { width: 30px; height: 30px; fill: currentColor; }
 
 // JIS の L 字の Enter: 上の段の部分と下の段の部分を、段のすき間をまたいでつなぐ。
 // どちらかを指す・押すと、両方の部分が一緒に変わる

@@ -37,6 +37,52 @@ pub struct Keyboard {
     committed_at: Mutex<Option<Instant>>,
     /// rime.dll loaded and started (once a process: a retry only builds again)
     rime: OnceLock<&'static Rime>,
+    /// the microphone types into the keyboard (Some: whether its transcription was on before, so
+    /// that turning this off leaves it as it was)
+    dictation: Mutex<Option<bool>>,
+    history: Mutex<History>,
+}
+
+/// What the keyboard sent (either way), called back with ↑ ↓ as a shell does
+#[derive(Default)]
+struct History {
+    sent: Vec<String>,
+    /// the one shown (None: what is being typed)
+    at: Option<usize>,
+    /// what was being typed before ↑, back after the newest
+    draft: String,
+}
+
+const HISTORY_KEPT: usize = 50;
+
+impl History {
+    /// A text sent: the newest (once: sent again, it moves up)
+    fn add(&mut self, text: &str) {
+        self.sent.retain(|sent| sent != text);
+        self.sent.push(text.into());
+        let excess = self.sent.len().saturating_sub(HISTORY_KEPT);
+        self.sent.drain(..excess);
+        self.at = None;
+    }
+
+    /// ↑ (older) or ↓ (newer): the text to show, None: nothing changes
+    fn step(&mut self, older: bool, typed: impl FnOnce() -> String) -> Option<String> {
+        let at = match (self.at, older) {
+            (None, true) if !self.sent.is_empty() => {
+                self.draft = typed();
+                self.sent.len() - 1
+            }
+            (Some(at), true) if at > 0 => at - 1,
+            (Some(at), false) if at + 1 < self.sent.len() => at + 1,
+            (Some(_), false) => {
+                self.at = None;
+                return Some(std::mem::take(&mut self.draft));
+            }
+            _ => return None,
+        };
+        self.at = Some(at);
+        Some(self.sent[at].clone())
+    }
 }
 
 /// An Enter this soon after the one that committed the word does not send
@@ -46,7 +92,7 @@ impl Keyboard {
     pub fn new(config: &crate::config::Config) -> Self {
         let language = Language::from_code(&config.get_str("KEYBOARD_LANGUAGE")).unwrap_or(Language::Japanese);
         Keyboard { status: Mutex::new(Status::Preparing), input: Mutex::new(Input::new(language)), typing: Mutex::default(),
-                   committed_at: Mutex::default(), rime: OnceLock::new() }
+                   committed_at: Mutex::default(), rime: OnceLock::new(), dictation: Mutex::default(), history: Mutex::default() }
     }
 }
 
@@ -101,6 +147,13 @@ fn set_typing(app: &App, typing: bool) {
 /// The keyboard closed or VRCT ends: VRChat's typing indicator off (what is typed stays)
 pub fn stop_typing(app: &App) {
     set_typing(app, false);
+}
+
+/// The keyboard closed (or the VR UI with it), with text in it: VRChat's typing indicator is not
+/// left on, nor its microphone
+pub fn hidden(app: &App) {
+    stop_typing(app);
+    stop_dictation(app, true);
 }
 
 fn push_state(app: &App, input: &Input) {
@@ -197,10 +250,17 @@ pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
     Ok(Reply::ok(state_json(*keyboard(app).status.lock().unwrap(), &input.state(), input.language())))
 }
 
-/// A key: one character ("a", "A" with Shift, "、"), or Backspace, Space, Enter, Left, Right,
-/// PageUp, PageDown
+/// A key: one character ("a", "A" with Shift, "、", "\n"), or Backspace, Space, Enter, Left, Right,
+/// PageUp, PageDown, Up and Down (what was sent, called back)
 pub fn keyboard_key(app: &App, data: Data) -> Result<Reply> {
     let name = data.as_ref().and_then(Value::as_str).ok_or_else(|| anyhow!("the key is not a string"))?;
+    if let "Up" | "Down" = name {
+        let mut input = keyboard(app).input.lock().unwrap();
+        if let Some(text) = keyboard(app).history.lock().unwrap().step(name == "Up", || input.take()) {
+            input.set_text(&text);
+        }
+        return Ok(Reply::ok(changed(app, &input)));
+    }
     let key = match name {
         "Backspace" => Key::Backspace,
         "Space" => Key::Space,
@@ -255,6 +315,73 @@ pub fn keyboard_clear(app: &App, _: Data) -> Result<Reply> {
     Ok(Reply::ok(changed(app, &input)))
 }
 
+// --------------------------------------------------------------------------------- dictation
+
+/// The microphone types into the keyboard: what it hears goes after the text (to be corrected
+/// and sent with ↵) instead of being sent. Its transcription is turned on for it, and back off after
+pub fn keyboard_dictating(app: &App) -> bool {
+    keyboard(app).dictation.lock().unwrap().is_some()
+}
+
+/// What the microphone heard, while dictating
+pub fn dictated(app: &App, text: &str) {
+    let mut input = keyboard(app).input.lock().unwrap();
+    input.append(text);
+    push_state(app, &input);
+}
+
+fn dictation_reply(app: &App) -> Result<Reply> {
+    Ok(Reply::ok(json!(keyboard_dictating(app))))
+}
+
+pub fn get_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
+    dictation_reply(app)
+}
+
+/// On the keyboard's ordered worker (as its switching off): one at a time
+pub fn set_enable_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
+    if !keyboard_dictating(app) {
+        let was_on = app.config.get_bool("ENABLE_TRANSCRIPTION_SEND");
+        if !was_on {
+            // as the microphone's switch does (and shown on it); it may not start (no device…)
+            super::audio::set_enable_transcription_send(app, None)?;
+            if !app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") {
+                return dictation_reply(app);
+            }
+            ipc::print_response(200, Some("/set/enable/transcription_send"), &json!(true));
+        }
+        *keyboard(app).dictation.lock().unwrap() = Some(was_on);
+    }
+    dictation_reply(app)
+}
+
+pub fn set_disable_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
+    stop_dictation(app, false);
+    dictation_reply(app)
+}
+
+/// Dictation off (the keyboard closed, or turned off); the microphone's transcription back as it
+/// was. `told`: the UI is told (when it did not ask)
+fn stop_dictation(app: &App, told: bool) {
+    let Some(was_on) = keyboard(app).dictation.lock().unwrap().take() else { return };
+    if !was_on && app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") {
+        match super::audio::set_disable_transcription_send(app, None) {
+            Ok(_) => ipc::print_response(200, Some("/set/disable/transcription_send"), &json!(false)),
+            Err(e) => logs::error("keyboard dictation", &format!("{e:#}")),
+        }
+    }
+    if told {
+        ipc::print_response(200, Some("/set/disable/keyboard_dictation"), &json!(false));
+    }
+}
+
+/// The microphone's transcription was turned off (its switch, or an error): dictation ends with it
+pub fn transcription_stopped(app: &App) {
+    if keyboard(app).dictation.lock().unwrap().take().is_some() {
+        ipc::print_response(200, Some("/set/disable/keyboard_dictation"), &json!(false));
+    }
+}
+
 /// The text taken out (Korean's syllable being made included), sent: through VRCT as the message box
 /// sends it ({"to": "vrct", "message": its answer}) or pasted into VRChat ({"to": "paste", "pasted"}),
 /// told by keyboard_sent. On the keyboard's ordered worker, as the keys: sends go one at a time in
@@ -271,10 +398,14 @@ fn send(app: &App, text: String, to: &str) -> Result<()> {
         let window = app.model.app_name.get();
         let pasted = crate::clipboard::copy_and_paste(&text, window.as_deref(), &|line| ipc::log(line));
         out["pasted"] = json!(pasted);
+        if pasted {
+            keyboard(app).history.lock().unwrap().add(&text);
+        }
         out["state"] = if pasted { changed(app, &keyboard(app).input.lock().unwrap()) } else { put_back() };
     } else {
         match process(app, &CHAT, &text, None, None, None) {
             Ok(message) => {
+                keyboard(app).history.lock().unwrap().add(&text);
                 out["message"] = message.unwrap_or(Value::Null);
                 out["state"] = changed(app, &keyboard(app).input.lock().unwrap());
             }
@@ -425,6 +556,26 @@ mod tests {
         keys(&app, &["Enter"]);
         assert_eq!(osc_got(&osc), []);
         assert!(!ipc::take_printed().iter().any(|v| v["endpoint"] == "/run/keyboard_sent"));
+    }
+
+    #[test]
+    fn up_and_down_call_back_what_was_sent_and_a_line_break_goes_with_it() {
+        let (app, osc) = rig();
+        set_keyboard_language(&app, Some(json!("en"))).unwrap();
+        // nothing sent yet: nothing to call back
+        assert_eq!(keys(&app, &["x", "Up"])["text"], json!("x"));
+        keys(&app, &["\n", "o", "k", "Enter"]);
+        assert!(osc_got(&osc).contains(&("/chatbox/input".into(), "x\nok".into())));
+        keys(&app, &["t", "w", "o", "Enter", "d", "r", "a", "f", "t"]);
+        let text = |key| keys(&app, &[key])["text"].clone();
+        assert_eq!([text("Up"), text("Up"), text("Up"), text("Down"), text("Down"), text("Down")],
+                   [json!("two"), json!("x\nok"), json!("x\nok"), json!("two"), json!("draft"), json!("draft")]);
+        // one called back and sent again is the newest, once
+        keys(&app, &["Up", "Up", "Enter"]);
+        assert_eq!([text("Up"), text("Up"), text("Up")], [json!("x\nok"), json!("two"), json!("two")]);
+        // the opacity: 0.2–1.0
+        assert!(app.config.set("KEYBOARD_OPACITY", json!(0.1)).is_err());
+        assert!(app.config.set("KEYBOARD_OPACITY", json!(0.6)).is_ok());
     }
 
     #[test]

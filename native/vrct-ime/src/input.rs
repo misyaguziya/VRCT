@@ -271,6 +271,23 @@ impl<'r> Input<'r> {
         self.text.insert_str(0, text);
     }
 
+    /// The text replaced by this (a message sent before, called back): what was being composed is dropped
+    pub fn set_text(&mut self, text: &str) {
+        self.clear();
+        self.text = text.into();
+    }
+
+    /// Text from elsewhere (what the microphone heard) after what is written, with a space between
+    /// words of Latin letters; what is being composed stays after it
+    pub fn append(&mut self, text: &str) {
+        let text = text.trim();
+        let ends_word = self.text.chars().last().is_some_and(|c| c.is_ascii_alphanumeric() || ".,!?".contains(c));
+        if ends_word && text.starts_with(|c: char| c.is_ascii_alphanumeric()) {
+            self.text.push(' ');
+        }
+        self.text += text;
+    }
+
     /// The whole text (what is being composed included), then empty
     pub fn take(&mut self) -> String {
         self.flush();
@@ -373,6 +390,35 @@ mod tests {
         typed(&mut i, " again");
         i.restore(&sent);
         assert_eq!(i.take(), "hello again");
+    }
+
+    #[test]
+    fn a_line_break_is_text_in_every_language() {
+        let mut i = Input::new(Language::English);
+        typed(&mut i, "hi\nok");
+        assert_eq!(i.state().length, 5);
+        for _ in 0..3 {
+            i.key(Key::Backspace);
+        }
+        assert_eq!(i.take(), "hi");
+        // Korean: the break ends the syllable being made
+        let mut i = Input::new(Language::Korean);
+        typed(&mut i, "gks\nrmf");
+        assert_eq!(i.take(), "한\n글");
+    }
+
+    #[test]
+    fn a_text_called_back_replaces_and_heard_text_is_appended() {
+        let mut i = Input::new(Language::Korean);
+        typed(&mut i, "gks");
+        i.set_text("hello");
+        assert_eq!(i.state().syllable, None);
+        i.append(" world ");
+        i.append("。ok");
+        assert_eq!(i.take(), "hello world。ok");
+        i.set_text("日本");
+        i.append("語");
+        assert_eq!(i.take(), "日本語");
     }
 
     #[test]

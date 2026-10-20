@@ -1769,6 +1769,31 @@
    "endpoint": "/run/keyboard_retry",
    "during_init": true,
    "handler": "keyboardRetry"
+  },
+  {
+   "endpoint": "/get/data/keyboard_dictation",
+   "during_init": true,
+   "handler": "getKeyboardDictation"
+  },
+  {
+   "endpoint": "/set/enable/keyboard_dictation",
+   "during_init": true,
+   "handler": "setEnableKeyboardDictation"
+  },
+  {
+   "endpoint": "/set/disable/keyboard_dictation",
+   "during_init": true,
+   "handler": "setDisableKeyboardDictation"
+  },
+  {
+   "endpoint": "/get/data/keyboard_opacity",
+   "during_init": true,
+   "handler": "getKeyboardOpacity"
+  },
+  {
+   "endpoint": "/set/data/keyboard_opacity",
+   "during_init": true,
+   "handler": "setKeyboardOpacity"
   }
  ],
  "run_mapping": {
