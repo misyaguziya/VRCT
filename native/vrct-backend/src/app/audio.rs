@@ -511,8 +511,7 @@ fn handle_transcript(app: &App, kind: Kind, event: Event) -> Result<()> {
         Event::NoDevice => false,
     };
     // muted in VRChat: what the microphone heard is dropped
-    if kind == Kind::Mic && !recognition_error && app.config.get_bool("VRC_MIC_MUTE_SYNC")
-        && *app.model.mic_mute_status.lock().unwrap() == Some(true) {
+    if kind == Kind::Mic && !recognition_error && muted_by_vrchat(app) {
         return Ok(());
     }
     if recognition_error {
@@ -639,9 +638,16 @@ fn reopen(app: &App, kind: Kind) -> Result<()> {
     result
 }
 
+/// VRChat's mute holds the microphone (mute sync on, muted). Not while the VR keyboard's microphone
+/// types: it is turned on there on purpose, and what it hears is not sent until ↵
+fn muted_by_vrchat(app: &App) -> bool {
+    app.config.get_bool("VRC_MIC_MUTE_SYNC") && *app.model.mic_mute_status.lock().unwrap() == Some(true)
+        && !super::keyboard::keyboard_dictating(app)
+}
+
 /// changeMicTranscriptStatus: paused while VRChat mutes (with mute sync on); the caller holds the lock
 fn apply_mute(app: &App, session: &Session) {
-    if app.config.get_bool("VRC_MIC_MUTE_SYNC") && *app.model.mic_mute_status.lock().unwrap() == Some(true) {
+    if muted_by_vrchat(app) {
         session.pause();
     } else {
         session.resume();
@@ -1400,6 +1406,12 @@ mod tests {
         let got = pushes();
         assert_eq!(got.iter().map(|p| p.1.as_str()).collect::<Vec<_>>(), ["/run/keyboard_state"]);
         assert_eq!(got[0].2["text"], json!("こんにちは"));
+        // VRChat's mute does not hold it (it was turned on here on purpose)
+        app.config.set("VRC_MIC_MUTE_SYNC", json!(true)).unwrap();
+        *app.model.mic_mute_status.lock().unwrap() = Some(true);
+        transcript_event(&app, Kind::Mic, text("ミュート中"));
+        assert_eq!(pushes()[0].2["text"], json!("こんにちはミュート中"));
+        *app.model.mic_mute_status.lock().unwrap() = Some(false);
         // turned off: the microphone stays as it was before (on)
         assert_eq!(set_disable_keyboard_dictation(&app, None).unwrap(), Reply::ok(false));
         assert!(app.config.get_bool("ENABLE_TRANSCRIPTION_SEND"));

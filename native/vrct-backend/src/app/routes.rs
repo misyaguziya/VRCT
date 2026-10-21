@@ -349,6 +349,7 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/run/keyboard_key", o(h::keyboard_key)),
         ("/run/keyboard_select", o(h::keyboard_select)),
         ("/run/keyboard_clear", o(h::keyboard_clear)),
+        ("/run/keyboard_cursor", o(h::keyboard_cursor)),
         ("/get/data/keyboard_language", r(true, h::get_keyboard_language)),
         ("/set/data/keyboard_language", o(h::set_keyboard_language)),
         ("/get/data/keyboard_chinese_simplified", r(true, h::get_keyboard_chinese_simplified)),

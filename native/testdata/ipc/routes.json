@@ -1701,6 +1701,11 @@
    "handler": "keyboardClear"
   },
   {
+   "endpoint": "/run/keyboard_cursor",
+   "during_init": true,
+   "handler": "keyboardCursor"
+  },
+  {
    "endpoint": "/get/data/keyboard_language",
    "during_init": true,
    "handler": "getKeyboardLanguage"

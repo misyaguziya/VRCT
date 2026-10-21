@@ -492,7 +492,6 @@ vr_panel:
     keyboard:
         title: "键盘"
         language: "键盘语言"
-        simplified: "使用简体字"
         send_vrct: "通过 VRCT 发送"
         send_paste: "粘贴到 VRChat"
         send_to: "↵ 发送到"

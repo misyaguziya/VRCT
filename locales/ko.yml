@@ -492,7 +492,6 @@ vr_panel:
     keyboard:
         title: "키보드"
         language: "키보드 언어"
-        simplified: "간체자 사용"
         send_vrct: "VRCT로 보내기"
         send_paste: "VRChat에 붙여넣기"
         send_to: "↵로 보낼 곳"

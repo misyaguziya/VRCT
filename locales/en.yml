@@ -498,7 +498,6 @@ vr_panel:
     keyboard:
         title: "Keyboard"
         language: "Keyboard language"
-        simplified: "Use Simplified Chinese"
         send_vrct: "Send via VRCT"
         send_paste: "Paste into VRChat"
         send_to: "Where ↵ sends"

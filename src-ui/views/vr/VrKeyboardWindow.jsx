@@ -169,6 +169,21 @@ export const VrKeyboardWindow = ({ onClose }) => {
         handler();
     };
     const sendKey = (key) => asyncStdoutToPython("/run/keyboard_key", key);
+    // 入力欄の文を押した位置へカーソルを置く
+    const placeCursorAt = (index) => {
+        if (currentIsEnabledKeyboardKeySound.data === true) playKeySound("soft", "cursor");
+        asyncStdoutToPython("/run/keyboard_cursor", index);
+    };
+    // 長押しでくり返すキー (← ◀ ▶): くり返すたびに音も鳴らす (最初の1回の音は press が鳴らす)
+    // id: 押したキーと同じ (同じキーの音のまま)
+    const repeatKey = (key, sound, id = key) => {
+        let first = true;
+        repeat.start(() => {
+            if (!first && currentIsEnabledKeyboardKeySound.data === true) playKeySound(sound, id);
+            first = false;
+            sendKey(key);
+        });
+    };
     const typeChar = (spec) => {
         const [normal, shifted] = charsOf(spec);
         sendKey(is_shift ? shifted : normal);
@@ -180,11 +195,12 @@ export const VrKeyboardWindow = ({ onClose }) => {
         shift_pressed_at.current = now;
         setShift(s => (s === "off" ? "once" : s === "once" && quick ? "lock" : "off"));
     };
-    // ↵: Shift と一緒なら改行 (送らない)
+    // ↵: Shift を1回押した後なら改行 (送らない)。ロック中・変換中はいつもの ↵ (送る・確定)
+    const is_newline = shift === "once" && !composing;
     const pressEnter = () => {
-        if (!is_shift) return sendKey("Enter");
+        if (!is_newline) return sendKey("Enter");
         sendKey("\n");
-        if (shift === "once") setShift("off");
+        setShift("off");
     };
     // 全消去: 1回目で「もう一度で消す」にして、続けてもう1回で消す (VR で間違えて押しても消えない)
     const [clear_armed, setClearArmed] = useState(false);
@@ -234,7 +250,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
     // Space と ↵ は何も添えない (読み上げ用の名前だけ。↵ の送る先は入力欄の右端の印)
     const space_name = !composing ? t("vr_panel.keyboard.space")
         : language === "ja" ? t("vr_panel.keyboard.convert") : t("vr_panel.keyboard.select_first");
-    const enter_name = composing ? t("vr_panel.keyboard.commit") : is_shift ? t("vr_panel.keyboard.newline") : t("vr_panel.keyboard.send_to");
+    const enter_name = composing ? t("vr_panel.keyboard.commit") : is_newline ? t("vr_panel.keyboard.newline") : t("vr_panel.keyboard.send_to");
     // 1つのキー (文字・空き・文字以外)
     const keyOf = (item, index) => {
         if (typeof item === "string") {
@@ -247,7 +263,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
         switch (item.special) {
             case "backspace":
                 return <Key press={press} key="backspace" sound="backspace" label={<BackspaceIcon />} w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready}
-                    onPress={() => repeat.start(() => sendKey("Backspace"))} onLeave={repeat.stop} />;
+                    onPress={() => repeatKey("Backspace", "backspace")} onLeave={repeat.stop} />;
             case "enter":
                 return <Key press={press} key="enter" sound="enter" label={<EnterIcon />} w={w} kind="act" aria={enter_name}
                     onPress={pressEnter} disabled={!is_ready} />;
@@ -296,7 +312,9 @@ export const VrKeyboardWindow = ({ onClose }) => {
     </div>;
     const menu_button = <button type="button" className={styles.menu_button} aria-label={`${t("vr_panel.keyboard.opacity")}: ${percent(opacity)}`}
         aria-expanded={menu === "settings"} onMouseDown={press(() => setMenu(m => (m === "settings" ? null : "settings")), "soft", "menu")}>
-        <svg className={styles.stroke_icon} viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 12h16M12 4v16" /></svg>
+        <svg className={styles.stroke_icon} viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" /><path className={styles.filled} d="M12 4a8 8 0 0 1 0 16z" />
+        </svg>
     </button>;
     // ↵ で送る先: 入力欄の右端に今の送る先の印だけ。押すたびに切り替わる
     const send_to_button = <button type="button" className={styles.send_to} aria-label={t(`vr_panel.keyboard.${send_to === "paste" ? "send_paste" : "send_vrct"}`)}
@@ -307,13 +325,13 @@ export const VrKeyboardWindow = ({ onClose }) => {
     // ◀ ▶ はカーソル (変換中は文節)、▲ ▼ は送った文の呼び出し
     const arrows = <>
         <Key press={press} sound="soft" label="◀" kind="mod" aria={t("vr_panel.keyboard.left")}
-            onPress={() => repeat.start(() => sendKey("Left"))} onLeave={repeat.stop} />
+            onPress={() => repeatKey("Left", "soft", "◀")} onLeave={repeat.stop} />
         <div className={styles.updown} style={{ width: widthOf(1) }}>
             <Key press={press} sound="soft" label="▲" kind="mod" extra={styles.half} aria={t("vr_panel.keyboard.history_older")} onPress={() => sendKey("Up")} />
             <Key press={press} sound="soft" label="▼" kind="mod" extra={styles.half} aria={t("vr_panel.keyboard.history_newer")} onPress={() => sendKey("Down")} />
         </div>
         <Key press={press} sound="soft" label="▶" kind="mod" aria={t("vr_panel.keyboard.right")}
-            onPress={() => repeat.start(() => sendKey("Right"))} onLeave={repeat.stop} />
+            onPress={() => repeatKey("Right", "soft", "▶")} onLeave={repeat.stop} />
     </>;
 
     return (
@@ -325,7 +343,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
                 {menu === "language" && language_menu}
                 <div className={styles.top}>
                     <Composition state={state} language={language} clear_armed={clear_armed} onClear={press(pressClear, "soft", "clear")}
-                        send_to_button={send_to_button} />
+                        send_to_button={send_to_button} onCursor={placeCursorAt} />
                 </div>
                 <div className={styles.middle}>
                     {!is_ready ? <Preparing state={state} press={press} />
@@ -405,8 +423,9 @@ const splitAtLimit = (parts) => {
     });
 };
 
-// 右端: 残りが少ないときだけ文字数、↵ で送る先の印、何か入っていれば × (1回目で注意の色、続けてもう1回で全部消す)
-const Composition = ({ state, language, clear_armed, onClear, send_to_button }) => {
+// 右端: 残りが少ないときだけ文字数、何か入っていれば × (1回目で注意の色、続けてもう1回で全部消す)、
+// 一番右に ↵ で送る先の印 (いつも同じ場所)。文を押すと、その位置にカーソルを置く (変換中は置かない)
+const Composition = ({ state, language, clear_armed, onClear, send_to_button, onCursor }) => {
     const { t } = useI18n();
     const line = useRef(null);
     // 入る大きさのうち一番大きい字に (それでも入らなければ最後を見せる)
@@ -437,20 +456,38 @@ const Composition = ({ state, language, clear_armed, onClear, send_to_button }) 
     const all = splitAtLimit(pieces);
     const parts = all.filter(p => p.key.split("-")[0] !== after_key);
     const after_parts = all.filter(p => p.key.split("-")[0] === after_key);
+    // 押した点が文の何文字目か (字の間のどこか。字のない所は終わり)
+    const placeCursor = (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        if (c) return;
+        const at = document.caretPositionFromPoint?.(event.clientX, event.clientY);
+        const node = at?.offsetNode ?? document.caretRangeFromPoint?.(event.clientX, event.clientY)?.startContainer;
+        const offset = at?.offset ?? document.caretRangeFromPoint?.(event.clientX, event.clientY)?.startOffset ?? 0;
+        let index = 0;
+        for (const span of line.current.querySelectorAll("span:not([aria-hidden])")) {
+            if (span.contains(node)) {
+                index += [...(node.textContent ?? "").slice(0, offset)].length;
+                return onCursor(index);
+            }
+            index += [...span.textContent].length;
+        }
+        onCursor(index);
+    };
     return (
         <div className={styles.composition}>
-            <div ref={line} className={styles.line} lang={language}>
+            <div ref={line} className={styles.line} lang={language} onMouseDown={placeCursor}>
                 {parts.map(p => <span key={p.key} className={p.className}>{p.text}</span>)}
                 <span className={styles.caret} aria-hidden="true" />
                 {after_parts.map(p => <span key={p.key} className={p.className}>{p.text}</span>)}
             </div>
             {state.length > COUNTER_FROM &&
                 <span className={clsx(styles.counter, { [styles.is_over]: state.length > CHAT_MAX })}>{CHAT_MAX - state.length}</span>}
-            {send_to_button}
             {state.length > 0 && <button type="button" className={clsx(styles.clear, { [styles.is_armed]: clear_armed })}
                 aria-label={t("vr_panel.keyboard.clear")} onMouseDown={onClear}>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
             </button>}
+            {send_to_button}
         </div>
     );
 };

@@ -272,6 +272,19 @@ impl<'r> Input<'r> {
         self.collect();
     }
 
+    /// The cursor to this character of the text (the input box pressed there). Not while a word is
+    /// being composed (it is chosen first); Korean's syllable being made is written first
+    pub fn set_cursor(&mut self, index: usize) {
+        if self.composing() {
+            return;
+        }
+        self.text += &self.hangul.take();
+        let all = std::mem::take(&mut self.text) + &std::mem::take(&mut self.after);
+        let at = all.char_indices().nth(index).map_or(all.len(), |(i, _)| i);
+        self.text = all[..at].into();
+        self.after = all[at..].into();
+    }
+
     /// A character across the cursor
     fn move_cursor(&mut self, left: bool) {
         if left {
@@ -306,8 +319,9 @@ impl<'r> Input<'r> {
     }
 
     /// Text from elsewhere (what the microphone heard) at the cursor, with a space between words
-    /// of Latin letters; what is being composed stays after it
+    /// of Latin letters; what is being composed stays after it (Korean's syllables are written first)
     pub fn append(&mut self, text: &str) {
+        self.text += &self.hangul.take();
         let text = text.trim();
         let ends_word = self.text.chars().last().is_some_and(|c| c.is_ascii_alphanumeric() || ".,!?".contains(c));
         if ends_word && text.starts_with(|c: char| c.is_ascii_alphanumeric()) {
@@ -448,6 +462,10 @@ mod tests {
         i.set_text("日本");
         i.append("語");
         assert_eq!(i.take(), "日本語");
+        // Korean typed before it stays before it
+        typed(&mut i, "gksrmf");
+        i.append("hello");
+        assert_eq!(i.take(), "한글hello");
     }
 
     #[test]
@@ -471,6 +489,13 @@ mod tests {
         }
         typed(&mut i, "!");
         assert_eq!(i.take(), "Hhllo!");
+        // put where the input box was pressed (past the end: at the end)
+        typed(&mut i, "日本語です");
+        i.set_cursor(2);
+        typed(&mut i, "の");
+        i.set_cursor(99);
+        typed(&mut i, "!");
+        assert_eq!(i.take(), "日本の語です!");
         // Korean: the syllable being made is written before the cursor moves
         let mut i = Input::new(Language::Korean);
         typed(&mut i, "gksrmf");

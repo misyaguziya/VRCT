@@ -310,9 +310,19 @@ pub fn keyboard_select(app: &App, data: Data) -> Result<Reply> {
     Ok(Reply::ok(changed(app, &input)))
 }
 
+/// The cursor to this character of the text (the input box pressed there)
+pub fn keyboard_cursor(app: &App, data: Data) -> Result<Reply> {
+    let index = data.as_ref().and_then(Value::as_u64).ok_or_else(|| anyhow!("the index is not a number"))?;
+    let mut input = keyboard(app).input.lock().unwrap();
+    input.set_cursor(index as usize);
+    Ok(Reply::ok(changed(app, &input)))
+}
+
 pub fn keyboard_clear(app: &App, _: Data) -> Result<Reply> {
     let mut input = keyboard(app).input.lock().unwrap();
     input.clear();
+    // ↑ starts from the newest again
+    keyboard(app).history.lock().unwrap().at = None;
     Ok(Reply::ok(changed(app, &input)))
 }
 
@@ -352,6 +362,8 @@ pub fn set_enable_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
             ipc::print_response(200, Some("/set/enable/transcription_send"), &json!(true));
         }
         *keyboard(app).dictation.lock().unwrap() = Some(was_on);
+        // VRChat's mute does not hold the microphone while it types here
+        super::audio::change_mic_transcript_status(app)?;
     }
     dictation_reply(app)
 }
@@ -365,6 +377,8 @@ pub fn set_disable_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
 /// was. `told`: the UI is told (when it did not ask)
 fn stop_dictation(app: &App, told: bool) {
     let Some(was_on) = keyboard(app).dictation.lock().unwrap().take() else { return };
+    // VRChat's mute holds the microphone again (when it stays on)
+    let _ = super::audio::change_mic_transcript_status(app);
     if !was_on && app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") {
         match super::audio::set_disable_transcription_send(app, None) {
             Ok(_) => ipc::print_response(200, Some("/set/disable/transcription_send"), &json!(false)),
@@ -574,6 +588,9 @@ mod tests {
         // one called back and sent again is the newest, once
         keys(&app, &["Up", "Up", "Enter"]);
         assert_eq!([text("Up"), text("Up"), text("Up")], [json!("x\nok"), json!("two"), json!("two")]);
+        // cleared: ↑ starts from the newest again
+        keyboard_clear(&app, None).unwrap();
+        assert_eq!(text("Up"), json!("x\nok"));
         // the opacity: 0.2–1.0
         assert!(app.config.set("KEYBOARD_OPACITY", json!(0.1)).is_err());
         assert!(app.config.set("KEYBOARD_OPACITY", json!(0.6)).is_ok());

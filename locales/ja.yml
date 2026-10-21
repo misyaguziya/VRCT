@@ -498,7 +498,6 @@ vr_panel:
     keyboard:
         title: "キーボード"
         language: "キーボードの言語"
-        simplified: "簡体字にする"
         send_vrct: "VRCT で送る"
         send_paste: "VRChat に貼る"
         send_to: "↵ で送る先"

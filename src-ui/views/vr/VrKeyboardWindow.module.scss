@@ -48,6 +48,8 @@
 }
 
 .line {
+    // 押した位置にカーソルを置く
+    cursor: text;
     flex: 1;
     min-width: 0;
     max-height: 100%;
@@ -346,6 +348,7 @@ $ring: 3px;
 .menu_row { display: flex; align-items: center; gap: 6px; }
 // 線で描く印 (不透明度・送る先)
 .stroke_icon { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.stroke_icon .filled { fill: currentColor; }
 
 // 入力欄の右端の ↵ で送る先の印 (押すと切り替わる)
 .send_to {

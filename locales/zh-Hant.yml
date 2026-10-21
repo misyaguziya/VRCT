@@ -492,7 +492,6 @@ vr_panel:
     keyboard:
         title: "鍵盤"
         language: "鍵盤語言"
-        simplified: "使用簡體字"
         send_vrct: "透過 VRCT 傳送"
         send_paste: "貼到 VRChat"
         send_to: "↵ 傳送到"
