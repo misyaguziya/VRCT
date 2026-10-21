@@ -257,8 +257,8 @@ config_page:
             label: "Mic Phrase Timeout"
             desc: "Transcription processing is performed at intervals of the specified number of seconds."
         mic_max_phrase:
-            label: "Mic Max Words"
-            desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs and send to VRChat."
+            label: "Mic Max Phrases"
+            desc: "Maximum number of transcription results (phrases) held in the queue. When it is exceeded, the oldest ones are discarded without being sent to VRChat."
         mic_word_filter:
             label: "Mic Word Filter"
             desc: "If a registered word is detected, the message will not be sent. To add multiple words at once, separate them with ',' (comma).\n*Duplicate words will not be registered."
@@ -274,8 +274,8 @@ config_page:
             label: "Speaker Phrase Timeout"
             desc: "Transcription processing is performed at intervals of the specified number of seconds."
         speaker_max_phrase:
-            label: "Speaker Max Words"
-            desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs."
+            label: "Speaker Max Phrases"
+            desc: "Maximum number of transcription results (phrases) held in the queue. When it is exceeded, the oldest ones are discarded without being shown in the log."
         speaker_vad_filter:
             label: "Speaker VAD Filter"
             desc: "Only send audio to recognition after a silence gap is detected. Disable this if speaker transcription stops or shows 'speech recognition request failed' during continuous game/voice audio."
@@ -564,7 +564,7 @@ vr_panel:
         types_unavailable: "No processing types available. Check the selected device."
         prepare_model: "No downloaded models. Download one in PC settings."
         unavailable: "Unavailable. Check settings on your PC."
-        speaker_adjustments: "Adjust phrase timing and retained words"
+        speaker_adjustments: "Adjust phrase timing and max phrases"
         ui_log: "VR UI log window"
         subtitle_overlay: "Subtitle overlays (single / multiple lines)"
         decrease: "Decrease {{label}}"

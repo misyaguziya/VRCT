@@ -257,8 +257,8 @@ config_page:
             label: "转录间隔"
             desc: "在经过设定的时间后执行转录"
         mic_max_phrase:
-            label: "麦克风发送时的最小单词数"
-            desc: "转录字数的下限,只有超过这个数字,才会记录翻译结果并发送到VRC"
+            label: "麦克风最大短语数"
+            desc: "转录结果(短语)在队列中保留的最大数量。超出部分会从最旧的开始被丢弃,不会发送到VRChat。"
         mic_word_filter:
             label: "单词过滤器"
             desc: "检测出被记录的单词时,不会发送这段话\n如要添加多个单词,可以用逗号来分割\n※不会记录重复的单词"
@@ -271,8 +271,8 @@ config_page:
             label: "转录间隔"
             desc: "在经过设定的时间后执行转录"
         speaker_max_phrase:
-            label: "语音接收时的最小单词数"
-            desc: "转录字数的下限,只有超过这个数字,才会记录转录结果"
+            label: "扬声器最大短语数"
+            desc: "转录结果(短语)在队列中保留的最大数量。超出部分会从最旧的开始被丢弃,不会显示在日志中。"
         select_transcription_engine:
             label: "语音识别使用的引擎"
         whisper_weight_type:
@@ -558,7 +558,7 @@ vr_panel:
         types_unavailable: "没有可用的处理类型。请检查所选设备。"
         prepare_model: "尚未准备模型。请在电脑设置中下载。"
         unavailable: "无法使用。请检查电脑设置。"
-        speaker_adjustments: "调整分段与保留词数"
+        speaker_adjustments: "调整分段与最大短语数"
         ui_log: "VR UI 日志窗口"
         subtitle_overlay: "字幕浮层（单行／多行）"
         decrease: "减少{{label}}"
