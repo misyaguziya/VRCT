@@ -12,9 +12,9 @@
     "vite-preview": "vite preview",
     "tauri": "tauri",
     "tauri-dev": "tauri dev",
-    "task-kill": "python utils\\task_kill.py",
-    "clean": "python utils\\clean.py",
-    "clean-soft": "python utils\\clean.py --soft",
+    "task-kill": "taskkill /IM VRCT-sidecar.exe /F >nul 2>&1 || exit 0",
+    "clean": "node utils/clean.js",
+    "clean-soft": "node utils/clean.js --soft",
     "dev": "npm run task-kill && npm run clean && npm run build-sidecar && npm run dev-ui",
     "dev-cuda": "npm run task-kill && npm run clean && npm run build-sidecar-cuda && npm run dev-ui",
     "dev-fast": "npm run task-kill && npm run sidecar-dev && npm run dev-ui",
@@ -22,8 +22,8 @@
     "analyze-error": "node utils/analyze_ui_error.js",
     "build": "npm run task-kill && npm run clean && npm run build-sidecar && npm run vite-build && npm run tauri build",
     "build-cuda": "npm run task-kill && npm run clean && npm run build-sidecar-cuda && npm run vite-build && npm run tauri build",
-    "release": "npm run build && python utils\\zip.py --zip_name VRCT.zip",
-    "release-cuda": "npm run build-cuda && python utils\\zip.py --zip_name VRCT_cuda.zip",
+    "release": "npm run build && cd native && cargo run -q --release -p xtask -- release-zip --out ../VRCT.zip",
+    "release-cuda": "npm run build-cuda && cd native && cargo run -q --release -p xtask -- release-zip --out ../VRCT_cuda.zip",
     "release-all": "npm run release && npm run release-cuda"
   },
   "dependencies": {

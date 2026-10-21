@@ -65,11 +65,6 @@ jobs:
         with:
           node-version: '22.15.0'
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -79,9 +74,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      - name: Install Python script dependencies
-        run: pip install tqdm
 
       - name: Build and package
         run: npm run release-all
@@ -109,8 +101,6 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         shell: pwsh
         run: |
-          pip install huggingface_hub==0.34.4
-
           $UPLOAD_DIR = "./hf_upload_temp"
           New-Item -ItemType Directory -Force -Path $UPLOAD_DIR
           Copy-Item -Path ./VRCT.zip -Destination "$UPLOAD_DIR/VRCT.zip"
@@ -119,9 +109,13 @@ jobs:
           Copy-Item -Path ${{ steps.sha256.outputs.gpu_zip_sha_path }} -Destination "$UPLOAD_DIR/VRCT_cuda.zip.sha256"
           Copy-Item -Path "./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe" -Destination "$UPLOAD_DIR/VRCT_setup.exe"
 
-          hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ${{ steps.channel.outputs.hf_repo }} $UPLOAD_DIR
+          # reads HF_TOKEN; uploads the folder's files to the repo root as one commit
+          npx --yes @huggingface/hub@2.17.8 upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ${{ steps.channel.outputs.hf_repo }} $UPLOAD_DIR
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          hf repo tag create ${{ steps.channel.outputs.hf_repo }} ${{ github.ref_name }} --repo-type model --message "Release ${{ github.ref_name }}"
+          # the hfjs CLI has no tag command: POST /api/models/<repo>/tag/<revision> (what huggingface_hub's create_tag calls)
+          $body = @{ tag = "${{ github.ref_name }}"; message = "Release ${{ github.ref_name }}" } | ConvertTo-Json
+          Invoke-RestMethod -Method Post -Uri "https://huggingface.co/api/models/${{ steps.channel.outputs.hf_repo }}/tag/main" -Headers @{ Authorization = "Bearer $env:HF_TOKEN" } -ContentType "application/json" -Body $body
 
           Remove-Item -Recurse -Force $UPLOAD_DIR
 
