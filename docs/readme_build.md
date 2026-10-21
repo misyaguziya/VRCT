@@ -17,7 +17,7 @@
 ### 必須ソフトウェア
 
 - **Node.js** (npm含む)
-- **Python 3.x** (ZIP 作成・プロセス終了・クリーンアップ・ライセンス表の生成の補助スクリプト用)
+- **Python 3.x** (Rust のクレートのライセンス表 `tools/collect_rust_licenses.py` の生成用。開発・ビルド・リリースには不要)
 - **Rust** (Tauri とバックエンド用。MSVC ツールチェーン)
 - **Git**
 
@@ -263,11 +263,6 @@ jobs:
 				with:
 					node-version: '20'
 
-			- name: Setup Python
-				uses: actions/setup-python@v5
-				with:
-					python-version: '3.11'
-
 			- name: Setup Rust
 				uses: dtolnay/rust-toolchain@stable
 
@@ -281,7 +276,7 @@ jobs:
 
 			- name: Package ZIP (CPU)
 				run: |
-					python utils/zip.py --zip_name VRCT.zip
+					cd native && cargo run -q --release -p xtask -- release-zip --out ../VRCT.zip
 
 			- name: Read version from package.json
 				id: pkg
@@ -315,7 +310,7 @@ jobs:
 - アーティファクトのパスは既定構成に合わせています：
 	- インストーラー: `src-tauri/target/release/bundle/nsis/`
 	- ZIP: ルート直下の `VRCT.zip`
-- CUDA版も同様にビルドする場合は、`npm run build-cuda` と `python utils/zip.py --zip_name VRCT_cuda.zip` を追加して、別アーティファクト名でアップロード・添付してください。
+- CUDA版も同様にビルドする場合は、`npm run build-cuda` と `cd native && cargo run -q --release -p xtask -- release-zip --out ../VRCT_cuda.zip` を追加して、別アーティファクト名でアップロード・添付してください。
 
 ## ユーティリティコマンド
 
@@ -364,10 +359,8 @@ VRCT/
 │   └── target/           # Tauriビルド出力（生成）
 ├── src-ui/               # Reactフロントエンドソースコード
 ├── utils/                # ユーティリティスクリプト
-│   ├── clean.py         # クリーンアップスクリプト
+│   ├── clean.js         # クリーンアップスクリプト
 │   ├── dev_sidecar/     # dev-fast用の、配置済みバックエンドを起動するラッパー(Rust)
-│   ├── task_kill.py     # プロセス終了スクリプト
-│   └── zip.py           # ZIPパッケージング
 └── package.json          # Node.js設定とバージョン管理 (版はここだけ)
 ```
 

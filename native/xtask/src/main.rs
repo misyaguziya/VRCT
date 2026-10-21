@@ -1,6 +1,8 @@
 //! cargo xtask fetch-native [--cuda]
 //! cargo xtask stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <weights folder>]
 //!   (the installed layout; --weights makes a junction: the sidecar reads the weights from beside it)
+//! cargo xtask release-zip --out <zip>
+//!   (VRCT.exe, VRCT-sidecar.exe and _internal/ of src-tauri/target/release, for the updater: the layout of the installed folder)
 //!
 //! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
 //! SHA-256 を照合し、指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
@@ -324,6 +326,49 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     Ok(())
 }
 
+/// A release zip of src-tauri/target/release: the two exes at the top, _internal/ with its files (no directory entries).
+fn release_zip(out: &Path) -> Result<()> {
+    fn collect(dir: &Path, prefix: &str, files: &mut Vec<(PathBuf, String)>) -> Result<()> {
+        let mut entries = fs::read_dir(dir)?.collect::<std::io::Result<Vec<_>>>()?;
+        entries.sort_by_key(|e| e.file_name());
+        for e in entries {
+            let name = format!("{prefix}/{}", e.file_name().to_string_lossy());
+            if e.file_type()?.is_dir() { collect(&e.path(), &name, files)?; } else { files.push((e.path(), name)); }
+        }
+        Ok(())
+    }
+    let release = native_dir().parent().context("repo root")?.join("src-tauri/target/release");
+    let mut files = Vec::new();
+    for exe in ["VRCT.exe", "VRCT-sidecar.exe"] {
+        files.push((release.join(exe), exe.to_string()));
+    }
+    collect(&release.join("_internal"), "_internal", &mut files)?;
+    let mut total = 0u64;
+    for (p, _) in &files {
+        total += fs::metadata(p).with_context(|| format!("{}", p.display()))?.len();
+    }
+    let mut zip = zip::ZipWriter::new(std::io::BufWriter::new(fs::File::create(out)?));
+    let opts = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    let (mut done, mut shown, mut buf) = (0u64, u64::MAX, vec![0u8; 1 << 20]);
+    for (path, name) in &files {
+        let mut f = fs::File::open(path)?;
+        zip.start_file(name.as_str(), opts.large_file(f.metadata()?.len() >= 1 << 32))?;
+        loop {
+            let n = f.read(&mut buf)?;
+            if n == 0 { break; }
+            zip.write_all(&buf[..n])?;
+            done += n as u64;
+            if done * 100 / total.max(1) != shown {
+                shown = done * 100 / total.max(1);
+                eprint!("\r{} {shown:3}% ({} / {} MB)", out.display(), done >> 20, total >> 20);
+            }
+        }
+    }
+    zip.finish()?;
+    eprintln!("\n{} files -> {}", files.len(), out.display());
+    Ok(())
+}
+
 fn arg(args: &[String], flag: &str) -> Option<String> {
     args.iter().position(|a| a == flag).and_then(|i| args.get(i + 1)).cloned()
 }
@@ -337,6 +382,7 @@ fn main() -> Result<()> {
                                                args.iter().any(|a| a == "--cuda"),
                                                &arg(&args, "--exe-name").unwrap_or_else(|| "VRCT-sidecar.exe".into()),
                                                arg(&args, "--weights").map(PathBuf::from)),
-        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>]"),
+        Some("release-zip") => release_zip(&PathBuf::from(arg(&args, "--out").context("--out <zip>")?)),
+        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>] | release-zip --out <zip>"),
     }
 }
