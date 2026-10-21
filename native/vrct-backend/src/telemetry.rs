@@ -1,4 +1,4 @@
-//! Telemetry (src-python/models/telemetry + the aptabase 0.1.0 SDK it wraps): "app_started" once a
+//! Telemetry (models/telemetry of the removed Python backend + the aptabase 0.1.0 SDK it wraps): "app_started" once a
 //! day and "error" once a day per error code, deduplicated with the state file v3.6.x wrote
 //! (telemetry_state.json). Events are queued and sent in batches of up to 25 every 10 s and at shutdown.
 //!

@@ -101,12 +101,12 @@ You can opt out of telemetry in the app settings at any time. See the [Aptabase 
 
 VRCT is released under the [MIT License](/LICENSE), with one exception: the
 chat-bubble detection model used by the OCR feature
-(`src-python/models/ocr/onnx/chatbox_yolox_tiny.onnx`) is covered by a
+(`native/data/ocr/chatbox_yolox_tiny.onnx`) is covered by a
 **VRCT-only license**. You may run it as part of VRCT, and in a fork while
 you develop, test or contribute to VRCT — forking the repository with the
 model inside it is fine. You may not ship it in a fork's own release, use
 it in unrelated software, redistribute it on its own, or derive models from
-it. See [LICENSE.en.txt](/src-python/models/ocr/onnx/LICENSE.en.txt) for
+it. See [LICENSE.en.txt](/native/data/ocr/LICENSE.en.txt) for
 the terms and [NOTICE.md](/NOTICE.md) for the scope. VRCT builds and runs
 without the model; only chat-bubble detection becomes unavailable, and the
 training procedure is published in

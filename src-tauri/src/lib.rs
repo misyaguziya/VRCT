@@ -9,12 +9,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 // 隠れたウィンドウの描画停止を無効にする (VRパネルは画面外に置いて撮影するため)。
 const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding";
 
-// VRオーバーレイに映す画面。Python側 (models/overlay) がタイトルで見つけて撮影・入力する。
+// VRオーバーレイに映す画面。バックエンド (vrct-overlay) がタイトルで見つけて撮影・入力する。
 // VR UI が ON の間だけ作る (set_vr_panel_window)。OFF の間も動かしておくと、使わない人にも負荷がかかる
 fn create_vr_panel_window<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<()> {
     let window = WebviewWindowBuilder::new(manager, "vr_panel", WebviewUrl::App("vr.html".into()))
         .title("VRCT VR Panel")
-        // 既定の並び (src-ui/views/vr/vr_layout.json の atlas)。ログの大きさを変えると Python が合わせて変える
+        // 既定の並び (src-ui/views/vr/vr_layout.json の atlas)。ログの大きさを変えるとバックエンドが合わせて変える
         .inner_size(1690.0, 880.0)
         .decorations(false)
         .resizable(false)
