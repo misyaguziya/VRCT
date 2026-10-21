@@ -1,5 +1,5 @@
 //! The parts of CPython 3.11's audioop that VRCT uses (ratecv, lin2lin, bias, tomono), integer for
-//! integer, and PcmAudio's conversions (src-python/models/transcription/pcm_audio.py) with the WAV
+//! integer, and PcmAudio's conversions (pcm_audio.py of the removed Python backend) with the WAV
 //! file the `wave` module writes.
 
 /// Sample `i` of `width` bytes, signed, scaled to 32 bits (GETSAMPLE32)

@@ -1,4 +1,4 @@
-//! Speech segments from VAD probabilities (src-python/models/transcription/audio_vad.py:
+//! Speech segments from VAD probabilities (audio_vad.py of the removed Python backend:
 //! VadSegmenter and VadRecognizerAdapter): pre-roll, start after `min_speech_frames` positive
 //! frames, end after `hangover_frames` frames below the negative threshold (the anchor, not a
 //! decaying counter), and a forced split at `max_speech_frames` that keeps the VAD state.
