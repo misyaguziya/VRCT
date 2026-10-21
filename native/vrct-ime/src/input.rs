@@ -56,12 +56,11 @@ pub enum Key {
     PageDown,
 }
 
-/// The word being composed (Japanese, Chinese): as shown, the segment being chosen and the caret
+/// The word being composed (Japanese, Chinese): as shown, and the segment being chosen
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Composition {
     pub preedit: String,
     pub selection: (usize, usize),
-    pub cursor: usize,
 }
 
 /// Everything the keyboard shows
@@ -79,8 +78,8 @@ pub struct State {
     pub converting: bool,
     pub page: usize,
     pub last_page: bool,
-    /// Korean: the syllable being made and its jamo
-    pub syllable: Option<(String, Vec<char>)>,
+    /// Korean: the syllable being made (at the cursor)
+    pub syllable: Option<String>,
     /// characters of the text (both sides of the cursor) and what is being composed (VRChat's chat box takes 144)
     pub length: usize,
 }
@@ -110,11 +109,6 @@ impl<'r> Input<'r> {
 
     pub fn language(&self) -> Language {
         self.language
-    }
-
-    /// The language can be typed now (Japanese and Chinese need the dictionaries)
-    pub fn available(&self, language: Language) -> bool {
-        language.schema().is_none() || self.rime.is_some()
     }
 
     fn select_schema(&self) {
@@ -186,15 +180,16 @@ impl<'r> Input<'r> {
                 Key::Left | Key::Right => self.move_cursor(key == Key::Left),
                 _ => {}
             },
+            // the syllables done go into the text at once; the one being made is at the cursor
             Language::Korean => match key {
-                Key::Char(c) => self.hangul.input(jamo_of_key(c).unwrap_or(c)),
-                Key::Space => self.hangul.input(' '),
+                Key::Char(c) => self.text += &self.hangul.input(jamo_of_key(c).unwrap_or(c)),
+                Key::Space => self.text += &self.hangul.input(' '),
                 Key::Backspace => {
                     if !self.hangul.backspace() {
                         self.text.pop();
                     }
                 }
-                // the syllable being made is written first, then the cursor moves
+                // the syllable being made is finished first, then the cursor moves
                 Key::Left | Key::Right => {
                     self.text += &self.hangul.take();
                     self.move_cursor(key == Key::Left);
@@ -273,7 +268,7 @@ impl<'r> Input<'r> {
     }
 
     /// The cursor to this character of the text (the input box pressed there). Not while a word is
-    /// being composed (it is chosen first); Korean's syllable being made is written first
+    /// being composed (it is chosen first); Korean's syllable being made is finished first
     pub fn set_cursor(&mut self, index: usize) {
         if self.composing() {
             return;
@@ -319,7 +314,7 @@ impl<'r> Input<'r> {
     }
 
     /// Text from elsewhere (what the microphone heard) at the cursor, with a space between words
-    /// of Latin letters; what is being composed stays after it (Korean's syllables are written first)
+    /// of Latin letters; what is being composed stays after it (Korean's syllable is finished first)
     pub fn append(&mut self, text: &str) {
         self.text += &self.hangul.take();
         let text = text.trim();
@@ -353,7 +348,7 @@ impl<'r> Input<'r> {
             let c = s.context();
             if !c.preedit.is_empty() {
                 composed = c.preedit.chars().count();
-                state.composition = Some(Composition { preedit: c.preedit, selection: c.selection, cursor: c.cursor });
+                state.composition = Some(Composition { preedit: c.preedit, selection: c.selection });
                 state.candidates = c.candidates;
                 state.highlighted = c.highlighted;
                 state.converting = self.converting;
@@ -362,25 +357,22 @@ impl<'r> Input<'r> {
             }
         }
         if self.language == Language::Korean {
-            // the syllables done are text; the one being made shows after it
-            state.text += self.hangul.written();
             state.syllable = self.hangul.composing();
-            composed = state.syllable.as_ref().map_or(0, |(s, _)| s.chars().count());
+            composed = state.syllable.as_ref().map_or(0, |s| s.chars().count());
         }
         state.length = state.text.chars().count() + state.after.chars().count() + composed;
         state
     }
 }
 
-/// The punctuation the keyboard types, as Japanese / Chinese text writes it (the rest as typed)
+/// The punctuation the keyboard types, as Japanese / Chinese text writes it (keys.yaml; the rest as typed)
 fn full_width(language: Language, c: char) -> char {
-    let table: &[(char, char)] = match language {
-        Language::Japanese => &[(',', '、'), ('.', '。'), ('?', '？'), ('!', '！'), ('[', '「'), (']', '」'), ('/', '・'), ('~', '〜')],
-        Language::Chinese => &[(',', '，'), ('.', '。'), ('?', '？'), ('!', '！'), ('[', '「'), (']', '」'), (';', '；'), (':', '：'),
-                               ('(', '（'), (')', '）'), ('\\', '、')],
-        _ => &[],
+    let table = match language {
+        Language::Japanese => "ja",
+        Language::Chinese => "zh",
+        _ => return c,
     };
-    table.iter().find(|(from, _)| *from == c).map_or(c, |(_, to)| *to)
+    crate::keys::mapped(&["punctuation", table], c).unwrap_or(c)
 }
 
 #[cfg(test)]
@@ -410,10 +402,18 @@ mod tests {
         typed(&mut i, "dkssudgktpd");
         let s = i.state();
         assert_eq!(s.text, "안녕하");
-        assert_eq!(s.syllable, Some(("셍".to_string(), vec!['ㅅ', 'ㅔ', 'ㅇ'])));
+        assert_eq!(s.syllable.as_deref(), Some("셍"));
         assert_eq!(s.length, 4);
         typed(&mut i, "y");
         assert_eq!(i.take(), "안녕하세요");
+        // Backspace: a jamo of the syllable being made, then whole syllables done
+        typed(&mut i, "gksrmf");
+        for _ in 0..3 {
+            i.key(Key::Backspace);
+        }
+        assert_eq!((i.state().text.as_str(), i.state().syllable), ("한", None));
+        i.key(Key::Backspace);
+        assert_eq!(i.take(), "");
     }
 
     #[test]
@@ -507,8 +507,6 @@ mod tests {
     #[test]
     fn japanese_waits_for_the_dictionaries() {
         let mut i = Input::new(Language::Japanese);
-        assert!(!i.available(Language::Japanese));
-        assert!(i.available(Language::English));
         typed(&mut i, "nihongo");
         assert_eq!(i.state(), State::default());
     }

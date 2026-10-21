@@ -3753,7 +3753,7 @@
       "pushes": false
     },
     {
-      "name": "keyboard: Korean jamo",
+      "name": "keyboard: Korean syllable being made",
       "endpoint": "/run/keyboard_key",
       "data": "g",
       "raw_data": null,
@@ -4737,7 +4737,6 @@
     "/get/data/keyboard_state": {
       "status": "",
       "progress": 0,
-      "language": "",
       "text": "",
       "after": "",
       "composition": null,
@@ -4764,7 +4763,9 @@
       "endpoint": "/get/data/selected_tab_no",
       "status": 200,
       "result": "1",
-      "pushes": [],
+      "pushes": [
+        "/run/selected_speaker_device"
+      ],
       "push_results": [],
       "ms": 0
     },
@@ -10580,7 +10581,6 @@
       "result": {
         "status": "",
         "progress": 0,
-        "language": "",
         "text": "",
         "after": "",
         "composition": null,
@@ -10603,7 +10603,6 @@
       "result": {
         "status": "",
         "progress": 0,
-        "language": "",
         "text": "",
         "after": "",
         "composition": null,
@@ -10660,7 +10659,6 @@
       "result": {
         "status": "",
         "progress": 0,
-        "language": "",
         "text": "",
         "after": "",
         "composition": null,
@@ -10717,7 +10715,6 @@
       "result": {
         "status": "",
         "progress": 0,
-        "language": "",
         "text": "",
         "after": "",
         "composition": null,
@@ -10745,13 +10742,12 @@
       "ms": 0
     },
     {
-      "name": "keyboard: Korean jamo",
+      "name": "keyboard: Korean syllable being made",
       "endpoint": "/run/keyboard_key",
       "status": 200,
       "result": {
         "status": "",
         "progress": 0,
-        "language": "",
         "text": "",
         "after": "",
         "composition": null,
@@ -10760,12 +10756,7 @@
         "converting": false,
         "page": 0,
         "last_page": false,
-        "syllable": {
-          "text": "",
-          "jamo": [
-            ""
-          ]
-        },
+        "syllable": "",
         "length": 0
       },
       "pushes": [],
@@ -10779,7 +10770,6 @@
       "result": {
         "status": "",
         "progress": 0,
-        "language": "",
         "text": "",
         "after": "",
         "composition": null,

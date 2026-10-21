@@ -26,7 +26,6 @@ mod index {
     pub const GET_CONTEXT: usize = 24;
     pub const FREE_CONTEXT: usize = 25;
     pub const SET_OPTION: usize = 28;
-    pub const GET_OPTION: usize = 29;
     pub const SELECT_SCHEMA: usize = 35;
     pub const GET_INPUT: usize = 70;
     pub const GET_VERSION: usize = 73;
@@ -38,15 +37,12 @@ mod index {
 pub mod keys {
     pub const BACKSPACE: i32 = 0xff08;
     pub const RETURN: i32 = 0xff0d;
-    pub const ESCAPE: i32 = 0xff1b;
     pub const LEFT: i32 = 0xff51;
     pub const RIGHT: i32 = 0xff53;
     pub const DOWN: i32 = 0xff54;
     pub const PAGE_UP: i32 = 0xff55;
     pub const PAGE_DOWN: i32 = 0xff56;
     pub const SPACE: i32 = 0x20;
-    /// the modifier mask of a Shift press
-    pub const SHIFT_MASK: i32 = 1;
 }
 
 #[repr(C)]
@@ -223,7 +219,6 @@ pub struct Context {
     pub preedit: String,
     /// the segment being converted, in `preedit`'s characters (not bytes)
     pub selection: (usize, usize),
-    pub cursor: usize,
     pub candidates: Vec<String>,
     pub highlighted: usize,
     pub page: usize,
@@ -253,12 +248,6 @@ impl Session<'_> {
         let f: unsafe extern "C" fn(SessionId, *const c_char, Bool) = self.rime.f(index::SET_OPTION);
         let option = CString::new(option).unwrap_or_default();
         unsafe { f(self.id, option.as_ptr(), value as Bool) }
-    }
-
-    pub fn option(&self, option: &str) -> bool {
-        let f: unsafe extern "C" fn(SessionId, *const c_char) -> Bool = self.rime.f(index::GET_OPTION);
-        let option = CString::new(option).unwrap_or_default();
-        unsafe { f(self.id, option.as_ptr()) != 0 }
     }
 
     /// A key (an ASCII character or a `keys` keysym); true when RIME took it
@@ -317,7 +306,6 @@ impl Session<'_> {
             .collect();
         let context = Context {
             selection: (chars_at(&preedit, raw.composition.sel_start), chars_at(&preedit, raw.composition.sel_end)),
-            cursor: chars_at(&preedit, raw.composition.cursor_pos),
             candidates,
             highlighted: menu.highlighted_candidate_index.max(0) as usize,
             page: menu.page_no.max(0) as usize,

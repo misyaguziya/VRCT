@@ -7,13 +7,16 @@ import { useVr } from "@logics_configs";
 import KeyboardSvg from "@images/mui_keyboard_alt.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import { VrWindow } from "./VrWindow";
+import { GAP, charsOf, layoutOf, legendOf, widthOf } from "./keyboard_layout";
+import { loadKeySounds, playKeySound } from "./keyboard_sounds";
 import styles from "./VrKeyboardWindow.module.scss";
 
 // VRキーボード。変換はバックエンド (vrct-ime: 日本語・中国語は RIME、韓国語は字母の組み立て) が行い、
 // ここはキーを送って、返ってきた表示 (KeyboardState) を描くだけ。
 // キーは押した瞬間 (mousedown) に送る (離すまで待つと、指すのがずれて別のキーになる)。
 // 変換していないときの ↵ は、選んでいる送る先 (KeyboardSendTo) へ送る (バックエンドが決める)
-const LANGUAGES = [["ja", "日本語"], ["en", "English"], ["ko", "한국어"], ["zh", "中文"]];
+// 言語の一覧 (中国語は簡体字・繁体字を別の項目にして、その後ろに並べる)
+const LANGUAGES = [["ja", "日本語"], ["en", "English"], ["ko", "한국어"]];
 // 言語キーの字 (中国語は簡・繁)
 const LANGUAGE_MARK = { ja: "あ", ko: "한", en: "A" };
 const CHAT_MAX = 144; // VRChat のチャットボックスの文字数
@@ -22,94 +25,13 @@ const COUNTER_FROM = 120;
 const SENT_FEEDBACK_MS = 2500;
 // Shift をこの間に2回押すとロック
 const SHIFT_LOCK_MS = 400;
-// 不透明度の切り替え (ログの窓と同じ段階)
-const OPACITY_STEPS = [1.0, 0.8, 0.6, 0.4];
-
-// 2ボル式: 英字キーの字母 (Shift で濃音と ㅒ ㅖ)
-const KOREAN = Object.fromEntries([..."qwertyuiopasdfghjklzxcvbnm"].map((c, i) => [c, [..."ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔㅁㄴㅇㄹㅎㅗㅓㅏㅣㅋㅌㅊㅍㅠㅜㅡ"][i]]));
-const KOREAN_SHIFT = { q: "ㅃ", w: "ㅉ", e: "ㄸ", r: "ㄲ", t: "ㅆ", o: "ㅒ", p: "ㅖ" };
-
-// キーの並び: 日本語は JIS 配列、英語・中国語・韓国語は US 配列 (韓国語は KS X 5002、並びは US と同じ)。
-// 文字のキーは "通常 Shift" の2文字 (英字は1文字: Shift で大文字)。Tab・Caps Lock・Ctrl・Alt は置かず、
-// その分は空ける (文字のキーの位置は実際のキーボードと同じ)。1段は 15 キー分。
-// 矢印はノートパソコンのように一番下の段の右端に
-// { gap }: 空き、{ special }: 文字以外のキー (w はキー何個分)
-const LETTERS_1 = [..."qwertyuiop"];
-const LETTERS_2 = [..."asdfghjkl"];
-const LETTERS_3 = [..."zxcvbnm"];
-const JIS = [
-    [{ special: "toggle", w: 1 }, "1!", "2\"", "3#", "4$", "5%", "6&", "7'", "8(", "9)", "0", "-=", "^~", "¥|", { special: "backspace", w: 1 }],
-    // Enter は2段にまたがる L 字 (上の段の 1.5 キー分と、下の段の 1.25 キー分を1つのキーに見せる)
-    [{ gap: 1.5 }, ...LETTERS_1, "@`", "[{", { special: "enter_top", w: 1.5 }],
-    [{ gap: 1.75 }, ...LETTERS_2, ";+", ":*", "]}", { special: "enter_bottom", w: 1.25 }],
-    [{ special: "shift", w: 2.25 }, ...LETTERS_3, ",<", ".>", "/?", "\\_", { special: "shift", w: 1.75 }],
-];
-const US = [
-    ["`~", "1!", "2@", "3#", "4$", "5%", "6^", "7&", "8*", "9(", "0)", "-_", "=+", { special: "backspace", w: 2 }],
-    [{ gap: 1.5 }, ...LETTERS_1, "[{", "]}", "\\|"],
-    [{ gap: 1.75 }, ...LETTERS_2, ";:", "'\"", { special: "enter", w: 2.25 }],
-    [{ special: "shift", w: 2.25 }, ...LETTERS_3, ",<", ".>", "/?", { special: "shift", w: 2.75 }],
-];
 // 全消去は続けてもう1回押したときだけ (1回目から この間に)
 const CLEAR_CONFIRM_MS = 2000;
-const layoutOf = (language) => (language === "ja" ? JIS : US);
-// 文字のキーの (通常, Shift) の字
-const charsOf = (spec) => (spec.length === 1 ? [spec, spec.toUpperCase()] : [spec[0], spec[1] ?? spec[0]]);
-// 日本語・中国語で、記号がどの字になるか (変換はバックエンドの vrct-ime が行う。ここは表示だけ)
-const SHOWN_AS = {
-    ja: { ",": "、", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", "/": "・", "~": "〜" },
-    zh: { ",": "，", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", ";": "；", ":": "：", "(": "（", ")": "）" },
-};
-// キー1つ分の間隔 (px): キー 72px + すき間 6px。15 キー分で 1164px (窓の中は 1168px)
-const PITCH = 78;
-const GAP = 6;
-const widthOf = (units) => units * PITCH - GAP;
-
-// キーの音: 実際のキーボードの1打ずつの録音 (出典は assets/sounds/keyboard/SOURCE.md)。Enter・BackSpace・Space・半/全 は
-// 決まった音、それ以外は残りから選ぶ (同じキーを続けて押した時は同じ音)。鳴らせない環境では何もしない
-const KEYPRESS_URLS = import.meta.glob("../assets/sounds/keyboard/keypress-*.wav", { eager: true, query: "?url", import: "default" });
-const keypressUrl = (number) => KEYPRESS_URLS[`../assets/sounds/keyboard/keypress-${number}.wav`];
-const FIXED_KEY_SOUNDS = { enter: keypressUrl("031"), backspace: keypressUrl("019"), space: keypressUrl("028"), toggle: keypressUrl("029") };
-const SCATTERED_KEY_SOUNDS = Object.values(KEYPRESS_URLS).filter((url) => !Object.values(FIXED_KEY_SOUNDS).includes(url));
-// 文字を打たない Shift と、半/全・◀ ▶・切り替え・タブなどは控えめに
-const KEY_SOUND_GAIN = { shift: 0.05, soft: 0.05, toggle: 0.05 };
-const KEY_SOUND_GAIN_DEFAULT = 0.1;
-let audio_context = null;
-const key_buffers = {};
-// 最後に鳴らしたキーとその音
-let last_key_sound = { id: undefined, url: null };
-const keyBuffer = (url) => key_buffers[url] ??= fetch(url).then((response) => response.arrayBuffer())
-    .then((data) => audio_context.decodeAudioData(data));
-// 最初の1打が遅れないよう、開いた時に読んでおく
-const loadKeySounds = () => {
-    try {
-        audio_context ??= new AudioContext();
-        Object.values(KEYPRESS_URLS).forEach((url) => keyBuffer(url).catch(() => delete key_buffers[url]));
-    } catch {
-        // 音が出せなくても入力は続ける
-    }
-};
-const playKeySound = (name, id) => {
-    try {
-        audio_context ??= new AudioContext();
-        if (audio_context.state === "suspended") audio_context.resume();
-        const same_key = id !== undefined && id === last_key_sound.id;
-        const url = FIXED_KEY_SOUNDS[name]
-            ?? (same_key ? last_key_sound.url : SCATTERED_KEY_SOUNDS[Math.floor(Math.random() * SCATTERED_KEY_SOUNDS.length)]);
-        last_key_sound = { id, url };
-        keyBuffer(url).then((buffer) => {
-            const source = audio_context.createBufferSource();
-            source.buffer = buffer;
-            source.playbackRate.value = 0.95 + Math.random() * 0.1; // 連打で同じ音に聞こえないよう少しずらす
-            const gain = audio_context.createGain();
-            gain.gain.value = KEY_SOUND_GAIN[name] ?? KEY_SOUND_GAIN_DEFAULT;
-            source.connect(gain).connect(audio_context.destination);
-            source.start();
-        }).catch(() => delete key_buffers[url]);
-    } catch {
-        // 音が出せなくても入力は続ける
-    }
-};
+// 不透明度の切り替え (ログの窓と同じ段階)
+const OPACITY_STEPS = [1.0, 0.8, 0.6, 0.4];
+// 言語を変えたとき、言語キーから一番遠いキー (キー約16個分) の字が変わり始めるまで
+const LANGUAGE_WAVE_MS = 100;
+const LANGUAGE_WAVE_KEYS = 16;
 
 // 押している間くり返す (←・◀ ▶)。離す・外れるで止まる
 const REPEAT_DELAY_MS = 500;
@@ -135,6 +57,54 @@ const useRepeat = () => {
     return { start, stop };
 };
 
+// Shift: 1回押すと次の1文字だけ ("once")、素早く2回でロック ("lock")。ロック中・次の1文字を待っている間に
+// もう1回で解除。左右は同じ状態
+const useShift = () => {
+    const [shift, setShift] = useState("off");
+    const pressed_at = useRef(0);
+    const press = () => {
+        const now = Date.now();
+        const quick = now - pressed_at.current < SHIFT_LOCK_MS;
+        pressed_at.current = now;
+        setShift(s => (s === "off" ? "once" : s === "once" && quick ? "lock" : "off"));
+    };
+    // 1文字打った: 1回押しの Shift はそこで外れる
+    const used = () => {
+        if (shift === "once") setShift("off");
+    };
+    return { shift, is_shift: shift !== "off", press, used };
+};
+
+// 2回押しで実行するもの (全消去): 1回目で構え (armed)、within_ms の間にもう1回で実行。間があけば戻る
+// (VR で間違えて押しても消えない)
+const useConfirm = (action, within_ms) => {
+    const [armed, setArmed] = useState(false);
+    useEffect(() => {
+        if (!armed) return undefined;
+        const timer = setTimeout(() => setArmed(false), within_ms);
+        return () => clearTimeout(timer);
+    }, [armed, within_ms]);
+    const press = () => {
+        if (!armed) return setArmed(true);
+        setArmed(false);
+        action();
+    };
+    return { armed, press };
+};
+
+// 印字が変わるときの動き: Shift のオン・オフ ("shift_on" / "shift_off")、言語の切り替え ("language")。
+// 動くのは字が変わったキーだけ (変わった字は作り直され、その時の動きで現れる: Legend)。
+// 入力は押した瞬間に変わっていて、見た目だけが追いつく
+const useLegendMotion = (is_shift, language) => {
+    const motion = useRef({ is_shift, language, kind: null });
+    if (motion.current.language !== language) motion.current = { is_shift, language, kind: "language" };
+    else if (motion.current.is_shift !== is_shift) motion.current = { is_shift, language, kind: is_shift ? "shift_on" : "shift_off" };
+    return motion.current.kind;
+};
+
+// 言語キー (左下) から、ある段のキーの中心 (左端からキー何個分) までの距離で、字が変わり始めるまで
+const waveDelay = (x, rows_above) => `${Math.round(Math.hypot(x, rows_above) / LANGUAGE_WAVE_KEYS * LANGUAGE_WAVE_MS)}ms`;
+
 export const VrKeyboardWindow = ({ onClose }) => {
     const { t } = useI18n();
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -143,43 +113,48 @@ export const VrKeyboardWindow = ({ onClose }) => {
         currentIsEnabledKeyboardDictation, toggleIsEnabledKeyboardDictation, currentKeyboardOpacity, setKeyboardOpacity } = useVr();
     const { currentKeyboardSendResult } = useKeyboard();
     const repeat = useRepeat();
+    const { shift, is_shift, press: pressShift, used: shiftUsed } = useShift();
+    const clear = useConfirm(() => asyncStdoutToPython("/run/keyboard_clear"), CLEAR_CONFIRM_MS);
     const state = currentKeyboardState.data;
     const language = currentKeyboardLanguage.data;
     const send_to = currentKeyboardSendTo.data;
-    // Shift: 1回押すと次の1文字だけ、素早く2回でロック (ロック中・次の1文字を待っている間にもう1回で解除)。左右は同じ状態
-    const [shift, setShift] = useState("off");
-    const shift_pressed_at = useRef(0);
+    const motion = useLegendMotion(is_shift, language);
     // 英字との切り替えキーで戻る言語
     const before_english = useRef("ja");
+    // 開いている一覧: "language" (左下の言語キー) / "settings" (タイトルバーの不透明度の印) / null
+    const [menu, setMenu] = useState(null);
 
     const needs_dictionary = language === "ja" || language === "zh";
     const is_ready = !needs_dictionary || state.status === "ready";
     const composing = state.composition !== null;
-    const is_shift = shift !== "off";
+    const sound_on = currentIsEnabledKeyboardKeySound.data === true;
+    const dictating = currentIsEnabledKeyboardDictation.data === true;
+    const simplified_on = currentIsEnabledKeyboardChineseSimplified.data === true;
+    const opacity = Number(currentKeyboardOpacity.data);
 
     useEffect(() => {
-        if (currentIsEnabledKeyboardKeySound.data === true) loadKeySounds();
-    }, [currentIsEnabledKeyboardKeySound.data]);
+        if (sound_on) loadKeySounds();
+    }, [sound_on]);
 
-    // id: どのキーか (同じキーを続けて押した時は同じ音にする)
+    // sound: 音の種類、id: どのキーか (同じキーを続けて押した時は同じ音にする)
     const press = (handler, sound = "key", id = undefined) => (event) => {
         if (event.button !== 0) return;
         event.preventDefault();
-        if (currentIsEnabledKeyboardKeySound.data === true) playKeySound(sound, id);
+        if (sound_on) playKeySound(sound, id);
         handler();
     };
     const sendKey = (key) => asyncStdoutToPython("/run/keyboard_key", key);
     // 入力欄の文を押した位置へカーソルを置く
     const placeCursorAt = (index) => {
-        if (currentIsEnabledKeyboardKeySound.data === true) playKeySound("soft", "cursor");
+        if (sound_on) playKeySound("soft", "cursor");
         asyncStdoutToPython("/run/keyboard_cursor", index);
     };
-    // 長押しでくり返すキー (← ◀ ▶): くり返すたびに音も鳴らす (最初の1回の音は press が鳴らす)
+    // 長押しでくり返すキー (← ◀ ▶): くり返すたびに音も鳴らす (最初の1回の音は press が鳴らす)。
     // id: 押したキーと同じ (同じキーの音のまま)
-    const repeatKey = (key, sound, id = key) => {
+    const repeatKey = (key, sound, id) => {
         let first = true;
         repeat.start(() => {
-            if (!first && currentIsEnabledKeyboardKeySound.data === true) playKeySound(sound, id);
+            if (!first && sound_on) playKeySound(sound, id);
             first = false;
             sendKey(key);
         });
@@ -187,39 +162,17 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const typeChar = (spec) => {
         const [normal, shifted] = charsOf(spec);
         sendKey(is_shift ? shifted : normal);
-        if (shift === "once") setShift("off");
-    };
-    const pressShift = () => {
-        const now = Date.now();
-        const quick = now - shift_pressed_at.current < SHIFT_LOCK_MS;
-        shift_pressed_at.current = now;
-        setShift(s => (s === "off" ? "once" : s === "once" && quick ? "lock" : "off"));
+        shiftUsed();
     };
     // ↵: Shift を1回押した後なら改行 (送らない)。ロック中・変換中はいつもの ↵ (送る・確定)
     const is_newline = shift === "once" && !composing;
     const pressEnter = () => {
         if (!is_newline) return sendKey("Enter");
         sendKey("\n");
-        setShift("off");
+        shiftUsed();
     };
-    // 全消去: 1回目で「もう一度で消す」にして、続けてもう1回で消す (VR で間違えて押しても消えない)
-    const [clear_armed, setClearArmed] = useState(false);
-    useEffect(() => {
-        if (!clear_armed) return undefined;
-        const timer = setTimeout(() => setClearArmed(false), CLEAR_CONFIRM_MS);
-        return () => clearTimeout(timer);
-    }, [clear_armed]);
-    const pressClear = () => {
-        if (!clear_armed) return setClearArmed(true);
-        setClearArmed(false);
-        asyncStdoutToPython("/run/keyboard_clear");
-    };
-    const dictating = currentIsEnabledKeyboardDictation.data === true;
-    const opacity = Number(currentKeyboardOpacity.data);
-    // 開いている一覧: "language" (左下の言語キー) / "settings" (タイトルバーの不透明度の印) / null
-    const [menu, setMenu] = useState(null);
     // 言語キーの字 (中国語は簡体字・繁体字のどちらか)
-    const language_mark = language === "zh" ? (currentIsEnabledKeyboardChineseSimplified.data === true ? "简" : "繁") : LANGUAGE_MARK[language];
+    const language_mark = language === "zh" ? (simplified_on ? "简" : "繁") : LANGUAGE_MARK[language];
     const changeLanguage = (code) => {
         if (code !== language) setKeyboardLanguage(code);
     };
@@ -232,30 +185,15 @@ export const VrKeyboardWindow = ({ onClose }) => {
         }
     };
 
-    // キーの印字: 大きい字 (今押すと入る字) と、左上の小さい字 (もう一方の字。Shift で入る / Shift を外すと入る)。
-    // 英字は大文字で印字 (実際のキーと同じ)。韓国語は字母 (濃音などのあるキーは Shift の字母も)。
-    // 日本語・中国語の記号は入る字で (、。「」 など)
-    // (\ は日本語の字体で ¥ に見えて ¥ のキーと区別できないので、どの言語でも ＼ と印字する)
-    const shown = (c) => SHOWN_AS[language]?.[c] ?? (c === "\\" ? "＼" : c);
-    const legendOf = (spec) => {
-        const [normal, shifted] = charsOf(spec);
-        if (language === "ko" && KOREAN[normal]) {
-            const tense = KOREAN_SHIFT[normal];
-            return { main: is_shift && tense ? tense : KOREAN[normal], sub: tense && (is_shift ? KOREAN[normal] : tense) };
-        }
-        if (spec.length === 1) return { main: is_shift ? shifted : normal.toUpperCase(), sub: null };
-        if (shifted === normal) return { main: shown(normal), sub: null };
-        return is_shift ? { main: shown(shifted), sub: shown(normal) } : { main: shown(normal), sub: shown(shifted) };
-    };
     // Space と ↵ は何も添えない (読み上げ用の名前だけ。↵ の送る先は入力欄の右端の印)
     const space_name = !composing ? t("vr_panel.keyboard.space")
         : language === "ja" ? t("vr_panel.keyboard.convert") : t("vr_panel.keyboard.select_first");
     const enter_name = composing ? t("vr_panel.keyboard.commit") : is_newline ? t("vr_panel.keyboard.newline") : t("vr_panel.keyboard.send_to");
-    // 1つのキー (文字・空き・文字以外)
-    const keyOf = (item, index) => {
+    // 1つのキー (文字・空き・文字以外)。delay: 言語を変えたとき、そのキーの字が変わり始めるまで
+    const keyOf = (item, index, delay) => {
         if (typeof item === "string") {
-            const { main, sub } = legendOf(item);
-            return <Key press={press} key={item} label={main} corner={sub} lang={language} aria={main}
+            const { main, sub } = legendOf(item, language, is_shift);
+            return <Key press={press} key={item} id={item} label={main} corner={sub} lang={language} aria={main} motion={motion} delay={delay}
                 onPress={() => typeChar(item)} disabled={!is_ready} />;
         }
         if (item.gap) return <span key={`gap-${index}`} className={styles.gap} style={{ width: widthOf(item.gap) }} aria-hidden="true" />;
@@ -263,7 +201,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
         switch (item.special) {
             case "backspace":
                 return <Key press={press} key="backspace" sound="backspace" label={<BackspaceIcon />} w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready}
-                    onPress={() => repeatKey("Backspace", "backspace")} onLeave={repeat.stop} />;
+                    onPress={() => repeatKey("Backspace", "backspace", "backspace")} onLeave={repeat.stop} />;
             case "enter":
                 return <Key press={press} key="enter" sound="enter" label={<EnterIcon />} w={w} kind="act" aria={enter_name}
                     onPress={pressEnter} disabled={!is_ready} />;
@@ -280,7 +218,8 @@ export const VrKeyboardWindow = ({ onClose }) => {
                     disabled={!is_ready} onMouseDown={press(pressShift, "shift", "shift")}><ShiftIcon locked={shift === "lock"} /></button>;
             // JIS の左上 (半角/全角): 英字との切り替え
             case "toggle":
-                return <Key press={press} key="toggle" sound="toggle" label="半/全" w={w} kind="mod" aria={t("vr_panel.keyboard.switch_english")} onPress={toggleEnglish} />;
+                return <Key press={press} key="toggle" sound="toggle" label="半/全" w={w} kind="mod" aria={t("vr_panel.keyboard.switch_english")} onPress={toggleEnglish}
+                    motion={motion} delay={delay} />;
             default:
                 return null;
         }
@@ -291,15 +230,13 @@ export const VrKeyboardWindow = ({ onClose }) => {
         <button key={key} type="button" className={styles.option} aria-pressed={selected} {...extra}
             onMouseDown={press(() => { setMenu(null); onPick(); }, "soft", key)}>{label}</button>
     );
-    const simplified_on = currentIsEnabledKeyboardChineseSimplified.data === true;
     // 言語の一覧 (左下の言語キーから)。中国語は簡体字・繁体字を別の項目に
     const pickChinese = (simplified) => {
         changeLanguage("zh");
         if (simplified !== simplified_on) toggleIsEnabledKeyboardChineseSimplified();
     };
     const language_menu = <div className={clsx(styles.menu, styles.language_menu)} role="menu" aria-label={t("vr_panel.keyboard.language")}>
-        {LANGUAGES.filter(([code]) => code !== "zh").map(([code, name]) => option(`language:${code}`, name, code === language,
-            () => changeLanguage(code), { lang: code }))}
+        {LANGUAGES.map(([code, name]) => option(`language:${code}`, name, code === language, () => changeLanguage(code), { lang: code }))}
         {option("language:zh-hans", "简体中文", language === "zh" && simplified_on, () => pickChinese(true), { lang: "zh-Hans" })}
         {option("language:zh-hant", "繁體中文", language === "zh" && !simplified_on, () => pickChinese(false), { lang: "zh-Hant" })}
     </div>;
@@ -342,7 +279,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
                 {menu === "settings" && settings_menu}
                 {menu === "language" && language_menu}
                 <div className={styles.top}>
-                    <Composition state={state} language={language} clear_armed={clear_armed} onClear={press(pressClear, "soft", "clear")}
+                    <Composition state={state} language={language} clear_armed={clear.armed} onClear={press(clear.press, "soft", "clear")}
                         send_to_button={send_to_button} onCursor={placeCursorAt} />
                 </div>
                 <div className={styles.middle}>
@@ -351,10 +288,17 @@ export const VrKeyboardWindow = ({ onClose }) => {
                     <SentFeedback result={currentKeyboardSendResult.data} />
                 </div>
                 <div className={clsx(styles.keys, { [styles.is_waiting]: !is_ready })} style={{ "--key_gap": `${GAP}px` }}>
-                    {layoutOf(language).map((row, r) => <div key={r} className={styles.row}>{row.map(keyOf)}</div>)}
+                    {layoutOf(language).map((row, r, rows) => {
+                        let x = 0;
+                        return <div key={r} className={styles.row}>{row.map((item, i) => {
+                            const w = item.w ?? item.gap ?? 1;
+                            x += w;
+                            return keyOf(item, i, waveDelay(x - w / 2, rows.length - r));
+                        })}</div>;
+                    })}
                     <div className={styles.row}>
                         {/* 言語: 今の言語の字だけを出し、押すと一覧 (準備中でも押せる: 英字に切り替えれば、その間も打てる) */}
-                        <Key press={press} sound="toggle" label={language_mark} w={widthOf(1.75)} kind="mod" extra={styles.mark} lang={language}
+                        <Key press={press} sound="toggle" label={language_mark} w={widthOf(1.75)} kind="mod" extra={styles.mark} lang={language} motion={motion}
                             aria={t("vr_panel.keyboard.language")} onPress={() => setMenu(m => (m === "language" ? null : "language"))} />
                         <Key press={press} sound="space" label="" w={widthOf(9)} kind="act" aria={space_name}
                             onPress={() => sendKey("Space")} disabled={!is_ready} />
@@ -396,14 +340,22 @@ const ShiftIcon = ({ locked }) => (
     </svg>
 );
 
-// label: 大きい字、corner: 左上の小さい字 (Shift の字)
-const Key = ({ press, label, corner, lang, w = widthOf(1), kind = "char", extra, sound = "key", aria, onPress, onLeave, disabled = false }) => (
-    <button type="button" className={clsx(styles.key, styles[kind], extra)} style={{ width: w }} aria-label={aria ?? label} lang={lang}
-        disabled={disabled} onMouseDown={press(onPress, sound, label)} onMouseLeave={onLeave}>
-        {corner && <span className={styles.key_corner} aria-hidden="true">{corner}</span>}
-        {label}
+// label: 大きい字、corner: 左上の小さい字 (Shift の字)。字は変わるたびに作り直す (変わった字だけが動く)。
+// id: 音の上でどのキーか (既定は印字。文字のキーは Shift で印字が変わるのでキーの並びの名前を渡す)
+const Key = ({ press, id, label, corner, lang, w = widthOf(1), kind = "char", extra, sound = "key", aria, onPress, onLeave, disabled = false, motion, delay }) => (
+    <button type="button" className={clsx(styles.key, styles[kind], extra)} style={{ width: w, "--delay": delay }} aria-label={aria ?? label} lang={lang}
+        disabled={disabled} onMouseDown={press(onPress, sound, id ?? label)} onMouseLeave={onLeave}>
+        {/* (key は大きい字と左上で別の名前: Shift で字が入れ替わるとき、同じ字として使い回されないように) */}
+        {corner && <Legend key={`corner:${corner}`} text={corner} className={styles.key_corner} motion={motion} aria-hidden="true" />}
+        {typeof label === "string" && label ? <Legend key={`label:${label}`} text={label} motion={motion} /> : label}
     </button>
 );
+
+// 字1つ。作られたときの動き (motion) で現れ、その後は変えない (変えると、変わっていない字まで動き直す)
+const Legend = ({ text, className, motion, ...rest }) => {
+    const [appear] = useState(motion);
+    return <span className={clsx(className, appear && styles[`appear_${appear}`])} {...rest}>{text}</span>;
+};
 
 // 打った文字と、変換中の語 (文節を選んでいるところを強調)。長くなったら終わりの方を見せる
 // 長くなると折り返し (最大4行)、入りきらなければ字を小さくする: 144文字まで全部見える
@@ -449,7 +401,7 @@ const Composition = ({ state, language, clear_armed, onClear, send_to_button, on
             { text: preedit.slice(start, end).join(""), className: styles.selection },
             { text: preedit.slice(end).join(""), className: styles.preedit },
         ] : []),
-        ...(state.syllable ? [{ text: state.syllable.text, className: styles.selection }] : []),
+        ...(state.syllable ? [{ text: state.syllable, className: styles.selection }] : []),
         { text: state.after ?? "" },
     ];
     const after_key = String(pieces.length - 1);

@@ -202,6 +202,16 @@
     &.is_waiting .key:disabled { opacity: 0.45; }
 }
 
+// 印字が変わったときの字の現れ方 (変わった字だけ)。Shift は下から差し替わり、戻りは上から短く。
+// 言語は言語キーから近い順に (--delay)、言語キーの字 (あ・A・한・简) は縦に回る
+.appear_shift_on { animation: legend_up 110ms ease-out; }
+.appear_shift_off { animation: legend_down 80ms ease-out; }
+.appear_language { animation: legend_up 140ms ease-out var(--delay, 0ms) backwards; }
+.key.mark .appear_language { animation: legend_flip 180ms ease-out; }
+@keyframes legend_up { from { opacity: 0.2; transform: translateY(5px); } }
+@keyframes legend_down { from { opacity: 0.2; transform: translateY(-5px); } }
+@keyframes legend_flip { from { opacity: 0; transform: perspective(200px) rotateX(90deg); } }
+
 // ▲ ▼: 1キー分の場所を上下に分ける (ノートパソコンの矢印キー)
 .updown {
     flex: none;

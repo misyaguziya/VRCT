@@ -1,0 +1,41 @@
+# What the VR keyboard's keys type besides themselves. One table for both sides: vrct-ime types
+# with it, the VR view (src-ui/views/vr/keyboard_layout.js) prints the keys with it, so the two
+# cannot drift apart. (One rule is vrct-ime's alone: right after a digit . and , go in as typed,
+# for 1.5 and 1,000, though the key shows the full-width mark)
+
+# Japanese and Chinese: punctuation as their text writes it (the rest as typed)
+punctuation:
+  ja: {",": "、", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", "/": "・", "~": "〜"}
+  zh: {",": "，", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", ";": "；", ":": "：", "(": "（", ")": "）",
+       "\\": "、"}
+
+# Korean, the 2-set (dubeolsik) layout: the jamo of each letter key, and with Shift (the tense
+# consonants and ㅒ ㅖ; the other keys type the same jamo with Shift)
+korean:
+  q: ㅂ
+  w: ㅈ
+  e: ㄷ
+  r: ㄱ
+  t: ㅅ
+  y: ㅛ
+  u: ㅕ
+  i: ㅑ
+  o: ㅐ
+  p: ㅔ
+  a: ㅁ
+  s: ㄴ
+  d: ㅇ
+  f: ㄹ
+  g: ㅎ
+  h: ㅗ
+  j: ㅓ
+  k: ㅏ
+  l: ㅣ
+  z: ㅋ
+  x: ㅌ
+  c: ㅊ
+  v: ㅍ
+  b: ㅠ
+  n: ㅜ
+  m: ㅡ
+korean_shift: {q: ㅃ, w: ㅉ, e: ㄸ, r: ㄲ, t: ㅆ, o: ㅒ, p: ㅖ}

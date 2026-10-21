@@ -9,7 +9,7 @@ use crate::ipc::{self, Reply};
 use crate::logs;
 use anyhow::{anyhow, bail, Result};
 use serde_json::{json, Value};
-use std::sync::{Mutex, OnceLock};
+use std::sync::{Mutex, MutexGuard, OnceLock};
 use std::time::{Duration, Instant};
 use vrct_ime::input::{Input, Key, Language, State};
 use vrct_ime::rime::Rime;
@@ -30,17 +30,39 @@ enum Status {
 
 pub struct Keyboard {
     status: Mutex<Status>,
-    input: Mutex<Input<'static>>,
+    typing: Mutex<Typing>,
     /// the typing indicator is on in VRChat
-    typing: Mutex<bool>,
-    /// when Enter last committed a word: an Enter right after it is a double press, not a send
-    committed_at: Mutex<Option<Instant>>,
+    indicator: Mutex<bool>,
     /// rime.dll loaded and started (once a process: a retry only builds again)
     rime: OnceLock<&'static Rime>,
     /// the microphone types into the keyboard (Some: whether its transcription was on before, so
     /// that turning this off leaves it as it was)
     dictation: Mutex<Option<bool>>,
-    history: Mutex<History>,
+}
+
+/// What is typed, and what goes with it (one lock: keys, sends and what the microphone heard
+/// change it in turn)
+struct Typing {
+    input: Input<'static>,
+    history: History,
+    /// when Enter last committed a word: an Enter right after it is a double press, not a send
+    committed_at: Option<Instant>,
+}
+
+impl Typing {
+    /// ↑ (older) or ↓ (newer): what was sent, called back in place of what is typed
+    fn recall(&mut self, older: bool) {
+        let Typing { input, history, .. } = self;
+        if let Some(text) = history.step(older, || input.take()) {
+            input.set_text(&text);
+        }
+    }
+
+    /// Everything typed gone; ↑ starts from the newest again
+    fn clear(&mut self) {
+        self.input.clear();
+        self.history.at = None;
+    }
 }
 
 /// What the keyboard sent (either way), called back with ↑ ↓ as a shell does
@@ -91,8 +113,9 @@ const SEND_AFTER_COMMIT: Duration = Duration::from_millis(400);
 impl Keyboard {
     pub fn new(config: &crate::config::Config) -> Self {
         let language = Language::from_code(&config.get_str("KEYBOARD_LANGUAGE")).unwrap_or(Language::Japanese);
-        Keyboard { status: Mutex::new(Status::Preparing), input: Mutex::new(Input::new(language)), typing: Mutex::default(),
-                   committed_at: Mutex::default(), rime: OnceLock::new(), dictation: Mutex::default(), history: Mutex::default() }
+        let typing = Typing { input: Input::new(language), history: History::default(), committed_at: None };
+        Keyboard { status: Mutex::new(Status::Preparing), typing: Mutex::new(typing), indicator: Mutex::default(), rime: OnceLock::new(),
+                   dictation: Mutex::default() }
     }
 }
 
@@ -100,7 +123,11 @@ fn keyboard(app: &App) -> &Keyboard {
     &app.model.keyboard
 }
 
-fn state_json(status: Status, s: &State, language: Language) -> Value {
+fn typing(app: &App) -> MutexGuard<'_, Typing> {
+    keyboard(app).typing.lock().unwrap()
+}
+
+fn state_json(status: Status, s: &State) -> Value {
     // progress: of the download, 0..1
     let (status, progress) = match status {
         Status::Preparing => ("preparing", 0.0),
@@ -112,16 +139,15 @@ fn state_json(status: Status, s: &State, language: Language) -> Value {
     json!({
         "status": status,
         "progress": progress,
-        "language": language.code(),
         "text": s.text,
         "after": s.after,
-        "composition": s.composition.as_ref().map(|c| json!({"preedit": c.preedit, "selection": [c.selection.0, c.selection.1], "cursor": c.cursor})),
+        "composition": s.composition.as_ref().map(|c| json!({"preedit": c.preedit, "selection": [c.selection.0, c.selection.1]})),
         "candidates": s.candidates,
         "highlighted": s.highlighted,
         "converting": s.converting,
         "page": s.page,
         "last_page": s.last_page,
-        "syllable": s.syllable.as_ref().map(|(s, jamo)| json!({"text": s, "jamo": jamo.iter().map(char::to_string).collect::<Vec<_>>()})),
+        "syllable": s.syllable,
         "length": s.length,
     })
 }
@@ -131,29 +157,29 @@ fn state_json(status: Status, s: &State, language: Language) -> Value {
 fn changed(app: &App, input: &Input) -> Value {
     let s = input.state();
     let typing = s.length > 0 && app.config.get_bool("KEYBOARD_TYPING_INDICATOR") && app.config.get_bool("SEND_MESSAGE_TO_VRC");
-    set_typing(app, typing);
-    state_json(*keyboard(app).status.lock().unwrap(), &s, input.language())
+    set_indicator(app, typing);
+    state_json(*keyboard(app).status.lock().unwrap(), &s)
 }
 
-fn set_typing(app: &App, typing: bool) {
-    let mut was = keyboard(app).typing.lock().unwrap();
-    if *was != typing {
-        if let Err(e) = app.model.osc.send_typing(typing) {
+fn set_indicator(app: &App, on: bool) {
+    let mut was = keyboard(app).indicator.lock().unwrap();
+    if *was != on {
+        if let Err(e) = app.model.osc.send_typing(on) {
             logs::error("keyboard typing indicator", &format!("{e:#}"));
         }
-        *was = typing;
+        *was = on;
     }
 }
 
 /// The keyboard closed or VRCT ends: VRChat's typing indicator off (what is typed stays)
-pub fn stop_typing(app: &App) {
-    set_typing(app, false);
+pub fn indicator_off(app: &App) {
+    set_indicator(app, false);
 }
 
 /// The keyboard closed (or the VR UI with it), with text in it: VRChat's typing indicator is not
 /// left on, nor its microphone
 pub fn hidden(app: &App) {
-    stop_typing(app);
+    indicator_off(app);
     stop_dictation(app, true);
 }
 
@@ -163,8 +189,8 @@ fn push_state(app: &App, input: &Input) {
 
 fn set_status(app: &App, status: Status) {
     *keyboard(app).status.lock().unwrap() = status;
-    let input = keyboard(app).input.lock().unwrap();
-    let _ = app.run(200, "keyboard_state", state_json(status, &input.state(), input.language()));
+    let state = typing(app).input.state();
+    let _ = app.run(200, "keyboard_state", state_json(status, &state));
 }
 
 // ------------------------------------------------------------------------------- the dictionaries
@@ -222,7 +248,7 @@ fn prepare(app: &App) -> Result<()> {
         }
     }
     let session = rime.session()?;
-    keyboard(app).input.lock().unwrap().attach(session, app.config.get_bool("KEYBOARD_CHINESE_SIMPLIFIED"));
+    typing(app).input.attach(session, app.config.get_bool("KEYBOARD_CHINESE_SIMPLIFIED"));
     ipc::log(format!("Keyboard ready (librime {})", rime.version()));
     set_status(app, Status::Ready);
     Ok(())
@@ -247,22 +273,32 @@ pub fn keyboard_retry(app: &App, _: Data) -> Result<Reply> {
 }
 
 pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
-    let input = keyboard(app).input.lock().unwrap();
-    Ok(Reply::ok(state_json(*keyboard(app).status.lock().unwrap(), &input.state(), input.language())))
+    let state = typing(app).input.state();
+    Ok(Reply::ok(state_json(*keyboard(app).status.lock().unwrap(), &state)))
 }
 
 /// A key: one character ("a", "A" with Shift, "、", "\n"), or Backspace, Space, Enter, Left, Right,
 /// PageUp, PageDown, Up and Down (what was sent, called back)
 pub fn keyboard_key(app: &App, data: Data) -> Result<Reply> {
     let name = data.as_ref().and_then(Value::as_str).ok_or_else(|| anyhow!("the key is not a string"))?;
-    if let "Up" | "Down" = name {
-        let mut input = keyboard(app).input.lock().unwrap();
-        if let Some(text) = keyboard(app).history.lock().unwrap().step(name == "Up", || input.take()) {
-            input.set_text(&text);
+    let mut t = typing(app);
+    match name {
+        "Up" | "Down" => t.recall(name == "Up"),
+        "Enter" if !t.input.composing() => return enter(app, t),
+        _ => {
+            let key = key_of(name)?;
+            // Enter commits the word being composed (and one right after it is not a send)
+            if key == Key::Enter {
+                t.committed_at = Some(Instant::now());
+            }
+            t.input.key(key);
         }
-        return Ok(Reply::ok(changed(app, &input)));
     }
-    let key = match name {
+    Ok(Reply::ok(changed(app, &t.input)))
+}
+
+fn key_of(name: &str) -> Result<Key> {
+    Ok(match name {
         "Backspace" => Key::Backspace,
         "Space" => Key::Space,
         "Enter" => Key::Enter,
@@ -277,53 +313,47 @@ pub fn keyboard_key(app: &App, data: Data) -> Result<Reply> {
                 _ => bail!("no key {name:?}"),
             }
         }
-    };
-    let mut input = keyboard(app).input.lock().unwrap();
-    if key == Key::Enter {
-        let mut committed_at = keyboard(app).committed_at.lock().unwrap();
-        if input.composing() {
-            *committed_at = Some(Instant::now());
+    })
+}
+
+/// Enter with nothing being composed: what is typed is sent (KEYBOARD_SEND_TO), told by
+/// keyboard_sent. Not right after Enter committed a word (its double press), nor blank text
+fn enter<'a>(app: &'a App, mut t: MutexGuard<'a, Typing>) -> Result<Reply> {
+    let double = t.committed_at.take().is_some_and(|at| at.elapsed() < SEND_AFTER_COMMIT);
+    if !double {
+        let text = t.input.take();
+        if text.trim().is_empty() {
+            t.input.restore(&text);
         } else {
-            // nothing being composed: Enter sends (KEYBOARD_SEND_TO), told by keyboard_sent
-            let double = committed_at.take().is_some_and(|at| at.elapsed() < SEND_AFTER_COMMIT);
-            drop(committed_at);
-            let text = if double { String::new() } else { input.take() };
-            if text.trim().is_empty() {
-                input.restore(&text);
-            }
-            drop(input);
-            if !text.trim().is_empty() {
-                send(app, text, &app.config.get_str("KEYBOARD_SEND_TO"))?;
-            }
-            return Ok(Reply::ok(changed(app, &keyboard(app).input.lock().unwrap())));
+            // (the send takes the lock again when it is done)
+            drop(t);
+            send(app, text, &app.config.get_str("KEYBOARD_SEND_TO"))?;
+            t = typing(app);
         }
     }
-    input.key(key);
-    Ok(Reply::ok(changed(app, &input)))
+    Ok(Reply::ok(changed(app, &t.input)))
 }
 
 /// The candidate at this index of the page shown
 pub fn keyboard_select(app: &App, data: Data) -> Result<Reply> {
     let index = data.as_ref().and_then(Value::as_u64).ok_or_else(|| anyhow!("the index is not a number"))?;
-    let mut input = keyboard(app).input.lock().unwrap();
-    input.select(index as usize);
-    Ok(Reply::ok(changed(app, &input)))
+    let mut t = typing(app);
+    t.input.select(index as usize);
+    Ok(Reply::ok(changed(app, &t.input)))
 }
 
 /// The cursor to this character of the text (the input box pressed there)
 pub fn keyboard_cursor(app: &App, data: Data) -> Result<Reply> {
     let index = data.as_ref().and_then(Value::as_u64).ok_or_else(|| anyhow!("the index is not a number"))?;
-    let mut input = keyboard(app).input.lock().unwrap();
-    input.set_cursor(index as usize);
-    Ok(Reply::ok(changed(app, &input)))
+    let mut t = typing(app);
+    t.input.set_cursor(index as usize);
+    Ok(Reply::ok(changed(app, &t.input)))
 }
 
 pub fn keyboard_clear(app: &App, _: Data) -> Result<Reply> {
-    let mut input = keyboard(app).input.lock().unwrap();
-    input.clear();
-    // ↑ starts from the newest again
-    keyboard(app).history.lock().unwrap().at = None;
-    Ok(Reply::ok(changed(app, &input)))
+    let mut t = typing(app);
+    t.clear();
+    Ok(Reply::ok(changed(app, &t.input)))
 }
 
 // --------------------------------------------------------------------------------- dictation
@@ -336,9 +366,9 @@ pub fn keyboard_dictating(app: &App) -> bool {
 
 /// What the microphone heard, while dictating
 pub fn dictated(app: &App, text: &str) {
-    let mut input = keyboard(app).input.lock().unwrap();
-    input.append(text);
-    push_state(app, &input);
+    let mut t = typing(app);
+    t.input.append(text);
+    push_state(app, &t.input);
 }
 
 fn dictation_reply(app: &App) -> Result<Reply> {
@@ -403,35 +433,39 @@ pub fn transcription_stopped(app: &App) {
 /// the order typed, and the keys typed meanwhile wait (never pass them). What did not go (an error;
 /// only copied: no VRChat window took the focus) is put back, so nothing typed is lost.
 fn send(app: &App, text: String, to: &str) -> Result<()> {
-    let put_back = || {
-        let mut input = keyboard(app).input.lock().unwrap();
-        input.restore(&text);
-        changed(app, &input)
-    };
     let mut out = json!({"to": to});
-    if to == "paste" {
+    // Ok(false): only copied
+    let sent = if to == "paste" {
         let window = app.model.app_name.get();
         let pasted = crate::clipboard::copy_and_paste(&text, window.as_deref(), &|line| ipc::log(line));
         out["pasted"] = json!(pasted);
-        if pasted {
-            keyboard(app).history.lock().unwrap().add(&text);
-        }
-        out["state"] = if pasted { changed(app, &keyboard(app).input.lock().unwrap()) } else { put_back() };
+        Ok(pasted)
     } else {
-        match process(app, &CHAT, &text, None, None, None) {
-            Ok(message) => {
-                keyboard(app).history.lock().unwrap().add(&text);
-                out["message"] = message.unwrap_or(Value::Null);
-                out["state"] = changed(app, &keyboard(app).input.lock().unwrap());
-            }
-            // the text back on the keyboard, the error to the UI (500, as the message box)
-            Err(e) => {
-                let _ = app.run(200, "keyboard_state", put_back());
-                return Err(e);
-            }
+        process(app, &CHAT, &text, None, None, None).map(|message| {
+            out["message"] = message.unwrap_or(Value::Null);
+            true
+        })
+    };
+    let state = {
+        let mut t = typing(app);
+        if matches!(sent, Ok(true)) {
+            t.history.add(&text);
+        } else {
+            t.input.restore(&text);
+        }
+        changed(app, &t.input)
+    };
+    match sent {
+        Ok(_) => {
+            out["state"] = state;
+            app.run(200, "keyboard_sent", out)
+        }
+        // the text back on the keyboard, the error to the UI (500, as the message box)
+        Err(e) => {
+            let _ = app.run(200, "keyboard_state", state);
+            Err(e)
         }
     }
-    app.run(200, "keyboard_sent", out)
 }
 
 // --------------------------------------------------------------------------------- settings
@@ -444,21 +478,21 @@ pub fn get_keyboard_language(app: &App, _: Data) -> Result<Reply> {
 pub fn set_keyboard_language(app: &App, data: Data) -> Result<Reply> {
     let reply = validated(app, "KEYBOARD_LANGUAGE", data.unwrap_or(Value::Null))?;
     if let Some(language) = Language::from_code(&app.config.get_str("KEYBOARD_LANGUAGE")) {
-        let mut input = keyboard(app).input.lock().unwrap();
-        input.set_language(language);
+        let mut t = typing(app);
+        t.input.set_language(language);
         // what was being composed is written now: shown at once (not at the next key)
-        push_state(app, &input);
+        push_state(app, &t.input);
     }
     Ok(reply)
 }
 
 fn set_simplified(app: &App, on: bool) -> Result<Reply> {
     app.config.set("KEYBOARD_CHINESE_SIMPLIFIED", json!(on))?;
-    let input = keyboard(app).input.lock().unwrap();
-    input.set_simplified(on);
+    let t = typing(app);
+    t.input.set_simplified(on);
     // the candidates shown change script
-    push_state(app, &input);
-    drop(input);
+    push_state(app, &t.input);
+    drop(t);
     current(app, "KEYBOARD_CHINESE_SIMPLIFIED")
 }
 
@@ -503,7 +537,7 @@ pub fn get_keyboard_typing_indicator(app: &App, _: Data) -> Result<Reply> {
 
 fn set_typing_indicator(app: &App, on: bool) -> Result<Reply> {
     app.config.set("KEYBOARD_TYPING_INDICATOR", json!(on))?;
-    changed(app, &keyboard(app).input.lock().unwrap());
+    changed(app, &typing(app).input);
     current(app, "KEYBOARD_TYPING_INDICATOR")
 }
 
@@ -602,7 +636,7 @@ mod tests {
         app.config.set("KEYBOARD_TYPING_INDICATOR", json!(false)).unwrap();
         set_keyboard_language(&app, Some(json!("ko"))).unwrap();
         let state = keys(&app, &["g", "k", "s"]);
-        assert_eq!(state["syllable"], json!({"text": "한", "jamo": ["ㅎ", "ㅏ", "ㄴ"]}));
+        assert_eq!(state["syllable"], json!("한"));
         assert_eq!(set_keyboard_language(&app, Some(json!("xx"))).unwrap().status, 400);
         assert_eq!(app.config.get_str("KEYBOARD_LANGUAGE"), "ko");
         // switching writes the syllable being made

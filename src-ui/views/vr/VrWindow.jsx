@@ -12,7 +12,7 @@ import styles from "./VrWindow.module.scss";
 // is_grab_locked: 操作バーのロック中 (掴めない)。タイトルバーに錠と「ロック中」を出す
 // is_resizable: 角を掴んで大きさを変えられる (ログ)。指している間だけ角に取っ手を出す。
 // 当たり判定と大きさの変更は Python 側 (models/overlay/overlay.py panelCornerAt)。右上は閉じるボタンなので出さない
-// title_extra: タイトルの右に並べるもの (キーボードの言語の切り替え)
+// title_extra: タイトルの右に並べるもの (キーボードの不透明度の印)
 export const VrWindow = ({ Icon, title, title_extra = null, onClose, close_label, is_lockable = true, is_grab_locked = false, is_resizable = false, children }) => {
     const { t, i18n } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();

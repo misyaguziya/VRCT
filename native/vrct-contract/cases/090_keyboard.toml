@@ -58,7 +58,7 @@ endpoint = "/set/data/keyboard_language"
 data = "ko"
 
 [[case]]
-name = "keyboard: Korean jamo"
+name = "keyboard: Korean syllable being made"
 endpoint = "/run/keyboard_key"
 data = "g"
 rule = "shape"

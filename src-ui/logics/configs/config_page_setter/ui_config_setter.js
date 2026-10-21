@@ -805,7 +805,7 @@ export const SETTINGS_ARRAY = [
         Category: "Vr",
         Base_Name: "KeyboardState",
         default_value: {
-            status: "preparing", progress: 0, language: "ja", text: "", after: "", composition: null, candidates: [],
+            status: "preparing", progress: 0, text: "", after: "", composition: null, candidates: [],
             highlighted: 0, converting: false, page: 0, last_page: false, syllable: null, length: 0,
         },
         ui_template_id: "object",

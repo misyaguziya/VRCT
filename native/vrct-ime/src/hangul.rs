@@ -1,24 +1,12 @@
 //! Korean input: the 2-set (dubeolsik) layout on QWERTY, composing jamo into syllables. No
 //! dictionary is needed (Hanja is not offered).
 
-/// The jamo a key types (Shift gives the tense consonants and ㅒ ㅖ)
+use crate::keys::mapped;
+
+/// The jamo a key types (keys.yaml; Shift gives the tense consonants and ㅒ ㅖ)
 pub fn jamo_of_key(key: char) -> Option<char> {
-    const LOWER: &str = "qwertyuiopasdfghjklzxcvbnm";
-    const JAMO: &str = "ㅂㅈㄷㄱㅅㅛㅕㅑㅐㅔㅁㄴㅇㄹㅎㅗㅓㅏㅣㅋㅌㅊㅍㅠㅜㅡ";
-    let shifted = match key {
-        'Q' => Some('ㅃ'),
-        'W' => Some('ㅉ'),
-        'E' => Some('ㄸ'),
-        'R' => Some('ㄲ'),
-        'T' => Some('ㅆ'),
-        'O' => Some('ㅒ'),
-        'P' => Some('ㅖ'),
-        _ => None,
-    };
-    shifted.or_else(|| {
-        let lower = key.to_ascii_lowercase();
-        LOWER.chars().position(|c| c == lower).and_then(|i| JAMO.chars().nth(i))
-    })
+    let lower = key.to_ascii_lowercase();
+    key.is_ascii_uppercase().then(|| mapped(&["korean_shift"], lower)).flatten().or_else(|| mapped(&["korean"], lower))
 }
 
 const INITIALS: [char; 19] = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
@@ -69,31 +57,14 @@ impl Syllable {
             (None, None, _) => String::new(),
         }
     }
-
-    /// The jamo it is made of (what the keyboard shows while composing)
-    fn parts(&self) -> Vec<char> {
-        let mut parts = vec![];
-        parts.extend(self.initial);
-        if let Some(m) = self.medial {
-            match split(&VOWEL_PAIRS, m) {
-                Some((a, b)) => parts.extend([a, b]),
-                None => parts.push(m),
-            }
-        }
-        if let Some(f) = self.last {
-            match split(&FINAL_PAIRS, f) {
-                Some((a, b)) => parts.extend([a, b]),
-                None => parts.push(f),
-            }
-        }
-        parts
-    }
 }
 
-/// Composes jamo into Hangul: `text` is what is done, the syllable being made shows after it
+/// Composes jamo into Hangul. It holds only the syllable being made: what is done is handed
+/// back by `input` (to go into the text at once)
 #[derive(Default)]
 pub struct Composer {
-    text: String,
+    /// done by the jamo being put in, for `input` to hand back
+    done: String,
     current: Syllable,
     /// the states of the current syllable before each jamo (for backspace)
     history: Vec<Syllable>,
@@ -104,23 +75,13 @@ impl Composer {
         Self::default()
     }
 
-    /// The syllables done (the one being composed not included)
-    pub fn written(&self) -> &str {
-        &self.text
-    }
-
-    /// The text so far, the syllable being composed included
-    pub fn preedit(&self) -> String {
-        self.text.clone() + &self.current.text()
-    }
-
-    /// The syllable being composed and its jamo (None when nothing is being composed)
-    pub fn composing(&self) -> Option<(String, Vec<char>)> {
-        (!self.current.is_empty()).then(|| (self.current.text(), self.current.parts()))
+    /// The syllable being composed (None when nothing is being composed)
+    pub fn composing(&self) -> Option<String> {
+        (!self.current.is_empty()).then(|| self.current.text())
     }
 
     fn finish(&mut self) {
-        self.text += &self.current.text();
+        self.done += &self.current.text();
         self.current = Syllable::default();
         self.history.clear();
     }
@@ -131,16 +92,18 @@ impl Composer {
         self.current = s;
     }
 
-    /// A jamo (a key's) or any other character (it ends the syllable and goes in as it is)
-    pub fn input(&mut self, c: char) {
+    /// A jamo (a key's) or any other character (it ends the syllable and goes in as it is).
+    /// Returns what is done by it (syllables finished, the other character)
+    pub fn input(&mut self, c: char) -> String {
         if INITIALS.contains(&c) || FINALS[1..].contains(&c) {
             self.consonant(c);
         } else if is_vowel(c) {
             self.vowel(c);
         } else {
             self.finish();
-            self.text.push(c);
+            self.done.push(c);
         }
+        std::mem::take(&mut self.done)
     }
 
     fn consonant(&mut self, c: char) {
@@ -160,7 +123,7 @@ impl Composer {
             // a double final alone (ㄳ ...) begins no syllable: it goes in as it is
             None => {
                 self.finish();
-                self.text.push(c);
+                self.done.push(c);
             }
         }
     }
@@ -192,19 +155,22 @@ impl Composer {
         }
     }
 
-    /// One step back: the last jamo of the syllable, else the last character. False when empty.
+    /// One jamo back of the syllable being made. False when none is being made (the text's last
+    /// character is the one to go)
     pub fn backspace(&mut self) -> bool {
-        if let Some(previous) = self.history.pop() {
-            self.current = previous;
-            return true;
+        match self.history.pop() {
+            Some(previous) => {
+                self.current = previous;
+                true
+            }
+            None => false,
         }
-        self.text.pop().is_some()
     }
 
-    /// Everything as it is, then empty
+    /// The syllable being made, finished, then nothing is being made
     pub fn take(&mut self) -> String {
         self.finish();
-        std::mem::take(&mut self.text)
+        std::mem::take(&mut self.done)
     }
 }
 
@@ -212,68 +178,68 @@ impl Composer {
 mod tests {
     use super::*;
 
-    fn typed(keys: &str) -> Composer {
+    /// The keys typed: (what is done, the composer with the syllable being made)
+    fn typed(keys: &str) -> (String, Composer) {
         let mut c = Composer::new();
-        for k in keys.chars() {
-            c.input(jamo_of_key(k).unwrap_or(k));
-        }
-        c
+        let done = keys.chars().map(|k| c.input(jamo_of_key(k).unwrap_or(k))).collect();
+        (done, c)
+    }
+
+    /// What it shows: done, then the syllable being made
+    fn shown(keys: &str) -> String {
+        let (done, c) = typed(keys);
+        done + &c.composing().unwrap_or_default()
     }
 
     #[test]
     fn words_on_the_2_set_layout() {
-        assert_eq!(typed("dkssudgktpdy").preedit(), "안녕하세요");
-        assert_eq!(typed("gksrmf").preedit(), "한글");
-        assert_eq!(typed("rkatkgkqslek").preedit(), "감사합니다");
+        assert_eq!(shown("dkssudgktpdy"), "안녕하세요");
+        assert_eq!(shown("gksrmf"), "한글");
+        assert_eq!(shown("rkatkgkqslek"), "감사합니다");
         // a double final, then a vowel takes its second half (닭 + ㅏ = 달가)
-        assert_eq!(typed("ekfr").preedit(), "닭");
-        assert_eq!(typed("ekfrk").preedit(), "달가");
+        assert_eq!(shown("ekfr"), "닭");
+        assert_eq!(shown("ekfrk"), "달가");
         // compound vowels; tense consonants with Shift
-        assert_eq!(typed("dhkd").preedit(), "왕");
-        assert_eq!(typed("dmlwk").preedit(), "의자");
-        assert_eq!(typed("Tkd").preedit(), "쌍");
+        assert_eq!(shown("dhkd"), "왕");
+        assert_eq!(shown("dmlwk"), "의자");
+        assert_eq!(shown("Tkd"), "쌍");
         // ㄸ cannot be a final: it starts the next syllable
-        assert_eq!(typed("dkE").preedit(), "아ㄸ");
+        assert_eq!(shown("dkE"), "아ㄸ");
     }
 
     #[test]
-    fn the_syllable_being_composed_and_its_jamo() {
-        let c = typed("dkssudgktpd");
-        assert_eq!(c.composing(), Some(("셍".to_string(), vec!['ㅅ', 'ㅔ', 'ㅇ'])));
-        let c = typed("dhk");
-        assert_eq!(c.composing(), Some(("와".to_string(), vec!['ㅇ', 'ㅗ', 'ㅏ'])));
+    fn only_the_syllable_being_made_is_kept() {
+        let (done, c) = typed("dkssudgktpd");
+        assert_eq!((done.as_str(), c.composing()), ("안녕하", Some("셍".to_string())));
+        assert_eq!(typed("dhk").1.composing(), Some("와".to_string()));
         assert_eq!(Composer::new().composing(), None);
     }
 
     #[test]
-    fn backspace_takes_back_one_jamo_then_whole_characters() {
-        let mut c = typed("gksrmf");
+    fn backspace_takes_back_one_jamo_of_the_syllable_being_made() {
+        let (_, mut c) = typed("gksrmf");
         assert!(c.backspace());
-        assert_eq!(c.preedit(), "한그");
+        assert_eq!(c.composing().as_deref(), Some("그"));
         assert!(c.backspace());
-        assert_eq!(c.preedit(), "한ㄱ");
+        assert_eq!(c.composing().as_deref(), Some("ㄱ"));
         assert!(c.backspace());
-        assert_eq!(c.preedit(), "한");
-        assert!(c.backspace());
-        assert_eq!(c.preedit(), "");
+        assert_eq!(c.composing(), None);
+        // 한 is done (in the text): not the composer's
         assert!(!c.backspace());
     }
 
     #[test]
     fn a_double_final_alone_is_not_an_initial() {
         let mut c = Composer::new();
-        c.input('ㄳ');
-        c.input('ㅏ');
-        assert_eq!(c.take(), "ㄳㅏ");
+        assert_eq!(c.input('ㄳ') + &c.input('ㅏ') + &c.take(), "ㄳㅏ");
     }
 
     #[test]
     fn other_characters_end_the_syllable_and_take_empties() {
-        let mut c = typed("dkssud");
-        c.input(' ');
-        c.input('?');
-        assert_eq!(c.preedit(), "안녕 ?");
-        assert_eq!(c.take(), "안녕 ?");
-        assert_eq!(c.preedit(), "");
+        let (mut done, mut c) = typed("dkssud");
+        done += &c.input(' ');
+        done += &c.input('?');
+        assert_eq!((done.as_str(), c.composing()), ("안녕 ?", None));
+        assert_eq!(c.take(), "");
     }
 }

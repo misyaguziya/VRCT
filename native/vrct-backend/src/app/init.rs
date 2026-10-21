@@ -577,7 +577,7 @@ fn stop_service(app: &App, label: &str, stop: fn(&App)) {
 /// config.json saved, telemetry sent. The UI ends the process 2 s after /run/shutdown.
 pub fn shutdown(app: &App, _: Option<Value>) -> Result<ipc::Reply> {
     // VRChat's typing indicator is not left on
-    super::keyboard::stop_typing(app);
+    super::keyboard::indicator_off(app);
     audio::shutdown(app);
     stop_service(app, "OSC receive server", |a| a.model.osc.stop_receive());
     stop_service(app, "OBS browser source server", |a| a.model.servers.stop_obs());
