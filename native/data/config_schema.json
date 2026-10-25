@@ -2171,7 +2171,10 @@
     "ja",
     "en",
     "ko",
-    "zh"
+    "zh",
+    "zhuyin",
+    "cangjie",
+    "quick"
    ],
    "readonly": false,
    "serialize": true,
@@ -2247,6 +2250,33 @@
    "immediate_save": false,
    "mutable_tracking": false,
    "default": 1.0
+  },
+  {
+   "name": "KEYBOARD_LOCKED",
+   "kind": "managed",
+   "type": [
+    "bool"
+   ],
+   "allowed": null,
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": false
+  },
+  {
+   "name": "OVERLAY_VR_LASER_PITCH",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 12.0
   }
  ],
  "serialized_order": [
@@ -2364,6 +2394,8 @@
   "KEYBOARD_KEY_SOUND",
   "KEYBOARD_TYPING_INDICATOR",
   "KEYBOARD_SEND_TO",
-  "KEYBOARD_OPACITY"
+  "KEYBOARD_OPACITY",
+  "KEYBOARD_LOCKED",
+  "OVERLAY_VR_LASER_PITCH"
  ]
 }

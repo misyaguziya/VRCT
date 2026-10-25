@@ -877,6 +877,24 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "keyboard_opacity",
     },
     {
+        // VRキーボードのピン: 掴んでも動かない。キーボードのタイトルバーのピンで変える
+        Category: "Vr",
+        Base_Name: "KeyboardLocked",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "keyboard_locked",
+    },
+    {
+        // VRのレーザーを、コントローラの先端の向きから何度上に向けるか (-30〜30)。VR設定ウィンドウのランチャーで変える
+        Category: "Vr",
+        Base_Name: "OverlayVrLaserPitch",
+        default_value: 12,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_laser_pitch",
+    },
+    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

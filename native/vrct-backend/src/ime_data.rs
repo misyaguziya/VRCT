@@ -22,7 +22,8 @@ pub struct Source {
 }
 
 /// Japanese (rime-jaroomaji, Apache-2.0; Mozc's dictionary BSD-3, JMdict and KANJIDIC2 CC BY-SA 4.0),
-/// Chinese (luna_pinyin with essay and prelude, LGPL-3.0)
+/// Chinese (luna_pinyin with essay and prelude; Zhuyin (bopomofo, with terra_pinyin), Cangjie
+/// (cangjie5) and Quick (quick5): LGPL-3.0)
 pub const SOURCES: &[Source] = &[
     Source {
         repo: "rime/rime-prelude",
@@ -48,6 +49,41 @@ pub const SOURCES: &[Source] = &[
         files: &[("luna_pinyin.schema.yaml", "668b4d4957e4cc8f9cea32ed3f08f0ecf4a7be8cdba058700507487bd96dd5c7"),
                  ("luna_pinyin.dict.yaml", "75bcf6eb3ff62b129882ed89cc22b2d80a5347aa72bcfa2ccc839bac298e7314"),
                  ("pinyin.yaml", "caa220b05172bf35775db07fed6ead7719c742e6139232d9797040dbe65f746c"),
+                 ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
+    },
+    Source {
+        repo: "rime/rime-terra-pinyin",
+        commit: "723e51bc266cf9464530c1ddedb856aa18e3da34",
+        size: 732_915,
+        files: &[("terra_pinyin.dict.yaml", "2f881a239e09a61e5993e79257655f98f81c3789dc8aeea5f33477f710345b27"),
+                 ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
+    },
+    Source {
+        repo: "rime/rime-bopomofo",
+        commit: "6085c9a38a4a728047862b33d67eee18aa86f3b9",
+        size: 12_487,
+        files: &[("bopomofo.schema.yaml", "21301f17f799c4779516d69bb9d80a343c1cc36f06cdcb8607860c80394bb8cc"),
+                 ("zhuyin.yaml", "77931ab77952fdb2535f8addebc0918453e0220a50ca176380971203f14c48be"),
+                 ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
+    },
+    Source {
+        repo: "rime/rime-cangjie",
+        commit: "52d90a1b1312e74042b38c1cbc8142defbc53171",
+        size: 403_479,
+        files: &[("cangjie5.schema.yaml", "93b3e81787447b9002885b38fb4024d36e4135741e9e765bd847268efb81aac1"),
+                 ("cangjie5.dict.yaml", "1514afcfb56dc347db596a6602c8dfefee798fa504e35d10eaa1e11536648d3a"),
+                 ("cangjie5.base.dict.yaml", "8690f2ad8aafd38780846881aa916b5779e6d9247a351a1da426d3f3257afca4"),
+                 ("cangjie5.stem.dict.yaml", "a15208351dbc33d5ade8d16ece75907ef2a7310e3962f4e54003dab9bbd49b8a"),
+                 ("cangjie5.extended.dict.yaml", "a6a0b06427c599d9fa7fc1e02a618bf234eb1dc9fc9b6b92f3292fc02213b3cd"),
+                 ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
+    },
+    Source {
+        repo: "rime/rime-quick",
+        commit: "5dcdb9e353d314239e9c8cddc0f42d52da4837bb",
+        size: 40_231,
+        files: &[("quick5.schema.yaml", "0eed4b8b10cd50132a691c8027cb774f481eb571c9d5c0b901d54bc7c5867c53"),
+                 ("quick5.dict.yaml", "47dee37657c75afce60b3c65e650dbcbd4df39e4a7aecba7153ab56649632cd0"),
+                 ("quick5.supplement.dict.yaml", "c7e38622084f4be1c64a240f64e41ec5571da22563e60ea14028945e3f76a4b7"),
                  ("LICENSE", "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768")],
     },
     Source {

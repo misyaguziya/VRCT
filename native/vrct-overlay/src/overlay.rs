@@ -32,6 +32,8 @@ use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory1, IDXGIFactory1};
 
 const STEAMVR_POLL: Duration = Duration::from_secs(10);
 const STOP_WAIT: Duration = Duration::from_secs(5);
+/// The lasers' tilt up from the controllers' tips by default (degrees)
+pub const LASER_PITCH_UP_DEG: f64 = 12.0;
 pub(crate) const COLOR_NORMAL: [f32; 3] = [1.0, 1.0, 1.0];
 
 /// A size's settings (OVERLAY_SMALL_LOG_SETTINGS and the like)
@@ -106,11 +108,13 @@ pub(crate) enum Command {
     VrWindows(bool, bool, bool),
     VrPanelEnabled(bool),
     PanelLocked(bool),
+    KeyboardLocked(bool),
     LauncherAutoHide(bool),
+    LaserPitch(f64),
     LauncherDefaults(Settings),
     LauncherReset(bool),
     Anchor(String),
-    RecallPanel,
+    Recall(Region),
     Tooltip(Tooltip),
     LayoutRendered((u32, u32)),
     Stop,
@@ -233,9 +237,19 @@ impl Overlay {
         self.send(Command::PanelLocked(locked));
     }
 
+    /// keyboard_locked: the keyboard cannot be grabbed (its keys still work)
+    pub fn set_keyboard_locked(&self, locked: bool) {
+        self.send(Command::KeyboardLocked(locked));
+    }
+
     /// launcher_auto_hide: the launcher shows only while the wrist is looked at
     pub fn set_launcher_auto_hide(&self, enabled: bool) {
         self.send(Command::LauncherAutoHide(enabled));
+    }
+
+    /// The lasers tilted up from the controllers' tips by this (degrees), to point as the game does
+    pub fn set_laser_pitch(&self, degrees: f64) {
+        self.send(Command::LaserPitch(degrees));
     }
 
     /// launcher_defaults: the launcher's place, width and hand to go back to
@@ -255,7 +269,12 @@ impl Overlay {
 
     /// requestRecallPanel: the log window in front of the eyes
     pub fn recall_panel(&self) {
-        self.send(Command::RecallPanel);
+        self.send(Command::Recall(Region::Panel));
+    }
+
+    /// The keyboard in front of the eyes (as the log's recall)
+    pub fn recall_keyboard(&self) {
+        self.send(Command::Recall(Region::Keyboard));
     }
 
     /// setTooltip (checked with layout::validate_tooltip)
@@ -304,14 +323,18 @@ pub(crate) struct Worker {
     pub vr_panel_enabled: bool,
     pub panel_enabled_requests: VecDeque<bool>,
     pub panel_locked: bool,
+    pub keyboard_locked: bool,
     pub launcher_auto_hide: bool,
+    /// the lasers' tilt up from the controllers' tips (degrees)
+    pub laser_pitch_up_deg: f64,
     pub launcher_defaults: Option<Settings>,
     pub launcher_reset_requested: bool,
     pub launcher_reset_keep_hand: bool,
     /// (log, popup, keyboard) wanted shown
     pub vr_windows_wanted: (bool, bool, bool),
     pub requested_anchor: Option<String>,
-    pub recall_requested: Option<Instant>,
+    /// the log or the keyboard to bring in front of the eyes, and when it was asked
+    pub recall_requested: Option<(Region, Instant)>,
     pub tooltip_epoch: u64,
     pub tooltip_revision: u64,
     pub tooltip_requests: VecDeque<Tooltip>,
@@ -352,7 +375,8 @@ impl Worker {
         }));
         Self {
             sizes, commands, log, events, shared, stopped: false, connect_failure_logged: false,
-            vr_panel_enabled: true, panel_enabled_requests: VecDeque::new(), panel_locked: false, launcher_auto_hide: true,
+            vr_panel_enabled: true, panel_enabled_requests: VecDeque::new(), panel_locked: false, keyboard_locked: false, launcher_auto_hide: true,
+            laser_pitch_up_deg: LASER_PITCH_UP_DEG,
             launcher_defaults: None, launcher_reset_requested: false, launcher_reset_keep_hand: false,
             vr_windows_wanted: (false, false, false), requested_anchor: None, recall_requested: None,
             tooltip_epoch, tooltip_revision: 0, tooltip_requests: VecDeque::new(),
@@ -444,7 +468,9 @@ impl Worker {
             Command::VrWindows(log, popup, keyboard) => self.vr_windows_wanted = (log, popup, keyboard),
             Command::VrPanelEnabled(enabled) => self.panel_enabled_requests.push_back(enabled),
             Command::PanelLocked(locked) => self.panel_locked = locked,
+            Command::KeyboardLocked(locked) => self.keyboard_locked = locked,
             Command::LauncherAutoHide(enabled) => self.launcher_auto_hide = enabled,
+            Command::LaserPitch(degrees) => self.laser_pitch_up_deg = degrees,
             Command::LauncherDefaults(settings) => self.launcher_defaults = Some(settings),
             Command::LauncherReset(keep_hand) => {
                 if self.launcher_defaults.is_none() {
@@ -460,7 +486,7 @@ impl Worker {
                     self.requested_anchor = Some(anchor);
                 }
             }
-            Command::RecallPanel => self.recall_requested = Some(Instant::now()),
+            Command::Recall(region) => self.recall_requested = Some((region, Instant::now())),
             Command::Tooltip(tooltip) => self.tooltip_requests.push_back(tooltip),
             Command::LayoutRendered(size) => self.layout_rendered = size,
             _ => {}

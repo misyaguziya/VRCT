@@ -88,6 +88,7 @@ export const VrApp = () => {
     const togglePopup = (name) => setWindows(w => ({ ...w, popup: w.popup === name ? null : name }));
     const closePopup = () => setWindows(w => ({ ...w, popup: null }));
     const toggleKeyboard = () => setWindows(w => ({ ...w, keyboard: !w.keyboard }));
+    const openKeyboard = () => setWindows(w => ({ ...w, keyboard: true }));
 
     return (
         <div ref={atlas} className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>
@@ -97,7 +98,7 @@ export const VrApp = () => {
             <FontFamilyController />
 
             <Region layout={layout} name="panel"><VrLogWindow onClose={toggleLog} /></Region>
-            <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} toggleKeyboard={toggleKeyboard} /></Region>
+            <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} toggleKeyboard={toggleKeyboard} openKeyboard={openKeyboard} /></Region>
             <Region layout={layout} name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
             <Region layout={layout} name="toolbar"><VrToolbar /></Region>
             <Region layout={layout} name="keyboard">{windows.keyboard && <VrKeyboardWindow onClose={toggleKeyboard} />}</Region>

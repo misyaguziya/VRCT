@@ -8,6 +8,17 @@ punctuation:
   ja: {",": "、", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", "/": "・", "~": "〜"}
   zh: {",": "，", ".": "。", "?": "？", "!": "！", "[": "「", "]": "」", ";": "；", ":": "：", "(": "（", ")": "）",
        "\\": "、"}
+  # Zhuyin: , . ; / - are Zhuyin's keys, so its comma and full stop come with Shift (as on Taiwan's keyboards)
+  zhuyin: {"<": "，", ">": "。", "?": "？", "!": "！", "[": "「", "]": "」", ":": "：", "(": "（", ")": "）", "\\": "、"}
+
+# What the keys show (RIME types the keys themselves): Zhuyin's Dachen layout, its tones on
+# Space (ˉ) and 6 3 4 7; Cangjie's (and Quick's) radicals on the letters
+zhuyin_keys: {"1": ㄅ, q: ㄆ, a: ㄇ, z: ㄈ, "2": ㄉ, w: ㄊ, s: ㄋ, x: ㄌ, e: ㄍ, d: ㄎ, c: ㄏ, r: ㄐ, f: ㄑ, v: ㄒ,
+              "5": ㄓ, t: ㄔ, g: ㄕ, b: ㄖ, y: ㄗ, h: ㄘ, n: ㄙ, u: ㄧ, j: ㄨ, m: ㄩ, "8": ㄚ, i: ㄛ, k: ㄜ, ",": ㄝ,
+              "9": ㄞ, o: ㄟ, l: ㄠ, ".": ㄡ, "0": ㄢ, p: ㄣ, ";": ㄤ, "/": ㄥ, "-": ㄦ, "6": ˊ, "3": ˇ, "4": ˋ,
+              "7": ˙}
+cangjie_keys: {a: 日, b: 月, c: 金, d: 木, e: 水, f: 火, g: 土, h: 竹, i: 戈, j: 十, k: 大, l: 中, m: 一, n: 弓,
+               o: 人, p: 心, q: 手, r: 口, s: 尸, t: 廿, u: 山, v: 女, w: 田, x: 難, y: 卜, z: 符}
 
 # Korean, the 2-set (dubeolsik) layout: the jamo of each letter key, and with Shift (the tense
 # consonants and ㅒ ㅖ; the other keys type the same jamo with Shift)

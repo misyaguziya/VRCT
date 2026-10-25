@@ -240,6 +240,7 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/run/vr_panel_tooltip", r(false, h::set_vr_panel_tooltip)),
         ("/run/vr_panel_windows", r(false, h::set_vr_panel_windows)),
         ("/run/vr_panel_recall_log", r(false, h::recall_vr_panel_log)),
+        ("/run/vr_panel_recall_keyboard", r(false, h::recall_vr_panel_keyboard)),
         ("/run/vr_launcher_reset", r(false, h::reset_vr_launcher)),
         ("/get/data/overlay_vr_panel_opacity", r(true, h::get_overlay_vr_panel_opacity)),
         ("/get/data/overlay_vr_panel_anchor", r(true, h::get_overlay_vr_panel_anchor)),
@@ -369,6 +370,11 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/set/disable/keyboard_dictation", o(h::set_disable_keyboard_dictation)),
         ("/get/data/keyboard_opacity", r(true, h::get_keyboard_opacity)),
         ("/set/data/keyboard_opacity", r(true, h::set_keyboard_opacity)),
+        ("/get/data/keyboard_locked", r(true, h::get_keyboard_locked)),
+        ("/set/enable/keyboard_locked", r(true, h::set_enable_keyboard_locked)),
+        ("/set/disable/keyboard_locked", r(true, h::set_disable_keyboard_locked)),
+        ("/get/data/overlay_vr_laser_pitch", r(true, h::get_overlay_vr_laser_pitch)),
+        ("/set/data/overlay_vr_laser_pitch", r(true, h::set_overlay_vr_laser_pitch)),
     ]
 }
 

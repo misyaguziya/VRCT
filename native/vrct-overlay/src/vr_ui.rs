@@ -58,10 +58,7 @@ const TRIGGER_AIM_START: f32 = 0.15;
 const TRIGGER_AIM_SEC: f64 = 0.4;
 /// A key pressed on the keyboard: this long a vibration (SteamVR takes up to about 4 ms)
 const KEY_HAPTIC_US: u16 = 1500;
-/// The keyboard: this far ahead of the eyes (horizontally) and below them
-const KEYBOARD_AHEAD_M: f64 = 0.45;
-const KEYBOARD_BELOW_EYES_M: f64 = 0.30;
-// A recall asked for with the log closed waits this long for it to open
+// A recall asked for with the log (keyboard) closed waits this long for it to open
 const RECALL_PENDING_SEC: f64 = 1.0;
 // The bar under the log: fixed size (0.4 m per 900 px), this gap, shown after pointing at the
 // log a while, hidden a while after, faded in / out
@@ -87,7 +84,6 @@ const CORNER_HANDLE_CENTER_PX: i32 = 34;
 const GHOST_FRONT_M: f64 = 0.004;
 // Look for a controller's tip again after this when it was not found
 const TIP_RETRY_SEC: f64 = 5.0;
-const LASER_PITCH_UP_DEG: f64 = 12.0;
 
 pub(crate) const COLOR_POINTER: [f32; 3] = [0x61 as f32 / 255.0, 0xB4 as f32 / 255.0, 0xA7 as f32 / 255.0];
 const COLOR_GRABBING: [f32; 3] = [0xB7 as f32 / 255.0, 0xDE as f32 / 255.0, 0xD8 as f32 / 255.0];
@@ -167,7 +163,7 @@ impl Run<'_> {
     fn ray_of(&mut self, w: &Worker, hand: u32, now: Instant) -> Option<Mat4> {
         let p = self.pose_of(Follow::Device(hand))?;
         let tip = self.tip_offset(w, hand, now);
-        Some(pose::mul(&pose::mul(&p, &tip), &pose::laser_tilt(LASER_PITCH_UP_DEG)))
+        Some(pose::mul(&pose::mul(&p, &tip), &pose::laser_tilt(w.laser_pitch_up_deg)))
     }
 
     /// The size's pose in the room (None while its tracker is not tracked)
@@ -582,7 +578,7 @@ impl Run<'_> {
                 }
                 continue;
             }
-            if Some(index) == panel && w.panel_locked {
+            if (Some(index) == panel && w.panel_locked) || (w.sizes[index].region == Some(Region::Keyboard) && w.keyboard_locked) {
                 continue;
             }
             let (Some(overlay_pose), Some(ray)) = (self.overlay_world_pose(w, index), hand_pose) else { continue };
@@ -761,7 +757,9 @@ impl Run<'_> {
         }
         let s = self.grab_scale.as_ref().unwrap();
         let pushed = pose::dot(pose::sub(pose::position(hand_pose), s.start), s.forward);
-        let width = (s.width * 2f64.powf(pushed / SCALE_DOUBLING_M)).clamp(WIDTH_MIN_M, WIDTH_MAX_M);
+        // the launcher within its own widths (released outside them it would fly back to the wrist)
+        let (low, high) = if w.sizes[index].region == Some(Region::Launcher) { pose::LAUNCHER_WIDTH_RANGE_M } else { (WIDTH_MIN_M, WIDTH_MAX_M) };
+        let width = (s.width * 2f64.powf(pushed / SCALE_DOUBLING_M)).clamp(low, high);
         let relative = pose::top(&pose::mul(&pose::inverse(tracker_pose), &s.overlay_pose));
         self.update_ui_scaling(w, index, width);
         self.grab_last_relative = Some(relative);
@@ -1358,12 +1356,16 @@ impl Run<'_> {
         {
             self.set_anchor(w, &anchor);
         }
-        if let Some(at) = w.recall_requested {
-            if w.region_index(Region::Panel).is_some() && !self.hidden.contains(&Region::Panel) {
+        if let Some((region, at)) = w.recall_requested {
+            if w.region_index(region).is_some() && !self.hidden.contains(&region) {
                 w.recall_requested = None;
-                self.recall_panel(w);
+                if region == Region::Keyboard {
+                    self.place_keyboard(w);
+                } else {
+                    self.recall_panel(w);
+                }
             } else if at.elapsed().as_secs_f64() > RECALL_PENDING_SEC {
-                // the log was not opened
+                // it was not opened
                 w.recall_requested = None;
             }
         }
@@ -1440,22 +1442,11 @@ impl Run<'_> {
         self.place(w, popup);
     }
 
-    /// placeKeyboard: in front of the head below the eyes, tilted up to face them (as a desk's
-    /// keyboard), fixed in the room; grabbed to move it, put back there each time it opens
+    /// placeKeyboard: in front of the eyes as the recalled log (along the gaze, facing them), fixed
+    /// in the room; grabbed to move it, put back there each time it opens or is recalled
     fn place_keyboard(&mut self, w: &mut Worker) {
         let (Some(head), Some(keyboard)) = (self.pose_of(HMD), w.region_index(Region::Keyboard)) else { return };
-        let head_pos = pose::position(&head);
-        let forward = pose::axis(&head, 2);
-        let mut ahead = [-forward[0], 0.0, -forward[2]];
-        let length = pose::norm(ahead);
-        // looking straight up or down: ahead of where the head's top points
-        if length < 1e-6 {
-            let up = pose::axis(&head, 1);
-            ahead = [up[0], 0.0, up[2]];
-        }
-        let ahead = pose::scale(ahead, KEYBOARD_AHEAD_M / pose::norm(ahead).max(1e-6));
-        let p = pose::add(pose::add(head_pos, ahead), [0.0, -KEYBOARD_BELOW_EYES_M, 0.0]);
-        let world = pose::face_head(p, &head);
+        let world = pose::recall_pose(&head);
         w.sizes[keyboard].settings.tracker = "Playspace".into();
         self.commit_position(w, keyboard, &pose::top(&world));
         self.place(w, keyboard);

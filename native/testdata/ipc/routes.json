@@ -1156,6 +1156,11 @@
    "handler": "recallVrPanelLog"
   },
   {
+   "endpoint": "/run/vr_panel_recall_keyboard",
+   "during_init": false,
+   "handler": "recallVrPanelKeyboard"
+  },
+  {
    "endpoint": "/run/vr_launcher_reset",
    "during_init": false,
    "handler": "resetVrLauncher"
@@ -1799,6 +1804,31 @@
    "endpoint": "/set/data/keyboard_opacity",
    "during_init": true,
    "handler": "setKeyboardOpacity"
+  },
+  {
+   "endpoint": "/get/data/keyboard_locked",
+   "during_init": true,
+   "handler": "getKeyboardLocked"
+  },
+  {
+   "endpoint": "/set/enable/keyboard_locked",
+   "during_init": true,
+   "handler": "setEnableKeyboardLocked"
+  },
+  {
+   "endpoint": "/set/disable/keyboard_locked",
+   "during_init": true,
+   "handler": "setDisableKeyboardLocked"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_laser_pitch",
+   "during_init": true,
+   "handler": "getOverlayVrLaserPitch"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_laser_pitch",
+   "during_init": true,
+   "handler": "setOverlayVrLaserPitch"
   }
  ],
  "run_mapping": {

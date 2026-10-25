@@ -79,6 +79,8 @@
     text-decoration: underline 4px var(--primary_300_color);
     text-underline-offset: 4px;
 }
+// 選んだ所 (Shift ◀ ▶、Ctrl+A)。字の大きさが変わらないよう、余白も飾りも足さない
+.selected { background: var(--primary_700_color); color: #ffffff; }
 .caret {
     display: inline-block;
     vertical-align: text-bottom;
@@ -297,14 +299,18 @@ $ring: 3px;
 }
 
 // 左上の小さい字 (Shift を押すと入る字。Shift 中は押さないときの字)
+// Ctrl: 印字は字で
+.ctrl { font-size: 20px; font-weight: 600; }
+// Ctrl の間、働きのないキーは薄く (押せない)
+.ctrl_off { opacity: 0.3; }
 .key_corner {
     position: absolute;
     top: 4px;
     left: 8px;
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 500;
     line-height: 1;
-    color: var(--dark_500_color);
+    color: var(--dark_400_color);
 }
 
 // 入力欄の右端の × (全部消す)。1回目で注意の色、続けてもう1回で消す
@@ -331,6 +337,7 @@ $ring: 3px;
     background: transparent;
     color: var(--dark_400_color);
     &[aria-expanded="true"] { background: #26272a; color: #ffffff; }
+    &[aria-pressed="true"] { color: var(--primary_300_color); }
     @include pointed { background: #4f5257; color: #ffffff; }
 }
 
@@ -351,14 +358,17 @@ $ring: 3px;
     background: #1f2023;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
 }
-// 言語キー (左下) の上に開く
-.language_menu { left: 16px; bottom: 16px + 56px + 8px; flex-direction: row; }
+// 言語キー (下から3段目の左端) の上に開く: 下の余白 16px と3段分 (キー 56px + すき間 8px)
+.language_menu { left: 16px; bottom: 16px + 3 * 64px; flex-direction: row; }
 // 不透明度の印 (右上) の下に開く
 .settings_menu { top: 4px; right: 16px; }
 .menu_row { display: flex; align-items: center; gap: 6px; }
 // 線で描く印 (不透明度・送る先)
 .stroke_icon { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .stroke_icon .filled { fill: currentColor; }
+// ピン: 外れている間は傾けて薄く、留めている間はまっすぐ (アクセントの色は .menu_button の aria-pressed)
+.pin_icon { transform: rotate(40deg); opacity: 0.6; transition: transform 150ms, opacity 150ms; }
+[aria-pressed="true"] > .pin_icon { transform: none; opacity: 1; }
 
 // 入力欄の右端の ↵ で送る先の印 (押すと切り替わる)
 .send_to {

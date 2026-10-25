@@ -149,6 +149,9 @@ fn state_json(status: Status, s: &State) -> Value {
         "last_page": s.last_page,
         "syllable": s.syllable,
         "length": s.length,
+        "half_width": s.half_width,
+        // characters selected before / after the cursor
+        "selected": [s.selected.0, s.selected.1],
     })
 }
 
@@ -278,12 +281,29 @@ pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
 }
 
 /// A key: one character ("a", "A" with Shift, "、", "\n"), or Backspace, Space, Enter, Left, Right,
-/// PageUp, PageDown, Up and Down (what was sent, called back)
+/// PageUp, PageDown, HalfWidth (半角/全角), Up and Down (what was sent, called back); ◀ ▶ with
+/// modifiers (Shift+Left, Ctrl+Right, Ctrl+Shift+Left…), SelectAll, Undo, Redo, and Copy, Cut,
+/// Paste through the clipboard (Cut deletes only what went onto it)
 pub fn keyboard_key(app: &App, data: Data) -> Result<Reply> {
     let name = data.as_ref().and_then(Value::as_str).ok_or_else(|| anyhow!("the key is not a string"))?;
     let mut t = typing(app);
     match name {
         "Up" | "Down" => t.recall(name == "Up"),
+        "Copy" => {
+            if let Some(text) = t.input.selected_text() {
+                crate::clipboard::copy(&text);
+            }
+        }
+        "Cut" => {
+            if t.input.selected_text().is_some_and(|text| crate::clipboard::copy(&text)) {
+                t.input.cut();
+            }
+        }
+        "Paste" => {
+            if let Some(text) = crate::clipboard::text() {
+                t.input.paste(&text);
+            }
+        }
         "Enter" if !t.input.composing() => return enter(app, t),
         _ => {
             let key = key_of(name)?;
@@ -306,6 +326,20 @@ fn key_of(name: &str) -> Result<Key> {
         "Right" => Key::Right,
         "PageUp" => Key::PageUp,
         "PageDown" => Key::PageDown,
+        "HalfWidth" => Key::HalfWidth,
+        "SelectAll" => Key::SelectAll,
+        "Undo" => Key::Undo,
+        "Redo" => Key::Redo,
+        _ if name.ends_with("+Left") || name.ends_with("+Right") => {
+            let (modifiers, arrow) = name.rsplit_once('+').unwrap_or_default();
+            let (word, select) = match modifiers {
+                "Shift" => (false, true),
+                "Ctrl" => (true, false),
+                "Ctrl+Shift" => (true, true),
+                _ => bail!("no key {name:?}"),
+            };
+            Key::Move { left: arrow == "Left", word, select }
+        }
         _ => {
             let mut chars = name.chars();
             match (chars.next(), chars.next()) {
@@ -474,7 +508,7 @@ pub fn get_keyboard_language(app: &App, _: Data) -> Result<Reply> {
     current(app, "KEYBOARD_LANGUAGE")
 }
 
-/// "ja", "en", "ko" or "zh"; what was being composed is written first
+/// "ja", "en", "ko", "zh", "zhuyin", "cangjie" or "quick"; what was being composed is written first
 pub fn set_keyboard_language(app: &App, data: Data) -> Result<Reply> {
     let reply = validated(app, "KEYBOARD_LANGUAGE", data.unwrap_or(Value::Null))?;
     if let Some(language) = Language::from_code(&app.config.get_str("KEYBOARD_LANGUAGE")) {
@@ -583,6 +617,20 @@ mod tests {
 
     fn keys(app: &App, keys: &[&str]) -> Value {
         keys.iter().map(|k| keyboard_key(app, Some(json!(k))).unwrap().result).last().unwrap()
+    }
+
+    #[test]
+    fn modified_arrows_select_all_undo_redo_and_half_width_by_name() {
+        let (app, _osc) = rig();
+        set_keyboard_language(&app, Some(json!("en"))).unwrap();
+        keys(&app, &["a", "b", "Space", "c", "d", "Ctrl+Left"]);
+        assert_eq!(keys(&app, &["Ctrl+Shift+Right"])["selected"], json!([2, 0]));
+        assert_eq!(keys(&app, &["SelectAll", "Backspace"])["text"], json!(""));
+        assert_eq!(keys(&app, &["Undo"])["text"], json!("ab cd"));
+        assert_eq!(keys(&app, &["Redo"])["text"], json!(""));
+        assert!(keyboard_key(&app, Some(json!("Alt+Left"))).is_err());
+        set_keyboard_language(&app, Some(json!("ja"))).unwrap();
+        assert_eq!(keys(&app, &["HalfWidth"])["half_width"], json!(true));
     }
 
     #[test]

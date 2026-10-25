@@ -627,7 +627,7 @@ fn a_recalled_log_comes_in_front_of_the_eyes() {
     let mut r = vr_ui();
     let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
     r.hand(HEAD, head);
-    r.w.recall_requested = Some(Instant::now());
+    r.w.recall_requested = Some((Region::Panel, Instant::now()));
     r.frame(0);
     let expected = pose::position(&pose::recall_pose(&head));
     let got = pose::position(&r.world("panel"));
@@ -648,7 +648,7 @@ fn each_hand_pointing_at_the_vr_ui_shows_its_own_dot() {
 }
 
 #[test]
-fn the_keyboard_opens_in_front_of_the_head_below_the_eyes_facing_them() {
+fn the_keyboard_opens_and_is_recalled_in_front_of_the_eyes_facing_them() {
     let mut r = vr_ui();
     let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
     r.hand(HEAD, head);
@@ -657,16 +657,23 @@ fn the_keyboard_opens_in_front_of_the_head_below_the_eyes_facing_them() {
     r.w.vr_windows_wanted = (true, false, true);
     r.frame(0);
     assert!(r.steam.0.borrow().overlays[handle as usize - 1].visible);
-    let keyboard = r.world("keyboard");
-    let at = pose::position(&keyboard);
-    let ahead = pose::scale(pose::axis(&head, 2), -1.0);
-    assert!((at[1] - 1.3).abs() < 1e-3, "{at:?}");
-    let horizontal = [at[0], 0.0, at[2]];
-    assert!((pose::norm(horizontal) - 0.45).abs() < 1e-3 && horizontal[0] * ahead[0] + horizontal[2] * ahead[2] > 0.0, "{at:?}");
-    // its face (+z) toward the eyes, so tilted up
-    let to_eyes = pose::sub([0.0, 1.6, 0.0], at);
-    let face = pose::axis(&keyboard, 2);
-    assert!(face.iter().zip(to_eyes).map(|(a, b)| a * b).sum::<f64>() / pose::norm(to_eyes) > 0.99, "{face:?}");
+    let in_front = |r: &Rig, head: &Mat4| {
+        let keyboard = r.world("keyboard");
+        let at = pose::position(&keyboard);
+        assert!(pose::norm(pose::sub(at, pose::position(&pose::recall_pose(head)))) < 1e-3, "{at:?}");
+        // its face (+z) toward the eyes
+        let to_eyes = pose::sub(pose::position(head), at);
+        let face = pose::axis(&keyboard, 2);
+        assert!(face.iter().zip(to_eyes).map(|(a, b)| a * b).sum::<f64>() / pose::norm(to_eyes) > 0.99, "{face:?}");
+    };
+    in_front(&r, &head);
+    // turned away, then recalled: in front again
+    let turned = pose::pose_facing([0.0, 1.6, 0.0], [1.0, 1.6, 0.0], None);
+    r.hand(HEAD, turned);
+    r.w.recall_requested = Some((Region::Keyboard, Instant::now()));
+    r.frame(0);
+    in_front(&r, &turned);
+    assert!(r.w.recall_requested.is_none());
     r.w.vr_windows_wanted = (true, false, false);
     r.frame(0);
     assert!(!r.steam.0.borrow().overlays[handle as usize - 1].visible);
@@ -753,4 +760,26 @@ fn resizing_stops_at_the_largest_size() {
     r.frame(20);
     let (w, h) = r.w.sizes[pi].settings.panel_size.unwrap();
     assert_eq!((w, h), crate::layout::clamp_panel_size(1e9, 1e9));
+}
+
+#[test]
+fn a_locked_keyboard_is_not_grabbed() {
+    let mut r = vr_ui();
+    let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
+    r.hand(HEAD, head);
+    r.w.vr_windows_wanted = (true, false, true);
+    r.frame(0);
+    let at = pose::position(&r.world("keyboard"));
+    r.hand(RIGHT, aiming([0.2, 1.2, 0.2], at));
+    r.w.keyboard_locked = true;
+    r.frame(0);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), None);
+    r.w.keyboard_locked = false;
+    r.buttons(RIGHT, 0);
+    r.frame(20);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), Some(r.index("keyboard")));
 }

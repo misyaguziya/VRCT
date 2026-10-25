@@ -19,7 +19,7 @@ import shared from "./VrSettingsWindow.module.scss";
 import styles from "./VrLauncher.module.scss";
 
 const LONG_PRESS_MS = 600;
-export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKeyboard }) => {
+export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKeyboard, openKeyboard }) => {
     const { t } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
     const { toggleTranslation, currentTranslationStatus, toggleTranscriptionSend, currentTranscriptionSendStatus,
@@ -31,6 +31,8 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKey
     const is_log_lost = windows.log && currentVrPanelLogOutOfView.data === true;
     const is_locked = currentIsOpenedConfigPage.data === true;
     const recallLog = () => { openLog(); asyncStdoutToPython("/run/vr_panel_recall_log"); };
+    // キーボード: 長押しで目の前へ呼び戻す (閉じていれば開く。ログのボタンと同じ)
+    const recallKeyboard = () => { openKeyboard(); asyncStdoutToPython("/run/vr_panel_recall_keyboard"); };
     return <div className={styles.root} style={{ "--vrct-logo": `url("${vrct_logo}")` }}>
         {intro === "playing" && <>
             <img className={styles.intro_icon} src={vrct_icon} alt="" aria-hidden="true" />
@@ -54,7 +56,7 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKey
                     name={t("vr_panel.window_log")} is_open={windows.log} is_attention={is_log_lost}
                     onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog} onLongPress={recallLog} />
                 <WindowButton Svg={KeyboardSvg} label={t("vr_panel.keyboard.title")}
-                    is_open={windows.keyboard} onClick={toggleKeyboard} />
+                    is_open={windows.keyboard} onClick={toggleKeyboard} onLongPress={recallKeyboard} />
                 <WindowButton Svg={LanguageSvg} label={t("vr_panel.window_language")}
                     is_open={windows.popup === "language"} onClick={() => togglePopup("language")} />
                 <WindowButton Svg={ConfigurationSvg} label={t("vr_panel.window_settings")}

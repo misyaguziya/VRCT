@@ -69,6 +69,11 @@ pub fn copy(text: &str) -> bool {
     arboard::Clipboard::new().and_then(|mut c| c.set_text(text)).is_ok()
 }
 
+/// The text on the clipboard (None: none, or it could not be read)
+pub fn text() -> Option<String> {
+    arboard::Clipboard::new().and_then(|mut c| c.get_text()).ok()
+}
+
 /// Ctrl+V to the focused window
 pub fn paste() {
     unsafe {

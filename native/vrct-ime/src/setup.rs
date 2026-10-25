@@ -6,10 +6,23 @@ use std::path::Path;
 /// The candidates on a page (the keyboard's candidate row)
 pub const PAGE_SIZE: usize = 8;
 
+/// The schemas RIME builds (each language's: Language::schema)
+pub const SCHEMAS: [&str; 5] = ["jaroomaji", "luna_pinyin", "bopomofo", "cangjie5", "quick5"];
+
+/// Zhuyin, Cangjie and Quick without what needs data not downloaded (the reverse lookups by
+/// strokes / pinyin and their dictionaries, the user's phrases). Cangjie shows its radicals only
+/// (its own format adds the letters after a tab).
+const ZHUYIN_PATCH: &str = "patch:\n  schema/dependencies: []\n  engine/translators: [punct_translator, script_translator]\n";
+const CANGJIE_PATCH: &str = "patch:\n  schema/dependencies: []\n  engine/translators: [punct_translator, table_translator]\n  abc_segmentor/extra_tags: []\n  translator/preedit_format:\n    - \"xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|\"\n";
+const QUICK_PATCH: &str = "patch:\n  schema/dependencies: []\n  engine/translators: [punct_translator, script_translator]\n  abc_segmentor/extra_tags: []\n";
+
 /// The files to write into the user folder before RIME builds: (name, contents)
 pub fn user_files(shared: &Path) -> Result<Vec<(&'static str, String)>> {
-    let default = format!("patch:\n  schema_list:\n    - schema: jaroomaji\n    - schema: luna_pinyin\n  menu/page_size: {PAGE_SIZE}\n");
-    Ok(vec![("default.custom.yaml", default), ("jaroomaji.custom.yaml", jaroomaji_patch(shared)?)])
+    let schemas: String = SCHEMAS.iter().map(|s| format!("    - schema: {s}\n")).collect();
+    let default = format!("patch:\n  schema_list:\n{schemas}  menu/page_size: {PAGE_SIZE}\n");
+    Ok(vec![("default.custom.yaml", default), ("jaroomaji.custom.yaml", jaroomaji_patch(shared)?),
+            ("bopomofo.custom.yaml", ZHUYIN_PATCH.into()), ("cangjie5.custom.yaml", CANGJIE_PATCH.into()),
+            ("quick5.custom.yaml", QUICK_PATCH.into())])
 }
 
 /// jaroomaji's rules, changed:

@@ -17,7 +17,8 @@ mod tests {
 
     #[test]
     fn every_key_types_one_character() {
-        for table in [&["punctuation", "ja"][..], &["punctuation", "zh"], &["korean"], &["korean_shift"]] {
+        for table in [&["punctuation", "ja"][..], &["punctuation", "zh"], &["punctuation", "zhuyin"], &["korean"], &["korean_shift"],
+                      &["zhuyin_keys"], &["cangjie_keys"]] {
             let map = table.iter().fold(&*KEYS, |v, name| &v[*name]).as_mapping().unwrap_or_else(|| panic!("{table:?}"));
             for (key, to) in map {
                 let (key, to) = (key.as_str().unwrap(), to.as_str().unwrap());
@@ -25,6 +26,9 @@ mod tests {
             }
         }
         assert_eq!(KEYS["korean"].as_mapping().unwrap().len(), 26);
+        // Zhuyin: the 37 symbols and 4 tones (the 1st on Space); Cangjie: the 26 letters
+        assert_eq!(KEYS["zhuyin_keys"].as_mapping().unwrap().len(), 41);
+        assert_eq!(KEYS["cangjie_keys"].as_mapping().unwrap().len(), 26);
         assert_eq!(mapped(&["punctuation", "zh"], '\\'), Some('、'));
         assert_eq!(mapped(&["korean"], 'y'), Some('ㅛ'));
         assert_eq!(mapped(&["punctuation", "ja"], 'a'), None);

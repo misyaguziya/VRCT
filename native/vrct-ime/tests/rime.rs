@@ -121,8 +121,42 @@ fn japanese_and_chinese_convert() {
         typed(&mut i, keys);
         assert_eq!(i.take(), text, "{keys}");
     }
+    // 半角/全角: what was being composed is written, then the keys as they are; again: kana
+    typed(&mut i, "ni");
+    i.key(Key::HalfWidth);
+    typed(&mut i, "ok,");
+    i.key(Key::HalfWidth);
+    typed(&mut i, "ne");
+    assert_eq!(i.take(), "にok,ね");
+    // Ctrl+Z while composing drops only the word being composed; Ctrl+A writes it first
+    typed(&mut i, "nihon");
+    i.key(Key::Undo);
+    assert!(i.state().composition.is_none() && i.state().text.is_empty(), "{:?}", i.state());
+    typed(&mut i, "kana");
+    i.key(Key::SelectAll);
+    assert_eq!(i.selected_text().as_deref(), Some("かな"));
+    typed(&mut i, "ne");
+    assert_eq!(i.take(), "ね");
     i.set_language(Language::Chinese);
     typed(&mut i, "nihao,");
     assert_eq!(i.take(), "你好，");
+    // Zhuyin on the Dachen layout: ㄋㄧˇ ㄏㄠˇ (s u 3, c l 3; shown with a space between the syllables); its comma with Shift
+    i.set_language(Language::Zhuyin);
+    typed(&mut i, "su3cl3");
+    let st = i.state();
+    assert_eq!((st.composition.as_ref().unwrap().preedit.as_str(), st.candidates[0].as_str()), ("ㄋㄧˇ ㄏㄠˇ", "你好"), "{st:?}");
+    i.select(0);
+    typed(&mut i, "<");
+    assert_eq!(i.take(), "你好，");
+    // Cangjie: 明 is 日月 (a b), shown as its radicals; Quick: 你 is 人火 (first and last of 人弓火)
+    i.set_language(Language::Cangjie);
+    typed(&mut i, "ab");
+    let st = i.state();
+    assert_eq!((st.composition.as_ref().unwrap().preedit.as_str(), st.candidates[0].as_str()), ("日月", "明"), "{st:?}");
+    i.key(Key::Space);
+    assert_eq!(i.take(), "明");
+    i.set_language(Language::Quick);
+    typed(&mut i, "of");
+    assert!(i.state().candidates.iter().any(|c| c == "你"), "{:?}", i.state());
     let _ = std::fs::remove_dir_all(&user);
 }

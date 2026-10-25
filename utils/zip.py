@@ -1,3 +1,4 @@
+import sys
 import zipfile
 import argparse
 from pathlib import Path
@@ -12,31 +13,29 @@ def zip_files_and_directory(zip_name, file_paths, dir_paths, verbose=False):
             # ファイルを追加
             for file_path_str in tqdm(file_paths, desc="Adding files", unit="file"):
                 file_path = Path(file_path_str)
-                if file_path.is_file():
-                    zipf.write(file_path, file_path.name)
-                    if verbose:
-                        print(f"Add file: {file_path}")
-                else:
-                    print(f"Warning: File not found or is not a file: {file_path}")
+                if not file_path.is_file():
+                    raise FileNotFoundError(f"File not found or is not a file: {file_path}")
+                zipf.write(file_path, file_path.name)
+                if verbose:
+                    print(f"Add file: {file_path}")
 
             # ディレクトリを追加
             for dir_path_str in dir_paths:
                 dir_path = Path(dir_path_str)
-                if dir_path.is_dir():
-                    all_files_in_dir = [item for item in dir_path.rglob("*") if item.is_file()]
-                    for item in tqdm(all_files_in_dir, desc=f"Adding files from {dir_path.name}", unit="file"):
-                        # ディレクトリ構造を保持しつつ、ルートに配置
-                        arcname = Path(dir_path.name) / item.relative_to(dir_path)
-                        zipf.write(item, arcname)
-                        if verbose:
-                            print(f"Add file: {item}")
-                else:
-                    print(f"Warning: Directory not found or is not a directory: {dir_path}")
+                if not dir_path.is_dir():
+                    raise FileNotFoundError(f"Directory not found or is not a directory: {dir_path}")
+                all_files_in_dir = [item for item in dir_path.rglob("*") if item.is_file()]
+                for item in tqdm(all_files_in_dir, desc=f"Adding files from {dir_path.name}", unit="file"):
+                    # ディレクトリ構造を保持しつつ、ルートに配置
+                    arcname = Path(dir_path.name) / item.relative_to(dir_path)
+                    zipf.write(item, arcname)
+                    if verbose:
+                        print(f"Add file: {item}")
         print(f"Successfully created zip file: {zip_file_path}")
-    except IOError as e:
-        print(f"Error: Could not create zip file {zip_file_path}. Reason: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        # 途中までの zip は残さない (欠けたまま配らない)
+        zip_file_path.unlink(missing_ok=True)
+        sys.exit(f"Error: Could not create zip file {zip_file_path}. Reason: {e}")
 
 
 if __name__ == "__main__":

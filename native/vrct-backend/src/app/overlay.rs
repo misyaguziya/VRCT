@@ -214,6 +214,8 @@ pub fn sync_overlay_running(app: &App) -> Result<()> {
     let mut o = overlay(app);
     o.set_vr_panel_enabled(app.config.get_bool("OVERLAY_VR_PANEL"));
     o.set_panel_locked(app.config.get_bool("OVERLAY_VR_PANEL_LOCKED"));
+    o.set_keyboard_locked(app.config.get_bool("KEYBOARD_LOCKED"));
+    o.set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
     o.set_launcher_auto_hide(app.config.get_bool("OVERLAY_VR_LAUNCHER_AUTO_HIDE"));
     if app.config.get_bool("OVERLAY_SMALL_LOG") || app.config.get_bool("OVERLAY_LARGE_LOG") || app.config.get_bool("OVERLAY_VR_PANEL") {
         o.start();
@@ -429,6 +431,12 @@ pub fn recall_vr_panel_log(app: &App, _: Data) -> Result<Reply> {
     Ok(Reply::ok(true))
 }
 
+/// The keyboard in front of the eyes (the launcher's keyboard button held)
+pub fn recall_vr_panel_keyboard(app: &App, _: Data) -> Result<Reply> {
+    overlay(app).recall_keyboard();
+    Ok(Reply::ok(true))
+}
+
 /// resetVrLauncher: the launcher back to its defaults (to the wrist when in VR)
 pub fn reset_vr_launcher(app: &App, _: Data) -> Result<Reply> {
     app.config.set("OVERLAY_VR_LAUNCHER_SETTINGS", default_launcher())?;
@@ -514,6 +522,37 @@ pub fn set_keyboard_opacity(app: &App, data: Data) -> Result<Reply> {
     let rounded = data.as_ref().and_then(py_float).map_or(Value::Null, |o| json!(vrct_overlay::pose::round_to(o, 2)));
     let reply = super::basic::validated(app, "KEYBOARD_OPACITY", rounded)?;
     overlay(app).update_opacity(KEYBOARD, app.config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), false);
+    Ok(reply)
+}
+
+pub fn get_keyboard_locked(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_LOCKED")
+}
+
+/// The keyboard pinned: not grabbed (moved) in VR
+fn set_keyboard_locked(app: &App, locked: bool) -> Result<Reply> {
+    app.config.set("KEYBOARD_LOCKED", json!(locked))?;
+    overlay(app).set_keyboard_locked(locked);
+    current(app, "KEYBOARD_LOCKED")
+}
+
+pub fn set_enable_keyboard_locked(app: &App, _: Data) -> Result<Reply> {
+    set_keyboard_locked(app, true)
+}
+
+pub fn set_disable_keyboard_locked(app: &App, _: Data) -> Result<Reply> {
+    set_keyboard_locked(app, false)
+}
+
+pub fn get_overlay_vr_laser_pitch(app: &App, _: Data) -> Result<Reply> {
+    current(app, "OVERLAY_VR_LASER_PITCH")
+}
+
+/// The lasers' tilt up from the controllers' tips: -30–30 degrees (applied at once)
+pub fn set_overlay_vr_laser_pitch(app: &App, data: Data) -> Result<Reply> {
+    let rounded = data.as_ref().and_then(py_float).map_or(Value::Null, |d| json!(vrct_overlay::pose::round_to(d, 1)));
+    let reply = super::basic::validated(app, "OVERLAY_VR_LASER_PITCH", rounded)?;
+    overlay(app).set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
     Ok(reply)
 }
 
