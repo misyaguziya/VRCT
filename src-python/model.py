@@ -2318,6 +2318,7 @@ class Model:
     def updateOverlaySmallLogSettings(self):
         self.ensure_initialized()
         size = "small"
+        self.overlay.settings[size]["locked"] = config.OVERLAY_SMALL_LOG_SETTINGS["locked"]
 
         if (self.overlay.settings[size]["x_pos"] != config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"] or
             self.overlay.settings[size]["y_pos"] != config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"] or
@@ -2382,6 +2383,7 @@ class Model:
     def updateOverlayLargeLogSettings(self):
         self.ensure_initialized()
         size = "large"
+        self.overlay.settings[size]["locked"] = config.OVERLAY_LARGE_LOG_SETTINGS["locked"]
         if (self.overlay.settings[size]["x_pos"] != config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"] or
             self.overlay.settings[size]["y_pos"] != config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"] or
             self.overlay.settings[size]["z_pos"] != config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"] or

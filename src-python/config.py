@@ -496,12 +496,17 @@ def _selected_transcription_compute_type_validator(val, inst):
     return None
 
 def _overlay_small_validator(val, inst):
+    # locked は後から増えた項目。以前に保存した設定 (locked なし) の位置を捨てないよう、足りなければ解除として補う
+    if isinstance(val, dict):
+        val = {"locked": False, **val}
     if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_SMALL_LOG_SETTINGS.keys())):
         return None
     base = inst.OVERLAY_SMALL_LOG_SETTINGS
     new = dict(base)
     for key, v in val.items():
-        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
+        if key == 'locked' and isinstance(v, bool):
+            new[key] = v
+        elif key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
             new[key] = v
         elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation'] and isinstance(v,(int,float)):
             new[key] = float(v)
@@ -533,12 +538,16 @@ def _validate_overlay_vr_window(val, current):
     return new
 
 def _overlay_large_validator(val, inst):
+    if isinstance(val, dict):
+        val = {"locked": False, **val}
     if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_LARGE_LOG_SETTINGS.keys())):
         return None
     base = inst.OVERLAY_LARGE_LOG_SETTINGS
     new = dict(base)
     for key, v in val.items():
-        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
+        if key == 'locked' and isinstance(v, bool):
+            new[key] = v
+        elif key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
             new[key] = v
         elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation'] and isinstance(v,(int,float)):
             new[key] = float(v)
@@ -1302,6 +1311,7 @@ class Config:
             "opacity": 1.0,
             "ui_scaling": 1.0,
             "tracker": "HMD",
+            "locked": False,
         }
         self._OVERLAY_LARGE_LOG = False
         self._OVERLAY_LARGE_LOG_SETTINGS = {
@@ -1316,6 +1326,7 @@ class Config:
             "opacity": 1.0,
             "ui_scaling": 1.0,
             "tracker": "LeftHand",
+            "locked": False,
         }
         self._OVERLAY_VR_LAUNCHER_SETTINGS = dict(DEFAULT_OVERLAY_VR_LAUNCHER_SETTINGS)
         self._OVERLAY_VR_PANEL = False

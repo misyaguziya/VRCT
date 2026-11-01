@@ -306,6 +306,7 @@ config_page:
         restore_default_settings: "초기값으로 되돌리기"
         position: "위치"
         rotation: "회전"
+        lock_position: "좌표 잠금 (VR에서 잡아서 움직이지 못하게 합니다)"
         x_position: "X축 (좌우)"
         y_position: "Y축 (상하)"
         z_position: "Z축 (앞뒤)"
