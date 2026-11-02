@@ -15,7 +15,7 @@ from psutil import Process as psutil_Process
 from datetime import datetime
 from time import sleep
 from queue import Queue, Empty
-from threading import Thread, Lock, current_thread
+from threading import Thread, Lock, RLock, current_thread
 from concurrent.futures import ThreadPoolExecutor
 from requests import get as requests_get
 from typing import Callable, Optional, cast
@@ -896,6 +896,8 @@ class Model:
     # /avatar/change で MuteSelf を問い合わせるスレッド。問い合わせ (HTTP、時間制限なし) を OSC の受信スレッドで
     # 行うと、その間すべての OSC 受信が止まる
     _avatar_query_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="osc_avatar_query")
+    # init() の実行中は、別スレッドの init() をここで待たせる (下の init の説明を参照)
+    _init_lock = RLock()
 
     def __new__(cls):
         if cls._instance is None:
@@ -913,7 +915,17 @@ class Model:
         This method performs heavy construction (models, overlay, threads)
         and is intentionally not called at import time. Call explicitly
         or let `ensure_initialized()` call it lazily.
+
+        別のスレッドが初期化している最中に呼ばれたときは、その完了を待つ。
+        待たずに即 return すると、呼び出し側は overlay などがまだ無いまま使い始めて
+        AttributeError になる (Controller._bootstrapModel のコールバック登録が失敗し、
+        掴んだ位置の保存や UI への通知が起動中ずっと効かなくなっていた)。
+        同じスレッドからの再入は RLock が通し、下の _init_failed で即 return する。
         """
+        with self._init_lock:
+            self._initResources()
+
+    def _initResources(self):
         if getattr(self, '_inited', False) or getattr(self, '_init_failed', False):
             return
 
@@ -2518,7 +2530,10 @@ class Model:
         self._armFreezeDump()
 
     def feedWatchdog(self):
-        self.ensure_initialized()
+        # watchdog は init() の先頭で作られる。初期化中に届いた feed は、初期化の完了を待たずに通す
+        # (待つと、初期化が遅い環境で feed が止まる)
+        if getattr(self, 'watchdog', None) is None:
+            self.ensure_initialized()
         self.watchdog.feed()
         self._armFreezeDump()
 
