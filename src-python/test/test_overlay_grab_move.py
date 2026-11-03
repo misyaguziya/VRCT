@@ -284,6 +284,15 @@ class UpdateGrabFlowTest(unittest.TestCase):
         self.assertIsNone(self.overlay.grabbing)
         self.callback.assert_called_once()
 
+    def test_locked_overlay_is_not_grabbed(self):
+        """座標ロック中の字幕は、グリップしても掴めない。"""
+        for settings in self.overlay.settings.values():
+            settings["locked"] = True
+        self.overlay.updateGrab()
+        self.grip = True
+        self.overlay.updateGrab()
+        self.assertIsNone(self.overlay.grabbing)
+
     def test_grip_held_before_pointing_does_not_grab(self):
         """グリップを押したままレーザーを当てても掴まない (VRChatで物を持っている時など)。"""
         hit = self.overlay.overlay.computeOverlayIntersection.return_value
