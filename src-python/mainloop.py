@@ -28,6 +28,13 @@ warnings.filterwarnings(
     message=r"grpcio < 1\.83\.0 does not support Post-Quantum Cryptography.*",
     category=FutureWarning,
 )
+# google.api_core は Python 3.11 のサポート終了予告 (2027-10-24) を import 時に出す。
+# 同じ理由でダイアログに化けるうえ、こちらは Python を上げるまで毎回発火する。
+warnings.filterwarnings(
+    "ignore",
+    message=r"You are using a Python version .* which Google will stop supporting.*",
+    category=FutureWarning,
+)
 
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
