@@ -33,6 +33,52 @@
         color: var(--dark_400_color);
     }
 }
+// 位置/回転の切り替えと座標ロックのボタンを横に並べる
+.controller_type_switch_row {
+    margin-top: 2rem;
+    display: flex;
+    align-items: stretch;
+    gap: 1rem;
+    width: 80%;
+    & .controller_type_switch {
+        margin-top: 0;
+        width: auto;
+        flex: 1;
+    }
+}
+.lock_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 4.8rem;
+    border: 0.1rem solid var(--dark_600_color);
+    border-radius: 0.4rem;
+    color: var(--dark_400_color);
+    cursor: pointer;
+    &:hover {
+        color: var(--dark_200_color);
+    }
+    &.is_locked {
+        background-color: var(--primary_500_color);
+        border-color: var(--primary_500_color);
+        color: var(--dark_100_color);
+    }
+}
+.lock_button_svg {
+    width: 2.2rem;
+    height: 2.2rem;
+    // 線画のアイコン。共通の svg の塗りを打ち消す
+    fill: none;
+    stroke: currentColor;
+}
+// ロック中は位置・回転の操作を受け付けない (サンプル送信ボタンは外なので使える)
+// filter は子の絶対配置の基準を変えて配置が崩れるので使わない
+.is_locked_controls {
+    opacity: 0.38;
+    pointer-events: none;
+}
+
 .controller_type_switcher {
     width: 100%;
     &.is_selected {
