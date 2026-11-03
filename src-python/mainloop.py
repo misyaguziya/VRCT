@@ -16,25 +16,12 @@ import warnings
 # transformers を import するより前に設定する必要がある。
 os.environ.setdefault("TRANSFORMERS_NO_ADVISORY_WARNINGS", "1")
 
-# google-auth 2.42.0 以降は google/auth/transport/grpc.py の import 時に
-# 「grpcio < 1.83.0 は Post-Quantum Cryptography 非対応」という FutureWarning を
-# 出す。requirements では grpcio>=1.83.0 に更新済みなので通常は発火しないが、
-# 古い grpcio が残った開発環境向けのフォールバックとして残す。warnings.warn は
-# 既定で stderr に書かれ、フロントの StartPythonController が sidecar の stderr
-# 出力を致命的エラー通知に昇格させるため、良性の警告が「An error occurred」
-# ダイアログに化けてしまう。どの google import よりも前にフィルタを設定する。
-warnings.filterwarnings(
-    "ignore",
-    message=r"grpcio < 1\.83\.0 does not support Post-Quantum Cryptography.*",
-    category=FutureWarning,
-)
-# google.api_core は Python 3.11 のサポート終了予告 (2027-10-24) を import 時に出す。
-# 同じ理由でダイアログに化けるうえ、こちらは Python を上げるまで毎回発火する。
-warnings.filterwarnings(
-    "ignore",
-    message=r"You are using a Python version .* which Google will stop supporting.*",
-    category=FutureWarning,
-)
+# 依存ライブラリの FutureWarning (google-auth の grpcio 非対応予告、google.api_core の
+# Python 3.11 サポート終了予告など) は import 時に stderr へ書かれる。フロントの
+# StartPythonController は stderr 出力を致命的エラー通知に昇格させるため、良性の
+# 予告が「An error occurred」ダイアログに化けてしまう。FutureWarning は将来の
+# 非互換の予告にすぎず動作に影響しないので、どの import よりも前に一括で抑制する。
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
