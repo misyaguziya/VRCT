@@ -7,6 +7,11 @@ pub(crate) trait VrSystem {
     fn device_to_absolute_tracking_pose(&self, origin: i32, predicted_seconds: f32) -> Vec<TrackedDevicePose>;
     fn tracked_device_index_for_controller_role(&self, role: i32) -> u32;
     fn controller_state(&self, index: u32) -> Option<ControllerState>;
+    /// Once a frame, before the controller states: the hands (device indices) pointing at VRCT,
+    /// held from the game (input.rs)
+    fn update_input(&self, _pointing: &[u32]) -> Result<(), Error> { Ok(()) }
+    fn is_input_available(&self) -> bool { true }
+    fn invalidate_input(&self) {}
     fn trigger_haptic_pulse(&self, index: u32, duration_us: u16);
     fn poll_next_event(&self) -> Option<Event>;
     fn string_tracked_device_property(&self, index: u32, property: u32) -> String;
@@ -16,6 +21,7 @@ pub(crate) trait VrSystem {
 }
 
 pub(crate) trait VrOverlay {
+    fn is_dashboard_visible(&self) -> bool { false }
     fn create_overlay(&self, key: &str, name: &str) -> Result<u64, Error>;
     fn destroy_overlay(&self, handle: u64) -> Result<(), Error>;
     fn show_overlay(&self, handle: u64) -> Result<(), Error>;
@@ -37,37 +43,72 @@ pub(crate) trait VrRenderModels {
                        -> Option<ComponentState>;
 }
 
-impl VrSystem for vrct_openvr::System<'_> {
+/// SteamVR's system, its hands read through SteamVR Input (the legacy controller state when the
+/// actions could not be set up)
+pub(crate) struct SteamVrSystem<'s> {
+    pub system: vrct_openvr::System<'s>,
+    pub actions: Option<crate::input::Actions<vrct_openvr::Input<'s>>>,
+}
+
+impl SteamVrSystem<'_> {
+    /// 0: the left hand, 1: the right hand
+    fn hand_of(&self, index: u32) -> Option<usize> {
+        [vrct_openvr::CONTROLLER_ROLE_LEFT_HAND, vrct_openvr::CONTROLLER_ROLE_RIGHT_HAND]
+            .iter().position(|&role| index != vrct_openvr::TRACKED_DEVICE_INDEX_INVALID && self.system.tracked_device_index_for_controller_role(role) == index)
+    }
+}
+
+impl VrSystem for SteamVrSystem<'_> {
     fn device_to_absolute_tracking_pose(&self, origin: i32, predicted_seconds: f32) -> Vec<TrackedDevicePose> {
-        self.device_to_absolute_tracking_pose(origin, predicted_seconds)
+        self.system.device_to_absolute_tracking_pose(origin, predicted_seconds)
     }
     fn tracked_device_index_for_controller_role(&self, role: i32) -> u32 {
-        self.tracked_device_index_for_controller_role(role)
+        self.system.tracked_device_index_for_controller_role(role)
     }
     fn controller_state(&self, index: u32) -> Option<ControllerState> {
-        self.controller_state(index)
+        match &self.actions {
+            Some(actions) => self.hand_of(index).and_then(|hand| actions.state(hand)),
+            None => self.system.controller_state(index),
+        }
+    }
+    fn update_input(&self, pointing: &[u32]) -> Result<(), Error> {
+        if let Some(actions) = &self.actions {
+            let mut wanted = [false; 2];
+            for &index in pointing {
+                if let Some(hand) = self.hand_of(index) {
+                    wanted[hand] = true;
+                }
+            }
+            actions.update(wanted)?;
+        }
+        Ok(())
+    }
+    fn is_input_available(&self) -> bool { self.system.is_input_available() }
+    fn invalidate_input(&self) {
+        if let Some(actions) = &self.actions { actions.invalidate(); }
     }
     fn trigger_haptic_pulse(&self, index: u32, duration_us: u16) {
-        self.trigger_haptic_pulse(index, 0, duration_us)
+        self.system.trigger_haptic_pulse(index, 0, duration_us)
     }
     fn poll_next_event(&self) -> Option<Event> {
-        self.poll_next_event()
+        self.system.poll_next_event()
     }
     fn string_tracked_device_property(&self, index: u32, property: u32) -> String {
-        self.string_tracked_device_property(index, property)
+        self.system.string_tracked_device_property(index, property)
     }
     fn tracked_device_activity_level(&self, index: u32) -> i32 {
-        self.tracked_device_activity_level(index)
+        self.system.tracked_device_activity_level(index)
     }
     fn is_tracked_device_connected(&self, index: u32) -> bool {
-        self.is_tracked_device_connected(index)
+        self.system.is_tracked_device_connected(index)
     }
     fn dxgi_output_info(&self) -> i32 {
-        self.dxgi_output_info()
+        self.system.dxgi_output_info()
     }
 }
 
 impl VrOverlay for vrct_openvr::Overlay<'_> {
+    fn is_dashboard_visible(&self) -> bool { self.is_dashboard_visible() }
     fn create_overlay(&self, key: &str, name: &str) -> Result<u64, Error> {
         self.create_overlay(key, name)
     }

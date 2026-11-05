@@ -20,7 +20,9 @@ use vrct_openvr::{Texture, TextureBounds};
 const LAYOUT_RETRY_SEC: f64 = 1.0;
 const LAYOUT_GIVE_UP_SEC: f64 = 3.0;
 // Captures while the VR UI is used (the hover and click show this late), and while not
-const PANEL_CAPTURE_INTERVAL_SEC: f64 = 1.0 / 20.0;
+const PANEL_CAPTURE_INTERVAL_SEC: f64 = 1.0 / 60.0;
+// PrintWindow starts a thread and may block the UI; keep its existing ceiling.
+const PANEL_PRINT_INTERVAL_SEC: f64 = 1.0 / 20.0;
 const PANEL_IDLE_CAPTURE_INTERVAL_SEC: f64 = 1.0 / 4.0;
 const PANEL_ACTIVE_HOLD_SEC: f64 = 1.0;
 const PANEL_FIND_INTERVAL_SEC: f64 = 2.0;
@@ -146,6 +148,7 @@ pub(crate) struct Panel {
     pub hwnd: Option<Hwnd>,
     last_find: Option<Instant>,
     last_capture: Option<Instant>,
+    last_print: Option<Instant>,
     job: Option<Job>,
     stream: Option<Stream>,
     stream_unavailable: bool,
@@ -175,10 +178,10 @@ pub(crate) struct Panel {
 }
 
 impl Panel {
-    pub fn new(_w: &Worker) -> Panel {
+    pub fn new() -> Panel {
         let now = Instant::now();
         Panel {
-            hwnd: None, last_find: None, last_capture: None, job: None, stream: None, stream_unavailable: false,
+            hwnd: None, last_find: None, last_capture: None, last_print: None, job: None, stream: None, stream_unavailable: false,
             stream_failures: 0, stream_retry_at: None, last_raw: None, last_change: now, image_size: None, errors: 0,
             error: None, stopped: false, gpu: None, gpu_retired: vec![], gpu_failed: false, mask_key: None,
             layout_applied: None, window_fitted: None, window_size: None, layout_requested_at: now, layout_retried: false,
@@ -189,6 +192,30 @@ impl Panel {
     /// The bounds are for the current layout
     pub fn layout_applied_is(&self, w: &Worker) -> bool {
         self.layout_applied.is_some_and(|(generation, _)| generation == w.layout_gen)
+    }
+
+    fn capture_interval(&self, interacting: bool, now: Instant) -> f64 {
+        if interacting || since(now, self.last_change) < PANEL_ACTIVE_HOLD_SEC {
+            PANEL_CAPTURE_INTERVAL_SEC
+        } else {
+            PANEL_IDLE_CAPTURE_INTERVAL_SEC
+        }
+    }
+
+    fn print_due(&self, now: Instant) -> bool {
+        self.last_print.is_none_or(|at| since(now, at) >= PANEL_PRINT_INTERVAL_SEC)
+    }
+
+    /// A future capture may wake the frame early. Pending work or an already due capture
+    /// must not turn a stalled/failed capture into a zero-duration polling loop.
+    fn frame_wait(&self, frame_deadline: Instant, capture_interval: f64, now: Instant) -> Duration {
+        let capture_deadline = if self.stopped || self.job.is_some() {
+            None
+        } else {
+            self.last_capture.map(|at| at + secs(capture_interval)).filter(|&at| at > now)
+        };
+        capture_deadline.map_or(frame_deadline, |at| at.min(frame_deadline))
+            .saturating_duration_since(now)
     }
 
     pub fn close_stream(&mut self) {
@@ -272,6 +299,7 @@ impl Run<'_> {
         p.layout_retried = false;
         p.layout_logged.clear();
         p.job = None;
+        p.last_print = None;
         p.close_stream();
         p.stream_unavailable = false;
         p.stream_failures = 0;
@@ -389,9 +417,11 @@ impl Run<'_> {
 
     /// panelCaptureInterval: short while the VR UI is used or just changed
     fn capture_interval(&self, w: &Worker, now: Instant) -> f64 {
-        let active = w.pointer_notified.is_some() || self.grabbing.is_some() || self.resizing.is_some()
-            || since(now, self.panel.last_change) < PANEL_ACTIVE_HOLD_SEC;
-        if active { PANEL_CAPTURE_INTERVAL_SEC } else { PANEL_IDLE_CAPTURE_INTERVAL_SEC }
+        self.panel.capture_interval(w.pointer_notified.is_some() || self.grabbing.is_some() || self.resizing.is_some(), now)
+    }
+
+    pub(crate) fn next_frame_wait(&self, w: &Worker, started: Instant, interval: Duration, now: Instant) -> Duration {
+        self.panel.frame_wait(started + interval, self.capture_interval(w, now), now)
     }
 
     /// startCapture: once the interval passed: the window found and fitted to the layout, then a
@@ -402,6 +432,7 @@ impl Run<'_> {
         }
         self.panel.last_capture = Some(now);
         if !self.panel.hwnd.is_some_and(window::is_window) {
+            self.release_all_presses();
             if self.panel.hwnd.take().is_some() {
                 self.reset_tooltip_epoch(w, true);
             }
@@ -445,6 +476,10 @@ impl Run<'_> {
             // the new size's frame has not come (it waits for the screen to change, up to 40 s
             // seen): PrintWindow until then
         }
+        if !self.panel.print_due(now) {
+            return Ok(());
+        }
+        self.panel.last_print = Some(now);
         let (tx, rx) = mpsc::channel();
         // ponytail: a thread per capture (20 a second at most); a hung window leaves one behind per
         // off / on, ending when it draws
@@ -883,4 +918,94 @@ impl Run<'_> {
 
 fn since(now: Instant, then: Instant) -> f64 {
     now.saturating_duration_since(then).as_secs_f64()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hover_wakes_at_capture_gate_after_processing_time() {
+        let base = Instant::now();
+        let mut panel = Panel::new();
+        panel.last_capture = Some(base);
+        let frame = secs(1.0 / 60.0);
+        // Hover input and WGC capture both run at 60 Hz, minus the work already done.
+        assert_eq!(panel.frame_wait(base + frame, PANEL_CAPTURE_INTERVAL_SEC, base + secs(0.002)),
+                   frame - secs(0.002));
+        // A capture taken between frame starts retains its own deadline.
+        panel.last_capture = Some(base + frame);
+        let second = base + frame + secs(0.003);
+        let now = second + secs(0.002);
+        assert_eq!(panel.frame_wait(second + frame, PANEL_CAPTURE_INTERVAL_SEC, now),
+                   (base + frame + frame).duration_since(now));
+        // Once captured, its new deadline is recomputed from the actual attempt time.
+        panel.last_capture = Some(second);
+        assert_eq!(panel.frame_wait(second + frame, PANEL_CAPTURE_INTERVAL_SEC, now),
+                   frame - secs(0.002));
+    }
+
+    #[test]
+    fn idle_and_active_hold_recompute_capture_deadline() {
+        let base = Instant::now();
+        let mut panel = Panel::new();
+        panel.last_change = base;
+        panel.last_capture = Some(base + secs(0.990));
+        assert_eq!(panel.capture_interval(false, base + secs(0.999)), PANEL_CAPTURE_INTERVAL_SEC);
+        assert_eq!(panel.capture_interval(false, base + secs(1.0)), PANEL_IDLE_CAPTURE_INTERVAL_SEC);
+        assert_eq!(panel.capture_interval(true, base + secs(1.0)), PANEL_CAPTURE_INTERVAL_SEC);
+        // Crossing the hold boundary discards the former active deadline.
+        let now = base + secs(1.0);
+        let deadline = now + secs(1.0 / 16.0);
+        assert_eq!(panel.frame_wait(deadline, panel.capture_interval(false, now), now), secs(1.0 / 16.0));
+        assert_eq!(panel.frame_wait(deadline, panel.capture_interval(true, now), now),
+                   secs(PANEL_CAPTURE_INTERVAL_SEC) - secs(0.010));
+        // Idle captures still wake at 250 ms after the last attempt, not the next input frame.
+        let now = base + secs(1.230);
+        assert_eq!(panel.frame_wait(now + secs(1.0 / 16.0), panel.capture_interval(false, now), now), secs(0.010));
+    }
+
+    #[test]
+    fn unavailable_or_expired_capture_deadline_keeps_normal_frame_wait() {
+        let now = Instant::now();
+        let mut panel = Panel::new();
+        let interval = secs(1.0 / 60.0);
+        let deadline = now + interval;
+        assert_eq!(panel.frame_wait(deadline, PANEL_CAPTURE_INTERVAL_SEC, now), interval);
+        panel.last_capture = Some(now - secs(0.010));
+        panel.stopped = true;
+        assert_eq!(panel.frame_wait(deadline, PANEL_CAPTURE_INTERVAL_SEC, now), interval);
+        panel.stopped = false;
+        panel.job = Some(Job { layout_gen: 0, started: now, reported: false, printing: None, result: None });
+        assert_eq!(panel.frame_wait(deadline, PANEL_CAPTURE_INTERVAL_SEC, now), interval);
+        panel.job = None;
+        for age in [PANEL_CAPTURE_INTERVAL_SEC, 0.020] {
+            panel.last_capture = Some(now - secs(age));
+            assert_eq!(panel.frame_wait(deadline, PANEL_CAPTURE_INTERVAL_SEC, now), interval);
+        }
+        // An overrun input frame is still immediately eligible, with no subtraction overflow.
+        panel.last_capture = Some(now);
+        assert_eq!(panel.frame_wait(now - secs(0.001), PANEL_CAPTURE_INTERVAL_SEC, now), Duration::ZERO);
+        assert_eq!(panel.frame_wait(now, PANEL_CAPTURE_INTERVAL_SEC, now), Duration::ZERO);
+    }
+
+    #[test]
+    fn print_fallback_is_limited_without_delaying_wgc_polls() {
+        let base = Instant::now();
+        let mut panel = Panel::new();
+        assert!(panel.print_due(base));
+        panel.last_print = Some(base);
+        for elapsed in [secs(1.0 / 60.0), secs(2.0 / 60.0), secs(0.049)] {
+            let now = base + elapsed;
+            assert!(!panel.print_due(now));
+            assert_eq!(panel.capture_interval(true, now), PANEL_CAPTURE_INTERVAL_SEC);
+        }
+        assert!(panel.print_due(base + secs(0.050)));
+        panel.last_print = Some(base + secs(0.050));
+        assert!(!panel.print_due(base + secs(0.099)));
+        assert!(panel.print_due(base + secs(0.100)));
+        // Idle remains 4 Hz independently of the fallback ceiling.
+        panel.last_change = base;
+        assert_eq!(panel.capture_interval(false, base + secs(2.0)), PANEL_IDLE_CAPTURE_INTERVAL_SEC);
+    }
 }

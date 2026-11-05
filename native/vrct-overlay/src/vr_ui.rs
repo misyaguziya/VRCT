@@ -5,7 +5,8 @@
 //! A controller's laser (from its tip, tilted up a little) points at the overlays: a dot shows
 //! where; the trigger clicks and the stick scrolls the VR UI; pressing the grip grabs a window
 //! (and with the trigger held, scales it by pushing / pulling the hand); the log window's corners
-//! resize it. Grips also reach VRChat (an overlay cannot take input from it).
+//! resize it. The pointing hand's trigger, grip and A/B/X/Y are held from VRChat (input.rs); the
+//! stick remains available to it.
 use crate::layout::{self, PointerKind, Region};
 use crate::math::{Mat34, Mat4};
 use crate::overlay::{Follow, Grab, GrabScale, Intro, Resize, Return, Run, Settings, Worker, COLOR_NORMAL};
@@ -70,9 +71,10 @@ const TOOLBAR_FADE_SEC: f64 = 0.25;
 // Moving the log onto a hand / the head brings it within these distances
 const HAND_ANCHOR_MAX_DISTANCE_M: f64 = 0.5;
 const HMD_ANCHOR_DISTANCE_RANGE_M: (f64, f64) = (0.4, 1.5);
-// The stick as the wheel (per frame; WHEEL_DELTA = 120)
-const PANEL_SCROLL_PER_FRAME: f64 = 60.0;
+// Preserve the original 60 wheel units at 30 Hz without depending on input frame rate.
+const PANEL_SCROLL_PER_SEC: f64 = 1800.0;
 const PANEL_SCROLL_DEADZONE: f64 = 0.3;
+const PANEL_SCROLL_MAX_DT_SEC: f64 = 1.0 / 30.0;
 // Off the VR view: a click there does not happen and the hover goes
 const OUTSIDE_XY: (i32, i32) = (-1, -1);
 const POINTER_NOTIFY_MIN_MOVE_PX: i32 = 4;
@@ -114,6 +116,25 @@ fn translation(x: f64, y: f64, z: f64) -> Mat4 {
     m
 }
 
+#[derive(Default)]
+pub(crate) struct Scroll {
+    previous: Option<Instant>,
+    remainder: f64,
+}
+
+impl Scroll {
+    fn delta(&mut self, now: Instant, stick: f64) -> i32 {
+        let Some(previous) = self.previous.replace(now) else { return 0 };
+        // Do not replay a backlog after a stalled frame. Keep fractional wheel units so
+        // additional capture wakes and small stick values do not change the steady speed.
+        let elapsed = since(now, previous).min(PANEL_SCROLL_MAX_DT_SEC);
+        let amount = self.remainder + elapsed * PANEL_SCROLL_PER_SEC * stick;
+        let delta = amount as i32;
+        self.remainder = amount - delta as f64;
+        delta
+    }
+}
+
 impl Run<'_> {
     /// The tracked pose (standing), None when not valid; the room for Playspace
     pub fn pose_of(&self, follow: Follow) -> Option<Mat4> {
@@ -128,7 +149,7 @@ impl Run<'_> {
     }
 
     fn controller_state(&self, hand: u32) -> Option<ControllerState> {
-        self.vr.system.controller_state(hand)
+        self.vr.system.controller_state(hand).filter(|_| !self.input_suspended.contains(&hand))
     }
 
     /// tipOffset: the controller's tip (render model component "tip") seen from its pose. Quest
@@ -140,10 +161,12 @@ impl Run<'_> {
         {
             return *offset;
         }
+        // A pre-update ray may have no usable action snapshot yet. Do not turn that
+        // temporary input suspension into a five-second negative model lookup cache.
+        let Some(state) = self.controller_state(hand) else { return IDENTITY };
         let mut found = None;
         let name = self.vr.system.string_tracked_device_property(hand, vrct_openvr::PROP_RENDER_MODEL_NAME_STRING);
-        if let Some(state) = self.controller_state(hand)
-            && !name.is_empty()
+        if !name.is_empty()
             && let Some(c) = self.vr.render_models.component_state(&name, "tip", &state, &Default::default())
         {
             found = Some(pose::homogeneous(&c.tracking_to_component_local.map(|r| r.map(f64::from))));
@@ -338,7 +361,95 @@ impl Run<'_> {
         self.update_launcher_intro_flight(w, now);
         self.update_launcher_return(w, now);
         self.update_toolbar_fade(now);
+        let roles = [vrct_openvr::CONTROLLER_ROLE_LEFT_HAND, vrct_openvr::CONTROLLER_ROLE_RIGHT_HAND];
+        let hands = roles.map(|role| self.vr.system.tracked_device_index_for_controller_role(role));
+        if self.input_hands.is_some_and(|previous| previous != hands) {
+            // Role loss/reassignment interrupts a grab just like tracking loss. Save the
+            // last valid relative pose before discarding its owner; do not use the new hand.
+            let last_grab = self.grabbing.as_ref().map(|g| g.index).zip(self.grab_last_relative);
+            self.vr.system.invalidate_input();
+            self.release_all_presses();
+            self.input_suspended.extend(hands);
+            self.tip_offsets.clear();
+            self.shortcut_presses.clear();
+            self.grip_prev.clear();
+            self.drop_grab(w);
+            if let Some((index, relative)) = last_grab { self.commit_position(w, index, &relative); }
+            // Tracked-device transforms retain a device index, not a left/right role.
+            // Reapply hand-relative settings on the next frame (or when the hand connects).
+            // The normal intro/return update then keeps any in-progress animation in control.
+            for (index, size) in w.sizes.iter().enumerate() {
+                if matches!(crate::math::Tracker::from_name(&size.settings.tracker),
+                    crate::math::Tracker::LeftHand | crate::math::Tracker::RightHand) {
+                    self.pending[index] = true;
+                }
+            }
+        }
+        self.input_hands = Some(hands);
+        let available = self.vr.system.is_input_available() && !self.vr.overlay.is_dashboard_visible();
+        if !available { self.vr.system.invalidate_input(); }
+        // Current poses and transforms choose this loop's holds, with one action update.
+        let mut wanted = Vec::new();
+        if available {
+            for hand in hands {
+                if let Some(ray) = self.ray_of(w, hand, now) {
+                    let target = self.pointing_overlay(w, &ray).filter(|(i, _)|
+                        self.tracker(&w.sizes[*i].settings.tracker).1 != Follow::Device(hand));
+                    if target.is_some() || self.grabbing.as_ref().is_some_and(|g| g.hand == hand) || self.holds_for_vrct(w, hand, &ray) {
+                        wanted.push(hand);
+                    }
+                }
+            }
+        }
+        let update = self.vr.system.update_input(&wanted);
+        if let Err(error) = &update {
+            if !self.input_update_failed { (w.log)(format!("overlay: input update failed; interactions cancelled: {error}")); }
+        } else if self.input_update_failed {
+            (w.log)("overlay: input update recovered; waiting for neutral".into());
+        }
+        self.input_update_failed = update.is_err();
+        for hand in hands {
+            let state = self.vr.system.controller_state(hand);
+            if !available || update.is_err() || self.pose_of(Follow::Device(hand)).is_none() || state.is_none() {
+                if self.input_suspended.insert(hand) && hand != TRACKED_DEVICE_INDEX_INVALID {
+                    (w.log)(format!("overlay: device {hand} suspended (runtime available={available}, pose={}, action={})",
+                        self.pose_of(Follow::Device(hand)).is_some(), state.is_some()));
+                }
+                self.release_press(hand);
+                if let Some(index) = self.grabbing.as_ref().filter(|g| g.hand == hand).map(|g| g.index) {
+                    // An unavailable action is not a physical grip release. Preserve the last
+                    // valid position instead of recomputing it from a fallback tip transform.
+                    let last = self.grab_last_relative;
+                    self.drop_grab(w);
+                    if let Some(relative) = last { self.commit_position(w, index, &relative); }
+                }
+                self.shortcut_presses.remove(&hand);
+                self.grip_prev.remove(&hand);
+                self.tip_offsets.remove(&hand);
+            } else if let Some(s) = state.filter(|s| s.button_pressed & !GRIP_MASK == 0)
+                && self.input_suspended.remove(&hand)
+            {
+                // back with nothing pressing (the stick, a resting finger and a grip may be held):
+                // a grip held through it grabs nothing
+                self.grip_prev.insert(hand, s.button_pressed & GRIP_MASK != 0);
+            }
+        }
+        if !available || update.is_err() {
+            self.release_all_presses();
+            self.drop_grab(w);
+            self.show_other_pointer(None);
+            self.notify_pointer(w, None, None);
+            return Ok(());
+        }
+        self.update_shortcut(w, now);
         // a window grabbed or resized: the presses on the VR view end (their hands are not followed meanwhile)
+        if let Some(holding) = self.grabbing.as_ref().map(|g| g.hand).or(self.resizing.as_ref().map(|r| r.hand)) {
+            // the other hand's grip followed too: squeezed meanwhile, it grabs nothing when this one lets go
+            for hand in hands.into_iter().filter(|&h| h != holding) {
+                let grip = self.controller_state(hand).is_some_and(|s| s.button_pressed & GRIP_MASK != 0);
+                self.grip_prev.insert(hand, grip);
+            }
+        }
         if self.resizing.is_some() {
             self.release_all_presses();
             self.update_resize(w, now);
@@ -351,6 +462,32 @@ impl Run<'_> {
         }
         self.update_pointing(w, now);
         Ok(())
+    }
+
+    /// What else of VRCT's holds a hand from the game besides its windows: a resize by it, the
+    /// log's bar, and the log's corners (they reach outside it)
+    fn holds_for_vrct(&self, w: &Worker, hand: u32, ray: &Mat4) -> bool {
+        self.resizing.as_ref().is_some_and(|r| r.hand == hand)
+            || (self.toolbar_visible && self.toolbar.and_then(|t| self.intersect(ray, t))
+                .is_some_and(|hit| self.hit_inside_region(w, Target::Toolbar, &hit)))
+            || self.panel_corner_at(w, hand, ray).is_some()
+    }
+
+    /// The controller shortcut, from either hand (while grabbing too)
+    fn update_shortcut(&mut self, w: &Worker, now: Instant) {
+        let mask = w.shortcut.button_mask();
+        for role in [vrct_openvr::CONTROLLER_ROLE_LEFT_HAND, vrct_openvr::CONTROLLER_ROLE_RIGHT_HAND] {
+            let hand = self.vr.system.tracked_device_index_for_controller_role(role);
+            let Some(state) = self.controller_state(hand) else {
+                self.shortcut_presses.remove(&hand);
+                continue;
+            };
+            let pressed = state.button_pressed & mask != 0;
+            if self.shortcut_presses.entry(hand).or_default().update(w.shortcut, pressed, now) {
+                (w.log)(format!("overlay: ショートカット ({:?}, device {hand})", w.shortcut));
+                w.emit(crate::overlay::Event::Shortcut);
+            }
+        }
     }
 
     /// While a window is grabbed: it follows the laser (on the sphere round the eyes for windows
@@ -455,8 +592,12 @@ impl Run<'_> {
         let mut pointing_log = false;
         let mut pointing_launcher = false;
         let panel = w.region_index(Region::Panel);
-        for role in [vrct_openvr::CONTROLLER_ROLE_LEFT_HAND, vrct_openvr::CONTROLLER_ROLE_RIGHT_HAND] {
-            let hand = self.vr.system.tracked_device_index_for_controller_role(role);
+        let mut hands = [vrct_openvr::CONTROLLER_ROLE_LEFT_HAND, vrct_openvr::CONTROLLER_ROLE_RIGHT_HAND]
+            .map(|role| self.vr.system.tracked_device_index_for_controller_role(role));
+        // Process an existing owner first, so a release in this snapshot is a normal up
+        // before the other hand's new down, independent of left/right role order.
+        if self.mouse_owner == Some(hands[1]) { hands.swap(0, 1); }
+        for hand in hands {
             let hand_pose = self.ray_of(w, hand, now);
             let grip = hand_pose.is_some() && self.controller_state(hand).is_some_and(|s| s.button_pressed & GRIP_MASK != 0);
             let mut target: Option<(Target, Hit)> = None;
@@ -614,46 +755,51 @@ impl Run<'_> {
     /// window grabbed or resized, no VR view): the mouse is let go, so the view does not take the
     /// key as held (repeating ← until the text is gone), and a trigger still held is no new press
     fn release_press(&mut self, hand: u32) {
+        self.panel_scroll.remove(&hand);
         self.trigger_aim.remove(&hand);
         self.trigger_value.remove(&hand);
-        let Some((pressed, xy)) = self.panel_input.remove(&hand) else { return };
+        let Some((pressed, _xy)) = self.panel_input.remove(&hand) else { return };
         if pressed && self.mouse_owner == Some(hand) {
             if let Some(hwnd) = self.panel.hwnd {
-                let (x, y) = xy.unwrap_or(OUTSIDE_XY);
-                self.mouse.up(hwnd, x, y);
+                self.mouse.cancel(hwnd);
             }
             self.mouse_owner = None;
+            self.mouse_owner_keyboard = false;
         }
         if pressed {
             self.trigger_blocked.insert(hand);
         }
     }
 
-    fn release_all_presses(&mut self) {
+    pub(crate) fn release_all_presses(&mut self) {
+        self.panel_scroll.clear();
         let hands: Vec<u32> = self.panel_input.keys().copied().collect();
         for hand in hands {
             self.release_press(hand);
         }
     }
 
-    /// handlePanelInput: the trigger clicks, the stick scrolls, where the laser hits the VR view
-    /// (xy in the capture's px; None: off it). A key of the keyboard pressed: a tap in the hand.
-    /// Both hands share the one mouse: a press holds it (the other hand's moves wait), a press of
-    /// the other hand ends it first.
-    fn handle_panel_input(&mut self, hand: u32, xy: Option<(i32, i32)>, state: Option<ControllerState>, on_keyboard: bool) {
+    /// The trigger clicks, the stick scrolls, where the laser hits the VR view (xy in the
+    /// capture's px; None: off it). A key of the keyboard pressed: a tap in the hand. Both hands
+    /// share one mouse: a new keyboard press cancels a held keyboard press before taking over.
+    /// Presses on the other windows retain first-owner protection, and other-hand moves still wait.
+    pub(crate) fn handle_panel_input(&mut self, hand: u32, xy: Option<(i32, i32)>, state: Option<ControllerState>, on_keyboard: bool) {
         let (last_pressed, last_xy) = self.panel_input.get(&hand).copied().unwrap_or((false, None));
         let (Some(hwnd), Some(_)) = (self.panel.hwnd, self.panel.image_size) else {
             // no VR view: a press it held ends
             self.release_press(hand);
             return;
         };
-        // (a frame without the controller's state changes nothing: a held key goes on; a hand
-        // really lost has no pose, and its press ends there)
-        let Some(state) = state else { return };
+        let Some(state) = state else {
+            self.release_press(hand);
+            self.trigger_blocked.insert(hand);
+            return;
+        };
         let owns = self.mouse_owner == Some(hand);
         // (a hand that went away still pressing holds it no more)
         let other = self.mouse_owner.filter(|&o| o != hand && self.panel_input.get(&o).is_some_and(|p| p.0));
         let mut pressed = state.button_pressed & TRIGGER_MASK != 0;
+        // blocked until the click is let go (a finger resting on the trigger is no press)
         if self.trigger_blocked.contains(&hand) {
             if pressed {
                 pressed = false;
@@ -662,6 +808,8 @@ impl Run<'_> {
             }
         }
         let Some((x, y)) = xy else {
+            self.panel_scroll.remove(&hand);
+            if pressed { self.trigger_blocked.insert(hand); }
             // off the VR view: released outside, so a press begun on a button does not click (no
             // mic turned on by mistake), and the hover goes
             // (the other hand still on the VR view keeps its hover: no move away from it)
@@ -669,13 +817,14 @@ impl Run<'_> {
             if last_xy.is_some() && other.is_none() && (owns || !other_on_view) {
                 self.mouse.moved(hwnd, OUTSIDE_XY.0, OUTSIDE_XY.1, last_pressed && owns);
                 if last_pressed && owns {
-                    self.mouse.up(hwnd, OUTSIDE_XY.0, OUTSIDE_XY.1);
+                    self.mouse.cancel(hwnd);
                     // coming back still pressed is not a new press (no repeated long presses)
                     self.trigger_blocked.insert(hand);
                 }
             }
             if owns {
                 self.mouse_owner = None;
+                self.mouse_owner_keyboard = false;
             }
             self.panel_input.remove(&hand);
             self.trigger_aim.remove(&hand);
@@ -695,31 +844,44 @@ impl Run<'_> {
             self.mouse.moved(hwnd, x, y, pressed && owns);
         }
         if pressed && !last_pressed {
-            if let Some(o) = other {
-                let (ox, oy) = self.panel_input.get(&o).and_then(|p| p.1).unwrap_or((x, y));
-                self.mouse.up(hwnd, ox, oy);
-                // its release later is not a click
-                self.trigger_blocked.insert(o);
+            if let Some(owner) = other {
+                if on_keyboard && self.mouse_owner_keyboard {
+                    // Offscreen up stops repeats/discards unfinished flicks, without clicking
+                    // the old key. Its trigger must return to neutral before it can take over.
+                    self.release_press(owner);
+                } else {
+                    self.panel_scroll.remove(&hand);
+                    self.trigger_blocked.insert(hand);
+                    self.panel_input.insert(hand, (false, xy));
+                    self.trigger_aim.remove(&hand);
+                    return;
+                }
             }
             // a key: where the pull began, if it began just now (the press itself shakes the hand)
             // (used once: a next press without letting the trigger down is where the hand is)
             let (px, py) = match self.trigger_aim.remove(&hand) {
-                Some((at, since)) if on_keyboard && now.duration_since(since).as_secs_f64() < TRIGGER_AIM_SEC => at,
+                Some((at, since)) if on_keyboard && now.duration_since(since).as_secs_f64() < TRIGGER_AIM_SEC
+                    && (at.0 - x).abs() <= 12 && (at.1 - y).abs() <= 12 => at,
                 _ => (x, y),
             };
             self.mouse.moved(hwnd, px, py, false);
             self.mouse.down(hwnd, px, py);
             self.mouse_owner = Some(hand);
+            self.mouse_owner_keyboard = on_keyboard;
             if on_keyboard {
                 self.vr.system.trigger_haptic_pulse(hand, KEY_HAPTIC_US);
             }
         } else if last_pressed && !pressed && owns {
             self.mouse.up(hwnd, x, y);
             self.mouse_owner = None;
+            self.mouse_owner_keyboard = false;
         }
         let stick_y = state.axis[0][1] as f64;
         if stick_y.abs() > PANEL_SCROLL_DEADZONE {
-            self.mouse.wheel(hwnd, x, y, (PANEL_SCROLL_PER_FRAME * stick_y) as i32);
+            let delta = self.panel_scroll.entry(hand).or_default().delta(now, stick_y);
+            if delta != 0 { self.mouse.wheel(hwnd, x, y, delta); }
+        } else {
+            self.panel_scroll.remove(&hand);
         }
         self.panel_input.insert(hand, (pressed, xy));
     }
@@ -1151,6 +1313,9 @@ impl Run<'_> {
             return;
         }
         w.intro = state;
+        // The intro changes the GPU alpha mask even when the captured UI is static.
+        // Recompose the cached capture on the next pass instead of keeping Pending transparent.
+        self.panel.last_raw = None;
         if state == Intro::Pending {
             self.launcher_intro_logged.clear();
         }
@@ -1288,6 +1453,11 @@ impl Run<'_> {
     fn apply_vr_windows(&mut self, w: &mut Worker) {
         let (log, popup, keyboard) = w.vr_windows_wanted;
         let wanted = [(Region::Panel, log), (Region::Popup, popup), (Region::Keyboard, keyboard), (Region::Launcher, true)];
+        // A short tracking loss may delay a recall; an old request must not move the window later,
+        // including after a long grab. Opening a hidden window is a separate, ongoing request.
+        if w.recall_requested.is_some_and(|(_, at)| at.elapsed().as_secs_f64() >= RECALL_PENDING_SEC) {
+            w.recall_requested = None;
+        }
         if !w.vr_panel_enabled {
             // off: not waiting for the VR view
             self.first_frame_wait_since = None;
@@ -1314,7 +1484,11 @@ impl Run<'_> {
                     self.place_popup(w);
                 }
                 if region == Region::Keyboard {
-                    self.place_keyboard(w);
+                    // Do not reveal the old/initial position when the head is not tracked.
+                    if !self.place_keyboard(w) { continue; }
+                    if w.recall_requested.is_some_and(|(r, _)| r == Region::Keyboard) {
+                        w.recall_requested = None;
+                    }
                 }
                 self.hidden.remove(&region);
                 let _ = self.vr.overlay.show_overlay(self.handles[i]);
@@ -1356,16 +1530,12 @@ impl Run<'_> {
         {
             self.set_anchor(w, &anchor);
         }
-        if let Some((region, at)) = w.recall_requested {
-            if w.region_index(region).is_some() && !self.hidden.contains(&region) {
-                w.recall_requested = None;
-                if region == Region::Keyboard {
-                    self.place_keyboard(w);
-                } else {
-                    self.recall_panel(w);
-                }
-            } else if at.elapsed().as_secs_f64() > RECALL_PENDING_SEC {
-                // it was not opened
+        // kept until the head is tracked (and the window shown), or it expires above
+        if let Some((region, _)) = w.recall_requested
+            && w.region_index(region).is_some() && !self.hidden.contains(&region)
+        {
+            let placed = if region == Region::Keyboard { self.place_keyboard(w) } else { self.recall_panel(w) };
+            if placed {
                 w.recall_requested = None;
             }
         }
@@ -1387,11 +1557,13 @@ impl Run<'_> {
     }
 
     /// recallPanel: in front of the eyes, fixed in the room, saved
-    fn recall_panel(&mut self, w: &mut Worker) {
-        let (Some(head), Some(pi)) = (self.pose_of(HMD), w.region_index(Region::Panel)) else { return };
+    /// Whether a tracked head allowed it (as place_keyboard)
+    fn recall_panel(&mut self, w: &mut Worker) -> bool {
+        let (Some(head), Some(pi)) = (self.pose_of(HMD), w.region_index(Region::Panel)) else { return false };
         w.sizes[pi].settings.tracker = "Playspace".into();
         self.commit_position(w, pi, &pose::top(&pose::recall_pose(&head)));
         self.place(w, pi);
+        true
     }
 
     /// setAnchor: what the log follows, from where it shows now (brought nearer on a hand, to a
@@ -1443,13 +1615,15 @@ impl Run<'_> {
     }
 
     /// placeKeyboard: in front of the eyes as the recalled log (along the gaze, facing them), fixed
-    /// in the room; grabbed to move it, put back there each time it opens or is recalled
-    fn place_keyboard(&mut self, w: &mut Worker) {
-        let (Some(head), Some(keyboard)) = (self.pose_of(HMD), w.region_index(Region::Keyboard)) else { return };
+    /// in the room; grabbed to move it, put back there each time it opens or is recalled.
+    /// Returns whether a tracked head allowed placement, not whether SteamVR displayed it.
+    fn place_keyboard(&mut self, w: &mut Worker) -> bool {
+        let (Some(head), Some(keyboard)) = (self.pose_of(HMD), w.region_index(Region::Keyboard)) else { return false };
         let world = pose::recall_pose(&head);
         w.sizes[keyboard].settings.tracker = "Playspace".into();
         self.commit_position(w, keyboard, &pose::top(&world));
         self.place(w, keyboard);
+        true
     }
 
     /// onGrabError: the grab or resize ends (not failing the same way every frame)
@@ -1480,4 +1654,46 @@ pub(crate) fn restore_place(settings: &mut Settings, undo: &Settings) {
     settings.position = undo.position;
     settings.ui_scaling = undo.ui_scaling;
     settings.tracker = undo.tracker.clone();
+}
+
+#[cfg(test)]
+mod scroll_tests {
+    use super::*;
+
+    #[test]
+    fn scroll_speed_is_independent_of_frame_rate_and_fractional_wakes() {
+        let base = Instant::now();
+        for stick in [1.0, 0.31, -0.73] {
+            for frames in [30, 60, 120] {
+                let mut scroll = Scroll::default();
+                assert_eq!(scroll.delta(base, stick), 0);
+                let total: i32 = (1..=frames).map(|i| scroll.delta(base + Duration::from_secs_f64(i as f64 / frames as f64), stick)).sum();
+                assert!((total as f64 - PANEL_SCROLL_PER_SEC * stick).abs() <= 1.0);
+            }
+            let mut scroll = Scroll::default();
+            assert_eq!(scroll.delta(base, stick), 0);
+            let mut now = base;
+            let mut total = 0;
+            // 100 unequal intervals, totalling one second (extra short capture wakes).
+            for _ in 0..50 {
+                for ms in [1, 19] {
+                    now += Duration::from_millis(ms);
+                    total += scroll.delta(now, stick);
+                }
+            }
+            assert!((total as f64 - PANEL_SCROLL_PER_SEC * stick).abs() <= 1.0);
+        }
+    }
+
+    #[test]
+    fn scroll_does_not_replay_a_stall_or_time_before_first_input() {
+        let base = Instant::now();
+        let mut scroll = Scroll::default();
+        assert_eq!(scroll.delta(base + Duration::from_secs(100), 1.0), 0);
+        assert_eq!(scroll.delta(base + Duration::from_secs(200), 1.0), 60);
+        assert_eq!(scroll.delta(base + Duration::from_secs(200), 1.0), 0);
+        // A new hand or a reset state starts independently, not from the old timestamp.
+        let mut other = Scroll::default();
+        assert_eq!(other.delta(base + Duration::from_secs(300), -1.0), 0);
+    }
 }

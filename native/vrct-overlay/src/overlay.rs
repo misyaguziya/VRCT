@@ -6,7 +6,7 @@
 //!
 //! One thread owns everything OpenVR / D3D11 (callers send commands, applied at once): it waits
 //! for SteamVR, joins the shared session as a background app, runs at 16 fps (60 while grabbing,
-//! 30 while pointing at the VR UI) and closes everything when SteamVR quits, then waits for it
+//! 60 while pointing at the VR UI) and closes everything when SteamVR quits, then waits for it
 //! again. Stopping hands the state back, so a restart goes on from it.
 //!
 //! Images go to SteamVR as D3D11 textures (SetOverlayTexture, then Flush: SteamVR's copy is queued
@@ -17,7 +17,8 @@ use crate::math::{position_transform, to_hmd, Mat34, Mat4, Tracker};
 use crate::pose;
 use crate::vr::{VrOverlay, VrRenderModels, VrSystem};
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::mpsc::{self, Receiver, RecvTimeoutError, Sender};
+use crate::command_wait::{self, Receiver, Sender};
+use std::sync::mpsc::RecvTimeoutError;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use vrct_openvr::{ApplicationType, Session, Texture};
@@ -85,6 +86,8 @@ pub enum Event {
     PanelOutOfView(bool),
     /// launcher_intro_callback
     LauncherIntro(Intro),
+    /// the controller shortcut was made (to open / close the keyboard)
+    Shortcut,
 }
 
 /// What callers can read at any time (the last the overlay thread published)
@@ -111,6 +114,7 @@ pub(crate) enum Command {
     KeyboardLocked(bool),
     LauncherAutoHide(bool),
     LaserPitch(f64),
+    Shortcut(crate::shortcut::Shortcut),
     LauncherDefaults(Settings),
     LauncherReset(bool),
     Anchor(String),
@@ -137,7 +141,7 @@ pub type Events = Arc<dyn Fn(Event) + Send + Sync>;
 impl Overlay {
     /// The overlays for `sizes` (in this order: overlay keys "VRCT0", "VRCT1", ...), not started
     pub fn new(sizes: Vec<(String, Settings)>, log: Log, events: Events) -> Self {
-        let (commands, received) = mpsc::channel();
+        let (commands, received) = command_wait::channel();
         let worker = Worker::new(sizes, received, log.clone(), events.clone());
         let shared = worker.shared.clone();
         Self { commands, log, events, thread: None, idle: Some(worker), shared }
@@ -172,7 +176,7 @@ impl Overlay {
         if thread.is_finished() {
             self.idle = thread.join().ok();
         } else {
-            let (commands, received) = mpsc::channel();
+            let (commands, received) = command_wait::channel();
             self.commands = commands;
             let shared = self.shared.lock().unwrap().clone();
             let mut worker = Worker::new(shared.settings, received, self.log.clone(), self.events.clone());
@@ -252,6 +256,11 @@ impl Overlay {
         self.send(Command::LaserPitch(degrees));
     }
 
+    /// The controller shortcut told as Event::Shortcut (Off by default)
+    pub fn set_shortcut(&self, shortcut: crate::shortcut::Shortcut) {
+        self.send(Command::Shortcut(shortcut));
+    }
+
     /// launcher_defaults: the launcher's place, width and hand to go back to
     pub fn set_launcher_defaults(&self, settings: Settings) {
         self.send(Command::LauncherDefaults(settings));
@@ -327,6 +336,7 @@ pub(crate) struct Worker {
     pub launcher_auto_hide: bool,
     /// the lasers' tilt up from the controllers' tips (degrees)
     pub laser_pitch_up_deg: f64,
+    pub shortcut: crate::shortcut::Shortcut,
     pub launcher_defaults: Option<Settings>,
     pub launcher_reset_requested: bool,
     pub launcher_reset_keep_hand: bool,
@@ -376,7 +386,7 @@ impl Worker {
         Self {
             sizes, commands, log, events, shared, stopped: false, connect_failure_logged: false,
             vr_panel_enabled: true, panel_enabled_requests: VecDeque::new(), panel_locked: false, keyboard_locked: false, launcher_auto_hide: true,
-            laser_pitch_up_deg: LASER_PITCH_UP_DEG,
+            laser_pitch_up_deg: LASER_PITCH_UP_DEG, shortcut: Default::default(),
             launcher_defaults: None, launcher_reset_requested: false, launcher_reset_keep_hand: false,
             vr_windows_wanted: (false, false, false), requested_anchor: None, recall_requested: None,
             tooltip_epoch, tooltip_revision: 0, tooltip_requests: VecDeque::new(),
@@ -419,7 +429,7 @@ impl Worker {
         let deadline = Instant::now() + duration;
         loop {
             let remaining = deadline.saturating_duration_since(Instant::now());
-            let command = match self.commands.recv_timeout(remaining) {
+            let command = match self.commands.recv_timeout(remaining, run.is_some(), self.log.as_ref()) {
                 Ok(command) => command,
                 Err(RecvTimeoutError::Timeout) => return true,
                 Err(RecvTimeoutError::Disconnected) => {
@@ -434,6 +444,10 @@ impl Worker {
             self.publish(run.is_some());
             if self.stopped {
                 return false;
+            }
+            // Commands may arrive continuously; they must not extend this frame's deadline.
+            if Instant::now() >= deadline {
+                return true;
             }
         }
     }
@@ -465,12 +479,19 @@ impl Worker {
     /// The requests that only set what the next frame does (both with and without SteamVR)
     pub(crate) fn apply_request(&mut self, command: Command) {
         match command {
-            Command::VrWindows(log, popup, keyboard) => self.vr_windows_wanted = (log, popup, keyboard),
+            Command::VrWindows(log, popup, keyboard) => {
+                self.vr_windows_wanted = (log, popup, keyboard);
+                // a window closed: its recall waiting for the head goes too
+                if self.recall_requested.is_some_and(|(r, _)| (r == Region::Panel && !log) || (r == Region::Keyboard && !keyboard)) {
+                    self.recall_requested = None;
+                }
+            }
             Command::VrPanelEnabled(enabled) => self.panel_enabled_requests.push_back(enabled),
             Command::PanelLocked(locked) => self.panel_locked = locked,
             Command::KeyboardLocked(locked) => self.keyboard_locked = locked,
             Command::LauncherAutoHide(enabled) => self.launcher_auto_hide = enabled,
             Command::LaserPitch(degrees) => self.laser_pitch_up_deg = degrees,
+            Command::Shortcut(shortcut) => self.shortcut = shortcut,
             Command::LauncherDefaults(settings) => self.launcher_defaults = Some(settings),
             Command::LauncherReset(keep_hand) => {
                 if self.launcher_defaults.is_none() {
@@ -545,8 +566,17 @@ impl Worker {
     fn connected(&mut self, session: &Session) -> anyhow::Result<()> {
         let system = session.system()?;
         let (device, context) = device(system.dxgi_output_info())?;
+        let dir = std::env::temp_dir().join("VRCT").join("input");
+        let actions = match session.input().map_err(anyhow::Error::from).and_then(|input| crate::input::Actions::new(input, &dir)) {
+            Ok(actions) => Some(actions),
+            Err(e) => {
+                (self.log)(format!("overlay: SteamVR Input を使えないので、手を古い読み方で読みます (VRChat の操作は止めません): {e:#}"));
+                None
+            }
+        };
+        let system = crate::vr::SteamVrSystem { system, actions };
         let vr = Vr { overlay: Box::new(session.overlay()?), system: Box::new(system), render_models: Box::new(session.render_models()?) };
-        let mut run = Run::new(vr, device, context, self);
+        let mut run = Run::new(vr, device, context);
         let result = run.init(self).map(|()| {
             (self.log)(format!("overlay: 起動しました (vr_panel: {})", run.panel_ready));
             self.publish(true);
@@ -683,10 +713,16 @@ pub(crate) struct Run<'s> {
     pub resize_undo: Option<Settings>,
     // input
     pub panel_input: HashMap<u32, (bool, Option<(i32, i32)>)>,
+    pub panel_scroll: HashMap<u32, crate::vr_ui::Scroll>,
     /// hands whose trigger is ignored until released (no click after a grab)
     pub trigger_blocked: HashSet<u32>,
+    pub input_suspended: HashSet<u32>,
+    pub input_update_failed: bool,
+    pub input_hands: Option<[u32; 2]>,
     /// the hand whose press holds the VR view's one mouse button
     pub mouse_owner: Option<u32>,
+    /// The region where the owner's press began (not where it happens to point now).
+    pub mouse_owner_keyboard: bool,
     /// where each hand began pulling its trigger (the keyboard's key goes there: the hand moves as
     /// the trigger is pulled)
     pub trigger_aim: HashMap<u32, ((i32, i32), Instant)>,
@@ -696,6 +732,8 @@ pub(crate) struct Run<'s> {
     /// each controller's tip seen from its pose, and when to look again
     pub tip_offsets: HashMap<u32, (Mat4, Option<Instant>)>,
     pub debug_state: HashMap<u32, (bool, Option<String>)>,
+    /// each hand's shortcut button
+    pub shortcut_presses: HashMap<u32, crate::shortcut::Detector>,
     // the VR view's capture (panel.rs)
     pub panel: crate::panel::Panel,
     /// the VR UI's capture is set up (overlay.py: self.gl)
@@ -705,7 +743,7 @@ pub(crate) struct Run<'s> {
 }
 
 impl<'s> Run<'s> {
-    fn new(vr: Vr<'s>, device: ID3D11Device, context: ID3D11DeviceContext, w: &Worker) -> Self {
+    fn new(vr: Vr<'s>, device: ID3D11Device, context: ID3D11DeviceContext) -> Self {
         let now = Instant::now();
         Run {
             vr, device, context, handles: vec![], textures: vec![], pending: vec![], pointers: vec![], other_dot: None, toolbar: None, ghost: None,
@@ -719,8 +757,8 @@ impl<'s> Run<'s> {
             launcher_intro_front: None, launcher_intro_logged: HashSet::new(), launcher_return: None, first_frame_wait_since: None,
             first_frame_wait_logged: false, tooltip_state: None, tooltip_ready: false, tooltip_shown: false,
             tooltip_manipulating: false, resizing: None, corner_prev: HashMap::new(), ghost_key: None, resize_undo: None,
-            panel_input: HashMap::new(), trigger_blocked: HashSet::new(), mouse_owner: None, trigger_aim: HashMap::new(), trigger_value: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
-            debug_state: HashMap::new(), panel: crate::panel::Panel::new(w), panel_ready: false, poses: vec![],
+            panel_input: HashMap::new(), panel_scroll: HashMap::new(), trigger_blocked: HashSet::new(), input_suspended: HashSet::new(), input_update_failed: false, input_hands: None, mouse_owner: None, mouse_owner_keyboard: false, trigger_aim: HashMap::new(), trigger_value: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
+            debug_state: HashMap::new(), shortcut_presses: HashMap::new(), panel: crate::panel::Panel::new(), panel_ready: false, poses: vec![],
         }
     }
 
@@ -995,14 +1033,15 @@ impl<'s> Run<'s> {
             }
             w.publish(true);
             // smooth while grabbing, quick while pointing at the VR UI
-            let interval = if self.grabbing.is_some() || self.resizing.is_some() {
+            let interval = if self.grabbing.is_some() || self.resizing.is_some() || w.pointer_notified.is_some() {
                 Duration::from_secs_f64(1.0 / 60.0)
-            } else if w.pointer_notified.is_some() {
-                Duration::from_secs_f64(1.0 / 30.0)
             } else {
                 Duration::from_secs_f64(1.0 / 16.0)
             };
-            if !w.wait(interval.saturating_sub(started.elapsed()), Some(self)) {
+            // Wake for a capture between input frames (also during the active hold).
+            // Input is updated on this early wake as well.
+            let wait = self.next_frame_wait(w, started, interval, Instant::now());
+            if !w.wait(wait, Some(self)) {
                 return;
             }
         }
@@ -1011,6 +1050,10 @@ impl<'s> Run<'s> {
     /// teardown: the overlays go before their textures (SteamVR stops reading them first), the GPU
     /// capture after them
     fn teardown(&mut self, w: &mut Worker) {
+        self.release_all_presses();
+        let _ = self.vr.system.update_input(&[]);
+        self.grabbing = None;
+        self.shortcut_presses.clear();
         self.panel.close_stream();
         for &handle in self.handles.iter().chain(self.pointers.iter().map(|p| &p.1)).chain(self.other_dot.iter().map(|d| &d.0)).chain(self.toolbar.iter())
             .chain(self.ghost.iter()).chain(self.tooltip_handle.iter())
