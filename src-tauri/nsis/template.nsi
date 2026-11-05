@@ -715,6 +715,34 @@ SectionEnd
   app_check_done:
 !macroend
 
+; In: $R0 = the Windows "ProxyServer" setting. Out: $R0 = the proxy for HTTPS,
+; or "" when there is none. The setting is either "host:port" for every
+; protocol or "http=host:port;https=host:port;...".
+Function SystemProxyForHttps
+  Push $1
+  ${StrLoc} $1 $R0 "=" ">"
+  ${If} $1 != ""
+    ${StrLoc} $1 $R0 "https=" ">"
+    ${If} $1 != ""
+      IntOp $1 $1 + 6
+    ${Else}
+      ${StrLoc} $1 $R0 "http=" ">"
+      ${If} $1 == ""
+        StrCpy $R0 ""
+        Goto done
+      ${EndIf}
+      IntOp $1 $1 + 5
+    ${EndIf}
+    StrCpy $R0 $R0 "" $1
+    ${StrLoc} $1 $R0 ";" ">"
+    ${If} $1 != ""
+      StrCpy $R0 $R0 $1
+    ${EndIf}
+  ${EndIf}
+  done:
+  Pop $1
+FunctionEnd
+
 Var /GLOBAL existing_install
 
 Section Install
@@ -851,6 +879,25 @@ Section Install
 
   StrCpy $cmder_dl "https://huggingface.co/$release_repo/resolve/$release_revision/$file_name"
   DetailPrint "Got URL : $cmder_dl"
+
+  ; NScurl and curl.exe (libcurl) ignore the Windows proxy setting, which is
+  ; where VPN tools in "system proxy" mode point browsers. Without it they
+  ; connect directly and fail where Hugging Face is blocked (issue #124).
+  ; libcurl does read HTTPS_PROXY, so pass the setting on through it, unless
+  ; the user already set a proxy for curl.
+  ; ponytail: a PAC script (AutoConfigURL) is not followed; setting HTTPS_PROXY by hand works there.
+  ReadEnvStr $0 "HTTPS_PROXY"
+  ReadEnvStr $1 "ALL_PROXY"
+  ReadRegDWORD $2 HKCU "Software\Microsoft\Windows\CurrentVersion\Internet Settings" "ProxyEnable"
+  ${If} "$0$1" == ""
+  ${AndIf} $2 == 1
+    ReadRegStr $R0 HKCU "Software\Microsoft\Windows\CurrentVersion\Internet Settings" "ProxyServer"
+    Call SystemProxyForHttps
+    ${If} $R0 != ""
+      System::Call 'kernel32::SetEnvironmentVariable(t "HTTPS_PROXY", t R0)'
+      DetailPrint "Using the system proxy: $R0"
+    ${EndIf}
+  ${EndIf}
 
   ; New releases publish a SHA-256 sidecar next to each package. Download it
   ; before the large archive so a package can be rejected before extraction.
