@@ -1,7 +1,11 @@
 // VRキーボード (1200x560 の領域、タイトルバー 56px)。キーは 72px 幅 (VRで約 3.6cm)、1段 15 キー分 (矢印も中に)。
-// 常に出すのはキーと入力欄だけ。言語・送る先・不透明度は一覧 (押して開く) に入れ、線で囲んだり文字で説明したりしない
-// 見た目は平らで暗いキー。指しているキー (左右どちらの手でも) は明るくしてアクセントの枠、
-// 押した瞬間はアクセントで塗る (XSOverlay のように、どこを指しているかが一目でわかる)
+// 常に出すのはキーと入力欄だけ。言語・送る先・設定は一覧 (押して開く) に入れ、線で囲んだり文字で説明したりしない
+// 見た目は平らで暗いキー。指しているキー (左右どちらの手でも) は緑の面と暗い文字で示す。
+// 押している間もハイライトを保ち、キーの面と印字だけを下へ2px沈める
+// 色は --kb_* の変数 (無ければ既定の色)
+
+// 色の変数を入れる外側 (並びには加わらない)
+.themed { display: contents; }
 
 // 指している (data-vr-hover: 1本目の手、data-vr-hover2: もう1本の手)
 @mixin pointed { &[data-vr-hover]:not(:disabled), &[data-vr-hover2]:not(:disabled) { @content; } }
@@ -13,7 +17,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 60ms ease-out, box-shadow 60ms ease-out;
+    // Pointer and press feedback appears immediately in the next captured frame.
     &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
     &:disabled { cursor: default; }
 }
@@ -26,6 +30,11 @@
     gap: 10px;
     padding: 12px 16px 16px;
     min-width: 0;
+    // 設定の行の動き (スイッチ・広がる一覧)
+    --motion_fast: 120ms;
+    --motion_base: 220ms;
+    --ease_out: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --ease_move: cubic-bezier(0.3, 0.7, 0.2, 1);
 }
 
 .top {
@@ -44,7 +53,7 @@
     gap: 16px;
     padding: 6px 20px;
     border-radius: 14px;
-    background: var(--dark_1000_color);
+    background: var(--kb_field, var(--dark_1000_color));
 }
 
 .line {
@@ -59,7 +68,7 @@
     white-space: pre-wrap;
     line-height: 1.15;
     font-size: 28px;
-    color: var(--dark_basic_text_color);
+    color: var(--kb_text, var(--dark_basic_text_color));
 }
 
 // 144文字目より後ろ (VRChat のチャットボックスでは切れる)
@@ -118,12 +127,12 @@
     height: 48px;
     padding: 0 14px;
     border-radius: 10px;
-    background: var(--dark_750_color);
-    color: var(--dark_350_color);
+    background: var(--kb_candidate, var(--dark_750_color));
+    color: var(--kb_text_dim, var(--dark_350_color));
     font-size: 22px;
     white-space: nowrap;
     &[aria-pressed="true"] { background: var(--primary_600_color_44); color: #ffffff; }
-    @include pointed { background: #4a4c51; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
+    @include pointed { background: var(--kb_pointed, #4a4c51); box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
     &:active { background: var(--primary_400_color); color: var(--dark_1000_color); }
 }
 
@@ -135,11 +144,11 @@
     width: 48px;
     height: 48px;
     border-radius: 10px;
-    background: var(--dark_750_color);
-    color: var(--dark_400_color);
+    background: var(--kb_candidate, var(--dark_750_color));
+    color: var(--kb_text_dim, var(--dark_400_color));
     font-size: 28px;
     &:disabled { opacity: 0.35; }
-    @include pointed { background: #4a4c51; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
+    @include pointed { background: var(--kb_pointed, #4a4c51); box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
     &:active:not(:disabled) { background: var(--primary_400_color); color: var(--dark_1000_color); }
 }
 
@@ -205,14 +214,12 @@
 }
 
 // 印字が変わったときの字の現れ方 (変わった字だけ)。Shift は下から差し替わり、戻りは上から短く。
-// 言語は言語キーから近い順に (--delay)、言語キーの字 (あ・A・한・简) は縦に回る
+// 言語は Caps Lock キーの段から近い順に (--delay)
 .appear_shift_on { animation: legend_up 110ms ease-out; }
 .appear_shift_off { animation: legend_down 80ms ease-out; }
 .appear_language { animation: legend_up 140ms ease-out var(--delay, 0ms) backwards; }
-.key.mark .appear_language { animation: legend_flip 180ms ease-out; }
 @keyframes legend_up { from { opacity: 0.2; transform: translateY(5px); } }
 @keyframes legend_down { from { opacity: 0.2; transform: translateY(-5px); } }
-@keyframes legend_flip { from { opacity: 0; transform: perspective(200px) rotateX(90deg); } }
 
 // ▲ ▼: 1キー分の場所を上下に分ける (ノートパソコンの矢印キー)
 .updown {
@@ -221,16 +228,18 @@
     flex-direction: column;
     gap: 4px;
 }
-.key.half { width: 100% !important; height: 26px; font-size: 14px; }
+.key.half { --key-height: 26; width: 100% !important; height: 26px; font-size: 14px; }
 
 .row {
     display: flex;
     gap: var(--key_gap);
 }
 
-// Tab・Caps Lock などの場所 (置かないキー)
+// 記号のページ (高さは文字のキー4段分): 左に縦のタブ (2列 × 4、絵文字と短い名前)、真ん中に字 (多ければスティックで送る)、右に ⌫ ↵
 .gap { flex: none; }
 
+// The fixed button is the hit area; its face contains all moving artwork.
+// 音を決めてあるキー (設定画面の「キーの音」の見本): 字をアクセントの色に (押している色のときは、そちらを優先)
 .key {
     @extend %vr_button;
     position: relative;
@@ -238,17 +247,45 @@
     flex-direction: column;
     height: 56px;
     border-radius: 10px;
+    background: transparent;
     font-size: 18px;
     font-weight: 500;
-    // 文字のキー / 修飾キー (⇧ ← ◀ ▶ 切り替え) / 決めるキー (↵ 空白・変換)
-    &.char { background: #34363a; color: #eceef1; font-size: 26px; }
-    &.mod { background: #26272a; color: var(--dark_400_color); }
-    &.act { background: #2c3d3a; color: var(--primary_100_color); }
-    // Shift の1回 (次の1文字) はアクセントの字、ロック・マイクの ON は塗り
+    --key_ring: inset 0 -3px 0 rgba(0, 0, 0, 0.24);
+    &.char { --key_face: var(--kb_key, #34363a); color: var(--kb_text, #eceef1); font-size: 26px; }
+    &.mod { --key_face: var(--kb_mod, #26272a); color: var(--kb_text_dim, var(--dark_400_color)); }
+    &.act { --key_face: var(--kb_act, #2c3d3a); color: var(--primary_100_color); }
     &[aria-pressed="true"] { color: var(--primary_200_color); }
-    &.is_locked { background: var(--primary_700_color); color: #ffffff; }
-    @include pointed { background: #4f5257; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
-    &:active:not(:disabled) { background: var(--primary_300_color); box-shadow: none; color: var(--dark_1000_color); transition: none; }
+    &.is_locked { --key_face: var(--primary_700_color); color: #ffffff; }
+    @include pointed {
+        --key_face: var(--primary_300_color);
+        --key_corner: var(--dark_1000_color);
+        color: var(--dark_1000_color);
+    }
+    &:active:not(:disabled), &.is_held:not(:disabled) {
+        --key_face: var(--primary_300_color);
+        --key_ring: none;
+        --key_corner: var(--dark_1000_color);
+        color: var(--dark_1000_color);
+    }
+}
+.key_face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border-radius: inherit;
+    background: var(--key_face);
+    box-shadow: var(--key_ring);
+    pointer-events: none;
+    transform: translateY(0);
+    transition: transform 70ms ease-out;
+}
+.key:active:not(:disabled) > .key_face,
+.key.is_held:not(:disabled) > .key_face {
+    transform: translateY(2px);
+    transition: none;
 }
 
 // BackSpace は太い矢印、↵ は大きい矢印
@@ -270,32 +307,49 @@
 
 // マイク (聞き取った文を入力欄へ)。ON の間は塗る
 .mic_icon { width: 30px; height: 30px; fill: currentColor; }
+// マイク: 初回のモデルを取っている間の何 %、読み込み中の点滅、失敗 (注意の色)
+.mic_progress { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.key.is_loading .mic_icon { animation: mic_loading 0.8s ease-in-out infinite alternate; }
+@keyframes mic_loading { from { opacity: 0.35; } }
+.key.is_failed:not(:active):not(.is_held):not([data-vr-hover]):not([data-vr-hover2]) { color: var(--warning_color); --key_ring: inset 0 0 0 2px var(--warning_color); }
 
-// JIS の L 字の Enter: 上の段の部分と下の段の部分を、段のすき間をまたいでつなぐ。
-// どちらかを指す・押すと、両方の部分が一緒に変わる
-// (下の部分は上の部分に枠の太さだけ重ね、上辺の枠を描かない: つなぎ目に線が出ない)
-$row_gap: 8px;
-$ring: 3px;
-.enter_top { border-bottom-right-radius: 0; }
-.enter_bottom {
-    z-index: 1;
-    height: 56px + $row_gap + $ring;
-    margin-top: -($row_gap + $ring);
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+// JIS の L 字の Enter: 形は上の部分の中の1つの図形 (EnterShape) で塗り、2つのボタンは押す場所だけ
+// (下の部分は段のすき間まで: すき間を指しても Enter)。どちらかを指すと緑、押すと全体が下へ2px沈む
+.keys .key.enter_part > .key_face { background: none; box-shadow: none; }
+.enter_top { --key-height: 120; z-index: 1; }
+.enter_top > .key_face { transform-origin: 50% 60px; }
+.enter_bottom { height: 64px; margin-top: -8px; }
+.enter_shape {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    overflow: visible;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.24));
+    path { fill: var(--kb_act, #2c3d3a); stroke: none; }
 }
 .keys:has(.enter_part[data-vr-hover]:not(:disabled)),
-.keys:has(.enter_part[data-vr-hover2]:not(:disabled)) {
-    .enter_part { background: #4f5257; color: #ffffff; }
-    .enter_top { box-shadow: inset 0 0 0 $ring var(--primary_200_color); }
-    .enter_bottom.enter_bottom {
-        box-shadow: inset $ring 0 0 var(--primary_200_color), inset (-$ring) 0 0 var(--primary_200_color), inset 0 (-$ring) 0 var(--primary_200_color);
-    }
+.keys:has(.enter_part[data-vr-hover2]:not(:disabled)),
+.keys:has(.enter_part:is(:active, .is_held):not(:disabled)) {
+    .enter_part { color: var(--dark_1000_color); }
+    .enter_shape path { fill: var(--primary_300_color); stroke: none; }
 }
-.keys:has(.enter_part:active:not(:disabled)) .enter_part {
-    background: var(--primary_300_color);
-    box-shadow: none;
-    color: var(--dark_1000_color);
+.keys:has(.enter_part:is(:active, .is_held):not(:disabled)) .enter_top > .key_face {
+    transform: translateY(2px);
+    transition: none;
+}
+
+.keys:has(.enter_part:is(:active, .is_held):not(:disabled)) .enter_shape { filter: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    // Keep the pressed position visible; only remove the animated release.
+    .key > .key_face,
+    .key:active:not(:disabled) > .key_face,
+    .key.is_held:not(:disabled) > .key_face,
+    .keys:has(.enter_part:is(:active, .is_held):not(:disabled)) .enter_top > .key_face {
+        transition: none;
+    }
 }
 
 // 左上の小さい字 (Shift を押すと入る字。Shift 中は押さないときの字)
@@ -303,6 +357,8 @@ $ring: 3px;
 .ctrl { font-size: 20px; font-weight: 600; }
 // Ctrl の間、働きのないキーは薄く (押せない)
 .ctrl_off { opacity: 0.3; }
+// Ctrl の間、働きのあるキーの字の下に添える名前 (コピー・貼り付けなど)。キーの幅に収まらなければ省く
+.ctrl_name { max-width: calc(100% - 8px); margin-top: 2px; overflow: hidden; font-size: 12px; font-weight: 500; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .key_corner {
     position: absolute;
     top: 4px;
@@ -310,7 +366,7 @@ $ring: 3px;
     font-size: 18px;
     font-weight: 500;
     line-height: 1;
-    color: var(--dark_400_color);
+    color: var(--key_corner, var(--kb_text_dim, var(--dark_400_color)));
 }
 
 // 入力欄の右端の × (全部消す)。1回目で注意の色、続けてもう1回で消す
@@ -324,9 +380,10 @@ $ring: 3px;
     color: var(--dark_500_color);
     svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
     &.is_armed { background: var(--warning_color); color: var(--dark_1000_color); }
-    @include pointed { background: #4f5257; color: #ffffff; }
+    @include pointed { background: var(--kb_pointed, #4f5257); color: #ffffff; }
 }
 
+.title_buttons { display: flex; align-items: center; }
 // タイトルバーの不透明度の印
 .menu_button {
     @extend %vr_button;
@@ -335,10 +392,10 @@ $ring: 3px;
     margin-right: 8px;
     border-radius: 9px;
     background: transparent;
-    color: var(--dark_400_color);
-    &[aria-expanded="true"] { background: #26272a; color: #ffffff; }
-    &[aria-pressed="true"] { color: var(--primary_300_color); }
-    @include pointed { background: #4f5257; color: #ffffff; }
+    color: var(--kb_text_dim, var(--dark_400_color));
+    &[aria-expanded="true"] { background: var(--kb_mod, #26272a); color: #ffffff; }
+    &[aria-pressed="true"] { color: var(--kb_accent, var(--primary_300_color)); }
+    @include pointed { background: var(--kb_pointed, #4f5257); color: #ffffff; }
 }
 
 // 一覧 (言語・不透明度)。外を押すと閉じる
@@ -355,15 +412,31 @@ $ring: 3px;
     gap: 6px;
     padding: 8px;
     border-radius: 14px;
-    background: #1f2023;
+    background: var(--kb_menu, #1f2023);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
 }
-// 言語キー (下から3段目の左端) の上に開く: 下の余白 16px と3段分 (キー 56px + すき間 8px)
-.language_menu { left: 16px; bottom: 16px + 3 * 64px; flex-direction: row; }
-// 不透明度の印 (右上) の下に開く
-.settings_menu { top: 4px; right: 16px; }
-.menu_row { display: flex; align-items: center; gap: 6px; }
-// 線で描く印 (不透明度・送る先)
+// 言語キー (一番下の段) の上、キーボードの左端にそろえて縦に積む: 下の余白 16px と1段分 (キー 56px + すき間 8px)。
+// 選んでいる項目には ✓
+.language_menu {
+    left: 16px;
+    bottom: 16px + 64px;
+    flex-direction: column;
+    gap: 4px;
+    .option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        height: 44px;
+        min-width: 240px;
+        &[aria-pressed="true"]::after { content: "✓"; }
+    }
+}
+.gear_icon { width: 26px; height: 26px; fill: currentColor; }
+// 半/全: 今の方 (かな = 全、半角英数 = 半) をアクセントの字で
+.half_full { span { opacity: 0.45; } .is_on { opacity: 1; color: var(--primary_200_color); font-weight: 700; } }
+// キーの奥の画像: 一面に広げ、キーと入力欄は少し透かす (色の変数で)
+// 線で描く印 (送る先・ピン)
 .stroke_icon { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .stroke_icon .filled { fill: currentColor; }
 // ピン: 外れている間は傾けて薄く、留めている間はまっすぐ (アクセントの色は .menu_button の aria-pressed)
@@ -379,8 +452,10 @@ $ring: 3px;
     border-radius: 10px;
     background: transparent;
     color: var(--primary_200_color);
-    @include pointed { background: #4f5257; color: #ffffff; }
+    @include pointed { background: var(--kb_pointed, #4f5257); color: #ffffff; }
     &:active { background: var(--primary_300_color); color: var(--dark_1000_color); }
+    // VRChat の入力欄が開いている間 (その入力欄へ送る): 印だけ
+    &:disabled { pointer-events: none; }
 }
 // 選んでいるものはアクセントの字だけ
 .option {
@@ -389,15 +464,126 @@ $ring: 3px;
     min-width: 88px;
     padding: 0 18px;
     border-radius: 10px;
-    background: #2a2b2f;
-    color: var(--dark_400_color);
+    background: var(--kb_option, #2a2b2f);
+    color: var(--kb_text_dim, var(--dark_400_color));
     font-size: 18px;
     font-weight: 500;
     white-space: nowrap;
     &[aria-pressed="true"] { color: var(--primary_200_color); font-weight: 700; }
-    @include pointed { background: #4f5257; box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
+    @include pointed { background: var(--kb_pointed, #4f5257); box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
     &:active { background: var(--primary_300_color); color: var(--dark_1000_color); }
 }
 
-// 言語キーの字 (あ・A・한・简・繁): 文字のキーと同じ大きさ
-.key.mark { font-size: 24px; }
+// 歯車のパネル: キーボードだけの設定。歯車の下に右寄せで、入力欄の上からキーボードの下の余白まで (キーは隠れる)。
+// 縦1列、1つ 44px の高さ。入りきらないときはスティックで送る
+.settings_menu {
+    top: 4px;
+    bottom: 16px;
+    right: 16px;
+    width: 560px;
+    padding: 10px;
+    box-sizing: border-box;
+    .settings { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+}
+.setting_sub { display: block; margin-top: 2px; font-size: 13px; color: var(--kb_text_dim, #c7c8cc); }
+.setting.is_off { opacity: 0.45; }
+.settings_close {
+    @extend %vr_button;
+    flex: none;
+    height: 44px;
+    background: var(--kb_option, #2a2b2f);
+    color: var(--kb_text, #eceef1);
+    font: inherit;
+    font-size: 18px;
+    @include pointed { background: var(--kb_pointed, #4f5257); box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+}
+.settings { display: flex; flex-direction: column; gap: 4px; }
+.setting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 10px 0 20px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--kb_option, #2a2b2f);
+    color: var(--kb_text, #eceef1);
+    font: inherit;
+    font-size: 18px;
+    text-align: left;
+    &:is(button) { cursor: pointer; }
+    &:disabled { opacity: 0.4; cursor: default; }
+    &:is(button)[data-vr-hover], &:is(button)[data-vr-hover2] { background: var(--kb_pointed, #4f5257); box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+}
+.setting_label { flex: 1; min-width: 0; }
+// 選択肢を横に並べる行: ラベルと選択肢が1行に収まらない言語では、選択肢を次の行へ回す (ラベルが潰れて縦に伸びないように)
+.setting_wrap { height: auto; min-height: 44px; flex-wrap: wrap; padding-top: 3px; padding-bottom: 3px; .setting_label { flex: 1 1 auto; } }
+.setting_value { min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+.switch {
+    position: relative;
+    flex: none;
+    width: 48px;
+    height: 28px;
+    border-radius: 14px;
+    background: var(--dark_700_color);
+    &::after { content: ""; position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: #ffffff; transition: left var(--motion_fast) var(--ease_out); }
+    &.is_on { background: var(--primary_300_color); &::after { left: 24px; } }
+}
+.fold { border-radius: 10px; background: var(--kb_option, #2a2b2f); }
+.fold_head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 44px;
+    padding: 0 10px 0 20px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--kb_text, #eceef1);
+    font: inherit;
+    font-size: 18px;
+    text-align: left;
+    cursor: pointer;
+    &[data-vr-hover], &[data-vr-hover2] { background: var(--kb_pointed, #4f5257); box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+}
+.fold_current { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; color: var(--kb_text_dim, #c7c8cc); }
+.fold_chevron { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--kb_text_dim, #c7c8cc); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: transform var(--motion_base) var(--ease_move); }
+.fold.is_open .fold_chevron { transform: rotate(180deg); }
+.fold_panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--motion_base) var(--ease_move); }
+.fold.is_open > .fold_panel { grid-template-rows: 1fr; }
+// 閉じている間は、中の選択肢を押せないようにする (閉じ終わってから隠す)
+.fold_inner { overflow: hidden; visibility: hidden; transition: visibility 0s linear var(--motion_base); }
+.fold.is_open > .fold_panel > .fold_inner { visibility: visible; transition-delay: 0s; }
+.fold_options { padding: 2px 6px 6px; display: flex; flex-direction: column; gap: 2px; }
+.fold_option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--kb_text, #eceef1);
+    font: inherit;
+    font-size: 16px;
+    text-align: left;
+    cursor: pointer;
+    svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--primary_300_color); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+    span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    &[aria-selected="true"] { font-weight: 700; color: #ffffff; svg { opacity: 1; } }
+    &[data-vr-hover], &[data-vr-hover2] { background: var(--kb_pointed, #4f5257); box-shadow: inset 0 0 0 3px var(--primary_200_color); }
+    &:active { background: var(--primary_300_color); color: var(--dark_1000_color); }
+}
+
+.slider {
+    position: relative;
+    width: 220px;
+    height: 36px;
+    cursor: pointer;
+    &::before { content: ""; position: absolute; left: 0; right: 0; top: 15px; height: 6px; border-radius: 3px; background: var(--dark_700_color); }
+    &[data-vr-hover] .slider_thumb, &[data-vr-hover2] .slider_thumb { box-shadow: 0 0 0 3px var(--primary_200_color); }
+}
+.slider_fill { position: absolute; left: 0; top: 15px; height: 6px; border-radius: 3px; background: var(--primary_300_color); }
+.slider_thumb { position: absolute; top: 6px; width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; background: #ffffff; }

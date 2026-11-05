@@ -13,22 +13,28 @@ const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreen
 // VR UI が ON の間だけ作る (set_vr_panel_window)。OFF の間も動かしておくと、使わない人にも負荷がかかる
 fn create_vr_panel_window<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<()> {
     // 開発用: VRCT_DESKTOP_VR_PANEL を付けて起動すると、VR 画面をデスクトップに出してマウスで触れる
-    let desktop = cfg!(debug_assertions) && std::env::var_os("VRCT_DESKTOP_VR_PANEL").is_some();
+    // (値はその縮小率。数でなければ 0.6: 全体が1枚の画面に入るように)
+    let desktop = cfg!(debug_assertions).then(|| std::env::var("VRCT_DESKTOP_VR_PANEL").ok()).flatten()
+        .map(|zoom| zoom.parse::<f64>().ok().filter(|z| *z > 0.0).unwrap_or(0.6));
+    let zoom = desktop.unwrap_or(1.0);
     let window = WebviewWindowBuilder::new(manager, "vr_panel", WebviewUrl::App("vr.html".into()))
         .title("VRCT VR Panel")
         // 既定の並び (src-ui/views/vr/vr_layout.json の atlas)。ログの大きさを変えると Python が合わせて変える
-        .inner_size(1690.0, 1448.0)
-        .decorations(desktop)
-        .resizable(false)
-        .skip_taskbar(!desktop)
+        .inner_size(1690.0 * zoom, 1448.0 * zoom)
+        .decorations(desktop.is_some())
+        .resizable(desktop.is_some())
+        .skip_taskbar(desktop.is_none())
         .focused(false)
         .visible(false)
         .additional_browser_args(BROWSER_ARGS)
         .build()?;
     // 画面外に置く。Windows ではビルダーの .position() が効かず既定の位置 (画面内) に出るため、
     // 作ってから動かし、動かした後で表示する (撮影のため、表示状態で画面外に置いておく)
-    let (x, y) = if desktop { (0, 0) } else { (-10000, -10000) };
+    let (x, y) = if desktop.is_some() { (0, 0) } else { (-10000, -10000) };
     window.set_position(PhysicalPosition::new(x, y))?;
+    if desktop.is_some() {
+        window.set_zoom(zoom)?;
+    }
     window.show()?;
     Ok(())
 }

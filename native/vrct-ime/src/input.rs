@@ -97,6 +97,8 @@ pub enum Key {
     PageDown,
     /// 半角/全角: Japanese typed as it is (half-width, the JIS keys kept) or back to kana
     HalfWidth,
+    /// the candidate highlighted taken (Japanese, Chinese; nothing when not composing)
+    Tab,
     /// ◀ ▶ with Ctrl (to the word's edge) and / or Shift (selecting from where the cursor was)
     Move { left: bool, word: bool, select: bool },
     SelectAll,
@@ -282,7 +284,7 @@ impl<'r> Input<'r> {
         let kind = match key {
             Key::Char(_) | Key::Space => Edit::Typing,
             Key::Backspace => Edit::Deleting,
-            Key::Enter => Edit::Other,
+            Key::Enter | Key::Tab => Edit::Other,
             _ => Edit::None,
         };
         self.record(before, kind);
@@ -306,6 +308,15 @@ impl<'r> Input<'r> {
                 self.flush();
                 self.text += &std::mem::take(&mut self.after);
                 self.anchor = Some(0);
+                return;
+            }
+            Key::Tab => {
+                if self.numeric_candidates().is_some() {
+                    self.select(if self.converting { self.numeric_candidate } else { 0 });
+                } else if let Some(s) = self.session().filter(|_| self.composing()) {
+                    let highlighted = s.context().highlighted;
+                    self.select(highlighted);
+                }
                 return;
             }
             _ => {}
@@ -456,7 +467,7 @@ impl<'r> Input<'r> {
             Key::Right => s.key(keys::RIGHT, 0),
             Key::PageUp => s.key(keys::PAGE_UP, 0),
             Key::PageDown => s.key(keys::PAGE_DOWN, 0),
-            Key::HalfWidth | Key::Move { .. } | Key::SelectAll | Key::Undo | Key::Redo => return,
+            Key::HalfWidth | Key::Tab | Key::Move { .. } | Key::SelectAll | Key::Undo | Key::Redo => return,
         };
         if let (Key::Char(c), false) = (key, taken) {
             self.text.push(c);

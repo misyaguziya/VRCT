@@ -89,7 +89,7 @@ fn japanese_and_chinese_convert() {
         typed(&mut i, raw);
         i.select(1);
         assert_eq!(i.take(), wide);
-        for finish in [Key::Enter, Key::HalfWidth] {
+        for finish in [Key::Enter, Key::Tab, Key::HalfWidth] {
             typed(&mut i, raw);
             i.key(Key::Space);
             i.key(Key::Space);
@@ -425,6 +425,15 @@ fn japanese_and_chinese_convert() {
         assert!(i.state().composition.is_none());
         i.clear();
     }
+    // Tab takes the candidate highlighted; not composing, it does nothing
+    typed(&mut i, "kanji");
+    i.key(Key::Space);
+    i.key(Key::Space);
+    let candidate = i.state().candidates[i.state().highlighted].clone();
+    i.key(Key::Tab);
+    assert_eq!(i.take(), candidate);
+    i.key(Key::Tab);
+    assert_eq!(i.state().text, "");
     typed(&mut i, "kanji");
     i.key(Key::Space);
     let candidate = i.state().candidates[i.state().highlighted].clone();
