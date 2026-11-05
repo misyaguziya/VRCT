@@ -378,6 +378,7 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/get/data/overlay_vr_laser_pitch", r(true, h::get_overlay_vr_laser_pitch)),
         ("/set/data/overlay_vr_laser_pitch", r(true, h::set_overlay_vr_laser_pitch)),
         ("/get/data/keyboard_shortcut", r(true, h::get_keyboard_shortcut)),
+        ("/run/steamvr_bindings", r(true, h::steamvr_bindings)),
         ("/set/data/keyboard_shortcut", r(true, h::set_keyboard_shortcut)),
     ]
 }

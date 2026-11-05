@@ -270,6 +270,17 @@ pub fn is_active() -> bool {
     *SESSION.lock().unwrap() > 0
 }
 
+/// A reference to the session already running (the overlay's), without starting SteamVR or changing
+/// the application type. None when none runs
+pub fn acquire_existing() -> Option<Session> {
+    let mut count = SESSION.lock().unwrap();
+    if *count == 0 {
+        return None;
+    }
+    *count += 1;
+    Some(Session(()))
+}
+
 impl Drop for Session {
     fn drop(&mut self) {
         let mut count = SESSION.lock().unwrap();
@@ -731,6 +742,7 @@ pub mod input {
     pub const UPDATE_ACTION_STATE: usize = 4;
     pub const GET_DIGITAL_ACTION_DATA: usize = 5;
     pub const GET_ANALOG_ACTION_DATA: usize = 6;
+    pub const OPEN_BINDING_UI: usize = 30;
     /// An action set at a priority in this range is overlay-global: what it binds reaches no app
     /// below it (the game) while it is active
     pub const OVERLAY_GLOBAL_PRIORITY_MIN: i32 = 0x0100_0000;
@@ -781,6 +793,16 @@ fn input_error(code: i32, what: &str) -> Result<(), Error> {
 }
 
 impl Input<'_> {
+    /// This process's controller bindings opened in SteamVR on the desktop (IVRInput_010). Ok only
+    /// says the request was taken, not that a window showed
+    pub fn open_binding_ui(&self) -> Result<(), Error> {
+        let code = unsafe {
+            let f: unsafe extern "system" fn(*const c_char, u64, u64, bool) -> i32 = self.0.f(input::OPEN_BINDING_UI);
+            f(std::ptr::null(), 0, 0, true)
+        };
+        input_error(code, "OpenBindingUI")
+    }
+
     /// The app's actions (the action manifest, a JSON file with the default bindings beside it)
     pub fn set_action_manifest_path(&self, path: &std::path::Path) -> Result<(), Error> {
         let path = CString::new(path.to_string_lossy().into_owned()).map_err(|_| err(-1, "manifest path"))?;
@@ -846,6 +868,24 @@ impl Input<'_> {
 #[cfg(test)]
 mod input_layout_tests {
     use super::*;
+
+    #[test]
+    fn binding_ui_uses_the_current_process_and_desktop_and_propagates_errors() {
+        static ARGS: Mutex<Option<(bool, u64, u64, bool)>> = Mutex::new(None);
+        unsafe extern "system" fn open(key: *const c_char, device: u64, set: u64, desktop: bool) -> i32 {
+            *ARGS.lock().unwrap() = Some((key.is_null(), device, set, desktop));
+            0
+        }
+        unsafe extern "system" fn fail(_: *const c_char, _: u64, _: u64, _: bool) -> i32 { 3 }
+        // a table of our own: no DLL nor session
+        let mut functions = [0usize; input::LEN];
+        functions[input::OPEN_BINDING_UI] = open as *const () as usize;
+        let call = |functions: &[usize]| Input(Table { functions: functions.as_ptr(), _session: std::marker::PhantomData::<&Session> }).open_binding_ui();
+        assert!(call(&functions).is_ok());
+        assert_eq!(*ARGS.lock().unwrap(), Some((true, 0, 0, true)));
+        functions[input::OPEN_BINDING_UI] = fail as *const () as usize;
+        assert_eq!(call(&functions).unwrap_err().code, 3);
+    }
 
     /// The sizes openvr_capi.h makes them (pack 8 on Windows)
     #[test]

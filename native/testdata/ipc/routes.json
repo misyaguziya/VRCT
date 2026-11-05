@@ -1846,6 +1846,11 @@
    "handler": "getKeyboardShortcut"
   },
   {
+   "endpoint": "/run/steamvr_bindings",
+   "during_init": true,
+   "handler": "steamvrBindings"
+  },
+  {
    "endpoint": "/set/data/keyboard_shortcut",
    "during_init": true,
    "handler": "setKeyboardShortcut"

@@ -334,6 +334,14 @@ config_page:
         reset_launcher:
             label: "Reset the launcher position and size"
             desc: "Use this if you lose the launcher in VR. It returns to your left wrist at its default position and size."
+        steamvr_bindings:
+            label: "VR UI button bindings (SteamVR)"
+            desc: "Opens SteamVR on the desktop to check or change the VR UI's controller bindings. To keep VRChat from reacting while you point at the VR UI, turn on SteamVR's \"Enable global input from overlays\""
+            pending: "Opening…"
+            requested: "Asked SteamVR to show them. Check the desktop"
+            not_running: "SteamVR is not running"
+            not_ready: "The VR UI is not ready yet. Press again once it shows"
+            failed: "Could not open them. Check the connection to SteamVR"
         voice_typing_mode:
             label: "Voice Typing Mode"
             desc: "Automatically pastes transcribed text into the active input field.\n*Utilizes standard Windows clipboard functionality."

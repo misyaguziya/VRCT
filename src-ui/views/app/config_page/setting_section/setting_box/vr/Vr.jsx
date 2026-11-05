@@ -21,6 +21,7 @@ import {
     useVr,
 } from "@logics_configs";
 import { useStdoutToPython } from "@useStdoutToPython";
+import { useSteamVrBindings } from "@logics_common";
 
 import RedoSvg from "@images/redo.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
@@ -565,6 +566,8 @@ const VrUiBetaContainer = () => {
         toggleIsEnabledOverlayVrPanel,
     } = useVr();
     const { asyncStdoutToPython } = useStdoutToPython();
+    const { currentSteamVrBindings, updateSteamVrBindings } = useSteamVrBindings();
+    const bindings = currentSteamVrBindings.data;
 
     return (
         <div className={styles.common_container}>
@@ -582,6 +585,18 @@ const VrUiBetaContainer = () => {
                 ClickedIconComponent={CheckMarkSvg}
                 clicked_duration={1000}
                 onclickFunction={() => asyncStdoutToPython("/run/vr_launcher_reset")}
+            />
+            {/* VR UI のコントローラの割り当て (既定の割り当てが無い機種、変えたいとき)。SteamVR の画面をデスクトップに開く */}
+            <ActionButtonContainer
+                label={t("config_page.vr.steamvr_bindings.label")}
+                desc={[t("config_page.vr.steamvr_bindings.desc"), bindings && t(`config_page.vr.steamvr_bindings.${bindings}`)].filter(Boolean).join("\n")}
+                IconComponent={RedoSvg}
+                ClickedIconComponent={CheckMarkSvg}
+                clicked_duration={1000}
+                onclickFunction={() => {
+                    updateSteamVrBindings("pending");
+                    asyncStdoutToPython("/run/steamvr_bindings");
+                }}
             />
         </div>
     );

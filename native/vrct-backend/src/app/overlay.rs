@@ -107,8 +107,9 @@ impl Overlays {
         large.ui_scaling *= LARGE_SCALE;
         let popup = Settings { position: [0.0; 6], tracker: "Playspace".into(), opacity: 1.0, ui_scaling: 0.36,
                                display_duration: 5.0, fadeout_duration: 0.0, panel_size: None };
-        // the keyboard: 0.6 m, its keys about 3.6 cm wide (72 px of 1200: 15 keys a row, the arrows in the bottom one)
-        let keyboard = Settings { ui_scaling: 0.6, opacity: config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), ..popup.clone() };
+        // the keyboard: as wide as it was last made in VR (0.6 m at first: its keys about 3.6 cm wide, 72 px of
+        // 1200: 15 keys a row, the arrows in the bottom one). Its place is in front of the eyes each time it opens
+        let keyboard = Settings { ui_scaling: config.get("KEYBOARD_WIDTH").as_f64().unwrap_or(0.6), opacity: config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), ..popup.clone() };
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),
@@ -185,6 +186,8 @@ fn position_changed(app: &App, size: &str, mut position: Map<String, Value>) -> 
             app.config.set("OVERLAY_VR_LAUNCHER_SETTINGS", merged(app, "OVERLAY_VR_LAUNCHER_SETTINGS", &position))?;
             app.run(200, "overlay_vr_launcher_hand", position.get("tracker").cloned().unwrap_or(Value::Null))
         }
+        // the keyboard: its width kept for the next start
+        KEYBOARD if scaling > 0.0 => app.config.set("KEYBOARD_WIDTH", json!(vrct_overlay::pose::round_to(scaling, 3))).map_err(Into::into),
         _ => Ok(()),
     }
 }
@@ -582,6 +585,39 @@ fn chrono_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
 }
 
+/// The controller bindings of VRCT's VR UI opened in SteamVR on the desktop (to change them, or for a
+/// controller without default bindings). {"status": "requested" / "not_running" / "not_ready" (the VR
+/// UI has not set up its actions) / "failed"}. Never starts SteamVR
+pub fn steamvr_bindings(_: &App, _: Data) -> Result<Reply> {
+    Ok(Reply::ok(json!({"status": binding_status(vrct_openvr::is_steamvr_running(), open_bindings)})))
+}
+
+fn binding_status(running: bool, open: impl FnOnce() -> Result<bool>) -> &'static str {
+    if !running {
+        return "not_running";
+    }
+    match open() {
+        Ok(true) => "requested",
+        Ok(false) => "not_ready",
+        Err(e) => {
+            logs::error("SteamVR bindings", &format!("{e:#}"));
+            "failed"
+        }
+    }
+}
+
+/// Through the overlay's session, once it has set up its actions (else SteamVR would open bindings
+/// of an app without them)
+fn open_bindings() -> Result<bool> {
+    let Some(session) = vrct_openvr::acquire_existing() else { return Ok(false) };
+    let input = session.input()?;
+    if input.action_set_handle("/actions/main").unwrap_or(0) == 0 {
+        return Ok(false);
+    }
+    input.open_binding_ui()?;
+    Ok(true)
+}
+
 /// getVrPanelLayout: the layout the VR view draws (the overlay's)
 pub fn get_vr_panel_layout(app: &App, _: Data) -> Result<Reply> {
     let shared = overlay(app).shared();
@@ -612,3 +648,24 @@ pub fn set_vr_panel_layout_rendered(app: &App, data: Data) -> Result<Reply> {
     Ok(Reply::ok(data))
 }
 
+
+#[cfg(test)]
+mod bindings_tests {
+    #[test]
+    fn bindings_do_not_start_steamvr_and_tell_readiness() {
+        assert_eq!(super::binding_status(false, || panic!("SteamVR must not be started")), "not_running");
+        assert_eq!(super::binding_status(true, || Ok(false)), "not_ready");
+        assert_eq!(super::binding_status(true, || Ok(true)), "requested");
+        assert_eq!(super::binding_status(true, || Err(anyhow::anyhow!("disconnected"))), "failed");
+    }
+    #[test]
+    fn the_keyboard_width_made_in_vr_is_kept() {
+        let app = super::super::test_app(0);
+        let position = |w: f64| serde_json::json!({"ui_scaling": w, "tracker": "Playspace"}).as_object().unwrap().clone();
+        super::position_changed(&app, super::KEYBOARD, position(0.84567)).unwrap();
+        assert_eq!(app.config.get("KEYBOARD_WIDTH"), serde_json::json!(0.846));
+        // outside the widths a grab can make: refused, kept as it was
+        assert!(super::position_changed(&app, super::KEYBOARD, position(5.0)).is_err());
+        assert_eq!(app.config.get("KEYBOARD_WIDTH"), serde_json::json!(0.846));
+    }
+}

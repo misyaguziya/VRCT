@@ -2279,6 +2279,20 @@
    "default": false
   },
   {
+   "name": "KEYBOARD_WIDTH",
+   "kind": "managed",
+   "type": [
+    "int",
+    "float"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": 0.6
+  },
+  {
    "name": "OVERLAY_VR_LASER_PITCH",
    "kind": "managed",
    "type": [
@@ -2429,6 +2443,7 @@
   "KEYBOARD_SEND_TO",
   "KEYBOARD_OPACITY",
   "KEYBOARD_LOCKED",
+  "KEYBOARD_WIDTH",
   "OVERLAY_VR_LASER_PITCH",
   "KEYBOARD_SHORTCUT"
  ]

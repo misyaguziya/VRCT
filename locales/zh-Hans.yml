@@ -328,6 +328,14 @@ config_page:
         reset_launcher:
             label: "重置启动器的位置和大小"
             desc: "在VR中找不到启动器时使用。它会回到左手手腕上的默认位置和大小。"
+        steamvr_bindings:
+            label: "VR UI 按键设置 (SteamVR)"
+            desc: "在桌面打开 SteamVR，查看或更改 VR UI 的按键绑定。若要在指向 VR UI 时不让 VRChat 响应，请开启 SteamVR 的 \"Enable global input from overlays\""
+            pending: "正在打开…"
+            requested: "已请求 SteamVR 显示，请查看桌面"
+            not_running: "SteamVR 未运行"
+            not_ready: "VR UI 尚未就绪。请在 VR UI 出现后再按一次"
+            failed: "无法打开。请检查与 SteamVR 的连接"
         voice_typing_mode:
             label:
             desc:
