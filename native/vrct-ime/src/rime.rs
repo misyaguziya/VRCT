@@ -28,9 +28,12 @@ mod index {
     pub const SET_OPTION: usize = 28;
     pub const SELECT_SCHEMA: usize = 35;
     pub const GET_INPUT: usize = 70;
+    pub const GET_CARET_POS: usize = 71;
     pub const GET_VERSION: usize = 73;
+    pub const SET_CARET_POS: usize = 74;
     pub const SELECT_CANDIDATE_ON_CURRENT_PAGE: usize = 75;
-    pub const LAST: usize = SELECT_CANDIDATE_ON_CURRENT_PAGE;
+    pub const SET_INPUT: usize = 90;
+    pub const LAST: usize = SET_INPUT;
 }
 
 /// X11 keysyms RIME takes besides the printable ASCII ones
@@ -217,6 +220,8 @@ impl Rime {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Context {
     pub preedit: String,
+    /// The editing cursor, in preedit characters.
+    pub cursor: usize,
     /// the segment being converted, in `preedit`'s characters (not bytes)
     pub selection: (usize, usize),
     pub candidates: Vec<String>,
@@ -292,6 +297,23 @@ impl Session<'_> {
         text(unsafe { f(self.id) })
     }
 
+    pub fn caret(&self) -> usize {
+        let f: unsafe extern "C" fn(SessionId) -> usize = self.rime.f(index::GET_CARET_POS);
+        unsafe { f(self.id) }
+    }
+
+    /// Replace raw input; unlike Backspace this keeps the unchanged selected segments.
+    pub fn set_input(&self, input: &str) -> bool {
+        let Ok(input) = CString::new(input) else { return false };
+        let f: unsafe extern "C" fn(SessionId, *const c_char) -> Bool = self.rime.f(index::SET_INPUT);
+        unsafe { f(self.id, input.as_ptr()) != 0 }
+    }
+
+    pub fn set_caret(&self, caret: usize) {
+        let f: unsafe extern "C" fn(SessionId, usize) = self.rime.f(index::SET_CARET_POS);
+        unsafe { f(self.id, caret) };
+    }
+
     pub fn context(&self) -> Context {
         let get: unsafe extern "C" fn(SessionId, *mut RawContext) -> Bool = self.rime.f(index::GET_CONTEXT);
         let free: unsafe extern "C" fn(*mut RawContext) -> Bool = self.rime.f(index::FREE_CONTEXT);
@@ -305,6 +327,7 @@ impl Session<'_> {
             .map(|i| text(unsafe { (*menu.candidates.add(i)).text }))
             .collect();
         let context = Context {
+            cursor: chars_at(&preedit, raw.composition.cursor_pos),
             selection: (chars_at(&preedit, raw.composition.sel_start), chars_at(&preedit, raw.composition.sel_end)),
             candidates,
             highlighted: menu.highlighted_candidate_index.max(0) as usize,

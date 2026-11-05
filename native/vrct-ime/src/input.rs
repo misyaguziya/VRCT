@@ -2,6 +2,7 @@
 //! by language. English goes in as typed, Korean through the Hangul composer, Japanese and
 //! Chinese (pinyin, Zhuyin, Cangjie, Quick) through a RIME session (when the dictionaries are ready).
 //! The text has a selection (Shift ◀ ▶, Ctrl+A) that typing replaces, and its edits undo and redo.
+use crate::kana;
 use crate::hangul::{jamo_of_key, Composer};
 use crate::rime::{keys, Session};
 
@@ -127,6 +128,8 @@ const UNDO_LIMIT: usize = 100;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Composition {
     pub preedit: String,
+    /// Editing cursor in displayed Unicode characters.
+    pub cursor: usize,
     pub selection: (usize, usize),
 }
 
@@ -164,6 +167,8 @@ pub struct Input<'r> {
     rime: Option<Session<'r>>,
     hangul: Composer,
     converting: bool,
+    /// Whole-number width candidates use the same conversion controls as RIME candidates.
+    numeric_candidate: usize,
     /// Japanese typed as English is (半角/全角), until pressed again or the language changes
     half_width: bool,
     /// where the selection began (a character of text + after); the cursor is its other end
@@ -175,7 +180,7 @@ pub struct Input<'r> {
 
 impl<'r> Input<'r> {
     pub fn new(language: Language) -> Self {
-        Self { text: String::new(), after: String::new(), language, rime: None, hangul: Composer::new(), converting: false, half_width: false,
+        Self { text: String::new(), after: String::new(), language, rime: None, hangul: Composer::new(), converting: false, numeric_candidate: 0, half_width: false,
                anchor: None, undo: Vec::new(), redo: Vec::new(), last_edit: Edit::None }
     }
 
@@ -201,11 +206,20 @@ impl<'r> Input<'r> {
     /// Switches language; what was being composed is written first
     pub fn set_language(&mut self, language: Language) {
         if language != self.language {
-            self.flush();
+            self.finish_composition();
             self.language = language;
             self.half_width = false;
             self.select_schema();
         }
+    }
+
+    /// Finish an input-method change in the editor, without sending the text.
+    pub fn finish_composition(&mut self) {
+        let before = self.snapshot();
+        self.flush();
+        self.converting = false;
+        self.record(before, Edit::Other);
+        self.last_edit = Edit::None;
     }
 
     pub fn set_simplified(&self, simplified: bool) {
@@ -237,10 +251,16 @@ impl<'r> Input<'r> {
     /// The composition as shown (RIME's) or the Korean syllables, into the text: Japanese before
     /// 変換 is its kana (RIME would write the first candidate)
     fn flush(&mut self) {
+        if self.converting && self.select_numeric(self.numeric_candidate) {
+            return;
+        }
         let kana = self.language == Language::Japanese && !self.converting;
         if let Some(s) = self.session() {
             if !s.input().is_empty() {
                 if kana {
+                    // Return commits only the portion before RIME's caret. Finish the whole
+                    // reading when switching input methods or leaving the composition.
+                    s.set_caret(s.input().len());
                     s.key(keys::RETURN, 0);
                 } else {
                     s.commit_composition();
@@ -345,6 +365,38 @@ impl<'r> Input<'r> {
             return;
         }
         let composing = self.composing();
+        if let Some(candidates) = self.numeric_candidates() {
+            match key {
+                Key::Space => {
+                    self.numeric_candidate = if self.converting { (self.numeric_candidate + 1) % candidates.len() } else { 0 };
+                    self.converting = true;
+                    return;
+                }
+                Key::Enter if self.converting => {
+                    self.select_numeric(self.numeric_candidate);
+                    return;
+                }
+                Key::PageUp | Key::PageDown => return, // the width choices fit on one page
+                Key::Left | Key::Right => {
+                    self.numeric_candidate = 0;
+                    self.converting = false;
+                }
+                _ => {}
+            }
+        }
+        if self.language == Language::Japanese {
+            if let Key::Char(c) = key {
+                if crate::punctuation::supported(c) {
+                    let before_caret = self.session().map(|s| s.context()).and_then(|context|
+                        context.preedit.chars().take(context.cursor).last());
+                    let after_digit = before_caret.or_else(|| self.text.chars().last()).is_some_and(|c| c.is_ascii_digit() || matches!(c, '０'..='９'));
+                    self.insert_punctuation(if after_digit && matches!(c, '.' | ',') { c }
+                        else if c == '-' { 'ー' }
+                        else { full_width(self.language, c) });
+                    return;
+                }
+            }
+        }
         // what only the text takes
         match key {
             Key::Char(c) if !self.language.rime_types(c, composing) => {
@@ -374,11 +426,20 @@ impl<'r> Input<'r> {
         // 確定 takes the one shown, the kana before 変換 (jaroomaji's own Space would commit)
         let japanese = self.language == Language::Japanese;
         let converting = self.converting;
+        if japanese && key == Key::Backspace {
+            self.converting = false;
+            if !converting {
+                self.backspace_kana();
+            }
+            self.collect();
+            return;
+        }
         if let Key::Char(_) | Key::Backspace = key {
             self.converting = false;
         }
         let Some(s) = self.session() else { return };
         let taken = match key {
+            Key::Char(c) if japanese => Self::japanese_char(s, c),
             Key::Char(c) => s.key(c as i32, 0),
             Key::Space if japanese => {
                 if converting {
@@ -401,6 +462,110 @@ impl<'r> Input<'r> {
             self.text.push(c);
         }
         self.collect();
+    }
+
+    /// Only expand a pending consonant in ordinary romaji input. Flick and editing already
+    /// send canonical spellings, and must not re-expand their intermediate characters.
+    fn japanese_char(s: &Session<'_>, next: char) -> bool {
+        let context = s.context();
+        let pending: String = context.preedit.chars().take(context.cursor).skip(context.selection.0).collect();
+        let back = if "kcqgszjtdhfbvpmyrw".contains(next) && pending.ends_with(next) {
+            1
+        } else if next == 'h' && pending.ends_with("tc") {
+            2
+        } else {
+            return s.key(next as i32, 0);
+        };
+        let before_caret = s.caret();
+        let taken = s.key(next as i32, 0);
+        if !taken { return false; }
+        let mut raw = s.input();
+        let caret = s.caret();
+        if before_caret < back || caret != before_caret + 1 || caret > raw.len() { return true; }
+        let start = before_caret - back;
+        if !raw.is_char_boundary(start) { return true; }
+        if (back == 1 && raw.as_bytes()[start] != next as u8) || (back == 2 && &raw[start..before_caret] != "tc") { return true; }
+        let original = raw.clone();
+        let mut expected: Vec<char> = context.preedit.chars().collect();
+        expected[context.cursor - back] = 'っ';
+        expected.insert(context.cursor, next);
+        let expected: String = expected.into_iter().collect();
+        raw.replace_range(start..start + 1, "xtu");
+        if s.set_input(&raw) {
+            s.set_caret(caret + 2);
+            let expanded = s.context();
+            // An invalid preceding syllable (e.g. hhjj) can leave the expanded xtu
+            // outside RIME's translated segment. Only accept the intended small-tsu
+            // replacement, retaining the rest of the displayed reading and cursor.
+            if expanded.preedit != expected || expanded.cursor != context.cursor + 1 {
+                s.set_input(&original);
+                s.set_caret(caret);
+            }
+        }
+        true
+    }
+
+    /// Remove one displayed character, preserving RIME's selected segments and cursor.
+    /// A contracted spelling (kya) may need to be shortened and retyped (ki).
+    fn backspace_kana(&self) {
+        let Some(s) = self.session() else { return };
+        let context = s.context();
+        let mut left: String = context.preedit.chars().take(context.cursor).collect();
+        let Some(removed) = left.pop() else { return };
+        if crate::punctuation::supported(removed) && context.cursor > context.selection.0 {
+            let mut raw = s.input();
+            let caret = s.caret();
+            if let Some((_, code, _)) = crate::punctuation::entries().find(|(_, code, _)| raw.get(..caret).is_some_and(|before| before.ends_with(code))) {
+                let start = caret - code.len();
+                raw.replace_range(start..caret, "");
+                s.set_input(&raw);
+                s.set_caret(start);
+                return;
+            }
+        }
+        if context.cursor <= context.selection.0 || (kana::romaji(removed).is_none() && !removed.is_ascii_lowercase()) {
+            s.key(keys::BACKSPACE, 0);
+            return;
+        }
+        let right: String = context.preedit.chars().skip(context.cursor).collect();
+        let original = s.input();
+        let original_caret = s.caret();
+        if !original.is_char_boundary(original_caret) { return; }
+        let mut raw = original.clone();
+        let protected: String = context.preedit.chars().take(context.selection.0).collect();
+        for (caret, _) in original[..original_caret].char_indices().rev() {
+            raw.remove(caret);
+            if !s.set_input(&raw) { break; }
+            s.set_caret(caret);
+            let current = s.context();
+            let prefix: String = current.preedit.chars().take(current.cursor).collect();
+            let suffix: String = current.preedit.chars().skip(current.cursor).collect();
+            // At the beginning RIME displays the untouched suffix as kana again.
+            if left.is_empty() && caret == 0 && raw == original[original_caret..] {
+                return;
+            }
+            if let Some(rest) = left.strip_prefix(&prefix).filter(|_| suffix == right
+                || (caret == 0 && raw == original[original_caret..])) {
+                let romaji: Option<String> = rest.chars().map(|c| kana::romaji(c).map(str::to_owned)
+                    .or_else(|| c.is_ascii_lowercase().then(|| c.to_string()))).collect();
+                if let Some(romaji) = romaji {
+                    let mut replacement = raw.clone();
+                    replacement.insert_str(caret, &romaji);
+                    s.set_input(&replacement);
+                    s.set_caret(caret + romaji.len());
+                    let result = s.context();
+                    if result.preedit == left.clone() + &right && result.cursor == left.chars().count() {
+                        return;
+                    }
+                    break;
+                }
+            }
+            // Never search back into a segment the user already selected.
+            if prefix == protected || !prefix.starts_with(&protected) { break; }
+        }
+        // An unfamiliar spelling or cursor boundary must not discard surrounding text.
+        s.set_input(&original);
+        s.set_caret(original_caret);
     }
 
     /// The cursor to this character of the text (the input box pressed there). Not while a word is
@@ -490,6 +655,20 @@ impl<'r> Input<'r> {
         self.record(before, Edit::Other);
     }
 
+    fn insert_punctuation(&mut self, c: char) {
+        let Some(s) = self.session() else { return };
+        let Some(code) = crate::punctuation::spelling(c) else { return };
+        let mut raw = s.input();
+        let caret = s.caret();
+        if !raw.is_char_boundary(caret) { return; }
+        raw.insert_str(caret, &code);
+        if s.set_input(&raw) {
+            s.set_caret(caret + code.len());
+        }
+        self.converting = false;
+        self.collect();
+    }
+
     fn snapshot(&self) -> Snapshot {
         Snapshot { text: self.text.clone(), after: self.after.clone() }
     }
@@ -563,6 +742,10 @@ impl<'r> Input<'r> {
 
     /// The candidate at `index` of the page shown
     pub fn select(&mut self, index: usize) {
+        if self.numeric_candidates().is_some() {
+            self.select_numeric(index);
+            return;
+        }
         if let Some(s) = self.session() {
             s.select(index);
         }
@@ -634,12 +817,21 @@ impl<'r> Input<'r> {
             let c = s.context();
             if !c.preedit.is_empty() {
                 composed = c.preedit.chars().count();
-                state.composition = Some(Composition { preedit: c.preedit, selection: c.selection });
+                state.composition = Some(Composition { preedit: c.preedit, cursor: c.cursor, selection: c.selection });
                 state.candidates = c.candidates;
                 state.highlighted = c.highlighted;
                 state.converting = self.converting;
                 state.page = c.page;
                 state.last_page = c.last_page;
+            }
+        }
+        if let Some(candidates) = self.numeric_candidates() {
+            state.candidates = candidates;
+            state.highlighted = if self.converting { self.numeric_candidate.min(state.candidates.len() - 1) } else { 0 };
+            state.page = 0;
+            state.last_page = true;
+            if let Some(composition) = &mut state.composition {
+                composition.selection = (0, composition.preedit.chars().count());
             }
         }
         if self.language == Language::Korean {
@@ -654,6 +846,50 @@ impl<'r> Input<'r> {
         }
         state
     }
+
+    /// Only a complete, unsegmented number at its end gets whole-number width choices.
+    /// Mixed Japanese text and partially selected segments keep RIME's ordinary segmentation.
+    fn numeric_candidates(&self) -> Option<Vec<String>> {
+        if self.language != Language::Japanese || self.half_width { return None; }
+        let context = self.session()?.context();
+        if context.selection.0 != 0 || context.cursor != context.preedit.chars().count() { return None; }
+        number_widths(&context.preedit)
+    }
+
+    fn select_numeric(&mut self, index: usize) -> bool {
+        let Some(candidates) = self.numeric_candidates() else { return false };
+        let Some(selected) = candidates.get(index) else { return false };
+        let Some(s) = self.session() else { return false };
+        let Some(raw) = selected.chars().map(crate::punctuation::spelling).collect::<Option<String>>() else { return false };
+        if !s.set_input(&raw) { return false; }
+        s.set_caret(raw.len());
+        s.key(keys::RETURN, 0);
+        self.collect();
+        true
+    }
+}
+
+fn number_widths(reading: &str) -> Option<Vec<String>> {
+    let half: String = reading.chars().map(|c| match c {
+        '０'..='９' => char::from_u32(c as u32 - '０' as u32 + '0' as u32).unwrap(),
+        '．' => '.', '，' => ',', _ => c,
+    }).collect();
+    let (integer, fraction) = half.split_once('.').map_or((half.as_str(), None), |(a, b)| (a, Some(b)));
+    let digits = |s: &str| !s.is_empty() && s.bytes().all(|c| c.is_ascii_digit());
+    if !fraction.is_none_or(digits) { return None; }
+    let groups: Vec<&str> = integer.split(',').collect();
+    if !groups.iter().all(|s| digits(s)) || (groups.len() > 1 && (groups[0].len() > 3 || groups[1..].iter().any(|s| s.len() != 3))) {
+        return None;
+    }
+    let full: String = half.chars().map(|c| match c {
+        '0'..='9' => char::from_u32(c as u32 - '0' as u32 + '０' as u32).unwrap(),
+        '.' => '．', ',' => '，', _ => c,
+    }).collect();
+    let mut candidates = vec![reading.to_string()];
+    for candidate in [half, full] {
+        if !candidates.contains(&candidate) { candidates.push(candidate); }
+    }
+    Some(candidates)
 }
 
 /// Ctrl ◀ ▶: from `at` over the spaces and one run of the same kind of characters (letters and
@@ -701,6 +937,16 @@ fn full_width(language: Language, c: char) -> char {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn number_candidates_cover_whole_valid_numbers_only() {
+        assert_eq!(number_widths("123").unwrap(), ["123", "１２３"]);
+        assert_eq!(number_widths("1,000.5").unwrap(), ["1,000.5", "１，０００．５"]);
+        assert_eq!(number_widths("１２３").unwrap(), ["１２３", "123"]);
+        for invalid in ["", "k123", "1.", ".5", "1,00", "1234,567", "1.2.3", "１２a"] {
+            assert!(number_widths(invalid).is_none(), "{invalid}");
+        }
+    }
 
     fn typed(input: &mut Input, s: &str) {
         for c in s.chars() {
