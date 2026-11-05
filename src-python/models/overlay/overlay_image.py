@@ -365,7 +365,8 @@ class OverlayImage:
 
         # 改行を含んだtextの最大の文字数を計算する
         text_width = max(draw.textlength(line, font) for line in text.split("\n"))
-        character_width = text_width // len(text)
+        # 翻訳エンジンが空文字を返すことがある (issue #121)。小ログ側と同じく 0 除算を避ける
+        character_width = max(1, text_width // max(1, len(text)))
         character_line_num = int((ui_size["width"] // character_width) - 1)
         if len(text) > character_line_num:
             text = "\n".join([text[i:i + character_line_num] for i in range(0, len(text), character_line_num)])
