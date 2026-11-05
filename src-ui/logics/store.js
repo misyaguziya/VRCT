@@ -220,6 +220,8 @@ export const { atomInstance: Atom_MicThresholdCheckStatus, useHook: useStore_Mic
 export const { atomInstance: Atom_VrPanelLogOutOfView, useHook: useStore_VrPanelLogOutOfView } = createAtomWithHook(false, "VrPanelLogOutOfView", {is_state_ok: true});
 // VR UI のランチャーの起動演出 ("idle" 通常 / "pending" 最初に出すのを待つ / "playing" 演出中)。atom なので VR ウィンドウへも同期される
 export const { atomInstance: Atom_VrPanelLauncherIntro, useHook: useStore_VrPanelLauncherIntro } = createAtomWithHook("idle", "VrPanelLauncherIntro", {is_state_ok: true});
+// コントローラのショートカットが押された時刻 (ms。VR 画面がキーボードを開閉する)。atom なので VR ウィンドウへも同期される
+export const { atomInstance: Atom_VrPanelKeyboardShortcut, useHook: useStore_VrPanelKeyboardShortcut } = createAtomWithHook(0, "VrPanelKeyboardShortcut", {is_state_ok: true});
 // VRキーボードで最後に送った結果 ({to, pasted, at})。VR画面が、貼れずにコピーだけしたことを知らせる
 export const { atomInstance: Atom_KeyboardSendResult, useHook: useStore_KeyboardSendResult } = createAtomWithHook(null, "KeyboardSendResult", {is_state_ok: true});
 export const { atomInstance: Atom_SpeakerThresholdCheckStatus, useHook: useStore_SpeakerThresholdCheckStatus } = createAtomWithHook(false, "SpeakerThresholdCheckStatus", {is_state_ok: true});

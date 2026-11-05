@@ -130,7 +130,7 @@ const Category = ({ id, t, openPicker }) => {
         case "translation": return <TranslationSettings t={t} openPicker={openPicker} />;
         case "transcription": return <TranscriptionSettings t={t} openPicker={openPicker} />;
         case "ocr": return <OcrSettings t={t} openPicker={openPicker} />;
-        case "vr": return <VrSettings t={t} />;
+        case "vr": return <VrSettings t={t} openPicker={openPicker} />;
         case "others": return <OthersSettings t={t} />;
         default: return null;
     }
@@ -311,8 +311,13 @@ const TranslationSettings = ({ t, openPicker }) => {
     );
 };
 
-const VrSettings = ({ t }) => {
+// キーボードを開閉するコントローラのショートカット (off は手首のランチャーからだけ開く)
+const SHORTCUTS = ["off", "stick_double", "menu_long", "menu_double"];
+
+const VrSettings = ({ t, openPicker }) => {
     const vr = useVr();
+    const shortcut_label = t("vr_panel.keyboard.shortcut");
+    const shortcuts = SHORTCUTS.map(id => ({ id, label: t(`vr_panel.keyboard.shortcut_${id}`) }));
     const opacity = vr.currentOverlayVrPanelOpacity;
     // VR UI 自体のON/OFFはここに置かない (VRの中で消すと戻せなくなる。デスクトップの設定で行う)
     return (
@@ -341,6 +346,17 @@ const VrSettings = ({ t }) => {
                 setValue={vr.setOverlayVrLaserPitch} min={-30} max={30} step={1} format={(v) => `${v}°`} />
             <ToggleRow label={t("vr_panel.tooltip_enabled")} sub={t("vr_panel.tooltip_enabled_desc")}
                 variable={vr.currentOverlayVrTooltip} onToggle={vr.toggleOverlayVrTooltip} />
+
+            <SectionLabel label={t("vr_panel.settings.keyboard")} />
+            <ToggleRow label={t("vr_panel.keyboard.key_sound")} variable={vr.currentIsEnabledKeyboardKeySound}
+                onToggle={vr.toggleIsEnabledKeyboardKeySound} />
+            <StepperRow label={t("vr_panel.keyboard.key_sound_volume")} variable={vr.currentKeyboardKeySoundVolume}
+                setValue={vr.setKeyboardKeySoundVolume} min={0} max={100} step={10} format={(v) => `${v}%`} />
+            <SelectRow label={shortcut_label} value={shortcuts.find(s => s.id === vr.currentKeyboardShortcut.data)?.label ?? vr.currentKeyboardShortcut.data}
+                is_pending={vr.currentKeyboardShortcut.state === "pending"}
+                onOpen={() => openPicker(shortcut_label, shortcuts, vr.currentKeyboardShortcut.data, vr.setKeyboardShortcut)} />
+            <ToggleRow label={t("vr_panel.keyboard.typing_indicator")} sub={t("vr_panel.keyboard.typing_indicator_desc")}
+                variable={vr.currentIsEnabledKeyboardTypingIndicator} onToggle={vr.toggleIsEnabledKeyboardTypingIndicator} />
         </>
     );
 };

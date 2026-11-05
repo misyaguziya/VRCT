@@ -65,7 +65,8 @@ impl Typing {
     }
 }
 
-/// What the keyboard sent (either way), called back with ↑ ↓ as a shell does
+/// What VRCT sent (the message box, the microphone and the keyboard: the main window's history,
+/// not what was pasted), called back with ↑ ↓ as a shell does
 #[derive(Default)]
 struct History {
     sent: Vec<String>,
@@ -141,7 +142,7 @@ fn state_json(status: Status, s: &State) -> Value {
         "progress": progress,
         "text": s.text,
         "after": s.after,
-        "composition": s.composition.as_ref().map(|c| json!({"preedit": c.preedit, "selection": [c.selection.0, c.selection.1]})),
+        "composition": s.composition.as_ref().map(|c| json!({"preedit": c.preedit, "cursor": c.cursor, "selection": [c.selection.0, c.selection.1]})),
         "candidates": s.candidates,
         "highlighted": s.highlighted,
         "converting": s.converting,
@@ -156,10 +157,12 @@ fn state_json(status: Status, s: &State) -> Value {
 }
 
 /// Everything the keyboard shows, after a change: VRChat's typing indicator follows whether
-/// anything is typed (not sent, as when OSC cannot send: logged, the typing goes on)
+/// anything is typed for VRCT to write to the chat box (not when pasting: VRChat's own field is
+/// open then), and not sent, as when OSC cannot send: logged, the typing goes on
 fn changed(app: &App, input: &Input) -> Value {
     let s = input.state();
-    let typing = s.length > 0 && app.config.get_bool("KEYBOARD_TYPING_INDICATOR") && app.config.get_bool("SEND_MESSAGE_TO_VRC");
+    let typing = s.length > 0 && app.config.get_bool("KEYBOARD_TYPING_INDICATOR") && app.config.get_bool("SEND_MESSAGE_TO_VRC")
+        && app.config.get_str("KEYBOARD_SEND_TO") == "vrct";
     set_indicator(app, typing);
     state_json(*keyboard(app).status.lock().unwrap(), &s)
 }
@@ -390,6 +393,13 @@ pub fn keyboard_clear(app: &App, _: Data) -> Result<Reply> {
     Ok(Reply::ok(changed(app, &t.input)))
 }
 
+/// VRCT sent this (the message box, the microphone or the keyboard): ↑ calls it back
+pub fn sent(app: &App, text: &str) {
+    if !text.trim().is_empty() {
+        typing(app).history.add(text);
+    }
+}
+
 // --------------------------------------------------------------------------------- dictation
 
 /// The microphone types into the keyboard: what it hears goes after the text (to be corrected
@@ -483,7 +493,8 @@ fn send(app: &App, text: String, to: &str) -> Result<()> {
     let state = {
         let mut t = typing(app);
         if matches!(sent, Ok(true)) {
-            t.history.add(&text);
+            // (what went through VRCT is in the history already: sent())
+            t.history.at = None;
         } else {
             t.input.restore(&text);
         }
@@ -556,13 +567,26 @@ pub fn set_disable_keyboard_key_sound(app: &App, _: Data) -> Result<Reply> {
     current(app, "KEYBOARD_KEY_SOUND")
 }
 
+pub fn get_keyboard_key_sound_volume(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_KEY_SOUND_VOLUME")
+}
+
+/// The keys' sound, 0–100 % (whole percents)
+pub fn set_keyboard_key_sound_volume(app: &App, data: Data) -> Result<Reply> {
+    let rounded = data.as_ref().and_then(crate::pyjson::py_float).map_or(Value::Null, |v| json!(v.round() as i64));
+    validated(app, "KEYBOARD_KEY_SOUND_VOLUME", rounded)
+}
+
 pub fn get_keyboard_send_to(app: &App, _: Data) -> Result<Reply> {
     current(app, "KEYBOARD_SEND_TO")
 }
 
 /// Where Enter sends: "vrct" (translated, to the chat box) or "paste" (into VRChat's text field)
 pub fn set_keyboard_send_to(app: &App, data: Data) -> Result<Reply> {
-    validated(app, "KEYBOARD_SEND_TO", data.unwrap_or(Value::Null))
+    let reply = validated(app, "KEYBOARD_SEND_TO", data.unwrap_or(Value::Null))?;
+    // the typing indicator follows at once
+    changed(app, &typing(app).input);
+    Ok(reply)
 }
 
 pub fn get_keyboard_typing_indicator(app: &App, _: Data) -> Result<Reply> {
@@ -676,6 +700,26 @@ mod tests {
         // the opacity: 0.2–1.0
         assert!(app.config.set("KEYBOARD_OPACITY", json!(0.1)).is_err());
         assert!(app.config.set("KEYBOARD_OPACITY", json!(0.6)).is_ok());
+    }
+
+    #[test]
+    fn the_typing_indicator_is_only_for_the_chat_box_and_up_calls_back_the_message_box_too() {
+        let (app, osc) = rig();
+        app.config.set("SEND_MESSAGE_TO_VRC", json!(true)).unwrap();
+        set_keyboard_language(&app, Some(json!("en"))).unwrap();
+        keys(&app, &["h", "i"]);
+        assert_eq!(osc_got(&osc), [("/chatbox/typing".to_string(), "true".to_string())]);
+        // pasting: VRChat's own field is open, the indicator goes off at once
+        set_keyboard_send_to(&app, Some(json!("paste"))).unwrap();
+        assert_eq!(osc_got(&osc), [("/chatbox/typing".to_string(), "false".to_string())]);
+        keys(&app, &["!"]);
+        assert_eq!(osc_got(&osc), []);
+        set_keyboard_send_to(&app, Some(json!("vrct"))).unwrap();
+        assert_eq!(osc_got(&osc), [("/chatbox/typing".to_string(), "true".to_string())]);
+        // what the main window's message box sent is called back by ↑
+        keyboard_clear(&app, None).unwrap();
+        super::super::pipeline::send_message_box(&app, Some(json!({"id": "1", "message": "from the box"}))).unwrap();
+        assert_eq!(keys(&app, &["Up"])["text"], json!("from the box"));
     }
 
     #[test]

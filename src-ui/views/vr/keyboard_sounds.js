@@ -27,8 +27,8 @@ export const loadKeySounds = () => {
 };
 
 // name: 音の種類 (enter・backspace・space・toggle は決まった音、shift・soft は控えめ、ほかは文字のキー)。
-// id: どのキーか (同じキーを続けて押した時は同じ音にする)
-export const playKeySound = (name, id) => {
+// id: どのキーか (同じキーを続けて押した時は同じ音にする)。volume: 設定の大きさ (0〜1)
+export const playKeySound = (name, id, volume = 1) => {
     try {
         audio_context ??= new AudioContext();
         if (audio_context.state === "suspended") audio_context.resume();
@@ -41,7 +41,7 @@ export const playKeySound = (name, id) => {
             source.buffer = buffer;
             source.playbackRate.value = 0.95 + Math.random() * 0.1; // 連打で同じ音に聞こえないよう少しずらす
             const gain = audio_context.createGain();
-            gain.gain.value = KEY_SOUND_GAIN[name] ?? KEY_SOUND_GAIN_DEFAULT;
+            gain.gain.value = (KEY_SOUND_GAIN[name] ?? KEY_SOUND_GAIN_DEFAULT) * volume;
             source.connect(gain).connect(audio_context.destination);
             source.start();
         }).catch(() => delete key_buffers[url]);

@@ -12,20 +12,23 @@ const BROWSER_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreen
 // VRオーバーレイに映す画面。Python側 (models/overlay) がタイトルで見つけて撮影・入力する。
 // VR UI が ON の間だけ作る (set_vr_panel_window)。OFF の間も動かしておくと、使わない人にも負荷がかかる
 fn create_vr_panel_window<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Result<()> {
+    // 開発用: VRCT_DESKTOP_VR_PANEL を付けて起動すると、VR 画面をデスクトップに出してマウスで触れる
+    let desktop = cfg!(debug_assertions) && std::env::var_os("VRCT_DESKTOP_VR_PANEL").is_some();
     let window = WebviewWindowBuilder::new(manager, "vr_panel", WebviewUrl::App("vr.html".into()))
         .title("VRCT VR Panel")
         // 既定の並び (src-ui/views/vr/vr_layout.json の atlas)。ログの大きさを変えると Python が合わせて変える
         .inner_size(1690.0, 1448.0)
-        .decorations(false)
+        .decorations(desktop)
         .resizable(false)
-        .skip_taskbar(true)
+        .skip_taskbar(!desktop)
         .focused(false)
         .visible(false)
         .additional_browser_args(BROWSER_ARGS)
         .build()?;
     // 画面外に置く。Windows ではビルダーの .position() が効かず既定の位置 (画面内) に出るため、
     // 作ってから動かし、動かした後で表示する (撮影のため、表示状態で画面外に置いておく)
-    window.set_position(PhysicalPosition::new(-10000, -10000))?;
+    let (x, y) = if desktop { (0, 0) } else { (-10000, -10000) };
+    window.set_position(PhysicalPosition::new(x, y))?;
     window.show()?;
     Ok(())
 }

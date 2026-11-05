@@ -4,7 +4,7 @@ import { getDefaultStore } from "jotai";
 
 import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
-import { useIsOpenedConfigPage } from "@logics_common";
+import { useIsOpenedConfigPage, useVrPanelKeyboardShortcut } from "@logics_common";
 
 import {
     UiLanguageController,
@@ -27,6 +27,9 @@ import styles from "./VrApp.module.scss";
 // Python 側 (models/overlay/overlay.py) が1回だけ撮影し、領域ごとに別のオーバーレイとして表示する。
 // VRでは px で固定する (デスクトップのUI倍率 UiSizeController は使わない。
 // 大きさはVR内で掴んで拡大縮小できる)。
+// これより前に押されたショートカットでは開閉しない (VR 画面を開き直したときに送り直される分)
+const SHORTCUT_FRESH_MS = 2000;
+
 const Region = ({ layout, name, children }) => {
     const [x, y, w, h] = layout.regions[name];
     return (
@@ -89,6 +92,16 @@ export const VrApp = () => {
     const closePopup = () => setWindows(w => ({ ...w, popup: null }));
     const toggleKeyboard = () => setWindows(w => ({ ...w, keyboard: !w.keyboard }));
     const openKeyboard = () => setWindows(w => ({ ...w, keyboard: true }));
+    // コントローラのショートカット: 押されるたびにキーボードを開閉 (開くと目の前に出る)。届くのは押された
+    // 時刻で、古いもの (この画面を開き直したときに送り直される前の分) では開閉しない
+    const { currentVrPanelKeyboardShortcut } = useVrPanelKeyboardShortcut();
+    const shortcut_made = useRef(currentVrPanelKeyboardShortcut.data);
+    useEffect(() => {
+        const made = currentVrPanelKeyboardShortcut.data;
+        if (made === shortcut_made.current) return;
+        shortcut_made.current = made;
+        if (Date.now() - made < SHORTCUT_FRESH_MS) toggleKeyboard();
+    }, [currentVrPanelKeyboardShortcut.data]);
 
     return (
         <div ref={atlas} className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>

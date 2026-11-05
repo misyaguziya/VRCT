@@ -850,6 +850,15 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "keyboard_key_sound",
     },
     {
+        // VRキーボードのキーの音の大きさ (0〜100%)。VR設定ウィンドウのキーボードで変える
+        Category: "Vr",
+        Base_Name: "KeyboardKeySoundVolume",
+        default_value: 100,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_key_sound_volume",
+    },
+    {
         // VRキーボードで打っている間、VRChat に入力中を出す
         Category: "Vr",
         Base_Name: "IsEnabledKeyboardTypingIndicator",
@@ -893,6 +902,15 @@ export const SETTINGS_ARRAY = [
         ui_template_id: "slider",
         logics_template_id: "get_set",
         base_endpoint_name: "overlay_vr_laser_pitch",
+    },
+    {
+        // キーボードを開閉するコントローラのショートカット (off / stick_double / menu_long / menu_double)。VR設定ウィンドウのキーボードで変える
+        Category: "Vr",
+        Base_Name: "KeyboardShortcut",
+        default_value: "off",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_shortcut",
     },
     {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える

@@ -114,7 +114,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const { currentKeyboardState, currentKeyboardLanguage, setKeyboardLanguage, currentKeyboardSendTo, setKeyboardSendTo,
         currentIsEnabledKeyboardKeySound, currentIsEnabledKeyboardChineseSimplified, toggleIsEnabledKeyboardChineseSimplified,
         currentIsEnabledKeyboardDictation, toggleIsEnabledKeyboardDictation, currentKeyboardOpacity, setKeyboardOpacity, currentKeyboardLocked,
-        toggleKeyboardLocked } = useVr();
+        toggleKeyboardLocked, currentKeyboardKeySoundVolume } = useVr();
     const { currentKeyboardSendResult } = useKeyboard();
     const repeat = useRepeat();
     const { shift, is_shift, press: pressShift, used: shiftUsed } = useShift();
@@ -137,6 +137,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const is_ready = !needs_dictionary || state.status === "ready";
     const composing = state.composition !== null;
     const sound_on = currentIsEnabledKeyboardKeySound.data === true;
+    const volume = Number(currentKeyboardKeySoundVolume.data) / 100;
     const dictating = currentIsEnabledKeyboardDictation.data === true;
     const simplified_on = currentIsEnabledKeyboardChineseSimplified.data === true;
     const opacity = Number(currentKeyboardOpacity.data);
@@ -149,13 +150,13 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const press = (handler, sound = "key", id = undefined) => (event) => {
         if (event.button !== 0) return;
         event.preventDefault();
-        if (sound_on) playKeySound(sound, id);
+        if (sound_on) playKeySound(sound, id, volume);
         handler();
     };
     const sendKey = (key) => asyncStdoutToPython("/run/keyboard_key", key);
     // 入力欄の文を押した位置へカーソルを置く
     const placeCursorAt = (index) => {
-        if (sound_on) playKeySound("soft", "cursor");
+        if (sound_on) playKeySound("soft", "cursor", volume);
         asyncStdoutToPython("/run/keyboard_cursor", index);
     };
     // 長押しでくり返すキー (← ◀ ▶): くり返すたびに音も鳴らす (最初の1回の音は press が鳴らす)。
@@ -163,7 +164,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
     const repeatKey = (key, sound, id) => {
         let first = true;
         repeat.start(() => {
-            if (!first && sound_on) playKeySound(sound, id);
+            if (!first && sound_on) playKeySound(sound, id, volume);
             first = false;
             sendKey(key);
         });
@@ -423,19 +424,21 @@ const Composition = ({ state, language, clear_armed, onClear, send_to_button, on
     const c = state.composition;
     const preedit = c ? [...c.preedit] : [];
     const [start, end] = c ? c.selection : [0, 0];
-    // カーソルまで (選んだ所はその終わり)・変換中の語・カーソルの後 (選んだ所はその始め)。
-    // カーソルは変換中の語のすぐ後ろ
+    // 変換中の語の中のカーソル (◀ ▶ で動く。無ければ語の終わり)
+    const cursor = Math.max(0, Math.min(preedit.length, c?.cursor ?? preedit.length));
+    // カーソルまで (選んだ所はその終わり)・変換中の語 (カーソルの前と後)・カーソルの後 (選んだ所はその始め)
     const text = [...state.text];
     const after = [...(state.after ?? "")];
     const [selected_before, selected_after] = state.selected ?? [0, 0];
+    const composing = [[0, start, styles.preedit], [start, end, styles.selection], [end, preedit.length, styles.preedit]]
+        .flatMap(([from, to, className]) => [
+            { text: preedit.slice(from, Math.min(to, cursor)).join(""), className },
+            { text: preedit.slice(Math.max(from, cursor), to).join(""), className, after: true },
+        ]);
     const pieces = [
         { text: text.slice(0, text.length - selected_before).join("") },
         { text: text.slice(text.length - selected_before).join(""), className: styles.selected },
-        ...(c ? [
-            { text: preedit.slice(0, start).join(""), className: styles.preedit },
-            { text: preedit.slice(start, end).join(""), className: styles.selection },
-            { text: preedit.slice(end).join(""), className: styles.preedit },
-        ] : []),
+        ...composing,
         ...(state.syllable ? [{ text: state.syllable, className: styles.selection }] : []),
         { text: after.slice(0, selected_after).join(""), className: styles.selected, after: true },
         { text: after.slice(selected_after).join(""), after: true },

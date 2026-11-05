@@ -4749,17 +4749,20 @@
       "length": 0,
       "half_width": false,
       "selected": [
-        0,
         0
       ]
     },
     "/get/data/keyboard_language": "ja",
     "/get/data/keyboard_chinese_simplified": false,
     "/get/data/keyboard_key_sound": true,
+    "/get/data/keyboard_key_sound_volume": 100,
     "/get/data/keyboard_typing_indicator": true,
     "/get/data/keyboard_send_to": "vrct",
     "/get/data/keyboard_dictation": false,
-    "/get/data/keyboard_opacity": 1.0
+    "/get/data/keyboard_opacity": 1.0,
+    "/get/data/keyboard_locked": false,
+    "/get/data/overlay_vr_laser_pitch": 12.0,
+    "/get/data/keyboard_shortcut": "off"
   },
   "init_ms": 0,
   "answers": [
@@ -10598,7 +10601,6 @@
         "length": 0,
         "half_width": false,
         "selected": [
-          0,
           0
         ]
       },
@@ -10625,7 +10627,6 @@
         "length": 0,
         "half_width": false,
         "selected": [
-          0,
           0
         ]
       },
@@ -10686,7 +10687,6 @@
         "length": 0,
         "half_width": false,
         "selected": [
-          0,
           0
         ]
       },
@@ -10747,7 +10747,6 @@
         "length": 0,
         "half_width": false,
         "selected": [
-          0,
           0
         ]
       },
@@ -10785,7 +10784,6 @@
         "length": 0,
         "half_width": false,
         "selected": [
-          0,
           0
         ]
       },
@@ -10812,7 +10810,6 @@
         "length": 0,
         "half_width": false,
         "selected": [
-          0,
           0
         ]
       },

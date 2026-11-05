@@ -1751,6 +1751,16 @@
    "handler": "setDisableKeyboardKeySound"
   },
   {
+   "endpoint": "/get/data/keyboard_key_sound_volume",
+   "during_init": true,
+   "handler": "getKeyboardKeySoundVolume"
+  },
+  {
+   "endpoint": "/set/data/keyboard_key_sound_volume",
+   "during_init": true,
+   "handler": "setKeyboardKeySoundVolume"
+  },
+  {
    "endpoint": "/get/data/keyboard_typing_indicator",
    "during_init": true,
    "handler": "getKeyboardTypingIndicator"
@@ -1829,6 +1839,16 @@
    "endpoint": "/set/data/overlay_vr_laser_pitch",
    "during_init": true,
    "handler": "setOverlayVrLaserPitch"
+  },
+  {
+   "endpoint": "/get/data/keyboard_shortcut",
+   "during_init": true,
+   "handler": "getKeyboardShortcut"
+  },
+  {
+   "endpoint": "/set/data/keyboard_shortcut",
+   "during_init": true,
+   "handler": "setKeyboardShortcut"
   }
  ],
  "run_mapping": {
@@ -1914,7 +1934,8 @@
   "initialization_complete": "/run/initialization_complete",
   "enable_osc_query": "/run/enable_osc_query",
   "keyboard_state": "/run/keyboard_state",
-  "keyboard_sent": "/run/keyboard_sent"
+  "keyboard_sent": "/run/keyboard_sent",
+  "vr_panel_keyboard_shortcut": "/run/vr_panel_keyboard_shortcut"
  },
  "simple_getters": {
   "getVersion": "VERSION",

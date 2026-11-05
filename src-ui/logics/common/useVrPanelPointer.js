@@ -1,5 +1,5 @@
 import { emit } from "@tauri-apps/api/event";
-import { useStore_VrPanelLogOutOfView, useStore_VrPanelLauncherIntro } from "@store";
+import { useStore_VrPanelLogOutOfView, useStore_VrPanelLauncherIntro, useStore_VrPanelKeyboardShortcut } from "@store";
 
 // バックエンドから届く VR UI 上のポインタ位置 ({x, y} または null) を VR ウィンドウへ転送する。
 // VR ウィンドウはバックエンドと直接つながっていないため、メインウィンドウが中継する。
@@ -20,4 +20,10 @@ export const useVrPanelLogOutOfView = () => {
 export const useVrPanelLauncherIntro = () => {
     const { currentVrPanelLauncherIntro, updateVrPanelLauncherIntro } = useStore_VrPanelLauncherIntro();
     return { currentVrPanelLauncherIntro, updateVrPanelLauncherIntro };
+};
+
+// キーボードを開閉するコントローラのショートカットが押された時刻 (ms)
+export const useVrPanelKeyboardShortcut = () => {
+    const { currentVrPanelKeyboardShortcut, updateVrPanelKeyboardShortcut } = useStore_VrPanelKeyboardShortcut();
+    return { currentVrPanelKeyboardShortcut, updateVrPanelKeyboardShortcut };
 };

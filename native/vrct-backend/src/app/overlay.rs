@@ -12,6 +12,7 @@ use vrct_overlay::image::{Image, OverlayImage, Token};
 use vrct_overlay::layout::{validate_tooltip, Layout, Region};
 use vrct_overlay::overlay::{Event, Overlay, Settings};
 use vrct_overlay::pose::{launcher_nearest_in_reach, launcher_out_of_reach};
+use vrct_overlay::shortcut::Shortcut;
 
 type Data = Option<Value>;
 
@@ -144,6 +145,9 @@ fn on_event(app: &App, event: Event) -> Result<()> {
         Event::PanelOutOfView(out) => app.run(200, "vr_panel_log_out_of_view", json!(out)),
         Event::LauncherIntro(intro) => app.run(200, "vr_panel_launcher_intro", json!(intro.name())),
         Event::Position { size, settings } => position_changed(app, &size, position_of(&settings)),
+        // when it was made (ms): the VR view opens / closes the keyboard, and ignores an old one
+        // sent again when it opens anew
+        Event::Shortcut => app.run(200, "vr_panel_keyboard_shortcut", json!(chrono_ms())),
     }
 }
 
@@ -216,6 +220,7 @@ pub fn sync_overlay_running(app: &App) -> Result<()> {
     o.set_panel_locked(app.config.get_bool("OVERLAY_VR_PANEL_LOCKED"));
     o.set_keyboard_locked(app.config.get_bool("KEYBOARD_LOCKED"));
     o.set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
+    o.set_shortcut(shortcut_of(app));
     o.set_launcher_auto_hide(app.config.get_bool("OVERLAY_VR_LAUNCHER_AUTO_HIDE"));
     if app.config.get_bool("OVERLAY_SMALL_LOG") || app.config.get_bool("OVERLAY_LARGE_LOG") || app.config.get_bool("OVERLAY_VR_PANEL") {
         o.start();
@@ -554,6 +559,27 @@ pub fn set_overlay_vr_laser_pitch(app: &App, data: Data) -> Result<Reply> {
     let reply = super::basic::validated(app, "OVERLAY_VR_LASER_PITCH", rounded)?;
     overlay(app).set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
     Ok(reply)
+}
+
+fn shortcut_of(app: &App) -> Shortcut {
+    Shortcut::from_name(&app.config.get_str("KEYBOARD_SHORTCUT")).unwrap_or_default()
+}
+
+pub fn get_keyboard_shortcut(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_SHORTCUT")
+}
+
+/// The controller shortcut that opens / closes the keyboard: "off", "stick_double", "menu_long" or
+/// "menu_double" (applied at once)
+pub fn set_keyboard_shortcut(app: &App, data: Data) -> Result<Reply> {
+    let reply = super::basic::validated(app, "KEYBOARD_SHORTCUT", data.unwrap_or(Value::Null))?;
+    overlay(app).set_shortcut(shortcut_of(app));
+    Ok(reply)
+}
+
+/// The time now in ms since 1970
+fn chrono_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
 }
 
 /// getVrPanelLayout: the layout the VR view draws (the overlay's)

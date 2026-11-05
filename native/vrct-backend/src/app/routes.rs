@@ -359,6 +359,8 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/get/data/keyboard_key_sound", r(true, h::get_keyboard_key_sound)),
         ("/set/enable/keyboard_key_sound", r(true, h::set_enable_keyboard_key_sound)),
         ("/set/disable/keyboard_key_sound", r(true, h::set_disable_keyboard_key_sound)),
+        ("/get/data/keyboard_key_sound_volume", r(true, h::get_keyboard_key_sound_volume)),
+        ("/set/data/keyboard_key_sound_volume", r(true, h::set_keyboard_key_sound_volume)),
         ("/get/data/keyboard_typing_indicator", r(true, h::get_keyboard_typing_indicator)),
         ("/set/enable/keyboard_typing_indicator", r(true, h::set_enable_keyboard_typing_indicator)),
         ("/set/disable/keyboard_typing_indicator", r(true, h::set_disable_keyboard_typing_indicator)),
@@ -375,6 +377,8 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/set/disable/keyboard_locked", r(true, h::set_disable_keyboard_locked)),
         ("/get/data/overlay_vr_laser_pitch", r(true, h::get_overlay_vr_laser_pitch)),
         ("/set/data/overlay_vr_laser_pitch", r(true, h::set_overlay_vr_laser_pitch)),
+        ("/get/data/keyboard_shortcut", r(true, h::get_keyboard_shortcut)),
+        ("/set/data/keyboard_shortcut", r(true, h::set_keyboard_shortcut)),
     ]
 }
 
@@ -463,4 +467,5 @@ pub const RUN_MAPPING: &[(&str, &str)] = &[
     ("enable_osc_query", "/run/enable_osc_query"),
     ("keyboard_state", "/run/keyboard_state"),
     ("keyboard_sent", "/run/keyboard_sent"),
+    ("vr_panel_keyboard_shortcut", "/run/vr_panel_keyboard_shortcut"),
 ];

@@ -344,6 +344,10 @@ pub fn process(app: &App, spec: &Spec, message: &str, language: Option<&str>, ms
         }
     }
     add_history(app, spec.kind, message);
+    if spec.input {
+        // the main window logs it as sent: the VR keyboard's ↑ ↓ call back the same
+        super::keyboard::sent(app, message);
+    }
 
     let elapsed = started.elapsed().as_millis();
     let asr = asr_ms.map(|ms| format!("asr={ms}ms ")).unwrap_or_default();
