@@ -850,8 +850,53 @@ fn notice_changes(app: &App, now: &Snapshot, mic_auto: bool, speaker_auto: bool)
     }
 }
 
-fn stop_access_mic(app: &App) {
+/// The microphone's transcription runs: VRCT's microphone is on, or the VR keyboard types with it
+fn mic_transcribing(app: &App) -> bool {
+    app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") || super::keyboard::keyboard_dictating(app)
+}
+
+/// The VR keyboard's microphone: the session started (VRCT's switch untouched), and VRChat's mute
+/// lets it through. Whether it runs
+pub fn start_mic_for_keyboard(app: &App) -> bool {
+    let started = {
+        let mut session = app.audio.mic.lock().unwrap();
+        if session.transcript {
+            Ok(true)
+        } else {
+            session.reconfigure(app, Some(true), None, None).map(|()| session.transcript)
+        }
+    };
+    match started {
+        Ok(true) => {
+            let _ = change_mic_transcript_status(app);
+            true
+        }
+        Ok(false) => false,
+        Err(e) => {
+            match vram_error(&e) {
+                Some(message) => {
+                    let _ = app.run_error("error_transcription_mic_vram_overflow", "TRANSCRIPTION_VRAM_MIC", json!(message));
+                }
+                None => logs::error("start mic transcription for the keyboard", &format!("{e:#}")),
+            }
+            let _ = app.audio.mic.lock().unwrap().reconfigure(app, Some(false), None, None);
+            false
+        }
+    }
+}
+
+/// The VR keyboard's microphone done: the session stops unless VRCT's microphone is on (then
+/// VRChat's mute holds it again)
+pub fn release_mic_for_keyboard(app: &App) -> Result<()> {
     if app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") {
+        change_mic_transcript_status(app)
+    } else {
+        stop_transcription(app, Kind::Mic)
+    }
+}
+
+fn stop_access_mic(app: &App) {
+    if mic_transcribing(app) {
         let _ = stop_transcription(app, Kind::Mic);
     }
     if app.config.get_bool("ENABLE_CHECK_ENERGY_SEND") {
@@ -871,6 +916,8 @@ fn stop_access_speaker(app: &App) {
 fn restart_access_mic(app: &App) {
     if app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") {
         let _ = start_transcription(app, Kind::Mic);
+    } else if super::keyboard::keyboard_dictating(app) && !start_mic_for_keyboard(app) {
+        super::keyboard::transcription_stopped(app);
     }
     if app.config.get_bool("ENABLE_CHECK_ENERGY_SEND") {
         let _ = set_energy(app, Kind::Mic, true);
@@ -949,7 +996,7 @@ fn sync_mic_selection(app: &App) -> Result<()> {
     }
     if let Some((h, d)) = fallback_mic(&s) {
         update_selected_mic_device(app, &h, &d)?;
-        if !app.config.get_bool("AUTO_MIC_SELECT") && (app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") || app.config.get_bool("ENABLE_CHECK_ENERGY_SEND")) {
+        if !app.config.get_bool("AUTO_MIC_SELECT") && (mic_transcribing(app) || app.config.get_bool("ENABLE_CHECK_ENERGY_SEND")) {
             enqueue(app, &app.audio.mic_worker, Some("mic_device_fallback"), |a| {
                 if let Err(e) = reopen(a, Kind::Mic) {
                     logs::error("mic device fallback", &format!("{e:#}"));
@@ -1001,7 +1048,12 @@ fn disable_after_device_loss(app: &App, kind: Kind) -> Result<()> {
                           "/set/disable/transcription_receive", "disable_check_speaker_threshold", "/set/disable/check_speaker_threshold"),
     };
     let (transcription, energy) = (app.config.get_bool(t_name), app.config.get_bool(e_name));
-    if !(transcription || energy) {
+    // the keyboard's microphone ends too
+    let dictating = kind == Kind::Mic && super::keyboard::keyboard_dictating(app);
+    if dictating {
+        super::keyboard::transcription_stopped(app);
+    }
+    if !(transcription || energy || dictating) {
         return Ok(());
     }
     app.config.set(t_name, json!(false))?;
@@ -1251,10 +1303,12 @@ fn transcription_switch(app: &App, kind: Kind, name: &str, on: bool) -> Result<R
         let started = start_transcription(app, kind)?;
         app.config.set(name, json!(started))?;
     } else if !on && app.config.get_bool(name) {
-        stop_transcription(app, kind)?;
         app.config.set(name, json!(false))?;
-        if kind == Kind::Mic {
-            super::keyboard::transcription_stopped(app);
+        if kind == Kind::Mic && super::keyboard::keyboard_dictating(app) {
+            // the session goes on for the keyboard's microphone (VRChat's mute does not hold it)
+            change_mic_transcript_status(app)?;
+        } else {
+            stop_transcription(app, kind)?;
         }
     }
     current(app, name)
@@ -1396,12 +1450,16 @@ mod tests {
     fn while_the_keyboard_dictates_what_the_mic_hears_goes_into_its_text() {
         use super::super::keyboard::{keyboard_dictating, set_disable_keyboard_dictation, set_enable_keyboard_dictation};
         let app = app();
+        let switch_told = |got: &[(i64, String, Value)]| got.iter().any(|p| p.1.contains("transcription_send"));
         // no device: the microphone does not start, nor does dictation
         assert_eq!(set_enable_keyboard_dictation(&app, None).unwrap(), Reply::ok(false));
-        pushes();
-        // the microphone already on: what it hears goes into the keyboard, not sent
-        app.config.set("ENABLE_TRANSCRIPTION_SEND", json!(true)).unwrap();
+        assert!(!switch_told(&pushes()));
+        // the session running (as if started): dictation on, VRCT's microphone switch untouched
+        app.audio.mic.lock().unwrap().transcript = true;
         assert_eq!(set_enable_keyboard_dictation(&app, None).unwrap(), Reply::ok(true));
+        assert!(!app.config.get_bool("ENABLE_TRANSCRIPTION_SEND"));
+        assert!(!switch_told(&pushes()));
+        // what it hears goes into the keyboard, not sent
         transcript_event(&app, Kind::Mic, text("こんにちは"));
         let got = pushes();
         assert_eq!(got.iter().map(|p| p.1.as_str()).collect::<Vec<_>>(), ["/run/keyboard_state"]);
@@ -1412,16 +1470,18 @@ mod tests {
         transcript_event(&app, Kind::Mic, text("ミュート中"));
         assert_eq!(pushes()[0].2["text"], json!("こんにちはミュート中"));
         *app.model.mic_mute_status.lock().unwrap() = Some(false);
-        // turned off: the microphone stays as it was before (on)
+        // VRCT's microphone turned on and off meanwhile: dictation goes on
+        app.config.set("ENABLE_TRANSCRIPTION_SEND", json!(true)).unwrap();
+        set_disable_transcription_send(&app, None).unwrap();
+        assert!(keyboard_dictating(&app));
+        // off: the session stops (VRCT's microphone is off), nothing told about its switch
         assert_eq!(set_disable_keyboard_dictation(&app, None).unwrap(), Reply::ok(false));
-        assert!(app.config.get_bool("ENABLE_TRANSCRIPTION_SEND"));
+        assert!(!app.audio.mic.lock().unwrap().transcript);
+        assert!(!switch_told(&pushes()));
+        // VRCT's microphone on, the keyboard not dictating: what it hears is sent
+        app.config.set("ENABLE_TRANSCRIPTION_SEND", json!(true)).unwrap();
         transcript_event(&app, Kind::Mic, text("送る"));
         assert_eq!(pushes()[0].1, "/run/transcription_send_mic_message");
-        // the microphone turned off ends dictation, and the keyboard's button is told
-        set_enable_keyboard_dictation(&app, None).unwrap();
-        set_disable_transcription_send(&app, None).unwrap();
-        assert!(!keyboard_dictating(&app));
-        assert!(pushes().contains(&(200, "/set/disable/keyboard_dictation".to_string(), json!(false))));
     }
 
     #[test]

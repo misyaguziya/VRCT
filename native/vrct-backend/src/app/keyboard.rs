@@ -35,9 +35,9 @@ pub struct Keyboard {
     indicator: Mutex<bool>,
     /// rime.dll loaded and started (once a process: a retry only builds again)
     rime: OnceLock<&'static Rime>,
-    /// the microphone types into the keyboard (Some: whether its transcription was on before, so
-    /// that turning this off leaves it as it was)
-    dictation: Mutex<Option<bool>>,
+    /// the microphone types into the keyboard (its transcription runs for it, VRCT's microphone
+    /// switch untouched)
+    dictation: Mutex<bool>,
 }
 
 /// What is typed, and what goes with it (one lock: keys, sends and what the microphone heard
@@ -284,7 +284,7 @@ pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
 }
 
 /// A key: one character ("a", "A" with Shift, "、", "\n"), or Backspace, Space, Enter, Left, Right,
-/// PageUp, PageDown, HalfWidth (半角/全角), Up and Down (what was sent, called back); ◀ ▶ with
+/// PageUp, PageDown, HalfWidth (半角/全角), Tab (the candidate highlighted), Up and Down (what was sent, called back); ◀ ▶ with
 /// modifiers (Shift+Left, Ctrl+Right, Ctrl+Shift+Left…), SelectAll, Undo, Redo, and Copy, Cut,
 /// Paste through the clipboard (Cut deletes only what went onto it)
 pub fn keyboard_key(app: &App, data: Data) -> Result<Reply> {
@@ -330,6 +330,7 @@ fn key_of(name: &str) -> Result<Key> {
         "PageUp" => Key::PageUp,
         "PageDown" => Key::PageDown,
         "HalfWidth" => Key::HalfWidth,
+        "Tab" => Key::Tab,
         "SelectAll" => Key::SelectAll,
         "Undo" => Key::Undo,
         "Redo" => Key::Redo,
@@ -403,9 +404,10 @@ pub fn sent(app: &App, text: &str) {
 // --------------------------------------------------------------------------------- dictation
 
 /// The microphone types into the keyboard: what it hears goes after the text (to be corrected
-/// and sent with ↵) instead of being sent. Its transcription is turned on for it, and back off after
+/// and sent with ↵) instead of being sent. Its transcription runs for it without turning VRCT's
+/// microphone on (ENABLE_TRANSCRIPTION_SEND and its switch stay as they are)
 pub fn keyboard_dictating(app: &App) -> bool {
-    keyboard(app).dictation.lock().unwrap().is_some()
+    *keyboard(app).dictation.lock().unwrap()
 }
 
 /// What the microphone heard, while dictating
@@ -426,18 +428,13 @@ pub fn get_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
 /// On the keyboard's ordered worker (as its switching off): one at a time
 pub fn set_enable_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
     if !keyboard_dictating(app) {
-        let was_on = app.config.get_bool("ENABLE_TRANSCRIPTION_SEND");
-        if !was_on {
-            // as the microphone's switch does (and shown on it); it may not start (no device…)
-            super::audio::set_enable_transcription_send(app, None)?;
-            if !app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") {
-                return dictation_reply(app);
-            }
-            ipc::print_response(200, Some("/set/enable/transcription_send"), &json!(true));
+        // (marked first: the microphone's session then knows it runs for the keyboard)
+        *keyboard(app).dictation.lock().unwrap() = true;
+        // the session started for it (already running when VRCT's microphone is on); it may not
+        // start (no device…). VRChat's mute does not hold it while it types here
+        if !super::audio::start_mic_for_keyboard(app) {
+            *keyboard(app).dictation.lock().unwrap() = false;
         }
-        *keyboard(app).dictation.lock().unwrap() = Some(was_on);
-        // VRChat's mute does not hold the microphone while it types here
-        super::audio::change_mic_transcript_status(app)?;
     }
     dictation_reply(app)
 }
@@ -447,26 +444,23 @@ pub fn set_disable_keyboard_dictation(app: &App, _: Data) -> Result<Reply> {
     dictation_reply(app)
 }
 
-/// Dictation off (the keyboard closed, or turned off); the microphone's transcription back as it
-/// was. `told`: the UI is told (when it did not ask)
+/// Dictation off (the keyboard closed, or turned off): the microphone's session stops unless VRCT's
+/// microphone is on (then VRChat's mute holds it again). `told`: the UI is told (when it did not ask)
 fn stop_dictation(app: &App, told: bool) {
-    let Some(was_on) = keyboard(app).dictation.lock().unwrap().take() else { return };
-    // VRChat's mute holds the microphone again (when it stays on)
-    let _ = super::audio::change_mic_transcript_status(app);
-    if !was_on && app.config.get_bool("ENABLE_TRANSCRIPTION_SEND") {
-        match super::audio::set_disable_transcription_send(app, None) {
-            Ok(_) => ipc::print_response(200, Some("/set/disable/transcription_send"), &json!(false)),
-            Err(e) => logs::error("keyboard dictation", &format!("{e:#}")),
-        }
+    if !std::mem::take(&mut *keyboard(app).dictation.lock().unwrap()) {
+        return;
+    }
+    if let Err(e) = super::audio::release_mic_for_keyboard(app) {
+        logs::error("keyboard dictation", &format!("{e:#}"));
     }
     if told {
         ipc::print_response(200, Some("/set/disable/keyboard_dictation"), &json!(false));
     }
 }
 
-/// The microphone's transcription was turned off (its switch, or an error): dictation ends with it
+/// The microphone's transcription stopped by itself (an error, its device lost): dictation ends with it
 pub fn transcription_stopped(app: &App) {
-    if keyboard(app).dictation.lock().unwrap().take().is_some() {
+    if std::mem::take(&mut *keyboard(app).dictation.lock().unwrap()) {
         ipc::print_response(200, Some("/set/disable/keyboard_dictation"), &json!(false));
     }
 }
