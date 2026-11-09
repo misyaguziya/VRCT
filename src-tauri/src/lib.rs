@@ -26,8 +26,37 @@ fn create_vr_panel_window<R: Runtime, M: Manager<R>>(manager: &M) -> tauri::Resu
     // 画面外に置く。Windows ではビルダーの .position() が効かず既定の位置 (画面内) に出るため、
     // 作ってから動かし、動かした後で表示する (撮影のため、表示状態で画面外に置いておく)
     window.set_position(PhysicalPosition::new(-10000, -10000))?;
+    ignore_text_scale(&window, window.scale_factor()?);
     window.show()?;
     Ok(())
+}
+
+// VR画面に Windows の「テキストのサイズ」(アクセシビリティ) を反映させない。
+// WebView2 の描画倍率は既定で「モニターのDPI × テキストのサイズ」になり、VR画面では中身だけが大きく描かれる。
+// Python 側はDPIの倍率で領域を切り出してVRに映すので、100% 以外だとずれて操作できなくなる。
+// メイン画面は配置し直されて崩れないので、テキストのサイズをそのまま反映する。
+// 自動の追従を止めるので、DPI が変わったら呼び直す (WindowEvent::ScaleFactorChanged)
+fn ignore_text_scale<R: Runtime>(window: &tauri::WebviewWindow<R>, scale: f64) {
+    #[cfg(windows)]
+    {
+        let label = window.label().to_string();
+        let result = window.with_webview(move |webview| {
+            use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Controller3;
+            use windows_core::Interface;
+            let applied = webview.controller().cast::<ICoreWebView2Controller3>().and_then(|controller| unsafe {
+                controller.SetShouldDetectMonitorScaleChanges(false)?;
+                controller.SetRasterizationScale(scale)
+            });
+            if let Err(error) = applied {
+                startup_log(&format!("Text scale could not be ignored ({label}): {error}"));
+            }
+        });
+        if let Err(error) = result {
+            startup_log(&format!("Text scale could not be ignored ({}): {error}", window.label()));
+        }
+    }
+    #[cfg(not(windows))]
+    let _ = (window, scale);
 }
 
 fn startup_log_path(executable_path: &Path) -> PathBuf {
@@ -79,10 +108,14 @@ pub fn run() {
         })
         // 画面外の vr_panel ウィンドウが残ることがあるため「最後のウィンドウが閉じたら終了」に頼れない。
         // main が閉じたらアプリを終了する。
-        .on_window_event(|window, event| {
-            if window.label() == "main" && matches!(event, WindowEvent::Destroyed) {
-                window.app_handle().exit(0);
+        .on_window_event(|window, event| match event {
+            WindowEvent::Destroyed if window.label() == "main" => window.app_handle().exit(0),
+            WindowEvent::ScaleFactorChanged { scale_factor, .. } if window.label() == "vr_panel" => {
+                if let Some(webview_window) = window.app_handle().get_webview_window(window.label()) {
+                    ignore_text_scale(&webview_window, *scale_factor);
+                }
             }
+            _ => {}
         })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_http::init())
