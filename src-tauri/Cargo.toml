@@ -31,5 +31,10 @@ font-kit = "=0.14.2"
 reqwest = "=0.12.15"
 base64 = "=0.22.1"
 
+[target.'cfg(windows)'.dependencies]
+# tauri (wry) が使っているのと同じ版。WebView2 の描画倍率を設定するため (lib.rs の ignore_text_scale)
+webview2-com = "=0.37.0"
+windows-core = "=0.61.0"
+
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "=2.2.0"
