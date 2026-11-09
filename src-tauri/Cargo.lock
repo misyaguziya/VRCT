@@ -18,6 +18,8 @@ dependencies = [
  "tauri-plugin-http",
  "tauri-plugin-opener",
  "tauri-plugin-shell",
+ "webview2-com",
+ "windows-core 0.61.0",
 ]
 
 [[package]]
