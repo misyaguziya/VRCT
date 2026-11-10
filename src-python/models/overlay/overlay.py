@@ -2203,7 +2203,7 @@ class Overlay:
                     pointer = (results, _COLOR_POINTER)
                 continue
 
-            if size == PANEL and self.panel_locked:
+            if (size == PANEL and self.panel_locked) or self.settings[size].get("locked"):
                 continue
             overlay_pose = self.overlayWorldPose(size, poseOf)
             if overlay_pose is None:

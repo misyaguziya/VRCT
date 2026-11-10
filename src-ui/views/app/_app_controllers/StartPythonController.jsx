@@ -85,7 +85,9 @@ const useStartPython = () => {
             // (FutureWarning 等: 依存ライブラリの将来非互換の予告など) まで致命的な
             // エラー通知に昇格させると、実際にはクラッシュしていないのに
             // 「An error occurred」ダイアログが出てしまう。警告行はログに残すだけにする。
-            if (typeof line === "string" && /\b[A-Za-z]*Warning: /.test(line)) {
+            // 警告は2行で届く (「...: FutureWarning: 本文」と、続く「  warnings.warn(...)」)。
+            // 2行目には "Warning: " が無いので、warnings.warn( でも見分ける。
+            if (typeof line === "string" && /\b[A-Za-z]*Warning: |warnings\.warn\(/.test(line)) {
                 console.warn("stderr (warning, ignored)", line);
                 return;
             }
