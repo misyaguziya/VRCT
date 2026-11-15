@@ -11,6 +11,7 @@ use crate::layout::{self, PointerKind, Region};
 use crate::math::{Mat34, Mat4};
 use crate::overlay::{Follow, Grab, GrabScale, Intro, Resize, Return, Run, Settings, Worker, COLOR_NORMAL};
 use crate::pose::{self, Vec3, IDENTITY};
+use std::collections::HashSet;
 use std::time::{Duration, Instant};
 use vrct_openvr::{ControllerState, IntersectionParams, TRACKED_DEVICE_INDEX_HMD, TRACKED_DEVICE_INDEX_INVALID};
 
@@ -59,6 +60,17 @@ const TRIGGER_AIM_START: f32 = 0.15;
 const TRIGGER_AIM_SEC: f64 = 0.4;
 /// A key pressed on the keyboard: this long a vibration (SteamVR takes up to about 4 ms)
 const KEY_HAPTIC_US: u16 = 1500;
+
+/// Whether the hand just touched the launcher (the laser reached it) or pressed it: a tap in the hand each.
+/// `touching` holds the hands on the launcher
+pub(crate) fn launcher_haptic_due(touching: &mut HashSet<u32>, hand: u32, on_launcher: bool, was_pressed: bool, pressed: bool) -> bool {
+    if !on_launcher {
+        touching.remove(&hand);
+        return false;
+    }
+    let entered = touching.insert(hand);
+    entered || (pressed && !was_pressed)
+}
 // A recall asked for with the log (keyboard) closed waits this long for it to open
 const RECALL_PENDING_SEC: f64 = 1.0;
 // The bar under the log: fixed size (0.4 m per 900 px), this gap, shown after pointing at the
@@ -672,10 +684,16 @@ impl Run<'_> {
                 {
                     xy = self.region_pixel(w, region, hit, &overlay_pose);
                 }
-                let on_keyboard = target.as_ref().and_then(|(t, _)| self.target_region(w, *t)) == Some(Region::Keyboard);
+                let region = target.as_ref().and_then(|(t, _)| self.target_region(w, *t));
+                let on_keyboard = region == Some(Region::Keyboard);
                 // no click or scroll on a corner handle, only its hover
                 let state = self.controller_state(hand);
+                let was_pressed = self.panel_input.get(&hand).is_some_and(|p| p.0);
                 self.handle_panel_input(hand, if corner.is_some() { None } else { xy }, state, on_keyboard);
+                let pressed = self.panel_input.get(&hand).is_some_and(|p| p.0);
+                if launcher_haptic_due(&mut self.launcher_touch, hand, region == Some(Region::Launcher), was_pressed, pressed) {
+                    self.vr.system.trigger_haptic_pulse(hand, KEY_HAPTIC_US);
+                }
                 let handle_xy = corner.and_then(|c| self.corner_handle_xy(w, c.0));
                 let logical = match (xy, self.panel.image_size) {
                     (Some((x, y)), Some(image)) => {
@@ -694,6 +712,7 @@ impl Run<'_> {
             } else {
                 // grip held or the hand lost: its press on the VR view ends
                 self.release_press(hand);
+                self.launcher_touch.remove(&hand);
             }
 
             // on a corner (outside the log too): the pointer; a grip resizes (above)

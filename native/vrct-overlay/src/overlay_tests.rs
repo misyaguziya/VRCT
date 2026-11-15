@@ -1485,3 +1485,16 @@ fn handoff_owner_cancels_on_dashboard_or_tracking_loss_and_waits_for_neutral() {
         assert_eq!(r.run.mouse_owner, Some(RIGHT));
     }
 }
+
+#[test]
+fn launcher_taps_the_hand_when_touched_and_when_pressed() {
+    let mut touching = std::collections::HashSet::new();
+    let due = |touching: &mut std::collections::HashSet<u32>, on, was, now| crate::vr_ui::launcher_haptic_due(touching, LEFT, on, was, now);
+    assert!(!due(&mut touching, false, false, false), "off the launcher");
+    assert!(due(&mut touching, true, false, false), "the laser reaches it");
+    assert!(!due(&mut touching, true, false, false), "staying on it");
+    assert!(due(&mut touching, true, false, true), "pressed");
+    assert!(!due(&mut touching, true, true, true), "held");
+    assert!(!due(&mut touching, false, true, false), "left");
+    assert!(due(&mut touching, true, false, false), "touching it again taps again");
+}

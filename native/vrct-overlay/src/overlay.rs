@@ -691,6 +691,8 @@ pub(crate) struct Run<'s> {
     pub hidden: HashSet<Region>,
     // grabbing
     pub grip_prev: HashMap<u32, bool>,
+    /// the hands whose laser is on the launcher (a tap in the hand as it reaches it)
+    pub launcher_touch: HashSet<u32>,
     pub grab_started: Instant,
     pub grabbing: Option<Grab>,
     pub grab_last_relative: Option<Mat34>,
@@ -776,7 +778,7 @@ impl<'s> Run<'s> {
         Run {
             vr, device, context, handles: vec![], textures: vec![], pending: vec![], pointers: vec![], other_dot: None, toolbar: None, ghost: None,
             ghost_texture: None, tooltip_handle: None, vr_resources_tried: false, hidden: HashSet::new(),
-            grip_prev: HashMap::new(), grab_started: now, grabbing: None, grab_last_relative: None, grab_scale: None,
+            grip_prev: HashMap::new(), launcher_touch: HashSet::new(), grab_started: now, grabbing: None, grab_last_relative: None, grab_scale: None,
             grab_prev_time: now, grab_smoothed: None, grab_prev_target: None, grab_radius: None, grab_hand_distance: 1.0,
             grab_error: None, toolbar_visible: false, toolbar_alpha: 0.0, toolbar_faded_at: None, toolbar_pointed_since: None,
             toolbar_last_pointed: None, toolbar_relative: None, toolbar_follow: None, launcher_shown: true, launcher_alpha: 1.0,
