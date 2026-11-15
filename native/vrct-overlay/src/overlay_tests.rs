@@ -466,6 +466,32 @@ fn a_locked_log_is_not_grabbed_but_the_other_is() {
     r.frame(20);
     assert_eq!(r.grabbed(), Some(large));
 }
+
+#[test]
+fn the_last_lock_command_wins_while_stopped() {
+    // update_locked(on) then update_locked(off) before the thread runs: what is applied at start is off
+    let mut r = Rig::new(vec![("small", settings("Playspace", [0.0; 6], 0.4))]);
+    r._commands.send(Command::Locked("small".into(), true)).unwrap();
+    r._commands.send(Command::Locked("small".into(), false)).unwrap();
+    while let Ok(c) = r.w.commands.try_recv() {
+        r.w.apply_offline(c);
+    }
+    assert!(!r.w.sizes[r.index("small")].settings.locked);
+}
+
+#[test]
+fn a_lock_command_reaches_the_running_overlay() {
+    let mut r = Rig::new(vec![("small", settings("Playspace", [0.0; 6], 0.4))]);
+    let i = r.index("small");
+    r._commands.send(Command::Locked("small".into(), true)).unwrap();
+    r.w.wait(Duration::from_millis(1), Some(&mut r.run));
+    assert!(r.w.sizes[i].settings.locked);
+    assert!(r.w.shared.lock().unwrap().settings.iter().any(|(n, s)| n == "small" && s.locked));
+    r._commands.send(Command::Locked("small".into(), false)).unwrap();
+    r.w.wait(Duration::from_millis(1), Some(&mut r.run));
+    assert!(!r.w.sizes[i].settings.locked);
+}
+
 #[test]
 fn a_grip_wakes_a_faded_log() {
     let mut r = room_log();

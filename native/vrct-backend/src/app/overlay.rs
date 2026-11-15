@@ -188,9 +188,9 @@ fn update_log_settings(app: &App, size: &str) {
     if now.position != wanted.position || now.tracker != wanted.tracker {
         o.update_position(size, wanted.position, &wanted.tracker);
     }
-    if now.locked != wanted.locked {
-        o.update_locked(size, wanted.locked);
-    }
+    // always sent (idempotent): `now` is the overlay's last published copy, which lags behind queued
+    // commands (stopped overlay, or a toggle back within one frame), so a difference test could drop the OFF
+    o.update_locked(size, wanted.locked);
     if now.display_duration != wanted.display_duration {
         o.update_display_duration(size, wanted.display_duration);
     }
