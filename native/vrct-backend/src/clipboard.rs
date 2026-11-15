@@ -131,9 +131,9 @@ pub fn copy_and_paste(message: &str, window_name: Option<&str>, log: &dyn Fn(Str
     into_app(window_name, log, paste)
 }
 
-/// Clipboard's app_name: once SteamVR runs (looked for every 10 s), the name of the first Steam app
-/// OpenVR lists (keys "steam.app.*"), through the shared session; then again for each paste (`get`).
-/// None until one is found.
+/// Clipboard's app_name: the name of the first Steam app OpenVR lists (keys "steam.app.*"), through
+/// the shared session, looked for every 10 s while SteamVR runs until one is found (SteamVR started
+/// later, or not ready yet: Hmd Not Found); then again for each paste (`get`). None until one is found.
 pub struct AppName {
     name: Arc<Mutex<Option<String>>>,
     // dropped: the watching thread ends at once
@@ -147,15 +147,25 @@ impl AppName {
         let found = name.clone();
         std::thread::spawn(move || {
             log("Clipboard: VR monitor thread started.".into());
+            let mut failure_logged = false;
             loop {
                 if is_steamvr_running() {
-                    log("Clipboard: SteamVR detected. Setting up app info.".into());
                     match vrct_openvr::acquire(vrct_openvr::ApplicationType::Background).and_then(|session| steam_app_name(&session)) {
-                        // (none listed: what a paste found meanwhile stays)
-                        Ok(app) => if app.is_some() { *found.lock().unwrap() = app },
-                        Err(e) => log(format!("Clipboard: Error setting up VR app name: {e}")),
+                        Ok(Some(app)) => {
+                            log(format!("Clipboard: VR app name set up: {app}"));
+                            *found.lock().unwrap() = Some(app);
+                            break;
+                        }
+                        // (none listed: what a paste found meanwhile stays) tried again, logging once
+                        result if !failure_logged => {
+                            failure_logged = true;
+                            match result {
+                                Err(e) => log(format!("Clipboard: Error setting up VR app name, trying again: {e}")),
+                                _ => log("Clipboard: no Steam app listed yet, trying again".into()),
+                            }
+                        }
+                        _ => {}
                     }
-                    break;
                 }
                 if stopped.recv_timeout(Duration::from_secs(10)) != Err(mpsc::RecvTimeoutError::Timeout) {
                     break;
