@@ -4,7 +4,7 @@
 //! They take the audio already encoded (FLAC / 16 kHz WAV, made by vrct-audio as PcmAudio does).
 use crate::net::{Body, Http};
 use crate::openai;
-use anyhow::{bail, Context, Result};
+use anyhow::Result;
 use reqwest::blocking::multipart::{Form, Part};
 use reqwest::Method;
 use serde_json::{json, Value};
@@ -37,9 +37,35 @@ impl Languages {
     }
 }
 
-/// A failed API transcription with the ErrorCode the Python provider raises
+/// A failed recognition: Transient may pass by itself (a timeout, a connection failure, a 5xx),
+/// so the phrase is skipped; Fatal does not (a wrong key, a rate limit, a failure on this PC)
 #[derive(Debug, PartialEq, Eq)]
-pub struct ApiError(pub &'static str);
+pub enum AsrError {
+    Transient(String),
+    Fatal(String),
+}
+
+impl From<String> for AsrError {
+    fn from(e: String) -> Self {
+        AsrError::Fatal(e)
+    }
+}
+
+/// What `Http::send` gives for a request that did not get its response: timed out, not connected,
+/// or cut while it was sent (not one that could not be made: a bad URL or header)
+pub fn transient_send(e: &anyhow::Error) -> bool {
+    e.downcast_ref::<reqwest::Error>().is_some_and(|e| e.is_timeout() || e.is_connect() || e.is_request())
+}
+
+/// A response that may be different next time: the server's own failure (5xx)
+pub fn transient_status(status: u16) -> bool {
+    status >= 500
+}
+
+/// A failed API transcription with the ErrorCode the Python provider raises, and whether it is
+/// transient (`AsrError`)
+#[derive(Debug, PartialEq, Eq)]
+pub struct ApiError(pub &'static str, pub bool);
 
 impl std::fmt::Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -49,10 +75,12 @@ impl std::fmt::Display for ApiError {
 
 impl std::error::Error for ApiError {}
 
-pub const AUTH_FAILED: ApiError = ApiError("TRANSCRIPTION_API_AUTH_FAILED");
-pub const RATE_LIMITED: ApiError = ApiError("TRANSCRIPTION_API_RATE_LIMITED");
-pub const TIMEOUT: ApiError = ApiError("TRANSCRIPTION_API_TIMEOUT");
-pub const SERVER_ERROR: ApiError = ApiError("TRANSCRIPTION_API_SERVER_ERROR");
+pub const AUTH_FAILED: ApiError = ApiError("TRANSCRIPTION_API_AUTH_FAILED", false);
+pub const RATE_LIMITED: ApiError = ApiError("TRANSCRIPTION_API_RATE_LIMITED", false);
+pub const TIMEOUT: ApiError = ApiError("TRANSCRIPTION_API_TIMEOUT", true);
+pub const SERVER_ERROR: ApiError = ApiError("TRANSCRIPTION_API_SERVER_ERROR", false);
+/// SERVER_ERROR from a connection failure or a 5xx
+pub const SERVER_UNAVAILABLE: ApiError = ApiError("TRANSCRIPTION_API_SERVER_ERROR", true);
 
 /// transcription_providers._HTTP_TIMEOUT (connect 10 s, read 60 s)
 const HTTP_TIMEOUT: Duration = Duration::from_secs(60);
@@ -64,17 +92,23 @@ const GOOGLE_LEGACY_KEY: &str = "AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw";
 
 /// GoogleSpeechClient.recognize after the FLAC encoding: (joined transcripts, mean confidence).
 /// Any transport, HTTP or format failure is an error (GoogleRequestError).
-pub fn google_recognize(http: &Http, flac: &[u8], rate: u32, language: &str) -> Result<(String, f64)> {
+pub fn google_recognize(http: &Http, flac: &[u8], rate: u32, language: &str) -> Result<(String, f64), AsrError> {
+    let failed = |transient: bool| {
+        let e = "Google recognition request failed".to_string();
+        if transient { AsrError::Transient(e) } else { AsrError::Fatal(e) }
+    };
     let query = form_urlencode(&[("client", "chromium"), ("lang", language), ("key", GOOGLE_LEGACY_KEY), ("pFilter", "0")]);
     let url = format!("http://www.google.com/speech-api/v2/recognize?{query}");
     let headers = [("content-type", format!("audio/x-flac; rate={rate}"))];
     let response = http
         .send(Method::POST, &url, &headers, Some(Body::Bytes(flac.to_vec())), Some(Duration::from_secs(10)))
-        .context("Google recognition request failed")?;
+        .map_err(|e| failed(transient_send(&e)))?;
     if !response.status().is_success() {
-        bail!("Google recognition request failed: HTTP {}", response.status());
+        return Err(failed(transient_status(response.status().as_u16())));
     }
-    parse_google_response(&response.text()?)
+    // reading the body fails only when the connection does (nothing is parsed here)
+    let text = response.text().map_err(|_| failed(true))?;
+    parse_google_response(&text).map_err(|_| failed(false))
 }
 
 /// urllib.parse.urlencode (quote_plus)
@@ -133,6 +167,8 @@ fn map_openai(e: openai::Error) -> ApiError {
         openai::Error::Status(401, _) => AUTH_FAILED,
         openai::Error::Status(429, _) => RATE_LIMITED,
         openai::Error::Timeout => TIMEOUT,
+        openai::Error::Connection(_) => SERVER_UNAVAILABLE,
+        openai::Error::Status(status, _) if transient_status(status) => SERVER_UNAVAILABLE,
         _ => SERVER_ERROR,
     }
 }
@@ -254,15 +290,19 @@ impl Deepgram {
         let response = match self.http.send(Method::POST, &url, &headers, Some(Body::Bytes(wav.to_vec())), Some(HTTP_TIMEOUT)) {
             Ok(r) => r,
             Err(e) if e.downcast_ref::<reqwest::Error>().is_some_and(|e| e.is_timeout()) => return Err(TIMEOUT),
+            Err(e) if transient_send(&e) => return Err(SERVER_UNAVAILABLE),
             Err(_) => return Err(SERVER_ERROR),
         };
         match response.status().as_u16() {
             200 => {}
             401 | 403 => return Err(AUTH_FAILED),
             429 => return Err(RATE_LIMITED),
+            status if transient_status(status) => return Err(SERVER_UNAVAILABLE),
             _ => return Err(SERVER_ERROR),
         }
-        let payload: Value = response.json().map_err(|_| SERVER_ERROR)?;
+        // response.json() in two steps: a body that could not be read is the connection's failure
+        let body = response.bytes().map_err(|_| SERVER_UNAVAILABLE)?;
+        let payload: Value = serde_json::from_slice(&body).map_err(|_| SERVER_ERROR)?;
         let Some(alternative) = payload.pointer("/results/channels/0/alternatives/0") else {
             return Ok((String::new(), 0.0, false));
         };
@@ -328,4 +368,40 @@ pub fn resolve_deepgram_language(languages: &Languages, language: &str, country:
     let base = |c: &str| c.split('-').next().unwrap_or("").to_lowercase();
     let wanted = base(whisper);
     normalized.iter().find(|(n, _)| base(n) == wanted).map(|(_, original)| original.clone())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn openai_errors_are_classified() {
+        let status = |s| map_openai(openai::Error::Status(s, String::new()));
+        assert_eq!(map_openai(openai::Error::Timeout), TIMEOUT);
+        assert_eq!(map_openai(openai::Error::Connection(String::new())), SERVER_UNAVAILABLE);
+        for s in [500, 502, 503, 504] {
+            assert_eq!(status(s), SERVER_UNAVAILABLE, "{s}");
+        }
+        for s in [401, 403, 408, 409, 429] {
+            assert!(!status(s).1, "{s}");
+        }
+        assert_eq!(map_openai(openai::Error::Other(String::new())), SERVER_ERROR);
+    }
+
+    /// A request that cannot be made is not transient: a custom URL that is no URL, a key that
+    /// cannot be a header
+    #[test]
+    fn a_request_that_cannot_be_made_is_fatal() {
+        let languages = Languages::new(json!({}));
+        let api = |base_url: &str, api_key: &str| WhisperApi {
+            http: Http::new().unwrap(),
+            api_key: api_key.into(),
+            base_url: base_url.into(),
+            model: "whisper-1".into(),
+            engine_name: "Custom_Whisper".into(),
+        };
+        for api in [api("not a url", "key"), api("http://127.0.0.1:9/v1", "bad\nkey")] {
+            assert_eq!(api.transcribe(&languages, b"", "Japanese", "Japan", -0.8, 0.6, false), Err(SERVER_ERROR), "{}", api.base_url);
+        }
+    }
 }

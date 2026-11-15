@@ -71,7 +71,14 @@ pub fn send(http: &Http, method: Method, url: &str, headers: &[(&str, String)], 
             Err(e) => {
                 let timed_out = e.downcast_ref::<reqwest::Error>().is_some_and(|e| e.is_timeout());
                 if retries >= 2 {
-                    return Err(if timed_out { Error::Timeout } else { Error::Connection(format!("{e:#}")) });
+                    // a request that could not be made (a bad URL or header) is not a connection failure
+                    return Err(if timed_out {
+                        Error::Timeout
+                    } else if crate::asr::transient_send(&e) {
+                        Error::Connection(format!("{e:#}"))
+                    } else {
+                        Error::Other(format!("{e:#}"))
+                    });
                 }
                 None
             }

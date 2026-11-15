@@ -1,7 +1,7 @@
 //! The transcriber (transcription_transcriber.py + transcription_providers.py): phrases from the
 //! recorder are gathered until a phrase is complete, then sent to the engine (Google, Whisper on
 //! this PC, a Whisper API, Deepgram) once per candidate language, the most confident kept.
-use crate::asr::{self, ApiError, Deepgram, Languages, WhisperApi};
+use crate::asr::{self, ApiError, AsrError, Deepgram, Languages, WhisperApi};
 use crate::net::Http;
 use crate::recorder::{Failure, Recorder};
 use std::collections::VecDeque;
@@ -12,6 +12,8 @@ use vrct_whisper::{TranscribeOptions, WhisperModel};
 const MAX_PHRASE_DURATION_SECONDS: f64 = 15.0;
 const VAD_PRE_PAD_MS: f64 = 300.0;
 const VAD_POST_PAD_MS: f64 = 500.0;
+/// Phrases skipped in a row for a transient failure before the session stops as for any other
+const MAX_TRANSIENT_FAILURES: u32 = 5;
 
 // one per recorder: the size of the larger variant does not matter
 #[allow(clippy::large_enum_variant)]
@@ -59,6 +61,10 @@ pub struct Transcriber {
     pub last_recognition_error: bool,
     attempts: u64,
     successes: u64,
+    transient_failures: u32,
+    /// The phrase (its `phrase_started`) the last transient failure was counted for: the sends of
+    /// one phrase as it grows count once
+    failed_phrase: Option<Instant>,
 }
 
 /// What a candidate language gave: (text, confidence, no need to try the others)
@@ -85,6 +91,8 @@ impl Transcriber {
             last_recognition_error: false,
             attempts: 0,
             successes: 0,
+            transient_failures: 0,
+            failed_phrase: None,
         }
     }
 
@@ -114,7 +122,7 @@ impl Transcriber {
     /// One candidate language
     #[allow(clippy::too_many_arguments)]
     fn transcribe_one(&mut self, languages: &Languages, pcm: &[u8], language: &str, country: &str, avg_logprob: f64,
-                      no_speech_prob: f64, no_repeat_ngram_size: usize, force: bool) -> Result<Heard, String> {
+                      no_speech_prob: f64, no_repeat_ngram_size: usize, force: bool) -> Result<Heard, AsrError> {
         let at_16k = || audioop::convert(pcm, self.sample_rate, 2, 16000, 2).map_err(String::from);
         let code = |engine: &str| languages.code(language, country, engine).map(String::from)
             .ok_or_else(|| format!("KeyError: {language}/{country}/{engine}"));
@@ -127,8 +135,7 @@ impl Transcriber {
                 let rate = self.sample_rate.max(8000);
                 let raw = audioop::convert(pcm, self.sample_rate, 2, rate, 2).map_err(String::from)?;
                 let flac = vrct_audio::encode_flac(&raw, rate).map_err(|_| "Google recognition request failed".to_string())?;
-                let (text, confidence) = asr::google_recognize(&self.http, &flac, rate, &code)
-                    .map_err(|_| "Google recognition request failed".to_string())?;
+                let (text, confidence) = asr::google_recognize(&self.http, &flac, rate, &code)?;
                 Ok((text, confidence, false))
             }
             Engine::Whisper(model) => {
@@ -160,7 +167,8 @@ impl Transcriber {
     }
 
     /// _finalizeAndTranscribe: Err is the ASR failure that stops the session (an engine failed and
-    /// nothing was heard)
+    /// nothing was heard). A send that failed only for transient reasons is skipped instead,
+    /// until MAX_TRANSIENT_FAILURES phrases in a row had one.
     fn finalize_and_transcribe(&mut self, languages: &Languages, candidates: &[(String, String)], avg_logprob: f64,
                                no_speech_prob: f64, no_repeat_ngram_size: usize, log: &dyn Fn(String)) -> Result<bool, Failure> {
         if !matches!(self.engine, Engine::Whisper(_)) {
@@ -168,16 +176,27 @@ impl Transcriber {
         }
         let mut best = Transcript { text: String::new(), language: None, confidence: 0.0, asr_ms: 0 };
         let mut provider_error: Option<String> = None;
+        let mut fatal = false;
         let started = Instant::now();
         let mut calls: Vec<String> = vec![];
         match self.mono() {
-            Err(e) => provider_error = Some(e),
+            Err(e) => {
+                provider_error = Some(e);
+                fatal = true;
+            }
             Ok(pcm) => {
                 let force = candidates.len() == 1;
                 for (language, country) in candidates {
                     let t = Instant::now();
                     match self.transcribe_one(languages, &pcm, language, country, avg_logprob, no_speech_prob, no_repeat_ngram_size, force) {
                         Err(e) => {
+                            let e = match e {
+                                AsrError::Transient(e) => e,
+                                AsrError::Fatal(e) => {
+                                    fatal = true;
+                                    e
+                                }
+                            };
                             self.last_recognition_error = true;
                             crate::logs::error(&format!("transcribe ({})", self.engine.name()), &e);
                             provider_error.get_or_insert(e);
@@ -202,9 +221,22 @@ impl Transcriber {
         let succeeded = !best.text.is_empty();
         let calls_text = format!("calls={}/{} [{}]", calls.len(), candidates.len(), calls.join(" "));
         if provider_error.is_some() && !succeeded {
+            if !fatal {
+                if self.phrase_started.is_none() || self.failed_phrase != self.phrase_started {
+                    self.transient_failures += 1;
+                    self.failed_phrase = self.phrase_started;
+                }
+                if self.transient_failures < MAX_TRANSIENT_FAILURES {
+                    log(format!("[ASR-error][{}][{}] skipped (transient error {}/{MAX_TRANSIENT_FAILURES}) asr={asr_ms}ms {calls_text}",
+                                self.label, self.engine.name(), self.transient_failures));
+                    return Ok(true);
+                }
+            }
             log(format!("[ASR-error][{}][{}] asr={asr_ms}ms {calls_text}", self.label, self.engine.name()));
             return Err(Failure { code: "ASR_ERROR", stage: "asr" });
         }
+        self.transient_failures = 0;
+        self.failed_phrase = None;
         if succeeded {
             self.last_recognition_error = false;
             self.successes += 1;
@@ -338,6 +370,8 @@ impl Transcriber {
         self.last_sample.clear();
         self.last_spoken = None;
         self.phrase_started = None;
+        self.transient_failures = 0;
+        self.failed_phrase = None;
     }
 
     /// getTranscript: the oldest waiting
@@ -346,11 +380,189 @@ impl Transcriber {
     }
 }
 
-fn api_error(e: ApiError) -> String {
-    e.0.to_string()
+fn api_error(e: ApiError) -> AsrError {
+    if e.1 { AsrError::Transient(e.0.to_string()) } else { AsrError::Fatal(e.0.to_string()) }
 }
 
 /// getWhisperModel: a CUDA allocation failure is told apart (VRAM_OUT_OF_MEMORY)
 pub fn load_whisper(path: &std::path::Path, device: &str, index: i32, compute_type: &str) -> anyhow::Result<WhisperModel> {
     WhisperModel::new(path, device, index, compute_type)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cell::RefCell;
+
+    /// A server answering the requests with `statuses` in order (200 has Google's "nothing heard")
+    fn server(statuses: &[u16]) -> String {
+        let server = tiny_http::Server::http("127.0.0.1:0").unwrap();
+        let root = format!("http://{}", server.server_addr());
+        let statuses = statuses.to_vec();
+        std::thread::spawn(move || {
+            for status in statuses {
+                let Ok(request) = server.recv() else { return };
+                let _ = request.respond(tiny_http::Response::from_string("{\"result\":[]}\n").with_status_code(status));
+            }
+        });
+        root
+    }
+
+    fn google(root: &str) -> Transcriber {
+        Transcriber {
+            label: "mic",
+            speaker: false,
+            phrase_timeout: 3.0,
+            max_phrases: 10,
+            vad: false,
+            engine: Engine::Google,
+            http: Http::redirected(root).unwrap(),
+            sample_rate: 16000,
+            channels: 1,
+            last_sample: vec![0; 3200],
+            last_spoken: None,
+            phrase_started: None,
+            transcripts: VecDeque::new(),
+            last_recognition_error: false,
+            attempts: 0,
+            successes: 0,
+            transient_failures: 0,
+            failed_phrase: None,
+        }
+    }
+
+    /// The phrase as it is sent once more: the result and what was logged
+    fn send(t: &mut Transcriber, candidates: &[&str]) -> (Result<bool, Failure>, Vec<String>) {
+        let languages = Languages::new(serde_json::json!({"Japanese": {"Japan": {"Google": "ja-JP"}},
+                                                          "English": {"United States": {"Google": "en-US"}}}));
+        let candidates: Vec<(String, String)> = candidates.iter()
+            .map(|l| (l.to_string(), if *l == "Japanese" { "Japan" } else { "United States" }.to_string())).collect();
+        let lines = RefCell::new(vec![]);
+        let result = t.finalize_and_transcribe(&languages, &candidates, -0.8, 0.6, 0, &|l| lines.borrow_mut().push(l));
+        (result, lines.into_inner())
+    }
+
+    /// A new phrase sent
+    fn phrase(t: &mut Transcriber) -> (Result<bool, Failure>, Vec<String>) {
+        t.phrase_started = Some(Instant::now());
+        send(t, &["Japanese"])
+    }
+
+    #[test]
+    fn the_sends_of_one_phrase_count_once() {
+        let mut t = google(&server(&[503; 8]));
+        assert_eq!(phrase(&mut t).0, Ok(true));
+        // the phrase grows and is sent again, more often than the limit
+        for _ in 0..6 {
+            let (result, lines) = send(&mut t, &["Japanese"]);
+            assert_eq!(result, Ok(true));
+            assert!(lines[0].contains("skipped (transient error 1/5)"), "{lines:?}");
+        }
+        assert_eq!(phrase(&mut t).0, Ok(true));
+        assert_eq!(t.transient_failures, 2);
+        // a mute starts the count again
+        t.clear();
+        assert_eq!((t.transient_failures, t.failed_phrase), (0, None));
+    }
+
+    #[test]
+    fn candidates_with_mixed_results() {
+        // transient and fatal: stopped at once
+        let mut t = google(&server(&[503, 401]));
+        t.phrase_started = Some(Instant::now());
+        assert_eq!(send(&mut t, &["Japanese", "English"]).0, STOPPED);
+        // transient and nothing heard: skipped and counted
+        let mut t = google(&server(&[503, 200]));
+        t.phrase_started = Some(Instant::now());
+        assert_eq!(send(&mut t, &["Japanese", "English"]).0, Ok(true));
+        assert_eq!(t.transient_failures, 1);
+    }
+
+    const STOPPED: Result<bool, Failure> = Err(Failure { code: "ASR_ERROR", stage: "asr" });
+
+    #[test]
+    fn transient_failure_skips_the_phrase() {
+        let mut t = google(&server(&[503, 200]));
+        let (result, lines) = phrase(&mut t);
+        assert_eq!(result, Ok(true));
+        assert_eq!(lines.len(), 1);
+        assert!(lines[0].starts_with("[ASR-error][mic][Google] skipped (transient error 1/5)"), "{lines:?}");
+        // the next phrase is sent
+        let (result, lines) = phrase(&mut t);
+        assert_eq!(result, Ok(true));
+        assert!(lines[0].starts_with("[ASR-stats]"), "{lines:?}");
+    }
+
+    #[test]
+    fn timeout_is_transient() {
+        // a server that accepts and never answers
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let http = Http::redirected(&format!("http://{}", listener.local_addr().unwrap())).unwrap();
+        let e = http.get("http://example.invalid/", &[], Some(Duration::from_millis(200))).unwrap_err();
+        assert!(e.downcast_ref::<reqwest::Error>().unwrap().is_timeout());
+        assert!(asr::transient_send(&e));
+    }
+
+    #[test]
+    fn connection_failure_is_transient_and_local_failure_is_not() {
+        // nothing listens on the port once the listener is gone
+        let port = std::net::TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap().port();
+        let mut t = google(&format!("http://127.0.0.1:{port}"));
+        assert_eq!(phrase(&mut t).0, Ok(true));
+        assert_eq!(t.transient_failures, 1);
+        // a URL that cannot be requested is not a failure of the connection
+        let e = Http::new().unwrap().get("not a url", &[], None).unwrap_err();
+        assert!(!asr::transient_send(&e));
+    }
+
+    #[test]
+    fn statuses_are_classified() {
+        for status in [500, 502, 503, 504] {
+            assert!(asr::transient_status(status), "{status}");
+        }
+        for status in [400, 401, 403, 404, 408, 429] {
+            assert!(!asr::transient_status(status), "{status}");
+        }
+        assert_eq!(api_error(asr::TIMEOUT), AsrError::Transient("TRANSCRIPTION_API_TIMEOUT".into()));
+        assert_eq!(api_error(asr::SERVER_UNAVAILABLE), AsrError::Transient("TRANSCRIPTION_API_SERVER_ERROR".into()));
+        assert_eq!(api_error(asr::SERVER_ERROR), AsrError::Fatal("TRANSCRIPTION_API_SERVER_ERROR".into()));
+        assert_eq!(api_error(asr::AUTH_FAILED), AsrError::Fatal("TRANSCRIPTION_API_AUTH_FAILED".into()));
+        assert_eq!(api_error(asr::RATE_LIMITED), AsrError::Fatal("TRANSCRIPTION_API_RATE_LIMITED".into()));
+    }
+
+    #[test]
+    fn fatal_failure_stops_at_once() {
+        for status in [401, 403, 429, 400] {
+            let mut t = google(&server(&[status]));
+            let (result, lines) = phrase(&mut t);
+            assert_eq!(result, STOPPED, "{status}");
+            assert!(lines[0].starts_with("[ASR-error][mic][Google] asr="), "{lines:?}");
+        }
+        // a failure on this PC (a candidate language the engine does not have)
+        let mut t = google(&server(&[]));
+        let languages = Languages::new(serde_json::json!({}));
+        assert_eq!(t.finalize_and_transcribe(&languages, &[("Japanese".into(), "Japan".into())], -0.8, 0.6, 0, &|_| ()), STOPPED);
+    }
+
+    #[test]
+    fn five_transient_failures_in_a_row_stop() {
+        let mut t = google(&server(&[503; 5]));
+        for n in 1..MAX_TRANSIENT_FAILURES {
+            assert_eq!(phrase(&mut t).0, Ok(true), "{n}");
+        }
+        let (result, lines) = phrase(&mut t);
+        assert_eq!(result, STOPPED);
+        assert!(lines[0].starts_with("[ASR-error][mic][Google] asr="), "{lines:?}");
+    }
+
+    #[test]
+    fn a_phrase_without_failure_starts_the_count_again() {
+        // four skipped, one with nothing heard, four skipped: never five in a row
+        let mut t = google(&server(&[503, 503, 503, 503, 200, 503, 503, 503, 503, 503]));
+        for n in 0..9 {
+            assert_eq!(phrase(&mut t).0, Ok(true), "{n}");
+        }
+        assert_eq!(t.transient_failures, 4);
+        assert_eq!(phrase(&mut t).0, STOPPED);
+    }
 }
