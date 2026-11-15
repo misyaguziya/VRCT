@@ -1429,6 +1429,7 @@ Section Uninstall
     Delete "$INSTDIR\telemetry_state.json"
     RmDir /r "$INSTDIR\logs"
     RmDir /r "$INSTDIR\weights"
+    RmDir /r "$INSTDIR\ime"
   ${EndIf}
 
   ; インストーラが起動時 UI 言語受け渡し用に置くマーカーファイル。
