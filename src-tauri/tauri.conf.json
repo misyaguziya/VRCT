@@ -51,7 +51,8 @@
             "bin/VRCT-sidecar"
         ],
         "resources": {
-            "bin/_internal": "_internal"
+            "bin/_internal": "_internal",
+            "THIRD_PARTY_LICENSES.txt": "_internal/licenses/rust-crates-app.txt"
         },
         "windows": {
             "nsis": {

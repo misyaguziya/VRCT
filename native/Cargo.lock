@@ -3444,6 +3444,7 @@ dependencies = [
  "vrchat_osc",
  "vrct-audio",
  "vrct-ct2",
+ "vrct-ime",
  "vrct-ocr",
  "vrct-openvr",
  "vrct-overlay",
@@ -3451,6 +3452,7 @@ dependencies = [
  "vrct-whisper",
  "windows 0.61.1",
  "windows-sys 0.61.2",
+ "zip",
 ]
 
 [[package]]
@@ -3478,6 +3480,15 @@ name = "vrct-graphics"
 version = "0.1.0"
 dependencies = [
  "windows 0.61.1",
+]
+
+[[package]]
+name = "vrct-ime"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "serde_yaml",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

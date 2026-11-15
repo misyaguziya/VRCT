@@ -45,6 +45,25 @@ license_sha256 = "f56ff606104d4ef18e617921a75c73ad73b5a1a1d70c69590c29de16919e04
 
 # 配布に同梱するデータ (stage-sidecar が _internal へ並べる)
 
+[librime]
+# VR キーボードの変換 (日本語・中国語)。RIME の公式ビルドの rime.dll。vrct-ime が実行時に読み込み関数の表で呼ぶ
+# (rime-api クレートは bindgen と libclang を要するため使わない)。安定版 1.17.0 は GPL-3.0 の時点の librime-octagram を
+# 組み込んでいるので、BSD-3-Clause に変わった後 (57d18b9) で作られた開発版 "latest" を使う (version-info.txt で確認)。
+# 組み込まれた部品の表記は vrct-ime/RIME_THIRD_PARTY_NOTICES.txt。"latest" は作り直すたびに差し替わるので、同じ 7z を
+# フォーク misyaguziya/librime のリリース vrct-7bc3fb0 に置いてそこから取る (中身は上流と同じ、SHA-256 も同じ)。
+# 次の安定版が出たらそれに替える。
+version = "latest-7bc3fb0"
+url = "https://github.com/misyaguziya/librime/releases/download/vrct-7bc3fb0/rime-7bc3fb0-Windows-msvc-x64.7z"
+sha256 = "ce4a792b941efdcbe567af020cce72c5fd02ba59ee69e800856962abc2bb0452"
+files = ["dist/lib/rime.dll"]
+
+[librime-opencc]
+# 同じビルドの依存に入っている OpenCC 1.1.9 の変換データ (繁体字・簡体字、Apache-2.0)
+version = "latest-7bc3fb0"
+url = "https://github.com/misyaguziya/librime/releases/download/vrct-7bc3fb0/rime-deps-7bc3fb0-Windows-msvc-x64.7z"
+sha256 = "22f6f05724e58934fd411c5bfc54cb945e2d492a4608bd9f5cbe2d05242f2969"
+files = ["share/opencc/*"]
+
 [sudachidict-full]
 # SudachiPy の辞書 (今の Python 版の sudachidict_full 20250825 と同じ system.dic。PyPI のものは
 # インストール時にこの zip を取ってくるだけなので、元の zip から取る)。Apache-2.0 (LICENSE-2.0.txt, LEGAL)

@@ -17,6 +17,7 @@ serde_json = "1"
 # The VR view's window: its size, PrintWindow, posted mouse input
 windows-sys = { version = "0.61", features = [
     "Win32_Foundation",
+    "Win32_Security",
     "Win32_Graphics_Dwm",
     "Win32_Graphics_Gdi",
     "Win32_Storage_Xps",

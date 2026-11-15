@@ -22,6 +22,7 @@ const jotai = getDefaultStore();
 const WINDOW_REQUEST_PATHS = [
     "/run/vr_panel_windows",
     "/run/vr_panel_recall_log",
+    "/run/vr_panel_recall_keyboard",
     "/set/data/overlay_vr_panel_anchor",
     "/set/enable/overlay_vr_panel_locked",
     "/set/disable/overlay_vr_panel_locked",

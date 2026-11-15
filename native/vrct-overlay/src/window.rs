@@ -167,6 +167,8 @@ fn lparam(x: i32, y: i32) -> LPARAM {
 /// Posted mouse input. WebView2 takes it in a descendant (Chrome_RenderWidgetHostHWND), found once.
 #[derive(Default)]
 pub struct Mouse {
+    #[cfg(test)]
+    pub events: Vec<(&'static str, i32, i32)>,
     target: Option<(Hwnd, Hwnd)>,
 }
 
@@ -196,18 +198,30 @@ impl Mouse {
     }
 
     pub fn moved(&mut self, hwnd: Hwnd, x: i32, y: i32, pressed: bool) {
+        #[cfg(test)]
+        if hwnd == 0 { self.events.push(("move", x, y)); return; }
         let target = self.target(hwnd);
         unsafe { PostMessageW(target, WM_MOUSEMOVE, if pressed { MK_LBUTTON } else { 0 }, lparam(x, y)) };
     }
 
     pub fn down(&mut self, hwnd: Hwnd, x: i32, y: i32) {
+        #[cfg(test)]
+        if hwnd == 0 { self.events.push(("down", x, y)); return; }
         let target = self.target(hwnd);
         unsafe { PostMessageW(target, WM_LBUTTONDOWN, MK_LBUTTON, lparam(x, y)) };
     }
 
     pub fn up(&mut self, hwnd: Hwnd, x: i32, y: i32) {
+        #[cfg(test)]
+        if hwnd == 0 { self.events.push(("up", x, y)); return; }
         let target = self.target(hwnd);
         unsafe { PostMessageW(target, WM_LBUTTONUP, 0, lparam(x, y)) };
+    }
+
+    /// Ordered with down/up; VR DOM handlers recognize the far-negative coordinates after DPI conversion.
+    /// Release native capture/repeat without committing a pending flick or color.
+    pub fn cancel(&mut self, hwnd: Hwnd) {
+        self.up(hwnd, -30000, -30000);
     }
 
     /// WM_MOUSEWHEEL takes screen coordinates

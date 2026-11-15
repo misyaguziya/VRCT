@@ -12,6 +12,7 @@ use vrct_overlay::image::{Image, OverlayImage, Token};
 use vrct_overlay::layout::{validate_tooltip, Layout, Region};
 use vrct_overlay::overlay::{Event, Overlay, Settings};
 use vrct_overlay::pose::{launcher_nearest_in_reach, launcher_out_of_reach};
+use vrct_overlay::shortcut::Shortcut;
 
 type Data = Option<Value>;
 
@@ -20,6 +21,7 @@ const LARGE: &str = "large";
 const PANEL: &str = "panel";
 const LAUNCHER: &str = "launcher";
 const POPUP: &str = "popup";
+const KEYBOARD: &str = "keyboard";
 const POSITION_KEYS: [&str; 6] = ["x_pos", "y_pos", "z_pos", "x_rotation", "y_rotation", "z_rotation"];
 const PANEL_ANCHORS: [&str; 4] = ["Playspace", "LeftHand", "RightHand", "HMD"];
 /// the large log's overlay is this part of its setting's width (Model.init)
@@ -106,12 +108,16 @@ impl Overlays {
         large.ui_scaling *= LARGE_SCALE;
         let popup = Settings { position: [0.0; 6], tracker: "Playspace".into(), opacity: 1.0, ui_scaling: 0.36,
                                display_duration: 5.0, fadeout_duration: 0.0, panel_size: None, locked: false };
+        // the keyboard: as wide as it was last made in VR (0.6 m at first: its keys about 3.6 cm wide, 72 px of
+        // 1200: 15 keys a row, the arrows in the bottom one). Its place is in front of the eyes each time it opens
+        let keyboard = Settings { ui_scaling: config.get("KEYBOARD_WIDTH").as_f64().unwrap_or(0.6), opacity: config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), ..popup.clone() };
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),
             (PANEL.into(), settings_of(&config.get("OVERLAY_VR_PANEL_SETTINGS"))),
             (LAUNCHER.into(), settings_of(&launcher)),
             (POPUP.into(), popup),
+            (KEYBOARD.into(), keyboard),
         ];
         let events = move |event: Event| {
             if let Some(app) = app.get().and_then(|w| w.upgrade()) {
@@ -134,10 +140,16 @@ fn overlay(app: &App) -> std::sync::MutexGuard<'_, Overlay> {
 fn on_event(app: &App, event: Event) -> Result<()> {
     match event {
         Event::Layout { layout, tooltip_epoch } => app.run(200, "vr_panel_layout", layout_json(&layout, tooltip_epoch)),
-        Event::Pointer(xy) => app.run(200, "vr_panel_pointer", xy.map_or(Value::Null, |(x, y)| json!({"x": x, "y": y}))),
+        // {"x", "y", "second": the other hand's {"x", "y"} or null}; null when none points at it
+        Event::Pointer(xy, second) => app.run(200, "vr_panel_pointer", xy.map_or(Value::Null, |(x, y)| {
+            json!({"x": x, "y": y, "second": second.map(|(x, y)| json!({"x": x, "y": y}))})
+        })),
         Event::PanelOutOfView(out) => app.run(200, "vr_panel_log_out_of_view", json!(out)),
         Event::LauncherIntro(intro) => app.run(200, "vr_panel_launcher_intro", json!(intro.name())),
         Event::Position { size, settings } => position_changed(app, &size, position_of(&settings)),
+        // when it was made (ms): the VR view opens / closes the keyboard, and ignores an old one
+        // sent again when it opens anew
+        Event::Shortcut => app.run(200, "vr_panel_keyboard_shortcut", json!(chrono_ms())),
     }
 }
 
@@ -175,6 +187,8 @@ fn position_changed(app: &App, size: &str, mut position: Map<String, Value>) -> 
             app.config.set("OVERLAY_VR_LAUNCHER_SETTINGS", merged(app, "OVERLAY_VR_LAUNCHER_SETTINGS", &position))?;
             app.run(200, "overlay_vr_launcher_hand", position.get("tracker").cloned().unwrap_or(Value::Null))
         }
+        // the keyboard: its width kept for the next start
+        KEYBOARD if scaling > 0.0 => app.config.set("KEYBOARD_WIDTH", json!(vrct_overlay::pose::round_to(scaling, 3))).map_err(Into::into),
         _ => Ok(()),
     }
 }
@@ -211,6 +225,9 @@ pub fn sync_overlay_running(app: &App) -> Result<()> {
     let mut o = overlay(app);
     o.set_vr_panel_enabled(app.config.get_bool("OVERLAY_VR_PANEL"));
     o.set_panel_locked(app.config.get_bool("OVERLAY_VR_PANEL_LOCKED"));
+    o.set_keyboard_locked(app.config.get_bool("KEYBOARD_LOCKED"));
+    o.set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
+    o.set_shortcut(shortcut_of(app));
     o.set_launcher_auto_hide(app.config.get_bool("OVERLAY_VR_LAUNCHER_AUTO_HIDE"));
     if app.config.get_bool("OVERLAY_SMALL_LOG") || app.config.get_bool("OVERLAY_LARGE_LOG") || app.config.get_bool("OVERLAY_VR_PANEL") {
         o.start();
@@ -345,6 +362,10 @@ fn panel_switch(app: &App, on: bool) -> Result<Reply> {
     if app.config.get("OVERLAY_VR_PANEL") == json!(!on) {
         app.config.set("OVERLAY_VR_PANEL", json!(on))?;
         sync_overlay_running(app)?;
+        // the VR UI gone: its keyboard with it
+        if !on {
+            super::keyboard::hidden(app);
+        }
     }
     current(app, "OVERLAY_VR_PANEL")
 }
@@ -405,16 +426,26 @@ pub fn set_disable_overlay_vr_tooltip(app: &App, _: Data) -> Result<Reply> {
     current(app, "OVERLAY_VR_TOOLTIP")
 }
 
-/// setVrPanelWindows: {"log", "popup"}, anything but true is false
+/// setVrPanelWindows: {"log", "popup", "keyboard"}, anything but true is false
 pub fn set_vr_panel_windows(app: &App, data: Data) -> Result<Reply> {
     let data = data.unwrap_or(Value::Null);
-    let (log, popup) = (data.get("log") == Some(&json!(true)), data.get("popup") == Some(&json!(true)));
-    overlay(app).set_vr_windows(log, popup);
-    Ok(Reply::ok(json!({"log": log, "popup": popup})))
+    let on = |key: &str| data.get(key) == Some(&json!(true));
+    let (log, popup, keyboard) = (on("log"), on("popup"), on("keyboard"));
+    overlay(app).set_vr_windows(log, popup, keyboard);
+    if !keyboard {
+        super::keyboard::hidden(app);
+    }
+    Ok(Reply::ok(json!({"log": log, "popup": popup, "keyboard": keyboard})))
 }
 
 pub fn recall_vr_panel_log(app: &App, _: Data) -> Result<Reply> {
     overlay(app).recall_panel();
+    Ok(Reply::ok(true))
+}
+
+/// The keyboard in front of the eyes (the launcher's keyboard button held)
+pub fn recall_vr_panel_keyboard(app: &App, _: Data) -> Result<Reply> {
+    overlay(app).recall_keyboard();
     Ok(Reply::ok(true))
 }
 
@@ -494,6 +525,103 @@ pub fn set_overlay_vr_panel_opacity(app: &App, data: Data) -> Result<Reply> {
     Ok(Reply::ok(setting_of(app, "OVERLAY_VR_PANEL_SETTINGS", "opacity")))
 }
 
+pub fn get_keyboard_opacity(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_OPACITY")
+}
+
+/// The VR keyboard's opacity: 0.2–1.0 (as the log window's)
+pub fn set_keyboard_opacity(app: &App, data: Data) -> Result<Reply> {
+    let rounded = data.as_ref().and_then(py_float).map_or(Value::Null, |o| json!(vrct_overlay::pose::round_to(o, 2)));
+    let reply = super::basic::validated(app, "KEYBOARD_OPACITY", rounded)?;
+    overlay(app).update_opacity(KEYBOARD, app.config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), false);
+    Ok(reply)
+}
+
+pub fn get_keyboard_locked(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_LOCKED")
+}
+
+/// The keyboard pinned: not grabbed (moved) in VR
+fn set_keyboard_locked(app: &App, locked: bool) -> Result<Reply> {
+    app.config.set("KEYBOARD_LOCKED", json!(locked))?;
+    overlay(app).set_keyboard_locked(locked);
+    current(app, "KEYBOARD_LOCKED")
+}
+
+pub fn set_enable_keyboard_locked(app: &App, _: Data) -> Result<Reply> {
+    set_keyboard_locked(app, true)
+}
+
+pub fn set_disable_keyboard_locked(app: &App, _: Data) -> Result<Reply> {
+    set_keyboard_locked(app, false)
+}
+
+pub fn get_overlay_vr_laser_pitch(app: &App, _: Data) -> Result<Reply> {
+    current(app, "OVERLAY_VR_LASER_PITCH")
+}
+
+/// The lasers' tilt up from the controllers' tips: -30–30 degrees (applied at once)
+pub fn set_overlay_vr_laser_pitch(app: &App, data: Data) -> Result<Reply> {
+    let rounded = data.as_ref().and_then(py_float).map_or(Value::Null, |d| json!(vrct_overlay::pose::round_to(d, 1)));
+    let reply = super::basic::validated(app, "OVERLAY_VR_LASER_PITCH", rounded)?;
+    overlay(app).set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
+    Ok(reply)
+}
+
+fn shortcut_of(app: &App) -> Shortcut {
+    Shortcut::from_name(&app.config.get_str("KEYBOARD_SHORTCUT")).unwrap_or_default()
+}
+
+pub fn get_keyboard_shortcut(app: &App, _: Data) -> Result<Reply> {
+    current(app, "KEYBOARD_SHORTCUT")
+}
+
+/// The controller shortcut that opens / closes the keyboard: "off", "stick_double", "menu_long" or
+/// "menu_double" (applied at once)
+pub fn set_keyboard_shortcut(app: &App, data: Data) -> Result<Reply> {
+    let reply = super::basic::validated(app, "KEYBOARD_SHORTCUT", data.unwrap_or(Value::Null))?;
+    overlay(app).set_shortcut(shortcut_of(app));
+    Ok(reply)
+}
+
+/// The time now in ms since 1970
+fn chrono_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
+}
+
+/// The controller bindings of VRCT's VR UI opened in SteamVR on the desktop (to change them, or for a
+/// controller without default bindings). {"status": "requested" / "not_running" / "not_ready" (the VR
+/// UI has not set up its actions) / "failed"}. Never starts SteamVR
+pub fn steamvr_bindings(_: &App, _: Data) -> Result<Reply> {
+    Ok(Reply::ok(json!({"status": binding_status(vrct_openvr::is_steamvr_running(), open_bindings)})))
+}
+
+fn binding_status(running: bool, open: impl FnOnce() -> Result<bool>) -> &'static str {
+    if !running {
+        return "not_running";
+    }
+    match open() {
+        Ok(true) => "requested",
+        Ok(false) => "not_ready",
+        Err(e) => {
+            logs::error("SteamVR bindings", &format!("{e:#}"));
+            "failed"
+        }
+    }
+}
+
+/// Through the overlay's session, once it has set up its actions (else SteamVR would open bindings
+/// of an app without them)
+fn open_bindings() -> Result<bool> {
+    let Some(session) = vrct_openvr::acquire_existing() else { return Ok(false) };
+    let input = session.input()?;
+    if input.action_set_handle("/actions/main").unwrap_or(0) == 0 {
+        return Ok(false);
+    }
+    input.open_binding_ui()?;
+    Ok(true)
+}
+
 /// getVrPanelLayout: the layout the VR view draws (the overlay's)
 pub fn get_vr_panel_layout(app: &App, _: Data) -> Result<Reply> {
     let shared = overlay(app).shared();
@@ -524,3 +652,24 @@ pub fn set_vr_panel_layout_rendered(app: &App, data: Data) -> Result<Reply> {
     Ok(Reply::ok(data))
 }
 
+
+#[cfg(test)]
+mod bindings_tests {
+    #[test]
+    fn bindings_do_not_start_steamvr_and_tell_readiness() {
+        assert_eq!(super::binding_status(false, || panic!("SteamVR must not be started")), "not_running");
+        assert_eq!(super::binding_status(true, || Ok(false)), "not_ready");
+        assert_eq!(super::binding_status(true, || Ok(true)), "requested");
+        assert_eq!(super::binding_status(true, || Err(anyhow::anyhow!("disconnected"))), "failed");
+    }
+    #[test]
+    fn the_keyboard_width_made_in_vr_is_kept() {
+        let app = super::super::test_app(0);
+        let position = |w: f64| serde_json::json!({"ui_scaling": w, "tracker": "Playspace"}).as_object().unwrap().clone();
+        super::position_changed(&app, super::KEYBOARD, position(0.84567)).unwrap();
+        assert_eq!(app.config.get("KEYBOARD_WIDTH"), serde_json::json!(0.846));
+        // outside the widths a grab can make: refused, kept as it was
+        assert!(super::position_changed(&app, super::KEYBOARD, position(5.0)).is_err());
+        assert_eq!(app.config.get("KEYBOARD_WIDTH"), serde_json::json!(0.846));
+    }
+}

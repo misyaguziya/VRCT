@@ -16,6 +16,8 @@ reqwest = { version = "0.12", features = ["blocking", "json", "multipart"] }
 serde_yaml = "0.9"
 regex = "1"
 sha2 = "0.10"
+# the keyboard dictionaries' archives (the same zip the xtask uses)
+zip = { version = "2", default-features = false, features = ["deflate"] }
 # reqwest's runtime: downloads with a read timeout (the blocking client has only a total one) and the WebSocket server
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "net", "time", "sync", "macros"] }
 # The WebSocket server for the OBS browser source
@@ -50,6 +52,7 @@ vrct-ocr = { path = "../vrct-ocr" }
 vrct-whisper = { path = "../vrct-whisper" }
 vrct-openvr = { path = "../vrct-openvr" }
 vrct-overlay = { path = "../vrct-overlay" }
+vrct-ime = { path = "../vrct-ime" }
 # D3D11 for SteamVR's mirror texture (OCR)
 windows = { version = "=0.61.1", features = [
     "Win32_Graphics_Direct3D",

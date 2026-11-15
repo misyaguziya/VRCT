@@ -6,7 +6,8 @@
 //! in a queue of 200 (the oldest dropped). 50 failed writes in a row: the UI is gone, the process ends.
 //! Requests go to a few workers. A feature's enable / disable share one lock (one at a time; busy:
 //! requeued every 50 ms, 423 after ~20 s). Endpoints not ready during initialization answer 423 after
-//! being requeued every 100 ms for ~30 s.
+//! being requeued every 100 ms for ~30 s. Ordered endpoints (the VR keyboard's keys) go to their own
+//! worker instead, one at a time in the order they came (a busy one requeued would let a later key pass).
 use crate::{logs, pyjson};
 use base64::Engine as _;
 use serde_json::{json, Value};
@@ -214,10 +215,12 @@ impl Reply {
 
 pub type Handler<C> = fn(&C, Option<Value>) -> anyhow::Result<Reply>;
 
-/// An endpoint: its handler and whether it answers while the backend initializes
+/// An endpoint: its handler, whether it answers while the backend initializes, and whether its
+/// requests are handled strictly in the order they came
 pub struct Route<C> {
     pub during_init: bool,
     pub handler: Handler<C>,
+    pub ordered: bool,
 }
 
 struct Request {
@@ -233,6 +236,9 @@ pub struct Dispatcher<C: Send + Sync + 'static> {
     locks: HashMap<String, Mutex<()>>,
     queue: Mutex<VecDeque<Request>>,
     ready: Condvar,
+    /// the ordered endpoints' requests, for their one worker
+    ordered: Mutex<VecDeque<Request>>,
+    ordered_ready: Condvar,
     initialized: AtomicBool,
 }
 
@@ -255,6 +261,8 @@ impl<C: Send + Sync + 'static> Dispatcher<C> {
             locks,
             queue: Mutex::new(VecDeque::new()),
             ready: Condvar::new(),
+            ordered: Mutex::new(VecDeque::new()),
+            ordered_ready: Condvar::new(),
             initialized: AtomicBool::new(false),
         })
     }
@@ -269,6 +277,12 @@ impl<C: Send + Sync + 'static> Dispatcher<C> {
     }
 
     fn enqueue(&self, request: Request) {
+        let ordered = request.endpoint.as_deref().and_then(|e| self.routes.get(e)).is_some_and(|r| r.ordered);
+        if ordered {
+            self.ordered.lock().unwrap().push_back(request);
+            self.ordered_ready.notify_one();
+            return;
+        }
         self.queue.lock().unwrap().push_back(request);
         self.ready.notify_one();
     }
@@ -310,6 +324,27 @@ impl<C: Send + Sync + 'static> Dispatcher<C> {
         for i in 0..count.max(1) {
             let this = self.clone();
             std::thread::Builder::new().name(format!("main_handler_{i}")).spawn(move || this.worker()).expect("worker thread");
+        }
+        let this = self.clone();
+        std::thread::Builder::new().name("ordered_handler".into()).spawn(move || this.ordered_worker()).expect("ordered worker thread");
+    }
+
+    /// The ordered endpoints, one request at a time in the order they came
+    fn ordered_worker(&self) {
+        loop {
+            let request = {
+                let mut queue = self.ordered.lock().unwrap();
+                loop {
+                    if let Some(r) = queue.pop_front() {
+                        break r;
+                    }
+                    queue = self.ordered_ready.wait(queue).unwrap();
+                }
+            };
+            let (status, result) = self.call(request.endpoint.as_deref(), request.data);
+            let label = request.endpoint.as_deref().unwrap_or("None");
+            print_log(label, &json!({"status": status, "send_data": result}));
+            print_response(status, request.endpoint.as_deref(), &result);
         }
     }
 
@@ -395,6 +430,31 @@ fn decode_data(data: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // the VR keyboard's keys: in the order they came, even when the first takes long (a busy
+    // endpoint requeued would let the later ones pass)
+    #[test]
+    fn ordered_requests_are_handled_in_the_order_they_came() {
+        fn key(seen: &Mutex<Vec<i64>>, data: Option<Value>) -> anyhow::Result<Reply> {
+            let n = data.and_then(|d| d.as_i64()).unwrap();
+            if n == 1 {
+                std::thread::sleep(Duration::from_millis(150));
+            }
+            seen.lock().unwrap().push(n);
+            Ok(Reply::ok(n))
+        }
+        let routes = vec![("/run/key", Route { during_init: true, handler: key as Handler<Mutex<Vec<i64>>>, ordered: true })];
+        let dispatcher = Dispatcher::new(Arc::new(Mutex::new(vec![])), routes);
+        dispatcher.start_workers(3);
+        for n in 1..=4 {
+            dispatcher.enqueue(Request { endpoint: Some("/run/key".into()), data: Some(json!(n)), attempt: 0 });
+        }
+        let started = std::time::Instant::now();
+        while dispatcher.context.lock().unwrap().len() < 4 && started.elapsed() < Duration::from_secs(3) {
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert_eq!(*dispatcher.context.lock().unwrap(), [1, 2, 3, 4]);
+    }
 
     #[test]
     fn masks_like_python() {

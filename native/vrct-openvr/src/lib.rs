@@ -37,7 +37,10 @@ pub const COLOR_SPACE_GAMMA: i32 = 1;
 /// EVREventType
 pub const EVENT_QUIT: u32 = 700;
 /// EVRButtonId (bit numbers)
+pub const BUTTON_APPLICATION_MENU: u32 = 1;
 pub const BUTTON_GRIP: u32 = 2;
+/// the stick / touchpad pressed
+pub const BUTTON_AXIS0: u32 = 32;
 pub const BUTTON_STEAMVR_TRIGGER: u32 = 33;
 /// EDeviceActivityLevel
 pub const ACTIVITY_UNKNOWN: i32 = -1;
@@ -267,6 +270,17 @@ pub fn is_active() -> bool {
     *SESSION.lock().unwrap() > 0
 }
 
+/// A reference to the session already running (the overlay's), without starting SteamVR or changing
+/// the application type. None when none runs
+pub fn acquire_existing() -> Option<Session> {
+    let mut count = SESSION.lock().unwrap();
+    if *count == 0 {
+        return None;
+    }
+    *count += 1;
+    Some(Session(()))
+}
+
 impl Drop for Session {
     fn drop(&mut self) {
         let mut count = SESSION.lock().unwrap();
@@ -315,6 +329,10 @@ impl Session {
 
     pub fn render_models(&self) -> Result<RenderModels<'_>, Error> {
         Ok(RenderModels(self.table(tables::render_models::VERSION, tables::render_models::LEN)?))
+    }
+
+    pub fn input(&self) -> Result<Input<'_>, Error> {
+        Ok(Input(self.table(input::VERSION, input::LEN)?))
     }
 }
 
@@ -367,6 +385,14 @@ impl System<'_> {
         ok.then_some(state)
     }
 
+    /// A short vibration of the controller (`axis` 0, up to about 4 ms)
+    pub fn trigger_haptic_pulse(&self, index: u32, axis: u32, duration_us: u16) {
+        unsafe {
+            let f: unsafe extern "C" fn(u32, u32, u16) = self.0.f(tables::system::TRIGGER_HAPTIC_PULSE);
+            f(index, axis, duration_us)
+        }
+    }
+
     pub fn poll_next_event(&self) -> Option<Event> {
         let mut event = Event::default();
         let ok = unsafe {
@@ -399,6 +425,13 @@ impl System<'_> {
         }
     }
 
+    pub fn is_input_available(&self) -> bool {
+        unsafe {
+            let f: unsafe extern "C" fn() -> bool = self.0.f(tables::system::IS_INPUT_AVAILABLE);
+            f()
+        }
+    }
+
     /// The DXGI adapter index of the headset (for the D3D11 device that shares textures with SteamVR)
     pub fn dxgi_output_info(&self) -> i32 {
         let mut adapter = -1;
@@ -418,6 +451,13 @@ fn overlay_result(code: u32, what: &str) -> Result<(), Error> {
 }
 
 impl Overlay<'_> {
+    pub fn is_dashboard_visible(&self) -> bool {
+        unsafe {
+            let f: unsafe extern "C" fn() -> bool = self.0.f(tables::overlay::IS_DASHBOARD_VISIBLE);
+            f()
+        }
+    }
+
     pub fn create_overlay(&self, key: &str, name: &str) -> Result<u64, Error> {
         let (key_c, name_c) = (CString::new(key).unwrap(), CString::new(name).unwrap());
         let mut handle = 0;
@@ -687,5 +727,173 @@ mod tests {
             let expected: Vec<usize> = fields.iter().map(|f| f.1).collect();
             assert_eq!(offsets, &expected, "{name} offsets");
         }
+    }
+}
+
+/// IVRInput_010 (SteamVR Input; not in pyopenvr's tables above): the indices of `VR_IVRInput_FnTable`
+/// in openvr_capi.h of OpenVR 1.26.7, the version of openvr_api.dll
+pub mod input {
+    pub const VERSION: &str = "IVRInput_010";
+    pub const LEN: usize = 32;
+    pub const SET_ACTION_MANIFEST_PATH: usize = 0;
+    pub const GET_ACTION_SET_HANDLE: usize = 1;
+    pub const GET_ACTION_HANDLE: usize = 2;
+    pub const GET_INPUT_SOURCE_HANDLE: usize = 3;
+    pub const UPDATE_ACTION_STATE: usize = 4;
+    pub const GET_DIGITAL_ACTION_DATA: usize = 5;
+    pub const GET_ANALOG_ACTION_DATA: usize = 6;
+    pub const OPEN_BINDING_UI: usize = 30;
+    /// An action set at a priority in this range is overlay-global: what it binds reaches no app
+    /// below it (the game) while it is active
+    pub const OVERLAY_GLOBAL_PRIORITY_MIN: i32 = 0x0100_0000;
+    pub const OVERLAY_GLOBAL_PRIORITY_MAX: i32 = 0x01FF_FFFF;
+}
+
+/// VRActiveActionSet_t
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ActiveActionSet {
+    pub action_set: u64,
+    pub restricted_to_device: u64,
+    pub secondary_action_set: u64,
+    pub padding: u32,
+    pub priority: i32,
+}
+
+/// InputDigitalActionData_t
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct DigitalActionData {
+    pub active: bool,
+    pub active_origin: u64,
+    pub state: bool,
+    pub changed: bool,
+    pub update_time: f32,
+}
+
+/// InputAnalogActionData_t
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct AnalogActionData {
+    pub active: bool,
+    pub active_origin: u64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub delta_x: f32,
+    pub delta_y: f32,
+    pub delta_z: f32,
+    pub update_time: f32,
+}
+
+pub struct Input<'s>(Table<'s>);
+
+fn input_error(code: i32, what: &str) -> Result<(), Error> {
+    if code == 0 { Ok(()) } else { Err(err(code, what)) }
+}
+
+impl Input<'_> {
+    /// This process's controller bindings opened in SteamVR on the desktop (IVRInput_010). Ok only
+    /// says the request was taken, not that a window showed
+    pub fn open_binding_ui(&self) -> Result<(), Error> {
+        let code = unsafe {
+            let f: unsafe extern "system" fn(*const c_char, u64, u64, bool) -> i32 = self.0.f(input::OPEN_BINDING_UI);
+            f(std::ptr::null(), 0, 0, true)
+        };
+        input_error(code, "OpenBindingUI")
+    }
+
+    /// The app's actions (the action manifest, a JSON file with the default bindings beside it)
+    pub fn set_action_manifest_path(&self, path: &std::path::Path) -> Result<(), Error> {
+        let path = CString::new(path.to_string_lossy().into_owned()).map_err(|_| err(-1, "manifest path"))?;
+        let code = unsafe {
+            let f: unsafe extern "C" fn(*const c_char) -> i32 = self.0.f(input::SET_ACTION_MANIFEST_PATH);
+            f(path.as_ptr())
+        };
+        input_error(code, "SetActionManifestPath")
+    }
+
+    fn handle(&self, index: usize, name: &str) -> Result<u64, Error> {
+        let name = CString::new(name).map_err(|_| err(-1, "action name"))?;
+        let mut handle = 0u64;
+        let code = unsafe {
+            let f: unsafe extern "C" fn(*const c_char, *mut u64) -> i32 = self.0.f(index);
+            f(name.as_ptr(), &mut handle)
+        };
+        input_error(code, "GetActionHandle").map(|_| handle)
+    }
+
+    /// A device by its path ("/user/hand/left"): an action set or an action's data restricted to it
+    pub fn input_source_handle(&self, path: &str) -> Result<u64, Error> {
+        self.handle(input::GET_INPUT_SOURCE_HANDLE, path)
+    }
+
+    pub fn action_set_handle(&self, name: &str) -> Result<u64, Error> {
+        self.handle(input::GET_ACTION_SET_HANDLE, name)
+    }
+
+    pub fn action_handle(&self, name: &str) -> Result<u64, Error> {
+        self.handle(input::GET_ACTION_HANDLE, name)
+    }
+
+    /// Once a frame: the action sets active now (none: the app's bindings let go)
+    pub fn update_action_state(&self, sets: &mut [ActiveActionSet]) -> Result<(), Error> {
+        let code = unsafe {
+            let f: unsafe extern "C" fn(*mut ActiveActionSet, u32, u32) -> i32 = self.0.f(input::UPDATE_ACTION_STATE);
+            f(sets.as_mut_ptr(), size_of::<ActiveActionSet>() as u32, sets.len() as u32)
+        };
+        input_error(code, "UpdateActionState")
+    }
+
+    /// `device`: from that device only (an input source handle), 0: any
+    pub fn digital_action_data(&self, action: u64, device: u64) -> Result<DigitalActionData, Error> {
+        let mut data = DigitalActionData::default();
+        let code = unsafe {
+            let f: unsafe extern "C" fn(u64, *mut DigitalActionData, u32, u64) -> i32 = self.0.f(input::GET_DIGITAL_ACTION_DATA);
+            f(action, &mut data, size_of::<DigitalActionData>() as u32, device)
+        };
+        input_error(code, "GetDigitalActionData").map(|_| data)
+    }
+
+    pub fn analog_action_data(&self, action: u64, device: u64) -> Result<AnalogActionData, Error> {
+        let mut data = AnalogActionData::default();
+        let code = unsafe {
+            let f: unsafe extern "C" fn(u64, *mut AnalogActionData, u32, u64) -> i32 = self.0.f(input::GET_ANALOG_ACTION_DATA);
+            f(action, &mut data, size_of::<AnalogActionData>() as u32, device)
+        };
+        input_error(code, "GetAnalogActionData").map(|_| data)
+    }
+}
+
+#[cfg(test)]
+mod input_layout_tests {
+    use super::*;
+
+    #[test]
+    fn binding_ui_uses_the_current_process_and_desktop_and_propagates_errors() {
+        static ARGS: Mutex<Option<(bool, u64, u64, bool)>> = Mutex::new(None);
+        unsafe extern "system" fn open(key: *const c_char, device: u64, set: u64, desktop: bool) -> i32 {
+            *ARGS.lock().unwrap() = Some((key.is_null(), device, set, desktop));
+            0
+        }
+        unsafe extern "system" fn fail(_: *const c_char, _: u64, _: u64, _: bool) -> i32 { 3 }
+        // a table of our own: no DLL nor session
+        let mut functions = [0usize; input::LEN];
+        functions[input::OPEN_BINDING_UI] = open as *const () as usize;
+        let call = |functions: &[usize]| Input(Table { functions: functions.as_ptr(), _session: std::marker::PhantomData::<&Session> }).open_binding_ui();
+        assert!(call(&functions).is_ok());
+        assert_eq!(*ARGS.lock().unwrap(), Some((true, 0, 0, true)));
+        functions[input::OPEN_BINDING_UI] = fail as *const () as usize;
+        assert_eq!(call(&functions).unwrap_err().code, 3);
+    }
+
+    /// The sizes openvr_capi.h makes them (pack 8 on Windows)
+    #[test]
+    fn input_structures_have_the_sdk_layout() {
+        assert_eq!(size_of::<ActiveActionSet>(), 32);
+        assert_eq!(size_of::<DigitalActionData>(), 24);
+        assert_eq!(std::mem::offset_of!(DigitalActionData, state), 16);
+        assert_eq!(size_of::<AnalogActionData>(), 48);
+        assert_eq!(std::mem::offset_of!(AnalogActionData, x), 16);
     }
 }

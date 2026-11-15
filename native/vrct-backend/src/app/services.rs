@@ -182,6 +182,12 @@ impl Osc {
         Ok(())
     }
 
+    /// In the tests: no sender, as when the address cannot be used (sending fails)
+    #[cfg(test)]
+    pub(crate) fn clear_sender(&self) {
+        self.state.lock().unwrap().sender = None;
+    }
+
     pub fn set_port(&self, port: i64) -> Result<()> {
         let mut state = self.state.lock().unwrap();
         if let Some(receiver) = state.receiver.take() {

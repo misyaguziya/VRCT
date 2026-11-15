@@ -3652,6 +3652,168 @@
       "rule": "exact",
       "expect_status": null,
       "pushes": false
+    },
+    {
+      "name": "get keyboard_state",
+      "endpoint": "/get/data/keyboard_state",
+      "data": null,
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: retry the dictionaries (offline: they fail again)",
+      "endpoint": "/run/keyboard_retry",
+      "data": null,
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get keyboard_language",
+      "endpoint": "/get/data/keyboard_language",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "set keyboard_language to one it does not have",
+      "endpoint": "/set/data/keyboard_language",
+      "data": "fr",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "set keyboard_language to English",
+      "endpoint": "/set/data/keyboard_language",
+      "data": "en",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: a key",
+      "endpoint": "/run/keyboard_key",
+      "data": "H",
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: a key that is not one",
+      "endpoint": "/run/keyboard_key",
+      "data": "Hello",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": 500,
+      "pushes": false
+    },
+    {
+      "name": "set keyboard_send_to to a place it does not know",
+      "endpoint": "/set/data/keyboard_send_to",
+      "data": "elsewhere",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get keyboard_send_to",
+      "endpoint": "/get/data/keyboard_send_to",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: Enter sends through VRCT (translated; told by keyboard_sent)",
+      "endpoint": "/run/keyboard_key",
+      "data": "Enter",
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "set keyboard_language to Korean",
+      "endpoint": "/set/data/keyboard_language",
+      "data": "ko",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: Korean syllable being made",
+      "endpoint": "/run/keyboard_key",
+      "data": "g",
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: clear",
+      "endpoint": "/run/keyboard_clear",
+      "data": null,
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "keyboard: the candidate index is not a number",
+      "endpoint": "/run/keyboard_select",
+      "data": "first",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": 500,
+      "pushes": false
+    },
+    {
+      "name": "enable keyboard_chinese_simplified",
+      "endpoint": "/set/enable/keyboard_chinese_simplified",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "disable keyboard_key_sound",
+      "endpoint": "/set/disable/keyboard_key_sound",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "disable keyboard_typing_indicator",
+      "endpoint": "/set/disable/keyboard_typing_indicator",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get keyboard_typing_indicator",
+      "endpoint": "/get/data/keyboard_typing_indicator",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
     }
   ],
   "init": {
@@ -4482,6 +4644,9 @@
         ],
         "tooltip": [
           0
+        ],
+        "keyboard": [
+          0
         ]
       },
       "tooltip_epoch": 0
@@ -4570,7 +4735,36 @@
     "/get/data/ocr_bubble_min_text_length": 2,
     "/get/data/osc_ip_address": "127.0.0.1",
     "/get/data/osc_port": 9000,
-    "/get/data/notification_vrc_sfx": true
+    "/get/data/notification_vrc_sfx": true,
+    "/get/data/keyboard_state": {
+      "status": "",
+      "progress": 0,
+      "text": "",
+      "after": "",
+      "composition": null,
+      "candidates": [],
+      "highlighted": 0,
+      "converting": false,
+      "page": 0,
+      "last_page": false,
+      "syllable": null,
+      "length": 0,
+      "half_width": false,
+      "selected": [
+        0
+      ]
+    },
+    "/get/data/keyboard_language": "ja",
+    "/get/data/keyboard_chinese_simplified": false,
+    "/get/data/keyboard_key_sound": true,
+    "/get/data/keyboard_key_sound_volume": 100,
+    "/get/data/keyboard_typing_indicator": true,
+    "/get/data/keyboard_send_to": "vrct",
+    "/get/data/keyboard_dictation": false,
+    "/get/data/keyboard_opacity": 1.0,
+    "/get/data/keyboard_locked": false,
+    "/get/data/overlay_vr_laser_pitch": 12.0,
+    "/get/data/keyboard_shortcut": "off"
   },
   "init_ms": 0,
   "answers": [
@@ -4579,7 +4773,9 @@
       "endpoint": "/get/data/selected_tab_no",
       "status": 200,
       "result": "1",
-      "pushes": [],
+      "pushes": [
+        "/run/selected_speaker_device"
+      ],
       "push_results": [],
       "ms": 0
     },
@@ -6237,6 +6433,9 @@
             0
           ],
           "tooltip": [
+            0
+          ],
+          "keyboard": [
             0
           ]
         },
@@ -9092,9 +9291,7 @@
         "category": "auth",
         "severity": "error"
       },
-      "pushes": [
-        "/run/selected_speaker_device"
-      ],
+      "pushes": [],
       "push_results": [],
       "ms": 0
     },
@@ -9805,7 +10002,8 @@
       "status": 200,
       "result": {
         "log": true,
-        "popup": false
+        "popup": false,
+        "keyboard": false
       },
       "pushes": [],
       "push_results": [],
@@ -9817,7 +10015,8 @@
       "status": 200,
       "result": {
         "log": false,
-        "popup": false
+        "popup": false,
+        "keyboard": false
       },
       "pushes": [],
       "push_results": [],
@@ -10386,6 +10585,286 @@
         },
         "translations": []
       },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get keyboard_state",
+      "endpoint": "/get/data/keyboard_state",
+      "status": 200,
+      "result": {
+        "status": "",
+        "progress": 0,
+        "text": "",
+        "after": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": null,
+        "length": 0,
+        "half_width": false,
+        "selected": [
+          0
+        ]
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: retry the dictionaries (offline: they fail again)",
+      "endpoint": "/run/keyboard_retry",
+      "status": 200,
+      "result": {
+        "status": "",
+        "progress": 0,
+        "text": "",
+        "after": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": null,
+        "length": 0,
+        "half_width": false,
+        "selected": [
+          0
+        ]
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get keyboard_language",
+      "endpoint": "/get/data/keyboard_language",
+      "status": 200,
+      "result": "ja",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "set keyboard_language to one it does not have",
+      "endpoint": "/set/data/keyboard_language",
+      "status": 400,
+      "result": {
+        "error_code": "VALIDATION_CONFIG_VALUE_INVALID",
+        "message": "The provided value was rejected",
+        "data": "fr",
+        "details": {},
+        "category": "validation",
+        "severity": "warning"
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "set keyboard_language to English",
+      "endpoint": "/set/data/keyboard_language",
+      "status": 200,
+      "result": "en",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: a key",
+      "endpoint": "/run/keyboard_key",
+      "status": 200,
+      "result": {
+        "status": "",
+        "progress": 0,
+        "text": "",
+        "after": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": null,
+        "length": 0,
+        "half_width": false,
+        "selected": [
+          0
+        ]
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: a key that is not one",
+      "endpoint": "/run/keyboard_key",
+      "status": 500,
+      "result": "Internal error",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "set keyboard_send_to to a place it does not know",
+      "endpoint": "/set/data/keyboard_send_to",
+      "status": 400,
+      "result": {
+        "error_code": "VALIDATION_CONFIG_VALUE_INVALID",
+        "message": "The provided value was rejected",
+        "data": "elsewhere",
+        "details": {},
+        "category": "validation",
+        "severity": "warning"
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get keyboard_send_to",
+      "endpoint": "/get/data/keyboard_send_to",
+      "status": 200,
+      "result": "vrct",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: Enter sends through VRCT (translated; told by keyboard_sent)",
+      "endpoint": "/run/keyboard_key",
+      "status": 200,
+      "result": {
+        "status": "",
+        "progress": 0,
+        "text": "",
+        "after": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": null,
+        "length": 0,
+        "half_width": false,
+        "selected": [
+          0
+        ]
+      },
+      "pushes": [
+        "/run/keyboard_sent"
+      ],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "set keyboard_language to Korean",
+      "endpoint": "/set/data/keyboard_language",
+      "status": 200,
+      "result": "ko",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: Korean syllable being made",
+      "endpoint": "/run/keyboard_key",
+      "status": 200,
+      "result": {
+        "status": "",
+        "progress": 0,
+        "text": "",
+        "after": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": "",
+        "length": 0,
+        "half_width": false,
+        "selected": [
+          0
+        ]
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: clear",
+      "endpoint": "/run/keyboard_clear",
+      "status": 200,
+      "result": {
+        "status": "",
+        "progress": 0,
+        "text": "",
+        "after": "",
+        "composition": null,
+        "candidates": [],
+        "highlighted": 0,
+        "converting": false,
+        "page": 0,
+        "last_page": false,
+        "syllable": null,
+        "length": 0,
+        "half_width": false,
+        "selected": [
+          0
+        ]
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "keyboard: the candidate index is not a number",
+      "endpoint": "/run/keyboard_select",
+      "status": 500,
+      "result": "Internal error",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "enable keyboard_chinese_simplified",
+      "endpoint": "/set/enable/keyboard_chinese_simplified",
+      "status": 200,
+      "result": true,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "disable keyboard_key_sound",
+      "endpoint": "/set/disable/keyboard_key_sound",
+      "status": 200,
+      "result": false,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "disable keyboard_typing_indicator",
+      "endpoint": "/set/disable/keyboard_typing_indicator",
+      "status": 200,
+      "result": false,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get keyboard_typing_indicator",
+      "endpoint": "/get/data/keyboard_typing_indicator",
+      "status": 200,
+      "result": false,
       "pushes": [],
       "push_results": [],
       "ms": 0

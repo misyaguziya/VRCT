@@ -4,7 +4,7 @@ import { getDefaultStore } from "jotai";
 
 import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
-import { useIsOpenedConfigPage } from "@logics_common";
+import { useIsOpenedConfigPage, useVrPanelKeyboardShortcut } from "@logics_common";
 
 import {
     UiLanguageController,
@@ -14,6 +14,7 @@ import {
 import { useVr } from "@logics_configs";
 import { VrLauncher } from "./VrLauncher";
 import { VrLogWindow } from "./VrLogWindow";
+import { VrKeyboardWindow } from "./VrKeyboardWindow";
 import { VrPopupWindow } from "./VrPopupWindow";
 import { VrToolbar } from "./VrToolbar";
 import { VrTooltip } from "./VrTooltip";
@@ -26,6 +27,9 @@ import styles from "./VrApp.module.scss";
 // Python 側 (models/overlay/overlay.py) が1回だけ撮影し、領域ごとに別のオーバーレイとして表示する。
 // VRでは px で固定する (デスクトップのUI倍率 UiSizeController は使わない。
 // 大きさはVR内で掴んで拡大縮小できる)。
+// これより前に押されたショートカットでは開閉しない (VR 画面を開き直したときに送り直される分)
+const SHORTCUT_FRESH_MS = 2000;
+
 const Region = ({ layout, name, children }) => {
     const [x, y, w, h] = layout.regions[name];
     return (
@@ -59,10 +63,11 @@ export const VrApp = () => {
     // 開いているウィンドウはこの画面の中だけで持つ (同期される atom に置くとメインの値で上書きされる)。
     // 表示・非表示の結果だけを Python に伝える。一時ウィンドウは同時に1つだけ
     // 起動時はランチャーだけを出す (ログは必要なときにランチャーから開く)
-    const [windows, setWindows] = useState({ log: false, popup: null });
+    // キーボードは一時ウィンドウとは別に開く (言語・設定と同時に使える)
+    const [windows, setWindows] = useState({ log: false, popup: null, keyboard: false });
     useEffect(() => {
-        asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null });
-    }, [windows.log, windows.popup]);
+        asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null, keyboard: windows.keyboard });
+    }, [windows.log, windows.popup, windows.keyboard]);
 
     // VR設定ウィンドウを開いている間は、デスクトップで設定画面を開いたのと同じ扱いにする
     // (メインがメイン機能を止め、閉じたら戻す。VrPanelSyncController)
@@ -85,6 +90,18 @@ export const VrApp = () => {
     const openLog = () => setWindows(w => ({ ...w, log: true }));
     const togglePopup = (name) => setWindows(w => ({ ...w, popup: w.popup === name ? null : name }));
     const closePopup = () => setWindows(w => ({ ...w, popup: null }));
+    const toggleKeyboard = () => setWindows(w => ({ ...w, keyboard: !w.keyboard }));
+    const openKeyboard = () => setWindows(w => ({ ...w, keyboard: true }));
+    // コントローラのショートカット: 押されるたびにキーボードを開閉 (開くと目の前に出る)。届くのは押された
+    // 時刻で、古いもの (この画面を開き直したときに送り直される前の分) では開閉しない
+    const { currentVrPanelKeyboardShortcut } = useVrPanelKeyboardShortcut();
+    const shortcut_made = useRef(currentVrPanelKeyboardShortcut.data);
+    useEffect(() => {
+        const made = currentVrPanelKeyboardShortcut.data;
+        if (made === shortcut_made.current) return;
+        shortcut_made.current = made;
+        if (Date.now() - made < SHORTCUT_FRESH_MS) toggleKeyboard();
+    }, [currentVrPanelKeyboardShortcut.data]);
 
     return (
         <div ref={atlas} className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>
@@ -94,9 +111,10 @@ export const VrApp = () => {
             <FontFamilyController />
 
             <Region layout={layout} name="panel"><VrLogWindow onClose={toggleLog} /></Region>
-            <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} /></Region>
+            <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} toggleKeyboard={toggleKeyboard} openKeyboard={openKeyboard} /></Region>
             <Region layout={layout} name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
             <Region layout={layout} name="toolbar"><VrToolbar /></Region>
+            <Region layout={layout} name="keyboard">{windows.keyboard && <VrKeyboardWindow onClose={toggleKeyboard} />}</Region>
             <Region layout={layout} name="tooltip"><VrTooltip atlasRef={atlas} layout={layout} /></Region>
         </div>
     );
@@ -104,17 +122,23 @@ export const VrApp = () => {
 
 // WebView2 はOSの本物のカーソル位置でホバーを判定するため、VRのポインタでは :hover が付かない。
 // Python から届くポインタ位置 (この画面の論理px) にある要素へ data-vr-hover を付けて代わりにする。
+// 両手で指しているときは、もう片方の手の要素に data-vr-hover2 (キーボードが両手で打てるように。
+// 吹き出しは data-vr-hover の方だけを見る)
 const HOVER_TARGET = "button, [data-vr-hoverable]";
 const VrPointerHover = () => {
     useEffect(() => {
-        let hovered = null;
-        const unlisten = listen("vr-panel-pointer", ({ payload }) => {
-            const element = payload ? document.elementFromPoint(payload.x, payload.y) : null;
+        const hovered = { "data-vr-hover": null, "data-vr-hover2": null };
+        const mark = (attribute, xy) => {
+            const element = xy ? document.elementFromPoint(xy.x, xy.y) : null;
             const target = element?.closest(HOVER_TARGET) ?? null;
-            if (target === hovered) return;
-            hovered?.removeAttribute("data-vr-hover");
-            target?.setAttribute("data-vr-hover", "");
-            hovered = target;
+            if (target === hovered[attribute]) return;
+            hovered[attribute]?.removeAttribute(attribute);
+            target?.setAttribute(attribute, "");
+            hovered[attribute] = target;
+        };
+        const unlisten = listen("vr-panel-pointer", ({ payload }) => {
+            mark("data-vr-hover", payload);
+            mark("data-vr-hover2", payload?.second ?? null);
         });
         return () => { unlisten.then(f => f()); };
     }, []);
