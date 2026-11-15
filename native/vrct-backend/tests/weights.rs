@@ -1,5 +1,6 @@
 //! Weight downloads and the verified marker against the Python backend
-//! (native/testdata/weights/weights.json, written by native/reference/export_weights.py): results,
+//! (native/testdata/weights/weights.json, written by the Python backend's export_weights.py, removed
+//! with it: kept as it is, not written again): results,
 //! progress, the written files, requests, and the marker's content and checks.
 mod support;
 
