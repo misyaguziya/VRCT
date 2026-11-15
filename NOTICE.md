@@ -113,3 +113,18 @@ pydub 0.25.1 (MIT).
 
 `vrct-graphics` (Windows.Graphics.Capture into a Direct3D 11 texture for the SteamVR
 overlay) uses the `windows` crates (MIT OR Apache-2.0) and their locked dependencies.
+
+## VR keyboard dictionaries
+
+The VR keyboard's dictionaries are not shipped with VRCT. On its first start the backend downloads
+them from each project's GitHub repository at a fixed commit, checked by SHA-256
+(`native/vrct-backend/src/ime_data.rs`), into `ime/shared/` beside the executable, with each
+project's license under `ime/shared/licenses/`. Japanese:
+[rime-jaroomaji](https://github.com/lazyfoxchan/rime-jaroomaji) (Apache-2.0), whose dictionaries
+are made from Mozc's OSS dictionary (Copyright Google Inc., BSD-3-Clause,
+<https://github.com/google/mozc>) and from JMdict and KANJIDIC2 (Electronic Dictionary Research and
+Development Group, CC BY-SA 4.0, <https://www.edrdg.org/edrdg/licence.html>); their notices are at
+the head of each dictionary file. Chinese (Pinyin, Zhuyin, Cangjie, Quick): rime-prelude,
+rime-essay, rime-luna-pinyin, rime-terra-pinyin, rime-bopomofo, rime-cangjie and rime-quick from
+<https://github.com/rime> (LGPL-3.0). librime (`rime.dll`) and OpenCC's data, which are shipped,
+are listed in `native/third_party.toml`.
