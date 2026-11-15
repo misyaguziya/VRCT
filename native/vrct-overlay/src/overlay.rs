@@ -6,8 +6,8 @@
 //!
 //! One thread owns everything OpenVR / D3D11 (callers send commands, applied at once): it waits
 //! for SteamVR, joins the shared session as a background app, runs at 16 fps (60 while grabbing,
-//! 60 while pointing at the VR UI) and closes everything when SteamVR quits, then waits for it
-//! again. Stopping hands the state back, so a restart goes on from it.
+//! 60 while pointing at the VR UI) and closes everything when SteamVR quits (or its server ends
+//! without telling: a crash), then waits for it again. Stopping hands the state back, so a restart goes on from it.
 //!
 //! Images go to SteamVR as D3D11 textures (SetOverlayTexture, then Flush: SteamVR's copy is queued
 //! on this device), not SetOverlayRaw, which keeps failing after ~190 calls (overlay.py).
@@ -33,6 +33,8 @@ use windows::Win32::Graphics::Dxgi::{CreateDXGIFactory1, IDXGIFactory1};
 
 const STEAMVR_POLL: Duration = Duration::from_secs(10);
 const STOP_WAIT: Duration = Duration::from_secs(5);
+/// After SteamVR quit: not back into it before its server has gone, waiting up to this
+const QUIT_WAIT: Duration = Duration::from_secs(30);
 /// The lasers' tilt up from the controllers' tips by default (degrees)
 pub const LASER_PITCH_UP_DEG: f64 = 12.0;
 pub(crate) const COLOR_NORMAL: [f32; 3] = [1.0, 1.0, 1.0];
@@ -533,6 +535,8 @@ impl Worker {
                 break;
             }
             if !vrct_openvr::is_steamvr_running() {
+                // it quit without a connection made: the next SteamVR's failure is logged again
+                self.connect_failure_logged = false;
                 self.wait(STEAMVR_POLL, None);
                 continue;
             }
@@ -549,16 +553,29 @@ impl Worker {
                 }
             };
             self.connect_failure_logged = false;
-            match self.connected(&session) {
-                Ok(()) => (self.log)("overlay: 止めました".into()),
+            let ended = match self.connected(&session) {
+                Ok(()) => {
+                    (self.log)("overlay: 止めました".into());
+                    true
+                }
                 Err(e) => {
                     (self.log)(format!("overlay: {e}"));
                     self.wait(STEAMVR_POLL, None);
+                    false
                 }
-            }
+            };
             self.publish(false);
             // after it stops, nothing is shown as lost
             self.notify_panel_out_of_view(false);
+            if ended {
+                // the connection is let go at once, as SteamVR's quit asks (it ends the apps that stay)
+                drop(session);
+                // SteamVR shutting down still takes a connection that dies with it: wait for its server to go
+                let until = Instant::now() + QUIT_WAIT;
+                while !self.stopped && Instant::now() < until && vrct_openvr::is_process_running("vrserver.exe") {
+                    self.wait(Duration::from_secs(1), None);
+                }
+            }
         }
         self
     }
@@ -585,6 +602,7 @@ impl Worker {
         let system = crate::vr::SteamVrSystem { system, actions };
         let vr = Vr { overlay: Box::new(session.overlay()?), system: Box::new(system), render_models: Box::new(session.render_models()?) };
         let mut run = Run::new(vr, device, context);
+        run.server = vrct_openvr::ProcessWatch::steamvr_server();
         let result = run.init(self).map(|()| {
             (self.log)(format!("overlay: 起動しました (vr_panel: {})", run.panel_ready));
             self.publish(true);
@@ -748,6 +766,8 @@ pub(crate) struct Run<'s> {
     pub panel_ready: bool,
     /// this frame's tracked poses
     pub poses: Vec<vrct_openvr::TrackedDevicePose>,
+    /// SteamVR's server: the connection is dead once it ends (None: not watched)
+    server: Option<vrct_openvr::ProcessWatch>,
 }
 
 impl<'s> Run<'s> {
@@ -766,7 +786,7 @@ impl<'s> Run<'s> {
             first_frame_wait_logged: false, tooltip_state: None, tooltip_ready: false, tooltip_shown: false,
             tooltip_manipulating: false, resizing: None, corner_prev: HashMap::new(), ghost_key: None, resize_undo: None,
             panel_input: HashMap::new(), panel_scroll: HashMap::new(), trigger_blocked: HashSet::new(), input_suspended: HashSet::new(), input_update_failed: false, input_hands: None, mouse_owner: None, mouse_owner_keyboard: false, trigger_aim: HashMap::new(), trigger_value: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
-            debug_state: HashMap::new(), shortcut_presses: HashMap::new(), panel: crate::panel::Panel::new(), panel_ready: false, poses: vec![],
+            debug_state: HashMap::new(), shortcut_presses: HashMap::new(), panel: crate::panel::Panel::new(), panel_ready: false, poses: vec![], server: None,
         }
     }
 
@@ -1034,6 +1054,10 @@ impl<'s> Run<'s> {
                 if event.event_type == vrct_openvr::EVENT_QUIT {
                     return;
                 }
+            }
+            if self.server.as_ref().is_some_and(vrct_openvr::ProcessWatch::exited) {
+                (w.log)("overlay: SteamVR (vrserver) が終了の知らせなしに終わりました".into());
+                return;
             }
             // the laser (pointer, hover) before the capture: it does not wait for it
             self.step(w);

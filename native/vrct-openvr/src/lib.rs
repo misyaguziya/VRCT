@@ -252,6 +252,44 @@ fn process_id(name: &str) -> Result<Option<u32>, ()> {
     }
 }
 
+/// One running process watched for its end: SteamVR's server, which may end without VREvent_Quit
+/// (a crash, killed), leaving the connection dead
+pub struct ProcessWatch(windows_sys::Win32::Foundation::HANDLE);
+
+// the handle is only waited on (any thread)
+unsafe impl Send for ProcessWatch {}
+
+impl ProcessWatch {
+    /// vrserver.exe as it runs now (None when it is not found or cannot be opened)
+    pub fn steamvr_server() -> Option<Self> {
+        Self::find("vrserver.exe")
+    }
+
+    pub fn find(name: &str) -> Option<Self> {
+        Self::open(process_id(name).ok()??)
+    }
+
+    /// The process with this id (None when it cannot be opened)
+    pub fn open(id: u32) -> Option<Self> {
+        use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SYNCHRONIZE};
+        let handle = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, 0, id) };
+        (!handle.is_null()).then_some(Self(handle))
+    }
+
+    /// The process has ended (does not wait)
+    pub fn exited(&self) -> bool {
+        use windows_sys::Win32::Foundation::WAIT_OBJECT_0;
+        use windows_sys::Win32::System::Threading::WaitForSingleObject;
+        unsafe { WaitForSingleObject(self.0, 0) == WAIT_OBJECT_0 }
+    }
+}
+
+impl Drop for ProcessWatch {
+    fn drop(&mut self) {
+        unsafe { windows_sys::Win32::Foundation::CloseHandle(self.0) };
+    }
+}
+
 /// The reference count of the process's session
 static SESSION: Mutex<usize> = Mutex::new(0);
 
@@ -279,9 +317,10 @@ pub fn is_active() -> bool {
 }
 
 /// A reference to the session already running (the overlay's), without starting SteamVR or changing
-/// the application type. None when none runs
+/// the application type. None when none runs, and while another thread is in VR_Init / VR_Shutdown:
+/// a borrower never waits on SteamVR
 pub fn acquire_existing() -> Option<Session> {
-    let mut count = SESSION.lock().unwrap();
+    let mut count = SESSION.try_lock().ok()?;
     if *count == 0 {
         return None;
     }
@@ -903,5 +942,21 @@ mod input_layout_tests {
         assert_eq!(std::mem::offset_of!(DigitalActionData, state), 16);
         assert_eq!(size_of::<AnalogActionData>(), 48);
         assert_eq!(std::mem::offset_of!(AnalogActionData, x), 16);
+    }
+}
+
+#[cfg(test)]
+mod process_tests {
+    use super::ProcessWatch;
+
+    #[test]
+    fn a_watched_process_is_seen_to_end() {
+        assert!(ProcessWatch::find("no-such-process-0a9f3c.exe").is_none());
+        let mut child = std::process::Command::new("cmd").args(["/c", "ping -n 30 127.0.0.1 >nul"]).spawn().unwrap();
+        let watch = ProcessWatch::open(child.id()).unwrap();
+        assert!(!watch.exited());
+        child.kill().unwrap();
+        child.wait().unwrap();
+        assert!(watch.exited());
     }
 }

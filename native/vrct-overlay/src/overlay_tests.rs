@@ -1346,6 +1346,22 @@ fn command_wait_processes_stop_even_at_zero_and_does_not_drain_past_deadline() {
     }
 }
 
+/// SteamVR's server ended without VREvent_Quit (killed, a crash): the frames end, as on a quit (the
+/// worker then closes the connection)
+#[test]
+fn frames_end_when_the_steamvr_server_is_gone() {
+    let mut r = Rig::new(vec![("small", settings("Playspace", [0.0; 6], 0.4))]);
+    let mut server = std::process::Command::new("cmd").args(["/c", "ping -n 30 127.0.0.1 >nul"]).spawn().unwrap();
+    r.run.server = vrct_openvr::ProcessWatch::open(server.id());
+    assert!(r.run.server.is_some());
+    server.kill().unwrap();
+    server.wait().unwrap();
+    // were the server not looked at, the frames would go on until this stop
+    r._commands.send(Command::Stop).unwrap();
+    r.run.frames(&mut r.w);
+    assert!(!r.w.stopped);
+}
+
 #[test]
 fn commands_arriving_repeatedly_do_not_extend_frame_wait() {
     let mut rig = Rig::new(vec![]);
