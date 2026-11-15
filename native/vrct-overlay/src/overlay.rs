@@ -602,7 +602,8 @@ impl Worker {
         let system = crate::vr::SteamVrSystem { system, actions };
         let vr = Vr { overlay: Box::new(session.overlay()?), system: Box::new(system), render_models: Box::new(session.render_models()?) };
         let mut run = Run::new(vr, device, context);
-        run.server = vrct_openvr::ProcessWatch::steamvr_server();
+        // the server this connection is to (one running now may be a newer one, the connection held elsewhere)
+        run.server = session.server();
         let result = run.init(self).map(|()| {
             (self.log)(format!("overlay: 起動しました (vr_panel: {})", run.panel_ready));
             self.publish(true);

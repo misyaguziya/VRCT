@@ -260,11 +260,6 @@ pub struct ProcessWatch(windows_sys::Win32::Foundation::HANDLE);
 unsafe impl Send for ProcessWatch {}
 
 impl ProcessWatch {
-    /// vrserver.exe as it runs now (None when it is not found or cannot be opened)
-    pub fn steamvr_server() -> Option<Self> {
-        Self::find("vrserver.exe")
-    }
-
     pub fn find(name: &str) -> Option<Self> {
         Self::open(process_id(name).ok()??)
     }
@@ -290,49 +285,71 @@ impl Drop for ProcessWatch {
     }
 }
 
-/// The reference count of the process's session
-static SESSION: Mutex<usize> = Mutex::new(0);
+/// The process's session: its reference count, and the vrserver it was made with (its id and a
+/// watch on it; None when it was not found)
+struct Shared {
+    count: usize,
+    server: Option<(u32, ProcessWatch)>,
+}
+
+impl Shared {
+    /// The vrserver the connection was made with has ended (a crash, killed): the connection is dead
+    /// even when SteamVR's server runs again. It stays while someone holds it (VR_Shutdown would pull
+    /// it from under them), so it is not handed out again
+    fn stale(&self) -> bool {
+        self.server.as_ref().is_some_and(|(_, watch)| watch.exited())
+    }
+}
+
+static SESSION: Mutex<Shared> = Mutex::new(Shared { count: 0, server: None });
 
 /// A reference to the shared OpenVR session (openvr_session.acquire); dropping it releases it
 pub struct Session(());
 
-/// openvr.init(application_type) for the first caller, a new reference for the others
+const STALE: &str = "the SteamVR connection is to a server that has ended, still held elsewhere";
+
+/// openvr.init(application_type) for the first caller, a new reference for the others. Err while
+/// the connection held is to a vrserver that has ended: it is made again once all have let it go
 pub fn acquire(application_type: ApplicationType) -> Result<Session, Error> {
-    let api = api()?;
-    let mut count = SESSION.lock().unwrap();
-    if *count == 0 {
+    let mut shared = SESSION.lock().unwrap();
+    if shared.count == 0 {
+        let api = api()?;
         let mut error = 0;
         unsafe { (api.init)(&mut error, application_type as i32, std::ptr::null()) };
         if error != 0 {
             let message = unsafe { CStr::from_ptr((api.init_error_description)(error)) }.to_string_lossy().into_owned();
             return Err(Error { code: error, message });
         }
+        shared.server = process_id("vrserver.exe").ok().flatten().and_then(|id| Some((id, ProcessWatch::open(id)?)));
+    } else if shared.stale() {
+        return Err(err(-1, STALE));
     }
-    *count += 1;
+    shared.count += 1;
     Ok(Session(()))
 }
 
 pub fn is_active() -> bool {
-    *SESSION.lock().unwrap() > 0
+    SESSION.lock().unwrap().count > 0
 }
 
 /// A reference to the session already running (the overlay's), without starting SteamVR or changing
-/// the application type. None when none runs, and while another thread is in VR_Init / VR_Shutdown:
-/// a borrower never waits on SteamVR
+/// the application type. None when none runs or it is to an ended vrserver, and while another thread
+/// is in VR_Init / VR_Shutdown: a borrower never waits on SteamVR
 pub fn acquire_existing() -> Option<Session> {
-    let mut count = SESSION.try_lock().ok()?;
-    if *count == 0 {
+    let mut shared = SESSION.try_lock().ok()?;
+    if shared.count == 0 || shared.stale() {
         return None;
     }
-    *count += 1;
+    shared.count += 1;
     Some(Session(()))
 }
 
 impl Drop for Session {
     fn drop(&mut self) {
-        let mut count = SESSION.lock().unwrap();
-        *count -= 1;
-        if *count == 0 {
+        let mut shared = SESSION.lock().unwrap();
+        shared.count -= 1;
+        if shared.count == 0 {
+            shared.server = None;
             if let Ok(api) = api() {
                 unsafe { (api.shutdown)() };
             }
@@ -347,7 +364,18 @@ struct Table<'s> {
 }
 
 impl Session {
+    /// A watch on the vrserver this connection was made with (None when it was not found)
+    pub fn server(&self) -> Option<ProcessWatch> {
+        let id = SESSION.lock().unwrap().server.as_ref()?.0;
+        ProcessWatch::open(id)
+    }
+
+    /// Err once the connection's vrserver has ended: a holder (the OCR capture, the paste) then lets
+    /// it go, so the next acquire makes a new one
     fn table(&self, version: &str, len: usize) -> Result<Table<'_>, Error> {
+        if SESSION.lock().unwrap().stale() {
+            return Err(err(-1, STALE));
+        }
         let name = CString::new(format!("FnTable:{version}")).unwrap();
         let mut error = 0;
         let functions = unsafe { (api()?.interface)(name.as_ptr(), &mut error) } as *const usize;
@@ -958,5 +986,35 @@ mod process_tests {
         child.kill().unwrap();
         child.wait().unwrap();
         assert!(watch.exited());
+    }
+
+    /// Another holder (the OCR capture) keeps the session while its vrserver is killed: the overlay's
+    /// next acquire, a borrower and the holder's own calls get nothing of the dead connection
+    #[test]
+    fn a_session_to_an_ended_server_is_not_handed_out() {
+        use super::{acquire, acquire_existing, ApplicationType, Session, SESSION};
+        let mut server = std::process::Command::new("cmd").args(["/c", "ping -n 30 127.0.0.1 >nul"]).spawn().unwrap();
+        // the holder's reference, made without VR_Init (it is not dropped: that would VR_Shutdown)
+        {
+            let mut shared = SESSION.lock().unwrap();
+            shared.count = 1;
+            shared.server = Some((server.id(), ProcessWatch::open(server.id()).unwrap()));
+        }
+        let holder = Session(());
+        drop(acquire(ApplicationType::Background).unwrap());
+        drop(acquire_existing().unwrap());
+        assert!(holder.server().is_some_and(|watch| !watch.exited()));
+
+        server.kill().unwrap();
+        server.wait().unwrap();
+        assert!(acquire(ApplicationType::Background).is_err());
+        assert!(acquire_existing().is_none());
+        assert!(holder.system().is_err());
+        assert_eq!(SESSION.lock().unwrap().count, 1);
+
+        std::mem::forget(holder);
+        let mut shared = SESSION.lock().unwrap();
+        shared.count = 0;
+        shared.server = None;
     }
 }
