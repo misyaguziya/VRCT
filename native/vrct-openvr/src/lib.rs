@@ -210,13 +210,21 @@ impl WideNull for std::ffi::OsStr {
 }
 
 /// SteamVR is running (vrmonitor.exe), from a Toolhelp snapshot (psutil's process list took ~2 s
-/// on a PC with 460 processes, this ~15 ms). False when it cannot be told.
+/// on a PC with 460 processes, this ~15 ms). True when it cannot be told (see `is_process_running`).
 pub fn is_steamvr_running() -> bool {
     is_process_running("vrmonitor.exe")
 }
 
-/// A process named `name` (case-insensitive) is running
+/// A process named `name` (case-insensitive) is running. True when the processes cannot be listed
+/// that moment: a failed look is not taken for its end (SteamVR's quit closes the overlay and moves
+/// the OCR capture and the paste off it)
 pub fn is_process_running(name: &str) -> bool {
+    !matches!(process_id(name), Ok(None))
+}
+
+/// The id of a process named `name` (case-insensitive): None when none runs, Err when the processes
+/// cannot be listed
+fn process_id(name: &str) -> Result<Option<u32>, ()> {
     use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
     use windows_sys::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
@@ -225,22 +233,22 @@ pub fn is_process_running(name: &str) -> bool {
     unsafe {
         let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         if snapshot == INVALID_HANDLE_VALUE || snapshot.is_null() {
-            return false;
+            return Err(());
         }
         let mut entry: PROCESSENTRY32W = std::mem::zeroed();
         entry.dwSize = size_of::<PROCESSENTRY32W>() as u32;
         let mut found = Process32FirstW(snapshot, &mut entry) != 0;
-        let mut running = false;
+        let mut id = None;
         while found {
             let len = entry.szExeFile.iter().position(|&c| c == 0).unwrap_or(entry.szExeFile.len());
             if String::from_utf16_lossy(&entry.szExeFile[..len]).to_lowercase() == wanted {
-                running = true;
+                id = Some(entry.th32ProcessID);
                 break;
             }
             found = Process32NextW(snapshot, &mut entry) != 0;
         }
         CloseHandle(snapshot);
-        running
+        Ok(id)
     }
 }
 
