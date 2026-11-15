@@ -132,8 +132,8 @@ pub fn copy_and_paste(message: &str, window_name: Option<&str>, log: &dyn Fn(Str
 }
 
 /// Clipboard's app_name: once SteamVR runs (looked for every 10 s), the name of the first Steam app
-/// OpenVR lists (keys "steam.app.*"), through the shared session. Looked up once, as the Python
-/// version does; None when it fails.
+/// OpenVR lists (keys "steam.app.*"), through the shared session; then again for each paste (`get`).
+/// None until one is found.
 pub struct AppName {
     name: Arc<Mutex<Option<String>>>,
     // dropped: the watching thread ends at once
@@ -150,8 +150,9 @@ impl AppName {
             loop {
                 if is_steamvr_running() {
                     log("Clipboard: SteamVR detected. Setting up app info.".into());
-                    match steam_app_name() {
-                        Ok(app) => *found.lock().unwrap() = app,
+                    match vrct_openvr::acquire(vrct_openvr::ApplicationType::Background).and_then(|session| steam_app_name(&session)) {
+                        // (none listed: what a paste found meanwhile stays)
+                        Ok(app) => if app.is_some() { *found.lock().unwrap() = app },
                         Err(e) => log(format!("Clipboard: Error setting up VR app name: {e}")),
                     }
                     break;
@@ -165,13 +166,21 @@ impl AppName {
         Self { name, _stop: stop }
     }
 
+    /// The name for this paste: looked up again through the session already running (the overlay's),
+    /// so an app installed after the first look is found. Never a VR_Init here (that waits on
+    /// SteamVR, holding the paste up). Without an answer, the last one found
     pub fn get(&self) -> Option<String> {
-        self.name.lock().unwrap().clone()
+        let session = if is_steamvr_running() { vrct_openvr::acquire_existing() } else { None };
+        let found = session.and_then(|session| steam_app_name(&session).ok().flatten());
+        let mut name = self.name.lock().unwrap();
+        if found.is_some() {
+            *name = found;
+        }
+        name.clone()
     }
 }
 
-fn steam_app_name() -> Result<Option<String>, vrct_openvr::Error> {
-    let session = vrct_openvr::acquire(vrct_openvr::ApplicationType::Background)?;
+fn steam_app_name(session: &vrct_openvr::Session) -> Result<Option<String>, vrct_openvr::Error> {
     let apps = session.applications()?;
     Ok((0..apps.application_count()).map(|i| apps.application_key_by_index(i)).find(|key| key.starts_with("steam.app"))
         .map(|key| apps.application_property_string(&key, vrct_openvr::APPLICATION_PROPERTY_NAME_STRING)))
