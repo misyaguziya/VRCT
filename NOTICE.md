@@ -116,8 +116,8 @@ overlay) uses the `windows` crates (MIT OR Apache-2.0) and their locked dependen
 
 ## VR keyboard dictionaries
 
-The VR keyboard's dictionaries are not shipped with VRCT. When the VR UI is first on the backend downloads
-them from each project's GitHub repository at a fixed commit, checked by SHA-256
+The VR keyboard's dictionaries are not shipped with VRCT. The first time the VR UI is turned on, the
+backend downloads them from each project's GitHub repository at a fixed commit, checked by SHA-256
 (`native/vrct-backend/src/ime_data.rs`), into `ime/shared/` beside the executable, with each
 project's license under `ime/shared/licenses/`. Japanese:
 [rime-jaroomaji](https://github.com/lazyfoxchan/rime-jaroomaji) (Apache-2.0), whose dictionaries
