@@ -306,6 +306,7 @@ config_page:
         restore_default_settings: "初期値に戻す"
         position: "位置"
         rotation: "回転"
+        lock_position: "座標をロック（VR内で掴んで動かせなくします）"
         x_position: "X軸（左右）"
         y_position: "Y軸（上下）"
         z_position: "Z軸（前後）"

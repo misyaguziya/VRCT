@@ -53,6 +53,7 @@ fn settings_of(v: &Value) -> Settings {
         display_duration: num(v, "display_duration"),
         fadeout_duration: num(v, "fadeout_duration"),
         panel_size,
+        locked: v.get("locked").and_then(Value::as_bool).unwrap_or_default(),
     }
 }
 
@@ -104,7 +105,7 @@ impl Overlays {
         let mut large = settings_of(&config.get("OVERLAY_LARGE_LOG_SETTINGS"));
         large.ui_scaling *= LARGE_SCALE;
         let popup = Settings { position: [0.0; 6], tracker: "Playspace".into(), opacity: 1.0, ui_scaling: 0.36,
-                               display_duration: 5.0, fadeout_duration: 0.0, panel_size: None };
+                               display_duration: 5.0, fadeout_duration: 0.0, panel_size: None, locked: false };
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),
@@ -186,6 +187,9 @@ fn update_log_settings(app: &App, size: &str) {
     let wanted = settings_of(&config);
     if now.position != wanted.position || now.tracker != wanted.tracker {
         o.update_position(size, wanted.position, &wanted.tracker);
+    }
+    if now.locked != wanted.locked {
+        o.update_locked(size, wanted.locked);
     }
     if now.display_duration != wanted.display_duration {
         o.update_display_duration(size, wanted.display_duration);

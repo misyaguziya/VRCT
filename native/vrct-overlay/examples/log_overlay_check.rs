@@ -12,7 +12,7 @@ fn main() {
     let fonts = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/fonts");
     let defaults = |tracker: &str, ui_scaling: f64| Settings {
         position: [0.0; 6], tracker: tracker.into(), opacity: 1.0, ui_scaling, display_duration: 5.0, fadeout_duration: 2.0,
-        panel_size: None,
+        panel_size: None, locked: false,
     };
     // model.py makes the large log a quarter of its setting
     let mut overlay = Overlay::new(vec![("small".into(), defaults("HMD", 1.0)), ("large".into(), defaults("LeftHand", 0.25))],

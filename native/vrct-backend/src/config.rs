@@ -258,13 +258,16 @@ const POSITION_KEYS: [&str; 6] = ["x_pos", "y_pos", "z_pos", "x_rotation", "y_ro
 /// _overlay_small_validator / _overlay_large_validator: the same keys; a bad entry keeps its value
 fn overlay_log_settings(v: &Value, current: &Value) -> Option<Value> {
     let (map, cur) = (v.as_object()?, current.as_object()?);
+    // locked was added later: a setting saved without it keeps its position, locked off
+    let mut map = map.clone();
+    map.entry("locked").or_insert(json!(false));
     if map.len() != cur.len() || !map.keys().all(|k| cur.contains_key(k)) {
         return None;
     }
     let mut new = cur.clone();
-    for (k, x) in map {
+    for (k, x) in &map {
         let k = k.as_str();
-        if k == "tracker" && x.as_str().is_some_and(|t| ["HMD", "LeftHand", "RightHand"].contains(&t)) {
+        if (k == "locked" && x.is_boolean()) || (k == "tracker" && x.as_str().is_some_and(|t| ["HMD", "LeftHand", "RightHand"].contains(&t))) {
             new.insert(k.into(), x.clone());
         } else if (POSITION_KEYS.contains(&k) || k == "opacity" || k == "ui_scaling") && is_number(x) {
             new.insert(k.into(), to_float(x));
@@ -728,6 +731,17 @@ mod tests {
             "z_rotation": 0.0, "display_duration": 2.5, "fadeout_duration": 1, "opacity": 1, "ui_scaling": 1.0, "tracker": "Playspace"})).unwrap();
         let s = c.get("OVERLAY_SMALL_LOG_SETTINGS");
         assert_eq!((s["x_pos"].clone(), s["display_duration"].clone(), s["tracker"].clone()), (json!(1.0), json!(5), json!("HMD")));
+        // a setting saved before "locked" existed keeps its position, locked off; only a bool locks
+        c.set("OVERLAY_LARGE_LOG_SETTINGS", json!({"x_pos": 0.3, "y_pos": 0.0, "z_pos": 0.0, "x_rotation": 0.0, "y_rotation": 0.0,
+            "z_rotation": 0.0, "display_duration": 5, "fadeout_duration": 2, "opacity": 1.0, "ui_scaling": 1.0, "tracker": "LeftHand"})).unwrap();
+        let l = c.get("OVERLAY_LARGE_LOG_SETTINGS");
+        assert_eq!((l["x_pos"].clone(), l["locked"].clone()), (json!(0.3), json!(false)));
+        let with = |locked: Value| json!({"x_pos": 0.3, "y_pos": 0.0, "z_pos": 0.0, "x_rotation": 0.0, "y_rotation": 0.0,
+            "z_rotation": 0.0, "display_duration": 5, "fadeout_duration": 2, "opacity": 1.0, "ui_scaling": 1.0, "tracker": "LeftHand", "locked": locked});
+        c.set("OVERLAY_LARGE_LOG_SETTINGS", with(json!(true))).unwrap();
+        assert_eq!(c.get("OVERLAY_LARGE_LOG_SETTINGS")["locked"], json!(true));
+        c.set("OVERLAY_LARGE_LOG_SETTINGS", with(json!("yes"))).unwrap();
+        assert_eq!(c.get("OVERLAY_LARGE_LOG_SETTINGS")["locked"], json!(true));
         assert_eq!(c.set("MIC_WORD_FILTER", json!(["a", 1, "a", "b"])), Ok(()));
         assert_eq!(c.get("MIC_WORD_FILTER"), json!(["a", "b"]));
         // the Rust backend's devices: PortAudio hosts move to WASAPI, an MME name cut at 31 characters

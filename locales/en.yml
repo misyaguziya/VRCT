@@ -306,6 +306,7 @@ config_page:
         restore_default_settings: "Reset to Default Settings"
         position: "Position"
         rotation: "Rotation"
+        lock_position: "Lock position (prevents grabbing and moving it in VR)"
         x_position: "X-axis (left-right)"
         y_position: "Y-axis (up-down)"
         z_position: "Z-axis (front-back)"

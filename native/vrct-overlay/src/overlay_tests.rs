@@ -200,7 +200,7 @@ fn warp() -> (ID3D11Device, ID3D11DeviceContext) {
 
 pub(super) fn settings(tracker: &str, position: [f64; 6], width: f64) -> Settings {
     Settings { position, tracker: tracker.into(), opacity: 1.0, ui_scaling: width, display_duration: 5.0, fadeout_duration: 0.0,
-               panel_size: None }
+               panel_size: None, locked: false }
 }
 
 fn translation(p: Vec3) -> Mat4 {
@@ -444,6 +444,28 @@ fn a_window_on_a_hand_is_not_grabbed_by_that_hand() {
     assert_eq!(r.grabbed(), Some(r.index("small")));
 }
 
+#[test]
+fn a_locked_log_is_not_grabbed_but_the_other_is() {
+    let at = |x: f64| [x, LOG_AT[1], LOG_AT[2]];
+    let place = |x: f64| settings("Playspace", [x, LOG_AT[1], -LOG_AT[2], 0.0, 0.0, 0.0], 0.4);
+    let mut r = Rig::new(vec![("small", place(-0.5)), ("large", place(0.5))]);
+    r.draw("small", 400, 200);
+    r.draw("large", 400, 200);
+    let (small, large) = (r.index("small"), r.index("large"));
+    r.w.sizes[small].settings.locked = true;
+    r.hand(RIGHT, aiming(HAND_AT, at(-0.5)));
+    r.frame(0);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), None);
+    r.buttons(RIGHT, 0);
+    r.frame(20);
+    r.hand(RIGHT, aiming(HAND_AT, at(0.5)));
+    r.frame(0);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), Some(large));
+}
 #[test]
 fn a_grip_wakes_a_faded_log() {
     let mut r = room_log();
