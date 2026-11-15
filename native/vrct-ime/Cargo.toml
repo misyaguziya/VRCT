@@ -9,4 +9,5 @@ description = "The VR keyboard's input: librime (rime.dll) for Japanese and Chin
 [dependencies]
 anyhow = "1"
 serde_yaml = "0.9"
+unicode-segmentation = "1"
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_LibraryLoader"] }

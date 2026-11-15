@@ -3,6 +3,7 @@
 //! Chinese (pinyin, Zhuyin, Cangjie, Quick) through a RIME session (when the dictionaries are ready).
 //! The text has a selection (Shift ◀ ▶, Ctrl+A) that typing replaces, and its edits undo and redo.
 use crate::kana;
+use unicode_segmentation::UnicodeSegmentation;
 use crate::hangul::{jamo_of_key, Composer};
 use crate::rime::{keys, Session};
 
@@ -345,9 +346,7 @@ impl<'r> Input<'r> {
             Language::English => match key {
                 Key::Char(c) => self.text.push(c),
                 Key::Space => self.text.push(' '),
-                Key::Backspace => {
-                    self.text.pop();
-                }
+                Key::Backspace => pop_grapheme(&mut self.text),
                 Key::Left | Key::Right => self.move_cursor(key == Key::Left),
                 _ => {}
             },
@@ -357,7 +356,7 @@ impl<'r> Input<'r> {
                 Key::Space => self.text += &self.hangul.input(' '),
                 Key::Backspace => {
                     if !self.hangul.backspace() {
-                        self.text.pop();
+                        pop_grapheme(&mut self.text);
                     }
                 }
                 // the syllable being made is finished first, then the cursor moves
@@ -422,7 +421,7 @@ impl<'r> Input<'r> {
                 return;
             }
             Key::Backspace if !composing => {
-                self.text.pop();
+                pop_grapheme(&mut self.text);
                 return;
             }
             Key::Enter if !composing => return,
@@ -592,9 +591,11 @@ impl<'r> Input<'r> {
         self.record(before, Edit::None);
     }
 
-    /// The cursor to this character of the text
+    /// The cursor to this character of the text (to the start of the character seen there: never
+    /// inside a flag or a joined emoji)
     fn place(&mut self, index: usize) {
         let all = std::mem::take(&mut self.text) + &std::mem::take(&mut self.after);
+        let index = grapheme_starts(&all).into_iter().take_while(|&b| b <= index).last().unwrap_or(0);
         let at = all.char_indices().nth(index).map_or(all.len(), |(i, _)| i);
         self.text = all[..at].into();
         self.after = all[at..].into();
@@ -622,11 +623,19 @@ impl<'r> Input<'r> {
         } else {
             self.anchor = None;
         }
-        let all: Vec<char> = self.text.chars().chain(self.after.chars()).collect();
+        let all = self.text.clone() + &self.after;
+        let starts = grapheme_starts(&all);
+        let end = *starts.last().unwrap();
         let to = match (word, left) {
-            (true, _) => word_edge(&all, cursor, left),
-            (false, true) => cursor.saturating_sub(1),
-            (false, false) => (cursor + 1).min(all.len()),
+            // by characters as seen, each of the kind of its first char (1️⃣, a letter and its
+            // accents): a word's edge is never inside one
+            (true, _) => {
+                let firsts: Vec<char> = all.graphemes(true).filter_map(|g| g.chars().next()).collect();
+                let at = starts.iter().position(|&b| b >= cursor).unwrap_or(firsts.len());
+                starts[word_edge(&firsts, at, left)]
+            }
+            (false, true) => starts.iter().copied().rfind(|&b| b < cursor).unwrap_or(0),
+            (false, false) => starts.iter().copied().find(|&b| b > cursor).unwrap_or(end),
         };
         self.place(to);
     }
@@ -739,15 +748,16 @@ impl<'r> Input<'r> {
         self.last_edit = Edit::None;
     }
 
-    /// A character across the cursor
+    /// A character as seen (a flag, a joined emoji, a letter and its accents) across the cursor
     fn move_cursor(&mut self, left: bool) {
         if left {
-            if let Some(c) = self.text.pop() {
-                self.after.insert(0, c);
+            if let Some((i, _)) = self.text.grapheme_indices(true).next_back() {
+                let moved = self.text.split_off(i);
+                self.after.insert_str(0, &moved);
             }
-        } else if let Some(c) = self.after.chars().next() {
-            self.after.remove(0);
-            self.text.push(c);
+        } else if let Some(len) = self.after.graphemes(true).next().map(str::len) {
+            let moved: String = self.after.drain(..len).collect();
+            self.text.push_str(&moved);
         }
     }
 
@@ -903,6 +913,25 @@ fn number_widths(reading: &str) -> Option<Vec<String>> {
     Some(candidates)
 }
 
+/// The last character as seen (a flag, a joined emoji, a letter and its accents) taken off
+fn pop_grapheme(text: &mut String) {
+    if let Some((i, _)) = text.grapheme_indices(true).next_back() {
+        text.truncate(i);
+    }
+}
+
+/// Where each character as seen starts (in chars), and the end
+fn grapheme_starts(text: &str) -> Vec<usize> {
+    let mut starts = vec![];
+    let mut at = 0;
+    for g in text.graphemes(true) {
+        starts.push(at);
+        at += g.chars().count();
+    }
+    starts.push(at);
+    starts
+}
+
 /// Ctrl ◀ ▶: from `at` over the spaces and one run of the same kind of characters (letters and
 /// digits, hiragana, katakana, kanji, hangul, other symbols), as Windows moves by words
 fn word_edge(chars: &[char], at: usize, left: bool) -> usize {
@@ -1041,6 +1070,46 @@ mod tests {
         i.key(Key::SelectAll);
         i.key(Key::Backspace);
         assert_eq!(shown(&i), "");
+    }
+
+    #[test]
+    fn flags_joined_emoji_and_accents_are_deleted_and_crossed_whole() {
+        let mut i = Input::new(Language::English);
+        // a flag, a family (joined by ZWJ), a skin tone, e + combining acute
+        i.paste("a🇯🇵👨‍👩‍👧👍🏽e\u{301}");
+        i.key(Key::Backspace);
+        assert_eq!(shown(&i), "a🇯🇵👨‍👩‍👧👍🏽");
+        i.key(Key::Backspace);
+        i.key(Key::Backspace);
+        assert_eq!(shown(&i), "a🇯🇵");
+        // ◀ goes over the whole flag: typing lands before it, not inside it
+        i.key(Key::Left);
+        typed(&mut i, "b");
+        assert_eq!((i.state().text.as_str(), i.state().after.as_str()), ("ab", "🇯🇵"));
+        moved(&mut i, false, false, false);
+        assert_eq!(i.state().after, "");
+        moved(&mut i, true, false, false);
+        assert_eq!(i.state().after, "🇯🇵");
+        // a press inside the flag puts the cursor at its start
+        i.set_cursor(3);
+        assert_eq!(i.state().after, "🇯🇵");
+    }
+
+    #[test]
+    fn ctrl_arrows_go_over_a_keycap_and_an_accent_as_part_of_the_word() {
+        // 1️⃣ (1 + FE0F + 20E3) and café with its accent apart (e + U+0301), as pasted
+        for (text, stops) in [("1\u{fe0f}\u{20e3} x", [4, 5]), ("cafe\u{301} x", [6, 7])] {
+            let mut i = Input::new(Language::English);
+            i.paste(text);
+            i.set_cursor(0);
+            for stop in stops {
+                moved(&mut i, false, true, false);
+                assert_eq!(i.state().text.chars().count(), stop, "{text:?}");
+            }
+            moved(&mut i, true, true, false);
+            moved(&mut i, true, true, false);
+            assert_eq!(i.state().text, "", "{text:?}");
+        }
     }
 
     #[test]
