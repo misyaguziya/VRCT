@@ -229,6 +229,10 @@ pub fn sync_overlay_running(app: &App) -> Result<()> {
     o.set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
     o.set_shortcut(shortcut_of(app));
     o.set_launcher_auto_hide(app.config.get_bool("OVERLAY_VR_LAUNCHER_AUTO_HIDE"));
+    // the VR UI's keyboard: its dictionaries made ready (once; not stopped when it goes off)
+    if app.config.get_bool("OVERLAY_VR_PANEL") {
+        super::keyboard::start(app);
+    }
     if app.config.get_bool("OVERLAY_SMALL_LOG") || app.config.get_bool("OVERLAY_LARGE_LOG") || app.config.get_bool("OVERLAY_VR_PANEL") {
         o.start();
     } else {

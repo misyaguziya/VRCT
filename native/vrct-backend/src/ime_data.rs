@@ -1,4 +1,4 @@
-//! The VR keyboard's dictionaries (RIME's shared data), downloaded on the first start: each
+//! The VR keyboard's dictionaries (RIME's shared data), downloaded when the VR UI is first on: each
 //! project's archive at a fixed commit from GitHub, only the files used taken out and checked by
 //! their SHA-256 (an archive's own bytes are not stable). Nothing is redistributed by VRCT.
 //!

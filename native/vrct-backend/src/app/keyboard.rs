@@ -1,5 +1,5 @@
-//! The VR keyboard (vrct-ime): its dictionaries made ready in the background (downloaded on the
-//! first start, then built by RIME), what is typed, and where it goes: VRCT's chat box (translated,
+//! The VR keyboard (vrct-ime): its dictionaries made ready in the background (downloaded when the
+//! VR UI is first on, then built by RIME), what is typed, and where it goes: VRCT's chat box (translated,
 //! as the message box sends) or pasted into VRChat's open text field.
 use super::basic::validated;
 use super::pipeline::{process, CHAT};
@@ -19,6 +19,8 @@ type Data = Option<Value>;
 /// The dictionaries (Japanese and Chinese; English and Korean need none)
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Status {
+    /// not started: nothing needed the keyboard yet (shown as preparing)
+    Idle,
     Preparing,
     /// downloading, 0..1
     Downloading(f64),
@@ -115,7 +117,7 @@ impl Keyboard {
     pub fn new(config: &crate::config::Config) -> Self {
         let language = Language::from_code(&config.get_str("KEYBOARD_LANGUAGE")).unwrap_or(Language::Japanese);
         let typing = Typing { input: Input::new(language), history: History::default(), committed_at: None };
-        Keyboard { status: Mutex::new(Status::Preparing), typing: Mutex::new(typing), indicator: Mutex::default(), rime: OnceLock::new(),
+        Keyboard { status: Mutex::new(Status::Idle), typing: Mutex::new(typing), indicator: Mutex::default(), rime: OnceLock::new(),
                    dictation: Mutex::default() }
     }
 }
@@ -131,7 +133,7 @@ fn typing(app: &App) -> MutexGuard<'_, Typing> {
 fn state_json(status: Status, s: &State) -> Value {
     // progress: of the download, 0..1
     let (status, progress) = match status {
-        Status::Preparing => ("preparing", 0.0),
+        Status::Idle | Status::Preparing => ("preparing", 0.0),
         Status::Downloading(p) => ("downloading", p),
         Status::Building => ("building", 1.0),
         Status::Ready => ("ready", 1.0),
@@ -201,8 +203,26 @@ fn set_status(app: &App, status: Status) {
 
 // ------------------------------------------------------------------------------- the dictionaries
 
-/// The dictionaries downloaded (the first time) and built, then Japanese and Chinese type
+/// The dictionaries downloaded (the first time) and built, then Japanese and Chinese type. Not at
+/// start-up: when the VR UI is first on, once
 pub fn start(app: &App) {
+    if claim(app, Status::Idle) {
+        prepare_in_background(app);
+    }
+}
+
+/// Preparing, when the dictionaries are `from`: true for the one caller that changed it (under
+/// the status's lock, so they are never prepared twice at once)
+fn claim(app: &App, from: Status) -> bool {
+    let mut status = keyboard(app).status.lock().unwrap();
+    let claimed = *status == from;
+    if claimed {
+        *status = Status::Preparing;
+    }
+    claimed
+}
+
+fn prepare_in_background(app: &App) {
     let me = app.me();
     std::thread::spawn(move || {
         let Some(app) = me.upgrade() else { return };
@@ -266,20 +286,13 @@ fn prepare(app: &App) -> Result<()> {
 
 /// The dictionaries once more, after they failed (a press while they are being made does nothing)
 pub fn keyboard_retry(app: &App, _: Data) -> Result<Reply> {
-    let retry = {
-        let mut status = keyboard(app).status.lock().unwrap();
-        let failed = *status == Status::Failed;
-        if failed {
-            *status = Status::Preparing;
-        }
-        failed
-    };
-    if retry {
-        start(app);
+    if claim(app, Status::Failed) {
+        prepare_in_background(app);
     }
     get_keyboard_state(app, None)
 }
 
+/// (not a start: updateConfigSettings calls every getter at start-up)
 pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
     let state = typing(app).input.state();
     Ok(Reply::ok(state_json(*keyboard(app).status.lock().unwrap(), &state)))
@@ -744,11 +757,27 @@ mod tests {
     }
 
     #[test]
-    fn retry_starts_again_only_after_a_failure() {
+    fn the_dictionaries_are_claimed_once_and_again_only_after_a_failure() {
+        // (claim only: the real preparing, with its download and librime, never starts here)
         let (app, _osc) = rig();
-        // not failed (being prepared): nothing starts, nothing changes
+        let status = || *keyboard(&app).status.lock().unwrap();
+        // started up, every getter collected for the UI (the state too): not yet, shown as preparing
+        super::super::init::update_config_settings(&app);
+        assert_eq!(status(), Status::Idle);
+        assert_eq!(get_keyboard_state(&app, None).unwrap().result["status"], json!("preparing"));
+        assert_eq!(status(), Status::Idle);
+        // the VR UI on: claimed once, not again while being made
+        assert!(claim(&app, Status::Idle));
+        assert!(!claim(&app, Status::Idle));
+        assert_eq!(status(), Status::Preparing);
+        // not failed: a retry claims nothing
+        assert!(!claim(&app, Status::Failed));
         assert_eq!(keyboard_retry(&app, None).unwrap().result["status"], json!("preparing"));
-        assert_eq!(*keyboard(&app).status.lock().unwrap(), Status::Preparing);
+        assert_eq!(status(), Status::Preparing);
+        // failed: a retry claims them again
+        *keyboard(&app).status.lock().unwrap() = Status::Failed;
+        assert!(claim(&app, Status::Failed));
+        assert_eq!(status(), Status::Preparing);
     }
 
     #[test]

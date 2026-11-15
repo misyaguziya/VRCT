@@ -217,7 +217,8 @@ impl Backend {
     }
 
     /// Next line that is not a log (348), the watchdog feeder's answer or the keyboard's state
-    /// (its dictionaries are prepared in the background: no case makes it, it comes any time)
+    /// (its dictionaries are prepared in the background once the VR UI is on, which no case turns
+    /// on: were one to, the state would come any time)
     fn next(&self, deadline: Instant) -> Result<Option<Value>> {
         loop {
             let left = deadline.saturating_duration_since(Instant::now());

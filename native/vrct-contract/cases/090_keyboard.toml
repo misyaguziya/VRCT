@@ -1,15 +1,16 @@
-# VR キーボード。辞書はオフラインなので取れない (日本語・中国語は打てない、状態は時間で変わるので shape)。
+# VR キーボード。辞書の準備は VR UI を ON にするまで始まらない (ここでは OFF のままなので日本語・中国語は打てない。
+# 状態は常に preparing だが、準備が始まる経路では時間で変わるので shape)。
 # 英語と韓国語は辞書なしで打てる。VRChat へ送るのは 040 で OFF のまま。
 
 [[case]]
 name = "get keyboard_state"
 endpoint = "/get/data/keyboard_state"
-rule = "shape"  # 辞書の取得中か失敗か (時間による)
+rule = "shape"  # 準備が始まっていない (preparing)
 
 [[case]]
 name = "keyboard: retry the dictionaries (offline: they fail again)"
 endpoint = "/run/keyboard_retry"
-rule = "shape"  # 取得中か失敗か (時間による)
+rule = "shape"  # 失敗していないので何も始まらない (preparing のまま。名前は基準との照合のため変えない)
 
 [[case]]
 name = "get keyboard_language"
