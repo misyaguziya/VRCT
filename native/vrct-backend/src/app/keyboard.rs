@@ -241,7 +241,9 @@ fn prepare(app: &App) -> Result<()> {
         None => {
             // the sessions borrow it for as long as the app runs
             let rime: &'static Rime = Box::leak(Box::new(Rime::load(&resources.join("rime.dll"))?));
-            rime.start(&shared, &user, &local.join("logs"))?;
+            // the logs relative to the working directory (`local`, set in main): librime reads log_dir in
+            // the ANSI code page, and a UTF-8 path with, say, テ in a Japanese user name aborts it
+            rime.start(&shared, &user, std::path::Path::new("logs"))?;
             *keyboard(app).rime.get_or_init(|| rime)
         }
     };

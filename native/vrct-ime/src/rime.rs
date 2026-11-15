@@ -172,7 +172,8 @@ impl Rime {
     }
 
     /// setup + initialize: the data in `shared` (schemas, dictionaries), what RIME builds and
-    /// learns in `user`, its logs in `log_dir`. Once per process.
+    /// learns in `user`, its logs in `log_dir`. Once per process. `shared` and `user` may hold any
+    /// characters; `log_dir` is read in the ANSI code page (an ASCII path, relative if need be).
     pub fn start(&self, shared: &Path, user: &Path, log_dir: &Path) -> Result<()> {
         let c = |p: &Path| CString::new(p.to_string_lossy().as_bytes()).map_err(|_| anyhow!("NUL in {}", p.display()));
         let (shared, user, log_dir) = (c(shared)?, c(user)?, c(log_dir)?);

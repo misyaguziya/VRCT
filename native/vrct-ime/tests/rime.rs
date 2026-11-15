@@ -17,14 +17,18 @@ fn japanese_and_chinese_convert() {
         eprintln!("SKIPPED: VRCT_RIME_DLL / VRCT_RIME_SHARED not set");
         return;
     };
-    let user = std::env::temp_dir().join(format!("vrct-rime-test-{}", std::process::id()));
+    // as under a Japanese Windows user name, the logs relative to it as the keyboard has them (テ in
+    // an absolute log_dir aborts librime)
+    let root = std::env::temp_dir().join(format!("vrct-rime-test-テスト ユーザー-{}", std::process::id()));
+    let user = root.join("user");
     std::fs::create_dir_all(&user).unwrap();
     for (name, contents) in vrct_ime::setup::user_files(&PathBuf::from(&shared)).unwrap() {
         std::fs::write(user.join(name), contents).unwrap();
     }
     let rime = Rime::load(&PathBuf::from(dll)).unwrap();
     assert!(rime.version().starts_with("1.17"), "{}", rime.version());
-    rime.start(&PathBuf::from(shared), &user, &user).unwrap();
+    std::env::set_current_dir(&root).unwrap();
+    rime.start(&PathBuf::from(shared), &user, std::path::Path::new("logs")).unwrap();
     assert!(rime.deploy(true));
     let s = rime.session().unwrap();
 
