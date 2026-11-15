@@ -19,6 +19,8 @@ type Data = Option<Value>;
 /// The dictionaries (Japanese and Chinese; English and Korean need none)
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Status {
+    /// not started: nothing needed the keyboard yet (shown as preparing)
+    Idle,
     Preparing,
     /// downloading, 0..1
     Downloading(f64),
@@ -115,7 +117,7 @@ impl Keyboard {
     pub fn new(config: &crate::config::Config) -> Self {
         let language = Language::from_code(&config.get_str("KEYBOARD_LANGUAGE")).unwrap_or(Language::Japanese);
         let typing = Typing { input: Input::new(language), history: History::default(), committed_at: None };
-        Keyboard { status: Mutex::new(Status::Preparing), typing: Mutex::new(typing), indicator: Mutex::default(), rime: OnceLock::new(),
+        Keyboard { status: Mutex::new(Status::Idle), typing: Mutex::new(typing), indicator: Mutex::default(), rime: OnceLock::new(),
                    dictation: Mutex::default() }
     }
 }
@@ -131,7 +133,7 @@ fn typing(app: &App) -> MutexGuard<'_, Typing> {
 fn state_json(status: Status, s: &State) -> Value {
     // progress: of the download, 0..1
     let (status, progress) = match status {
-        Status::Preparing => ("preparing", 0.0),
+        Status::Idle | Status::Preparing => ("preparing", 0.0),
         Status::Downloading(p) => ("downloading", p),
         Status::Building => ("building", 1.0),
         Status::Ready => ("ready", 1.0),
@@ -201,8 +203,26 @@ fn set_status(app: &App, status: Status) {
 
 // ------------------------------------------------------------------------------- the dictionaries
 
-/// The dictionaries downloaded (the first time) and built, then Japanese and Chinese type
+/// The dictionaries downloaded (the first time) and built, then Japanese and Chinese type. Not at
+/// start-up: when the keyboard is first needed (the VR UI on, or the UI asking for its state), once
 pub fn start(app: &App) {
+    begin(app, Status::Idle);
+}
+
+/// The dictionaries made ready in the background, when they are `from` (one caller wins: the status
+/// changes under its lock)
+fn begin(app: &App, from: Status) {
+    {
+        let mut status = keyboard(app).status.lock().unwrap();
+        if *status != from {
+            return;
+        }
+        *status = Status::Preparing;
+    }
+    // the tests see the status change only: no download, no librime
+    if cfg!(test) {
+        return;
+    }
     let me = app.me();
     std::thread::spawn(move || {
         let Some(app) = me.upgrade() else { return };
@@ -266,21 +286,13 @@ fn prepare(app: &App) -> Result<()> {
 
 /// The dictionaries once more, after they failed (a press while they are being made does nothing)
 pub fn keyboard_retry(app: &App, _: Data) -> Result<Reply> {
-    let retry = {
-        let mut status = keyboard(app).status.lock().unwrap();
-        let failed = *status == Status::Failed;
-        if failed {
-            *status = Status::Preparing;
-        }
-        failed
-    };
-    if retry {
-        start(app);
-    }
+    begin(app, Status::Failed);
     get_keyboard_state(app, None)
 }
 
+/// Asked for: the keyboard is needed, its dictionaries start if they have not
 pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
+    start(app);
     let state = typing(app).input.state();
     Ok(Reply::ok(state_json(*keyboard(app).status.lock().unwrap(), &state)))
 }
@@ -744,11 +756,24 @@ mod tests {
     }
 
     #[test]
-    fn retry_starts_again_only_after_a_failure() {
+    fn the_dictionaries_start_once_when_first_needed_and_again_only_after_a_failure() {
         let (app, _osc) = rig();
-        // not failed (being prepared): nothing starts, nothing changes
+        let status = || *keyboard(&app).status.lock().unwrap();
+        // started up: not yet
+        assert_eq!(status(), Status::Idle);
+        // the UI asks for the state: they start, shown as preparing all along
+        assert_eq!(get_keyboard_state(&app, None).unwrap().result["status"], json!("preparing"));
+        assert_eq!(status(), Status::Preparing);
+        // being made: asked again, the VR UI on (start) or a retry start nothing again
+        *keyboard(&app).status.lock().unwrap() = Status::Building;
+        assert_eq!(get_keyboard_state(&app, None).unwrap().result["status"], json!("building"));
+        start(&app);
+        assert_eq!(keyboard_retry(&app, None).unwrap().result["status"], json!("building"));
+        assert_eq!(status(), Status::Building);
+        // failed: a retry starts them again
+        *keyboard(&app).status.lock().unwrap() = Status::Failed;
         assert_eq!(keyboard_retry(&app, None).unwrap().result["status"], json!("preparing"));
-        assert_eq!(*keyboard(&app).status.lock().unwrap(), Status::Preparing);
+        assert_eq!(status(), Status::Preparing);
     }
 
     #[test]

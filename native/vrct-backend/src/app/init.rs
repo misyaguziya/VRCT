@@ -480,9 +480,6 @@ pub fn init(app: &App, escalate: impl Fn() + Send + 'static) -> Result<()> {
     ipc::log("Init Overlay");
     super::overlay::sync_overlay_running(app)?;
 
-    ipc::log("Init Keyboard (Background)");
-    super::keyboard::start(app);
-
     ipc::log("Init WebSocket Server");
     init_servers(app)?;
 
