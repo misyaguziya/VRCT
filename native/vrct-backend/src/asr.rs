@@ -51,15 +51,10 @@ impl From<String> for AsrError {
     }
 }
 
-/// A request that did not get its response: timed out, not connected, or cut while it was sent
-/// or the response was read
-pub fn transient(e: &reqwest::Error) -> bool {
-    e.is_timeout() || e.is_connect() || e.is_request() || e.is_body()
-}
-
-/// `transient` for what `Http::send` gives
+/// What `Http::send` gives for a request that did not get its response: timed out, not connected,
+/// or cut while it was sent (not one that could not be made: a bad URL or header)
 pub fn transient_send(e: &anyhow::Error) -> bool {
-    e.downcast_ref::<reqwest::Error>().is_some_and(transient)
+    e.downcast_ref::<reqwest::Error>().is_some_and(|e| e.is_timeout() || e.is_connect() || e.is_request())
 }
 
 /// A response that may be different next time: the server's own failure (5xx)
@@ -111,7 +106,8 @@ pub fn google_recognize(http: &Http, flac: &[u8], rate: u32, language: &str) -> 
     if !response.status().is_success() {
         return Err(failed(transient_status(response.status().as_u16())));
     }
-    let text = response.text().map_err(|e| failed(transient(&e)))?;
+    // reading the body fails only when the connection does (nothing is parsed here)
+    let text = response.text().map_err(|_| failed(true))?;
     parse_google_response(&text).map_err(|_| failed(false))
 }
 
@@ -304,7 +300,9 @@ impl Deepgram {
             status if transient_status(status) => return Err(SERVER_UNAVAILABLE),
             _ => return Err(SERVER_ERROR),
         }
-        let payload: Value = response.json().map_err(|e| if transient(&e) { SERVER_UNAVAILABLE } else { SERVER_ERROR })?;
+        // response.json() in two steps: a body that could not be read is the connection's failure
+        let body = response.bytes().map_err(|_| SERVER_UNAVAILABLE)?;
+        let payload: Value = serde_json::from_slice(&body).map_err(|_| SERVER_ERROR)?;
         let Some(alternative) = payload.pointer("/results/channels/0/alternatives/0") else {
             return Ok((String::new(), 0.0, false));
         };
@@ -370,4 +368,40 @@ pub fn resolve_deepgram_language(languages: &Languages, language: &str, country:
     let base = |c: &str| c.split('-').next().unwrap_or("").to_lowercase();
     let wanted = base(whisper);
     normalized.iter().find(|(n, _)| base(n) == wanted).map(|(_, original)| original.clone())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn openai_errors_are_classified() {
+        let status = |s| map_openai(openai::Error::Status(s, String::new()));
+        assert_eq!(map_openai(openai::Error::Timeout), TIMEOUT);
+        assert_eq!(map_openai(openai::Error::Connection(String::new())), SERVER_UNAVAILABLE);
+        for s in [500, 502, 503, 504] {
+            assert_eq!(status(s), SERVER_UNAVAILABLE, "{s}");
+        }
+        for s in [401, 403, 408, 409, 429] {
+            assert!(!status(s).1, "{s}");
+        }
+        assert_eq!(map_openai(openai::Error::Other(String::new())), SERVER_ERROR);
+    }
+
+    /// A request that cannot be made is not transient: a custom URL that is no URL, a key that
+    /// cannot be a header
+    #[test]
+    fn a_request_that_cannot_be_made_is_fatal() {
+        let languages = Languages::new(json!({}));
+        let api = |base_url: &str, api_key: &str| WhisperApi {
+            http: Http::new().unwrap(),
+            api_key: api_key.into(),
+            base_url: base_url.into(),
+            model: "whisper-1".into(),
+            engine_name: "Custom_Whisper".into(),
+        };
+        for api in [api("not a url", "key"), api("http://127.0.0.1:9/v1", "bad\nkey")] {
+            assert_eq!(api.transcribe(&languages, b"", "Japanese", "Japan", -0.8, 0.6, false), Err(SERVER_ERROR), "{}", api.base_url);
+        }
+    }
 }

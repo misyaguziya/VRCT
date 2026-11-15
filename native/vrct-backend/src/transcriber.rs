@@ -62,6 +62,9 @@ pub struct Transcriber {
     attempts: u64,
     successes: u64,
     transient_failures: u32,
+    /// The phrase (its `phrase_started`) the last transient failure was counted for: the sends of
+    /// one phrase as it grows count once
+    failed_phrase: Option<Instant>,
 }
 
 /// What a candidate language gave: (text, confidence, no need to try the others)
@@ -89,6 +92,7 @@ impl Transcriber {
             attempts: 0,
             successes: 0,
             transient_failures: 0,
+            failed_phrase: None,
         }
     }
 
@@ -163,8 +167,8 @@ impl Transcriber {
     }
 
     /// _finalizeAndTranscribe: Err is the ASR failure that stops the session (an engine failed and
-    /// nothing was heard). A phrase that failed only for transient reasons is skipped instead,
-    /// MAX_TRANSIENT_FAILURES in a row at most.
+    /// nothing was heard). A send that failed only for transient reasons is skipped instead,
+    /// until MAX_TRANSIENT_FAILURES phrases in a row had one.
     fn finalize_and_transcribe(&mut self, languages: &Languages, candidates: &[(String, String)], avg_logprob: f64,
                                no_speech_prob: f64, no_repeat_ngram_size: usize, log: &dyn Fn(String)) -> Result<bool, Failure> {
         if !matches!(self.engine, Engine::Whisper(_)) {
@@ -218,7 +222,10 @@ impl Transcriber {
         let calls_text = format!("calls={}/{} [{}]", calls.len(), candidates.len(), calls.join(" "));
         if provider_error.is_some() && !succeeded {
             if !fatal {
-                self.transient_failures += 1;
+                if self.phrase_started.is_none() || self.failed_phrase != self.phrase_started {
+                    self.transient_failures += 1;
+                    self.failed_phrase = self.phrase_started;
+                }
                 if self.transient_failures < MAX_TRANSIENT_FAILURES {
                     log(format!("[ASR-error][{}][{}] skipped (transient error {}/{MAX_TRANSIENT_FAILURES}) asr={asr_ms}ms {calls_text}",
                                 self.label, self.engine.name(), self.transient_failures));
@@ -229,6 +236,7 @@ impl Transcriber {
             return Err(Failure { code: "ASR_ERROR", stage: "asr" });
         }
         self.transient_failures = 0;
+        self.failed_phrase = None;
         if succeeded {
             self.last_recognition_error = false;
             self.successes += 1;
@@ -362,6 +370,8 @@ impl Transcriber {
         self.last_sample.clear();
         self.last_spoken = None;
         self.phrase_started = None;
+        self.transient_failures = 0;
+        self.failed_phrase = None;
     }
 
     /// getTranscript: the oldest waiting
@@ -417,16 +427,55 @@ mod tests {
             attempts: 0,
             successes: 0,
             transient_failures: 0,
+            failed_phrase: None,
         }
     }
 
-    /// One phrase sent: the result and what was logged
-    fn phrase(t: &mut Transcriber) -> (Result<bool, Failure>, Vec<String>) {
-        let languages = Languages::new(serde_json::json!({"Japanese": {"Japan": {"Google": "ja-JP"}}}));
+    /// The phrase as it is sent once more: the result and what was logged
+    fn send(t: &mut Transcriber, candidates: &[&str]) -> (Result<bool, Failure>, Vec<String>) {
+        let languages = Languages::new(serde_json::json!({"Japanese": {"Japan": {"Google": "ja-JP"}},
+                                                          "English": {"United States": {"Google": "en-US"}}}));
+        let candidates: Vec<(String, String)> = candidates.iter()
+            .map(|l| (l.to_string(), if *l == "Japanese" { "Japan" } else { "United States" }.to_string())).collect();
         let lines = RefCell::new(vec![]);
-        let result = t.finalize_and_transcribe(&languages, &[("Japanese".into(), "Japan".into())], -0.8, 0.6, 0,
-                                               &|l| lines.borrow_mut().push(l));
+        let result = t.finalize_and_transcribe(&languages, &candidates, -0.8, 0.6, 0, &|l| lines.borrow_mut().push(l));
         (result, lines.into_inner())
+    }
+
+    /// A new phrase sent
+    fn phrase(t: &mut Transcriber) -> (Result<bool, Failure>, Vec<String>) {
+        t.phrase_started = Some(Instant::now());
+        send(t, &["Japanese"])
+    }
+
+    #[test]
+    fn the_sends_of_one_phrase_count_once() {
+        let mut t = google(&server(&[503; 8]));
+        assert_eq!(phrase(&mut t).0, Ok(true));
+        // the phrase grows and is sent again, more often than the limit
+        for _ in 0..6 {
+            let (result, lines) = send(&mut t, &["Japanese"]);
+            assert_eq!(result, Ok(true));
+            assert!(lines[0].contains("skipped (transient error 1/5)"), "{lines:?}");
+        }
+        assert_eq!(phrase(&mut t).0, Ok(true));
+        assert_eq!(t.transient_failures, 2);
+        // a mute starts the count again
+        t.clear();
+        assert_eq!((t.transient_failures, t.failed_phrase), (0, None));
+    }
+
+    #[test]
+    fn candidates_with_mixed_results() {
+        // transient and fatal: stopped at once
+        let mut t = google(&server(&[503, 401]));
+        t.phrase_started = Some(Instant::now());
+        assert_eq!(send(&mut t, &["Japanese", "English"]).0, STOPPED);
+        // transient and nothing heard: skipped and counted
+        let mut t = google(&server(&[503, 200]));
+        t.phrase_started = Some(Instant::now());
+        assert_eq!(send(&mut t, &["Japanese", "English"]).0, Ok(true));
+        assert_eq!(t.transient_failures, 1);
     }
 
     const STOPPED: Result<bool, Failure> = Err(Failure { code: "ASR_ERROR", stage: "asr" });
