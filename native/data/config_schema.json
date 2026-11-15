@@ -1169,7 +1169,8 @@
     "fadeout_duration": 2,
     "opacity": 1.0,
     "ui_scaling": 1.0,
-    "tracker": "HMD"
+    "tracker": "HMD",
+    "locked": false
    }
   },
   {
@@ -1189,7 +1190,8 @@
     "fadeout_duration": 2,
     "opacity": 1.0,
     "ui_scaling": 1.0,
-    "tracker": "LeftHand"
+    "tracker": "LeftHand",
+    "locked": false
    }
   },
   {

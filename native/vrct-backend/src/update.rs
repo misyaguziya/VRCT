@@ -13,7 +13,9 @@ use std::time::Duration;
 
 const GITHUB_URL: &str = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest";
 const GITHUB_RELEASES_LIST_URL: &str = "https://api.github.com/repos/misyaguziya/VRCT/releases";
-const MIN_SUPPORTED_VERSION: &str = "3.4.3";
+/// The version picker UI exists from 3.6.0: older releases stay out of the picker and the checks
+/// (their prereleases, 3.6.0-beta.N, are in)
+const MIN_SUPPORTED_VERSION: &str = "3.6.0";
 const HF_REPO_STABLE: &str = "ms-software/VRCT";
 const HF_REPO_BETA: &str = "ms-software/VRCT-beta";
 /// model._HTTP_TIMEOUT (connect 10 s, read 60 s)
@@ -140,10 +142,10 @@ impl PartialOrd for Version {
     }
 }
 
-/// Model._isVersionSupported
+/// Model._isVersionSupported: the release numbers only, so 3.6.0-beta.N (which sorts below 3.6.0) counts
 pub fn is_version_supported(version: &str) -> bool {
     match (Version::parse(version), Version::parse(MIN_SUPPORTED_VERSION)) {
-        (Some(v), Some(min)) => v >= min,
+        (Some(v), Some(min)) => v.release >= min.release,
         _ => false,
     }
 }

@@ -246,12 +246,6 @@
      "version": "3.6.0",
      "is_prerelease": false,
      "published_at": "2026-10-06T00:00:00Z"
-    },
-    {
-     "tag": "v3.5.0",
-     "version": "3.5.0",
-     "is_prerelease": false,
-     "published_at": "2026-10-06T00:00:00Z"
     }
    ],
    "launched": [],
@@ -547,55 +541,10 @@
     "SELECTED_RELEASE_CHANNEL": "stable",
     "VERSION": "3.6.0"
    },
-   "result": "verify_failed",
+   "result": "download_failed",
    "launched": [],
    "setup_written": false,
-   "requests": [
-    {
-     "method": "GET",
-     "url": "https://api.github.com/repos/misyaguziya/VRCT/releases",
-     "headers": {
-      "user-agent": "python-requests/2.34.2",
-      "accept-encoding": "gzip, deflate, zstd",
-      "accept": "*/*",
-      "connection": "keep-alive"
-     },
-     "body": null
-    },
-    {
-     "method": "GET",
-     "url": "https://example.com/broken.sha256",
-     "headers": {
-      "user-agent": "python-requests/2.34.2",
-      "accept-encoding": "gzip, deflate, zstd",
-      "accept": "*/*",
-      "connection": "keep-alive"
-     },
-     "body": null
-    },
-    {
-     "method": "GET",
-     "url": "https://example.com/broken.sha256",
-     "headers": {
-      "user-agent": "python-requests/2.34.2",
-      "accept-encoding": "gzip, deflate, zstd",
-      "accept": "*/*",
-      "connection": "keep-alive"
-     },
-     "body": null
-    },
-    {
-     "method": "GET",
-     "url": "https://example.com/broken.sha256",
-     "headers": {
-      "user-agent": "python-requests/2.34.2",
-      "accept-encoding": "gzip, deflate, zstd",
-      "accept": "*/*",
-      "connection": "keep-alive"
-     },
-     "body": null
-    }
-   ]
+   "requests": []
   },
   {
    "step": "update cpu stable 3.6.1-rc.1",
@@ -6221,16 +6170,16 @@
   "3.6.0-rc.1": true,
   "3.6.0rc2": true,
   "3.6.1": true,
-  "3.6": true,
+  "3.6": false,
   "3.6.0.0": true,
   "3.10.0": true,
-  "3.4.3": true,
+  "3.4.3": false,
   "3.4.2": false,
   "v3.7.0": true,
   "3.7.0-alpha": true,
   "3.7.0.dev1": true,
   "3.7.0.post1": true,
-  "1!1.0": true,
+  "1!1.0": false,
   "3.6.0+local.1": true,
   "3.6.0-beta": true,
   "3.6.0-beta.10": true,

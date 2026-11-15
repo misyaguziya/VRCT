@@ -257,8 +257,8 @@ config_page:
             label: "麥克風音訊 - 紀錄間隔時間"
             desc: "每隔多久要紀錄一次音訊。"
         mic_max_phrase:
-            label: "麥克風音訊 - 最大單詞數量"
-            desc: "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。"
+            label: "麥克風最大等待訊息數"
+            desc: "轉錄後的訊息在發送前最多可以積壓的數量。超過後，最舊的訊息會被捨棄，不會發送到 VRChat。"
         mic_word_filter:
             label: "麥克風單詞過濾器"
             desc: "如果偵測到清單內的單詞，則不會發送訊息。要一次新增多個詞語，請用「,」（半形逗號）分隔。\n*重複詞語會被忽略。"
@@ -271,8 +271,8 @@ config_page:
             label: "喇叭音訊 - 紀錄間隔時間"
             desc: "以指定秒數間隔進行轉錄處理。"
         speaker_max_phrase:
-            label: "喇叭音訊 - 最大單詞數量"
-            desc: "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。"
+            label: "喇叭最大等待訊息數"
+            desc: "轉錄後的訊息在顯示到記錄前最多可以積壓的數量。超過後，最舊的訊息會被捨棄，不會顯示。"
         select_transcription_engine:
             label: "語音辨識使用的引擎"
         whisper_weight_type:
@@ -300,6 +300,7 @@ config_page:
         restore_default_settings: "恢復預設設定"
         position: "位置"
         rotation: "旋轉"
+        lock_position: "鎖定座標（禁止在VR中抓取移動）"
         x_position: "X軸（左右）"
         y_position: "Y軸（上下）"
         z_position: "Z軸（前後）"
@@ -558,7 +559,7 @@ vr_panel:
         types_unavailable: "沒有可用的處理類型。請檢查所選裝置。"
         prepare_model: "尚未準備模型。請在電腦設定中下載。"
         unavailable: "無法使用。請檢查電腦設定。"
-        speaker_adjustments: "調整分段與保留詞數"
+        speaker_adjustments: "調整分段與最大等待訊息數"
         ui_log: "VR UI 記錄視窗"
         subtitle_overlay: "字幕浮層（單行／多行）"
         decrease: "減少{{label}}"

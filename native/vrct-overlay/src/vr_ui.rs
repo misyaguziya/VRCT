@@ -537,7 +537,7 @@ impl Run<'_> {
                 }
                 continue;
             }
-            if Some(index) == panel && w.panel_locked {
+            if (Some(index) == panel && w.panel_locked) || w.sizes[index].settings.locked {
                 continue;
             }
             let (Some(overlay_pose), Some(ray)) = (self.overlay_world_pose(w, index), hand_pose) else { continue };

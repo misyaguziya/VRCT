@@ -48,6 +48,8 @@ pub struct Settings {
     pub fadeout_duration: f64,
     /// the log window's size (logical px; "width" / "height" of OVERLAY_VR_PANEL_SETTINGS)
     pub panel_size: Option<(u32, u32)>,
+    /// a locked log window cannot be grabbed (the logs' "locked")
+    pub locked: bool,
 }
 
 /// The launcher's intro (only when the VR UI is turned on): Pending until it can first show,
@@ -102,6 +104,7 @@ pub(crate) enum Command {
     Position(String, [f64; 6], String),
     DisplayDuration(String, f64),
     FadeoutDuration(String, f64),
+    Locked(String, bool),
     VrWindows(bool, bool),
     VrPanelEnabled(bool),
     PanelLocked(bool),
@@ -215,6 +218,10 @@ impl Overlay {
 
     pub fn update_fadeout_duration(&self, size: &str, seconds: f64) {
         self.send(Command::FadeoutDuration(size.into(), seconds));
+    }
+
+    pub fn update_locked(&self, size: &str, locked: bool) {
+        self.send(Command::Locked(size.into(), locked));
     }
 
     /// setVrWindows: whether the log window and the temporary window show
@@ -424,6 +431,7 @@ impl Worker {
             }),
             Command::DisplayDuration(name, v) => self.with(&name, |s| s.display_duration = v),
             Command::FadeoutDuration(name, v) => self.with(&name, |s| s.fadeout_duration = v),
+            Command::Locked(name, v) => self.with(&name, |s| s.locked = v),
             // without SteamVR an image has nowhere to go (updateImage does nothing then)
             Command::Image(..) => {}
             other => self.apply_request(other),
@@ -899,7 +907,7 @@ impl<'s> Run<'s> {
     fn apply(&mut self, w: &mut Worker, command: Command) {
         let name = match &command {
             Command::Image(n, _) | Command::Opacity(n, ..) | Command::UiScaling(n, _) | Command::Position(n, ..)
-            | Command::DisplayDuration(n, _) | Command::FadeoutDuration(n, _) => n.clone(),
+            | Command::DisplayDuration(n, _) | Command::FadeoutDuration(n, _) | Command::Locked(n, _) => n.clone(),
             Command::Stop => {
                 w.stopped = true;
                 return;
@@ -914,6 +922,7 @@ impl<'s> Run<'s> {
             Command::Position(_, position, tracker) => self.update_position(w, i, position, &tracker),
             Command::DisplayDuration(_, seconds) => w.sizes[i].settings.display_duration = seconds,
             Command::FadeoutDuration(_, seconds) => w.sizes[i].settings.fadeout_duration = seconds,
+            Command::Locked(_, locked) => w.sizes[i].settings.locked = locked,
             _ => {}
         }
     }

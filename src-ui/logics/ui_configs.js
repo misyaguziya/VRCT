@@ -29,6 +29,7 @@ export const ui_configs = {
         fadeout_duration: 2,
         opacity: 1.0,
         ui_scaling: 1.0,
+        locked: false,
     },
     get overlay_small_log_default_settings() {
         return { ...this._overlay_log_default_settings_base, tracker: "HMD" };

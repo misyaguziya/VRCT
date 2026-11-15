@@ -4458,7 +4458,8 @@
       "fadeout_duration": 2,
       "opacity": 1.0,
       "ui_scaling": 1.0,
-      "tracker": "HMD"
+      "tracker": "HMD",
+      "locked": false
     },
     "/get/data/overlay_vr_panel_opacity": 1.0,
     "/get/data/overlay_vr_panel_anchor": "Playspace",
@@ -4503,7 +4504,8 @@
       "fadeout_duration": 2,
       "opacity": 1.0,
       "ui_scaling": 1.0,
-      "tracker": "LeftHand"
+      "tracker": "LeftHand",
+      "locked": false
     },
     "/get/data/overlay_show_only_translated_messages": false,
     "/get/data/send_message_format_parts": {
@@ -6188,7 +6190,8 @@
         "fadeout_duration": 2,
         "opacity": 1.0,
         "ui_scaling": 1.0,
-        "tracker": "HMD"
+        "tracker": "HMD",
+        "locked": false
       },
       "pushes": [],
       "push_results": [],
@@ -6321,7 +6324,8 @@
         "fadeout_duration": 2,
         "opacity": 1.0,
         "ui_scaling": 1.0,
-        "tracker": "LeftHand"
+        "tracker": "LeftHand",
+        "locked": false
       },
       "pushes": [],
       "push_results": [],
@@ -8571,7 +8575,8 @@
         "fadeout_duration": 3,
         "opacity": 0.8,
         "ui_scaling": 1.2,
-        "tracker": "HMD"
+        "tracker": "HMD",
+        "locked": false
       },
       "pushes": [],
       "push_results": [],
@@ -8601,7 +8606,8 @@
         "fadeout_duration": 3,
         "opacity": 0.8,
         "ui_scaling": 1.2,
-        "tracker": "HMD"
+        "tracker": "HMD",
+        "locked": false
       },
       "pushes": [],
       "push_results": [],
@@ -8622,7 +8628,8 @@
         "fadeout_duration": 2,
         "opacity": 1.0,
         "ui_scaling": 1.0,
-        "tracker": "HMD"
+        "tracker": "HMD",
+        "locked": false
       },
       "pushes": [],
       "push_results": [],

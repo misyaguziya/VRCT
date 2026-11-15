@@ -26,6 +26,8 @@ import RedoSvg from "@images/redo.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 import SquareSvg from "@images/square.svg?react";
 import TriangleSvg from "@images/triangle.svg?react";
+import LockSvg from "@images/lock.svg?react";
+import UnlockSvg from "@images/unlock.svg?react";
 import { randomIntMinMax } from "@utils";
 
 export const Vr = () => {
@@ -47,9 +49,15 @@ export const Vr = () => {
     } = useVr();
 
 
+    // ロック中のオーバーレイは、位置・回転とロックを今のまま残す (初期化で動いたりロックが外れたりしないように)
+    const defaultsKeepingLock = (defaults, current) => {
+        if (!current?.locked) return defaults;
+        const { x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, locked } = current;
+        return { ...defaults, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, locked };
+    };
     const restoreDefaultSettings = () => {
-        setOverlaySmallLogSettings(ui_configs.overlay_small_log_default_settings);
-        setOverlayLargeLogSettings(ui_configs.overlay_large_log_default_settings);
+        setOverlaySmallLogSettings(defaultsKeepingLock(ui_configs.overlay_small_log_default_settings, currentOverlaySmallLogSettings.data));
+        setOverlayLargeLogSettings(defaultsKeepingLock(ui_configs.overlay_large_log_default_settings, currentOverlayLargeLogSettings.data));
     };
 
     return (
@@ -132,6 +140,8 @@ const OverlaySettingsContainer = ({
     };
 
     const selectFunction = (key, value) => {
+        // 送信待ちのスライダー操作は、いまの settings (操作を反映済み) に含めて送る。後から古い値で上書きさせない
+        if (timeout_id) clearTimeout(timeout_id);
         const new_data = { ...settings, [key]: value };
         setOverlaySettings(new_data);
     };
@@ -144,18 +154,29 @@ const OverlaySettingsContainer = ({
                 variable={current_is_enabled_overlay}
                 toggleFunction={toggle_is_enabled_overlay}
             />
-            <PageSwitcherContainer
-                toggleFunction={togglePositionRotationController}
-                is_selected={is_opened_position_controller}
-                label_1={t("config_page.vr.position")}
-                label_2={t("config_page.vr.rotation")}
-            />
+            <div className={styles.controller_type_switch_row}>
+                <PageSwitcherContainer
+                    toggleFunction={togglePositionRotationController}
+                    is_selected={is_opened_position_controller}
+                    label_1={t("config_page.vr.position")}
+                    label_2={t("config_page.vr.rotation")}
+                />
+                <button
+                    className={clsx(styles.lock_button, { [styles.is_locked]: settings.locked })}
+                    onClick={() => selectFunction("locked", !settings.locked)}
+                    title={t("config_page.vr.lock_position")}
+                    aria-label={t("config_page.vr.lock_position")}
+                    aria-pressed={!!settings.locked}
+                >
+                    {settings.locked ? <LockSvg className={styles.lock_button_svg} /> : <UnlockSvg className={styles.lock_button_svg} />}
+                </button>
+            </div>
 
             <div className={styles.position_rotation_controls_box}>
                 {is_opened_position_controller ? (
-                    <PositionControls settings={settings} onChangeFunction={onChangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
+                    <PositionControls settings={settings} onChangeFunction={onChangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction} is_locked={settings.locked}/>
                 ) : (
-                    <RotationControls settings={settings} onChangeFunction={onChangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
+                    <RotationControls settings={settings} onChangeFunction={onChangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction} is_locked={settings.locked}/>
                 )}
             <SendSampleTextToggleButton />
             </div>
@@ -198,7 +219,7 @@ const PageSwitcherContainer = (props) => {
 };
 
 
-export const PositionControls = ({ settings, onChangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
+export const PositionControls = ({ settings, onChangeFunction, selectFunction, ui_configs, default_ui_configs, is_locked }) => {
     const { t } = useI18n();
 
     const {
@@ -226,7 +247,7 @@ export const PositionControls = ({ settings, onChangeFunction, selectFunction, u
     } = useVariableControl("z_pos", settings, onChangeFunction, ui_configs);
 
     return (
-        <div className={styles.position_controls}>
+        <div className={clsx(styles.position_controls, { [styles.is_locked_controls]: is_locked })} inert={is_locked ? "" : undefined}>
             <div className={styles.position_wrapper}>
                 <p className={clsx(styles.slider_label, styles.x_position_label)}>
                     {t("config_page.vr.x_position")}
@@ -310,7 +331,7 @@ export const PositionControls = ({ settings, onChangeFunction, selectFunction, u
     );
 };
 
-export const RotationControls = ({ settings, onChangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
+export const RotationControls = ({ settings, onChangeFunction, selectFunction, ui_configs, default_ui_configs, is_locked }) => {
     const { t } = useI18n();
 
     const {
@@ -338,7 +359,7 @@ export const RotationControls = ({ settings, onChangeFunction, selectFunction, u
     } = useVariableControl("z_rotation", settings, onChangeFunction, ui_configs);
 
     return (
-        <div className={styles.rotation_controls}>
+        <div className={clsx(styles.rotation_controls, { [styles.is_locked_controls]: is_locked })} inert={is_locked ? "" : undefined}>
             <div className={styles.rotation_wrapper}>
                 <p className={clsx(styles.slider_label, styles.x_rotation_label)}>
                     {t("config_page.vr.x_rotation")}
