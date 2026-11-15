@@ -1,0 +1,392 @@
+{
+ "trees": {
+  "Systran/faster-whisper-base": [
+   "config.json",
+   "model.bin",
+   "tokenizer.json",
+   "vocabulary.txt",
+   "README.md",
+   ".gitattributes"
+  ],
+  "jncraton/m2m100_418M-ct2-int8": [
+   "config.json",
+   "model.bin",
+   "shared_vocabulary.json",
+   "sub/inner.txt",
+   "../evil.txt",
+   "a/../b.txt",
+   "missing.txt",
+   "flaky.txt",
+   "dir with space/x y.json"
+  ]
+ },
+ "steps": [
+  {
+   "step": "whisper",
+   "result": null,
+   "progress_last": "end",
+   "files": {
+    "weights/whisper/base/config.json": "content of config.json",
+    "weights/whisper/base/model.bin": "content of model.bincontent of model.bin",
+    "weights/whisper/base/tokenizer.json": "content of tokenizer.json",
+    "weights/whisper/base/vocabulary.txt": "content of vocabulary.txt"
+   },
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/api/models/Systran/faster-whisper-base/tree/main?recursive=True&expand=False",
+     "headers": {
+      "user-agent": "unknown/None; hf_hub/0.32.2; python/3.11.5",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/config.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/model.bin",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/tokenizer.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/vocabulary.txt",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "ct2",
+   "result": false,
+   "progress_last": "end",
+   "files": {
+    "weights/ctranslate2/m2m100_418M-ct2-int8/b.txt": "content of b.txt",
+    "weights/ctranslate2/m2m100_418M-ct2-int8/config.json": "content of config.json",
+    "weights/ctranslate2/m2m100_418M-ct2-int8/dir with space/x y.json": "content of dir%20with%20space/x%20y.json",
+    "weights/ctranslate2/m2m100_418M-ct2-int8/flaky.txt": "content of flaky.txt",
+    "weights/ctranslate2/m2m100_418M-ct2-int8/model.bin": "content of model.bincontent of model.bin",
+    "weights/ctranslate2/m2m100_418M-ct2-int8/shared_vocabulary.json": "content of shared_vocabulary.json",
+    "weights/ctranslate2/m2m100_418M-ct2-int8/sub/inner.txt": "content of sub/inner.txt"
+   },
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/api/models/jncraton/m2m100_418M-ct2-int8/tree/main?recursive=True&expand=False",
+     "headers": {
+      "user-agent": "unknown/None; hf_hub/0.32.2; python/3.11.5",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/config.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/model.bin",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/shared_vocabulary.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/sub/inner.txt",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/b.txt",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/missing.txt",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/flaky.txt",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/flaky.txt",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/jncraton/m2m100_418M-ct2-int8/resolve/main/dir%20with%20space/x%20y.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "whisper tree fails",
+   "result": null,
+   "progress_last": "end",
+   "files": {
+    "weights/whisper/base/config.json": "content of config.json",
+    "weights/whisper/base/model.bin": "content of model.bincontent of model.bin",
+    "weights/whisper/base/tokenizer.json": "content of tokenizer.json",
+    "weights/whisper/base/vocabulary.txt": "content of vocabulary.txt"
+   },
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/api/models/Systran/faster-whisper-base/tree/main?recursive=True&expand=False",
+     "headers": {
+      "user-agent": "unknown/None; hf_hub/0.32.2; python/3.11.5",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/config.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/preprocessor_config.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/model.bin",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/tokenizer.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/vocabulary.txt",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/Systran/faster-whisper-base/resolve/main/vocabulary.json",
+     "headers": {
+      "user-agent": "python-requests/2.34.2",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  },
+  {
+   "step": "ct2 tree fails",
+   "result": false,
+   "progress_last": null,
+   "files": {},
+   "requests": [
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/api/models/jncraton/m2m100_418M-ct2-int8/tree/main?recursive=True&expand=False",
+     "headers": {
+      "user-agent": "unknown/None; hf_hub/0.32.2; python/3.11.5",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/api/models/jncraton/m2m100_418M-ct2-int8/tree/main?recursive=True&expand=False",
+     "headers": {
+      "user-agent": "unknown/None; hf_hub/0.32.2; python/3.11.5",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    },
+    {
+     "method": "GET",
+     "url": "https://huggingface.co/api/models/jncraton/m2m100_418M-ct2-int8/tree/main?recursive=True&expand=False",
+     "headers": {
+      "user-agent": "unknown/None; hf_hub/0.32.2; python/3.11.5",
+      "accept-encoding": "gzip, deflate, zstd",
+      "accept": "*/*",
+      "connection": "keep-alive"
+     },
+     "body": null
+    }
+   ]
+  }
+ ],
+ "marker": {
+  "files": {
+   "model.bin": "xxxxx",
+   "sub/vocab.txt": "vocab",
+   "config.json": "{}",
+   "tie1.bin": "",
+   "tie2.bin": "t"
+  },
+  "mtime_ns": {
+   "model.bin": 1760140800123456700,
+   "sub/vocab.txt": 1760140801999999900,
+   "config.json": 1700000000000500000,
+   "tie1.bin": 1700000000062500000,
+   "tie2.bin": 1700000000187500000
+  },
+  "written": {
+   "verified_files": {
+    "config.json": {
+     "size": 2,
+     "mtime": 1700000000.0
+    },
+    "model.bin": {
+     "size": 5,
+     "mtime": 1760140800.123
+    },
+    "tie1.bin": {
+     "size": 0,
+     "mtime": 1700000000.062
+    },
+    "tie2.bin": {
+     "size": 1,
+     "mtime": 1700000000.188
+    },
+    "sub/vocab.txt": {
+     "size": 5,
+     "mtime": 1760140802.0
+    }
+   }
+  },
+  "verified": true,
+  "verified_after_touch": false
+ }
+}

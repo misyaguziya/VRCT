@@ -21,5 +21,105 @@
   "sentencepiece 0.14.0": {
     "urls": ["https://raw.githubusercontent.com/danieldk/sentencepiece/ff5626ae0058103e16244b35772d6bb1d655a6df/LICENSE-MIT",
              "https://raw.githubusercontent.com/danieldk/sentencepiece/ff5626ae0058103e16244b35772d6bb1d655a6df/LICENSE-APACHE"]
+  },
+  "alloc-stdlib 0.2.2": {
+    "urls": ["https://raw.githubusercontent.com/dropbox/rust-alloc-no-stdlib/6032b6a9b20e03737135c55a0270ccffcc1438ef/LICENSE"]
+  },
+  "convert_case 0.4.0": {
+    "_note": "MIT; the repository added its LICENSE after 0.4.0 (e58d5ae2)",
+    "urls": ["https://raw.githubusercontent.com/rutrum/convert-case/e58d5ae2ee30e434f1ea19a63e35c7e6abae84ad/LICENSE"]
+  },
+  "dwrote 0.11.3": {
+    "_note": "MPL-2.0 without its text in the package or repository: the license (as the Servo project ships it)",
+    "urls": ["https://raw.githubusercontent.com/servo/servo/f5ab95786f9cbbf5804d87f265812325fc80ad7b/LICENSE"]
+  },
+  "fxhash 0.2.1": {
+    "_note": "Apache-2.0 / MIT without a license file anywhere: taken under Apache-2.0",
+    "urls": ["https://www.apache.org/licenses/LICENSE-2.0.txt"]
+  },
+  "mac 0.1.1": {
+    "_note": "MIT / Apache-2.0 without a license file anywhere: taken under Apache-2.0",
+    "urls": ["https://www.apache.org/licenses/LICENSE-2.0.txt"]
+  },
+  "pathfinder_geometry 0.5.1": {
+    "_note": "published from a commit not on GitHub (a5e98fac): the repository's licenses at pathfinder_simd 0.5.4's",
+    "urls": ["https://raw.githubusercontent.com/servo/pathfinder/6ef6ccb519d7771dbea02e7ef50cc0ee34b3020b/LICENSE-APACHE",
+             "https://raw.githubusercontent.com/servo/pathfinder/6ef6ccb519d7771dbea02e7ef50cc0ee34b3020b/LICENSE-MIT"]
+  },
+  "pathfinder_simd 0.5.4": {
+    "urls": ["https://raw.githubusercontent.com/servo/pathfinder/6ef6ccb519d7771dbea02e7ef50cc0ee34b3020b/LICENSE-APACHE",
+             "https://raw.githubusercontent.com/servo/pathfinder/6ef6ccb519d7771dbea02e7ef50cc0ee34b3020b/LICENSE-MIT"]
+  },
+  "phf 0.10.1": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/bed01538ae576876f11189d541875d228acef9e8/LICENSE"]
+  },
+  "phf 0.8.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/81c7cc5b48649108428671d3b8ad151f6fbdb359/LICENSE"]
+  },
+  "phf_codegen 0.10.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/3ea14b2166553ad6e7b9afe7244144f5d661b6c6/LICENSE"]
+  },
+  "phf_codegen 0.8.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/81c7cc5b48649108428671d3b8ad151f6fbdb359/LICENSE"]
+  },
+  "phf_generator 0.10.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/3ea14b2166553ad6e7b9afe7244144f5d661b6c6/LICENSE"]
+  },
+  "phf_generator 0.8.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/81c7cc5b48649108428671d3b8ad151f6fbdb359/LICENSE"]
+  },
+  "phf_macros 0.8.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/81c7cc5b48649108428671d3b8ad151f6fbdb359/LICENSE"]
+  },
+  "phf_shared 0.10.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/3ea14b2166553ad6e7b9afe7244144f5d661b6c6/LICENSE"]
+  },
+  "phf_shared 0.8.0": {
+    "urls": ["https://raw.githubusercontent.com/sfackler/rust-phf/81c7cc5b48649108428671d3b8ad151f6fbdb359/LICENSE"]
+  },
+  "selectors 0.22.0": {
+    "urls": ["https://raw.githubusercontent.com/servo/servo/7fea21d888f111f9e4c0f2dd2a5550a097dfcf4b/LICENSE"]
+  },
+  "servo_arc 0.1.1": {
+    "_note": "MIT / Apache-2.0 without a license file (servo's components have none): taken under Apache-2.0",
+    "urls": ["https://www.apache.org/licenses/LICENSE-2.0.txt"]
+  },
+  "tauri-plugin 2.2.0": {
+    "urls": ["https://raw.githubusercontent.com/tauri-apps/tauri/977c4b496cbf96b811c0c5080263e31b83d8e084/LICENSE.spdx",
+             "https://raw.githubusercontent.com/tauri-apps/tauri/977c4b496cbf96b811c0c5080263e31b83d8e084/LICENSE_APACHE-2.0",
+             "https://raw.githubusercontent.com/tauri-apps/tauri/977c4b496cbf96b811c0c5080263e31b83d8e084/LICENSE_MIT"]
+  },
+  "thin-slice 0.1.1": {
+    "_note": "MPL-2.0 without its text in the package or repository: the license (as the Servo project ships it)",
+    "urls": ["https://raw.githubusercontent.com/servo/servo/f5ab95786f9cbbf5804d87f265812325fc80ad7b/LICENSE"]
+  },
+  "unic-char-property 0.9.0": {
+    "urls": ["https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE",
+             "https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"]
+  },
+  "unic-char-range 0.9.0": {
+    "urls": ["https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE",
+             "https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"]
+  },
+  "unic-common 0.9.0": {
+    "urls": ["https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE",
+             "https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"]
+  },
+  "unic-ucd-ident 0.9.0": {
+    "urls": ["https://raw.githubusercontent.com/open-i18n/rust-unic/8a6ce83063d90b91ae2ce59eddb803edd393fca9/LICENSE-APACHE",
+             "https://raw.githubusercontent.com/open-i18n/rust-unic/8a6ce83063d90b91ae2ce59eddb803edd393fca9/LICENSE-MIT"]
+  },
+  "unic-ucd-version 0.9.0": {
+    "urls": ["https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-APACHE",
+             "https://raw.githubusercontent.com/open-i18n/rust-unic/5878605364af97a3358368a6eaef02104af2e016/LICENSE-MIT"]
+  },
+  "webview2-com 0.37.0": {
+    "urls": ["https://raw.githubusercontent.com/wravery/webview2-rs/a0bd05ce3a557552318c0dff5a52fcb9faa37638/LICENSE"]
+  },
+  "webview2-com-macros 0.8.0": {
+    "urls": ["https://raw.githubusercontent.com/wravery/webview2-rs/2a4d92c91002f91b49fd282abbbe8ec8d3318339/LICENSE"]
+  },
+  "webview2-com-sys 0.37.0": {
+    "urls": ["https://raw.githubusercontent.com/wravery/webview2-rs/a0bd05ce3a557552318c0dff5a52fcb9faa37638/LICENSE"]
   }
 }

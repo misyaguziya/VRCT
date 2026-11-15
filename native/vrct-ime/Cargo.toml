@@ -1,0 +1,13 @@
+[package]
+name = "vrct-ime"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "The VR keyboard's input: librime (rime.dll) for Japanese and Chinese, Hangul composition for Korean"
+
+[dependencies]
+anyhow = "1"
+serde_yaml = "0.9"
+unicode-segmentation = "1"
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_LibraryLoader"] }

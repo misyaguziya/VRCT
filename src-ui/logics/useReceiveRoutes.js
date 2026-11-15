@@ -22,10 +22,21 @@ export const STATIC_ROUTE_META_LIST = [
     // ログウィンドウが視線から外れた・戻った / 呼び戻しの応答
     { endpoint: "/run/vr_panel_log_out_of_view", ns: common, hook_name: "useVrPanelLogOutOfView", method_name: "updateVrPanelLogOutOfView" },
     { endpoint: "/run/vr_panel_launcher_intro", ns: common, hook_name: "useVrPanelLauncherIntro", method_name: "updateVrPanelLauncherIntro" },
+    { endpoint: "/run/steamvr_bindings", ns: common, hook_name: "useSteamVrBindings", method_name: "receiveSteamVrBindings" },
+    { endpoint: "/run/vr_panel_keyboard_shortcut", ns: common, hook_name: "useVrPanelKeyboardShortcut", method_name: "updateVrPanelKeyboardShortcut" },
     { endpoint: "/run/vr_panel_recall_log", ns: null, hook_name: null, method_name: null },
+    { endpoint: "/run/vr_panel_recall_keyboard", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/vr_panel_layout_rendered", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/vr_panel_tooltip", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
+
+    // VRキーボード: キー・候補・クリアの応答はキーボードの表示そのもの。Enter で送った結果はログにも出す
+    { endpoint: "/run/keyboard_key", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_select", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_clear", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_cursor", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_retry", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },
+    { endpoint: "/run/keyboard_sent", ns: common, hook_name: "useKeyboard", method_name: "receiveKeyboardSend" },
 
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },
     { endpoint: "/set/data/main_window_geometry", ns: null, hook_name: null, method_name: null },

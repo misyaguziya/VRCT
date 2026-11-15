@@ -115,6 +115,42 @@ fn extract_wheel(wheel: &Path, files: &[String], dest: &Path) -> Result<()> {
     Ok(())
 }
 
+/// The `files` of a 7z archive (librime's releases) into `dest`, by Windows' own tar (bsdtar reads 7z)
+fn extract_7z(archive: &Path, files: &[String], dest: &Path) -> Result<()> {
+    let unpacked = archive.with_extension("d");
+    if !unpacked.is_dir() {
+        let tmp = archive.with_extension("d.part");
+        if tmp.exists() {
+            fs::remove_dir_all(&tmp)?;
+        }
+        fs::create_dir_all(&tmp)?;
+        let tar = Path::new(&std::env::var("SystemRoot").unwrap_or_else(|_| r"C:\Windows".into())).join(r"System32\tar.exe");
+        let ok = std::process::Command::new(&tar).arg("-xf").arg(archive).arg("-C").arg(&tmp).status()
+            .with_context(|| format!("run {}", tar.display()))?.success();
+        if !ok {
+            bail!("{} could not unpack {}", tar.display(), archive.display());
+        }
+        fs::rename(&tmp, &unpacked)?;
+    }
+    for pattern in files {
+        let (dir, name) = pattern.rsplit_once('/').unwrap_or(("", pattern));
+        let mut found = false;
+        for entry in fs::read_dir(unpacked.join(dir)).with_context(|| format!("{} has no {dir}", archive.display()))? {
+            let path = entry?.path();
+            let file = path.file_name().unwrap().to_string_lossy().to_string();
+            if path.is_file() && matches(name, &file) {
+                fs::copy(&path, dest.join(&file))?;
+                println!("  {}", dest.join(&file).display());
+                found = true;
+            }
+        }
+        if !found {
+            bail!("{} has no {pattern}", archive.display());
+        }
+    }
+    Ok(())
+}
+
 fn extract_headers(tarball: &Path, dir: &str, dest: &Path) -> Result<()> {
     let mut archive = tar::Archive::new(flate2::read::GzDecoder::new(fs::File::open(tarball)?));
     let include = dest.join("include");
@@ -162,7 +198,11 @@ fn fetch_native(cuda: bool) -> Result<()> {
         } else if let Some(url) = &e.url {
             let archive = url.rsplit('/').next().unwrap_or("archive.zip");
             let cached = fetch(url, &format!("{name}-{}-{archive}", e.version), &e.sha256, &cache)?;
-            extract_wheel(&cached, &e.files, &dest)?;
+            if archive.ends_with(".7z") {
+                extract_7z(&cached, &e.files, &dest)?;
+            } else {
+                extract_wheel(&cached, &e.files, &dest)?;
+            }
             Some(cached)
         } else {
             let url = wheel_url(name, &e.version, &e.wheel)?;
@@ -263,7 +303,7 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     }
     fs::create_dir_all(&internal)?;
     fs::copy(built.join("VRCT-sidecar.exe"), out.join(exe_name)).context("build VRCT-sidecar first")?;
-    let mut dll_dirs = vec!["ctranslate2", "numpy", "onnxruntime", "openvr"];
+    let mut dll_dirs = vec!["ctranslate2", "numpy", "onnxruntime", "openvr", "librime"];
     if cuda {
         dll_dirs.extend(["nvidia-cublas-cu12", "nvidia-cudnn-cu12"]);
     }
@@ -279,6 +319,9 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     for name in ["silero_encoder_v5.onnx", "silero_decoder_v5.onnx"] {
         fs::copy(third_party.join("faster-whisper").join(name), internal.join("silero").join(name))?;
     }
+    // the VR keyboard: OpenCC's data (Traditional / Simplified Chinese) beside rime.dll; the
+    // dictionaries are downloaded on the first start
+    copy_dir(&third_party.join("librime-opencc"), &internal.join("rime").join("opencc")).context("librime-opencc: run fetch-native")?;
     // OCR: the bubble detector (with its notices) and RapidOCR's models
     copy_dir(&data.join("ocr"), &internal.join("ocr"))?;
     let rapidocr = internal.join("ocr").join("rapidocr");
@@ -308,7 +351,8 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     for (from, to) in [("vrct-backend/THIRD_PARTY_LICENSES.txt", "rust-crates.txt"),
                        ("vrct-audio/SPEECH_RECOGNITION_LICENSE.txt", "speech_recognition.txt"),
                        ("vrct-backend/GOOGLE_SPEECH_LICENSE.txt", "google_speech.txt"),
-                       ("vrct-ocr/LICENSE-APACHE-2.0", "rapidocr-port-apache-2.0.txt")] {
+                       ("vrct-ocr/LICENSE-APACHE-2.0", "rapidocr-port-apache-2.0.txt"),
+                       ("vrct-ime/RIME_THIRD_PARTY_NOTICES.txt", "rime.txt")] {
         fs::copy(native.join(from), licenses.join(to)).with_context(|| from.to_string())?;
     }
     if let Some(weights) = weights {
@@ -382,7 +426,11 @@ fn main() -> Result<()> {
                                                args.iter().any(|a| a == "--cuda"),
                                                &arg(&args, "--exe-name").unwrap_or_else(|| "VRCT-sidecar.exe".into()),
                                                arg(&args, "--weights").map(PathBuf::from)),
-        Some("release-zip") => release_zip(&PathBuf::from(arg(&args, "--out").context("--out <zip>")?)),
+        Some("release-zip") => {
+            let out = PathBuf::from(arg(&args, "--out").context("--out <zip>")?);
+            // a zip that stopped half way is not left behind (never shipped with files missing)
+            release_zip(&out).inspect_err(|_| { let _ = fs::remove_file(&out); })
+        }
         _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>] | release-zip --out <zip>"),
     }
 }

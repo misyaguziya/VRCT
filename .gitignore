@@ -13,6 +13,7 @@ logs/
 .venv_cuda/
 .venv-collector/
 weights/
+!native/testdata/weights/
 # Local evaluation dataset archives (never commit downloaded speech data)
 common-voice-scripted-speech-*.tar.gz
 .vscode

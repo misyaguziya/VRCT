@@ -800,6 +800,119 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_vr_tooltip",
     },
     {
+        // VRキーボードの表示 (辞書の準備・打った文字・変換の候補)。キーを押すたびの応答と、
+        // 辞書の準備が進んだときにバックエンドから届く
+        Category: "Vr",
+        Base_Name: "KeyboardState",
+        default_value: {
+            status: "preparing", progress: 0, text: "", after: "", composition: null, candidates: [],
+            highlighted: 0, converting: false, page: 0, last_page: false, syllable: null, length: 0,
+        },
+        ui_template_id: "object",
+        logics_template_id: "get_only",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "keyboard_state",
+    },
+    {
+        // VRキーボードの言語 (ja / en / ko / zh)
+        Category: "Vr",
+        Base_Name: "KeyboardLanguage",
+        default_value: "ja",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_language",
+    },
+    {
+        // VRキーボードで何も変換していないときに Enter で送る先 (vrct: 翻訳してチャットボックスへ / paste: VRChat の入力欄へ貼る)
+        Category: "Vr",
+        Base_Name: "KeyboardSendTo",
+        default_value: "vrct",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_send_to",
+    },
+    {
+        // VRキーボードの中国語を簡体字にする (OFF: 繁体字)
+        Category: "Vr",
+        Base_Name: "IsEnabledKeyboardChineseSimplified",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "keyboard_chinese_simplified",
+    },
+    {
+        // VRキーボードのキーの音
+        Category: "Vr",
+        Base_Name: "IsEnabledKeyboardKeySound",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "keyboard_key_sound",
+    },
+    {
+        // VRキーボードのキーの音の大きさ (0〜100%)。VR設定ウィンドウのキーボードで変える
+        Category: "Vr",
+        Base_Name: "KeyboardKeySoundVolume",
+        default_value: 100,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_key_sound_volume",
+    },
+    {
+        // VRキーボードで打っている間、VRChat に入力中を出す
+        Category: "Vr",
+        Base_Name: "IsEnabledKeyboardTypingIndicator",
+        default_value: true,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "keyboard_typing_indicator",
+    },
+    {
+        // VRキーボードのマイク: 聞き取った文を送らずに入力欄へ入れる (保存しない。キーボードを閉じると OFF)
+        Category: "Vr",
+        Base_Name: "IsEnabledKeyboardDictation",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "keyboard_dictation",
+    },
+    {
+        // VRキーボードの不透明度 (0.2〜1.0)。キーボードのタイトルバーで変える
+        Category: "Vr",
+        Base_Name: "KeyboardOpacity",
+        default_value: 1.0,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_opacity",
+    },
+    {
+        // VRキーボードのピン: 掴んでも動かない。キーボードのタイトルバーのピンで変える
+        Category: "Vr",
+        Base_Name: "KeyboardLocked",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "keyboard_locked",
+    },
+    {
+        // VRのレーザーを、コントローラの先端の向きから何度上に向けるか (-30〜30)。VR設定ウィンドウのランチャーで変える
+        Category: "Vr",
+        Base_Name: "OverlayVrLaserPitch",
+        default_value: 12,
+        ui_template_id: "slider",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_laser_pitch",
+    },
+    {
+        // キーボードを開閉するコントローラのショートカット (off / stick_double / menu_long / menu_double)。VR設定ウィンドウのキーボードで変える
+        Category: "Vr",
+        Base_Name: "KeyboardShortcut",
+        default_value: "off",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "keyboard_shortcut",
+    },
+    {
         // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",

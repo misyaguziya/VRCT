@@ -5,8 +5,8 @@
 .group { display: flex; gap: 8px; }
 .divider { flex-shrink: 0; width: 4px; height: 72px; margin: 0 4px; border-radius: 2px; background: var(--dark_650_color); }
 .button {
-    // 文字は出さない (名前は指したときの吹き出しで出す)。7つとも同じ大きさ
-    position: relative; width: 112px; height: 104px; padding: 6px;
+    // 文字は出さない (名前は指したときの吹き出しで出す)。8つとも同じ大きさ (ランチャーの幅 952px に収まる幅)
+    position: relative; width: 96px; height: 104px; padding: 6px;
     &:not([aria-pressed="true"]) { background: var(--dark_850_color); color: var(--dark_400_color); }
     &:focus-visible { outline: 3px solid var(--primary_100_color); outline-offset: -3px; }
     &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
@@ -34,9 +34,9 @@ $intro-mark-dy: 7px;
     .mark { opacity: 0; }
     .button, .divider { opacity: 0; animation: intro_rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
     .divider { animation-delay: 3.3s; }
-    // 機能4つ → 画面3つの順に 50ms ずつずらす
+    // 機能4つ → 画面4つの順に 50ms ずつずらす
     @for $i from 1 through 4 { .group:first-of-type > :nth-child(#{$i}) { animation-delay: 3.05s + ($i - 1) * 0.065s; } }
-    @for $i from 1 through 3 { .group:last-of-type > :nth-child(#{$i}) { animation-delay: 3.05s + ($i + 3) * 0.065s; } }
+    @for $i from 1 through 4 { .group:last-of-type > :nth-child(#{$i}) { animation-delay: 3.05s + ($i + 3) * 0.065s; } }
 }
 .intro_icon { position: absolute; z-index: 1; left: 50%; top: 50%; translate: -50% -50%; pointer-events: none; opacity: 0; height: 112px; animation: intro_icon 2.2s 0.13s both; }
 // ロゴ = 吹き出し (マーク) + 文字。同じ画像を2枚に切り分けて重ねる (切る位置は、吹き出しの右端と「V」の間)

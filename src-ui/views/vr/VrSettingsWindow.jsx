@@ -337,8 +337,11 @@ const VrSettings = ({ t }) => {
                 ]} />
             <ToggleRow label={t("vr_panel.launcher_auto_hide")} sub={t("vr_panel.launcher_auto_hide_desc")}
                 variable={vr.currentOverlayVrLauncherAutoHide} onToggle={vr.toggleOverlayVrLauncherAutoHide} />
+            <StepperRow label={t("vr_panel.laser_pitch")} sub={t("vr_panel.laser_pitch_desc")} variable={vr.currentOverlayVrLaserPitch}
+                setValue={vr.setOverlayVrLaserPitch} min={-30} max={30} step={1} format={(v) => `${v}°`} />
             <ToggleRow label={t("vr_panel.tooltip_enabled")} sub={t("vr_panel.tooltip_enabled_desc")}
                 variable={vr.currentOverlayVrTooltip} onToggle={vr.toggleOverlayVrTooltip} />
+
         </>
     );
 };

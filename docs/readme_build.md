@@ -202,8 +202,9 @@ npm run build-sidecar
 
 `_internal/` の中身:
 
-- DLL (ctranslate2・onnxruntime・openvr_api・OpenBLAS など)
+- DLL (ctranslate2・onnxruntime・openvr_api・OpenBLAS・`rime.dll` など)
 - `translation_settings/`, `fonts/`, `sudachi/` (system.dic), `silero/`, `ocr/` (YOLOX と RapidOCR のモデル)
+- `rime/opencc/` — VR キーボードの繁体字・簡体字の変換データ (辞書は同梱せず、初回起動時に `ime/` へ取得)
 - `licenses/` — 同梱物のライセンス。Rust のクレートの分は `native/vrct-backend/THIRD_PARTY_LICENSES.txt`
   （依存を変えたら `python tools/collect_rust_licenses.py native/vrct-backend` で作り直す）
 

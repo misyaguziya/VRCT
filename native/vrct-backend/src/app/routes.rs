@@ -5,7 +5,9 @@ use super::App;
 use crate::ipc::{Handler, Route};
 
 pub fn routes() -> Vec<(&'static str, Route<App>)> {
-    let r = |during_init: bool, handler: Handler<App>| Route { during_init, handler };
+    let r = |during_init: bool, handler: Handler<App>| Route { during_init, handler, ordered: false };
+    // the VR keyboard's input: in the order typed (keys, candidates, the language it composes in)
+    let o = |handler: Handler<App>| Route { during_init: true, handler, ordered: true };
     vec![
         ("/set/enable/translation", r(false, h::set_enable_translation)),
         ("/set/disable/translation", r(false, h::set_disable_translation)),
@@ -238,6 +240,7 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/run/vr_panel_tooltip", r(false, h::set_vr_panel_tooltip)),
         ("/run/vr_panel_windows", r(false, h::set_vr_panel_windows)),
         ("/run/vr_panel_recall_log", r(false, h::recall_vr_panel_log)),
+        ("/run/vr_panel_recall_keyboard", r(false, h::recall_vr_panel_keyboard)),
         ("/run/vr_launcher_reset", r(false, h::reset_vr_launcher)),
         ("/get/data/overlay_vr_panel_opacity", r(true, h::get_overlay_vr_panel_opacity)),
         ("/get/data/overlay_vr_panel_anchor", r(true, h::get_overlay_vr_panel_anchor)),
@@ -343,6 +346,40 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/set/disable/notification_vrc_sfx", r(true, h::set_disable_notification_vrc_sfx)),
         ("/run/open_filepath_config_file", r(true, h::open_filepath_config_file)),
         ("/run/feed_watchdog", r(true, h::feed_watchdog)),
+        ("/get/data/keyboard_state", r(true, h::get_keyboard_state)),
+        ("/run/keyboard_key", o(h::keyboard_key)),
+        ("/run/keyboard_select", o(h::keyboard_select)),
+        ("/run/keyboard_clear", o(h::keyboard_clear)),
+        ("/run/keyboard_cursor", o(h::keyboard_cursor)),
+        ("/get/data/keyboard_language", r(true, h::get_keyboard_language)),
+        ("/set/data/keyboard_language", o(h::set_keyboard_language)),
+        ("/get/data/keyboard_chinese_simplified", r(true, h::get_keyboard_chinese_simplified)),
+        ("/set/enable/keyboard_chinese_simplified", o(h::set_enable_keyboard_chinese_simplified)),
+        ("/set/disable/keyboard_chinese_simplified", o(h::set_disable_keyboard_chinese_simplified)),
+        ("/get/data/keyboard_key_sound", r(true, h::get_keyboard_key_sound)),
+        ("/set/enable/keyboard_key_sound", r(true, h::set_enable_keyboard_key_sound)),
+        ("/set/disable/keyboard_key_sound", r(true, h::set_disable_keyboard_key_sound)),
+        ("/get/data/keyboard_key_sound_volume", r(true, h::get_keyboard_key_sound_volume)),
+        ("/set/data/keyboard_key_sound_volume", r(true, h::set_keyboard_key_sound_volume)),
+        ("/get/data/keyboard_typing_indicator", r(true, h::get_keyboard_typing_indicator)),
+        ("/set/enable/keyboard_typing_indicator", r(true, h::set_enable_keyboard_typing_indicator)),
+        ("/set/disable/keyboard_typing_indicator", r(true, h::set_disable_keyboard_typing_indicator)),
+        ("/get/data/keyboard_send_to", r(true, h::get_keyboard_send_to)),
+        ("/set/data/keyboard_send_to", r(true, h::set_keyboard_send_to)),
+        ("/run/keyboard_retry", r(true, h::keyboard_retry)),
+        ("/get/data/keyboard_dictation", r(true, h::get_keyboard_dictation)),
+        ("/set/enable/keyboard_dictation", o(h::set_enable_keyboard_dictation)),
+        ("/set/disable/keyboard_dictation", o(h::set_disable_keyboard_dictation)),
+        ("/get/data/keyboard_opacity", r(true, h::get_keyboard_opacity)),
+        ("/set/data/keyboard_opacity", r(true, h::set_keyboard_opacity)),
+        ("/get/data/keyboard_locked", r(true, h::get_keyboard_locked)),
+        ("/set/enable/keyboard_locked", r(true, h::set_enable_keyboard_locked)),
+        ("/set/disable/keyboard_locked", r(true, h::set_disable_keyboard_locked)),
+        ("/get/data/overlay_vr_laser_pitch", r(true, h::get_overlay_vr_laser_pitch)),
+        ("/set/data/overlay_vr_laser_pitch", r(true, h::set_overlay_vr_laser_pitch)),
+        ("/get/data/keyboard_shortcut", r(true, h::get_keyboard_shortcut)),
+        ("/run/steamvr_bindings", r(true, h::steamvr_bindings)),
+        ("/set/data/keyboard_shortcut", r(true, h::set_keyboard_shortcut)),
     ]
 }
 
@@ -429,4 +466,7 @@ pub const RUN_MAPPING: &[(&str, &str)] = &[
     ("initialization_progress", "/run/initialization_progress"),
     ("initialization_complete", "/run/initialization_complete"),
     ("enable_osc_query", "/run/enable_osc_query"),
+    ("keyboard_state", "/run/keyboard_state"),
+    ("keyboard_sent", "/run/keyboard_sent"),
+    ("vr_panel_keyboard_shortcut", "/run/vr_panel_keyboard_shortcut"),
 ];

@@ -249,6 +249,14 @@ fn allowed(name: &str, v: &Value, c: &View) -> Option<bool> {
         "OCR_POLL_INTERVAL_MS" => number_in(100.0, 5000.0),
         "OCR_MIN_CONFIDENCE" => number_in(0.1, 0.99),
         "OCR_BUBBLE_MIN_TEXT_LENGTH" => number_in(1.0, 50.0),
+        // the VR keyboard (below it, it could not be found again in VR)
+        "KEYBOARD_OPACITY" => number_in(0.2, 1.0),
+        // the keyboard's width (m) as last made in VR: the widths a grab can make (vrct-overlay)
+        "KEYBOARD_WIDTH" => number_in(0.05, 3.0),
+        // percent of the keys' own sound
+        "KEYBOARD_KEY_SOUND_VOLUME" => number_in(0.0, 100.0),
+        // the lasers tilted up from the controllers' tips (degrees), to point where VRChat's do
+        "OVERLAY_VR_LASER_PITCH" => number_in(-30.0, 30.0),
         _ => return None,
     })
 }

@@ -1156,6 +1156,11 @@
    "handler": "recallVrPanelLog"
   },
   {
+   "endpoint": "/run/vr_panel_recall_keyboard",
+   "during_init": false,
+   "handler": "recallVrPanelKeyboard"
+  },
+  {
    "endpoint": "/run/vr_launcher_reset",
    "during_init": false,
    "handler": "resetVrLauncher"
@@ -1679,6 +1684,176 @@
    "endpoint": "/run/feed_watchdog",
    "during_init": true,
    "handler": "feedWatchdog"
+  },
+  {
+   "endpoint": "/get/data/keyboard_state",
+   "during_init": true,
+   "handler": "getKeyboardState"
+  },
+  {
+   "endpoint": "/run/keyboard_key",
+   "during_init": true,
+   "handler": "keyboardKey"
+  },
+  {
+   "endpoint": "/run/keyboard_select",
+   "during_init": true,
+   "handler": "keyboardSelect"
+  },
+  {
+   "endpoint": "/run/keyboard_clear",
+   "during_init": true,
+   "handler": "keyboardClear"
+  },
+  {
+   "endpoint": "/run/keyboard_cursor",
+   "during_init": true,
+   "handler": "keyboardCursor"
+  },
+  {
+   "endpoint": "/get/data/keyboard_language",
+   "during_init": true,
+   "handler": "getKeyboardLanguage"
+  },
+  {
+   "endpoint": "/set/data/keyboard_language",
+   "during_init": true,
+   "handler": "setKeyboardLanguage"
+  },
+  {
+   "endpoint": "/get/data/keyboard_chinese_simplified",
+   "during_init": true,
+   "handler": "getKeyboardChineseSimplified"
+  },
+  {
+   "endpoint": "/set/enable/keyboard_chinese_simplified",
+   "during_init": true,
+   "handler": "setEnableKeyboardChineseSimplified"
+  },
+  {
+   "endpoint": "/set/disable/keyboard_chinese_simplified",
+   "during_init": true,
+   "handler": "setDisableKeyboardChineseSimplified"
+  },
+  {
+   "endpoint": "/get/data/keyboard_key_sound",
+   "during_init": true,
+   "handler": "getKeyboardKeySound"
+  },
+  {
+   "endpoint": "/set/enable/keyboard_key_sound",
+   "during_init": true,
+   "handler": "setEnableKeyboardKeySound"
+  },
+  {
+   "endpoint": "/set/disable/keyboard_key_sound",
+   "during_init": true,
+   "handler": "setDisableKeyboardKeySound"
+  },
+  {
+   "endpoint": "/get/data/keyboard_key_sound_volume",
+   "during_init": true,
+   "handler": "getKeyboardKeySoundVolume"
+  },
+  {
+   "endpoint": "/set/data/keyboard_key_sound_volume",
+   "during_init": true,
+   "handler": "setKeyboardKeySoundVolume"
+  },
+  {
+   "endpoint": "/get/data/keyboard_typing_indicator",
+   "during_init": true,
+   "handler": "getKeyboardTypingIndicator"
+  },
+  {
+   "endpoint": "/set/enable/keyboard_typing_indicator",
+   "during_init": true,
+   "handler": "setEnableKeyboardTypingIndicator"
+  },
+  {
+   "endpoint": "/set/disable/keyboard_typing_indicator",
+   "during_init": true,
+   "handler": "setDisableKeyboardTypingIndicator"
+  },
+  {
+   "endpoint": "/get/data/keyboard_send_to",
+   "during_init": true,
+   "handler": "getKeyboardSendTo"
+  },
+  {
+   "endpoint": "/set/data/keyboard_send_to",
+   "during_init": true,
+   "handler": "setKeyboardSendTo"
+  },
+  {
+   "endpoint": "/run/keyboard_retry",
+   "during_init": true,
+   "handler": "keyboardRetry"
+  },
+  {
+   "endpoint": "/get/data/keyboard_dictation",
+   "during_init": true,
+   "handler": "getKeyboardDictation"
+  },
+  {
+   "endpoint": "/set/enable/keyboard_dictation",
+   "during_init": true,
+   "handler": "setEnableKeyboardDictation"
+  },
+  {
+   "endpoint": "/set/disable/keyboard_dictation",
+   "during_init": true,
+   "handler": "setDisableKeyboardDictation"
+  },
+  {
+   "endpoint": "/get/data/keyboard_opacity",
+   "during_init": true,
+   "handler": "getKeyboardOpacity"
+  },
+  {
+   "endpoint": "/set/data/keyboard_opacity",
+   "during_init": true,
+   "handler": "setKeyboardOpacity"
+  },
+  {
+   "endpoint": "/get/data/keyboard_locked",
+   "during_init": true,
+   "handler": "getKeyboardLocked"
+  },
+  {
+   "endpoint": "/set/enable/keyboard_locked",
+   "during_init": true,
+   "handler": "setEnableKeyboardLocked"
+  },
+  {
+   "endpoint": "/set/disable/keyboard_locked",
+   "during_init": true,
+   "handler": "setDisableKeyboardLocked"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_laser_pitch",
+   "during_init": true,
+   "handler": "getOverlayVrLaserPitch"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_laser_pitch",
+   "during_init": true,
+   "handler": "setOverlayVrLaserPitch"
+  },
+  {
+   "endpoint": "/get/data/keyboard_shortcut",
+   "during_init": true,
+   "handler": "getKeyboardShortcut"
+  },
+  {
+   "endpoint": "/run/steamvr_bindings",
+   "during_init": true,
+   "handler": "steamvrBindings"
+  },
+  {
+   "endpoint": "/set/data/keyboard_shortcut",
+   "during_init": true,
+   "handler": "setKeyboardShortcut"
   }
  ],
  "run_mapping": {
@@ -1762,7 +1937,10 @@
   "software_update_info": "/run/software_update_info",
   "initialization_progress": "/run/initialization_progress",
   "initialization_complete": "/run/initialization_complete",
-  "enable_osc_query": "/run/enable_osc_query"
+  "enable_osc_query": "/run/enable_osc_query",
+  "keyboard_state": "/run/keyboard_state",
+  "keyboard_sent": "/run/keyboard_sent",
+  "vr_panel_keyboard_shortcut": "/run/vr_panel_keyboard_shortcut"
  },
  "simple_getters": {
   "getVersion": "VERSION",

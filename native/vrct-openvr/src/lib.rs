@@ -37,7 +37,10 @@ pub const COLOR_SPACE_GAMMA: i32 = 1;
 /// EVREventType
 pub const EVENT_QUIT: u32 = 700;
 /// EVRButtonId (bit numbers)
+pub const BUTTON_APPLICATION_MENU: u32 = 1;
 pub const BUTTON_GRIP: u32 = 2;
+/// the stick / touchpad pressed
+pub const BUTTON_AXIS0: u32 = 32;
 pub const BUTTON_STEAMVR_TRIGGER: u32 = 33;
 /// EDeviceActivityLevel
 pub const ACTIVITY_UNKNOWN: i32 = -1;
@@ -207,13 +210,21 @@ impl WideNull for std::ffi::OsStr {
 }
 
 /// SteamVR is running (vrmonitor.exe), from a Toolhelp snapshot (psutil's process list took ~2 s
-/// on a PC with 460 processes, this ~15 ms). False when it cannot be told.
+/// on a PC with 460 processes, this ~15 ms). True when it cannot be told (see `is_process_running`).
 pub fn is_steamvr_running() -> bool {
     is_process_running("vrmonitor.exe")
 }
 
-/// A process named `name` (case-insensitive) is running
+/// A process named `name` (case-insensitive) is running. True when the processes cannot be listed
+/// that moment: a failed look is not taken for its end (SteamVR's quit closes the overlay and moves
+/// the OCR capture and the paste off it)
 pub fn is_process_running(name: &str) -> bool {
+    !matches!(process_id(name), Ok(None))
+}
+
+/// The id of a process named `name` (case-insensitive): None when none runs, Err when the processes
+/// cannot be listed
+fn process_id(name: &str) -> Result<Option<u32>, ()> {
     use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
     use windows_sys::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
@@ -222,56 +233,123 @@ pub fn is_process_running(name: &str) -> bool {
     unsafe {
         let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         if snapshot == INVALID_HANDLE_VALUE || snapshot.is_null() {
-            return false;
+            return Err(());
         }
         let mut entry: PROCESSENTRY32W = std::mem::zeroed();
         entry.dwSize = size_of::<PROCESSENTRY32W>() as u32;
         let mut found = Process32FirstW(snapshot, &mut entry) != 0;
-        let mut running = false;
+        let mut id = None;
         while found {
             let len = entry.szExeFile.iter().position(|&c| c == 0).unwrap_or(entry.szExeFile.len());
             if String::from_utf16_lossy(&entry.szExeFile[..len]).to_lowercase() == wanted {
-                running = true;
+                id = Some(entry.th32ProcessID);
                 break;
             }
             found = Process32NextW(snapshot, &mut entry) != 0;
         }
         CloseHandle(snapshot);
-        running
+        Ok(id)
     }
 }
 
-/// The reference count of the process's session
-static SESSION: Mutex<usize> = Mutex::new(0);
+/// One running process watched for its end: SteamVR's server, which may end without VREvent_Quit
+/// (a crash, killed), leaving the connection dead
+pub struct ProcessWatch(windows_sys::Win32::Foundation::HANDLE);
+
+// the handle is only waited on (any thread)
+unsafe impl Send for ProcessWatch {}
+
+impl ProcessWatch {
+    pub fn find(name: &str) -> Option<Self> {
+        Self::open(process_id(name).ok()??)
+    }
+
+    /// The process with this id (None when it cannot be opened)
+    pub fn open(id: u32) -> Option<Self> {
+        use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SYNCHRONIZE};
+        let handle = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, 0, id) };
+        (!handle.is_null()).then_some(Self(handle))
+    }
+
+    /// The process has ended (does not wait)
+    pub fn exited(&self) -> bool {
+        use windows_sys::Win32::Foundation::WAIT_OBJECT_0;
+        use windows_sys::Win32::System::Threading::WaitForSingleObject;
+        unsafe { WaitForSingleObject(self.0, 0) == WAIT_OBJECT_0 }
+    }
+}
+
+impl Drop for ProcessWatch {
+    fn drop(&mut self) {
+        unsafe { windows_sys::Win32::Foundation::CloseHandle(self.0) };
+    }
+}
+
+/// The process's session: its reference count, and the vrserver it was made with (its id and a
+/// watch on it; None when it was not found)
+struct Shared {
+    count: usize,
+    server: Option<(u32, ProcessWatch)>,
+}
+
+impl Shared {
+    /// The vrserver the connection was made with has ended (a crash, killed): the connection is dead
+    /// even when SteamVR's server runs again. It stays while someone holds it (VR_Shutdown would pull
+    /// it from under them), so it is not handed out again
+    fn stale(&self) -> bool {
+        self.server.as_ref().is_some_and(|(_, watch)| watch.exited())
+    }
+}
+
+static SESSION: Mutex<Shared> = Mutex::new(Shared { count: 0, server: None });
 
 /// A reference to the shared OpenVR session (openvr_session.acquire); dropping it releases it
 pub struct Session(());
 
-/// openvr.init(application_type) for the first caller, a new reference for the others
+const STALE: &str = "the SteamVR connection is to a server that has ended, still held elsewhere";
+
+/// openvr.init(application_type) for the first caller, a new reference for the others. Err while
+/// the connection held is to a vrserver that has ended: it is made again once all have let it go
 pub fn acquire(application_type: ApplicationType) -> Result<Session, Error> {
-    let api = api()?;
-    let mut count = SESSION.lock().unwrap();
-    if *count == 0 {
+    let mut shared = SESSION.lock().unwrap();
+    if shared.count == 0 {
+        let api = api()?;
         let mut error = 0;
         unsafe { (api.init)(&mut error, application_type as i32, std::ptr::null()) };
         if error != 0 {
             let message = unsafe { CStr::from_ptr((api.init_error_description)(error)) }.to_string_lossy().into_owned();
             return Err(Error { code: error, message });
         }
+        shared.server = process_id("vrserver.exe").ok().flatten().and_then(|id| Some((id, ProcessWatch::open(id)?)));
+    } else if shared.stale() {
+        return Err(err(-1, STALE));
     }
-    *count += 1;
+    shared.count += 1;
     Ok(Session(()))
 }
 
 pub fn is_active() -> bool {
-    *SESSION.lock().unwrap() > 0
+    SESSION.lock().unwrap().count > 0
+}
+
+/// A reference to the session already running (the overlay's), without starting SteamVR or changing
+/// the application type. None when none runs or it is to an ended vrserver, and while another thread
+/// is in VR_Init / VR_Shutdown: a borrower never waits on SteamVR
+pub fn acquire_existing() -> Option<Session> {
+    let mut shared = SESSION.try_lock().ok()?;
+    if shared.count == 0 || shared.stale() {
+        return None;
+    }
+    shared.count += 1;
+    Some(Session(()))
 }
 
 impl Drop for Session {
     fn drop(&mut self) {
-        let mut count = SESSION.lock().unwrap();
-        *count -= 1;
-        if *count == 0 {
+        let mut shared = SESSION.lock().unwrap();
+        shared.count -= 1;
+        if shared.count == 0 {
+            shared.server = None;
             if let Ok(api) = api() {
                 unsafe { (api.shutdown)() };
             }
@@ -286,7 +364,18 @@ struct Table<'s> {
 }
 
 impl Session {
+    /// A watch on the vrserver this connection was made with (None when it was not found)
+    pub fn server(&self) -> Option<ProcessWatch> {
+        let id = SESSION.lock().unwrap().server.as_ref()?.0;
+        ProcessWatch::open(id)
+    }
+
+    /// Err once the connection's vrserver has ended: a holder (the OCR capture, the paste) then lets
+    /// it go, so the next acquire makes a new one
     fn table(&self, version: &str, len: usize) -> Result<Table<'_>, Error> {
+        if SESSION.lock().unwrap().stale() {
+            return Err(err(-1, STALE));
+        }
         let name = CString::new(format!("FnTable:{version}")).unwrap();
         let mut error = 0;
         let functions = unsafe { (api()?.interface)(name.as_ptr(), &mut error) } as *const usize;
@@ -315,6 +404,10 @@ impl Session {
 
     pub fn render_models(&self) -> Result<RenderModels<'_>, Error> {
         Ok(RenderModels(self.table(tables::render_models::VERSION, tables::render_models::LEN)?))
+    }
+
+    pub fn input(&self) -> Result<Input<'_>, Error> {
+        Ok(Input(self.table(input::VERSION, input::LEN)?))
     }
 }
 
@@ -367,6 +460,14 @@ impl System<'_> {
         ok.then_some(state)
     }
 
+    /// A short vibration of the controller (`axis` 0, up to about 4 ms)
+    pub fn trigger_haptic_pulse(&self, index: u32, axis: u32, duration_us: u16) {
+        unsafe {
+            let f: unsafe extern "C" fn(u32, u32, u16) = self.0.f(tables::system::TRIGGER_HAPTIC_PULSE);
+            f(index, axis, duration_us)
+        }
+    }
+
     pub fn poll_next_event(&self) -> Option<Event> {
         let mut event = Event::default();
         let ok = unsafe {
@@ -399,6 +500,13 @@ impl System<'_> {
         }
     }
 
+    pub fn is_input_available(&self) -> bool {
+        unsafe {
+            let f: unsafe extern "C" fn() -> bool = self.0.f(tables::system::IS_INPUT_AVAILABLE);
+            f()
+        }
+    }
+
     /// The DXGI adapter index of the headset (for the D3D11 device that shares textures with SteamVR)
     pub fn dxgi_output_info(&self) -> i32 {
         let mut adapter = -1;
@@ -418,6 +526,13 @@ fn overlay_result(code: u32, what: &str) -> Result<(), Error> {
 }
 
 impl Overlay<'_> {
+    pub fn is_dashboard_visible(&self) -> bool {
+        unsafe {
+            let f: unsafe extern "C" fn() -> bool = self.0.f(tables::overlay::IS_DASHBOARD_VISIBLE);
+            f()
+        }
+    }
+
     pub fn create_overlay(&self, key: &str, name: &str) -> Result<u64, Error> {
         let (key_c, name_c) = (CString::new(key).unwrap(), CString::new(name).unwrap());
         let mut handle = 0;
@@ -687,5 +802,219 @@ mod tests {
             let expected: Vec<usize> = fields.iter().map(|f| f.1).collect();
             assert_eq!(offsets, &expected, "{name} offsets");
         }
+    }
+}
+
+/// IVRInput_010 (SteamVR Input; not in pyopenvr's tables above): the indices of `VR_IVRInput_FnTable`
+/// in openvr_capi.h of OpenVR 1.26.7, the version of openvr_api.dll
+pub mod input {
+    pub const VERSION: &str = "IVRInput_010";
+    pub const LEN: usize = 32;
+    pub const SET_ACTION_MANIFEST_PATH: usize = 0;
+    pub const GET_ACTION_SET_HANDLE: usize = 1;
+    pub const GET_ACTION_HANDLE: usize = 2;
+    pub const GET_INPUT_SOURCE_HANDLE: usize = 3;
+    pub const UPDATE_ACTION_STATE: usize = 4;
+    pub const GET_DIGITAL_ACTION_DATA: usize = 5;
+    pub const GET_ANALOG_ACTION_DATA: usize = 6;
+    pub const OPEN_BINDING_UI: usize = 30;
+    /// An action set at a priority in this range is overlay-global: what it binds reaches no app
+    /// below it (the game) while it is active
+    pub const OVERLAY_GLOBAL_PRIORITY_MIN: i32 = 0x0100_0000;
+    pub const OVERLAY_GLOBAL_PRIORITY_MAX: i32 = 0x01FF_FFFF;
+}
+
+/// VRActiveActionSet_t
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct ActiveActionSet {
+    pub action_set: u64,
+    pub restricted_to_device: u64,
+    pub secondary_action_set: u64,
+    pub padding: u32,
+    pub priority: i32,
+}
+
+/// InputDigitalActionData_t
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct DigitalActionData {
+    pub active: bool,
+    pub active_origin: u64,
+    pub state: bool,
+    pub changed: bool,
+    pub update_time: f32,
+}
+
+/// InputAnalogActionData_t
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct AnalogActionData {
+    pub active: bool,
+    pub active_origin: u64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub delta_x: f32,
+    pub delta_y: f32,
+    pub delta_z: f32,
+    pub update_time: f32,
+}
+
+pub struct Input<'s>(Table<'s>);
+
+fn input_error(code: i32, what: &str) -> Result<(), Error> {
+    if code == 0 { Ok(()) } else { Err(err(code, what)) }
+}
+
+impl Input<'_> {
+    /// This process's controller bindings opened in SteamVR on the desktop (IVRInput_010). Ok only
+    /// says the request was taken, not that a window showed
+    pub fn open_binding_ui(&self) -> Result<(), Error> {
+        let code = unsafe {
+            let f: unsafe extern "system" fn(*const c_char, u64, u64, bool) -> i32 = self.0.f(input::OPEN_BINDING_UI);
+            f(std::ptr::null(), 0, 0, true)
+        };
+        input_error(code, "OpenBindingUI")
+    }
+
+    /// The app's actions (the action manifest, a JSON file with the default bindings beside it)
+    pub fn set_action_manifest_path(&self, path: &std::path::Path) -> Result<(), Error> {
+        let path = CString::new(path.to_string_lossy().into_owned()).map_err(|_| err(-1, "manifest path"))?;
+        let code = unsafe {
+            let f: unsafe extern "C" fn(*const c_char) -> i32 = self.0.f(input::SET_ACTION_MANIFEST_PATH);
+            f(path.as_ptr())
+        };
+        input_error(code, "SetActionManifestPath")
+    }
+
+    fn handle(&self, index: usize, name: &str) -> Result<u64, Error> {
+        let name = CString::new(name).map_err(|_| err(-1, "action name"))?;
+        let mut handle = 0u64;
+        let code = unsafe {
+            let f: unsafe extern "C" fn(*const c_char, *mut u64) -> i32 = self.0.f(index);
+            f(name.as_ptr(), &mut handle)
+        };
+        input_error(code, "GetActionHandle").map(|_| handle)
+    }
+
+    /// A device by its path ("/user/hand/left"): an action set or an action's data restricted to it
+    pub fn input_source_handle(&self, path: &str) -> Result<u64, Error> {
+        self.handle(input::GET_INPUT_SOURCE_HANDLE, path)
+    }
+
+    pub fn action_set_handle(&self, name: &str) -> Result<u64, Error> {
+        self.handle(input::GET_ACTION_SET_HANDLE, name)
+    }
+
+    pub fn action_handle(&self, name: &str) -> Result<u64, Error> {
+        self.handle(input::GET_ACTION_HANDLE, name)
+    }
+
+    /// Once a frame: the action sets active now (none: the app's bindings let go)
+    pub fn update_action_state(&self, sets: &mut [ActiveActionSet]) -> Result<(), Error> {
+        let code = unsafe {
+            let f: unsafe extern "C" fn(*mut ActiveActionSet, u32, u32) -> i32 = self.0.f(input::UPDATE_ACTION_STATE);
+            f(sets.as_mut_ptr(), size_of::<ActiveActionSet>() as u32, sets.len() as u32)
+        };
+        input_error(code, "UpdateActionState")
+    }
+
+    /// `device`: from that device only (an input source handle), 0: any
+    pub fn digital_action_data(&self, action: u64, device: u64) -> Result<DigitalActionData, Error> {
+        let mut data = DigitalActionData::default();
+        let code = unsafe {
+            let f: unsafe extern "C" fn(u64, *mut DigitalActionData, u32, u64) -> i32 = self.0.f(input::GET_DIGITAL_ACTION_DATA);
+            f(action, &mut data, size_of::<DigitalActionData>() as u32, device)
+        };
+        input_error(code, "GetDigitalActionData").map(|_| data)
+    }
+
+    pub fn analog_action_data(&self, action: u64, device: u64) -> Result<AnalogActionData, Error> {
+        let mut data = AnalogActionData::default();
+        let code = unsafe {
+            let f: unsafe extern "C" fn(u64, *mut AnalogActionData, u32, u64) -> i32 = self.0.f(input::GET_ANALOG_ACTION_DATA);
+            f(action, &mut data, size_of::<AnalogActionData>() as u32, device)
+        };
+        input_error(code, "GetAnalogActionData").map(|_| data)
+    }
+}
+
+#[cfg(test)]
+mod input_layout_tests {
+    use super::*;
+
+    #[test]
+    fn binding_ui_uses_the_current_process_and_desktop_and_propagates_errors() {
+        static ARGS: Mutex<Option<(bool, u64, u64, bool)>> = Mutex::new(None);
+        unsafe extern "system" fn open(key: *const c_char, device: u64, set: u64, desktop: bool) -> i32 {
+            *ARGS.lock().unwrap() = Some((key.is_null(), device, set, desktop));
+            0
+        }
+        unsafe extern "system" fn fail(_: *const c_char, _: u64, _: u64, _: bool) -> i32 { 3 }
+        // a table of our own: no DLL nor session
+        let mut functions = [0usize; input::LEN];
+        functions[input::OPEN_BINDING_UI] = open as *const () as usize;
+        let call = |functions: &[usize]| Input(Table { functions: functions.as_ptr(), _session: std::marker::PhantomData::<&Session> }).open_binding_ui();
+        assert!(call(&functions).is_ok());
+        assert_eq!(*ARGS.lock().unwrap(), Some((true, 0, 0, true)));
+        functions[input::OPEN_BINDING_UI] = fail as *const () as usize;
+        assert_eq!(call(&functions).unwrap_err().code, 3);
+    }
+
+    /// The sizes openvr_capi.h makes them (pack 8 on Windows)
+    #[test]
+    fn input_structures_have_the_sdk_layout() {
+        assert_eq!(size_of::<ActiveActionSet>(), 32);
+        assert_eq!(size_of::<DigitalActionData>(), 24);
+        assert_eq!(std::mem::offset_of!(DigitalActionData, state), 16);
+        assert_eq!(size_of::<AnalogActionData>(), 48);
+        assert_eq!(std::mem::offset_of!(AnalogActionData, x), 16);
+    }
+}
+
+#[cfg(test)]
+mod process_tests {
+    use super::ProcessWatch;
+
+    #[test]
+    fn a_watched_process_is_seen_to_end() {
+        assert!(ProcessWatch::find("no-such-process-0a9f3c.exe").is_none());
+        let mut child = std::process::Command::new("cmd").args(["/c", "ping -n 30 127.0.0.1 >nul"]).spawn().unwrap();
+        let watch = ProcessWatch::open(child.id()).unwrap();
+        assert!(!watch.exited());
+        child.kill().unwrap();
+        child.wait().unwrap();
+        assert!(watch.exited());
+    }
+
+    /// Another holder (the OCR capture) keeps the session while its vrserver is killed: the overlay's
+    /// next acquire, a borrower and the holder's own calls get nothing of the dead connection
+    #[test]
+    fn a_session_to_an_ended_server_is_not_handed_out() {
+        use super::{acquire, acquire_existing, ApplicationType, Session, SESSION};
+        let mut server = std::process::Command::new("cmd").args(["/c", "ping -n 30 127.0.0.1 >nul"]).spawn().unwrap();
+        // the holder's reference, made without VR_Init (it is not dropped: that would VR_Shutdown)
+        {
+            let mut shared = SESSION.lock().unwrap();
+            shared.count = 1;
+            shared.server = Some((server.id(), ProcessWatch::open(server.id()).unwrap()));
+        }
+        let holder = Session(());
+        drop(acquire(ApplicationType::Background).unwrap());
+        drop(acquire_existing().unwrap());
+        assert!(holder.server().is_some_and(|watch| !watch.exited()));
+
+        server.kill().unwrap();
+        server.wait().unwrap();
+        assert!(acquire(ApplicationType::Background).is_err());
+        assert!(acquire_existing().is_none());
+        assert!(holder.system().is_err());
+        assert_eq!(SESSION.lock().unwrap().count, 1);
+
+        std::mem::forget(holder);
+        let mut shared = SESSION.lock().unwrap();
+        shared.count = 0;
+        shared.server = None;
     }
 }

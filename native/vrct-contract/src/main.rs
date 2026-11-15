@@ -216,13 +216,14 @@ impl Backend {
         Ok(Backend { child, stdin, lines, stderr })
     }
 
-    /// Next line that is not a log (348) or the watchdog feeder's answer.
+    /// Next line that is not a log (348), the watchdog feeder's answer or the keyboard's state
+    /// (its dictionaries are prepared in the background: no case makes it, it comes any time)
     fn next(&self, deadline: Instant) -> Result<Option<Value>> {
         loop {
             let left = deadline.saturating_duration_since(Instant::now());
             match self.lines.recv_timeout(left) {
                 Ok(v) => {
-                    if v["status"] == 348 || v["endpoint"] == "/run/feed_watchdog" {
+                    if v["status"] == 348 || v["endpoint"] == "/run/feed_watchdog" || v["endpoint"] == "/run/keyboard_state" {
                         continue;
                     }
                     return Ok(Some(v));
@@ -453,7 +454,7 @@ fn main() -> Result<()> {
             let name = arg(&args, "--name").unwrap_or_else(|| "backend".into());
             let dir = fresh_run_dir(&name)?;
             let exe = PathBuf::from(arg(&args, "--exe").context("run needs --exe <sidecar.exe>")?);
-            copy_tree(exe.parent().unwrap(), &dir, &["weights", "logs"])?;
+            copy_tree(exe.parent().unwrap(), &dir, &["weights", "logs", "ime"])?;
             if let Some(weights) = arg(&args, "--weights") {
                 junction(&dir.join("weights"), Path::new(&weights))?;
             }

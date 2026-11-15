@@ -21,6 +21,7 @@ Python 版のコードは削除した。基準データ（`testdata/`）は、�
 | `vrct-whisper/` | faster-whisper 1.1.1 の `transcribe`（VRCT が通る経路）。メル特徴量は numpy と同じ計算 |
 | `vrct-ocr/` | 吹き出し検出（YOLOX）と RapidOCR 3.9.2 の移植（OpenCV / numpy の該当処理、Clipper、bidi） |
 | `vrct-backend/` | バックエンド本体。今は翻訳（NLLB / M2M100・LLM・DeepL・Web 翻訳の入口）、音訳（Sudachi + ヘボン式）、文字起こしの API、重みとトークナイザーの取得、ソフトの更新、テレメトリー、WebSocket・OBS のサーバー |
+| `vrct-ime/` | VR キーボードの入力。日本語・中国語は librime（`rime.dll` を実行時に読み込む）、韓国語はハングルの合成、英語はそのまま。辞書は初回起動時にバックエンドが取得する |
 | `vrct-webtranslate/` | Web 翻訳（Google / Bing / Papago）。`translator_engines` のソースを取り込み、PyO3 の入口を外したもの |
 | `data/` | 配布に入れるデータ（翻訳設定・フォント・OCR のモデル・Sudachi のリソース）と、Python 版から書き出した表（エラーコード・設定のスキーマ・文字起こしの言語） |
 | `reference/` | 照合用の文（`corpus/`）と、照合用の音声を作るスクリプト |

@@ -64,6 +64,8 @@ pub struct Model {
     pub ocr: Mutex<Option<crate::ocr_pipeline::OcrPipeline>>,
     /// the VR overlays and the log images
     pub overlays: super::overlay::Overlays,
+    /// the VR keyboard
+    pub keyboard: super::keyboard::Keyboard,
     /// where the overlay's events go (set when the app is made)
     pub overlay_app: Arc<std::sync::OnceLock<std::sync::Weak<super::App>>>,
 }
@@ -96,6 +98,7 @@ impl Model {
             ocr: Mutex::new(None),
             overlays,
             overlay_app,
+            keyboard: super::keyboard::Keyboard::new(config),
             app_name: {
                 crate::ipc::log("Clipboard initialized. Waiting for SteamVR.");
                 AppName::watch(crate::ipc::log)
