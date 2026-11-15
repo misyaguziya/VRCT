@@ -1,5 +1,5 @@
-//! The VR keyboard (vrct-ime): its dictionaries made ready in the background (downloaded on the
-//! first start, then built by RIME), what is typed, and where it goes: VRCT's chat box (translated,
+//! The VR keyboard (vrct-ime): its dictionaries made ready in the background (downloaded when the
+//! VR UI is first on, then built by RIME), what is typed, and where it goes: VRCT's chat box (translated,
 //! as the message box sends) or pasted into VRChat's open text field.
 use super::basic::validated;
 use super::pipeline::{process, CHAT};
@@ -204,25 +204,25 @@ fn set_status(app: &App, status: Status) {
 // ------------------------------------------------------------------------------- the dictionaries
 
 /// The dictionaries downloaded (the first time) and built, then Japanese and Chinese type. Not at
-/// start-up: when the keyboard is first needed (the VR UI on, or the UI asking for its state), once
+/// start-up: when the VR UI is first on, once
 pub fn start(app: &App) {
-    begin(app, Status::Idle);
+    if claim(app, Status::Idle) {
+        prepare_in_background(app);
+    }
 }
 
-/// The dictionaries made ready in the background, when they are `from` (one caller wins: the status
-/// changes under its lock)
-fn begin(app: &App, from: Status) {
-    {
-        let mut status = keyboard(app).status.lock().unwrap();
-        if *status != from {
-            return;
-        }
+/// Preparing, when the dictionaries are `from`: true for the one caller that changed it (under
+/// the status's lock, so they are never prepared twice at once)
+fn claim(app: &App, from: Status) -> bool {
+    let mut status = keyboard(app).status.lock().unwrap();
+    let claimed = *status == from;
+    if claimed {
         *status = Status::Preparing;
     }
-    // the tests see the status change only: no download, no librime
-    if cfg!(test) {
-        return;
-    }
+    claimed
+}
+
+fn prepare_in_background(app: &App) {
     let me = app.me();
     std::thread::spawn(move || {
         let Some(app) = me.upgrade() else { return };
@@ -286,13 +286,14 @@ fn prepare(app: &App) -> Result<()> {
 
 /// The dictionaries once more, after they failed (a press while they are being made does nothing)
 pub fn keyboard_retry(app: &App, _: Data) -> Result<Reply> {
-    begin(app, Status::Failed);
+    if claim(app, Status::Failed) {
+        prepare_in_background(app);
+    }
     get_keyboard_state(app, None)
 }
 
-/// Asked for: the keyboard is needed, its dictionaries start if they have not
+/// (not a start: updateConfigSettings calls every getter at start-up)
 pub fn get_keyboard_state(app: &App, _: Data) -> Result<Reply> {
-    start(app);
     let state = typing(app).input.state();
     Ok(Reply::ok(state_json(*keyboard(app).status.lock().unwrap(), &state)))
 }
@@ -756,23 +757,26 @@ mod tests {
     }
 
     #[test]
-    fn the_dictionaries_start_once_when_first_needed_and_again_only_after_a_failure() {
+    fn the_dictionaries_are_claimed_once_and_again_only_after_a_failure() {
+        // (claim only: the real preparing, with its download and librime, never starts here)
         let (app, _osc) = rig();
         let status = || *keyboard(&app).status.lock().unwrap();
-        // started up: not yet
+        // started up, every getter collected for the UI (the state too): not yet, shown as preparing
+        super::super::init::update_config_settings(&app);
         assert_eq!(status(), Status::Idle);
-        // the UI asks for the state: they start, shown as preparing all along
         assert_eq!(get_keyboard_state(&app, None).unwrap().result["status"], json!("preparing"));
+        assert_eq!(status(), Status::Idle);
+        // the VR UI on: claimed once, not again while being made
+        assert!(claim(&app, Status::Idle));
+        assert!(!claim(&app, Status::Idle));
         assert_eq!(status(), Status::Preparing);
-        // being made: asked again, the VR UI on (start) or a retry start nothing again
-        *keyboard(&app).status.lock().unwrap() = Status::Building;
-        assert_eq!(get_keyboard_state(&app, None).unwrap().result["status"], json!("building"));
-        start(&app);
-        assert_eq!(keyboard_retry(&app, None).unwrap().result["status"], json!("building"));
-        assert_eq!(status(), Status::Building);
-        // failed: a retry starts them again
-        *keyboard(&app).status.lock().unwrap() = Status::Failed;
+        // not failed: a retry claims nothing
+        assert!(!claim(&app, Status::Failed));
         assert_eq!(keyboard_retry(&app, None).unwrap().result["status"], json!("preparing"));
+        assert_eq!(status(), Status::Preparing);
+        // failed: a retry claims them again
+        *keyboard(&app).status.lock().unwrap() = Status::Failed;
+        assert!(claim(&app, Status::Failed));
         assert_eq!(status(), Status::Preparing);
     }
 

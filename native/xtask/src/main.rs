@@ -320,7 +320,7 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
         fs::copy(third_party.join("faster-whisper").join(name), internal.join("silero").join(name))?;
     }
     // the VR keyboard: OpenCC's data (Traditional / Simplified Chinese) beside rime.dll; the
-    // dictionaries are downloaded on the first start
+    // dictionaries are downloaded when the VR UI is first on
     copy_dir(&third_party.join("librime-opencc"), &internal.join("rime").join("opencc")).context("librime-opencc: run fetch-native")?;
     // OCR: the bubble detector (with its notices) and RapidOCR's models
     copy_dir(&data.join("ocr"), &internal.join("ocr"))?;
