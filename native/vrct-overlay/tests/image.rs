@@ -62,3 +62,27 @@ fn sizes_match_python() {
     }
     assert!(problems.is_empty(), "{} problems", problems.len());
 }
+
+/// master 76a5c5be (issue #121): a translation engine can return an empty string. It must not panic
+/// (the Python large log divided by len(text)) and the next log image must still be made.
+#[test]
+fn empty_translations_still_make_an_image() {
+    let fonts = native().join("data/fonts");
+    let mut overlay = OverlayImage::new(&fonts);
+    let empty = || vec![String::new()];
+    let mixed = || vec!["Hello".to_string(), String::new()];
+    let languages = |n: usize| vec!["English".to_string(); n];
+    let none = |n: usize| vec![Vec::<Token>::new(); n];
+    for translation in [empty(), mixed()] {
+        let n = translation.len();
+        let small = overlay.small_log("こんにちは", "Japanese", &translation, &languages(n), &[], &none(n)).unwrap();
+        assert!(small.width > 0 && small.height > 0);
+        let large = overlay.large_log("receive", Some("こんにちは"), "Japanese", &translation, &languages(n), &[], &none(n)).unwrap();
+        assert!(large.width > 0 && large.height > 0);
+    }
+    // an empty message too, and the log keeps working afterwards
+    let large = overlay.large_log("send", Some(""), "Japanese", &empty(), &languages(1), &[], &none(1)).unwrap();
+    assert!(large.width > 0 && large.height > 0);
+    let large = overlay.large_log("receive", Some("ok"), "English", &[], &[], &[], &[]).unwrap();
+    assert!(large.width > 0 && large.height > 0);
+}
