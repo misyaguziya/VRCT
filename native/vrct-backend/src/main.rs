@@ -43,8 +43,8 @@ fn add_dll_directory(dir: &std::path::Path) {
 
 fn main() -> Result<()> {
     // Physical px in every window API (vrct-overlay's window.rs: the VR panel's size, capture and
-    // input). DPI-unaware, Windows would scale them to 96 DPI at any display scale but 100%
-    // logged once the working directory (where error.log is) is set
+    // input). DPI-unaware, Windows would scale them to 96 DPI at any display scale but 100%.
+    // A failure is logged once the working directory (where error.log is) is set
     let dpi_error = unsafe {
         use windows_sys::Win32::UI::HiDpi::{SetProcessDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2};
         (SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) == 0).then(std::io::Error::last_os_error)
