@@ -131,3 +131,14 @@ fn update_matches_python() {
     }
     assert!(problems.is_empty(), "{} problems", problems.len());
 }
+
+/// master d2bdcf3c: the version picker starts at 3.6.0 (its betas are in: they sort below 3.6.0)
+#[test]
+fn versions_before_3_6_0_are_not_supported() {
+    for v in ["3.6.0", "3.6.0-beta.1", "3.6.0-beta.10", "3.6.1", "3.7.0-beta.2", "3.10.0"] {
+        assert!(is_version_supported(v), "{v}");
+    }
+    for v in ["3.5.1", "3.5.1-beta.1", "3.5.9", "3.4.3", "not a version"] {
+        assert!(!is_version_supported(v), "{v}");
+    }
+}
