@@ -426,7 +426,11 @@ fn main() -> Result<()> {
                                                args.iter().any(|a| a == "--cuda"),
                                                &arg(&args, "--exe-name").unwrap_or_else(|| "VRCT-sidecar.exe".into()),
                                                arg(&args, "--weights").map(PathBuf::from)),
-        Some("release-zip") => release_zip(&PathBuf::from(arg(&args, "--out").context("--out <zip>")?)),
+        Some("release-zip") => {
+            let out = PathBuf::from(arg(&args, "--out").context("--out <zip>")?);
+            // a zip that stopped half way is not left behind (never shipped with files missing)
+            release_zip(&out).inspect_err(|_| { let _ = fs::remove_file(&out); })
+        }
         _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>] | release-zip --out <zip>"),
     }
 }
