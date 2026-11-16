@@ -121,6 +121,19 @@
     overflow: hidden;
 }
 
+// 候補だけが横にスライドする帯 (‹ › は外: いつも見える)。スクロールバーは出さない
+.candidate_strip {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
 .candidate {
     @extend %vr_button;
     flex: none;
@@ -134,9 +147,9 @@
     &[aria-pressed="true"] { background: var(--primary_600_color_44); color: #ffffff; }
     @include pointed { background: var(--kb_pointed, #4a4c51); box-shadow: inset 0 0 0 3px var(--primary_200_color); color: #ffffff; }
     &:active { background: var(--primary_400_color); color: var(--dark_1000_color); }
+    // スライド中は押した色にしない (離しても選ばれない)
+    .is_dragging > &:active { background: var(--kb_candidate, var(--dark_750_color)); color: var(--kb_text_dim, var(--dark_350_color)); }
 }
-
-.spacer { flex: 1; }
 
 .page {
     @extend %vr_button;
@@ -413,7 +426,7 @@
     padding: 8px;
     border-radius: 14px;
     background: var(--kb_menu, #1f2023);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 // 言語キー (一番下の段) の上、キーボードの左端にそろえて縦に積む: 下の余白 16px と1段分 (キー 56px + すき間 8px)。
 // 選んでいる項目には ✓
