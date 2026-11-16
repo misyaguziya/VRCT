@@ -37,10 +37,13 @@ export const Candidates = ({ state, language, lang, press, sendKey }) => {
         event.preventDefault();
         const el = strip.current;
         const index = [...el.children].indexOf(event.target.closest("button"));
-        const x0 = event.clientX;
-        const left0 = el.scrollLeft;
+        // 起点は押した点でなく最初の move の点: オーバーレイは down を引き金を引き始めた位置へ最大 12px 戻して送るため
+        let x0 = null;
+        let left0 = 0;
         let moved = false;
         const move = (e) => {
+            if (e.clientX < 0) return; // パネルの外へ抜けた move (cancel の直前に -1 で届く)
+            if (x0 === null) { x0 = e.clientX; left0 = el.scrollLeft; return; }
             if (!moved && Math.abs(e.clientX - x0) < DRAG_FROM) return;
             if (!moved) { moved = true; setDragging(true); }
             el.scrollLeft = left0 - (e.clientX - x0);
