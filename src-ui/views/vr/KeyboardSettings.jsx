@@ -8,7 +8,7 @@ import styles from "./VrKeyboardWindow.module.scss";
 const SHORTCUTS = ["off", "stick_double", "menu_long", "menu_double"];
 
 // つまみを引いて選ぶ値 (min〜max を step ごと)。動かす間に何度も送る (すぐ見た目に出る)
-const Slider = ({ value, min, max, step, format, onChange }) => {
+const Slider = ({ label, value, min, max, step, format, onChange }) => {
     const track = useRef(null);
     const [drag, setDrag] = useState(null);
     const valueAt = (event) => {
@@ -40,7 +40,7 @@ const Slider = ({ value, min, max, step, format, onChange }) => {
     const shown = drag ?? value;
     const at = `${((shown - min) / (max - min)) * 100}%`;
     return <>
-        <div ref={track} className={styles.slider} role="slider" aria-valuemin={min} aria-valuemax={max} aria-valuenow={shown}
+        <div ref={track} className={styles.slider} role="slider" aria-label={label} aria-valuemin={min} aria-valuemax={max} aria-valuenow={shown}
             onMouseDown={onMouseDown}>
             <span className={styles.slider_fill} style={{ width: at }} />
             <span className={styles.slider_thumb} style={{ left: at }} />
@@ -70,13 +70,13 @@ export const KeyboardSettings = ({ press, onClose }) => {
         <div className={styles.settings}>
             <div className={styles.setting}>
                 <span className={styles.setting_label}>{t("vr_panel.keyboard.opacity")}</span>
-                <Slider value={Number(currentKeyboardOpacity.data) * 100} min={20} max={100} step={5} format={percent}
+                <Slider label={t("vr_panel.keyboard.opacity")} value={Number(currentKeyboardOpacity.data) * 100} min={20} max={100} step={5} format={percent}
                     onChange={(v) => setKeyboardOpacity(v / 100)} />
             </div>
             {toggle(t("vr_panel.keyboard.key_sound"), null, currentIsEnabledKeyboardKeySound, toggleIsEnabledKeyboardKeySound)}
             <div className={clsx(styles.setting, { [styles.is_off]: currentIsEnabledKeyboardKeySound.data !== true })}>
                 <span className={styles.setting_label}>{t("vr_panel.keyboard.key_sound_volume")}</span>
-                <Slider value={Number(currentKeyboardKeySoundVolume.data)} min={0} max={100} step={5} format={percent}
+                <Slider label={t("vr_panel.keyboard.key_sound_volume")} value={Number(currentKeyboardKeySoundVolume.data)} min={0} max={100} step={5} format={percent}
                     onChange={setKeyboardKeySoundVolume} />
             </div>
             {toggle(t("vr_panel.keyboard.typing_indicator"), t("vr_panel.keyboard.typing_indicator_desc"),
