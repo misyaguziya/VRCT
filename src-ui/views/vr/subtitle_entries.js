@@ -5,8 +5,7 @@
 // 返す件: { id, category, created_at, small: 小さく出す原文 (無ければ null), large: 大きく出す文の並び }
 export const SUBTITLE_FORMS = ["multi_line", "single_line"];
 // 字幕の文字の大きさ (訳文の px)。範囲は native/vrct-overlay/src/layout.rs SUBTITLE_FONT_SIZE_RANGE と同じ。
-// 既定は small / large のオーバーレイと同じ見た目の大きさ
-export const SUBTITLE_FONT_SIZE = { min: 16, max: 56, default: { multi_line: 27, single_line: 28 } };
+export const SUBTITLE_FONT_SIZE = { min: 16, max: 56 };
 // 原文・時刻の行は訳文の約 2/3 (オーバーレイの large の 20 / 30)
 export const subtitleSmallFontSize = (size) => Math.round(size * 2 / 3);
 const MULTI_LINE_COUNT = 5;

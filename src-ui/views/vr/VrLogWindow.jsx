@@ -9,7 +9,7 @@ import { LogBox } from "../app/main_page/main_section/message_container/log_box/
 
 import { VrWindow } from "./VrWindow";
 import { VrSubtitleWindow } from "./VrSubtitleWindow";
-import { SUBTITLE_FONT_SIZE, SUBTITLE_FORMS, subtitleEntries, subtitleKey } from "./subtitle_entries";
+import { SUBTITLE_FORMS, subtitleEntries, subtitleKey } from "./subtitle_entries";
 import styles from "./VrWindow.module.scss";
 
 // ログウィンドウ。形 (履歴 / 字幕・複数行 / 字幕・1行) と固定先・ロックなどは下の操作バー (VrToolbar) で変える
@@ -38,7 +38,7 @@ export const VrLogWindow = ({ onClose }) => {
 
     const is_locked = currentOverlayVrPanelLocked.data === true;
     if (form !== "history") {
-        const font_size = currentOverlayVrSubtitleSettings.data?.[form]?.font_size ?? SUBTITLE_FONT_SIZE.default[form];
+        const font_size = currentOverlayVrSubtitleSettings.data[form].font_size;
         return <VrSubtitleWindow form={form} entries={entries} is_locked={is_locked} font_size={font_size} />;
     }
     return (

@@ -39,7 +39,7 @@ export const VrToolbar = () => {
     const is_subtitle = form_id !== "history";
     // 文字の大きさは形ごと: 履歴は OVERLAY_VR_PANEL_FONT_SIZE (原文の px)、字幕はその形の font_size (訳文の px)
     const size = is_subtitle ? {
-        value: Number(subtitle.data?.[form_id]?.font_size ?? SUBTITLE_FONT_SIZE.default[form_id]), state: subtitle,
+        value: subtitle.data[form_id].font_size, state: subtitle,
         min: SUBTITLE_FONT_SIZE.min, max: SUBTITLE_FONT_SIZE.max, key: (name) => `${name}_subtitle`,
         set: (value) => setOverlayVrSubtitleSettings({ [form_id]: { font_size: value } }),
     } : {
