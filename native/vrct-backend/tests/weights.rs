@@ -62,6 +62,8 @@ struct Mode {
     /// model.bin is a relative redirect to /cdn/model.bin
     redirect: bool,
     missing: bool,
+    /// every Range of model.bin answered 416
+    refuse_range: bool,
 }
 
 /// The mock Hub: Range answered with 206 (unless `ignore_range`); `cancel` is raised when model.bin is asked for
@@ -96,6 +98,7 @@ fn hub(mode: Arc<Mutex<Mode>>, cancel: Option<Arc<AtomicBool>>) -> Mock {
         }
         let octet = ("content-type", "application/octet-stream".to_string());
         match entry["headers"]["range"].as_str().and_then(|r| r.strip_prefix("bytes=")?.strip_suffix('-')?.parse::<usize>().ok()) {
+            Some(_) if mode.refuse_range => (416, vec![], vec![]),
             Some(from) if !mode.ignore_range && from < body.len() => {
                 let range = format!("bytes {from}-{}/{}", body.len() - 1, body.len());
                 (206, vec![octet, ("content-range", range)], body[from..].to_vec())
@@ -218,9 +221,58 @@ fn a_file_that_is_not_the_catalogs_is_removed_and_fails() {
     let root = temp_dir("sha");
     let r = run(&mock, &root, "https://huggingface.co", &AtomicBool::new(false), false);
     assert_eq!(r.outcome, Outcome::Failed("sha256"));
-    assert_eq!(r.requests.iter().filter(|(u, _)| u.ends_with("model.bin")).count(), 3, "3 attempts");
+    // got whole in one request: not asked for again
+    assert_eq!(r.requests.iter().filter(|(u, _)| u.ends_with("model.bin")).count(), 1);
     assert!(!model_bin(&root).exists() && !part(&root).exists());
     assert!(vrct_backend::hf_cache::snapshot_dir(&root.join("weights/ctranslate2/test-nllb/tokenizer"), "org/tok").is_err());
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
+fn a_resumed_file_that_is_not_the_catalogs_is_got_once_more_from_the_start() {
+    let mock = hub(Arc::default(), None);
+    let root = temp_dir("sha-resumed");
+    std::fs::create_dir_all(part(&root).parent().unwrap()).unwrap();
+    // the bytes kept from an earlier try are not the file's
+    std::fs::write(part(&root), vec![0u8; 1000]).unwrap();
+    let r = run(&mock, &root, "https://huggingface.co", &AtomicBool::new(false), false);
+    assert_eq!(r.outcome, Outcome::Done);
+    let ranges: Vec<_> = r.requests.iter().filter(|(u, _)| u.ends_with("model.bin")).map(|(_, r)| r.clone()).collect();
+    assert_eq!(ranges, [Some("bytes=1000-".to_string()), None]);
+    assert_eq!(std::fs::read(model_bin(&root)).unwrap(), model_bytes());
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
+fn a_416_is_got_again_from_the_start() {
+    let mode = Arc::new(Mutex::new(Mode { refuse_range: true, ..Default::default() }));
+    let mock = hub(mode, None);
+    let root = temp_dir("416");
+    std::fs::create_dir_all(part(&root).parent().unwrap()).unwrap();
+    std::fs::write(part(&root), &model_bytes()[..1000]).unwrap();
+    let r = run(&mock, &root, "https://huggingface.co", &AtomicBool::new(false), false);
+    assert_eq!(r.outcome, Outcome::Done);
+    let ranges: Vec<_> = r.requests.iter().filter(|(u, _)| u.ends_with("model.bin")).map(|(_, r)| r.clone()).collect();
+    assert_eq!(ranges, [Some("bytes=1000-".to_string()), None]);
+    assert_eq!(std::fs::read(model_bin(&root)).unwrap(), model_bytes());
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
+fn a_file_of_the_catalogs_size_is_not_asked_for_and_one_of_another_size_is_replaced() {
+    let mock = hub(Arc::default(), None);
+    let root = temp_dir("there");
+    let dir = root.join("weights/ctranslate2/test-nllb");
+    std::fs::create_dir_all(&dir).unwrap();
+    // the size is all that is compared for a file already there
+    std::fs::write(dir.join("config.json"), b"{\"a\": 2}").unwrap();
+    std::fs::write(model_bin(&root), b"old").unwrap();
+    let r = run(&mock, &root, "https://huggingface.co", &AtomicBool::new(false), false);
+    assert_eq!(r.outcome, Outcome::Done);
+    assert!(!r.requests.iter().any(|(u, _)| u.ends_with("config.json")), "{:?}", r.requests);
+    assert_eq!(r.requests.iter().filter(|(u, _)| u.ends_with("model.bin")).count(), 1);
+    assert_eq!(std::fs::read(dir.join("config.json")).unwrap(), b"{\"a\": 2}");
+    assert_eq!(std::fs::read(model_bin(&root)).unwrap(), model_bytes());
     let _ = std::fs::remove_dir_all(&root);
 }
 

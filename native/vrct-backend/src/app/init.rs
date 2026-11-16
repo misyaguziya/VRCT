@@ -87,6 +87,9 @@ fn prepare_weights(app: &App, online: bool) -> (bool, bool) {
         let w = s.spawn(|| whisper_pre == Some(true) || whisper_weight_ok(app, &whisper_type()));
         (c.join().unwrap_or(false), w.join().unwrap_or(false))
     });
+    // the retry: also when the first one is still running past WEIGHT_DOWNLOAD_WAIT, where
+    // download_weight only answers Done (that one goes on and tells its end by push); never after a
+    // cancel (the user stopped it)
     if online && !(ct2 && whisper) {
         if !ct2 && !ct2_cancelled {
             ipc::log("CTranslate2 weight unavailable after first download; retrying once");
@@ -605,6 +608,31 @@ pub fn shutdown(app: &App, _: Option<Value>) -> Result<ipc::Reply> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_cancelled_download_is_not_tried_again_at_start_up() {
+        let app_cell: std::sync::Arc<std::sync::OnceLock<std::sync::Weak<App>>> = Default::default();
+        let requests = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let (cell, counted) = (app_cell.clone(), requests.clone());
+        // every download is cancelled at its first request (the user pressed stop)
+        let root = super::super::test_server(move |_| {
+            counted.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            let app = cell.get().unwrap().upgrade().unwrap();
+            for cancel in app.model.downloads.lock().unwrap().values() {
+                cancel.store(true, std::sync::atomic::Ordering::SeqCst);
+            }
+            (200, vec![b'x'; 10])
+        });
+        let app = super::super::test_app_with(9, crate::net::Http::redirected(&root).unwrap());
+        app_cell.set(app.me()).unwrap();
+        ipc::take_printed();
+        assert_eq!(prepare_weights(&app, true), (false, false));
+        let printed = serde_json::to_string(&ipc::take_printed()).unwrap();
+        assert!(!printed.contains("retrying once"), "{printed}");
+        // one request a model at most (the other may be stopped before its first)
+        assert!(requests.load(std::sync::atomic::Ordering::SeqCst) <= 2);
+        assert!(app.model.downloads.lock().unwrap().is_empty());
+    }
 
     #[test]
     fn shutdown_with_nothing_running_saves_the_settings_at_once_and_twice_is_fine() {

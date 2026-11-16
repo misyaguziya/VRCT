@@ -94,6 +94,12 @@ pub fn current(app: &App, name: &str) -> Result<Reply> {
 /// native/data, OSC to a port on this PC (a socket the test reads) and no devices
 #[cfg(test)]
 pub(crate) fn test_app(osc_port: u16) -> Arc<App> {
+    test_app_with(osc_port, crate::net::Http::new().unwrap())
+}
+
+/// `test_app` with its HTTP (e.g. `Http::redirected` to `test_server`)
+#[cfg(test)]
+pub(crate) fn test_app_with(osc_port: u16, http: crate::net::Http) -> Arc<App> {
     use crate::config::{DeviceLists, Env};
     use serde_json::json;
     static RUN: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -112,8 +118,23 @@ pub(crate) fn test_app(osc_port: u16) -> Arc<App> {
         new_token: || "token".into(),
     });
     config.set("OSC_PORT", json!(osc_port)).unwrap();
-    let model = Model::new(crate::net::Http::new().unwrap(), Resources { dir: data }, transcription_lang, &config).unwrap();
+    let model = Model::new(http, Resources { dir: data }, transcription_lang, &config).unwrap();
     App::new(config, model)
+}
+
+/// A local HTTP server for the tests, answering each request's path with `respond`; its root
+/// (for `Http::redirected`). ponytail: it runs until the test process ends.
+#[cfg(test)]
+pub(crate) fn test_server(respond: impl Fn(&str) -> (u16, Vec<u8>) + Send + 'static) -> String {
+    let server = tiny_http::Server::http("127.0.0.1:0").unwrap();
+    let root = format!("http://{}", server.server_addr().to_ip().unwrap());
+    std::thread::spawn(move || {
+        for request in server.incoming_requests() {
+            let (status, body) = respond(request.url());
+            let _ = request.respond(tiny_http::Response::from_data(body).with_status_code(status));
+        }
+    });
+    root
 }
 
 /// register_error_report_hook(model.telemetryTrackError): every error code goes to telemetry

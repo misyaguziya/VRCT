@@ -3947,6 +3947,15 @@
       "pushes": false
     },
     {
+      "name": "select the default CTranslate2 model (the delete below must be refused)",
+      "endpoint": "/set/data/selected_ctranslate2_weight_type",
+      "data": "nllb-200-distilled-600M-ct2-int8",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
       "name": "delete model: the selected one",
       "endpoint": "/delete/data/model",
       "data": "nllb-200-distilled-600M-ct2-int8",
@@ -11574,6 +11583,15 @@
         "category": "weight",
         "severity": "error"
       },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "select the default CTranslate2 model (the delete below must be refused)",
+      "endpoint": "/set/data/selected_ctranslate2_weight_type",
+      "status": 200,
+      "result": "nllb-200-distilled-600M-ct2-int8",
       "pushes": [],
       "push_results": [],
       "ms": 0

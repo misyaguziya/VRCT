@@ -217,6 +217,14 @@
    "user_action_required": true
   },
   {
+   "code": "WEIGHT_DELETE_FAILED",
+   "has_metadata": true,
+   "category": "weight",
+   "message": "The model could not be deleted",
+   "severity": "error",
+   "user_action_required": true
+  },
+  {
    "code": "UPDATE_SOFTWARE_DOWNLOAD",
    "has_metadata": true,
    "category": "general",

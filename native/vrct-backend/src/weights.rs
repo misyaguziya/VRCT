@@ -348,15 +348,16 @@ fn sha256_of(path: &Path) -> std::io::Result<String> {
 }
 
 /// The rest of `url` into `part` (`size` bytes in all): from the bytes it has, or from the start
-/// when the server cannot resume. `on_bytes` gets the bytes the part has.
+/// when the server cannot resume. `on_bytes` gets the bytes the part has. Ok(true): the part keeps
+/// bytes from before this call (resumed), Ok(false): all of it came now.
 fn get_part(http: &Http, url: &str, part: &Path, size: u64, cancel: &AtomicBool, on_bytes: &dyn Fn(u64))
-            -> std::result::Result<(), DownloadError> {
+            -> std::result::Result<bool, DownloadError> {
     if let Some(parent) = part.parent() {
         std::fs::create_dir_all(parent)?;
     }
     let have = size_of(part);
     if have == size {
-        return Ok(());
+        return Ok(true);
     }
     let mut file = std::fs::File::options().create(true).write(true).truncate(false).open(part)?;
     let mut get = |from: u64| {
@@ -375,8 +376,8 @@ fn get_part(http: &Http, url: &str, part: &Path, size: u64, cancel: &AtomicBool,
     };
     let from = if have > size { 0 } else { have };
     match get(from) {
-        Err(DownloadError::RangeIgnored | DownloadError::Status(416)) if from > 0 => get(0),
-        result => result,
+        Err(DownloadError::RangeIgnored | DownloadError::Status(416)) if from > 0 => get(0).map(|()| false),
+        result => result.map(|()| from > 0),
     }
 }
 
@@ -399,7 +400,8 @@ fn finish(part: &Path, path: &Path, sha256: &str) -> std::io::Result<bool> {
 /// tokenizer's in the Hugging Face cache layout v3.6.x's transformers wrote
 /// (`tokenizer/models--org--name/snapshots/<commit>/`, `refs/main` once they are all there). A file
 /// of the catalog's size is not fetched again. Up to 3 attempts a file, each resuming its `.part`;
-/// none more after a 4xx other than 429. `progress`: the bytes of the whole model there, 0 to 1.
+/// none more after a 4xx other than 429, nor after a file got whole in one attempt that is not the
+/// catalog's. `progress`: the bytes of the whole model there, 0 to 1.
 #[allow(clippy::too_many_arguments)]
 pub fn download_model(http: &Http, endpoint: &str, root: &Path, m: &CatalogModel, loads: &dyn Fn(&Path) -> bool,
                       cancel: &AtomicBool, progress: &dyn Fn(f64), log: &dyn Fn(&str, &str)) -> Outcome {
@@ -449,9 +451,15 @@ pub fn download_model(http: &Http, endpoint: &str, root: &Path, m: &CatalogModel
                 return Outcome::Cancelled;
             }
             reason = match result {
-                Ok(()) => match finish(&part, path, &f.sha256) {
+                Ok(resumed) => match finish(&part, path, &f.sha256) {
                     Ok(true) => None,
-                    Ok(false) => Some("sha256"),
+                    // the bytes from an earlier attempt may be the wrong ones: once more from the start
+                    Ok(false) if resumed => Some("sha256"),
+                    // all of it came now and is not the catalog's file: getting it again gives the same
+                    Ok(false) => {
+                        log("weight file is not the catalog's (sha256)", url);
+                        return Outcome::Failed("sha256");
+                    }
                     Err(e) => {
                         log(&format!("cannot keep the downloaded file: {e}"), url);
                         Some("network")

@@ -11,10 +11,10 @@ use crate::pyfmt;
 use crate::pyjson::{py_int, py_str};
 use crate::update::{self, Updater};
 use crate::weights;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, Result};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -591,18 +591,44 @@ impl Progress {
     }
 }
 
-/// A download in `Model::downloads`, taken out when it ends (a panic too)
-struct Registered<'a>(&'a Mutex<HashMap<String, Arc<AtomicBool>>>, &'a str);
+type Downloads = Mutex<HashMap<String, Arc<AtomicBool>>>;
+
+/// A download in `Model::downloads`, taken out when it ends (a panic too); only its own entry
+struct Registered<'a>(&'a Downloads, &'a str, Arc<AtomicBool>);
 
 impl Drop for Registered<'_> {
     fn drop(&mut self) {
-        self.0.lock().unwrap_or_else(|e| e.into_inner()).remove(self.1);
+        let mut downloads = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        if downloads.get(self.1).is_some_and(|c| Arc::ptr_eq(c, &self.2)) {
+            downloads.remove(self.1);
+        }
+    }
+}
+
+/// `run` (one download) once more while a cancel was taken back by a new request; a cancel that
+/// stands takes the download out of `downloads` under the same lock (so a request after it starts
+/// a new one, a request before it takes the cancel back)
+fn run_until_settled(downloads: &Downloads, id: &str, cancel: &Arc<AtomicBool>,
+                     mut run: impl FnMut() -> weights::Outcome) -> weights::Outcome {
+    loop {
+        let outcome = run();
+        if outcome != weights::Outcome::Cancelled {
+            return outcome;
+        }
+        let mut downloads = downloads.lock().unwrap();
+        if cancel.load(Ordering::SeqCst) {
+            if downloads.get(id).is_some_and(|c| Arc::ptr_eq(c, cancel)) {
+                downloads.remove(id);
+            }
+            return outcome;
+        }
     }
 }
 
 /// downloadCTranslate2Weight / downloadWhisperWeight of the catalog's model `weight_type`, on its
-/// own thread (`wait`: on this one, at start-up, which gets how it ended; otherwise Done means
-/// started). A model already downloading is not started again (Done: that one tells its end).
+/// own thread (`wait`: on this one, at start-up, which gets how it ended).
+/// Done means: finished (`wait`), started (not `wait`), or already downloading: that download goes
+/// on (a cancel asked for it is taken back) and tells its end by push.
 pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) -> weights::Outcome {
     let (kind, title) = if whisper { ("whisper", "Whisper") } else { ("ctranslate2", "CTranslate2") };
     let Some(m) = weights::model(weight_type).filter(|m| (m.family == weights::Family::Whisper) == whisper) else {
@@ -612,7 +638,8 @@ pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) 
     let cancel = Arc::new(AtomicBool::new(false));
     {
         let mut downloads = app.model.downloads.lock().unwrap();
-        if downloads.contains_key(&m.id) {
+        if let Some(running) = downloads.get(&m.id) {
+            running.store(false, Ordering::SeqCst);
             return weights::Outcome::Done;
         }
         downloads.insert(m.id.clone(), cancel.clone());
@@ -620,7 +647,7 @@ pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) 
     let me = app.me();
     let job = move || {
         let Some(app) = me.upgrade() else { return weights::Outcome::Cancelled };
-        let _registered = Registered(&app.model.downloads, &m.id);
+        let _registered = Registered(&app.model.downloads, &m.id, cancel.clone());
         let progress = Progress { last: Mutex::new((-1.0, None)) };
         let on_progress = |p: f64| {
             if progress.due(p) {
@@ -640,8 +667,10 @@ pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) 
         let log = |message: &str, detail: &str| ipc::print_log(message, &json!(detail));
         let endpoint = app.config.get_str("HF_ENDPOINT");
         let loads = if whisper { whisper_loads } else { ct2_loads };
-        let outcome = weights::download_model(&app.model.http, endpoint.trim_end_matches('/'), &app.config.env().path_local, m,
-                                              &loads, &cancel, &on_progress, &log);
+        let outcome = run_until_settled(&app.model.downloads, &m.id, &cancel, || {
+            weights::download_model(&app.model.http, endpoint.trim_end_matches('/'), &app.config.env().path_local, m,
+                                    &loads, &cancel, &on_progress, &log)
+        });
         match outcome {
             weights::Outcome::Done => {
                 let ok = if whisper { whisper_weight_ok(&app, &m.id) } else { ctranslate2_weight_ok(&app, &m.id) };
@@ -738,11 +767,14 @@ pub fn delete_model(app: &App, data: Data) -> Result<Reply> {
             return Ok(errors::error("WEIGHT_IN_USE", data));
         }
         let dir = m.dir(&app.config.env().path_local);
-        if dir.exists() {
-            std::fs::remove_dir_all(&dir).with_context(|| format!("delete {}", dir.display()))?;
+        let removed = if dir.exists() { std::fs::remove_dir_all(&dir) } else { Ok(()) };
+        // part of it may be gone: not installed either way
+        app.config.put_item(&format!("SELECTABLE_{upper}_WEIGHT_TYPE_DICT"), &m.id, json!(false));
+        if let Err(e) = removed {
+            logs::error("delete weight", &format!("{}: {e}", dir.display()));
+            return Ok(errors::error_response("WEIGHT_DELETE_FAILED", data, Some(json!({"error": e.to_string()})), None));
         }
     }
-    app.config.put_item(&format!("SELECTABLE_{upper}_WEIGHT_TYPE_DICT"), &m.id, json!(false));
     ipc::log(format!("Weight deleted: {}", m.id));
     Ok(Reply::ok(model_list(app)))
 }
@@ -752,14 +784,20 @@ pub fn cancel_weight_download(app: &App, data: Data) -> Result<Reply> {
     let id = py_str(&data_or_null(data));
     let downloads = app.model.downloads.lock().unwrap();
     let Some(cancel) = downloads.get(&id) else { return Ok(Reply::ok(false)) };
-    cancel.store(true, std::sync::atomic::Ordering::SeqCst);
+    cancel.store(true, Ordering::SeqCst);
     Ok(Reply::ok(true))
 }
 
-/// Where the weights come from: an https origin (a "/" at the end is dropped)
+/// Where the weights come from: an https origin, kept as read back (no spaces around, no "/" at
+/// the end, the host in lower case)
 pub fn set_hf_endpoint(app: &App, data: Data) -> Result<Reply> {
     let value = match data_or_null(data) {
-        Value::String(s) => json!(s.trim_end_matches('/')),
+        Value::String(s) => match reqwest::Url::parse(s.trim()) {
+            Ok(url) if url.path() == "/" && url.query().is_none() && url.fragment().is_none() && url.username().is_empty() => {
+                json!(url.origin().ascii_serialization())
+            }
+            _ => json!(s),
+        },
         other => other,
     };
     super::basic::validated(app, "HF_ENDPOINT", value)
@@ -772,10 +810,12 @@ mod tests {
     #[test]
     fn a_model_already_downloading_or_unknown_is_not_started() {
         let app = super::super::test_app(9);
-        let running = Arc::new(AtomicBool::new(false));
+        // one running, asked to stop: asked again, the stop is taken back
+        let running = Arc::new(AtomicBool::new(true));
         app.model.downloads.lock().unwrap().insert("nllb-200-distilled-600M-ct2-int8".into(), running.clone());
         assert_eq!(download_weight(&app, false, "nllb-200-distilled-600M-ct2-int8", true), weights::Outcome::Done);
         assert!(Arc::ptr_eq(&app.model.downloads.lock().unwrap()["nllb-200-distilled-600M-ct2-int8"], &running), "the running one kept");
+        assert!(!running.load(Ordering::SeqCst), "its cancel taken back");
         // a Whisper model is not a CTranslate2 one
         assert_eq!(download_weight(&app, false, "base", true), weights::Outcome::Failed("unknown"));
         assert_eq!(download_weight(&app, true, "nope", true), weights::Outcome::Failed("unknown"));
@@ -814,6 +854,91 @@ mod tests {
         assert!(!dir.exists() && root.join("weights/whisper").exists());
         // not there: fine
         assert_eq!(delete_model(&app, Some(json!("tiny"))).unwrap().status, 200);
+        // a file that cannot go (held open without sharing): an error with the OS's, not installed any more
+        let small = root.join("weights/whisper/small");
+        std::fs::create_dir_all(&small).unwrap();
+        use std::os::windows::fs::OpenOptionsExt;
+        let held = std::fs::File::options().create(true).write(true).truncate(true).share_mode(0).open(small.join("model.bin")).unwrap();
+        app.config.put_item("SELECTABLE_WHISPER_WEIGHT_TYPE_DICT", "small", json!(true));
+        let failed = delete_model(&app, Some(json!("small"))).unwrap();
+        assert_eq!((failed.status, failed.result["error_code"].clone()), (400, json!("WEIGHT_DELETE_FAILED")));
+        assert!(failed.result["details"]["error"].as_str().is_some_and(|e| !e.is_empty()), "{}", failed.result);
+        assert_eq!(app.config.get("SELECTABLE_WHISPER_WEIGHT_TYPE_DICT")["small"], json!(false));
+        drop(held);
+        ipc::take_printed();
+    }
+
+    #[test]
+    fn a_cancel_taken_back_runs_the_download_again_and_one_that_stands_takes_it_out() {
+        let downloads: Downloads = Mutex::default();
+        let cancel = Arc::new(AtomicBool::new(false));
+        downloads.lock().unwrap().insert("tiny".into(), cancel.clone());
+        // stopped, then asked again before it ended: once more
+        let mut runs = 0;
+        let outcome = run_until_settled(&downloads, "tiny", &cancel, || {
+            runs += 1;
+            if runs == 1 {
+                cancel.store(true, Ordering::SeqCst);
+                cancel.store(false, Ordering::SeqCst);
+                weights::Outcome::Cancelled
+            } else {
+                weights::Outcome::Done
+            }
+        });
+        assert_eq!((outcome, runs), (weights::Outcome::Done, 2));
+        assert!(downloads.lock().unwrap().contains_key("tiny"), "taken out by its Registered, not here");
+        // a cancel that stands: out of the table at once
+        cancel.store(true, Ordering::SeqCst);
+        assert_eq!(run_until_settled(&downloads, "tiny", &cancel, || weights::Outcome::Cancelled), weights::Outcome::Cancelled);
+        assert!(downloads.lock().unwrap().is_empty());
+        // another download of the same model in the table is not taken out
+        let other = Arc::new(AtomicBool::new(false));
+        downloads.lock().unwrap().insert("tiny".into(), other.clone());
+        run_until_settled(&downloads, "tiny", &cancel, || weights::Outcome::Cancelled);
+        assert!(Arc::ptr_eq(&downloads.lock().unwrap()["tiny"], &other));
+    }
+
+    #[test]
+    fn after_a_cancel_a_new_request_downloads_again_and_tells_its_end() {
+        let app_cell: Arc<std::sync::OnceLock<std::sync::Weak<App>>> = Arc::default();
+        let (cell, requests) = (app_cell.clone(), Arc::new(std::sync::atomic::AtomicUsize::new(0)));
+        let counted = requests.clone();
+        let root = super::super::test_server(move |_| {
+            // the first request is cancelled while it comes, the next one is not found
+            if counted.fetch_add(1, Ordering::SeqCst) == 0 {
+                let app = cell.get().unwrap().upgrade().unwrap();
+                assert_eq!(cancel_weight_download(&app, Some(json!("tiny"))).unwrap().result, json!(true));
+                return (200, vec![b'x'; 10]);
+            }
+            (404, b"not found".to_vec())
+        });
+        let app = super::super::test_app_with(9, crate::net::Http::redirected(&root).unwrap());
+        app_cell.set(app.me()).unwrap();
+        ipc::take_printed();
+        assert_eq!(download_weight(&app, true, "tiny", true), weights::Outcome::Cancelled);
+        let printed = ipc::take_printed();
+        assert!(!printed.iter().any(|p| p["endpoint"].as_str().is_some_and(|e| e.contains("weight") && !e.contains("progress"))),
+                "a cancel tells nothing: {printed:?}");
+        assert!(app.model.downloads.lock().unwrap().is_empty());
+        // asked again: it runs, and its end comes (here the failure, with the model and why)
+        assert_eq!(download_weight(&app, true, "tiny", true), weights::Outcome::Failed("network"));
+        let printed = ipc::take_printed();
+        let error = printed.iter().find(|p| p["endpoint"] == "/run/error_whisper_weight").unwrap_or_else(|| panic!("{printed:?}"));
+        assert_eq!(error["status"], json!(400));
+        assert_eq!(error["result"]["error_code"], json!("WEIGHT_WHISPER_DOWNLOAD"));
+        assert_eq!(error["result"]["data"], Value::Null);
+        assert_eq!(error["result"]["details"], json!({"weight_type": "tiny", "reason": "network"}));
+        assert_eq!(requests.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn hf_endpoint_is_kept_as_read_back() {
+        let app = super::super::test_app(9);
+        assert_eq!(set_hf_endpoint(&app, Some(json!("  https://HF-Mirror.com/  "))).unwrap().result, json!("https://hf-mirror.com"));
+        assert_eq!(set_hf_endpoint(&app, Some(json!("https://example.com:443"))).unwrap().result, json!("https://example.com"));
+        let bad = set_hf_endpoint(&app, Some(json!("https://example.com/x"))).unwrap();
+        assert_eq!((bad.status, bad.result["data"].clone()), (400, json!("https://example.com/x")));
+        assert_eq!(app.config.get("HF_ENDPOINT"), json!("https://example.com"));
         ipc::take_printed();
     }
 

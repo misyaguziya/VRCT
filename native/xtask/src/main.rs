@@ -442,7 +442,7 @@ struct HfLfs {
 fn model_catalog_files(repo: &str, revision: &str, only: Option<Vec<String>>) -> Result<()> {
     let hf = "https://huggingface.co";
     let commit = ureq::get(&format!("{hf}/api/models/{repo}/revision/{revision}")).call()?.into_json::<HfRevision>()?.sha;
-    if commit.len() != 40 || !commit.bytes().all(|b| b.is_ascii_hexdigit()) {
+    if commit.len() != 40 || !commit.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) {
         bail!("{repo}@{revision}: unexpected commit {commit}");
     }
     let tree: Vec<HfTreeEntry> = ureq::get(&format!("{hf}/api/models/{repo}/tree/{commit}?recursive=true")).call()?.into_json()?;

@@ -1,5 +1,8 @@
-# 検証済みのモデルの一覧 (カタログ)。重みのフォルダーは本物へのジャンクションなので、削除が成功するケースは
-# 絶対に置かない (本物の重みが消える)。削除は拒否される 2 つだけ。取得はオフラインなので始めない。
+# 検証済みのモデルの一覧 (カタログ)。取得はオフラインなので始めない。
+# 削除が成功するケースは絶対に置かない: 重みのフォルダー (--weights) は本物へのジャンクションで、
+# 削除は本物の重みを消す。置くのは拒否される 2 つだけ。「選択中」の拒否は CTranslate2 の選択が
+# nllb-200-distilled-600M-ct2-int8 であることに頼るので、すぐ前で明示的にそれを選ぶ。この選択と
+# 削除の間に、選択を変えるケースを入れないこと (選んでいないモデルになると本当に消える)。
 
 [[case]]
 name = "get model_catalog"
@@ -14,6 +17,11 @@ rule = "shape"  # 入っている重み・大きさは PC ごとに違う
 name = "delete model: not in the catalog"
 endpoint = "/delete/data/model"
 data = "../ctranslate2"
+
+[[case]]
+name = "select the default CTranslate2 model (the delete below must be refused)"
+endpoint = "/set/data/selected_ctranslate2_weight_type"
+data = "nllb-200-distilled-600M-ct2-int8"
 
 [[case]]
 name = "delete model: the selected one"
