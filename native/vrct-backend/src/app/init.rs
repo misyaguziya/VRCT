@@ -8,6 +8,7 @@ use crate::ipc;
 use crate::logs;
 use crate::platform;
 use crate::translate::llm::{Engine, LlmClient};
+use crate::weights::Outcome;
 use anyhow::{anyhow, Result};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
@@ -28,34 +29,39 @@ fn connected_network(app: &App) -> bool {
     app.model.http.get("http://www.google.com", &[], Some(Duration::from_secs(3))).is_ok_and(|r| r.status() == 200)
 }
 
-/// downloadXWeight(weight_type, False) on its own thread; the receiver hears when it ended
-fn download_in_background(app: &App, whisper: bool, weight_type: String) -> mpsc::Receiver<()> {
+/// downloadXWeight(weight_type, False) on its own thread; the receiver hears how it ended
+fn download_in_background(app: &App, whisper: bool, weight_type: String) -> mpsc::Receiver<Outcome> {
     let (done, rx) = mpsc::channel();
     let me = app.me();
     std::thread::spawn(move || {
         if let Some(app) = me.upgrade() {
-            features::download_weight(&app, whisper, &weight_type, true);
+            let _ = done.send(features::download_weight(&app, whisper, &weight_type, true));
         }
-        let _ = done.send(());
     });
     rx
 }
 
-fn wait_download(rx: Option<mpsc::Receiver<()>>, title: &str) -> bool {
-    let Some(rx) = rx else { return false };
-    if rx.recv_timeout(WEIGHT_DOWNLOAD_WAIT) == Err(mpsc::RecvTimeoutError::Timeout) {
-        ipc::log(format!("{title} weight download did not finish within {}s; continuing initialization without waiting \
-                          further (download continues in the background)", WEIGHT_DOWNLOAD_WAIT.as_secs()));
+/// (a download ran, it was cancelled)
+fn wait_download(rx: Option<mpsc::Receiver<Outcome>>, title: &str) -> (bool, bool) {
+    let Some(rx) = rx else { return (false, false) };
+    match rx.recv_timeout(WEIGHT_DOWNLOAD_WAIT) {
+        Ok(outcome) => (true, outcome == Outcome::Cancelled),
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            ipc::log(format!("{title} weight download did not finish within {}s; continuing initialization without waiting \
+                              further (download continues in the background)", WEIGHT_DOWNLOAD_WAIT.as_secs()));
+            (true, false)
+        }
+        Err(mpsc::RecvTimeoutError::Disconnected) => (true, false),
     }
-    true
 }
 
 /// The weights: downloaded when missing (online), then checked; a weight still missing is
-/// downloaded once more. Returns (CTranslate2, Whisper) available.
+/// downloaded once more (not one whose download was cancelled). Returns (CTranslate2, Whisper) available.
 fn prepare_weights(app: &App, online: bool) -> (bool, bool) {
     let ct2_type = || app.config.get_str("CTRANSLATE2_WEIGHT_TYPE");
     let whisper_type = || app.config.get_str("WHISPER_WEIGHT_TYPE");
     let (mut ct2_pre, mut whisper_pre) = (None, None);
+    let (mut ct2_cancelled, mut whisper_cancelled) = (false, false);
     if online {
         // the weight folders' names before v3.6 are not renamed any more (only v3.6.x is supported)
         ipc::log("Download CTranslate2 Model Weight");
@@ -65,10 +71,14 @@ fn prepare_weights(app: &App, online: bool) -> (bool, bool) {
         whisper_pre = Some(whisper_weight_ok(app, &whisper_type()));
         let whisper_job = (whisper_pre == Some(false)).then(|| download_in_background(app, true, whisper_type()));
         // a download changes the answer: checked again below
-        if wait_download(ct2_job, "CTranslate2") {
+        let ran;
+        (ran, ct2_cancelled) = wait_download(ct2_job, "CTranslate2");
+        if ran {
             ct2_pre = None;
         }
-        if wait_download(whisper_job, "Whisper") {
+        let ran;
+        (ran, whisper_cancelled) = wait_download(whisper_job, "Whisper");
+        if ran {
             whisper_pre = None;
         }
     }
@@ -78,11 +88,11 @@ fn prepare_weights(app: &App, online: bool) -> (bool, bool) {
         (c.join().unwrap_or(false), w.join().unwrap_or(false))
     });
     if online && !(ct2 && whisper) {
-        if !ct2 {
+        if !ct2 && !ct2_cancelled {
             ipc::log("CTranslate2 weight unavailable after first download; retrying once");
             features::download_weight(app, false, &ct2_type(), true);
         }
-        if !whisper {
+        if !whisper && !whisper_cancelled {
             ipc::log("Whisper weight unavailable after first download; retrying once");
             features::download_weight(app, true, &whisper_type(), true);
         }
@@ -575,6 +585,10 @@ fn stop_service(app: &App, label: &str, stop: fn(&App)) {
 pub fn shutdown(app: &App, _: Option<Value>) -> Result<ipc::Reply> {
     // VRChat's typing indicator is not left on
     super::keyboard::indicator_off(app);
+    // the weight downloads stop at their next chunk (their .part files are kept; not waited for)
+    for cancel in app.model.downloads.lock().unwrap().values() {
+        cancel.store(true, std::sync::atomic::Ordering::SeqCst);
+    }
     audio::shutdown(app);
     stop_service(app, "OSC receive server", |a| a.model.osc.stop_receive());
     stop_service(app, "OBS browser source server", |a| a.model.servers.stop_obs());

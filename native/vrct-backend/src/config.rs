@@ -257,6 +257,11 @@ fn allowed(name: &str, v: &Value, c: &View) -> Option<bool> {
         "KEYBOARD_KEY_SOUND_VOLUME" => number_in(0.0, 100.0),
         // the lasers tilted up from the controllers' tips (degrees), to point where VRChat's do
         "OVERLAY_VR_LASER_PITCH" => number_in(-30.0, 30.0),
+        // where the weights come from (a mirror of the Hub): https only, an origin (a "/" after it is dropped where used)
+        "HF_ENDPOINT" => v.as_str().and_then(|s| reqwest::Url::parse(s).ok()).is_some_and(|u| {
+            u.scheme() == "https" && u.host_str().is_some() && u.username().is_empty() && u.password().is_none()
+                && u.path() == "/" && u.query().is_none() && u.fragment().is_none()
+        }),
         _ => return None,
     })
 }
@@ -763,6 +768,15 @@ mod tests {
         assert!(c.set("OCR_POLL_INTERVAL_MS", Value::Null).is_err());
         assert!(c.set("WEBSOCKET_HOST", json!("0.0.0.0")).is_err());
         assert!(c.set("WEBSOCKET_HOST", json!("::1")).is_ok());
+        // a Hub mirror: an https origin
+        for ok in ["https://huggingface.co", "https://hf-mirror.com/", "https://127.0.0.1:8443"] {
+            assert!(c.set("HF_ENDPOINT", json!(ok)).is_ok(), "{ok}");
+        }
+        for bad in [json!("http://huggingface.co"), json!("https://hf-mirror.com/x"), json!("https://a.com?b"), json!("https://a.com#b"),
+                    json!("https://u:p@a.com"), json!("ftp://a.com"), json!("huggingface.co"), json!(""), json!(1), Value::Null] {
+            assert!(c.set("HF_ENDPOINT", bad.clone()).is_err(), "{bad}");
+        }
+        assert_eq!(c.get("HF_ENDPOINT"), json!("https://127.0.0.1:8443"));
         // a bad entry keeps its old value
         c.set("MAIN_WINDOW_GEOMETRY", json!({"x_pos": 1, "y_pos": "a", "width": 2, "height": 3})).unwrap();
         assert_eq!(c.get("MAIN_WINDOW_GEOMETRY"), json!({"x_pos": 1, "y_pos": 0, "width": 2, "height": 3}));

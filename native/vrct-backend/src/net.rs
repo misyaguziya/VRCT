@@ -26,6 +26,8 @@ pub type OnChunk<'a> = dyn FnMut(&[u8], Option<u64>) -> std::io::Result<()> + 'a
 
 pub enum DownloadError {
     Status(u16),
+    /// `download_from` asked for the rest but the server sent something else (nothing was written)
+    RangeIgnored,
     Other(anyhow::Error),
 }
 
@@ -105,6 +107,13 @@ impl Http {
     /// get(stream=True, timeout=(10, 60)) + iter_content). A 4xx/5xx is `DownloadError::Status`.
     pub fn download(&self, url: &str, write: &mut OnChunk)
                     -> std::result::Result<(), DownloadError> {
+        self.download_from(url, 0, write)
+    }
+
+    /// `download` of the bytes from `from` on (`Range: bytes=from-`, also after a redirect): only a
+    /// 206 starting there is read, anything else is `RangeIgnored` before the body
+    pub fn download_from(&self, url: &str, from: u64, write: &mut OnChunk)
+                         -> std::result::Result<(), DownloadError> {
         let (target, origin) = self.target(url)?;
         let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
         runtime.block_on(async {
@@ -112,10 +121,19 @@ impl Http {
             if let Some(origin) = origin {
                 request = request.header(ORIGINAL_ORIGIN_HEADER, origin);
             }
+            if from > 0 {
+                request = request.header(reqwest::header::RANGE, format!("bytes={from}-"));
+            }
             let mut response = request.send().await?;
             let status = response.status();
             if status.is_client_error() || status.is_server_error() {
                 return Err(DownloadError::Status(status.as_u16()));
+            }
+            if from > 0 {
+                let range = response.headers().get(reqwest::header::CONTENT_RANGE).and_then(|v| v.to_str().ok()).unwrap_or("");
+                if status != reqwest::StatusCode::PARTIAL_CONTENT || !range.starts_with(&format!("bytes {from}-")) {
+                    return Err(DownloadError::RangeIgnored);
+                }
             }
             let length = response.content_length();
             while let Some(chunk) = response.chunk().await? {

@@ -13,7 +13,9 @@ use crate::update::{self, Updater};
 use crate::weights;
 use anyhow::{anyhow, bail, Result};
 use serde_json::{json, Value};
-use std::sync::Mutex;
+use std::collections::HashMap;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 type Data = Option<Value>;
@@ -589,54 +591,79 @@ impl Progress {
     }
 }
 
-/// downloadCTranslate2Weight / downloadWhisperWeight (`wait`: on this thread, at start-up)
-pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) {
+/// A download in `Model::downloads`, taken out when it ends (a panic too)
+struct Registered<'a>(&'a Mutex<HashMap<String, Arc<AtomicBool>>>, &'a str);
+
+impl Drop for Registered<'_> {
+    fn drop(&mut self) {
+        self.0.lock().unwrap_or_else(|e| e.into_inner()).remove(self.1);
+    }
+}
+
+/// downloadCTranslate2Weight / downloadWhisperWeight of the catalog's model `weight_type`, on its
+/// own thread (`wait`: on this one, at start-up, which gets how it ended; otherwise Done means
+/// started). A model already downloading is not started again (Done: that one tells its end).
+pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) -> weights::Outcome {
+    let (kind, title) = if whisper { ("whisper", "Whisper") } else { ("ctranslate2", "CTranslate2") };
+    let Some(m) = weights::model(weight_type).filter(|m| (m.family == weights::Family::Whisper) == whisper) else {
+        logs::error(&format!("download {title} weight"), &format!("unknown weight type {weight_type}"));
+        return weights::Outcome::Failed("unknown");
+    };
+    let cancel = Arc::new(AtomicBool::new(false));
+    {
+        let mut downloads = app.model.downloads.lock().unwrap();
+        if downloads.contains_key(&m.id) {
+            return weights::Outcome::Done;
+        }
+        downloads.insert(m.id.clone(), cancel.clone());
+    }
     let me = app.me();
-    let tokenizer_weight_type = weight_type.to_string();
-    let weight_type = weight_type.to_string();
     let job = move || {
-        let Some(app) = me.upgrade() else { return };
-        let (kind, title) = if whisper { ("whisper", "Whisper") } else { ("ctranslate2", "CTranslate2") };
+        let Some(app) = me.upgrade() else { return weights::Outcome::Cancelled };
+        let _registered = Registered(&app.model.downloads, &m.id);
         let progress = Progress { last: Mutex::new((-1.0, None)) };
         let on_progress = |p: f64| {
             if progress.due(p) {
                 ipc::print_log(&format!("{title} Weight Download Progress"), &json!(p));
-                let _ = app.run(200, &format!("download_progress_{kind}_weight"), json!({"weight_type": weight_type, "progress": p}));
+                let _ = app.run(200, &format!("download_progress_{kind}_weight"), json!({"weight_type": m.id, "progress": p}));
             }
         };
-        let downloaded = || {
-            let ok = if whisper { whisper_weight_ok(&app, &weight_type) } else { ctranslate2_weight_ok(&app, &weight_type) };
-            if ok {
-                let dict = format!("SELECTABLE_{}_WEIGHT_TYPE_DICT", kind.to_uppercase());
-                app.config.put_item(&dict, &weight_type, json!(true));
-                let _ = app.run(200, &format!("downloaded_{kind}_weight"), json!(weight_type));
-            } else {
-                let code = if whisper { "WEIGHT_WHISPER_DOWNLOAD" } else { "WEIGHT_CTRANSLATE2_DOWNLOAD" };
-                let _ = app.run_error(&format!("error_{kind}_weight"), code, Value::Null);
+        let failed = |reason: Option<&str>| {
+            let code = if whisper { "WEIGHT_WHISPER_DOWNLOAD" } else { "WEIGHT_CTRANSLATE2_DOWNLOAD" };
+            let mut details = json!({"weight_type": m.id});
+            if let Some(reason) = reason {
+                details["reason"] = json!(reason);
             }
+            let reply = errors::error_response(code, Value::Null, Some(details), None);
+            let _ = app.run(reply.status, &format!("error_{kind}_weight"), reply.result);
         };
         let log = |message: &str, detail: &str| ipc::print_log(message, &json!(detail));
-        let root = app.config.env().path_local.clone();
-        let result = if whisper {
-            weights::download_whisper(&app.model.http, &root, &weight_type, &whisper_loads, &on_progress, &downloaded, &log)
-        } else {
-            weights::download_ctranslate2(&app.model.http, &root, &weight_type, &ct2_loads, &on_progress, &downloaded, &log).map(|_| ())
-        };
-        if let Err(e) = result {
-            logs::error(&format!("download {title} weight"), &format!("{e:#}"));
+        let endpoint = app.config.get_str("HF_ENDPOINT");
+        let loads = if whisper { whisper_loads } else { ct2_loads };
+        let outcome = weights::download_model(&app.model.http, endpoint.trim_end_matches('/'), &app.config.env().path_local, m,
+                                              &loads, &cancel, &on_progress, &log);
+        match outcome {
+            weights::Outcome::Done => {
+                let ok = if whisper { whisper_weight_ok(&app, &m.id) } else { ctranslate2_weight_ok(&app, &m.id) };
+                if ok {
+                    let dict = format!("SELECTABLE_{}_WEIGHT_TYPE_DICT", kind.to_uppercase());
+                    app.config.put_item(&dict, &m.id, json!(true));
+                    let _ = app.run(200, &format!("downloaded_{kind}_weight"), json!(m.id));
+                } else {
+                    // the catalog's files that do not load
+                    failed(None);
+                }
+            }
+            weights::Outcome::Failed(reason) => failed(Some(reason)),
+            weights::Outcome::Cancelled => ipc::log(format!("{title} weight download cancelled: {}", m.id)),
         }
+        outcome
     };
     if wait {
-        job();
+        job()
     } else {
         std::thread::spawn(job);
-    }
-    // the tokenizer comes with the weight (synchronously, as in Python)
-    if !whisper {
-        if let Err(e) = weights::download_tokenizer(&app.model.http, &app.config.env().path_local, &tokenizer_weight_type,
-                                                    &|m, d| ipc::print_log(m, &json!(d))) {
-            logs::error("download CTranslate2 tokenizer", &format!("{e:#}"));
-        }
+        weights::Outcome::Done
     }
 }
 
@@ -653,6 +680,20 @@ pub fn download_whisper_weight(app: &App, data: Data) -> Result<Reply> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_model_already_downloading_or_unknown_is_not_started() {
+        let app = super::super::test_app(9);
+        let running = Arc::new(AtomicBool::new(false));
+        app.model.downloads.lock().unwrap().insert("nllb-200-distilled-600M-ct2-int8".into(), running.clone());
+        assert_eq!(download_weight(&app, false, "nllb-200-distilled-600M-ct2-int8", true), weights::Outcome::Done);
+        assert!(Arc::ptr_eq(&app.model.downloads.lock().unwrap()["nllb-200-distilled-600M-ct2-int8"], &running), "the running one kept");
+        // a Whisper model is not a CTranslate2 one
+        assert_eq!(download_weight(&app, false, "base", true), weights::Outcome::Failed("unknown"));
+        assert_eq!(download_weight(&app, true, "nope", true), weights::Outcome::Failed("unknown"));
+        assert_eq!(app.model.downloads.lock().unwrap().len(), 1);
+        ipc::take_printed();
+    }
 
     #[test]
     fn unique_as_python() {

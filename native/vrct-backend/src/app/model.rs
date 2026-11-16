@@ -66,6 +66,8 @@ pub struct Model {
     pub overlays: super::overlay::Overlays,
     /// the VR keyboard
     pub keyboard: super::keyboard::Keyboard,
+    /// the weight downloads running: model id -> its cancel flag
+    pub downloads: Mutex<std::collections::HashMap<String, Arc<AtomicBool>>>,
     /// where the overlay's events go (set when the app is made)
     pub overlay_app: Arc<std::sync::OnceLock<std::sync::Weak<super::App>>>,
 }
@@ -99,6 +101,7 @@ impl Model {
             overlays,
             overlay_app,
             keyboard: super::keyboard::Keyboard::new(config),
+            downloads: Mutex::default(),
             app_name: {
                 crate::ipc::log("Clipboard initialized. Waiting for SteamVR.");
                 AppName::watch(crate::ipc::log)

@@ -34,10 +34,11 @@ arboard = { version = "3", default-features = false }
 # OSC / OSCQuery with VRChat (mDNS discovery as VRChat does it)
 vrchat_osc = "=2.2.0"
 serde_json = { version = "1", features = ["preserve_order"] }
-# window focus and paste, PrintWindow, process names
+# window focus and paste, PrintWindow, process names, free disk space
 windows-sys = { version = "0.61", features = [
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
+    "Win32_Storage_FileSystem",
     "Win32_Storage_Xps",
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_LibraryLoader",

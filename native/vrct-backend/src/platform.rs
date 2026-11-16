@@ -72,6 +72,16 @@ pub fn process_name(pid: u32) -> Option<String> {
     }
 }
 
+/// The bytes this user may still write on the drive of `dir` (None: not known)
+pub fn free_space(dir: &std::path::Path) -> Option<u64> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Storage::FileSystem::GetDiskFreeSpaceExW;
+    let wide: Vec<u16> = dir.as_os_str().encode_wide().chain([0]).collect();
+    let mut free = 0u64;
+    let ok = unsafe { GetDiskFreeSpaceExW(wide.as_ptr(), &mut free, std::ptr::null_mut(), std::ptr::null_mut()) };
+    (ok != 0).then_some(free)
+}
+
 /// The ids of this process's threads now
 pub fn thread_ids() -> std::collections::HashSet<u32> {
     use windows_sys::Win32::System::Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Thread32First, Thread32Next, THREADENTRY32,

@@ -2385,6 +2385,19 @@
      "locked": true
     }
    }
+  },
+  {
+   "name": "HF_ENDPOINT",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": "callable",
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "https://huggingface.co"
   }
  ],
  "serialized_order": [
@@ -2509,6 +2522,7 @@
   "OVERLAY_VR_LASER_PITCH",
   "KEYBOARD_SHORTCUT",
   "OVERLAY_VR_PANEL_FORM",
-  "OVERLAY_VR_SUBTITLE_SETTINGS"
+  "OVERLAY_VR_SUBTITLE_SETTINGS",
+  "HF_ENDPOINT"
  ]
 }

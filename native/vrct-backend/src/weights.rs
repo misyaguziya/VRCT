@@ -1,36 +1,22 @@
-//! Weight files: the download from Hugging Face (transcription_whisper.downloadWhisperWeight,
-//! translation_utils.downloadCTranslate2Weight) and the verified marker (utils.py
-//! isWeightVerifiedCache / writeWeightVerifiedCache), whose format v3.6.x already wrote.
+//! Weight files: the models of the catalog (native/data/model_catalog.json), their download from
+//! Hugging Face (or a mirror, HF_ENDPOINT) checked file by file against the catalog's SHA-256 and
+//! resumed from a `.part`, and the verified marker (utils.py isWeightVerifiedCache /
+//! writeWeightVerifiedCache), whose format v3.6.x already wrote.
 //!
 //! No Hugging Face token is sent (the Python backend's huggingface_hub sent a stored one implicitly;
 //! these repos are public).
 use crate::net::{DownloadError, Http};
 use anyhow::{bail, Result};
 use serde_json::{json, Map, Value};
-use std::io::Write;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, UNIX_EPOCH};
 
 pub const MARKER: &str = ".weight_verified.json";
 const ATTEMPTS: u32 = 3;
 /// Multiplied by the attempt number (2 s, 4 s)
 const BACKOFF: Duration = Duration::from_secs(2);
-
-pub const WHISPER_MODELS: [(&str, &str); 9] = [
-    ("tiny", "Systran/faster-whisper-tiny"),
-    ("base", "Systran/faster-whisper-base"),
-    ("small", "Systran/faster-whisper-small"),
-    ("medium", "Systran/faster-whisper-medium"),
-    ("large-v1", "Systran/faster-whisper-large-v1"),
-    ("large-v2", "Systran/faster-whisper-large-v2"),
-    ("large-v3", "Systran/faster-whisper-large-v3"),
-    ("large-v3-turbo-int8", "Zoont/faster-whisper-large-v3-turbo-int8-ct2"),
-    ("large-v3-turbo", "deepdml/faster-whisper-large-v3-turbo-ct2"),
-];
-
-/// The union of the files of the converted repos (each has only some of them)
-const WHISPER_FILES: [&str; 6] =
-    ["config.json", "preprocessor_config.json", "model.bin", "tokenizer.json", "vocabulary.txt", "vocabulary.json"];
 
 // --------------------------------------------------------------------------------- the catalog
 
@@ -272,27 +258,12 @@ pub fn check(path: &Path, loads: &dyn Fn(&Path) -> bool) -> bool {
     ok
 }
 
-/// huggingface_hub.list_repo_files: the files of the main branch.
-/// ponytail: the first page of the tree only (1000 entries), follow the Link header for bigger repos.
-pub fn list_repo_files(http: &Http, repo: &str) -> Result<Vec<String>> {
-    let url = format!("https://huggingface.co/api/models/{repo}/tree/main?recursive=True&expand=False");
-    let response = http.get(&url, &[], None)?;
-    if !response.status().is_success() {
-        bail!("{url}: {}", response.status());
-    }
-    let tree: Value = response.json()?;
-    Ok(tree.as_array().into_iter().flatten()
-        .filter(|e| e["type"] == "file")
-        .filter_map(|e| e["path"].as_str().map(String::from))
-        .collect())
-}
-
-/// huggingface_hub.hf_hub_url: the file name quoted as urllib.parse.quote (letters, digits and
-/// "_.-~/" kept)
-pub fn hf_hub_url(repo: &str, filename: &str) -> String {
+/// `{endpoint}/{repo}/resolve/{revision}/{path}`, the path quoted as huggingface_hub.hf_hub_url does
+/// (urllib.parse.quote: letters, digits and "_.-~/" kept)
+pub fn resolve_url(endpoint: &str, repo: &str, revision: &str, path: &str) -> String {
     use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
     const QUOTE: &percent_encoding::AsciiSet = &NON_ALPHANUMERIC.remove(b'_').remove(b'.').remove(b'-').remove(b'~').remove(b'/');
-    format!("https://huggingface.co/{repo}/resolve/main/{}", utf8_percent_encode(filename, QUOTE))
+    format!("{endpoint}/{repo}/resolve/{revision}/{}", utf8_percent_encode(path, QUOTE))
 }
 
 /// downloadFile: up to 3 attempts, none more after a 4xx other than 429; a failed attempt's file is removed.
@@ -337,112 +308,182 @@ pub(crate) fn download_file(http: &Http, url: &str, path: &Path, progress: Optio
     false
 }
 
-/// downloadWhisperWeight: the files of `weight_type` that are missing, unless the weights already load.
-/// `end` is called in every case.
-pub fn download_whisper(http: &Http, root: &Path, weight_type: &str, loads: &dyn Fn(&Path) -> bool,
-                        progress: &dyn Fn(f64), end: &dyn Fn(), log: &dyn Fn(&str, &str)) -> Result<()> {
-    let Some(&(_, repo)) = WHISPER_MODELS.iter().find(|(t, _)| *t == weight_type) else {
-        bail!("unknown whisper weight type {weight_type}");
-    };
-    let path = root.join("weights").join("whisper").join(weight_type);
-    std::fs::create_dir_all(&path)?;
-    if !check(&path, loads) {
-        // when the listing fails every file is tried (the load check rejects an incomplete set later)
-        let available = list_repo_files(http, repo).unwrap_or_else(|_| WHISPER_FILES.map(String::from).to_vec());
-        for name in WHISPER_FILES.iter().filter(|n| available.iter().any(|a| a == *n)) {
-            let progress = (*name == "model.bin").then_some(progress);
-            download_file(http, &hf_hub_url(repo, name), &path.join(name), progress, None, "Whisper", log);
-        }
-    }
-    end();
-    Ok(())
+/// How a model's download ended
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Outcome {
+    Done,
+    /// why, for the UI: "network" (not got: the connection, the server or writing the file),
+    /// "sha256" (got, but not the catalog's file) or "disk_space" (not started)
+    Failed(&'static str),
+    /// stopped (`cancel`): the `.part` files are kept for the next time
+    Cancelled,
 }
 
-/// `filename` from the repo listing under `base`, or None when it would leave it (os.path.normpath + abspath)
-fn inside(base: &Path, filename: &str) -> Option<PathBuf> {
-    let mut parts: Vec<&str> = vec![];
-    for c in Path::new(filename).components() {
-        match c {
-            Component::Normal(p) => parts.push(p.to_str()?),
-            Component::CurDir => {}
-            Component::ParentDir => {
-                parts.pop()?;
-            }
-            Component::Prefix(_) | Component::RootDir => return None,
-        }
-    }
-    Some(parts.iter().fold(base.to_path_buf(), |p, part| p.join(part)))
+/// left free on the drive beside the files
+const DISK_MARGIN: u64 = 64 << 20;
+
+/// `path` + ".part": the file while it comes
+fn part_of(path: &Path) -> PathBuf {
+    let mut name = path.as_os_str().to_owned();
+    name.push(".part");
+    name.into()
 }
 
-/// downloadCTranslate2Weight: every file of the repo, unless the weights already load. False when the
-/// listing fails 3 times or a file fails. `end` is called only after the files were tried.
-pub fn download_ctranslate2(http: &Http, root: &Path, weight_type: &str, loads: &dyn Fn(&Path) -> bool,
-                            progress: &dyn Fn(f64), end: &dyn Fn(), log: &dyn Fn(&str, &str)) -> Result<bool> {
-    let m = ctranslate2_model(weight_type)?;
-    let path = m.dir(root);
-    if check(&path, loads) {
-        return Ok(true);
-    }
-    let mut files = None;
-    for attempt in 1..=ATTEMPTS {
-        match list_repo_files(http, &m.weights.repo) {
-            Ok(f) => {
-                files = Some(f);
-                break;
-            }
-            Err(_) if attempt < ATTEMPTS => {
-                log(&format!("CTranslate2 repo listing failed, retrying ({attempt}/{})", ATTEMPTS - 1), &m.weights.repo);
-                std::thread::sleep(BACKOFF * attempt);
-            }
-            Err(_) => {}
-        }
-    }
-    let Some(files) = files else { return Ok(false) };
-    std::fs::create_dir_all(&path)?;
-    let mut all = true;
-    for name in &files {
-        let Some(file) = inside(&path, name) else {
-            all = false;
-            continue;
-        };
-        let progress = (name == "model.bin").then_some(progress);
-        all &= download_file(http, &hf_hub_url(&m.weights.repo, name), &file, progress, None, "CTranslate2", log);
-    }
-    end();
-    Ok(all)
+fn size_of(path: &Path) -> u64 {
+    std::fs::metadata(path).map(|m| m.len()).unwrap_or(0)
 }
 
-/// downloadCTranslate2Tokenizer: the tokenizer files the translator reads, in the Hugging Face cache
-/// layout v3.6.x's transformers wrote (`tokenizer/models--org--name/snapshots/<commit>/`, `refs/main`).
-/// Nothing is fetched when they are there (transformers asked the Hub for a newer revision every time).
-pub fn download_tokenizer(http: &Http, root: &Path, weight_type: &str, log: &dyn Fn(&str, &str)) -> Result<()> {
-    let m = ctranslate2_model(weight_type)?;
-    let cache = m.dir(root).join("tokenizer");
-    let tokenizer = m.tokenizer.as_ref().unwrap();
-    let files: Vec<&str> = tokenizer.files.iter().map(|f| f.path.as_str()).collect();
-    if crate::hf_cache::snapshot_dir(&cache, &tokenizer.repo).is_ok_and(|s| files.iter().all(|f| s.join(f).is_file())) {
+fn sha256_of(path: &Path) -> std::io::Result<String> {
+    use sha2::{Digest, Sha256};
+    let mut file = std::fs::File::open(path)?;
+    let mut hash = Sha256::new();
+    let mut buf = vec![0u8; 1 << 20];
+    loop {
+        let n = file.read(&mut buf)?;
+        if n == 0 {
+            return Ok(format!("{:x}", hash.finalize()));
+        }
+        hash.update(&buf[..n]);
+    }
+}
+
+/// The rest of `url` into `part` (`size` bytes in all): from the bytes it has, or from the start
+/// when the server cannot resume. `on_bytes` gets the bytes the part has.
+fn get_part(http: &Http, url: &str, part: &Path, size: u64, cancel: &AtomicBool, on_bytes: &dyn Fn(u64))
+            -> std::result::Result<(), DownloadError> {
+    if let Some(parent) = part.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let have = size_of(part);
+    if have == size {
         return Ok(());
     }
-    let url = format!("https://huggingface.co/api/models/{}/revision/main", tokenizer.repo);
-    let response = http.get(&url, &[], Some(Duration::from_secs(10)))?;
-    if !response.status().is_success() {
-        bail!("{url}: {}", response.status());
-    }
-    let info: Value = response.json()?;
-    let Some(commit) = info["sha"].as_str().filter(|c| !c.is_empty() && c.chars().all(|c| c.is_ascii_alphanumeric())) else {
-        bail!("{url}: no commit");
+    let mut file = std::fs::File::options().create(true).write(true).truncate(false).open(part)?;
+    let mut get = |from: u64| {
+        file.set_len(from)?;
+        file.seek(SeekFrom::Start(from))?;
+        let mut got = from;
+        http.download_from(url, from, &mut |chunk, _| {
+            if cancel.load(Ordering::SeqCst) {
+                return Err(std::io::Error::new(std::io::ErrorKind::Interrupted, "cancelled"));
+            }
+            file.write_all(chunk)?;
+            got += chunk.len() as u64;
+            on_bytes(got);
+            Ok(())
+        })
     };
-    let repo = cache.join(format!("models--{}", tokenizer.repo.replace('/', "--")));
-    for name in files {
-        let url = format!("https://huggingface.co/{}/resolve/{commit}/{name}", tokenizer.repo);
-        if !download_file(http, &url, &repo.join("snapshots").join(commit).join(name), None, None, "Tokenizer", log) {
-            bail!("{url}: download failed");
+    let from = if have > size { 0 } else { have };
+    match get(from) {
+        Err(DownloadError::RangeIgnored | DownloadError::Status(416)) if from > 0 => get(0),
+        result => result,
+    }
+}
+
+/// The complete `part`: its SHA-256 checked, then named `path` (an older file there is replaced).
+/// false: not the file (the part is removed)
+fn finish(part: &Path, path: &Path, sha256: &str) -> std::io::Result<bool> {
+    if sha256_of(part)? != sha256 {
+        let _ = std::fs::remove_file(part);
+        return Ok(false);
+    }
+    if path.exists() {
+        std::fs::remove_file(path)?;
+    }
+    std::fs::rename(part, path)?;
+    Ok(true)
+}
+
+/// downloadWhisperWeight / downloadCTranslate2Weight for a model of the catalog, unless it already
+/// loads: its files at the catalog's commit from `endpoint` (no "/" at the end), then the
+/// tokenizer's in the Hugging Face cache layout v3.6.x's transformers wrote
+/// (`tokenizer/models--org--name/snapshots/<commit>/`, `refs/main` once they are all there). A file
+/// of the catalog's size is not fetched again. Up to 3 attempts a file, each resuming its `.part`;
+/// none more after a 4xx other than 429. `progress`: the bytes of the whole model there, 0 to 1.
+#[allow(clippy::too_many_arguments)]
+pub fn download_model(http: &Http, endpoint: &str, root: &Path, m: &CatalogModel, loads: &dyn Fn(&Path) -> bool,
+                      cancel: &AtomicBool, progress: &dyn Fn(f64), log: &dyn Fn(&str, &str)) -> Outcome {
+    let dir = m.dir(root);
+    let tokenizer = m.tokenizer.as_ref().map(|t| (t, dir.join("tokenizer").join(format!("models--{}", t.repo.replace('/', "--")))));
+    let tokenizer_there = m.tokenizer.as_ref().is_none_or(|t| {
+        crate::hf_cache::snapshot_dir(&dir.join("tokenizer"), &t.repo).is_ok_and(|s| t.files.iter().all(|f| s.join(&f.path).is_file()))
+    });
+    if tokenizer_there && check(&dir, loads) {
+        progress(1.0);
+        return Outcome::Done;
+    }
+    let mut files: Vec<(String, PathBuf, &CatalogFile)> = vec![];
+    for (repo, base) in std::iter::once((&m.weights, dir.clone()))
+        .chain(tokenizer.iter().map(|(t, cache)| (*t, cache.join("snapshots").join(&t.revision)))) {
+        for f in &repo.files {
+            let path = f.path.split('/').fold(base.clone(), |p, part| p.join(part));
+            files.push((resolve_url(endpoint, &repo.repo, &repo.revision, &f.path), path, f));
         }
     }
+    let there = |path: &Path, f: &CatalogFile| path.is_file() && size_of(path) == f.size;
+    let todo: Vec<_> = files.iter().filter(|(_, path, f)| !there(path, f)).collect();
+    let mut done: u64 = files.iter().filter(|(_, path, f)| there(path, f)).map(|(_, _, f)| f.size).sum();
+    if !todo.is_empty() {
+        if let Err(e) = std::fs::create_dir_all(&dir) {
+            log(&format!("cannot make the weights folder: {e}"), &m.id);
+            return Outcome::Failed("network");
+        }
+        let need = todo.iter().map(|(_, path, f)| f.size.saturating_sub(size_of(&part_of(path)))).sum::<u64>() + DISK_MARGIN;
+        if let Some(free) = crate::platform::free_space(&dir) {
+            if free < need {
+                log(&format!("not enough disk space ({free} bytes free, {need} needed)"), &m.id);
+                return Outcome::Failed("disk_space");
+            }
+        }
+    }
+    let total = m.size().max(1) as f64;
+    for (url, path, f) in todo {
+        let part = part_of(path);
+        let mut reason = None;
+        for attempt in 1..=ATTEMPTS {
+            if cancel.load(Ordering::SeqCst) {
+                return Outcome::Cancelled;
+            }
+            let result = get_part(http, url, &part, f.size, cancel, &|got| progress(((done + got) as f64 / total).min(1.0)));
+            if cancel.load(Ordering::SeqCst) {
+                return Outcome::Cancelled;
+            }
+            reason = match result {
+                Ok(()) => match finish(&part, path, &f.sha256) {
+                    Ok(true) => None,
+                    Ok(false) => Some("sha256"),
+                    Err(e) => {
+                        log(&format!("cannot keep the downloaded file: {e}"), url);
+                        Some("network")
+                    }
+                },
+                Err(DownloadError::Status(status @ 400..=499)) if status != 429 => {
+                    log(&format!("weight file download failed ({status})"), url);
+                    return Outcome::Failed("network");
+                }
+                Err(_) => Some("network"),
+            };
+            let Some(why) = reason else { break };
+            if attempt < ATTEMPTS {
+                log(&format!("weight file download failed ({why}), retrying ({attempt}/{})", ATTEMPTS - 1), url);
+                std::thread::sleep(BACKOFF * attempt);
+            }
+        }
+        if let Some(reason) = reason {
+            return Outcome::Failed(reason);
+        }
+        done += f.size;
+    }
     // the snapshot is named only once it is complete
-    std::fs::create_dir_all(repo.join("refs"))?;
-    std::fs::write(repo.join("refs").join("main"), commit)?;
-    Ok(())
+    if let Some((t, cache)) = &tokenizer {
+        let named = std::fs::create_dir_all(cache.join("refs")).and_then(|()| std::fs::write(cache.join("refs").join("main"), &t.revision));
+        if let Err(e) = named {
+            log(&format!("cannot name the tokenizer snapshot: {e}"), &t.repo);
+            return Outcome::Failed("network");
+        }
+    }
+    progress(1.0);
+    Outcome::Done
 }
 
 #[cfg(test)]
@@ -478,14 +519,6 @@ mod tests {
         }
         assert_eq!(languages_key("nllb-200-3.3B-ct2-int8"), "nllb-200-3.3B-ct2-int8");
         assert_eq!(languages_key("not-in-the-catalog"), "not-in-the-catalog");
-    }
-
-    // ponytail: the bridge to the tables the catalog replaces, removed with them
-    #[test]
-    fn the_catalog_has_the_repos_of_the_old_tables() {
-        for (id, repo) in WHISPER_MODELS {
-            assert_eq!(model(id).unwrap().weights.repo, repo);
-        }
     }
 
     #[test]
