@@ -63,3 +63,57 @@ name = "text to the overlay, not a string"
 endpoint = "/run/send_text_overlay"
 data = 1
 expect_status = 500  # Rust 版は文字列でない値を先に断る (Python 版はオーバーレイが OFF なら 200 で返した)
+
+# ログ窓の形 (履歴 / 字幕)。固定先・ロック・不透明度は今の形の値。最後に履歴へ戻す
+
+[[case]]
+name = "get the log window's form"
+endpoint = "/get/data/overlay_vr_panel_form"
+
+[[case]]
+name = "the log window as a one-line subtitle (its anchor, lock and opacity told)"
+endpoint = "/set/data/overlay_vr_panel_form"
+data = "single_line"
+pushes = true
+
+[[case]]
+name = "get overlay_vr_panel_locked of the subtitle"
+endpoint = "/get/data/overlay_vr_panel_locked"
+
+[[case]]
+name = "get overlay_vr_panel_opacity of the subtitle"
+endpoint = "/get/data/overlay_vr_panel_opacity"
+
+[[case]]
+name = "get overlay_vr_panel_anchor of the subtitle"
+endpoint = "/get/data/overlay_vr_panel_anchor"
+
+[[case]]
+name = "the subtitle's opacity"
+endpoint = "/set/data/overlay_vr_panel_opacity"
+data = 0.6
+
+[[case]]
+name = "get the subtitle settings"
+endpoint = "/get/data/overlay_vr_subtitle_settings"
+
+[[case]]
+name = "a form that is not one"
+endpoint = "/set/data/overlay_vr_panel_form"
+data = "triple_line"
+
+[[case]]
+name = "a part of the subtitle settings (the rest kept)"
+endpoint = "/set/data/overlay_vr_subtitle_settings"
+data = { single_line = { x_pos = 0.25, fadeout_duration = 0 } }
+pushes = true
+
+[[case]]
+name = "the VR view drew the log window's new content"
+endpoint = "/run/vr_panel_log_rendered"
+
+[[case]]
+name = "the log window back to the history"
+endpoint = "/set/data/overlay_vr_panel_form"
+data = "history"
+pushes = true
