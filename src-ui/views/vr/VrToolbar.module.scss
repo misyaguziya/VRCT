@@ -5,12 +5,12 @@
     &.is_pending { cursor: wait; box-shadow: inset 0 0 0 3px var(--primary_200_color); }
     &.is_disabled { background: var(--dark_900_color); color: var(--dark_450_color); cursor: default; }
 }
-.anchor_button { width: 62px; }
-.recall_button { width: 72px; }
+.anchor_button { width: 56px; }
+.recall_button { width: 64px; }
 .lock_button { width: 64px; }
+.form_button { width: 56px; }
 .font_button { width: 56px; font-size: 26px; font-weight: 700; }
 .opacity_button { width: 80px; .icon { width: 26px; height: 26px; } }
 .icon { width: 36px; height: 36px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .hand_side { position: absolute; right: 7px; bottom: 5px; font-size: 14px; font-weight: 700; }
-.value { width: 32px; font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; color: var(--dark_basic_text_color); }
 .opacity_value { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }

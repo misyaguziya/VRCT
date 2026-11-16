@@ -320,6 +320,7 @@ const VrSettings = ({ t }) => {
             <SectionLabel label={t("vr_panel.settings.ui_log")} />
             <StepperRow label={t("vr_panel.log_opacity")} variable={opacity} setValue={vr.setOverlayVrPanelOpacity}
                 min={0.2} max={1.0} step={0.1} format={(v) => `${Math.round(v * 100)}%`} />
+            {["multi_line", "single_line"].map(form => <SubtitleTimingRows key={form} t={t} vr={vr} form={form} />)}
             <SectionLabel label={t("vr_panel.settings.subtitle_overlay")} />
             <ToggleRow label={t("vr_panel.overlay_small_log")} variable={vr.currentIsEnabledOverlaySmallLog}
                 onToggle={vr.toggleIsEnabledOverlaySmallLog} />
@@ -342,6 +343,23 @@ const VrSettings = ({ t }) => {
             <ToggleRow label={t("vr_panel.tooltip_enabled")} sub={t("vr_panel.tooltip_enabled_desc")}
                 variable={vr.currentOverlayVrTooltip} onToggle={vr.toggleOverlayVrTooltip} />
 
+        </>
+    );
+};
+
+// ログ窓の字幕の形ごとの表示秒・消える秒 (0: 消えない)。最後の新着から数える
+const SubtitleTimingRows = ({ t, vr, form }) => {
+    const settings = vr.currentOverlayVrSubtitleSettings;
+    const field = (key) => ({ state: settings.state, data: settings.data?.[form]?.[key] ?? 0 });
+    const set = (key) => (value) => vr.setOverlayVrSubtitleSettings({ [form]: { [key]: value } });
+    const name = t(`vr_panel.form_${form}`);
+    return (
+        <>
+            <StepperRow label={t("vr_panel.subtitle_display_duration", { form: name })} variable={field("display_duration")}
+                setValue={set("display_duration")} min={1} max={60} step={1} format={(v) => `${v}s`} />
+            <StepperRow label={t("vr_panel.subtitle_fadeout_duration", { form: name })} variable={field("fadeout_duration")}
+                setValue={set("fadeout_duration")} min={0} max={10} step={1}
+                format={(v) => (v === 0 ? t("vr_panel.subtitle_never_fade") : `${v}s`)} />
         </>
     );
 };

@@ -1,0 +1,55 @@
+// ログ窓の字幕の形。オーバーレイの画像 (native/vrct-overlay/src/image.rs) と同じ色と比で描く。
+// 複数行は large (幅 1010px に文字 30 / 20px、余白 25) を既定の幅 900px に、
+// 1 行は small (板幅 3940px に文字 92px、余白 50) を既定の幅 1200px に換算した px で固定する
+// (角を伸ばして広げると 1 行の文字数が増える。掴んで拡大すると文字も大きくなる)。
+// 角丸は撮影後の切り抜き (24px) に任せる。文字の影は付けない
+
+.board {
+    background-color: rgb(41, 42, 45);
+    box-shadow: none;
+    color: rgb(223, 223, 223);
+}
+
+.entries {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.entry {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.small, .large {
+    margin: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.small { color: rgb(190, 190, 190); }
+
+.multi_line {
+    padding: 22px;
+    // 新しい件ほど下。溢れたら古い件 (上) から隠れる
+    .entries { justify-content: flex-end; gap: 18px; }
+    .entry.received { align-items: flex-start; text-align: left; }
+    .entry.sent { align-items: flex-end; text-align: right; }
+    .info { margin: 0; display: flex; gap: 0.5em; font-size: 18px; line-height: 1.4; }
+    .time { color: rgb(120, 120, 120); }
+    .received .kind { color: rgb(168, 97, 180); }
+    .sent .kind { color: rgb(97, 151, 180); }
+    .small { font-size: 18px; line-height: 1.4; }
+    .large { font-size: 27px; line-height: 1.35; }
+}
+
+.single_line {
+    padding: 15px;
+    .entries { justify-content: center; }
+    .entry { align-items: center; text-align: center; gap: 4px; }
+    .small { font-size: 19px; line-height: 1.35; }
+    .large { font-size: 28px; line-height: 1.35; }
+}

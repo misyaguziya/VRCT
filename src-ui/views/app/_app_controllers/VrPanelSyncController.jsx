@@ -30,6 +30,8 @@ const WINDOW_REQUEST_PATHS = [
     "/set/data/overlay_vr_panel_font_size",
     "/run/vr_panel_layout_rendered",
     "/run/vr_panel_tooltip",
+    "/set/data/overlay_vr_panel_form",
+    "/run/vr_panel_log_rendered",
 ];
 
 const atomEntries = () => Object.entries(dynamicStoreRegistry)

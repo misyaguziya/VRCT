@@ -744,13 +744,37 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_vr_panel_anchor",
     },
     {
-        // VR UIのログウィンドウのロック (掴めなくする)。操作バーで変える
+        // VR UIのログウィンドウのロック (掴めなくする。字幕の形ではレーザーも当たらない)。今の形の値。
+        // 操作バーで変える。形を変えたときもバックエンドから届く
         Category: "Vr",
         Base_Name: "OverlayVrPanelLocked",
         default_value: false,
         ui_template_id: "toggle",
         logics_template_id: "toggle_enable_disable",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_vr_panel_locked",
+    },
+    {
+        // VR UIのログウィンドウの形 (history: 履歴 / multi_line: 字幕・複数行 / single_line: 字幕・1行)。操作バーで変える
+        Category: "Vr",
+        Base_Name: "OverlayVrPanelForm",
+        default_value: "history",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_vr_panel_form",
+    },
+    {
+        // 字幕の形ごとの位置・大きさ・表示秒・消える秒・不透明度・ロック。VR で動かしたときもバックエンドから届く
+        Category: "Vr",
+        Base_Name: "OverlayVrSubtitleSettings",
+        default_value: {
+            multi_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, tracker: "LeftHand", locked: true },
+            single_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, tracker: "HMD", locked: true },
+        },
+        ui_template_id: "object",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "overlay_vr_subtitle_settings",
     },
     {
         // VR UIのログの文字の大きさ (14〜28px)。操作バーの A−／A＋ で変える
@@ -913,12 +937,13 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "keyboard_shortcut",
     },
     {
-        // VR UIのログウィンドウの不透明度 (0.2〜1.0)。VR設定ウィンドウでだけ変える
+        // VR UIのログウィンドウの不透明度 (0.2〜1.0)。今の形の値。形を変えたときもバックエンドから届く
         Category: "Vr",
         Base_Name: "OverlayVrPanelOpacity",
         default_value: 1.0,
         ui_template_id: "slider",
         logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "overlay_vr_panel_opacity",
     },
     {
