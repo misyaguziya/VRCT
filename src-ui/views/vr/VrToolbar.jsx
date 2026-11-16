@@ -61,14 +61,9 @@ export const VrToolbar = () => {
                 onClick={toggleOverlayVrPanelLocked}><Icon name={locked.data === true ? "lock" : "unlock"} /></Button>
         </div>
         <div className={styles.group}>
-            {/* 字幕の形では文字の大きさのボタンが無い分 (領域は 720px 固定)、今の形の名前を出して幅を埋める */}
-            <Button className={clsx(styles.form_button, { [styles.with_label]: is_subtitle })}
-                label={`${t("vr_panel.tooltip.form")}: ${t(`vr_panel.form_${form_id}`)}`}
+            <Button className={styles.form_button} label={`${t("vr_panel.tooltip.form")}: ${t(`vr_panel.form_${form_id}`)}`}
                 tipTitle={t("vr_panel.tooltip.form")} state={form} tipState={`${current}: ${t(`vr_panel.form_${form_id}`)}`}
-                tipHelp={t("vr_panel.tooltip.form_help")} onClick={() => setOverlayVrPanelForm(nextForm)}>
-                <Icon name={form_id} />
-                {is_subtitle && <span className={styles.form_label} aria-hidden="true">{t(`vr_panel.form_${form_id}`)}</span>}
-            </Button>
+                tipHelp={t("vr_panel.tooltip.form_help")} onClick={() => setOverlayVrPanelForm(nextForm)}><Icon name={form_id} /></Button>
         </div>
         {/* 字幕の形の文字の大きさは決まっている (オーバーレイの字幕と同じ) */}
         {!is_subtitle && <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.font")}>
