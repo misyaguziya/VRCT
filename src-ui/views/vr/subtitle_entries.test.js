@@ -46,5 +46,17 @@ test("the key changes with a new log, a translation arriving and the form", () =
         subtitleKey("single_line", subtitleEntries([...translated, log(2, "received")], "single_line", false)),
     ];
     assert.equal(new Set(keys).size, keys.length);
-    assert.equal(subtitleKey("multi_line", []), "multi_line:");
+});
+
+test("a sent message translated after a later received one changes the key", () => {
+    const sent_pending = log(1, "sent", { status: "pending" });
+    const received = log(2, "received");
+    const before = subtitleKey("multi_line", subtitleEntries([sent_pending, received], "multi_line", false));
+    const after = subtitleKey("multi_line", subtitleEntries([log(1, "sent"), received], "multi_line", false));
+    assert.notEqual(before, after);
+});
+
+test("nothing to show: no key (nothing is told)", () => {
+    assert.equal(subtitleKey("multi_line", []), null);
+    assert.equal(subtitleKey("single_line", subtitleEntries([log(1, "sent")], "single_line", false)), null);
 });

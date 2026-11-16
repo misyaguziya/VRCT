@@ -25,6 +25,7 @@ export const VrLogWindow = ({ onClose }) => {
     // 字幕の表示秒が始まる (形を変えたときは、それまで透明)
     const key = form === "history" ? form : subtitleKey(form, entries);
     useEffect(() => {
+        if (key === null) return undefined;
         let second = null;
         const first = requestAnimationFrame(() => {
             second = requestAnimationFrame(() => asyncStdoutToPython("/run/vr_panel_log_rendered"));

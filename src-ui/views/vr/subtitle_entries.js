@@ -25,8 +25,8 @@ export const subtitleEntries = (logs, form, only_translated) => {
     return entries.slice(multi ? -MULTI_LINE_COUNT : -1);
 };
 
-// 見せる中身が変わったか (新しい件・翻訳が届いた・形が変わった) を見分けるための印
-export const subtitleKey = (form, entries) => {
-    const last = entries[entries.length - 1];
-    return last ? `${form}:${last.id}:${last.large.length}:${last.small ? 1 : 0}` : `${form}:`;
-};
+// 見せる中身が変わったか (新しい件・翻訳が届いた・形が変わった) を見分けるための印。出す件の全部
+// (5 件以下) をつなぐ (送信の訳が後の受信より遅れて届くこともある)。出す件が無ければ null
+// (知らせない。形を変えたときは vrct-overlay の待ちの上限で出る)
+export const subtitleKey = (form, entries) => entries.length === 0 ? null
+    : `${form}|${entries.map(e => `${e.id}:${e.large.length}:${e.small ? 1 : 0}`).join("|")}`;

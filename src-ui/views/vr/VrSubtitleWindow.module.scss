@@ -48,7 +48,8 @@
 
 .single_line {
     padding: 15px;
-    .entries { justify-content: center; }
+    // 板は低い (既定 180px)。溢れたら原文 (上) から隠れ、訳が残る
+    .entries { justify-content: flex-end; }
     .entry { align-items: center; text-align: center; gap: 4px; }
     .small { font-size: 19px; line-height: 1.35; }
     .large { font-size: 28px; line-height: 1.35; }
