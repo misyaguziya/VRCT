@@ -21,6 +21,7 @@ use windows_sys::Win32::Graphics::Gdi::{
     BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS,
 };
 use windows_sys::Win32::Storage::Xps::{PrintWindow, PRINT_WINDOW_FLAGS};
+use windows_sys::Win32::UI::HiDpi::{GetWindowDpiAwarenessContext, SetThreadDpiAwarenessContext};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     EnumWindows, GetWindowRect, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible,
 };
@@ -169,11 +170,13 @@ impl HwndCapture {
         if unsafe { IsIconic(hwnd) } != 0 {
             return None;
         }
-        let Some((width, height)) = window_size(hwnd) else {
-            self.hwnd = None;
-            return None;
-        };
-        let frame = print_window(hwnd, width, height);
+        // measured in the window's own DPI awareness: this process is Per-Monitor V2, so a DPI-unaware
+        // VRChat's rect would be physical px around what PrintWindow draws in logical px (a black margin)
+        let old = unsafe { SetThreadDpiAwarenessContext(GetWindowDpiAwarenessContext(hwnd)) };
+        let frame = window_size(hwnd).and_then(|(width, height)| print_window(hwnd, width, height));
+        if !old.is_null() {
+            unsafe { SetThreadDpiAwarenessContext(old) };
+        }
         if frame.is_none() {
             self.hwnd = None;
         }

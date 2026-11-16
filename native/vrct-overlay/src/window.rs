@@ -2,6 +2,7 @@
 //! kept off-screen. Its size follows the layout; it is captured with PrintWindow when
 //! Windows.Graphics.Capture (vrct-graphics) has no frame of the right size yet, and mouse input
 //! is posted to it (the OS cursor does not move).
+//! All sizes and coordinates are physical px: the sidecar is Per-Monitor V2 DPI aware (vrct-backend's main).
 use std::ffi::c_void;
 use windows_sys::Win32::Foundation::{HWND, LPARAM, POINT, RECT};
 use windows_sys::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
@@ -10,7 +11,7 @@ use windows_sys::Win32::Graphics::Gdi::{
     SelectObject, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS,
 };
 use windows_sys::Win32::Storage::Xps::PrintWindow;
-use windows_sys::Win32::UI::HiDpi::{GetDpiForWindow, SetThreadDpiAwarenessContext, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2};
+use windows_sys::Win32::UI::HiDpi::GetDpiForWindow;
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     EnumChildWindows, FindWindowW, GetClassNameW, GetClientRect, GetWindowRect, IsIconic, IsWindow, PostMessageW, SetWindowPos,
     SWP_ASYNCWINDOWPOS, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOZORDER, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_MOUSEWHEEL,
@@ -115,23 +116,18 @@ pub fn capture(hwnd: Hwnd) -> Option<Printed> {
 }
 
 /// _frameClientBox: the size of the window as Windows.Graphics.Capture sees it (its visible frame)
-/// and the client box in it, physical px
+/// and the client box in it, physical px (the process is Per-Monitor V2: vrct-backend's main)
 pub fn frame_client_box(hwnd: Hwnd) -> Option<((u32, u32), ClientBox)> {
     unsafe {
-        let old = SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         let mut frame: RECT = std::mem::zeroed();
         let mut client: RECT = std::mem::zeroed();
         let mut origin = POINT { x: 0, y: 0 };
-        let ok = DwmGetWindowAttribute(h(hwnd), DWMWA_EXTENDED_FRAME_BOUNDS as u32, (&mut frame as *mut RECT).cast::<c_void>(),
-                                       size_of::<RECT>() as u32) == 0;
-        if ok {
-            GetClientRect(h(hwnd), &mut client);
-            ClientToScreen(h(hwnd), &mut origin);
-        }
-        SetThreadDpiAwarenessContext(old);
-        if !ok {
+        if DwmGetWindowAttribute(h(hwnd), DWMWA_EXTENDED_FRAME_BOUNDS as u32, (&mut frame as *mut RECT).cast::<c_void>(),
+                                 size_of::<RECT>() as u32) != 0 {
             return None;
         }
+        GetClientRect(h(hwnd), &mut client);
+        ClientToScreen(h(hwnd), &mut origin);
         let (left, top) = ((origin.x - frame.left).max(0) as u32, (origin.y - frame.top).max(0) as u32);
         let size = ((frame.right - frame.left).max(0) as u32, (frame.bottom - frame.top).max(0) as u32);
         Some((size, (left, top, left + client.right as u32, top + client.bottom as u32)))
