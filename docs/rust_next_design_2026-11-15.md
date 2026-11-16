@@ -11,7 +11,9 @@ UI デザイン: `docs/rust_next_ui_design_2026-11-15.html`（2026-11-15 時点�
 | P1 | 済み（#127・#126） | #127 の回線断は未 |
 | P2 | 済み（オーバーレイの土台、キーボード、11-05 以降の MSKB の修正、キーボード辞書は VR UI を ON にしたときに準備、表示倍率への対応、見た目を今の MSKB に合わせる） | 全部未（VR） |
 | P2.5 | 段階 1 済み（ログ窓の字幕の形）。段階 2〜4 は未着手 | 全部未（VR） |
-| P3〜P6 | 未着手 | — |
+| P3 | 未着手 | — |
+| P4 | 済み（`claude/rust-p4-model-catalog`、未マージ。バックエンド。検証済みのモデルの一覧＝カタログ、再開・SHA-256 照合・中止・削除・取得元）。UI は `docs/model_catalog_ui_handover.md` | 実回線の取得・再開、プロキシ、ミラーは未 |
+| P5〜P6 | 未着手 | — |
 
 `rust-full-backend` はまだ push していない。
 
@@ -53,7 +55,7 @@ UI デザイン: `docs/rust_next_ui_design_2026-11-15.html`（2026-11-15 時点�
 | P2 | オーバーレイの土台の改善 + キーボード | 大 | VR 実機（SteamVR・VRChat） |
 | P2.5 | 字幕（small / large）を VR UI のログ窓に吸収 | 中 | VR 実機 |
 | P3 | AMD 版（ROCm のエディション）。**評価で Vulkan が足りないときだけ作る** | 中 | AMD の GPU（RDNA3 / RDNA4） |
-| P4 | モデルを Hugging Face から探して入れる | 中 | なし |
+| P4 | 検証済みのモデルの一覧（カタログ）から入れる・消す | 中 | なし |
 | P5 | llama.cpp・speech.cpp（Vulkan 版を同梱、選べるエンジンとして追加） | 中 | GPU 各社 |
 | P6 | OCR の評価 → 差し替え | 評価が先 | なし |
 
@@ -349,48 +351,63 @@ VRCT の方が良い点（残す）: SteamVR の交差判定とマウス座標�
 
 ---
 
-## P4. モデルを Hugging Face から探して入れる
+## P4. 検証済みのモデルの一覧（カタログ）
 
-### 確認できたこと（実際に API を呼んで確認）
+### 決定（2026-11-16）
 
-- `GET /api/models?search=…&filter=gguf&sort=downloads&limit=…` で絞り込める。`filter=ctranslate2` も効く（`Systran/faster-whisper-*`、`OpenNMT/nllb-*-ct2-*` が出る）。
-- 応答に `tags`（言語・`license:…`）・`downloads`・`gated`・`pipeline_tag` が入る。
-- `GET /api/models/{repo}/tree/main` の各ファイルに `size` と `lfs.oid`（SHA-256）が付く。
-- 匿名の上限は 5 分で API 500 回・ファイル取得 3,000 回。
+- **自由な検索はやめ、VRCT が確かめたモデルの一覧（カタログ）だけを使う。** 理由: 翻訳の言語表が
+  モデル名ごと（`languages.yml["CTranslate2"][weight_type]`）でトークナイザーも系統ごとに要る、
+  英語専用の Whisper は黙って `en` にされる、派生や別系統は動かない。
+- 最初の一覧は今の 14 個だけ。各リポジトリは 2026-11-16 時点の main の commit に固定する。
+- 今の `/run/download_*_weight` もカタログ経由に寄せる。
+- 取得元（`HF_ENDPOINT`）は https だけ。
+- 今回作らないもの: 一覧の取り直し（配布の URL・署名が未決）、英語専用 Whisper と言語の絞り込み、
+  自由な検索、GGUF（P5 で family を足す）。
 
-### 設計
+### カタログ
 
-- **一覧は 2 段**: 上に「おすすめ」（今の固定の一覧。既定はここから）、下に「Hugging Face から探す」。
-- **形式ごとの絞り込み**:
+- `native/data/model_catalog.json`（exe に埋め込み）。モデルごとに `id`・`family`（`whisper` / `m2m100` / `nllb`）・
+  `license`・`repo`・`revision`（40 桁の commit）・ファイル（パス・大きさ・SHA-256）。翻訳は加えて
+  `languages`（`languages.yml["CTranslate2"]` のキー）とトークナイザーのリポジトリ・commit・ファイル。
+- 生成: `cargo xtask model-catalog-files <repo> [--revision <rev>] [--only a,b]`（Hub の公開 API、認証なし。
+  LFS は `lfs.oid`、それ以外は取って SHA-256 を計算）。
+- 読み込み時に検証する: id の文字、commit と SHA-256 の形、大きさ > 0、パス（`..`・絶対パス・ドライブ・`:`・`\` を拒否）、
+  pickle（`.pt` `.pth` `.pkl` `.pickle` `.ckpt` と `model.bin` 以外の `.bin`）を拒否、未知の family を拒否。
+- 種類（設定キー・フォルダー `weights/<whisper|ctranslate2>/<id>`）とトークナイザーの種類は family から決める。
+- テストで「カタログの id（種類ごと、順序込み）= `SELECTABLE_*_WEIGHT_TYPE_LIST` = `DICT` のキー」を保証する。
 
-| 用途 | 形式 | 絞り込み | 制限 |
-|---|---|---|---|
-| 文字起こし | CTranslate2 の Whisper | `filter=ctranslate2` + `automatic-speech-recognition` | `model.bin` と設定ファイルが揃っているもの |
-| 翻訳（CTranslate2） | NLLB / M2M100 | `filter=ctranslate2` + `nllb` / `m2m_100` | **この 2 系統だけ**（言語コードの表とトークナイザーが系統ごとに要る） |
-| 翻訳（LLM）・OCR（VLM） | GGUF | `filter=gguf` | P5 が前提 |
+### 取得
 
-- **安全**:
-  - 落とすファイルは `.gguf`、`model.bin` と決まった設定ファイル（今の `WHISPER_FILES` と同じ考え）だけ。pickle 形式（`.pt` `.pkl` と任意の `.bin`）は落とさない。
-  - `lfs.oid` の SHA-256 と照合する。合わなければ消して失敗にする。
-  - 大きさ・ライセンス・ダウンロード数を、落とす前に画面に出す。空き容量が足りなければ始めない。
-  - `gated` のモデルは一覧に出すが落とせない（トークンは扱わない）。
-- **取得**: 新しい crate（`hf-hub`）は足さない。今の `weights.rs` と `net.rs` を使い、**途中からの再開（Range）**だけ足す。プロキシは今の `net.rs` の設定がそのまま効く。
-- **ミラー**: 設定に「Hugging Face の接続先」（既定 `https://huggingface.co`）。中国からの利用（#124 と同じ利用者層）で `hf-mirror.com` などを入れられる。
-- **置き場所**: `weights/hub/<owner>/<repo>/`。今の `weights/` の中身と検証済みの印（`.weight_verified.json`）はそのまま使う。
-- **設定**: 今の `*_WEIGHT_TYPE` はそのまま（おすすめの名前が入る）。Hugging Face から入れたものは `hub:<owner>/<repo>[:<file>]` という値で同じキーに入れる。
+- URL は `{HF_ENDPOINT}/{repo}/resolve/{revision}/{path}`（tree などの API は使わない）。
+- 1 ファイルずつ `<name>.part` に取り、`Range: bytes=N-` で再開（206 で始まりが合うときだけ。無視されたら 0 から）。
+  3 回まで。4xx（429 を除く）ではやめる。失敗しても `.part` は消さない。
+- 取り終えたら SHA-256 を照合し、合えば本来の名前にする。合わなければ `.part` を消して失敗。
+- 始める前に空き容量（残りの合計 − 既存の `.part` + 64MB）を確かめる。
+- トークナイザーは同じ取得の中で Hugging Face のキャッシュの並びに置き、揃ってから `refs/main` を書く。
+- 進み具合はモデル全体のバイト数。中止は push しない。失敗の push は今のキー・コードのまま `details` に
+  `{"weight_type", "reason": "network" | "sha256" | "disk_space"}`。
+- 同じモデルの二重起動はしない。終了時は中止の旗を立てるだけ（待たない）。中止されたモデルは起動時に取り直さない。
+- 新しい crate は足さない（`windows-sys` の `Win32_Storage_FileSystem` だけ）。
 
-### 足す endpoint（案）
+### endpoint
 
 | endpoint | 内容 |
 |---|---|
-| `/get/data/model_hub_search` | 用途と検索語 → 候補の一覧（名前・大きさ・ライセンス・ダウンロード数・量子化の候補） |
-| `/run/model_hub_download` | 取得の開始。進み具合は push（今の `download_progress_*` と同じ形） |
-| `/run/model_hub_cancel` | 取得の中止 |
-| `/get/data/model_list` | 入っているモデルと大きさ・使用中かどうか |
-| `/delete/data/model` | 削除（使用中は不可） |
-| `/set/data/hf_endpoint` `/get/data/hf_endpoint` | 接続先 |
+| `/get/data/model_catalog` | `[{id, family, size, license, repo}]` |
+| `/get/data/model_list` | `[{id, family, bytes, installed, partial, in_use, downloading}]` |
+| `/delete/data/model` | id。未知は `WEIGHT_UNKNOWN`、選択中・取得中は `WEIGHT_IN_USE`。成功で `model_list` |
+| `/run/cancel_weight_download` | id。止めたら true |
+| `/get/data/hf_endpoint` `/set/data/hf_endpoint` | 取得元 |
+| `/run/download_*_weight`（既存） | 中身がカタログ経由に |
 
-既存の endpoint と push のキーは変えない。契約テストは、検索は模擬サーバー、取得は対象外（今の方針どおり）。
+既存の endpoint と push のキーは変えない。契約テスト（`100_models.toml`）に削除が成功するケースは置かない
+（重みのフォルダーは本物へのジャンクション）。UI の引き継ぎは `docs/model_catalog_ui_handover.md`。
+
+### 実機・実回線で確かめること（未）
+
+huggingface.co と hf-mirror.com からの実取得、途中で切っての再開（206）、プロキシ越し・中国の回線、
+3.3B の取得の安定性と照合の時間、ウイルス対策ソフトの下での名前の付け替え、空き容量不足の通知、
+既存の利用者の weights（印あり）で取り直しが起きないこと、選択を外した直後のモデルの削除。
 
 ---
 
@@ -401,7 +418,7 @@ VRCT の方が良い点（残す）: SteamVR の交差判定とマウス座標�
 ### 共通の設計
 
 - 公式のビルド済みバイナリを使う。自分でビルドしない。
-- **同梱する（2026-11-15 決定）。** Vulkan 版の実行ファイル（llama.cpp 約 38MB、speech.cpp 約 30MB、合わせて約 70MB）を、CPU 版・CUDA 版（作る場合は AMD 版も）の全エディションに同じものを入れる。版と SHA-256 は `third_party.toml` に固定し、`cargo xtask fetch-native` と `stage-sidecar` で今の DLL と同じ並びに置く。モデルは同梱せず、P4 の仕組みで取得する。
+- **同梱する（2026-11-15 決定）。** Vulkan 版の実行ファイル（llama.cpp 約 38MB、speech.cpp 約 30MB、合わせて約 70MB）を、CPU 版・CUDA 版（作る場合は AMD 版も）の全エディションに同じものを入れる。版と SHA-256 は `third_party.toml` に固定し、`cargo xtask fetch-native` と `stage-sidecar` で今の DLL と同じ並びに置く。モデルは同梱せず、P4 のカタログに載せて取得する（GGUF の family を足す）。
 - Vulkan が使えない PC（GPU が無い・ドライバーが古い）では CPU で動かす。起動に失敗した理由は隠さず通知する。
 - **今のエンジンと既定値は変えない。** 足したエンジンは、利用者が選んだときだけ使われる。
 - 選んだときに初めて起動する（起動時に重い初期化を増やさない）。`127.0.0.1` の空いているポートで動かし、VRCT の終了時に必ず止める（Job Object で子プロセスを親に結ぶ）。落ちたら 1 回だけ起動し直し、それでも駄目ならエンジンを使えない状態にして通知する。
@@ -413,7 +430,7 @@ VRCT の方が良い点（残す）: SteamVR の交差判定とマウス座標�
 
 - 公式のリリースに Windows 用の CPU・CUDA・Vulkan・ROCm/HIP のビルドがある。**全エディションで Vulkan 版を使う**（NVIDIA・AMD・Intel を 1 つで賄える。CUDA 版は本体約 320MB + ランタイム約 390MB と大きいので入れない）。NVIDIA で Vulkan が CUDA より明らかに遅いと評価で分かったら、CUDA 版のエディションだけ差し替えることを改めて検討する。
 - 翻訳エンジンに「内蔵 LLM」を足す。`llama-server` を起動し、今の OpenAI 互換の経路で要求を送る。
-- モデルは P4 で GGUF を取得。HY-MT1.5-1.8B は公式の GGUF がある（Q4_K_M で約 1.1GB、#78）。
+- モデルは P4 のカタログに GGUF として載せて取得。HY-MT1.5-1.8B は公式の GGUF がある（Q4_K_M で約 1.1GB、#78）。
 - 画像入力（mtmd）は P6 の VLM 型 OCR でも使える。
 
 ### speech.cpp（文字起こしの追加エンジン）
@@ -429,7 +446,7 @@ VRCT の方が良い点（残す）: SteamVR の交差判定とマウス座標�
 設計:
 
 - 文字起こしエンジンに「内蔵（speech.cpp）」を足す。`speech serve` を起動し、今の OpenAI 互換の文字起こしの経路（`/v1/audio/transcriptions`）で、VRCT が区切った 1 発話ずつを送る。**区切り（VAD）と、その後の翻訳・表示は今のまま。** Realtime の経路は使わない（今の処理の形を変えないため）。
-- モデルの取得は speech.cpp 自身の機能に任せず、P4 の仕組みで行う（進み具合の表示・接続先・検証を VRCT に揃える）。
+- モデルの取得は speech.cpp 自身の機能に任せず、P4 のカタログで行う（進み具合の表示・接続先・検証を VRCT に揃える）。
 - **Whisper（CTranslate2）は既定のまま残す。** speech.cpp は追加の選択肢。
 
 先に確かめること（入れるかどうかはこの結果で決める）:
@@ -486,7 +503,7 @@ VRCT の方が良い点（残す）: SteamVR の交差判定とマウス座標�
 | P2 | 1（今の MSKB との見た目の差分） | ○（Input と種別） | 土台 → 修正 → キーボード → 見た目の順に 1 つずつ | ○ | ○ | VR |
 | P2.5 | 1（今の字幕の経路） | ○（表示の形の持ち方） | 見た目の案の確認 → 1 | ○ | ○ | VR |
 | P3（作る場合） | — | 不要（この文書で足りる） | 確認用の実行ファイル → P3-0 の後に本体 | ○ | ○ | AMD |
-| P4 | — | 不要 | バックエンド 1 → UI は引き継ぎ文書 | ○ | ○ | — |
+| P4 | — | 不要 | バックエンド 1 → UI は引き継ぎ文書（済み） | ○ | ○ | 実回線 |
 | P5 | — | ○（プロセス管理） | 評価 → 1 | ○ | ○ | GPU 各社 |
 | P6 | — | 評価の後に | 評価のスクリプト 1 | ○ | ○ | — |
 
