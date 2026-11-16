@@ -32,6 +32,167 @@ pub const WHISPER_MODELS: [(&str, &str); 9] = [
 const WHISPER_FILES: [&str; 6] =
     ["config.json", "preprocessor_config.json", "model.bin", "tokenizer.json", "vocabulary.txt", "vocabulary.json"];
 
+// --------------------------------------------------------------------------------- the catalog
+
+/// The models VRCT has checked (native/data/model_catalog.json, `cargo xtask model-catalog-files`):
+/// each at a fixed commit, with every file's size and SHA-256. Nothing else is downloaded.
+const CATALOG: &str = include_str!("../../data/model_catalog.json");
+
+/// What a model is: the settings and folder it belongs to and the tokenizer it is read with
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Family {
+    Whisper,
+    M2m100,
+    Nllb,
+}
+
+impl Family {
+    /// The weights folder (`weights/<kind>/<id>`) and the settings' name (`<KIND>_WEIGHT_TYPE`)
+    pub fn kind(self) -> &'static str {
+        if self == Family::Whisper { "whisper" } else { "ctranslate2" }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Family::Whisper => "whisper",
+            Family::M2m100 => "m2m100",
+            Family::Nllb => "nllb",
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct CatalogFile {
+    pub path: String,
+    pub size: u64,
+    pub sha256: String,
+}
+
+#[derive(Debug)]
+pub struct CatalogRepo {
+    pub repo: String,
+    /// a commit (40 hex digits)
+    pub revision: String,
+    pub files: Vec<CatalogFile>,
+}
+
+#[derive(Debug)]
+pub struct CatalogModel {
+    /// the weight type: the settings' value, the folder's name and the push's weight_type
+    pub id: String,
+    pub family: Family,
+    /// CTranslate2: the key of languages.yml["CTranslate2"]
+    pub languages: Option<String>,
+    pub license: String,
+    pub weights: CatalogRepo,
+    /// CTranslate2: the tokenizer, kept in the Hugging Face cache layout under `tokenizer/`
+    pub tokenizer: Option<CatalogRepo>,
+}
+
+impl CatalogModel {
+    /// The bytes of every file, the tokenizer's too
+    pub fn size(&self) -> u64 {
+        self.weights.files.iter().chain(self.tokenizer.iter().flat_map(|t| &t.files)).map(|f| f.size).sum()
+    }
+}
+
+/// A file path of the catalog: plain names under the folder only, no pickles (only model.bin of the
+/// .bin files, which is CTranslate2's own format)
+fn safe_path(path: &str) -> bool {
+    let p = Path::new(path);
+    let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+    let pickle = ["pt", "pth", "pkl", "pickle", "ckpt"].contains(&ext.as_str()) || (ext == "bin" && path != "model.bin");
+    !path.is_empty() && !path.contains([':', '\\']) && !pickle && p.components().all(|c| matches!(c, Component::Normal(_)))
+}
+
+fn hex(s: &str, len: usize) -> bool {
+    s.len() == len && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+fn parse_repo(v: &Value) -> Result<CatalogRepo> {
+    let str_of = |key: &str| v[key].as_str().map(String::from).ok_or_else(|| anyhow::anyhow!("no {key}"));
+    let (repo, revision) = (str_of("repo")?, str_of("revision")?);
+    let name_ok = |s: &str| !s.is_empty() && !s.starts_with('.') && s.bytes().all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b));
+    if repo.split('/').count() != 2 || !repo.split('/').all(name_ok) {
+        bail!("bad repo {repo}");
+    }
+    if !hex(&revision, 40) {
+        bail!("{repo}: revision {revision} is not a commit");
+    }
+    let mut files = vec![];
+    for f in v["files"].as_array().into_iter().flatten() {
+        let file = CatalogFile {
+            path: f["path"].as_str().unwrap_or("").to_string(),
+            size: f["size"].as_u64().unwrap_or(0),
+            sha256: f["sha256"].as_str().unwrap_or("").to_string(),
+        };
+        if !safe_path(&file.path) || file.size == 0 || !hex(&file.sha256, 64) {
+            bail!("{repo}: bad file {f}");
+        }
+        if files.iter().any(|g: &CatalogFile| g.path == file.path) {
+            bail!("{repo}: {} twice", file.path);
+        }
+        files.push(file);
+    }
+    if files.is_empty() {
+        bail!("{repo}: no files");
+    }
+    Ok(CatalogRepo { repo, revision, files })
+}
+
+/// model_catalog.json, every entry checked (a bad one is refused, not skipped)
+pub fn parse_catalog(text: &str) -> Result<Vec<CatalogModel>> {
+    let v: Value = serde_json::from_str(text)?;
+    if v["version"] != 1 {
+        bail!("catalog version {}", v["version"]);
+    }
+    let mut models: Vec<CatalogModel> = vec![];
+    for m in v["models"].as_array().into_iter().flatten() {
+        let id = m["id"].as_str().unwrap_or("").to_string();
+        let id_ok = !id.is_empty() && !id.starts_with('.') && id.bytes().all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b));
+        if !id_ok || models.iter().any(|o| o.id == id) {
+            bail!("bad or repeated id {id:?}");
+        }
+        let family = match m["family"].as_str() {
+            Some("whisper") => Family::Whisper,
+            Some("m2m100") => Family::M2m100,
+            Some("nllb") => Family::Nllb,
+            other => bail!("{id}: unknown family {other:?}"),
+        };
+        let languages = m["languages"].as_str().map(String::from);
+        let tokenizer = if m["tokenizer"].is_null() { None } else { Some(parse_repo(&m["tokenizer"]).map_err(|e| e.context(id.clone()))?) };
+        if (family == Family::Whisper) != (languages.is_none() && tokenizer.is_none()) {
+            bail!("{id}: CTranslate2 models (only) have languages and a tokenizer");
+        }
+        models.push(CatalogModel {
+            license: m["license"].as_str().unwrap_or("").to_string(),
+            weights: parse_repo(m).map_err(|e| e.context(id.clone()))?,
+            id,
+            family,
+            languages,
+            tokenizer,
+        });
+    }
+    Ok(models)
+}
+
+pub fn catalog() -> &'static [CatalogModel] {
+    static MODELS: std::sync::OnceLock<Vec<CatalogModel>> = std::sync::OnceLock::new();
+    MODELS.get_or_init(|| parse_catalog(CATALOG).expect("model_catalog.json"))
+}
+
+/// The catalog's model `id`
+pub fn model(id: &str) -> Option<&'static CatalogModel> {
+    catalog().iter().find(|m| m.id == id)
+}
+
+/// The key of languages.yml["CTranslate2"] for a weight type (a name not in the catalog as it is)
+pub fn languages_key(weight_type: &str) -> &str {
+    model(weight_type).and_then(|m| m.languages.as_deref()).unwrap_or(weight_type)
+}
+
+// ------------------------------------------------------------------------ the verified marker
+
 /// {relative path: {size, mtime}} of the files under `root`, mtime as Python's round(st_mtime, 3)
 fn file_stats(root: &Path) -> Map<String, Value> {
     fn walk(root: &Path, dir: &Path, out: &mut Map<String, Value>) {
@@ -271,4 +432,83 @@ pub fn download_tokenizer(http: &Http, root: &Path, weight_type: &str, log: &dyn
     std::fs::create_dir_all(repo.join("refs"))?;
     std::fs::write(repo.join("refs").join("main"), commit)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ids(list: &Value) -> Vec<&str> {
+        list.as_array().unwrap().iter().map(|v| v.as_str().unwrap()).collect()
+    }
+
+    #[test]
+    fn the_catalog_is_the_selectable_weight_types_in_their_order() {
+        for kind in ["whisper", "ctranslate2"] {
+            let upper = kind.to_uppercase();
+            let catalog: Vec<&str> = catalog().iter().filter(|m| m.family.kind() == kind).map(|m| m.id.as_str()).collect();
+            let list = crate::config::default_of(&format!("SELECTABLE_{upper}_WEIGHT_TYPE_LIST")).unwrap();
+            let dict = crate::config::default_of(&format!("SELECTABLE_{upper}_WEIGHT_TYPE_DICT")).unwrap();
+            assert_eq!(catalog, ids(list), "{kind}");
+            assert_eq!(catalog, dict.as_object().unwrap().keys().map(String::as_str).collect::<Vec<_>>(), "{kind}");
+        }
+    }
+
+    #[test]
+    fn every_ctranslate2_model_has_a_language_table_and_its_tokenizer() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../data/translation_settings/languages/languages.yml");
+        let yaml: serde_yaml::Value = serde_yaml::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        for m in catalog().iter().filter(|m| m.family != Family::Whisper) {
+            let key = m.languages.as_deref().unwrap();
+            assert!(yaml["CTranslate2"][key]["source"].is_mapping(), "{}: {key}", m.id);
+            let files: Vec<&str> = m.tokenizer.as_ref().unwrap().files.iter().map(|f| f.path.as_str()).collect();
+            let expected: &[&str] = if m.family == Family::M2m100 { &["sentencepiece.bpe.model", "vocab.json"] } else { &["tokenizer.json"] };
+            assert_eq!(files, expected, "{}", m.id);
+        }
+        assert_eq!(languages_key("nllb-200-3.3B-ct2-int8"), "nllb-200-3.3B-ct2-int8");
+        assert_eq!(languages_key("not-in-the-catalog"), "not-in-the-catalog");
+    }
+
+    // ponytail: the bridge to the tables the catalog replaces, removed with them
+    #[test]
+    fn the_catalog_has_the_repos_of_the_old_tables() {
+        for (id, repo) in WHISPER_MODELS {
+            assert_eq!(model(id).unwrap().weights.repo, repo);
+        }
+        for w in crate::translate::ctranslate2::WEIGHTS {
+            let m = model(w.weight_type).unwrap();
+            assert_eq!((m.weights.repo.as_str(), m.tokenizer.as_ref().unwrap().repo.as_str()), (w.hf_repo, w.tokenizer));
+        }
+    }
+
+    #[test]
+    fn a_bad_catalog_entry_is_refused() {
+        let file = r#"{"path": "model.bin", "size": 1, "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}"#;
+        let rev = "0123456789abcdef0123456789abcdef01234567";
+        let catalog = |model: &str| format!(r#"{{"version": 1, "models": [{model}]}}"#);
+        let whisper = |id: &str, rev: &str, file: &str| catalog(&format!(
+            r#"{{"id": "{id}", "family": "whisper", "license": "MIT", "repo": "a/b", "revision": "{rev}", "files": [{file}]}}"#));
+        assert_eq!(parse_catalog(&whisper("tiny", rev, file)).unwrap()[0].size(), 1);
+        for bad_id in ["", ".x", "a/b", "a b", "..", r"a\\b"] {
+            assert!(parse_catalog(&whisper(bad_id, rev, file)).is_err(), "{bad_id}");
+        }
+        assert!(parse_catalog(&whisper("tiny", "main", file)).is_err());
+        assert!(parse_catalog(&whisper("tiny", &rev.to_uppercase(), file)).is_err());
+        for path in ["../model.bin", "/model.bin", "C:/model.bin", "C:model.bin", "a/../../b", "model.bin:x", r"a\\b", "",
+                     "pytorch_model.bin", "x.pt", "x.PTH", "x.pkl", "x.pickle", "x.ckpt", "./config.json"] {
+            let f = file.replace("model.bin", path);
+            assert!(parse_catalog(&whisper("tiny", rev, &f)).is_err(), "{path}");
+        }
+        assert!(parse_catalog(&whisper("tiny", rev, "")).is_err(), "no files");
+        assert!(parse_catalog(&whisper("tiny", rev, &file.replace("\"size\": 1", "\"size\": 0"))).is_err());
+        assert!(parse_catalog(&whisper("tiny", rev, &file.replace("000\"", "00\""))).is_err(), "short sha256");
+        assert!(parse_catalog(&whisper("tiny", rev, &format!("{file}, {file}"))).is_err(), "the same file twice");
+        let one = whisper("tiny", rev, file);
+        let inner = &one[r#"{"version": 1, "models": ["#.len()..one.len() - 2];
+        assert!(parse_catalog(&catalog(&format!("{inner}, {inner}"))).is_err(), "the same id twice");
+        assert!(parse_catalog(&one.replace("\"whisper\"", "\"gguf\"")).is_err(), "unknown family");
+        assert!(parse_catalog(&one.replace("\"whisper\"", "\"nllb\"")).is_err(), "CTranslate2 without languages");
+        assert!(parse_catalog(&one.replace("\"a/b\"", "\"../b\"")).is_err());
+        assert!(parse_catalog(&one.replace("\"version\": 1", "\"version\": 2")).is_err());
+    }
 }

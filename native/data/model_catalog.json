@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "models": [
+    {
+      "id": "tiny",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Systran/faster-whisper-tiny",
+      "revision": "d90ca5fe260221311c53c58e660288d3deb8d356",
+      "files": [
+        {"path": "config.json", "size": 2249, "sha256": "a73a28cdfe1c43ccc7202fa333d1f89c202477271407ae9a7f19afa52039cac8"},
+        {"path": "model.bin", "size": 75538270, "sha256": "dcb76c6586fc06cbdac6dd21f14cfd129cc4cdd9dce19bf4ffa62e59cbe6e6d1"},
+        {"path": "tokenizer.json", "size": 2203239, "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"},
+        {"path": "vocabulary.txt", "size": 459861, "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"}
+      ]
+    },
+    {
+      "id": "base",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Systran/faster-whisper-base",
+      "revision": "ebe41f70d5b6dfa9166e2c581c45c9c0cfc57b66",
+      "files": [
+        {"path": "config.json", "size": 2309, "sha256": "56a6d8110d311f19c8f0471e562832c7527f146b567275bfca59fcf7c184da9a"},
+        {"path": "model.bin", "size": 145217532, "sha256": "d01c3014881c9c6f3133c182f3d2887eb6ca1c789a7538c5c007196857a0a6a9"},
+        {"path": "tokenizer.json", "size": 2203239, "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"},
+        {"path": "vocabulary.txt", "size": 459861, "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"}
+      ]
+    },
+    {
+      "id": "small",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Systran/faster-whisper-small",
+      "revision": "536b0662742c02347bc0e980a01041f333bce120",
+      "files": [
+        {"path": "config.json", "size": 2370, "sha256": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828"},
+        {"path": "model.bin", "size": 483546902, "sha256": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671"},
+        {"path": "tokenizer.json", "size": 2203239, "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"},
+        {"path": "vocabulary.txt", "size": 459861, "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"}
+      ]
+    },
+    {
+      "id": "medium",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Systran/faster-whisper-medium",
+      "revision": "08e178d48790749d25932bbc082711ddcfdfbc4f",
+      "files": [
+        {"path": "config.json", "size": 2257, "sha256": "3622a2ddc41ec0e0fd4e68c13c6830f03b90c38d89aaad184de02c8c642cf807"},
+        {"path": "model.bin", "size": 1527906378, "sha256": "9b45e1009dcc4ab601eff815b61d80e60ce3fd8c74c1a14f4a282258286b51ae"},
+        {"path": "tokenizer.json", "size": 2203239, "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"},
+        {"path": "vocabulary.txt", "size": 459861, "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"}
+      ]
+    },
+    {
+      "id": "large-v1",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Systran/faster-whisper-large-v1",
+      "revision": "b07c8d4be0be90092aa01a29c975077acb8d15c9",
+      "files": [
+        {"path": "config.json", "size": 2352, "sha256": "98eb866f6d98c38224aa2f13fc9854f75fa01280714e945f7e803aa8b16e2b4b"},
+        {"path": "model.bin", "size": 3086912962, "sha256": "a3cce8081a5414206ab09a80aa410ebf9965feef52adafeead13f4a83398b1d1"},
+        {"path": "tokenizer.json", "size": 2203239, "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"},
+        {"path": "vocabulary.txt", "size": 459861, "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"}
+      ]
+    },
+    {
+      "id": "large-v2",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Systran/faster-whisper-large-v2",
+      "revision": "f0fe81560cb8b68660e564f55dd99207059c092e",
+      "files": [
+        {"path": "config.json", "size": 2796, "sha256": "d86b7a7664a12559d644aa210a32ce9a7e03913e794b7ea4fb7182de69e273a7"},
+        {"path": "model.bin", "size": 3086912962, "sha256": "bf2a9746382e1aa7ffff6b3a0d137ed9edbd9670c3b87e5d35f5e85e70d0333a"},
+        {"path": "tokenizer.json", "size": 2203239, "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab"},
+        {"path": "vocabulary.txt", "size": 459861, "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913"}
+      ]
+    },
+    {
+      "id": "large-v3",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Systran/faster-whisper-large-v3",
+      "revision": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+      "files": [
+        {"path": "config.json", "size": 2394, "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9"},
+        {"path": "model.bin", "size": 3087284237, "sha256": "69f74147e3334731bc3a76048724833325d2ec74642fb52620eda87352e3d4f1"},
+        {"path": "preprocessor_config.json", "size": 340, "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"},
+        {"path": "tokenizer.json", "size": 2480617, "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca"},
+        {"path": "vocabulary.json", "size": 1068114, "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"}
+      ]
+    },
+    {
+      "id": "large-v3-turbo-int8",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "Zoont/faster-whisper-large-v3-turbo-int8-ct2",
+      "revision": "846f74797293e5f605d509a6ab5395a1f2f2874e",
+      "files": [
+        {"path": "config.json", "size": 2487, "sha256": "27ec8ecb8ba05f3ac81522a7a035bd5ab19a5b567640bf68ccec90ded4fc1726"},
+        {"path": "model.bin", "size": 814054531, "sha256": "7482f978f9493b93b3d0bf68a148a1a62ca02547e8ee981358ff8ef2de8a9418"},
+        {"path": "preprocessor_config.json", "size": 340, "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"},
+        {"path": "tokenizer.json", "size": 2710337, "sha256": "297b13372ac43916285644fb9687add3cc62ee2a1adb60da3dc25cc94c1871fd"},
+        {"path": "vocabulary.json", "size": 1119981, "sha256": "697ee5a65726e46b4d294d1a243d98e1878f5d81caba17891b1c5ebab7a912a9"}
+      ]
+    },
+    {
+      "id": "large-v3-turbo",
+      "family": "whisper",
+      "license": "MIT",
+      "repo": "deepdml/faster-whisper-large-v3-turbo-ct2",
+      "revision": "4df90f75321148c3a29a9e2351b7ddf8f5b115a8",
+      "files": [
+        {"path": "config.json", "size": 2263, "sha256": "b0253ea6c0d3bea6b1e19e91a02acfd3b53f4467362efcb5a3e6b16c9b3a9b7e"},
+        {"path": "model.bin", "size": 1617884929, "sha256": "e76620f83d5f5b69efd3d87e3dc180c1bd21df9fbebacfd4335e5e1efcc018da"},
+        {"path": "preprocessor_config.json", "size": 340, "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711"},
+        {"path": "tokenizer.json", "size": 2710337, "sha256": "297b13372ac43916285644fb9687add3cc62ee2a1adb60da3dc25cc94c1871fd"},
+        {"path": "vocabulary.json", "size": 1068114, "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1"}
+      ]
+    },
+    {
+      "id": "m2m100_418M-ct2-int8",
+      "family": "m2m100",
+      "languages": "m2m100_418M-ct2-int8",
+      "license": "MIT",
+      "repo": "jncraton/m2m100_418M-ct2-int8",
+      "revision": "7c1b2620a4e58dacecbd8bf89cfd6da7eb9eb7b0",
+      "files": [
+        {"path": "config.json", "size": 189, "sha256": "4244772990e30069563e3ddfb4ad6dc95bdfd2ac3de667ea8858c9b0a8433fa8"},
+        {"path": "generation_config.json", "size": 233, "sha256": "aed76366507333ddbb8bd49960f23c82fe6446b3319a46a54befdb45324ccf61"},
+        {"path": "model.bin", "size": 490667713, "sha256": "d6703dd9f920ff896e45c3d97b490761bed5944937b90bbe6a7245f5652542d4"},
+        {"path": "sentencepiece.bpe.model", "size": 2423393, "sha256": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a"},
+        {"path": "shared_vocabulary.json", "size": 2796509, "sha256": "7eb5d0ff184c6095c7c10f9911c0aea492250abd12854f9c3d787c64b1c6397e"},
+        {"path": "special_tokens_map.json", "size": 1140, "sha256": "c1a4f86c3874d279ae1b2a05162858db5dd6c61665d84223ed886cbcff08fda6"},
+        {"path": "tokenizer_config.json", "size": 272, "sha256": "ae54f15f0649bb05041cdadad8485ba1faf40bc33e6b4c2a74ae2d1ae5710fa2"},
+        {"path": "vocab.json", "size": 3708092, "sha256": "b6e77e474aeea8f441363aca7614317c06381f3eacfe10fb9856d5081d1074cc"}
+      ],
+      "tokenizer": {
+        "repo": "facebook/m2m100_418M",
+        "revision": "55c2e61bbf05dfb8d7abccdc3fae6fc8512fd636",
+        "files": [
+          {"path": "sentencepiece.bpe.model", "size": 2423393, "sha256": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a"},
+          {"path": "vocab.json", "size": 3708092, "sha256": "b6e77e474aeea8f441363aca7614317c06381f3eacfe10fb9856d5081d1074cc"}
+        ]
+      }
+    },
+    {
+      "id": "m2m100_1.2B-ct2-int8",
+      "family": "m2m100",
+      "languages": "m2m100_1.2B-ct2-int8",
+      "license": "MIT",
+      "repo": "jncraton/m2m100_1.2B-ct2-int8",
+      "revision": "e50078df6be13a88592b70ea42f4d74c2082e448",
+      "files": [
+        {"path": "config.json", "size": 189, "sha256": "4244772990e30069563e3ddfb4ad6dc95bdfd2ac3de667ea8858c9b0a8433fa8"},
+        {"path": "generation_config.json", "size": 233, "sha256": "aed76366507333ddbb8bd49960f23c82fe6446b3319a46a54befdb45324ccf61"},
+        {"path": "model.bin", "size": 1249655149, "sha256": "c97df052a558895317312470e1ff7cb8eae5416f7ae16214a2983c6853dd3ce5"},
+        {"path": "sentencepiece.bpe.model", "size": 2423393, "sha256": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a"},
+        {"path": "shared_vocabulary.json", "size": 2796509, "sha256": "7eb5d0ff184c6095c7c10f9911c0aea492250abd12854f9c3d787c64b1c6397e"},
+        {"path": "special_tokens_map.json", "size": 1140, "sha256": "c1a4f86c3874d279ae1b2a05162858db5dd6c61665d84223ed886cbcff08fda6"},
+        {"path": "tokenizer_config.json", "size": 271, "sha256": "1566a6cfa4f541a55594c9d5e090f530812d5de7c94882ea3af156962d9933ae"},
+        {"path": "vocab.json", "size": 3708092, "sha256": "b6e77e474aeea8f441363aca7614317c06381f3eacfe10fb9856d5081d1074cc"}
+      ],
+      "tokenizer": {
+        "repo": "facebook/m2m100_1.2B",
+        "revision": "7b36184180524c1a1bbfa37f120a608046250b98",
+        "files": [
+          {"path": "sentencepiece.bpe.model", "size": 2423393, "sha256": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a"},
+          {"path": "vocab.json", "size": 3708092, "sha256": "b6e77e474aeea8f441363aca7614317c06381f3eacfe10fb9856d5081d1074cc"}
+        ]
+      }
+    },
+    {
+      "id": "nllb-200-distilled-600M-ct2-int8",
+      "family": "nllb",
+      "languages": "nllb-200-distilled-600M-ct2-int8",
+      "license": "CC-BY-NC-4.0",
+      "repo": "JustFrederik/nllb-200-distilled-600M-ct2-int8",
+      "revision": "302d78f00e6fdb50a1064059df7c392b735e9d05",
+      "files": [
+        {"path": "config.json", "size": 159, "sha256": "0c2f6fa2057c7264d052fb4a62ba3476eeae70487acddfa8e779a53a00cbf44c"},
+        {"path": "model.bin", "size": 622595991, "sha256": "ed1beaf75134de7505315a5223162f56acff397eff6b50638a500d3936fe707b"},
+        {"path": "sentencepiece.bpe.model", "size": 4852054, "sha256": "14bb8dfb35c0ffdea7bc01e56cea38b9e3d5efcdcb9c251d6b40538e1aab555a"},
+        {"path": "shared_vocabulary.txt", "size": 2568098, "sha256": "a132a83330f45514c2476eb81d1d69b3c41762264d16ce0a7ea982e5d6c728e5"},
+        {"path": "special_tokens_map.json", "size": 3548, "sha256": "992bd4ed610d644d6823081937bcc91bb8878dd556cea4ae5327f2480361330e"},
+        {"path": "tokenizer.json", "size": 17331176, "sha256": "e316b82de11d0f951f370943b3c438311629547285129b0b81dadabd01bca665"},
+        {"path": "tokenizer_config.json", "size": 564, "sha256": "d1aa8c3697d3e35674f97b5b7e9c99d22b010f528e80140257d97316be90d044"}
+      ],
+      "tokenizer": {
+        "repo": "facebook/nllb-200-distilled-600M",
+        "revision": "f8d333a098d19b4fd9a8b18f94170487ad3f821d",
+        "files": [
+          {"path": "tokenizer.json", "size": 17331176, "sha256": "e316b82de11d0f951f370943b3c438311629547285129b0b81dadabd01bca665"}
+        ]
+      }
+    },
+    {
+      "id": "nllb-200-distilled-1.3B-ct2-int8",
+      "family": "nllb",
+      "languages": "nllb-200-distilled-1.3B-ct2-int8",
+      "license": "CC-BY-NC-4.0",
+      "repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
+      "revision": "70f572adafa4794890ce7826156a4209717855af",
+      "files": [
+        {"path": "config.json", "size": 1071, "sha256": "bb11352c2579e31d4251500cd3d813beb6ab083c8a60268db52e9698c1c9cda2"},
+        {"path": "generation_config.json", "size": 189, "sha256": "0bb604cdb8392649176935a447ce994128f170a6908c135a17d0e3dfb8113cb2"},
+        {"path": "model.bin", "size": 1377755738, "sha256": "89dc4b9eb7f4dcd3ff36023c9b1c55fcecb47ddc0df97ab31b068ef9cf194940"},
+        {"path": "shared_vocabulary.json", "size": 5921176, "sha256": "af53bfd0e6f726209e7325e45b87ab3b14e5856f7d42d7b9be91de3287c45267"},
+        {"path": "special_tokens_map.json", "size": 3548, "sha256": "992bd4ed610d644d6823081937bcc91bb8878dd556cea4ae5327f2480361330e"},
+        {"path": "tokenizer.json", "size": 17331176, "sha256": "e316b82de11d0f951f370943b3c438311629547285129b0b81dadabd01bca665"},
+        {"path": "tokenizer_config.json", "size": 564, "sha256": "d1aa8c3697d3e35674f97b5b7e9c99d22b010f528e80140257d97316be90d044"}
+      ],
+      "tokenizer": {
+        "repo": "facebook/nllb-200-distilled-1.3B",
+        "revision": "7be3e24664b38ce1cac29b8aeed6911aa0cf0576",
+        "files": [
+          {"path": "tokenizer.json", "size": 17331176, "sha256": "e316b82de11d0f951f370943b3c438311629547285129b0b81dadabd01bca665"}
+        ]
+      }
+    },
+    {
+      "id": "nllb-200-3.3B-ct2-int8",
+      "family": "nllb",
+      "languages": "nllb-200-3.3B-ct2-int8",
+      "license": "CC-BY-NC-4.0",
+      "repo": "OpenNMT/nllb-200-3.3B-ct2-int8",
+      "revision": "28d998cc8548ad62f4f98cf8860928c3af99b97b",
+      "files": [
+        {"path": "config.json", "size": 1071, "sha256": "fa393269e093784425d78115fa8c223722f6432fab71ae972e6e7b869ce916f2"},
+        {"path": "generation_config.json", "size": 189, "sha256": "0bb604cdb8392649176935a447ce994128f170a6908c135a17d0e3dfb8113cb2"},
+        {"path": "model.bin", "size": 3356047962, "sha256": "b7540c4e19aa2a5079c89241ffccb49711705ca8b1d255cea00c3216dc7d5165"},
+        {"path": "shared_vocabulary.json", "size": 5921176, "sha256": "af53bfd0e6f726209e7325e45b87ab3b14e5856f7d42d7b9be91de3287c45267"},
+        {"path": "special_tokens_map.json", "size": 3548, "sha256": "992bd4ed610d644d6823081937bcc91bb8878dd556cea4ae5327f2480361330e"},
+        {"path": "tokenizer.json", "size": 17331176, "sha256": "e316b82de11d0f951f370943b3c438311629547285129b0b81dadabd01bca665"},
+        {"path": "tokenizer_config.json", "size": 564, "sha256": "d1aa8c3697d3e35674f97b5b7e9c99d22b010f528e80140257d97316be90d044"}
+      ],
+      "tokenizer": {
+        "repo": "facebook/nllb-200-3.3B",
+        "revision": "1a07f7d195896b2114afcb79b7b57ab512e7b43e",
+        "files": [
+          {"path": "tokenizer.json", "size": 17331176, "sha256": "e316b82de11d0f951f370943b3c438311629547285129b0b81dadabd01bca665"}
+        ]
+      }
+    }
+  ]
+}

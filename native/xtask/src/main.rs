@@ -3,6 +3,8 @@
 //!   (the installed layout; --weights makes a junction: the sidecar reads the weights from beside it)
 //! cargo xtask release-zip --out <zip>
 //!   (VRCT.exe, VRCT-sidecar.exe and _internal/ of src-tauri/target/release, for the updater: the layout of the installed folder)
+//! cargo xtask model-catalog-files <repo> [--revision <branch or commit>] [--only a,b]
+//!   (a repo's files with their sizes and SHA-256 at a commit, for native/data/model_catalog.json)
 //!
 //! native/third_party.toml の wheel (PyPI)・単体のファイル (`url`)・ヘッダー (GitHub のタグ) を取ってきて
 //! SHA-256 を照合し、指定のファイルだけを native/third_party/<name>/ に取り出す。ダウンロードは
@@ -413,6 +415,74 @@ fn release_zip(out: &Path) -> Result<()> {
     Ok(())
 }
 
+#[derive(Deserialize)]
+struct HfRevision {
+    sha: String,
+}
+
+#[derive(Deserialize)]
+struct HfTreeEntry {
+    #[serde(rename = "type")]
+    kind: String,
+    path: String,
+    size: u64,
+    lfs: Option<HfLfs>,
+}
+
+#[derive(Deserialize)]
+struct HfLfs {
+    oid: String,
+}
+
+/// The files of a Hugging Face repo at a commit, for native/data/model_catalog.json: `revision`
+/// (a branch or a commit) is resolved to its commit; a large file's SHA-256 is the LFS oid, a small
+/// one is downloaded and hashed. `only`: those of these files the repo has, else every file but README.md,
+/// .gitattributes and pickles. Printed as JSON.
+/// ponytail: the tree's first page only (1000 entries), refused beyond it.
+fn model_catalog_files(repo: &str, revision: &str, only: Option<Vec<String>>) -> Result<()> {
+    let hf = "https://huggingface.co";
+    let commit = ureq::get(&format!("{hf}/api/models/{repo}/revision/{revision}")).call()?.into_json::<HfRevision>()?.sha;
+    if commit.len() != 40 || !commit.bytes().all(|b| b.is_ascii_hexdigit()) {
+        bail!("{repo}@{revision}: unexpected commit {commit}");
+    }
+    let tree: Vec<HfTreeEntry> = ureq::get(&format!("{hf}/api/models/{repo}/tree/{commit}?recursive=true")).call()?.into_json()?;
+    if tree.len() >= 1000 {
+        bail!("{repo}: 1000 entries or more, the tree is paged");
+    }
+    let pickle = |p: &str| {
+        let ext = Path::new(p).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+        ["pt", "pth", "pkl", "pickle", "ckpt"].contains(&ext.as_str()) || (ext == "bin" && p != "model.bin")
+    };
+    let mut files = vec![];
+    for e in tree.iter().filter(|e| e.kind == "file") {
+        let wanted = match &only {
+            Some(only) => only.contains(&e.path),
+            None => !matches!(e.path.as_str(), "README.md" | ".gitattributes") && !pickle(&e.path),
+        };
+        if !wanted {
+            continue;
+        }
+        // written into JSON as it is
+        if !e.path.bytes().all(|b| b.is_ascii_graphic() && b != b'"' && b != b'\\') {
+            bail!("{repo}: unexpected file name {:?}", e.path);
+        }
+        let sha256 = match &e.lfs {
+            Some(lfs) => lfs.oid.clone(),
+            None => {
+                let mut body = vec![];
+                ureq::get(&format!("{hf}/{repo}/resolve/{commit}/{}", e.path)).call()?.into_reader().read_to_end(&mut body)?;
+                if body.len() as u64 != e.size {
+                    bail!("{repo}/{}: {} bytes, the tree says {}", e.path, body.len(), e.size);
+                }
+                format!("{:x}", Sha256::digest(&body))
+            }
+        };
+        files.push(format!("{{\"path\": \"{}\", \"size\": {}, \"sha256\": \"{sha256}\"}}", e.path, e.size));
+    }
+    println!("{{\"repo\": \"{repo}\", \"revision\": \"{commit}\", \"files\": [{}]}}", files.join(", "));
+    Ok(())
+}
+
 fn arg(args: &[String], flag: &str) -> Option<String> {
     args.iter().position(|a| a == flag).and_then(|i| args.get(i + 1)).cloned()
 }
@@ -431,6 +501,10 @@ fn main() -> Result<()> {
             // a zip that stopped half way is not left behind (never shipped with files missing)
             release_zip(&out).inspect_err(|_| { let _ = fs::remove_file(&out); })
         }
-        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>] | release-zip --out <zip>"),
+        Some("model-catalog-files") => model_catalog_files(
+            args.get(1).context("<repo>")?,
+            &arg(&args, "--revision").unwrap_or_else(|| "main".into()),
+            arg(&args, "--only").map(|o| o.split(',').map(String::from).collect())),
+        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>] | release-zip --out <zip> | model-catalog-files <repo> [--revision <rev>] [--only a,b]"),
     }
 }
