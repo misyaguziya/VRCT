@@ -371,13 +371,21 @@ impl Run<'_> {
         self.transfer_capture(w, capture, now)?;
         // a capture handled to the end
         self.panel.errors = 0;
-        // the log window's new content sent (one taken after it was drawn: no old one flashing)
-        if self.panel.last_change == now && self.panel_reveal_at.is_some_and(|at| started >= at)
-            && let Some(pi) = w.region_index(Region::Panel)
-        {
+        let transferred = self.panel.last_change == now;
+        self.after_transfer(w, started, transferred);
+        Ok(())
+    }
+
+    /// The log window's new content shown once a capture taken after it was drawn was sent (no
+    /// old one flashing). One taken before it is not kept as the last sent: it may already hold
+    /// the new content, and the next capture, the same picture, must still be sent to show it
+    pub(crate) fn after_transfer(&mut self, w: &mut Worker, started: Instant, transferred: bool) {
+        let Some(at) = self.panel_reveal_at else { return };
+        if started < at {
+            self.panel.last_raw = None;
+        } else if transferred && let Some(pi) = w.region_index(Region::Panel) {
             self.show_panel(w, pi);
         }
-        Ok(())
     }
 
     /// revealPanel: captured and sent at once (the next capture, even if the screen looks the same)
@@ -766,7 +774,7 @@ impl Run<'_> {
 
     /// setPanelSize: the log's size; the VR view gets the new layout, the overlays switch once captured
     pub fn set_panel_size(&mut self, w: &mut Worker, width: f64, height: f64) {
-        let (width, height) = layout::clamp_panel_size(width, height);
+        let (width, height) = layout::clamp_panel_size(width, height, w.panel_min_height());
         if let Some(pi) = w.region_index(Region::Panel) {
             w.sizes[pi].settings.panel_size = Some((width, height));
         }

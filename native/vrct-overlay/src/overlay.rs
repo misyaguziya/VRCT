@@ -104,6 +104,9 @@ pub struct Shared {
     pub intro: Intro,
     pub layout: Layout,
     pub tooltip_epoch: u64,
+    /// the log window's form and lock (kept by a worker made again after a stop that timed out)
+    pub panel_form: String,
+    pub panel_locked: bool,
 }
 
 pub(crate) enum Command {
@@ -192,7 +195,7 @@ impl Overlay {
             let (commands, received) = command_wait::channel();
             self.commands = commands;
             let shared = self.shared.lock().unwrap().clone();
-            let mut worker = Worker::new(shared.settings, received, self.log.clone(), self.events.clone());
+            let mut worker = Worker::from_shared(shared, received, self.log.clone(), self.events.clone());
             worker.shared = self.shared.clone();
             self.idle = Some(worker);
         }
@@ -406,12 +409,14 @@ impl Worker {
         }).collect();
         let panel = sizes.iter().find(|s| s.region == Some(Region::Panel)).and_then(|s| s.settings.panel_size)
             .unwrap_or(layout::PANEL_DEFAULT_SIZE);
-        let (w, h) = layout::clamp_panel_size(panel.0 as f64, panel.1 as f64);
+        // the form is not known yet (Command::PanelForm clamps again by it): the subtitle's least height
+        let (w, h) = layout::clamp_panel_size(panel.0 as f64, panel.1 as f64, layout::SUBTITLE_MIN_HEIGHT);
         let layout = Layout::new(w, h);
         let tooltip_epoch = random_epoch();
         let shared = Arc::new(Mutex::new(Shared {
             settings: sizes.iter().map(|s| (s.name.clone(), s.settings.clone())).collect(),
             initialized: false, intro: Intro::Idle, layout, tooltip_epoch,
+            panel_form: PANEL_FORM_HISTORY.into(), panel_locked: false,
         }));
         Self {
             sizes, commands, log, events, shared, stopped: false, connect_failure_logged: false,
@@ -426,6 +431,21 @@ impl Worker {
             layout_rendered: layout::PANEL_DEFAULT_SIZE,
             intro: Intro::Idle, panel_out_of_view: false, pointer_notified: None, second_pointer_notified: None,
         }
+    }
+
+    /// A worker going on from what a stopped one published (its settings, layout, form and lock)
+    fn from_shared(shared: Shared, commands: Receiver<Command>, log: Log, events: Events) -> Self {
+        let mut worker = Worker::new(shared.settings, commands, log, events);
+        worker.layout = shared.layout;
+        worker.panel_form = shared.panel_form;
+        worker.panel_locked = shared.panel_locked;
+        worker.publish(false);
+        worker
+    }
+
+    /// The log window's least height in its form
+    pub fn panel_min_height(&self) -> u32 {
+        if self.panel_subtitle() { layout::SUBTITLE_MIN_HEIGHT } else { layout::PANEL_SIZE_RANGE.0.1 }
     }
 
     pub fn index(&self, size: &str) -> Option<usize> {
@@ -449,6 +469,8 @@ impl Worker {
     pub(crate) fn set_panel_form(&mut self, form: String, settings: Settings, locked: bool) {
         self.panel_form = form;
         self.panel_locked = locked;
+        // an anchor asked for in the form before is not for this one
+        self.requested_anchor = None;
         if let Some(pi) = self.region_index(Region::Panel) {
             self.sizes[pi].settings = Settings { locked: false, ..settings };
         }
@@ -462,6 +484,8 @@ impl Worker {
         shared.intro = self.intro;
         shared.layout = self.layout;
         shared.tooltip_epoch = self.tooltip_epoch;
+        shared.panel_form.clone_from(&self.panel_form);
+        shared.panel_locked = self.panel_locked;
     }
 
     /// The VR view's layout and the tooltip generation (getVrLayout) to the app
@@ -516,7 +540,7 @@ impl Worker {
                 let size = settings.panel_size;
                 self.set_panel_form(form, settings, locked);
                 if let Some((w, h)) = size {
-                    let (w, h) = layout::clamp_panel_size(w as f64, h as f64);
+                    let (w, h) = layout::clamp_panel_size(w as f64, h as f64, self.panel_min_height());
                     if Layout::new(w, h) != self.layout {
                         self.layout = Layout::new(w, h);
                         self.layout_gen += 1;

@@ -285,8 +285,9 @@ impl Run<'_> {
             if size.region == Some(Region::Launcher) && !self.launcher_interactive {
                 continue;
             }
-            // a locked subtitle is not there for the lasers (the game keeps its input)
-            if size.region == Some(Region::Panel) && w.panel_locked && w.panel_subtitle() {
+            // a locked or faded subtitle is not there for the lasers (the game keeps its input, and
+            // nothing unseen takes it; it shows again with a new line, opened or recalled)
+            if size.region == Some(Region::Panel) && w.panel_subtitle() && (w.panel_locked || !self.is_visible(w, i)) {
                 continue;
             }
             let Some(hit) = self.intersect(ray, self.handles[i]) else { continue };
@@ -771,9 +772,10 @@ impl Run<'_> {
         self.show_other_pointer(other.as_ref());
         self.notify_pointer(w, hover_xy, second_xy);
         self.update_toolbar_visibility(w, now, pointing_log);
-        // a subtitle (or its bar) pointed at does not fade meanwhile
+        // a subtitle (or its bar) pointed at does not fade meanwhile (a faded one is not shown by it)
         if pointing_log && w.panel_subtitle()
             && let Some(pi) = panel
+            && self.is_visible(w, pi)
         {
             self.wake(w, pi);
         }
@@ -1056,7 +1058,7 @@ impl Run<'_> {
         let (sx, sy) = (r.corner.0 as f64, r.corner.1 as f64);
         let (fixed_x, fixed_y) = r.fixed;
         let wanted = (sx * (hit.x - fixed_x) / r.m_per_px, sy * (hit.y - fixed_y) / r.m_per_px);
-        let (width_px, height_px) = layout::clamp_panel_size(wanted.0, wanted.1);
+        let (width_px, height_px) = layout::clamp_panel_size(wanted.0, wanted.1, w.panel_min_height());
         let at_limit = (width_px as f64 - wanted.0).abs() > 1.0 || (height_px as f64 - wanted.1).abs() > 1.0;
         r.size = (width_px, height_px);
         r.center = (fixed_x + sx * width_px as f64 * r.m_per_px / 2.0, fixed_y + sy * height_px as f64 * r.m_per_px / 2.0);
@@ -1526,8 +1528,10 @@ impl Run<'_> {
                 self.panel.last_raw = None;
                 if region == Region::Panel {
                     self.place(w, i);
-                    // a subtitle opened shows its last lines for a while
-                    self.wake(w, i);
+                    // a subtitle opened shows its last lines once captured (the picture of when it was closed is old)
+                    if w.panel_subtitle() {
+                        self.hide_panel_until_shown(w, i);
+                    }
                     // left where it cannot be seen: in front of the eyes when opened
                     if self.is_panel_out_of_view(w) {
                         self.recall_panel(w);
@@ -1588,21 +1592,28 @@ impl Run<'_> {
         }
     }
 
-    /// recallPanel: in front of the eyes, fixed in the room (a subtitle on the head stays on it), saved
-    /// Whether a tracked head allowed it (as place_keyboard)
+    /// recallPanel: in front of the eyes, fixed in the room, saved; a subtitle on the head is
+    /// already in view: only shown, not moved. Whether a tracked head allowed it (as place_keyboard)
     fn recall_panel(&mut self, w: &mut Worker) -> bool {
-        let (Some(head), Some(pi)) = (self.pose_of(HMD), w.region_index(Region::Panel)) else { return false };
-        let world = pose::recall_pose(&head);
-        let relative = if w.panel_subtitle() && w.sizes[pi].settings.tracker == "HMD" {
-            pose::mul(&pose::inverse(&head), &world)
-        } else {
-            w.sizes[pi].settings.tracker = "Playspace".into();
-            world
-        };
-        self.commit_position(w, pi, &pose::top(&relative));
+        let Some(pi) = w.region_index(Region::Panel) else { return false };
+        if w.panel_subtitle() && w.sizes[pi].settings.tracker == "HMD" {
+            self.wake(w, pi);
+            return true;
+        }
+        let Some(head) = self.pose_of(HMD) else { return false };
+        w.sizes[pi].settings.tracker = "Playspace".into();
+        self.commit_position(w, pi, &pose::top(&pose::recall_pose(&head)));
         self.place(w, pi);
         self.wake(w, pi);
         true
+    }
+
+    /// The log window clear until the VR view's new content was captured (at most PANEL_REVEAL_WAIT)
+    fn hide_panel_until_shown(&mut self, w: &mut Worker, pi: usize) {
+        self.panel_hidden_since = Some(Instant::now());
+        self.panel_reveal_at = None;
+        w.sizes[pi].fade_ratio = 0.0;
+        self.set_alpha(pi, 0.0);
     }
 
     /// applyPanelForm: the log window becomes another form (history / a subtitle) at that form's
@@ -1630,10 +1641,7 @@ impl Run<'_> {
         w.set_panel_form(form, settings, locked);
         self.hide_toolbar_now(w);
         self.reset_tooltip_epoch(w, true);
-        self.panel_hidden_since = Some(Instant::now());
-        self.panel_reveal_at = None;
-        w.sizes[pi].fade_ratio = 0.0;
-        self.set_alpha(pi, 0.0);
+        self.hide_panel_until_shown(w, pi);
         let width = w.sizes[pi].settings.ui_scaling;
         self.update_ui_scaling(w, pi, width);
         self.place(w, pi);

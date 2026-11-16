@@ -742,6 +742,8 @@ fn a_locked_subtitle_is_not_pointed_at_and_leaves_the_input_to_the_game() {
 fn an_unlocked_subtitle_is_grabbed() {
     let mut r = vr_ui();
     to_form(&mut r, "multi_line", "Playspace", false);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
     aim_at_panel(&mut r);
     r.frame(0);
     assert!(r.steam.0.borrow().input_updates.last().is_some_and(|hands| hands.contains(&RIGHT)));
@@ -807,20 +809,154 @@ fn the_history_that_never_fades_is_clear_too_while_changing_form() {
 }
 
 #[test]
-fn a_subtitle_on_the_head_is_recalled_on_the_head() {
+fn recalling_a_subtitle_on_the_head_only_shows_it_where_it_is() {
     let mut r = vr_ui();
     let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
     r.hand(HEAD, head);
     to_form(&mut r, "single_line", "HMD", true);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
+    let before = (r.w.sizes[pi].settings.clone(), r.world("panel"));
+    // faded out
+    r.w.sizes[pi].last_update = Instant::now() - Duration::from_secs(60);
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    r.events.lock().unwrap().clear();
+    r.w.recall_requested = Some((Region::Panel, Instant::now()));
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 1.0);
+    assert_eq!((r.w.sizes[pi].settings.clone(), r.world("panel")), before);
+    assert!(r.positions().is_empty());
+}
+
+#[test]
+fn a_subtitle_not_on_the_head_is_recalled_in_front_of_the_eyes_as_the_history() {
+    let mut r = vr_ui();
+    let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
+    r.hand(HEAD, head);
+    to_form(&mut r, "multi_line", "LeftHand", true);
     r.w.recall_requested = Some((Region::Panel, Instant::now()));
     r.frame(0);
     let pi = r.index("panel");
-    assert_eq!(r.w.sizes[pi].settings.tracker, "HMD");
-    let handle = r.run.handles[pi];
-    assert_eq!(r.steam.0.borrow().overlays[handle as usize - 1].place.map(|p| p.0), Some(Some(HEAD)));
+    assert_eq!(r.w.sizes[pi].settings.tracker, "Playspace");
     let expected = pose::position(&pose::recall_pose(&head));
     let got = pose::position(&r.world("panel"));
     assert!(pose::norm(pose::sub(got, expected)) < 1e-3, "{got:?} {expected:?}");
+}
+
+#[test]
+fn a_faded_subtitle_is_not_pointed_at_nor_woken_by_the_laser() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", false);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
+    r.w.sizes[pi].last_update = Instant::now() - Duration::from_secs(60);
+    aim_at_panel(&mut r);
+    r.frame(0);
+    r.frame(20);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    assert_eq!(r.steam.0.borrow().input_updates.last(), Some(&vec![]));
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), None);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+}
+
+#[test]
+fn a_shown_subtitle_pointed_at_does_not_fade() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", false);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
+    // its display time almost over
+    r.w.sizes[pi].last_update = Instant::now() - Duration::from_millis(4900);
+    aim_at_panel(&mut r);
+    r.frame(0);
+    assert!(r.w.sizes[pi].last_update.elapsed() < Duration::from_secs(1));
+}
+
+#[test]
+fn a_capture_begun_before_the_new_content_does_not_count_and_the_next_one_shows_it() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", false);
+    let before = Instant::now();
+    std::thread::sleep(Duration::from_millis(2));
+    r.run.reveal_panel();
+    // a PrintWindow begun before, sent a frame late (it may hold the new content)
+    r.run.panel.last_raw = Some(crate::panel::Frame::Gpu(7));
+    r.run.after_transfer(&mut r.w, before, true);
+    assert!(r.run.panel.last_raw.is_none(), "the next capture of the same picture must be sent");
+    assert!(r.run.panel_hidden_since.is_some());
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    r.run.after_transfer(&mut r.w, Instant::now(), true);
+    assert!(r.run.panel_hidden_since.is_none() && r.run.panel_reveal_at.is_none());
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 1.0);
+}
+
+#[test]
+fn a_new_line_shows_a_faded_subtitle_and_its_display_time_counts_from_then() {
+    let mut r = vr_ui();
+    to_form(&mut r, "single_line", "HMD", true);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
+    r.w.sizes[pi].last_update = Instant::now() - Duration::from_secs(60);
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    r.run.reveal_panel();
+    // a capture not sent (the same picture): not yet
+    r.run.after_transfer(&mut r.w, Instant::now(), false);
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    r.run.after_transfer(&mut r.w, Instant::now(), true);
+    r.frame(20);
+    assert_eq!(alpha_of(&r, "panel"), 1.0);
+    assert!(r.w.sizes[pi].last_update.elapsed() < Duration::from_secs(1));
+}
+
+#[test]
+fn a_subtitle_opened_again_waits_for_its_new_picture() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", true);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
+    r.w.vr_windows_wanted = (false, false, false);
+    r.frame(0);
+    r.w.vr_windows_wanted = (true, false, false);
+    r.frame(0);
+    assert!(r.run.panel_hidden_since.is_some());
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+}
+
+#[test]
+fn a_subtitle_may_be_lower_than_the_history() {
+    let mut r = vr_ui();
+    let pi = r.index("panel");
+    let low = Settings { panel_size: Some((1200, 180)), ..r.w.sizes[pi].settings.clone() };
+    r.run.apply_panel_form(&mut r.w, "single_line".into(), low.clone(), true);
+    assert_eq!(r.w.layout.panel_size(), (1200, 180));
+    r.run.apply_panel_form(&mut r.w, "history".into(), low, false);
+    assert_eq!(r.w.layout.panel_size(), (1200, 400));
+}
+
+#[test]
+fn changing_form_drops_an_anchor_asked_for_the_form_before() {
+    let mut r = vr_ui();
+    r.w.requested_anchor = Some("LeftHand".into());
+    to_form(&mut r, "single_line", "HMD", true);
+    assert_eq!(r.w.requested_anchor, None);
+}
+
+#[test]
+fn a_worker_made_again_after_a_stop_keeps_the_form_and_lock() {
+    let mut r = vr_ui();
+    to_form(&mut r, "single_line", "HMD", true);
+    r.w.publish(false);
+    let shared = r.w.shared.lock().unwrap().clone();
+    let (_commands, received) = command_wait::channel();
+    let again = Worker::from_shared(shared, received, Arc::new(|_| {}), Arc::new(|_| {}));
+    assert_eq!((again.panel_form.as_str(), again.panel_locked, again.layout), ("single_line", true, r.w.layout));
 }
 
 #[test]
@@ -1049,7 +1185,7 @@ fn resizing_stops_at_the_largest_size() {
     r.buttons(RIGHT, 0);
     r.frame(20);
     let (w, h) = r.w.sizes[pi].settings.panel_size.unwrap();
-    assert_eq!((w, h), crate::layout::clamp_panel_size(1e9, 1e9));
+    assert_eq!((w, h), crate::layout::clamp_panel_size(1e9, 1e9, 400));
 }
 
 /// The keyboard alone (no log), in front of the head; what it told meanwhile cleared

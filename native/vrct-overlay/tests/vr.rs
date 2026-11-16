@@ -182,7 +182,7 @@ fn layout_matches_python() {
         assert!(off <= 4 * 4 * 6 + 4 * 4 + 8, "tooltip mask {panel:?} {image:?}: {off} px differ");
     }
     for c in data["clamps"].as_array().unwrap() {
-        let (w, h) = layout::clamp_panel_size(f(&c[0]), f(&c[1]));
+        let (w, h) = layout::clamp_panel_size(f(&c[0]), f(&c[1]), layout::PANEL_SIZE_RANGE.0.1);
         assert_eq!(vec![w, h], ints(&c[2]), "{c}");
     }
 }
