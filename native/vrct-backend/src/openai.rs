@@ -52,11 +52,17 @@ pub fn send(http: &Http, method: Method, url: &str, headers: &[(&str, String)], 
     let mut retries = 0u32;
     loop {
         let wait = match http.send(method.clone(), url, headers, body(), Some(timeout)) {
+            // response.json() in two steps: a body cut off while it is read is the connection's
+            // failure (retried as the SDK does), a body that is not JSON is not
+            Ok(response) if response.status().is_success() => match response.bytes() {
+                Ok(body) => return serde_json::from_slice(&body).map_err(|e| Error::Other(e.to_string())),
+                Err(e) if retries >= 2 => {
+                    return Err(if e.is_timeout() { Error::Timeout } else { Error::Connection(format!("{e:#}")) });
+                }
+                Err(_) => None,
+            },
             Ok(response) => {
                 let status = response.status().as_u16();
-                if response.status().is_success() {
-                    return response.json().map_err(|e| Error::Other(e.to_string()));
-                }
                 let should_retry = match response.headers().get("x-should-retry").and_then(|v| v.to_str().ok()) {
                     Some("true") => true,
                     Some("false") => false,
@@ -94,4 +100,52 @@ pub fn list_models(http: &Http, base: &str, api_key: &str, timeout: Duration) ->
     let headers = [("accept", "application/json".to_string()), ("authorization", format!("Bearer {api_key}"))];
     let response = send(http, Method::GET, &url(base, "models"), &headers, &|| None, timeout)?;
     Ok(response.get("data").and_then(Value::as_array).cloned().unwrap_or_default())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::{Read, Write};
+    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::Arc;
+
+    /// A server answering 200 with each of `bodies` in turn: (what Content-Length says, what is sent)
+    fn server(bodies: &'static [(usize, &'static str)]) -> (String, Arc<AtomicU32>) {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let count = Arc::new(AtomicU32::new(0));
+        let seen = count.clone();
+        std::thread::spawn(move || {
+            for (stream, (length, body)) in listener.incoming().zip(bodies.iter().cycle()) {
+                let mut stream = stream.unwrap();
+                seen.fetch_add(1, Ordering::SeqCst);
+                let _ = stream.read(&mut [0u8; 4096]);
+                let _ = write!(stream, "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {length}\r\nconnection: close\r\n\r\n{body}");
+                // dropped here: a shorter body than promised is cut off
+            }
+        });
+        (base, count)
+    }
+
+    #[test]
+    fn a_body_cut_off_is_a_connection_failure_and_retried() {
+        let (base, count) = server(&[(100, "{\"data\":")]);
+        let e = list_models(&Http::new().unwrap(), &base, "k", Duration::from_secs(5)).unwrap_err();
+        assert!(matches!(e, Error::Connection(_)), "{e:?}");
+        assert_eq!(count.load(Ordering::SeqCst), 3);
+    }
+
+    #[test]
+    fn a_body_cut_off_once_is_read_again() {
+        let (base, _) = server(&[(100, "{\"data\":"), (11, "{\"data\":[]}")]);
+        assert_eq!(list_models(&Http::new().unwrap(), &base, "k", Duration::from_secs(5)).unwrap(), Vec::<Value>::new());
+    }
+
+    #[test]
+    fn a_whole_body_that_is_not_json_is_not_retried() {
+        let (base, count) = server(&[(8, "not json")]);
+        let e = list_models(&Http::new().unwrap(), &base, "k", Duration::from_secs(5)).unwrap_err();
+        assert!(matches!(e, Error::Other(_)), "{e:?}");
+        assert_eq!(count.load(Ordering::SeqCst), 1);
+    }
 }

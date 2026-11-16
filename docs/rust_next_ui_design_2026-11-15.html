@@ -1,0 +1,338 @@
+<title>VRCT 次期 UI デザイン</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 構成: 1 列の読み物。各節は「説明 → アプリの画面を模した枠」。枠の中だけ VRCT の実際の配色を使う。 */
+:root{
+  color-scheme:dark;
+  --bg:#151517; --page:#1f2022; --panel:#292a2d; --panel2:#323336; --line:#434447; --line2:#5b5c5f;
+  --fg:#f2f2f2; --sub:#a9aaae; --dim:#7f8084;
+  --primary:#48a495; --primary-d:#368777; --primary-l:#8acac0; --primary-bg:#36877744;
+  --sent:#6197b4; --recv:#a861b4; --warn:#cb944f; --err:#bb4448;
+  --font:"Noto Sans JP","Yu Gothic UI","Meiryo",system-ui,sans-serif;
+  --mono:"Cascadia Mono","Consolas",monospace;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.7;
+  padding-block:32px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1{font-size:26px;margin:0;font-weight:600;text-wrap:balance}
+h2{font-size:18px;margin:0 0 4px;font-weight:600;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+h2 .ph{font:600 12px var(--mono);color:var(--primary-l);border:1px solid var(--primary-d);border-radius:4px;padding:1px 7px}
+p{margin:0;color:var(--sub);max-width:70ch}
+.lead{color:var(--sub)}
+.note{font-size:13px;color:var(--sub);border-left:3px solid var(--warn);padding:2px 0 2px 12px;max-width:70ch}
+section{display:flex;flex-direction:column;gap:12px}
+ul.pts{margin:0;padding-left:20px;color:var(--sub);max-width:72ch}
+ul.pts b{color:var(--fg);font-weight:600}
+
+/* アプリの枠 */
+.app{background:var(--page);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.app .bar{background:var(--bg);padding:7px 14px;font-size:12px;color:var(--dim);display:flex;justify-content:space-between;gap:8px}
+.cfg{display:grid;grid-template-columns:170px minmax(0,1fr)}
+.side{background:var(--panel);padding:12px 0;display:flex;flex-direction:column}
+.side span{padding:8px 18px;color:var(--sub);font-size:13px}
+.side .on{color:var(--fg);background:var(--primary-bg);box-shadow:inset 3px 0 0 var(--primary)}
+.side .new::after{content:"新";font-size:10px;margin-left:8px;color:var(--bg);background:var(--primary-l);border-radius:3px;padding:0 4px}
+.main{padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tabs span{padding:7px 14px;color:var(--sub);font-size:13px}
+.tabs .on{color:var(--fg);border-bottom:2px solid var(--primary)}
+.sec{font-size:12px;color:var(--dim);letter-spacing:.06em;margin-top:4px}
+.row{background:var(--panel);border-radius:6px;padding:11px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.row.sel{box-shadow:inset 0 0 0 1px var(--primary)}
+.row .nm{flex:1 1 220px;min-width:0}
+.row .nm b{display:block;font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.row .nm small{color:var(--sub);font-size:12px}
+.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{font-size:11px;border:1px solid var(--line2);color:var(--sub);border-radius:10px;padding:0 8px;white-space:nowrap}
+.chip.ok{border-color:var(--primary-d);color:var(--primary-l)}
+.chip.warn{border-color:var(--warn);color:var(--warn)}
+.size{font:12px var(--mono);color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
+.btn{font:inherit;font-size:12px;border:0;border-radius:5px;padding:6px 12px;background:var(--panel2);color:var(--fg);white-space:nowrap}
+.btn.pri{background:var(--primary-d)}
+.btn.ghost{background:none;border:1px solid var(--line2);color:var(--sub)}
+.btn[disabled]{opacity:.45}
+.radio{width:14px;height:14px;border-radius:50%;border:2px solid var(--line2);flex:none}
+.radio.on{border-color:var(--primary);background:radial-gradient(var(--primary) 45%,transparent 50%)}
+.search{display:flex;gap:8px;flex-wrap:wrap}
+.input{flex:1 1 200px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:7px 10px;color:var(--fg);font-size:13px;min-width:0}
+.sel-box{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:6px 26px 6px 10px;font-size:12px;color:var(--fg);position:relative;white-space:nowrap}
+.sel-box::after{content:"▾";position:absolute;right:8px;color:var(--dim)}
+.prog{flex:1 1 100%;height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--primary)}
+.field{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:14px;align-items:center;background:var(--panel);border-radius:6px;padding:12px 14px}
+.field .lb b{display:block;font-weight:600}
+.field .lb small{color:var(--sub);font-size:12px}
+.field .ct{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.msg{font-size:12px;padding:8px 12px;border-radius:5px;background:var(--panel);color:var(--sub);border-left:3px solid var(--primary)}
+.msg.w{border-left-color:var(--warn)}
+
+/* VR */
+.vr{background:radial-gradient(120% 90% at 50% 10%,#2b3440,#12151a 70%);padding:28px 16px;display:flex;flex-direction:column;gap:18px;align-items:center}
+/* MSKB のキーボードの見た目（1 段 15 キー分、JIS）。幅は flex の比で表す */
+.kb{--kw:#2c2d30;--key:#35363a;--fnk:#27282b;--grn:#2c3d37;width:min(100%,760px);background:var(--kw);border-radius:10px;overflow:hidden;font-size:clamp(8px,1.9vw,15px)}
+.kb .top{background:#222326;display:flex;gap:1.2em;align-items:center;padding:.5em .9em;color:var(--sub);font-size:1.15em}
+.kb .top .logo{font:700 .7em var(--mono);background:#e9e4d6;color:#222;border-radius:.3em;padding:.1em .35em;margin-right:auto}
+.kb .body{padding:.6em;display:flex;flex-direction:column;gap:.38em}
+.comp{background:#141517;border-radius:.6em;padding:1.1em 1em;font-size:1.35em;display:flex;align-items:center;gap:1em}
+.comp .tx{flex:1;min-width:0}
+.comp u{text-decoration:none;background:#2c3d37;border-bottom:2px solid var(--primary-l);padding:0 .1em}
+.comp .cur{border-left:2px solid var(--primary-l);margin-left:1px}
+.comp .ic{color:var(--sub);font-size:.8em}.comp .ic.g{color:var(--primary-l)}
+.cand{display:flex;gap:.38em;align-items:center;min-height:2.6em}
+.cand span{background:#5a5b5f;border-radius:.4em;padding:.4em .9em;font-size:1.05em;white-space:nowrap}
+.cand .on{background:var(--grn)}.cand .sm{font-size:.7em;font-weight:700}
+.cand .pg{background:var(--key);color:var(--dim);padding:.4em 1.1em}.cand .sp{flex:1;background:none}
+.kr{display:flex;gap:.38em}
+.k{flex:1 1 0;min-width:0;background:var(--key);border-radius:.45em;height:3.1em;display:grid;place-items:center;position:relative;font-size:1.05em;font-weight:600;box-shadow:0 2px 0 #1d1e20}
+.k sup{position:absolute;left:.5em;top:.25em;font-size:.72em;font-weight:400;color:var(--sub);line-height:1}
+.k.fn{background:var(--fnk);font-size:.9em;color:#d8d9dd}
+.k.grn{background:var(--grn)}
+.k.gl{color:var(--primary-l)}
+.k.cut{background:none;box-shadow:none;border:1px dashed var(--line2);color:var(--dim);font-size:.75em;font-weight:400}
+.k .ud{display:flex;flex-direction:column;font-size:.7em;line-height:1.25}
+.vrnote{width:min(100%,460px);background:#1a1b1dee;border:1px solid var(--warn);border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.vrnote b{flex:1 1 200px;font-weight:600;font-size:13px}
+.sub{width:min(100%,520px);display:flex;gap:10px;align-items:center}
+.sub .box{flex:1;background:#000a;border-radius:8px;padding:8px 14px;font-size:15px;min-width:0}
+.sub .box small{display:block;color:var(--primary-l);font-size:12px}
+.lock{width:30px;height:30px;border-radius:6px;background:var(--primary-d);display:grid;place-items:center;font-size:14px;flex:none}
+
+table{border-collapse:collapse;font-size:13px;width:100%}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:500;font-size:12px}
+td code{font-family:var(--mono);font-size:12px;color:var(--primary-l)}
+.tw{overflow-x:auto}
+
+@media (max-width:640px){
+  .cfg{grid-template-columns:1fr}
+  .side{flex-direction:row;overflow-x:auto;padding:0}
+  .side span{white-space:nowrap}
+  .field{grid-template-columns:1fr}
+  .field .ct{justify-content:flex-start}
+  .k{font-size:10px;padding:6px 0}
+}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>VRCT 次期 UI デザイン</h1>
+  <p class="lead">Rust 版の次期開発（設計書: <code>docs/rust_next_design_2026-11-15.md</code>）で、画面が変わる所の案です。承認待ち。配色と部品は今の設定画面のものを使い、新しい見た目は足していません。文言は日本語だけ示します（5 言語の訳は実装時）。</p>
+</header>
+
+<section>
+  <h2><span class="ph">P4</span>設定 → モデル（新しいページ）</h2>
+  <p>今は「翻訳」「文字起こし」の中にモデルの選択とダウンロードが分かれています。これを 1 ページにまとめ、入っているもの・使っているもの・大きさを見えるようにします（#77）。元の場所にも選択は残し、「モデルを管理」からここへ飛びます。</p>
+  <div class="app">
+    <div class="bar"><span>設定</span><span>VRCT</span></div>
+    <div class="cfg">
+      <div class="side">
+        <span>デバイス</span><span>外観</span><span>翻訳</span><span>文字起こし</span><span>OCR</span>
+        <span class="on new">モデル</span><span>VR</span><span>その他</span><span>詳細設定</span>
+      </div>
+      <div class="main">
+        <div class="tabs"><span class="on">文字起こし</span><span>翻訳</span><span>OCR</span></div>
+
+        <div class="sec">入っているモデル　<span class="size">合計 2.3 GB</span></div>
+        <div class="row sel">
+          <i class="radio on"></i>
+          <div class="nm"><b>large-v3-turbo-int8</b><small>Zoont/faster-whisper-large-v3-turbo-int8-ct2</small></div>
+          <div class="meta"><span class="chip ok">使用中</span><span class="chip">おすすめ</span><span class="size">794 MB</span></div>
+          <button class="btn ghost" disabled>削除</button>
+        </div>
+        <div class="row">
+          <i class="radio"></i>
+          <div class="nm"><b>kotoba-whisper-v2.0-faster</b><small>kotoba-tech/kotoba-whisper-v2.0-faster ・ Hugging Face から追加</small></div>
+          <div class="meta"><span class="chip">MIT</span><span class="size">1.5 GB</span></div>
+          <button class="btn ghost">削除</button>
+        </div>
+
+        <div class="sec">おすすめ（未取得）</div>
+        <div class="row">
+          <div class="nm"><b>small</b><small>Systran/faster-whisper-small</small></div>
+          <div class="meta"><span class="chip">MIT</span><span class="size">484 MB</span></div>
+          <button class="btn pri">ダウンロード</button>
+        </div>
+        <div class="row">
+          <div class="nm"><b>large-v3</b><small>Systran/faster-whisper-large-v3</small></div>
+          <div class="meta"><span class="size">1.9 / 3.1 GB</span></div>
+          <button class="btn">中止</button>
+          <div class="prog"><i style="width:61%"></i></div>
+        </div>
+
+        <div class="sec">Hugging Face から探す</div>
+        <div class="search">
+          <div class="input">whisper ja</div>
+          <span class="sel-box">ダウンロード数順</span>
+          <button class="btn pri">検索</button>
+        </div>
+        <div class="row">
+          <div class="nm"><b>deepdml/faster-whisper-large-v3-turbo-ct2</b><small>多言語 ・ 月 41 万回ダウンロード</small></div>
+          <div class="meta"><span class="chip">MIT</span><span class="size">1.6 GB</span></div>
+          <button class="btn pri">ダウンロード</button>
+        </div>
+        <div class="row">
+          <div class="nm"><b>example-org/whisper-gated-ct2</b><small>利用の申請が要るモデルです</small></div>
+          <div class="meta"><span class="chip warn">申請制</span><span class="size">3.1 GB</span></div>
+          <button class="btn" disabled>取得できません</button>
+        </div>
+        <div class="msg">この用途で動く形式（CTranslate2 の Whisper）だけを表示しています。ライセンスは各モデルの作者が付けたものです。</div>
+      </div>
+    </div>
+  </div>
+  <ul class="pts">
+    <li><b>選ぶ</b>のは左の丸、<b>入れる・消す</b>のは右のボタン。使用中のモデルは消せません。</li>
+    <li>翻訳タブは同じ並びで、CTranslate2（NLLB / M2M100）と GGUF（内蔵 LLM 用、P5）を見出しで分けます。GGUF は量子化（Q4_K_M など）を行の中のプルダウンで選びます。</li>
+    <li>空き容量が足りないときは、ダウンロードのボタンの代わりに「空き容量が足りません（あと 1.2 GB）」を出します。</li>
+    <li>検索に失敗したとき（通信・回数の上限）は、一覧の位置に理由と「もう一度」を出します。おすすめの一覧は通信なしで表示できます。</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="ph">P3</span>GPU ランタイム</h2>
+  <p>インストーラは今のまま（エディション別）で、CPU 版・CUDA 版に AMD 版を足します。画面の変更は、アップデーターの版の選択肢が 1 つ増えることだけです。計算デバイスの行は今の部品のままで、名前に Radeon が出ます。</p>
+  <div class="app">
+    <div class="bar"><span>設定 → その他 → アップデート（今の画面に選択肢を 1 つ追加）</span><span></span></div>
+    <div class="main">
+      <div class="row sel">
+        <i class="radio on"></i>
+        <div class="nm"><b>CPU 版</b><small>どの PC でも動きます</small></div>
+        <div class="meta"><span class="chip ok">今の版</span></div>
+      </div>
+      <div class="row">
+        <i class="radio"></i>
+        <div class="nm"><b>CUDA 版</b><small>NVIDIA の GPU</small></div>
+        <div class="meta"><span class="size">約 4 GB</span></div>
+      </div>
+      <div class="row">
+        <i class="radio"></i>
+        <div class="nm"><b>AMD 版</b><small>Radeon RX 6000 / 7000 / 9000 系</small></div>
+        <div class="meta"><span class="chip">新</span><span class="size">大きさは実機の確認後に確定</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="app">
+    <div class="bar"><span>設定 → 文字起こし（AMD 版。今の部品のまま）</span><span></span></div>
+    <div class="main">
+      <div class="field">
+        <div class="lb"><b>文字起こしの計算デバイス</b><small>今の説明文のまま。</small></div>
+        <div class="ct"><span class="sel-box">AMD Radeon RX 7800 XT</span><span class="sel-box">int8_float16</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note">対応する GPU の範囲と使える計算の型は、実機の確認（設計書 P3-0）の後に確定します。</p>
+</section>
+
+<section>
+  <h2><span class="ph">P5</span><span class="ph">P6</span>翻訳エンジンと OCR エンジン</h2>
+  <p>今の「ローカル LLM」（LM Studio / Ollama）の並びに「内蔵 LLM」を足します。外のアプリを入れなくても、VRCT が自分で動かします。文字起こしのエンジンには「内蔵（speech.cpp）」を足します。どちらも実行ファイルはインストーラに入れず、初めて選んだときに取得します。OCR は評価が先で、良いものがあればエンジンを選ぶ行を足します。</p>
+  <div class="app">
+    <div class="bar"><span>設定 → 文字起こし → 文字起こしエンジン</span><span></span></div>
+    <div class="main">
+      <div class="field">
+        <div class="lb"><b>文字起こしエンジン</b><small>今の選択肢に 1 つ追加。既定は変えません。</small></div>
+        <div class="ct"><span class="sel-box">内蔵（speech.cpp）</span></div>
+      </div>
+      <div class="field">
+        <div class="lb"><b>実行ファイル</b><small>未取得のときだけ、この行が出ます。</small></div>
+        <div class="ct"><span class="chip warn">未取得</span><button class="btn pri">取得する</button></div>
+      </div>
+      <div class="field">
+        <div class="lb"><b>モデル</b><small>「モデル」ページで追加できます。</small></div>
+        <div class="ct"><span class="sel-box">Qwen3-ASR 0.6B（30 言語）</span><button class="btn ghost">モデルを管理</button></div>
+      </div>
+      <div class="msg">入れるかどうかは、今の Whisper との比較（精度・遅延・VRChat を動かしながらの負荷）の結果で決めます。</div>
+    </div>
+  </div>
+  <div class="app">
+    <div class="bar"><span>設定 → 翻訳 → ローカル LLM</span><span></span></div>
+    <div class="main">
+      <div class="field">
+        <div class="lb"><b>内蔵 LLM（llama.cpp）</b><small>選んだときに起動します。起動に数秒かかります。</small></div>
+        <div class="ct"><span class="chip ok">起動中 ・ Vulkan</span><button class="btn">停止</button></div>
+      </div>
+      <div class="field">
+        <div class="lb"><b>モデル</b><small>GGUF 形式。「モデル」ページで追加できます。</small></div>
+        <div class="ct"><span class="sel-box">HY-MT1.5-1.8B ・ Q4_K_M（1.1 GB）</span><button class="btn ghost">モデルを管理</button></div>
+      </div>
+      <div class="field">
+        <div class="lb"><b>GPU に載せる量</b><small>VRChat が重くなるときは下げてください。0 で CPU だけ。</small></div>
+        <div class="ct"><span class="sel-box">すべて</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="app">
+    <div class="bar"><span>設定 → OCR → 詳細</span><span></span></div>
+    <div class="main">
+      <div class="field">
+        <div class="lb"><b>文字を読むエンジン</b><small>吹き出しを見つける処理は共通です。</small></div>
+        <div class="ct"><span class="sel-box">標準（RapidOCR）</span></div>
+      </div>
+      <div class="msg">候補: 標準（RapidOCR）／ Indra OCR（ONNX、CPU 向け）／ VLM（内蔵 LLM で読む。Xiaomi-OCR-0 など）。<br>評価で今より良いと分かったものだけを選択肢に出します。評価の前は、この行自体を出しません。</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="ph">P2</span>VR: キーボード</h2>
+  <p>見た目は MSKB を踏襲します（1 段 15 キー分の JIS / US 配列、2 段にまたがる Enter、濃い色の機能キー、緑の Enter と空白、灰色の候補）。機能は 2026-11-05 に決めた範囲に制限し、MSKB にあって VRCT に入れないキーは抜いて、空いた幅は空白キーに足します。</p>
+  <div class="app">
+    <div class="vr">
+      <div class="kb">
+        <div class="top"><span class="logo">VRCT</span><span>⚙</span><span>📌</span><span>✕</span></div>
+        <div class="body">
+          <div class="comp"><span class="tx"><u>にほんご</u><i class="cur"></i></span><span class="ic">✕</span><span class="ic g">💬</span></div>
+          <div class="cand"><span class="on">日本語</span><span>ニホンゴ</span><span>日本</span><span>にほん</span><span>ニホン</span><span>二本</span><span class="sm">JP</span><span class="sp"></span><span class="pg">‹</span><span class="pg">›</span></div>
+          <div class="kr"><span class="k fn gl">半/全</span><span class="k"><sup>!</sup>1</span><span class="k"><sup>"</sup>2</span><span class="k"><sup>#</sup>3</span><span class="k"><sup>$</sup>4</span><span class="k"><sup>%</sup>5</span><span class="k"><sup>&amp;</sup>6</span><span class="k"><sup>'</sup>7</span><span class="k"><sup>(</sup>8</span><span class="k"><sup>)</sup>9</span><span class="k">0</span><span class="k"><sup>=</sup>-</span><span class="k"><sup>~</sup>^</span><span class="k"><sup>|</sup>¥</span><span class="k fn">←</span></div>
+          <div class="kr"><span class="k fn" style="flex:1.5">Tab</span><span class="k">q</span><span class="k">w</span><span class="k">e</span><span class="k">r</span><span class="k">t</span><span class="k">y</span><span class="k">u</span><span class="k">i</span><span class="k">o</span><span class="k">p</span><span class="k"><sup>`</sup>@</span><span class="k"><sup>{</sup>「</span><span class="k grn" style="flex:1.5">↵</span></div>
+          <div class="kr"><span class="k fn" style="flex:1.75">Caps</span><span class="k">a</span><span class="k">s</span><span class="k">d</span><span class="k">f</span><span class="k">g</span><span class="k">h</span><span class="k">j</span><span class="k">k</span><span class="k">l</span><span class="k"><sup>+</sup>;</span><span class="k"><sup>*</sup>:</span><span class="k"><sup>}</sup>」</span><span class="k grn" style="flex:1.25"></span></div>
+          <div class="kr"><span class="k fn" style="flex:2.25">⇧</span><span class="k">z</span><span class="k">x</span><span class="k">c</span><span class="k">v</span><span class="k">b</span><span class="k">n</span><span class="k">m</span><span class="k"><sup>&lt;</sup>、</span><span class="k"><sup>&gt;</sup>。</span><span class="k"><sup>?</sup>・</span><span class="k"><sup>_</sup>＼</span><span class="k fn" style="flex:1.75">⇧</span></div>
+          <div class="kr"><span class="k fn" style="flex:1.75">Ctrl</span><span class="k fn" style="flex:1.25">🌐</span><span class="k grn" style="flex:7.75"></span><span class="k fn" style="flex:1.25">🎤</span><span class="k fn">◀</span><span class="k fn"><span class="ud"><span>▲</span><span>▼</span></span></span><span class="k fn">▶</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tw"><table>
+    <tr><th>MSKB の部品</th><th>VRCT</th></tr>
+    <tr><td>キーの配置・寸法（15 キー分、キー 72px + すき間 6px）、L 字の Enter、機能キーの色、候補の並びとページ送り、変換中の下線、言語メニュー（🌐）</td><td>同じ</td></tr>
+    <tr><td>タイトルバー（ロゴ・歯車・ピン・閉じる）、入力欄の「消す」と「送り先」</td><td>同じ（ロゴは VRCT、送り先は「VRCT で送る＝翻訳」と「VRChat に貼る」）</td></tr>
+    <tr><td><code>#+=</code>（記号・絵文字・顔文字のページ）</td><td>抜く。空白キーを 7.75 キー分に広げる</td></tr>
+    <tr><td>言語メニューの「日本語（フリック）」、英単語の予測候補</td><td>出さない</td></tr>
+    <tr><td>歯車の中の色・背景画像・音のカスタム</td><td>出さない。歯車の中は不透明度・キーの音（ON/OFF と音量）・大きさ・入力中の表示・ショートカット</td></tr>
+    <tr><td>配色</td><td>MSKB の標準の色に固定（上の図）</td></tr>
+  </table></div>
+  <ul class="pts">
+    <li><b>▲▼</b> は VRCT の送信履歴、<b>🎤</b> は VRCT の文字起こしを使ってこの欄に入れます（マイク入力の ON とは別）。</li>
+    <li><b>指している間</b>は、その手のトリガーと A/B/X/Y を VRChat に渡しません。字幕・ログ窓・ランチャーも同じです（SteamVR の設定「Enable global input from overlays」が必要。未設定なら VR の設定欄に手順を出します）。</li>
+    <li>押したとき・ホバーしたときに短く振動します。設定でオフにできます。</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="ph">P0</span><span class="ph">P1</span>VR: 字幕のロックと、止まったときの知らせ</h2>
+  <p>字幕のロックは v3.6.1 と同じ（設定画面の「位置/回転」の右の鍵。1 行・複数行で別々）。VR の中では掴めなくなるだけで、鍵の絵は出しません。下は説明用です。</p>
+  <div class="app">
+    <div class="vr">
+      <div class="sub"><div class="box"><small>こんにちは、元気ですか？</small>Hello, how are you?</div><span class="lock" title="設定画面の鍵">🔒</span></div>
+    </div>
+  </div>
+  <ul class="pts">
+    <li>#127: 1 回の通信の失敗では止めず、その文だけ飛ばします（画面には出さず、ログに 1 行）。</li>
+    <li>一時的な失敗が連続 5 回続いたら、異常とみなして止め、今ある通知で知らせます。新しい部品は足しません。</li>
+  </ul>
+</section>
+
+<section>
+  <h2>足す文言と設定の一覧</h2>
+  <div class="tw"><table>
+    <tr><th>段階</th><th>画面</th><th>足すもの</th><th>設定キー（案）</th></tr>
+    <tr><td>P0</td><td>設定 → VR</td><td>字幕の鍵ボタン 2 つ（master から持ってくる）</td><td><code>OVERLAY_*_LOG_SETTINGS.locked</code></td></tr>
+    <tr><td>P1</td><td>設定 → 文字起こし</td><td>No Speech Prob の説明文の書き直し（5 言語）</td><td>なし</td></tr>
+    <tr><td>P2</td><td>VR</td><td>キーボードの窓（MSKB の見た目）、歯車の中の設定</td><td><code>KEYBOARD_*</code>（移植済みのブランチのもの）</td></tr>
+    <tr><td>P3</td><td>設定 → その他</td><td>アップデーターの版に「AMD 版」</td><td>なし（エディションはビルドで決まる）</td></tr>
+    <tr><td>P5</td><td>設定 → 文字起こし</td><td>エンジンに「内蔵（speech.cpp）」とモデルの行（評価の後）</td><td><code>BUILTIN_ASR_MODEL</code></td></tr>
+    <tr><td>P4</td><td>設定 → モデル</td><td>ページ全体、検索、接続先</td><td><code>HF_ENDPOINT</code>、<code>*_WEIGHT_TYPE</code> に <code>hub:…</code> の値</td></tr>
+    <tr><td>P5</td><td>設定 → 翻訳</td><td>内蔵 LLM の 3 行</td><td><code>BUILTIN_LLM_MODEL</code>、<code>BUILTIN_LLM_GPU_LAYERS</code></td></tr>
+    <tr><td>P6</td><td>設定 → OCR</td><td>エンジンの 1 行（評価の後）</td><td><code>OCR_ENGINE</code></td></tr>
+  </table></div>
+</section>
+</div>

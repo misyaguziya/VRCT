@@ -264,6 +264,9 @@ config_page:
             desc: "检测出被记录的单词时,不会发送这段话\n如要添加多个单词,可以用逗号来分割\n※不会记录重复的单词"
             add_button_label: "添加"
             count_desc: "现在被记录的单词数: {{count}}"
+        mic_vad_filter:
+            label: "麦克风VAD过滤器"
+            desc: "检测到静音区间后，再将音频发送至语音识别。如果说话途中转录停止，请关闭此设置。"
         speaker_record_timeout:
             label: "语音接收结束后的静音时间"
             desc: "当检测到静音并经过设定的秒数后，语音接收即被视为完成。"
@@ -273,6 +276,9 @@ config_page:
         speaker_max_phrase:
             label: "扬声器最大等待消息数"
             desc: "转录后的消息在显示到日志前最多可以积压的数量。超过后,最旧的消息会被丢弃,不会显示。"
+        speaker_vad_filter:
+            label: "扬声器VAD过滤器"
+            desc: "检测到静音区间后，再将音频发送至语音识别。如果游戏音效或语音聊天连续播放时转录停止，或显示“语音识别请求失败”，请关闭此设置。"
         select_transcription_engine:
             label: "语音识别使用的引擎"
         whisper_weight_type:
