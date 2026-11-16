@@ -132,7 +132,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
     // Space と ↵ は何も添えない (読み上げ用の名前だけ。↵ の送る先は入力欄の右端の印)
     const space_name = !composing ? t("vr_panel.keyboard.space")
         : language === "ja" ? t("vr_panel.keyboard.convert") : t("vr_panel.keyboard.select_first");
-    const enter_name = composing ? t("vr_panel.keyboard.commit") : is_newline ? t("vr_panel.keyboard.newline") : t("vr_panel.keyboard.send_to");
+    const enter_name = composing ? t("vr_panel.keyboard.commit") : is_newline ? t("vr_panel.keyboard.newline") : t(`vr_panel.keyboard.send_${send_to}`);
     // Ctrl・Shift・Caps のように押したままの状態を持つキー
     const modKey = (id, label, aria, pressed, locked, onPress, sound, w) => (
         <button key={id} type="button" className={clsx(styles.key, styles.mod, { [styles.ctrl]: id !== "shift", [styles.is_locked]: locked })}
@@ -214,7 +214,7 @@ export const VrKeyboardWindow = ({ onClose }) => {
         <ConfigurationSvg className={styles.gear_icon} aria-hidden="true" />
     </button>;
     // ↵ で送る先: 入力欄の右端に今の送る先の印だけ。押すたびに切り替わる
-    const send_to_button = <button type="button" className={styles.send_to} aria-label={t(`vr_panel.keyboard.send_${send_to}`)}
+    const send_to_button = <button type="button" className={styles.send_to} aria-label={`${t("vr_panel.keyboard.send_to")}: ${t(`vr_panel.keyboard.send_${send_to}`)}`}
         onMouseDown={press(() => setKeyboardSendTo(send_to === "paste" ? "vrct" : "paste"), "soft", "send_to")}>
         <SendToIcon to={send_to} />
     </button>;
