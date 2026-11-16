@@ -158,8 +158,9 @@ export const VrKeyboardWindow = ({ onClose }) => {
         if (item.gap) return <span key={`gap-${index}`} className={styles.gap} style={{ width: widthOf(item.gap) }} aria-hidden="true" />;
         const w = widthOf(item.w);
         switch (item.special) {
+            // Ctrl の間は押せない (単語ごとの削除は無い。押せると Ctrl が残ったまま1字ずつ消える)
             case "backspace":
-                return <Key press={press} key="backspace" sound="backspace" label={<BackspaceIcon />} w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready}
+                return <Key press={press} key="backspace" sound="backspace" label={<BackspaceIcon />} w={w} kind="mod" aria={t("vr_panel.keyboard.delete")} disabled={!is_ready || is_ctrl}
                     onPress={() => repeatKey("Backspace", "backspace", "backspace")} onLeave={repeat.stop} />;
             case "enter":
                 return <Key press={press} key="enter" sound="enter" label={<EnterIcon />} w={w} kind="act" aria={enter_name}
