@@ -764,12 +764,13 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "overlay_vr_panel_form",
     },
     {
-        // 字幕の形ごとの位置・大きさ・表示秒・消える秒・不透明度・ロック。VR で動かしたときもバックエンドから届く
+        // 字幕の形ごとの位置・大きさ・表示秒・消える秒・不透明度・文字の大きさ (訳文の px)・ロック。
+        // VR で動かしたときもバックエンドから届く
         Category: "Vr",
         Base_Name: "OverlayVrSubtitleSettings",
         default_value: {
-            multi_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, tracker: "LeftHand", locked: true },
-            single_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, tracker: "HMD", locked: true },
+            multi_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, font_size: 27, tracker: "LeftHand", locked: true },
+            single_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, font_size: 28, tracker: "HMD", locked: true },
         },
         ui_template_id: "object",
         logics_template_id: "get_set",

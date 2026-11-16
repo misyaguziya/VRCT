@@ -5,6 +5,7 @@ import { useVr } from "@logics_configs";
 import { VrTooltipButton } from "./VrTooltip";
 import shared from "./VrSettingsWindow.module.scss";
 import styles from "./VrToolbar.module.scss";
+import { SUBTITLE_FONT_SIZE } from "./subtitle_entries";
 
 const PATHS = {
     world: "M2 22l2.5-5h15l2.5 5zM12 2a4.5 4.5 0 0 0-4.5 4.5c0 3.4 4.5 8.5 4.5 8.5s4.5-5.1 4.5-8.5A4.5 4.5 0 0 0 12 2zM12 5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z", // 床に立てたピン
@@ -32,9 +33,18 @@ export const VrToolbar = () => {
         currentOverlayVrPanelLocked: locked, toggleOverlayVrPanelLocked,
         currentOverlayVrPanelOpacity: opacity, setOverlayVrPanelOpacity,
         currentOverlayVrPanelFontSize: font, setOverlayVrPanelFontSize,
-        currentOverlayVrPanelForm: form, setOverlayVrPanelForm } = useVr();
+        currentOverlayVrPanelForm: form, setOverlayVrPanelForm,
+        currentOverlayVrSubtitleSettings: subtitle, setOverlayVrSubtitleSettings } = useVr();
     const form_id = FORMS.includes(form.data) ? form.data : "history";
     const is_subtitle = form_id !== "history";
+    // 文字の大きさは形ごと: 履歴は OVERLAY_VR_PANEL_FONT_SIZE (原文の px)、字幕はその形の font_size (訳文の px)
+    const size = is_subtitle ? {
+        value: Number(subtitle.data?.[form_id]?.font_size ?? SUBTITLE_FONT_SIZE.default[form_id]), state: subtitle,
+        min: SUBTITLE_FONT_SIZE.min, max: SUBTITLE_FONT_SIZE.max, key: (name) => `${name}_subtitle`,
+        set: (value) => setOverlayVrSubtitleSettings({ [form_id]: { font_size: value } }),
+    } : {
+        value: font.data, state: font, min: FONT_SIZE.min, max: FONT_SIZE.max, key: (name) => name, set: setOverlayVrPanelFontSize,
+    };
     const nextForm = FORMS[(FORMS.indexOf(form_id) + 1) % FORMS.length];
     const currentAnchor = t(`vr_panel.${ANCHORS.find(([id]) => id === anchor.data)?.[1] ?? "anchor_playspace"}`);
     const current = t("vr_panel.tooltip.current");
@@ -65,15 +75,16 @@ export const VrToolbar = () => {
                 tipTitle={t("vr_panel.tooltip.form")} state={form} tipState={`${current}: ${t(`vr_panel.form_${form_id}`)}`}
                 tipHelp={t("vr_panel.tooltip.form_help")} onClick={() => setOverlayVrPanelForm(nextForm)}><Icon name={form_id} /></Button>
         </div>
-        {/* 字幕の形の文字の大きさは決まっている (オーバーレイの字幕と同じ) */}
-        {!is_subtitle && <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.font")}>
-            <Button className={styles.font_button} label={`${t("vr_panel.tooltip.smaller")}: ${font.data}`} state={font}
-                tipState={t("vr_panel.tooltip.font_current", { size: font.data })} tipHelp={t(`vr_panel.tooltip.${font.data <= FONT_SIZE.min ? "font_limit" : "font_help"}`)}
-                disabled={font.data <= FONT_SIZE.min} onClick={() => setOverlayVrPanelFontSize(font.data - 1)}>A−</Button>
-            <Button className={styles.font_button} label={`${t("vr_panel.tooltip.larger")}: ${font.data}`} state={font}
-                tipState={t("vr_panel.tooltip.font_current", { size: font.data })} tipHelp={t(`vr_panel.tooltip.${font.data >= FONT_SIZE.max ? "font_limit" : "font_help"}`)}
-                disabled={font.data >= FONT_SIZE.max} onClick={() => setOverlayVrPanelFontSize(font.data + 1)}>A＋</Button>
-        </div>}
+        <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.font")}>
+            <Button className={styles.font_button} label={`${t("vr_panel.tooltip.smaller")}: ${size.value}`} state={size.state}
+                tipState={t(`vr_panel.tooltip.${size.key("font_current")}`, { size: size.value })}
+                tipHelp={t(`vr_panel.tooltip.${size.key(size.value <= size.min ? "font_limit" : "font_help")}`)}
+                disabled={size.value <= size.min} onClick={() => size.set(size.value - 1)}>A−</Button>
+            <Button className={styles.font_button} label={`${t("vr_panel.tooltip.larger")}: ${size.value}`} state={size.state}
+                tipState={t(`vr_panel.tooltip.${size.key("font_current")}`, { size: size.value })}
+                tipHelp={t(`vr_panel.tooltip.${size.key(size.value >= size.max ? "font_limit" : "font_help")}`)}
+                disabled={size.value >= size.max} onClick={() => size.set(size.value + 1)}>A＋</Button>
+        </div>
         <div className={styles.group}>
             <Button className={styles.opacity_button} label={`${t("vr_panel.log_opacity")}: ${percent}%`} tipTitle={t("vr_panel.log_opacity")}
                 state={opacity} tipState={`${current}: ${percent}%`} tipHelp={t("vr_panel.tooltip.opacity_help")}

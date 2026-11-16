@@ -869,6 +869,17 @@ mod panel_form_tests {
         let reply = set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"opacity": 0.2, "height": 120, "ui_scaling": 3}}))).unwrap();
         let s = &reply.result["single_line"];
         assert_eq!((s["opacity"].clone(), s["height"].clone(), s["ui_scaling"].clone()), (json!(0.2), json!(120), json!(3.0)));
+        // the text size of a form (16-56 px; out of it or not an int: kept)
+        assert_eq!(app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS")["multi_line"]["font_size"], json!(27));
+        let size = |v: Value| set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"font_size": v}}))).unwrap()
+            .result["single_line"]["font_size"].clone();
+        assert_eq!(size(json!(40)), json!(40));
+        assert_eq!(size(json!(57)), json!(40));
+        assert_eq!(size(json!(15)), json!(40));
+        assert_eq!(size(json!(30.5)), json!(40));
+        assert_eq!(size(json!(16)), json!(16));
+        assert_eq!(size(json!(56)), json!(56));
+        assert_eq!(app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS")["multi_line"]["font_size"], json!(27));
         // an unknown form or key is refused
         assert_ne!(set_overlay_vr_subtitle_settings(&app, Some(json!({"triple_line": {}}))).unwrap().status, 200);
         assert_ne!(set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"colour": 1}}))).unwrap().status, 200);

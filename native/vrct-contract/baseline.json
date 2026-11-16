@@ -4883,6 +4883,7 @@
         "fadeout_duration": 2,
         "opacity": 1.0,
         "ui_scaling": 0.25,
+        "font_size": 27,
         "tracker": "LeftHand",
         "locked": true
       },
@@ -4899,6 +4900,7 @@
         "fadeout_duration": 2,
         "opacity": 1.0,
         "ui_scaling": 1.0,
+        "font_size": 28,
         "tracker": "HMD",
         "locked": true
       }
@@ -10326,6 +10328,7 @@
           "fadeout_duration": 2,
           "opacity": 1.0,
           "ui_scaling": 0.25,
+          "font_size": 27,
           "tracker": "LeftHand",
           "locked": true
         },
@@ -10342,6 +10345,7 @@
           "fadeout_duration": 2,
           "opacity": 0.6,
           "ui_scaling": 1.0,
+          "font_size": 28,
           "tracker": "HMD",
           "locked": true
         }
@@ -10384,6 +10388,7 @@
           "fadeout_duration": 2,
           "opacity": 1.0,
           "ui_scaling": 0.25,
+          "font_size": 27,
           "tracker": "LeftHand",
           "locked": true
         },
@@ -10400,6 +10405,7 @@
           "fadeout_duration": 0,
           "opacity": 0.6,
           "ui_scaling": 1.0,
+          "font_size": 28,
           "tracker": "HMD",
           "locked": true
         }

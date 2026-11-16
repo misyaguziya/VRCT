@@ -622,6 +622,9 @@ vr_panel:
         font_limit: "Text size range: 14–28"
         font_current: "Current: {{size}} (original)"
         font_help: "Translation size changes with it"
+        font_limit_subtitle: "Text size range: 16–56"
+        font_current_subtitle: "Current: {{size}} (translation)"
+        font_help_subtitle: "Original text size changes with it"
         opacity_help: "Each press: 100 → 80 → 60 → 40% → 100%"
     settings:
         processing: "Processing settings"

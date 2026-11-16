@@ -1,14 +1,17 @@
 import clsx from "clsx";
 import { MessageWithTransliteration } from "../app/main_page/main_section/message_container/log_box/message_container/MessageContainer";
 
+import { subtitleSmallFontSize } from "./subtitle_entries";
 import win from "./VrWindow.module.scss";
 import styles from "./VrSubtitleWindow.module.scss";
 
 // ログ窓の字幕の形。オーバーレイの small (1 行) / large (複数行) と同じ見た目の不透明な板。
+// 文字の大きさ (訳文の px、原文・時刻はその約 2/3) は形ごとに操作バーで変える。
 // 表示・消える演出はオーバーレイの不透明度だけで行う (ここに transition / animation を置かない)。
 // ロックを外している間だけ、角の取っ手を出す (当たり判定と大きさの変更は vrct-overlay)
-export const VrSubtitleWindow = ({ form, entries, is_locked }) => (
-    <div className={clsx(win.window, styles.board, styles[form])} data-vr-hoverable={is_locked ? undefined : ""}>
+export const VrSubtitleWindow = ({ form, entries, is_locked, font_size }) => (
+    <div className={clsx(win.window, styles.board, styles[form])} data-vr-hoverable={is_locked ? undefined : ""}
+        style={{ "--subtitle_large": `${font_size}px`, "--subtitle_small": `${subtitleSmallFontSize(font_size)}px` }}>
         <div className={styles.entries}>
             {entries.map(entry => (
                 <div key={entry.id} className={clsx(styles.entry, styles[entry.category])}>

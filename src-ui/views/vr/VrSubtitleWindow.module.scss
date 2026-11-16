@@ -1,6 +1,7 @@
 // ログ窓の字幕の形。オーバーレイの画像 (native/vrct-overlay/src/image.rs) と同じ色と比で描く。
 // 複数行は large (幅 1010px に文字 30 / 20px、余白 25) を既定の幅 900px に、
-// 1 行は small (板幅 3940px に文字 92px、余白 50) を既定の幅 1200px に換算した px で固定する
+// 1 行は small (板幅 3940px に文字 92px、余白 50) を既定の幅 1200px に換算した px を既定にする。
+// 文字の大きさ (訳文 --subtitle_large、原文・時刻 --subtitle_small) は形ごとに操作バーで変える
 // (角を伸ばして広げると 1 行の文字数が増える。掴んで拡大すると文字も大きくなる)。
 // 角丸は撮影後の切り抜き (24px) に任せる。文字の影は付けない
 
@@ -38,12 +39,12 @@
     .entries { justify-content: flex-end; gap: 18px; }
     .entry.received { align-items: flex-start; text-align: left; }
     .entry.sent { align-items: flex-end; text-align: right; }
-    .info { margin: 0; display: flex; gap: 0.5em; font-size: 18px; line-height: 1.4; }
+    .info { margin: 0; display: flex; gap: 0.5em; font-size: var(--subtitle_small); line-height: 1.4; }
     .time { color: rgb(120, 120, 120); }
     .received .kind { color: rgb(168, 97, 180); }
     .sent .kind { color: rgb(97, 151, 180); }
-    .small { font-size: 18px; line-height: 1.4; }
-    .large { font-size: 27px; line-height: 1.35; }
+    .small { font-size: var(--subtitle_small); line-height: 1.4; }
+    .large { font-size: var(--subtitle_large); line-height: 1.35; }
 }
 
 .single_line {
@@ -51,6 +52,6 @@
     // 板は低い (既定 180px)。溢れたら原文 (上) から隠れ、訳が残る
     .entries { justify-content: flex-end; }
     .entry { align-items: center; text-align: center; gap: 4px; }
-    .small { font-size: 19px; line-height: 1.35; }
-    .large { font-size: 28px; line-height: 1.35; }
+    .small { font-size: var(--subtitle_small); line-height: 1.35; }
+    .large { font-size: var(--subtitle_large); line-height: 1.35; }
 }

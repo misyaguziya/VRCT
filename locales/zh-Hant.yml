@@ -616,6 +616,9 @@ vr_panel:
         font_limit: "文字大小範圍：14～28"
         font_current: "目前: {{size}}（原文）"
         font_help: "譯文大小也會隨之變化"
+        font_limit_subtitle: "文字大小範圍：16～56"
+        font_current_subtitle: "目前: {{size}}（譯文）"
+        font_help_subtitle: "原文大小也會隨之變化"
         opacity_help: "每次按下：100 → 80 → 60 → 40% → 100%"
     settings:
         processing: "處理設定"

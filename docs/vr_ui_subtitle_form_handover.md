@@ -20,13 +20,16 @@ VR のログ窓の操作バーの形のボタンで切り替える。2 枚目の
 
 字幕の形ごとのキー: `width` `height` (ログ窓の論理 px) `x_pos` `y_pos` `z_pos` `x_rotation`
 `y_rotation` `z_rotation` `display_duration` (秒、int) `fadeout_duration` (秒、int、0 で消えない)
-`opacity` (0.2–1.0) `ui_scaling` (板の幅 m) `tracker` (`Playspace` / `LeftHand` / `RightHand` / `HMD`)
-`locked` (bool、既定 true)。既定は multi_line が 900×700・0.25 m・LeftHand、single_line が
+`opacity` (0.2–1.0) `ui_scaling` (板の幅 m) `font_size` (訳文の文字の px、int。原文・時刻はその約 2/3。
+既定は multi_line 27・single_line 28 で small / large と同じ見た目) `tracker` (`Playspace` / `LeftHand` / `RightHand` / `HMD`)
+`locked` (bool、既定 true)。履歴の文字の大きさは今までどおり `OVERLAY_VR_PANEL_FONT_SIZE` (14–28、原文の px)。
+VR の操作バーの A−/A＋ はどの形でも出て、今の形の値を変える (字幕は `set overlay_vr_subtitle_settings` の部分更新)。既定は multi_line が 900×700・0.25 m・LeftHand、single_line が
 1200×180・1.0 m・HMD (small / large の既定の見た目の大きさに合わせたもの。1 行の板の高さは約 0.15 m)。
 
 範囲 (外れた値は、型違いの値と同じく受け付けずに元の値を保つ。応答は 200):
 `opacity` 0.2–1.0、`display_duration` / `fadeout_duration` 0 以上、`ui_scaling` 0.05–3.0、
-`width` 600–1400、`height` 120–1000 (字幕の最小の高さは 120px。履歴は今までどおり 400px)。
+`width` 600–1400、`height` 120–1000 (字幕の最小の高さは 120px。履歴は今までどおり 400px)、
+`font_size` 16–56 (int)。範囲は `native/vrct-overlay/src/layout.rs` の pub 定数 (`SUBTITLE_FONT_SIZE_RANGE` など)。
 
 ## endpoint (新しい 5 つ)
 

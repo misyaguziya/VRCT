@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { subtitleEntries, subtitleKey } from "./subtitle_entries.js";
+import { SUBTITLE_FONT_SIZE, subtitleEntries, subtitleKey, subtitleSmallFontSize } from "./subtitle_entries.js";
+
+test("the original's size is about two thirds of the translation's (as before by default)", () => {
+    assert.equal(subtitleSmallFontSize(SUBTITLE_FONT_SIZE.default.multi_line), 18);
+    assert.equal(subtitleSmallFontSize(SUBTITLE_FONT_SIZE.default.single_line), 19);
+    assert.equal(subtitleSmallFontSize(SUBTITLE_FONT_SIZE.min), 11);
+    assert.equal(subtitleSmallFontSize(SUBTITLE_FONT_SIZE.max), 37);
+});
 
 const item = (message) => ({ message, transliteration: [] });
 const log = (id, category, { status = "ok", source, translations = ["訳"] } = {}) => ({

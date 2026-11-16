@@ -622,6 +622,9 @@ vr_panel:
         font_limit: "変更できる範囲は14〜28です"
         font_current: "現在: {{size}}（原文）"
         font_help: "訳文の大きさも合わせて変わります"
+        font_limit_subtitle: "変更できる範囲は16〜56です"
+        font_current_subtitle: "現在: {{size}}（訳文）"
+        font_help_subtitle: "原文の大きさも合わせて変わります"
         opacity_help: "押すごとに100 → 80 → 60 → 40% → 100%"
     settings:
         processing: "処理設定"
