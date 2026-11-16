@@ -628,7 +628,7 @@ fn run_until_settled(downloads: &Downloads, id: &str, cancel: &Arc<AtomicBool>,
 /// downloadCTranslate2Weight / downloadWhisperWeight of the catalog's model `weight_type`, on its
 /// own thread (`wait`: on this one, at start-up, which gets how it ended).
 /// Done means: finished (`wait`), started (not `wait`), or already downloading: that download goes
-/// on (a cancel asked for it is taken back) and tells its end by push.
+/// on and tells its end by push (asked by the user, not `wait`, a cancel asked for it is taken back).
 pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) -> weights::Outcome {
     let (kind, title) = if whisper { ("whisper", "Whisper") } else { ("ctranslate2", "CTranslate2") };
     let Some(m) = weights::model(weight_type).filter(|m| (m.family == weights::Family::Whisper) == whisper) else {
@@ -639,7 +639,10 @@ pub fn download_weight(app: &App, whisper: bool, weight_type: &str, wait: bool) 
     {
         let mut downloads = app.model.downloads.lock().unwrap();
         if let Some(running) = downloads.get(&m.id) {
-            running.store(false, Ordering::SeqCst);
+            // the user asking again takes their cancel back; the start-up's retry (`wait`) does not
+            if !wait {
+                running.store(false, Ordering::SeqCst);
+            }
             return weights::Outcome::Done;
         }
         downloads.insert(m.id.clone(), cancel.clone());
@@ -789,11 +792,12 @@ pub fn cancel_weight_download(app: &App, data: Data) -> Result<Reply> {
 }
 
 /// Where the weights come from: an https origin, kept as read back (no spaces around, no "/" at
-/// the end, the host in lower case)
+/// the end, the host in lower case); anything else goes to the check as it was sent
 pub fn set_hf_endpoint(app: &App, data: Data) -> Result<Reply> {
     let value = match data_or_null(data) {
         Value::String(s) => match reqwest::Url::parse(s.trim()) {
-            Ok(url) if url.path() == "/" && url.query().is_none() && url.fragment().is_none() && url.username().is_empty() => {
+            Ok(url) if url.scheme() == "https" && url.username().is_empty() && url.password().is_none()
+                && url.path() == "/" && url.query().is_none() && url.fragment().is_none() => {
                 json!(url.origin().ascii_serialization())
             }
             _ => json!(s),
@@ -810,10 +814,13 @@ mod tests {
     #[test]
     fn a_model_already_downloading_or_unknown_is_not_started() {
         let app = super::super::test_app(9);
-        // one running, asked to stop: asked again, the stop is taken back
+        // one running, asked to stop: the start-up's retry (wait) leaves the stop as it is
         let running = Arc::new(AtomicBool::new(true));
         app.model.downloads.lock().unwrap().insert("nllb-200-distilled-600M-ct2-int8".into(), running.clone());
         assert_eq!(download_weight(&app, false, "nllb-200-distilled-600M-ct2-int8", true), weights::Outcome::Done);
+        assert!(running.load(Ordering::SeqCst), "the user's cancel stands");
+        // the user asking again takes it back
+        assert_eq!(download_weight(&app, false, "nllb-200-distilled-600M-ct2-int8", false), weights::Outcome::Done);
         assert!(Arc::ptr_eq(&app.model.downloads.lock().unwrap()["nllb-200-distilled-600M-ct2-int8"], &running), "the running one kept");
         assert!(!running.load(Ordering::SeqCst), "its cancel taken back");
         // a Whisper model is not a CTranslate2 one
@@ -936,8 +943,10 @@ mod tests {
         let app = super::super::test_app(9);
         assert_eq!(set_hf_endpoint(&app, Some(json!("  https://HF-Mirror.com/  "))).unwrap().result, json!("https://hf-mirror.com"));
         assert_eq!(set_hf_endpoint(&app, Some(json!("https://example.com:443"))).unwrap().result, json!("https://example.com"));
-        let bad = set_hf_endpoint(&app, Some(json!("https://example.com/x"))).unwrap();
-        assert_eq!((bad.status, bad.result["data"].clone()), (400, json!("https://example.com/x")));
+        for sent in ["https://example.com/x", "http://Example.com/", "https://:p@a.com"] {
+            let bad = set_hf_endpoint(&app, Some(json!(sent))).unwrap();
+            assert_eq!((bad.status, bad.result["data"].clone()), (400, json!(sent)), "{sent}");
+        }
         assert_eq!(app.config.get("HF_ENDPOINT"), json!("https://example.com"));
         ipc::take_printed();
     }

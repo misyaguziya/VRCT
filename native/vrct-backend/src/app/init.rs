@@ -88,8 +88,8 @@ fn prepare_weights(app: &App, online: bool) -> (bool, bool) {
         (c.join().unwrap_or(false), w.join().unwrap_or(false))
     });
     // the retry: also when the first one is still running past WEIGHT_DOWNLOAD_WAIT, where
-    // download_weight only answers Done (that one goes on and tells its end by push); never after a
-    // cancel (the user stopped it)
+    // download_weight only answers Done (that one goes on and tells its end by push, and a cancel the
+    // user asked for meanwhile stands: the retry does not take it back); never after a cancel
     if online && !(ct2 && whisper) {
         if !ct2 && !ct2_cancelled {
             ipc::log("CTranslate2 weight unavailable after first download; retrying once");

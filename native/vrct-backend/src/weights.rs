@@ -349,9 +349,10 @@ fn sha256_of(path: &Path) -> std::io::Result<String> {
 
 /// The rest of `url` into `part` (`size` bytes in all): from the bytes it has, or from the start
 /// when the server cannot resume. `on_bytes` gets the bytes the part has. Ok(true): the part keeps
-/// bytes from before this call (resumed), Ok(false): all of it came now.
-fn get_part(http: &Http, url: &str, part: &Path, size: u64, cancel: &AtomicBool, on_bytes: &dyn Fn(u64))
-            -> std::result::Result<bool, DownloadError> {
+/// bytes from before this call (resumed), Ok(false): all of it came now. `stopped` is set when it
+/// stopped for `cancel` (whatever the flag says afterwards).
+fn get_part(http: &Http, url: &str, part: &Path, size: u64, cancel: &AtomicBool, stopped: &std::cell::Cell<bool>,
+            on_bytes: &dyn Fn(u64)) -> std::result::Result<bool, DownloadError> {
     if let Some(parent) = part.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -366,6 +367,7 @@ fn get_part(http: &Http, url: &str, part: &Path, size: u64, cancel: &AtomicBool,
         let mut got = from;
         http.download_from(url, from, &mut |chunk, _| {
             if cancel.load(Ordering::SeqCst) {
+                stopped.set(true);
                 return Err(std::io::Error::new(std::io::ErrorKind::Interrupted, "cancelled"));
             }
             file.write_all(chunk)?;
@@ -446,8 +448,11 @@ pub fn download_model(http: &Http, endpoint: &str, root: &Path, m: &CatalogModel
             if cancel.load(Ordering::SeqCst) {
                 return Outcome::Cancelled;
             }
-            let result = get_part(http, url, &part, f.size, cancel, &|got| progress(((done + got) as f64 / total).min(1.0)));
-            if cancel.load(Ordering::SeqCst) {
+            let stopped = std::cell::Cell::new(false);
+            let result = get_part(http, url, &part, f.size, cancel, &stopped, &|got| progress(((done + got) as f64 / total).min(1.0)));
+            // stopped for the cancel: not an attempt that failed, even when the cancel was taken back
+            // meanwhile (the caller sees the flag and goes on from the part)
+            if stopped.get() || cancel.load(Ordering::SeqCst) {
                 return Outcome::Cancelled;
             }
             reason = match result {
@@ -500,6 +505,26 @@ mod tests {
 
     fn ids(list: &Value) -> Vec<&str> {
         list.as_array().unwrap().iter().map(|v| v.as_str().unwrap()).collect()
+    }
+
+    /// A stop for the cancel is told as such, apart from the flag (which may be taken back before
+    /// download_model looks at it: then it is Cancelled, not a failed attempt)
+    #[test]
+    fn a_stop_for_the_cancel_is_told_whatever_the_flag_says_after() {
+        let root = crate::app::test_server(|_| (200, vec![b'x'; 100]));
+        let http = Http::redirected(&root).unwrap();
+        let dir = std::env::temp_dir().join(format!("vrct-weights-stop-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let part = dir.join("model.bin.part");
+        let (cancel, stopped) = (AtomicBool::new(true), std::cell::Cell::new(false));
+        assert!(get_part(&http, "https://huggingface.co/a/b/resolve/x/model.bin", &part, 100, &cancel, &stopped, &|_| {}).is_err());
+        assert!(stopped.get());
+        // not cancelled: not stopped
+        cancel.store(false, Ordering::SeqCst);
+        let stopped = std::cell::Cell::new(false);
+        assert!(get_part(&http, "https://huggingface.co/a/b/resolve/x/model.bin", &part, 100, &cancel, &stopped, &|_| {}).is_ok());
+        assert!(!stopped.get());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
