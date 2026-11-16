@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useI18n } from "@useI18n";
 import { useVr } from "@logics_configs";
@@ -6,6 +6,11 @@ import styles from "./VrKeyboardWindow.module.scss";
 
 // キーボードを開閉するコントローラのショートカット (off は手首のランチャーからだけ開く)
 const SHORTCUTS = ["off", "stick_double", "menu_long", "menu_double"];
+
+// 広がる一覧の高さ: 行の下の空き (2.5〜5.5 行) に収め、入りきらない分は一覧の中だけスクロールする
+const FOLD_ROW = 46; // 行 44px + 間 2px (VrKeyboardWindow.module.scss の .fold_option)
+const FOLD_MIN = 2.5 * FOLD_ROW + 2;
+const FOLD_MAX = 5.5 * FOLD_ROW + 2;
 
 // つまみを引いて選ぶ値 (min〜max を step ごと)。動かす間に何度も送る (すぐ見た目に出る)
 const Slider = ({ value, min, max, step, format, onChange }) => {
@@ -59,6 +64,22 @@ export const KeyboardSettings = ({ press, onClose }) => {
     // ショートカットの一覧はその行の下に広がる (パネルはスクロールするので、下に開く窓だと切れる)
     const [shortcuts_open, setShortcutsOpen] = useState(false);
     const shortcut = SHORTCUTS.includes(currentKeyboardShortcut.data) ? currentKeyboardShortcut.data : "off";
+    // 開いてもパネルの本体は動かさない。開いたら選んでいる行を一覧の真ん中に出す
+    const body = useRef(null);
+    const head = useRef(null);
+    const list = useRef(null);
+    const [room, setRoom] = useState(FOLD_MAX);
+    useLayoutEffect(() => {
+        if (!shortcuts_open) return;
+        // 行の下から、パネルの本体の見えている下端まで (画面の拡大・縮小があっても CSS の px で)
+        const box = body.current.getBoundingClientRect();
+        const px = (box.bottom - head.current.getBoundingClientRect().bottom) * (body.current.clientHeight / box.height);
+        setRoom(Math.min(FOLD_MAX, Math.max(FOLD_MIN, px - 8)));
+    }, [shortcuts_open]);
+    useLayoutEffect(() => {
+        const selected = shortcuts_open && list.current?.querySelector('[aria-selected="true"]');
+        if (selected) list.current.scrollTop = selected.offsetTop - (list.current.clientHeight - selected.offsetHeight) / 2;
+    }, [shortcuts_open, room]);
     const percent = (v) => `${Math.round(v)}%`;
     const toggle = (label, sub, variable, onToggle) => (
         <button type="button" className={styles.setting} aria-pressed={variable.data === true} onMouseDown={press(onToggle, "soft", label)}>
@@ -67,7 +88,7 @@ export const KeyboardSettings = ({ press, onClose }) => {
         </button>
     );
     return <div className={clsx(styles.menu, styles.settings_menu)} role="dialog" aria-label={t("vr_panel.keyboard.customize")}>
-        <div className={styles.settings}>
+        <div ref={body} className={styles.settings}>
             <div className={styles.setting}>
                 <span className={styles.setting_label}>{t("vr_panel.keyboard.opacity")}</span>
                 <Slider value={Number(currentKeyboardOpacity.data) * 100} min={20} max={100} step={5} format={percent}
@@ -82,7 +103,7 @@ export const KeyboardSettings = ({ press, onClose }) => {
             {toggle(t("vr_panel.keyboard.typing_indicator"), t("vr_panel.keyboard.typing_indicator_desc"),
                 currentIsEnabledKeyboardTypingIndicator, toggleIsEnabledKeyboardTypingIndicator)}
             <div className={clsx(styles.fold, { [styles.is_open]: shortcuts_open })}>
-                <button type="button" className={styles.fold_head} aria-expanded={shortcuts_open} aria-haspopup="listbox"
+                <button ref={head} type="button" className={styles.fold_head} aria-expanded={shortcuts_open} aria-haspopup="listbox"
                     onMouseDown={press(() => setShortcutsOpen(o => !o), "soft", "shortcut")}>
                     <span className={styles.setting_label}>{t("vr_panel.keyboard.shortcut")}</span>
                     <span className={styles.fold_current}>{t(`vr_panel.keyboard.shortcut_${shortcut}`)}</span>
@@ -90,7 +111,7 @@ export const KeyboardSettings = ({ press, onClose }) => {
                 </button>
                 <div className={styles.fold_panel}>
                     <div className={styles.fold_inner}>
-                        <div className={styles.fold_options} role="listbox" aria-label={t("vr_panel.keyboard.shortcut")}>
+                        <div ref={list} className={styles.fold_options} style={{ maxHeight: room }} role="listbox" aria-label={t("vr_panel.keyboard.shortcut")}>
                             {SHORTCUTS.map((s) => (
                                 <button key={s} type="button" role="option" aria-selected={s === shortcut} className={styles.fold_option}
                                     onMouseDown={press(() => { setKeyboardShortcut(s); setShortcutsOpen(false); }, "soft", `shortcut:${s}`)}>
