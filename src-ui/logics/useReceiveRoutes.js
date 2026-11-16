@@ -140,6 +140,9 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/get/data/selectable_transcription_engines", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
     { endpoint: "/run/shutdown", ns: null, hook_name: null, method_name: null }, // Not implemented on UI.
     { endpoint: "/get/data/selectable_release_channels", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet; release_channel options are hardcoded in Updater.jsx for now.
+    { endpoint: "/get/data/model_catalog", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet (docs/model_catalog_ui_handover.md).
+    { endpoint: "/get/data/model_list", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet (docs/model_catalog_ui_handover.md).
+    { endpoint: "/get/data/hf_endpoint", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet (docs/model_catalog_ui_handover.md).
 ];
 
 export const useReceiveRoutes = () => {
