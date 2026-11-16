@@ -3918,6 +3918,87 @@
       "rule": "exact",
       "expect_status": null,
       "pushes": false
+    },
+    {
+      "name": "get model_catalog",
+      "endpoint": "/get/data/model_catalog",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get model_list",
+      "endpoint": "/get/data/model_list",
+      "data": null,
+      "raw_data": null,
+      "rule": "shape",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "delete model: not in the catalog",
+      "endpoint": "/delete/data/model",
+      "data": "../ctranslate2",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "delete model: the selected one",
+      "endpoint": "/delete/data/model",
+      "data": "nllb-200-distilled-600M-ct2-int8",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "cancel weight download: none runs",
+      "endpoint": "/run/cancel_weight_download",
+      "data": "tiny",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get hf_endpoint",
+      "endpoint": "/get/data/hf_endpoint",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "set hf_endpoint to a mirror (the / at the end dropped)",
+      "endpoint": "/set/data/hf_endpoint",
+      "data": "https://hf-mirror.com/",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "set hf_endpoint to http",
+      "endpoint": "/set/data/hf_endpoint",
+      "data": "http://hf-mirror.com",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "set hf_endpoint back to the default",
+      "endpoint": "/set/data/hf_endpoint",
+      "data": "https://huggingface.co",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
     }
   ],
   "init": {
@@ -4712,6 +4793,118 @@
     },
     "/get/data/selected_whisper_weight_type": "base",
     "/get/data/selected_transcription_compute_type": "auto",
+    "/get/data/model_catalog": [
+      {
+        "id": "tiny",
+        "family": "whisper",
+        "size": 78203619,
+        "license": "MIT",
+        "repo": "Systran/faster-whisper-tiny"
+      },
+      {
+        "id": "base",
+        "family": "whisper",
+        "size": 147882941,
+        "license": "MIT",
+        "repo": "Systran/faster-whisper-base"
+      },
+      {
+        "id": "small",
+        "family": "whisper",
+        "size": 486212372,
+        "license": "MIT",
+        "repo": "Systran/faster-whisper-small"
+      },
+      {
+        "id": "medium",
+        "family": "whisper",
+        "size": 1530571735,
+        "license": "MIT",
+        "repo": "Systran/faster-whisper-medium"
+      },
+      {
+        "id": "large-v1",
+        "family": "whisper",
+        "size": 3089578414,
+        "license": "MIT",
+        "repo": "Systran/faster-whisper-large-v1"
+      },
+      {
+        "id": "large-v2",
+        "family": "whisper",
+        "size": 3089578858,
+        "license": "MIT",
+        "repo": "Systran/faster-whisper-large-v2"
+      },
+      {
+        "id": "large-v3",
+        "family": "whisper",
+        "size": 3090835702,
+        "license": "MIT",
+        "repo": "Systran/faster-whisper-large-v3"
+      },
+      {
+        "id": "large-v3-turbo-int8",
+        "family": "whisper",
+        "size": 817887676,
+        "license": "MIT",
+        "repo": "Zoont/faster-whisper-large-v3-turbo-int8-ct2"
+      },
+      {
+        "id": "large-v3-turbo",
+        "family": "whisper",
+        "size": 1621665983,
+        "license": "MIT",
+        "repo": "deepdml/faster-whisper-large-v3-turbo-ct2"
+      },
+      {
+        "id": "m2m100_418M-ct2-int8",
+        "family": "m2m100",
+        "size": 505729026,
+        "license": "MIT",
+        "repo": "jncraton/m2m100_418M-ct2-int8"
+      },
+      {
+        "id": "m2m100_1.2B-ct2-int8",
+        "family": "m2m100",
+        "size": 1264716461,
+        "license": "MIT",
+        "repo": "jncraton/m2m100_1.2B-ct2-int8"
+      },
+      {
+        "id": "nllb-200-distilled-600M-ct2-int8",
+        "family": "nllb",
+        "size": 664682766,
+        "license": "CC-BY-NC-4.0",
+        "repo": "JustFrederik/nllb-200-distilled-600M-ct2-int8"
+      },
+      {
+        "id": "nllb-200-distilled-1.3B-ct2-int8",
+        "family": "nllb",
+        "size": 1418344638,
+        "license": "CC-BY-NC-4.0",
+        "repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8"
+      },
+      {
+        "id": "nllb-200-3.3B-ct2-int8",
+        "family": "nllb",
+        "size": 3396636862,
+        "license": "CC-BY-NC-4.0",
+        "repo": "OpenNMT/nllb-200-3.3B-ct2-int8"
+      }
+    ],
+    "/get/data/model_list": [
+      {
+        "id": "",
+        "family": "",
+        "bytes": 0,
+        "installed": false,
+        "partial": false,
+        "in_use": false,
+        "downloading": false
+      }
+    ],
+    "/get/data/hf_endpoint": "https://huggingface.co",
     "/get/data/overlay_small_log": false,
     "/get/data/overlay_small_log_settings": {
       "x_pos": 0.0,
@@ -11238,6 +11431,217 @@
       "endpoint": "/get/data/keyboard_typing_indicator",
       "status": 200,
       "result": false,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get model_catalog",
+      "endpoint": "/get/data/model_catalog",
+      "status": 200,
+      "result": [
+        {
+          "id": "tiny",
+          "family": "whisper",
+          "size": 78203619,
+          "license": "MIT",
+          "repo": "Systran/faster-whisper-tiny"
+        },
+        {
+          "id": "base",
+          "family": "whisper",
+          "size": 147882941,
+          "license": "MIT",
+          "repo": "Systran/faster-whisper-base"
+        },
+        {
+          "id": "small",
+          "family": "whisper",
+          "size": 486212372,
+          "license": "MIT",
+          "repo": "Systran/faster-whisper-small"
+        },
+        {
+          "id": "medium",
+          "family": "whisper",
+          "size": 1530571735,
+          "license": "MIT",
+          "repo": "Systran/faster-whisper-medium"
+        },
+        {
+          "id": "large-v1",
+          "family": "whisper",
+          "size": 3089578414,
+          "license": "MIT",
+          "repo": "Systran/faster-whisper-large-v1"
+        },
+        {
+          "id": "large-v2",
+          "family": "whisper",
+          "size": 3089578858,
+          "license": "MIT",
+          "repo": "Systran/faster-whisper-large-v2"
+        },
+        {
+          "id": "large-v3",
+          "family": "whisper",
+          "size": 3090835702,
+          "license": "MIT",
+          "repo": "Systran/faster-whisper-large-v3"
+        },
+        {
+          "id": "large-v3-turbo-int8",
+          "family": "whisper",
+          "size": 817887676,
+          "license": "MIT",
+          "repo": "Zoont/faster-whisper-large-v3-turbo-int8-ct2"
+        },
+        {
+          "id": "large-v3-turbo",
+          "family": "whisper",
+          "size": 1621665983,
+          "license": "MIT",
+          "repo": "deepdml/faster-whisper-large-v3-turbo-ct2"
+        },
+        {
+          "id": "m2m100_418M-ct2-int8",
+          "family": "m2m100",
+          "size": 505729026,
+          "license": "MIT",
+          "repo": "jncraton/m2m100_418M-ct2-int8"
+        },
+        {
+          "id": "m2m100_1.2B-ct2-int8",
+          "family": "m2m100",
+          "size": 1264716461,
+          "license": "MIT",
+          "repo": "jncraton/m2m100_1.2B-ct2-int8"
+        },
+        {
+          "id": "nllb-200-distilled-600M-ct2-int8",
+          "family": "nllb",
+          "size": 664682766,
+          "license": "CC-BY-NC-4.0",
+          "repo": "JustFrederik/nllb-200-distilled-600M-ct2-int8"
+        },
+        {
+          "id": "nllb-200-distilled-1.3B-ct2-int8",
+          "family": "nllb",
+          "size": 1418344638,
+          "license": "CC-BY-NC-4.0",
+          "repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8"
+        },
+        {
+          "id": "nllb-200-3.3B-ct2-int8",
+          "family": "nllb",
+          "size": 3396636862,
+          "license": "CC-BY-NC-4.0",
+          "repo": "OpenNMT/nllb-200-3.3B-ct2-int8"
+        }
+      ],
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get model_list",
+      "endpoint": "/get/data/model_list",
+      "status": 200,
+      "result": [
+        {
+          "id": "",
+          "family": "",
+          "bytes": 0,
+          "installed": false,
+          "partial": false,
+          "in_use": false,
+          "downloading": false
+        }
+      ],
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "delete model: not in the catalog",
+      "endpoint": "/delete/data/model",
+      "status": 400,
+      "result": {
+        "error_code": "WEIGHT_UNKNOWN",
+        "message": "The model is not in the catalog",
+        "data": "../ctranslate2",
+        "details": {},
+        "category": "weight",
+        "severity": "error"
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "delete model: the selected one",
+      "endpoint": "/delete/data/model",
+      "status": 400,
+      "result": {
+        "error_code": "WEIGHT_IN_USE",
+        "message": "The model is selected or downloading",
+        "data": "nllb-200-distilled-600M-ct2-int8",
+        "details": {},
+        "category": "weight",
+        "severity": "warning"
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "cancel weight download: none runs",
+      "endpoint": "/run/cancel_weight_download",
+      "status": 200,
+      "result": false,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get hf_endpoint",
+      "endpoint": "/get/data/hf_endpoint",
+      "status": 200,
+      "result": "https://huggingface.co",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "set hf_endpoint to a mirror (the / at the end dropped)",
+      "endpoint": "/set/data/hf_endpoint",
+      "status": 200,
+      "result": "https://hf-mirror.com",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "set hf_endpoint to http",
+      "endpoint": "/set/data/hf_endpoint",
+      "status": 400,
+      "result": {
+        "error_code": "VALIDATION_CONFIG_VALUE_INVALID",
+        "message": "The provided value was rejected",
+        "data": "http://hf-mirror.com",
+        "details": {},
+        "category": "validation",
+        "severity": "warning"
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "set hf_endpoint back to the default",
+      "endpoint": "/set/data/hf_endpoint",
+      "status": 200,
+      "result": "https://huggingface.co",
       "pushes": [],
       "push_results": [],
       "ms": 0

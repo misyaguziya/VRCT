@@ -116,6 +116,7 @@ getters! {
     get_selectable_ocr_source_languages => "SELECTABLE_OCR_SOURCE_LANGUAGE_LIST",
     get_ocr_source_language => "OCR_SOURCE_LANGUAGE",
     get_ocr_window_title => "OCR_WINDOW_TITLE",
+    get_hf_endpoint => "HF_ENDPOINT",
     get_ocr_poll_interval_ms => "OCR_POLL_INTERVAL_MS",
     get_ocr_min_confidence => "OCR_MIN_CONFIDENCE",
     get_ocr_bubble_min_text_length => "OCR_BUBBLE_MIN_TEXT_LENGTH",

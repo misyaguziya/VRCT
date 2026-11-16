@@ -11,7 +11,7 @@ use crate::pyfmt;
 use crate::pyjson::{py_int, py_str};
 use crate::update::{self, Updater};
 use crate::weights;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
@@ -677,6 +677,94 @@ pub fn download_whisper_weight(app: &App, data: Data) -> Result<Reply> {
     Ok(Reply::ok(true))
 }
 
+/// The catalog: the models that can be downloaded (`size`: the bytes of all their files)
+pub fn get_model_catalog(_: &App, _: Data) -> Result<Reply> {
+    Ok(Reply::ok(weights::catalog().iter().map(|m| json!({
+        "id": m.id, "family": m.family.name(), "size": m.size(), "license": m.license, "repo": m.weights.repo,
+    })).collect::<Vec<_>>()))
+}
+
+/// (the bytes of the files under `dir`, whether one is a `.part`): a linked folder is not entered
+fn folder_usage(dir: &std::path::Path) -> (u64, bool) {
+    let (mut bytes, mut partial) = (0, false);
+    for entry in std::fs::read_dir(dir).into_iter().flatten().flatten() {
+        let Ok(kind) = entry.file_type() else { continue };
+        if kind.is_dir() {
+            let (b, p) = folder_usage(&entry.path());
+            bytes += b;
+            partial |= p;
+        } else if kind.is_file() {
+            bytes += entry.metadata().map(|m| m.len()).unwrap_or(0);
+            partial |= entry.file_name().to_string_lossy().ends_with(".part");
+        }
+    }
+    (bytes, partial)
+}
+
+/// The catalog's models on this PC: the bytes of their folders, installed (SELECTABLE_*_DICT),
+/// a download left part way, selected, downloading
+fn model_list(app: &App) -> Value {
+    let root = &app.config.env().path_local;
+    let downloads = app.model.downloads.lock().unwrap();
+    Value::Array(weights::catalog().iter().map(|m| {
+        let upper = m.family.kind().to_uppercase();
+        let (bytes, partial) = folder_usage(&m.dir(root));
+        json!({
+            "id": m.id, "family": m.family.name(), "bytes": bytes,
+            "installed": app.config.get(&format!("SELECTABLE_{upper}_WEIGHT_TYPE_DICT"))[&m.id] == json!(true),
+            "partial": partial,
+            "in_use": app.config.get_str(&format!("{upper}_WEIGHT_TYPE")) == m.id,
+            "downloading": downloads.contains_key(&m.id),
+        })
+    }).collect())
+}
+
+pub fn get_model_list(app: &App, _: Data) -> Result<Reply> {
+    Ok(Reply::ok(model_list(app)))
+}
+
+/// Deletes a model of the catalog (its folder, named from the catalog only): not the selected one
+/// nor one downloading. Answers the model list.
+pub fn delete_model(app: &App, data: Data) -> Result<Reply> {
+    let data = data_or_null(data);
+    let Some(m) = data.as_str().and_then(weights::model) else {
+        return Ok(errors::error("WEIGHT_UNKNOWN", data));
+    };
+    let upper = m.family.kind().to_uppercase();
+    {
+        // held while deleting: no download of it starts meanwhile
+        let downloads = app.model.downloads.lock().unwrap();
+        if downloads.contains_key(&m.id) || app.config.get_str(&format!("{upper}_WEIGHT_TYPE")) == m.id {
+            return Ok(errors::error("WEIGHT_IN_USE", data));
+        }
+        let dir = m.dir(&app.config.env().path_local);
+        if dir.exists() {
+            std::fs::remove_dir_all(&dir).with_context(|| format!("delete {}", dir.display()))?;
+        }
+    }
+    app.config.put_item(&format!("SELECTABLE_{upper}_WEIGHT_TYPE_DICT"), &m.id, json!(false));
+    ipc::log(format!("Weight deleted: {}", m.id));
+    Ok(Reply::ok(model_list(app)))
+}
+
+/// Stops the download of a model (at its next chunk; the .part is kept): false when none runs
+pub fn cancel_weight_download(app: &App, data: Data) -> Result<Reply> {
+    let id = py_str(&data_or_null(data));
+    let downloads = app.model.downloads.lock().unwrap();
+    let Some(cancel) = downloads.get(&id) else { return Ok(Reply::ok(false)) };
+    cancel.store(true, std::sync::atomic::Ordering::SeqCst);
+    Ok(Reply::ok(true))
+}
+
+/// Where the weights come from: an https origin (a "/" at the end is dropped)
+pub fn set_hf_endpoint(app: &App, data: Data) -> Result<Reply> {
+    let value = match data_or_null(data) {
+        Value::String(s) => json!(s.trim_end_matches('/')),
+        other => other,
+    };
+    super::basic::validated(app, "HF_ENDPOINT", value)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -693,6 +781,50 @@ mod tests {
         assert_eq!(download_weight(&app, true, "nope", true), weights::Outcome::Failed("unknown"));
         assert_eq!(app.model.downloads.lock().unwrap().len(), 1);
         ipc::take_printed();
+    }
+
+    #[test]
+    fn a_model_is_deleted_only_when_known_not_selected_and_not_downloading() {
+        let app = super::super::test_app(9);
+        let root = app.config.env().path_local.clone();
+        let reply = |r: Reply| (r.status, r.result.get("error_code").cloned());
+        assert_eq!(reply(delete_model(&app, Some(json!("../weights"))).unwrap()), (400, Some(json!("WEIGHT_UNKNOWN"))));
+        assert_eq!(reply(delete_model(&app, Some(json!(1))).unwrap()), (400, Some(json!("WEIGHT_UNKNOWN"))));
+        // selected
+        assert_eq!(reply(delete_model(&app, Some(json!("base"))).unwrap()), (400, Some(json!("WEIGHT_IN_USE"))));
+        // downloading
+        app.model.downloads.lock().unwrap().insert("tiny".into(), Arc::default());
+        assert_eq!(reply(delete_model(&app, Some(json!("tiny"))).unwrap()), (400, Some(json!("WEIGHT_IN_USE"))));
+        assert!(cancel_weight_download(&app, Some(json!("tiny"))).unwrap().result == json!(true));
+        assert!(app.model.downloads.lock().unwrap()["tiny"].load(std::sync::atomic::Ordering::SeqCst));
+        assert!(cancel_weight_download(&app, Some(json!("small"))).unwrap().result == json!(false));
+        app.model.downloads.lock().unwrap().clear();
+        // a model there and not selected: its folder goes, the dict says false
+        let dir = root.join("weights/whisper/tiny");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("model.bin.part"), b"xx").unwrap();
+        app.config.put_item("SELECTABLE_WHISPER_WEIGHT_TYPE_DICT", "tiny", json!(true));
+        let tiny = |list: &Value| list.as_array().unwrap().iter().find(|m| m["id"] == "tiny").unwrap().clone();
+        let before = model_list(&app);
+        assert_eq!(tiny(&before), json!({"id": "tiny", "family": "whisper", "bytes": 2, "installed": true, "partial": true,
+                                         "in_use": false, "downloading": false}));
+        let after = delete_model(&app, Some(json!("tiny"))).unwrap();
+        assert_eq!(after.status, 200);
+        assert_eq!((tiny(&after.result)["installed"].clone(), tiny(&after.result)["bytes"].clone()), (json!(false), json!(0)));
+        assert!(!dir.exists() && root.join("weights/whisper").exists());
+        // not there: fine
+        assert_eq!(delete_model(&app, Some(json!("tiny"))).unwrap().status, 200);
+        ipc::take_printed();
+    }
+
+    #[test]
+    fn the_catalog_answers_the_sizes_and_licenses() {
+        let catalog = get_model_catalog(&super::super::test_app(9), None).unwrap().result;
+        let nllb = catalog.as_array().unwrap().iter().find(|m| m["id"] == "nllb-200-distilled-600M-ct2-int8").unwrap();
+        assert_eq!((nllb["family"].clone(), nllb["license"].clone()), (json!("nllb"), json!("CC-BY-NC-4.0")));
+        // the weights and the tokenizer
+        assert!(nllb["size"].as_u64().unwrap() > 622_595_991 + 17_331_176);
+        assert_eq!(catalog.as_array().unwrap().len(), 14);
     }
 
     #[test]

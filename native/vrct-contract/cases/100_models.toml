@@ -1,0 +1,45 @@
+# 検証済みのモデルの一覧 (カタログ)。重みのフォルダーは本物へのジャンクションなので、削除が成功するケースは
+# 絶対に置かない (本物の重みが消える)。削除は拒否される 2 つだけ。取得はオフラインなので始めない。
+
+[[case]]
+name = "get model_catalog"
+endpoint = "/get/data/model_catalog"
+
+[[case]]
+name = "get model_list"
+endpoint = "/get/data/model_list"
+rule = "shape"  # 入っている重み・大きさは PC ごとに違う
+
+[[case]]
+name = "delete model: not in the catalog"
+endpoint = "/delete/data/model"
+data = "../ctranslate2"
+
+[[case]]
+name = "delete model: the selected one"
+endpoint = "/delete/data/model"
+data = "nllb-200-distilled-600M-ct2-int8"
+
+[[case]]
+name = "cancel weight download: none runs"
+endpoint = "/run/cancel_weight_download"
+data = "tiny"
+
+[[case]]
+name = "get hf_endpoint"
+endpoint = "/get/data/hf_endpoint"
+
+[[case]]
+name = "set hf_endpoint to a mirror (the / at the end dropped)"
+endpoint = "/set/data/hf_endpoint"
+data = "https://hf-mirror.com/"
+
+[[case]]
+name = "set hf_endpoint to http"
+endpoint = "/set/data/hf_endpoint"
+data = "http://hf-mirror.com"
+
+[[case]]
+name = "set hf_endpoint back to the default"
+endpoint = "/set/data/hf_endpoint"
+data = "https://huggingface.co"

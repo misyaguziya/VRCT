@@ -201,6 +201,22 @@
    "user_action_required": true
   },
   {
+   "code": "WEIGHT_UNKNOWN",
+   "has_metadata": true,
+   "category": "weight",
+   "message": "The model is not in the catalog",
+   "severity": "error",
+   "user_action_required": false
+  },
+  {
+   "code": "WEIGHT_IN_USE",
+   "has_metadata": true,
+   "category": "weight",
+   "message": "The model is selected or downloading",
+   "severity": "warning",
+   "user_action_required": true
+  },
+  {
    "code": "UPDATE_SOFTWARE_DOWNLOAD",
    "has_metadata": true,
    "category": "general",

@@ -233,6 +233,13 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
         ("/get/data/selected_transcription_compute_type", r(true, h::get_selected_transcription_compute_type)),
         ("/set/data/selected_transcription_compute_type", r(true, h::set_selected_transcription_compute_type)),
         ("/run/download_whisper_weight", r(true, h::download_whisper_weight)),
+        // the catalog's models
+        ("/get/data/model_catalog", r(true, h::get_model_catalog)),
+        ("/get/data/model_list", r(true, h::get_model_list)),
+        ("/delete/data/model", r(true, h::delete_model)),
+        ("/run/cancel_weight_download", r(true, h::cancel_weight_download)),
+        ("/get/data/hf_endpoint", r(true, h::get_hf_endpoint)),
+        ("/set/data/hf_endpoint", r(true, h::set_hf_endpoint)),
         ("/get/data/overlay_small_log", r(true, h::get_overlay_small_log)),
         ("/set/enable/overlay_small_log", r(true, h::set_enable_overlay_small_log)),
         ("/set/disable/overlay_small_log", r(true, h::set_disable_overlay_small_log)),

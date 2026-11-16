@@ -1121,6 +1121,36 @@
    "handler": "downloadWhisperWeight"
   },
   {
+   "endpoint": "/get/data/model_catalog",
+   "during_init": true,
+   "handler": "getModelCatalog"
+  },
+  {
+   "endpoint": "/get/data/model_list",
+   "during_init": true,
+   "handler": "getModelList"
+  },
+  {
+   "endpoint": "/delete/data/model",
+   "during_init": true,
+   "handler": "deleteModel"
+  },
+  {
+   "endpoint": "/run/cancel_weight_download",
+   "during_init": true,
+   "handler": "cancelWeightDownload"
+  },
+  {
+   "endpoint": "/get/data/hf_endpoint",
+   "during_init": true,
+   "handler": "getHfEndpoint"
+  },
+  {
+   "endpoint": "/set/data/hf_endpoint",
+   "during_init": true,
+   "handler": "setHfEndpoint"
+  },
+  {
    "endpoint": "/get/data/overlay_small_log",
    "during_init": true,
    "handler": "getOverlaySmallLog"
