@@ -4888,7 +4888,7 @@
       },
       "single_line": {
         "width": 1200,
-        "height": 400,
+        "height": 180,
         "x_pos": 0.0,
         "y_pos": 0.0,
         "z_pos": 0.0,
@@ -10302,7 +10302,9 @@
       "endpoint": "/set/data/overlay_vr_panel_opacity",
       "status": 200,
       "result": 0.6,
-      "pushes": [],
+      "pushes": [
+        "/run/overlay_vr_subtitle_settings"
+      ],
       "push_results": [],
       "ms": 0
     },
@@ -10329,7 +10331,7 @@
         },
         "single_line": {
           "width": 1200,
-          "height": 400,
+          "height": 180,
           "x_pos": 0.0,
           "y_pos": 0.0,
           "z_pos": 0.0,
@@ -10387,7 +10389,7 @@
         },
         "single_line": {
           "width": 1200,
-          "height": 400,
+          "height": 180,
           "x_pos": 0.25,
           "y_pos": 0.0,
           "z_pos": 0.0,
