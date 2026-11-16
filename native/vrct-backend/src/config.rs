@@ -295,13 +295,26 @@ fn overlay_vr_window(v: &Value, current: &Value) -> Option<Value> {
     let mut new = cur.clone();
     for (k, x) in map {
         let k = k.as_str();
-        if k == "tracker" && x.as_str().is_some_and(|t| ["HMD", "LeftHand", "RightHand", "Playspace"].contains(&t)) {
+        if (k == "tracker" && x.as_str().is_some_and(|t| ["HMD", "LeftHand", "RightHand", "Playspace"].contains(&t)))
+            || (k == "locked" && x.is_boolean())
+        {
             new.insert(k.into(), x.clone());
         } else if (POSITION_KEYS.contains(&k) || k == "opacity" || k == "ui_scaling") && is_number(x) {
             new.insert(k.into(), to_float(x));
         } else if ["display_duration", "fadeout_duration", "width", "height"].contains(&k) && is_int(x) && !x.is_boolean() {
             new.insert(k.into(), x.clone());
         }
+    }
+    Some(Value::Object(new))
+}
+
+/// The log window's subtitle forms: some of the forms, each with some of its keys (the others keep
+/// their value: a move in VR is not undone by a change made elsewhere)
+fn overlay_vr_subtitles(v: &Value, current: &Value) -> Option<Value> {
+    let (map, cur) = (v.as_object()?, current.as_object()?);
+    let mut new = cur.clone();
+    for (form, x) in map {
+        new.insert(form.clone(), overlay_vr_window(x, cur.get(form)?)?);
     }
     Some(Value::Object(new))
 }
@@ -386,6 +399,7 @@ fn validate(name: &str, v: &Value, c: &View) -> Option<Value> {
         }
         "OVERLAY_SMALL_LOG_SETTINGS" | "OVERLAY_LARGE_LOG_SETTINGS" => overlay_log_settings(v, current),
         "OVERLAY_VR_PANEL_SETTINGS" | "OVERLAY_VR_LAUNCHER_SETTINGS" => overlay_vr_window(v, current),
+        "OVERLAY_VR_SUBTITLE_SETTINGS" => overlay_vr_subtitles(v, current),
         "SEND_MESSAGE_FORMAT_PARTS" | "RECEIVED_MESSAGE_FORMAT_PARTS" => {
             let structure = json!({"message": {"prefix": "str", "suffix": "str"}, "separator": "str",
                                    "translation": {"prefix": "str", "separator": "str", "suffix": "str"}, "translation_first": "bool"});

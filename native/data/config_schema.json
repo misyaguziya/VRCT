@@ -2325,6 +2325,64 @@
    "immediate_save": false,
    "mutable_tracking": false,
    "default": "off"
+  },
+  {
+   "name": "OVERLAY_VR_PANEL_FORM",
+   "kind": "managed",
+   "type": [
+    "str"
+   ],
+   "allowed": [
+    "history",
+    "multi_line",
+    "single_line"
+   ],
+   "readonly": false,
+   "serialize": true,
+   "immediate_save": false,
+   "mutable_tracking": false,
+   "default": "history"
+  },
+  {
+   "name": "OVERLAY_VR_SUBTITLE_SETTINGS",
+   "kind": "validated",
+   "validator": "validator",
+   "serialize": true,
+   "immediate_save": false,
+   "default": {
+    "multi_line": {
+     "width": 900,
+     "height": 700,
+     "x_pos": 0.0,
+     "y_pos": 0.0,
+     "z_pos": 0.0,
+     "x_rotation": 0.0,
+     "y_rotation": 0.0,
+     "z_rotation": 0.0,
+     "display_duration": 5,
+     "fadeout_duration": 2,
+     "opacity": 1.0,
+     "ui_scaling": 0.25,
+     "tracker": "LeftHand",
+     "locked": true
+    },
+    "single_line": {
+     "width": 1200,
+     "height": 400,
+     "x_pos": 0.0,
+     "y_pos": 0.0,
+     "z_pos": 0.0,
+     "x_rotation": 0.0,
+     "y_rotation": 0.0,
+     "z_rotation": 0.0,
+     "display_duration": 5,
+     "fadeout_duration": 2,
+     "opacity": 1.0,
+     "ui_scaling": 1.0,
+     "tracker": "HMD",
+     "locked": true
+    }
+   }
   }
  ],
  "serialized_order": [
@@ -2447,6 +2505,8 @@
   "KEYBOARD_LOCKED",
   "KEYBOARD_WIDTH",
   "OVERLAY_VR_LASER_PITCH",
-  "KEYBOARD_SHORTCUT"
+  "KEYBOARD_SHORTCUT",
+  "OVERLAY_VR_PANEL_FORM",
+  "OVERLAY_VR_SUBTITLE_SETTINGS"
  ]
 }

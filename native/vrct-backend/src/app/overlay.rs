@@ -10,7 +10,7 @@ use serde_json::{json, Map, Value};
 use std::sync::Mutex;
 use vrct_overlay::image::{Image, OverlayImage, Token};
 use vrct_overlay::layout::{validate_tooltip, Layout, Region};
-use vrct_overlay::overlay::{Event, Overlay, Settings};
+use vrct_overlay::overlay::{Event, Overlay, Settings, PANEL_FORM_HISTORY as HISTORY};
 use vrct_overlay::pose::{launcher_nearest_in_reach, launcher_out_of_reach};
 use vrct_overlay::shortcut::Shortcut;
 
@@ -74,6 +74,43 @@ fn position_of(s: &Settings) -> Map<String, Value> {
     m
 }
 
+/// The log window's form now (OVERLAY_VR_PANEL_FORM)
+fn panel_form(config: &crate::config::Config) -> String {
+    config.get_str("OVERLAY_VR_PANEL_FORM")
+}
+
+/// A form's settings with its lock: the history's are OVERLAY_VR_PANEL_SETTINGS and _LOCKED, a
+/// subtitle's its part of OVERLAY_VR_SUBTITLE_SETTINGS
+fn form_settings(config: &crate::config::Config, form: &str) -> Value {
+    if form == HISTORY {
+        let mut settings = config.get("OVERLAY_VR_PANEL_SETTINGS");
+        settings["locked"] = json!(config.get_bool("OVERLAY_VR_PANEL_LOCKED"));
+        settings
+    } else {
+        config.get("OVERLAY_VR_SUBTITLE_SETTINGS")[form].clone()
+    }
+}
+
+/// Some of a form's settings saved (the rest kept)
+fn save_form_settings(app: &App, form: &str, mut values: Map<String, Value>) -> Result<()> {
+    if form != HISTORY {
+        app.config.set("OVERLAY_VR_SUBTITLE_SETTINGS", json!({form: values}))?;
+        return Ok(());
+    }
+    if let Some(locked) = values.remove("locked") {
+        app.config.set("OVERLAY_VR_PANEL_LOCKED", locked)?;
+    }
+    if !values.is_empty() {
+        app.config.set("OVERLAY_VR_PANEL_SETTINGS", merged(app, "OVERLAY_VR_PANEL_SETTINGS", &values))?;
+    }
+    Ok(())
+}
+
+/// A value of the current form's settings
+fn form_value(app: &App, key: &str) -> Value {
+    form_settings(&app.config, &panel_form(&app.config)).get(key).cloned().unwrap_or(Value::Null)
+}
+
 /// vrLayoutToJson
 fn layout_json(layout: &Layout, tooltip_epoch: u64) -> Value {
     let regions: Map<String, Value> = Region::ALL.iter().map(|r| (r.name().to_string(), json!(layout.region(*r)))).collect();
@@ -111,10 +148,13 @@ impl Overlays {
         // the keyboard: as wide as it was last made in VR (0.6 m at first: its keys about 3.6 cm wide, 72 px of
         // 1200: 15 keys a row, the arrows in the bottom one). Its place is in front of the eyes each time it opens
         let keyboard = Settings { ui_scaling: config.get("KEYBOARD_WIDTH").as_f64().unwrap_or(0.6), opacity: config.get("KEYBOARD_OPACITY").as_f64().unwrap_or(1.0), ..popup.clone() };
+        // the log window at its form's place and size (its lock is panel_locked, not the settings')
+        let form = panel_form(config);
+        let panel = settings_of(&form_settings(config, &form));
         let sizes = vec![
             (SMALL.into(), settings_of(&config.get("OVERLAY_SMALL_LOG_SETTINGS"))),
             (LARGE.into(), large),
-            (PANEL.into(), settings_of(&config.get("OVERLAY_VR_PANEL_SETTINGS"))),
+            (PANEL.into(), Settings { locked: false, ..panel.clone() }),
             (LAUNCHER.into(), settings_of(&launcher)),
             (POPUP.into(), popup),
             (KEYBOARD.into(), keyboard),
@@ -128,6 +168,8 @@ impl Overlays {
         };
         let overlay = Overlay::new(sizes, std::sync::Arc::new(ipc::log), std::sync::Arc::new(events));
         overlay.set_launcher_defaults(settings_of(&default_launcher()));
+        let locked = panel.locked;
+        overlay.set_panel_form(&form, panel, locked);
         Self { overlay: Mutex::new(overlay), image: Mutex::new(OverlayImage::new(&fonts)), fonts }
     }
 }
@@ -146,7 +188,7 @@ fn on_event(app: &App, event: Event) -> Result<()> {
         })),
         Event::PanelOutOfView(out) => app.run(200, "vr_panel_log_out_of_view", json!(out)),
         Event::LauncherIntro(intro) => app.run(200, "vr_panel_launcher_intro", json!(intro.name())),
-        Event::Position { size, settings, .. } => position_changed(app, &size, position_of(&settings)),
+        Event::Position { size, settings, form } => position_changed(app, &size, form.as_deref(), position_of(&settings)),
         // when it was made (ms): the VR view opens / closes the keyboard, and ignores an old one
         // sent again when it opens anew
         Event::Shortcut => app.run(200, "vr_panel_keyboard_shortcut", json!(chrono_ms())),
@@ -166,8 +208,9 @@ fn merged(app: &App, name: &str, position: &Map<String, Value>) -> Value {
     settings
 }
 
-/// _onOverlayPositionChanged: a window moved / resized in VR is saved and told to the UI
-fn position_changed(app: &App, size: &str, mut position: Map<String, Value>) -> Result<()> {
+/// _onOverlayPositionChanged: a window moved / resized in VR is saved and told to the UI (the log
+/// window to the form it was moved in, told only if that is still the form shown)
+fn position_changed(app: &App, size: &str, form: Option<&str>, mut position: Map<String, Value>) -> Result<()> {
     let scaling = position.get("ui_scaling").and_then(Value::as_f64).unwrap_or_default();
     match size {
         SMALL | LARGE => {
@@ -180,8 +223,18 @@ fn position_changed(app: &App, size: &str, mut position: Map<String, Value>) -> 
             app.run(200, push, app.config.get(name))
         }
         PANEL => {
-            app.config.set("OVERLAY_VR_PANEL_SETTINGS", merged(app, "OVERLAY_VR_PANEL_SETTINGS", &position))?;
-            app.run(200, "overlay_vr_panel_anchor", position.get("tracker").cloned().unwrap_or(Value::Null))
+            let current = panel_form(&app.config);
+            let form = form.unwrap_or(current.as_str());
+            let tracker = position.get("tracker").cloned().unwrap_or(Value::Null);
+            save_form_settings(app, form, position)?;
+            if form != current {
+                return Ok(());
+            }
+            app.run(200, "overlay_vr_panel_anchor", tracker)?;
+            if form != HISTORY {
+                app.run(200, "overlay_vr_subtitle_settings", app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS"))?;
+            }
+            Ok(())
         }
         LAUNCHER => {
             app.config.set("OVERLAY_VR_LAUNCHER_SETTINGS", merged(app, "OVERLAY_VR_LAUNCHER_SETTINGS", &position))?;
@@ -224,7 +277,7 @@ fn update_log_settings(app: &App, size: &str) {
 pub fn sync_overlay_running(app: &App) -> Result<()> {
     let mut o = overlay(app);
     o.set_vr_panel_enabled(app.config.get_bool("OVERLAY_VR_PANEL"));
-    o.set_panel_locked(app.config.get_bool("OVERLAY_VR_PANEL_LOCKED"));
+    o.set_panel_locked(form_value(app, "locked") == json!(true));
     o.set_keyboard_locked(app.config.get_bool("KEYBOARD_LOCKED"));
     o.set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
     o.set_shortcut(shortcut_of(app));
@@ -396,16 +449,67 @@ pub fn set_overlay_large_log_settings(app: &App, data: Data) -> Result<Reply> {
     log_settings(app, "OVERLAY_LARGE_LOG_SETTINGS", LARGE, data)
 }
 
+/// The current form's lock
+pub fn get_overlay_vr_panel_locked(app: &App, _: Data) -> Result<Reply> {
+    Ok(Reply::ok(form_value(app, "locked")))
+}
+
+fn set_panel_locked(app: &App, locked: bool) -> Result<Reply> {
+    let mut values = Map::new();
+    values.insert("locked".into(), json!(locked));
+    save_form_settings(app, &panel_form(&app.config), values)?;
+    overlay(app).set_panel_locked(locked);
+    get_overlay_vr_panel_locked(app, None)
+}
+
 pub fn set_enable_overlay_vr_panel_locked(app: &App, _: Data) -> Result<Reply> {
-    app.config.set("OVERLAY_VR_PANEL_LOCKED", json!(true))?;
-    overlay(app).set_panel_locked(true);
-    current(app, "OVERLAY_VR_PANEL_LOCKED")
+    set_panel_locked(app, true)
 }
 
 pub fn set_disable_overlay_vr_panel_locked(app: &App, _: Data) -> Result<Reply> {
-    app.config.set("OVERLAY_VR_PANEL_LOCKED", json!(false))?;
-    overlay(app).set_panel_locked(false);
-    current(app, "OVERLAY_VR_PANEL_LOCKED")
+    set_panel_locked(app, false)
+}
+
+/// The log window's form: "history" (the log) or a subtitle ("multi_line", "single_line"). Changed:
+/// the window goes to that form's place, size and lock, and its anchor, lock and opacity are told
+pub fn set_overlay_vr_panel_form(app: &App, data: Data) -> Result<Reply> {
+    let before = panel_form(&app.config);
+    let reply = super::basic::validated(app, "OVERLAY_VR_PANEL_FORM", data.unwrap_or(Value::Null))?;
+    let form = panel_form(&app.config);
+    if form != before {
+        let settings = settings_of(&form_settings(&app.config, &form));
+        let locked = settings.locked;
+        overlay(app).set_panel_form(&form, settings, locked);
+        app.run(200, "overlay_vr_panel_anchor", form_value(app, "tracker"))?;
+        app.run(200, "overlay_vr_panel_locked", form_value(app, "locked"))?;
+        app.run(200, "overlay_vr_panel_opacity", form_value(app, "opacity"))?;
+    }
+    Ok(reply)
+}
+
+/// The subtitle forms' settings, some forms and keys at a time. The shown form's display time,
+/// fade, opacity and lock go to the overlay at once (its place and size when it is shown again)
+pub fn set_overlay_vr_subtitle_settings(app: &App, data: Data) -> Result<Reply> {
+    let reply = super::basic::validated(app, "OVERLAY_VR_SUBTITLE_SETTINGS", data.unwrap_or(Value::Null))?;
+    let form = panel_form(&app.config);
+    if form != HISTORY && reply.status == 200 {
+        let s = settings_of(&form_settings(&app.config, &form));
+        let o = overlay(app);
+        o.update_display_duration(PANEL, s.display_duration);
+        o.update_fadeout_duration(PANEL, s.fadeout_duration);
+        o.update_opacity(PANEL, s.opacity, true);
+        o.set_panel_locked(s.locked);
+        drop(o);
+        app.run(200, "overlay_vr_panel_locked", json!(s.locked))?;
+        app.run(200, "overlay_vr_panel_opacity", json!(s.opacity))?;
+    }
+    Ok(reply)
+}
+
+/// The VR view drew the log window's new content: shown once captured (a subtitle's display time starts)
+pub fn vr_panel_log_rendered(app: &App, _: Data) -> Result<Reply> {
+    overlay(app).reveal_panel();
+    Ok(Reply::ok(true))
 }
 
 pub fn set_enable_overlay_vr_launcher_auto_hide(app: &App, _: Data) -> Result<Reply> {
@@ -465,15 +569,16 @@ fn setting_of(app: &App, name: &str, key: &str) -> Value {
     app.config.get(name).get(key).cloned().unwrap_or(Value::Null)
 }
 
+/// What the current form follows
 pub fn get_overlay_vr_panel_anchor(app: &App, _: Data) -> Result<Reply> {
-    Ok(Reply::ok(setting_of(app, "OVERLAY_VR_PANEL_SETTINGS", "tracker")))
+    Ok(Reply::ok(form_value(app, "tracker")))
 }
 
 /// setOverlayVrPanelAnchor: moved on the overlay's thread; the result comes as overlay_vr_panel_anchor
 pub fn set_overlay_vr_panel_anchor(app: &App, data: Data) -> Result<Reply> {
     let data = data.unwrap_or(Value::Null);
     let Some(anchor) = data.as_str().filter(|a| PANEL_ANCHORS.contains(a)) else {
-        return Ok(errors::error("VALIDATION_CONFIG_VALUE_INVALID", setting_of(app, "OVERLAY_VR_PANEL_SETTINGS", "tracker")));
+        return Ok(errors::error("VALIDATION_CONFIG_VALUE_INVALID", form_value(app, "tracker")));
     };
     overlay(app).request_anchor(anchor);
     Ok(Reply::ok(data))
@@ -513,20 +618,23 @@ pub fn set_overlay_vr_panel_font_size(app: &App, data: Data) -> Result<Reply> {
     }
 }
 
+/// The current form's opacity
 pub fn get_overlay_vr_panel_opacity(app: &App, _: Data) -> Result<Reply> {
-    Ok(Reply::ok(setting_of(app, "OVERLAY_VR_PANEL_SETTINGS", "opacity")))
+    Ok(Reply::ok(form_value(app, "opacity")))
 }
 
-/// setOverlayVrPanelOpacity: 0.2–1.0 (below it the window could not be found again in VR)
+/// setOverlayVrPanelOpacity: 0.2–1.0 (below it the window could not be found again in VR), the
+/// current form's (a subtitle's as far as it has faded)
 pub fn set_overlay_vr_panel_opacity(app: &App, data: Data) -> Result<Reply> {
     let Some(opacity) = data.as_ref().and_then(py_float).filter(|o| (0.2..=1.0).contains(o)) else {
-        return Ok(errors::error("VALIDATION_CONFIG_VALUE_INVALID", setting_of(app, "OVERLAY_VR_PANEL_SETTINGS", "opacity")));
+        return Ok(errors::error("VALIDATION_CONFIG_VALUE_INVALID", form_value(app, "opacity")));
     };
-    let mut panel = app.config.get("OVERLAY_VR_PANEL_SETTINGS");
-    panel["opacity"] = json!(vrct_overlay::pose::round_to(opacity, 2));
-    app.config.set("OVERLAY_VR_PANEL_SETTINGS", panel)?;
-    overlay(app).update_opacity(PANEL, num(&app.config.get("OVERLAY_VR_PANEL_SETTINGS"), "opacity"), false);
-    Ok(Reply::ok(setting_of(app, "OVERLAY_VR_PANEL_SETTINGS", "opacity")))
+    let form = panel_form(&app.config);
+    let mut values = Map::new();
+    values.insert("opacity".into(), json!(vrct_overlay::pose::round_to(opacity, 2)));
+    save_form_settings(app, &form, values)?;
+    overlay(app).update_opacity(PANEL, form_value(app, "opacity").as_f64().unwrap_or(1.0), form != HISTORY);
+    Ok(Reply::ok(form_value(app, "opacity")))
 }
 
 pub fn get_keyboard_opacity(app: &App, _: Data) -> Result<Reply> {
@@ -670,10 +778,95 @@ mod bindings_tests {
     fn the_keyboard_width_made_in_vr_is_kept() {
         let app = super::super::test_app(0);
         let position = |w: f64| serde_json::json!({"ui_scaling": w, "tracker": "Playspace"}).as_object().unwrap().clone();
-        super::position_changed(&app, super::KEYBOARD, position(0.84567)).unwrap();
+        super::position_changed(&app, super::KEYBOARD, None, position(0.84567)).unwrap();
         assert_eq!(app.config.get("KEYBOARD_WIDTH"), serde_json::json!(0.846));
         // outside the widths a grab can make: refused, kept as it was
-        assert!(super::position_changed(&app, super::KEYBOARD, position(5.0)).is_err());
+        assert!(super::position_changed(&app, super::KEYBOARD, None, position(5.0)).is_err());
         assert_eq!(app.config.get("KEYBOARD_WIDTH"), serde_json::json!(0.846));
+    }
+}
+
+#[cfg(test)]
+mod panel_form_tests {
+    use super::*;
+    use crate::ipc::take_printed;
+
+    /// The pushes printed since the last call: (name after /run/, result)
+    fn pushes() -> Vec<(String, Value)> {
+        take_printed().into_iter().filter_map(|p| {
+            let endpoint = p["endpoint"].as_str()?.strip_prefix("/run/")?.to_string();
+            Some((endpoint, p["result"].clone()))
+        }).collect()
+    }
+
+    #[test]
+    fn the_history_answers_as_before() {
+        let app = super::super::test_app(0);
+        let panel = app.config.get("OVERLAY_VR_PANEL_SETTINGS");
+        assert_eq!(get_overlay_vr_panel_anchor(&app, None).unwrap().result, panel["tracker"]);
+        assert_eq!(get_overlay_vr_panel_opacity(&app, None).unwrap().result, panel["opacity"]);
+        assert_eq!(get_overlay_vr_panel_locked(&app, None).unwrap().result, json!(false));
+        assert_eq!(set_enable_overlay_vr_panel_locked(&app, None).unwrap().result, json!(true));
+        assert_eq!(app.config.get("OVERLAY_VR_PANEL_LOCKED"), json!(true));
+        assert_eq!(set_overlay_vr_panel_opacity(&app, Some(json!(0.5))).unwrap().result, json!(0.5));
+        assert_eq!(app.config.get("OVERLAY_VR_PANEL_SETTINGS")["opacity"], json!(0.5));
+        // the subtitles untouched
+        assert_eq!(app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS"), *crate::config::default_of("OVERLAY_VR_SUBTITLE_SETTINGS").unwrap());
+    }
+
+    #[test]
+    fn each_form_keeps_its_own_opacity_lock_and_place() {
+        let app = super::super::test_app(0);
+        take_printed();
+        assert_eq!(set_overlay_vr_panel_form(&app, Some(json!("single_line"))).unwrap().result, json!("single_line"));
+        assert_eq!(pushes(), vec![("overlay_vr_panel_anchor".into(), json!("HMD")), ("overlay_vr_panel_locked".into(), json!(true)),
+                                  ("overlay_vr_panel_opacity".into(), json!(1.0))]);
+        // the same form again: nothing told
+        set_overlay_vr_panel_form(&app, Some(json!("single_line"))).unwrap();
+        assert!(pushes().is_empty());
+        set_overlay_vr_panel_opacity(&app, Some(json!(0.6))).unwrap();
+        assert_eq!(set_disable_overlay_vr_panel_locked(&app, None).unwrap().result, json!(false));
+        let subtitles = app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS");
+        assert_eq!((subtitles["single_line"]["opacity"].clone(), subtitles["single_line"]["locked"].clone()), (json!(0.6), json!(false)));
+        assert_eq!(subtitles["multi_line"]["locked"], json!(true));
+        assert_eq!((app.config.get("OVERLAY_VR_PANEL_SETTINGS")["opacity"].clone(), app.config.get("OVERLAY_VR_PANEL_LOCKED")),
+                   (json!(1.0), json!(false)));
+        // moved in VR as single_line: saved there and told
+        let moved = json!({"x_pos": 0.1, "y_pos": 0.2, "z_pos": 0.3, "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
+                           "ui_scaling": 1.2, "tracker": "HMD", "width": 1200, "height": 400});
+        take_printed();
+        position_changed(&app, PANEL, Some("single_line"), moved.as_object().unwrap().clone()).unwrap();
+        let told: Vec<String> = pushes().into_iter().map(|(name, _)| name).collect();
+        assert_eq!(told, vec!["overlay_vr_panel_anchor", "overlay_vr_subtitle_settings"]);
+        assert_eq!(app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS")["single_line"]["x_pos"], json!(0.1));
+        // a move made in the form before the change: saved to that form, not told
+        position_changed(&app, PANEL, Some("history"), moved.as_object().unwrap().clone()).unwrap();
+        assert!(pushes().is_empty());
+        assert_eq!(app.config.get("OVERLAY_VR_PANEL_SETTINGS")["x_pos"], json!(0.1));
+        // back to the history: its own values
+        set_overlay_vr_panel_form(&app, Some(json!("history"))).unwrap();
+        assert_eq!(get_overlay_vr_panel_opacity(&app, None).unwrap().result, json!(1.0));
+        assert_eq!(get_overlay_vr_panel_anchor(&app, None).unwrap().result, json!("HMD"));
+    }
+
+    #[test]
+    fn a_part_of_the_subtitle_settings_keeps_the_rest() {
+        let app = super::super::test_app(0);
+        set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"x_pos": 0.4}}))).unwrap();
+        let reply = set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"fadeout_duration": 0}}))).unwrap();
+        assert_eq!((reply.result["single_line"]["x_pos"].clone(), reply.result["single_line"]["fadeout_duration"].clone()),
+                   (json!(0.4), json!(0)));
+        assert_eq!(reply.result["multi_line"], crate::config::default_of("OVERLAY_VR_SUBTITLE_SETTINGS").unwrap()["multi_line"]);
+        // an unknown form or key is refused
+        assert_ne!(set_overlay_vr_subtitle_settings(&app, Some(json!({"triple_line": {}}))).unwrap().status, 200);
+        assert_ne!(set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"colour": 1}}))).unwrap().status, 200);
+    }
+
+    #[test]
+    fn an_unknown_form_is_refused() {
+        let app = super::super::test_app(0);
+        let reply = set_overlay_vr_panel_form(&app, Some(json!("triple_line"))).unwrap();
+        assert_eq!(reply, crate::errors::error("VALIDATION_CONFIG_VALUE_INVALID", json!("triple_line")));
+        assert_eq!(app.config.get("OVERLAY_VR_PANEL_FORM"), json!("history"));
     }
 }
