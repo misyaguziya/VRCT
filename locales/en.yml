@@ -578,7 +578,7 @@ vr_panel:
     overlay_small_log: "Subtitles (single line)"
     overlay_large_log: "Subtitles (multiple lines)"
     form_history: "History"
-    form_multi_line: "Subtitle (multi-line)"
+    form_multi_line: "Subtitle (multi‑line)"
     form_single_line: "Subtitle (one line)"
     subtitle_display_duration: "{{form}}: display time"
     subtitle_fadeout_duration: "{{form}}: fade-out time"
