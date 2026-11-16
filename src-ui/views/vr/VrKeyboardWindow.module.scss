@@ -568,18 +568,7 @@
 // 閉じている間は、中の選択肢を押せないようにする (閉じ終わってから隠す)
 .fold_inner { overflow: hidden; visibility: hidden; transition: visibility 0s linear var(--motion_base); }
 .fold.is_open > .fold_panel > .fold_inner { visibility: visible; transition-delay: 0s; }
-// 高さは KeyboardSettings が行の下の空きに合わせる。端まで送ってもパネルの本体は動かさない (スティックはポインタの当たっている所だけを送る)
-.fold_options {
-    position: relative;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    padding: 2px 6px 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    > * { flex: none; }
-}
+.fold_options { padding: 2px 6px 6px; display: flex; flex-direction: column; gap: 2px; }
 .fold_option {
     display: flex;
     align-items: center;
