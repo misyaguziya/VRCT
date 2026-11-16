@@ -2047,7 +2047,6 @@
   "getOverlaySmallLogSettings": "OVERLAY_SMALL_LOG_SETTINGS",
   "getOverlayLargeLog": "OVERLAY_LARGE_LOG",
   "getOverlayVrPanel": "OVERLAY_VR_PANEL",
-  "getOverlayVrPanelLocked": "OVERLAY_VR_PANEL_LOCKED",
   "getOverlayVrPanelFontSize": "OVERLAY_VR_PANEL_FONT_SIZE",
   "getOverlayVrLauncherAutoHide": "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
   "getOverlayVrTooltip": "OVERLAY_VR_TOOLTIP",

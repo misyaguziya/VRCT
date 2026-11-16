@@ -91,11 +91,11 @@ fn form_settings(config: &crate::config::Config, form: &str) -> Value {
     }
 }
 
-/// Some of a form's settings saved (the rest kept)
+/// Some of a form's settings saved (the rest kept); a subtitle's are told to the UI
 fn save_form_settings(app: &App, form: &str, mut values: Map<String, Value>) -> Result<()> {
     if form != HISTORY {
         app.config.set("OVERLAY_VR_SUBTITLE_SETTINGS", json!({form: values}))?;
-        return Ok(());
+        return app.run(200, "overlay_vr_subtitle_settings", app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS"));
     }
     if let Some(locked) = values.remove("locked") {
         app.config.set("OVERLAY_VR_PANEL_LOCKED", locked)?;
@@ -230,11 +230,7 @@ fn position_changed(app: &App, size: &str, form: Option<&str>, mut position: Map
             if form != current {
                 return Ok(());
             }
-            app.run(200, "overlay_vr_panel_anchor", tracker)?;
-            if form != HISTORY {
-                app.run(200, "overlay_vr_subtitle_settings", app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS"))?;
-            }
-            Ok(())
+            app.run(200, "overlay_vr_panel_anchor", tracker)
         }
         LAUNCHER => {
             app.config.set("OVERLAY_VR_LAUNCHER_SETTINGS", merged(app, "OVERLAY_VR_LAUNCHER_SETTINGS", &position))?;
@@ -824,8 +820,11 @@ mod panel_form_tests {
         // the same form again: nothing told
         set_overlay_vr_panel_form(&app, Some(json!("single_line"))).unwrap();
         assert!(pushes().is_empty());
+        // saved to a subtitle form: the subtitle settings told each time
         set_overlay_vr_panel_opacity(&app, Some(json!(0.6))).unwrap();
         assert_eq!(set_disable_overlay_vr_panel_locked(&app, None).unwrap().result, json!(false));
+        let told: Vec<String> = pushes().into_iter().map(|(name, _)| name).collect();
+        assert_eq!(told, vec!["overlay_vr_subtitle_settings", "overlay_vr_subtitle_settings"]);
         let subtitles = app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS");
         assert_eq!((subtitles["single_line"]["opacity"].clone(), subtitles["single_line"]["locked"].clone()), (json!(0.6), json!(false)));
         assert_eq!(subtitles["multi_line"]["locked"], json!(true));
@@ -837,12 +836,15 @@ mod panel_form_tests {
         take_printed();
         position_changed(&app, PANEL, Some("single_line"), moved.as_object().unwrap().clone()).unwrap();
         let told: Vec<String> = pushes().into_iter().map(|(name, _)| name).collect();
-        assert_eq!(told, vec!["overlay_vr_panel_anchor", "overlay_vr_subtitle_settings"]);
+        assert_eq!(told, vec!["overlay_vr_subtitle_settings", "overlay_vr_panel_anchor"]);
         assert_eq!(app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS")["single_line"]["x_pos"], json!(0.1));
-        // a move made in the form before the change: saved to that form, not told
+        // a move made in the form before the change: saved to that form, its anchor not told
         position_changed(&app, PANEL, Some("history"), moved.as_object().unwrap().clone()).unwrap();
         assert!(pushes().is_empty());
         assert_eq!(app.config.get("OVERLAY_VR_PANEL_SETTINGS")["x_pos"], json!(0.1));
+        position_changed(&app, PANEL, Some("multi_line"), moved.as_object().unwrap().clone()).unwrap();
+        let told: Vec<String> = pushes().into_iter().map(|(name, _)| name).collect();
+        assert_eq!(told, vec!["overlay_vr_subtitle_settings"]);
         // back to the history: its own values
         set_overlay_vr_panel_form(&app, Some(json!("history"))).unwrap();
         assert_eq!(get_overlay_vr_panel_opacity(&app, None).unwrap().result, json!(1.0));
@@ -857,6 +859,15 @@ mod panel_form_tests {
         assert_eq!((reply.result["single_line"]["x_pos"].clone(), reply.result["single_line"]["fadeout_duration"].clone()),
                    (json!(0.4), json!(0)));
         assert_eq!(reply.result["multi_line"], crate::config::default_of("OVERLAY_VR_SUBTITLE_SETTINGS").unwrap()["multi_line"]);
+        // out of range: kept as it was (as a value of another type), the rest taken
+        let reply = set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {
+            "opacity": 0.1, "display_duration": -1, "ui_scaling": 5.0, "width": 2000, "height": 100, "y_pos": 0.3}}))).unwrap();
+        let s = &reply.result["single_line"];
+        assert_eq!((s["opacity"].clone(), s["display_duration"].clone(), s["ui_scaling"].clone(), s["width"].clone(), s["height"].clone(), s["y_pos"].clone()),
+                   (json!(1.0), json!(5), json!(1.0), json!(1200), json!(180), json!(0.3)));
+        let reply = set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"opacity": 0.2, "height": 120, "ui_scaling": 3}}))).unwrap();
+        let s = &reply.result["single_line"];
+        assert_eq!((s["opacity"].clone(), s["height"].clone(), s["ui_scaling"].clone()), (json!(0.2), json!(120), json!(3.0)));
         // an unknown form or key is refused
         assert_ne!(set_overlay_vr_subtitle_settings(&app, Some(json!({"triple_line": {}}))).unwrap().status, 200);
         assert_ne!(set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"colour": 1}}))).unwrap().status, 200);

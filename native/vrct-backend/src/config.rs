@@ -311,10 +311,26 @@ fn overlay_vr_window(v: &Value, current: &Value) -> Option<Value> {
 /// The log window's subtitle forms: some of the forms, each with some of its keys (the others keep
 /// their value: a move in VR is not undone by a change made elsewhere)
 fn overlay_vr_subtitles(v: &Value, current: &Value) -> Option<Value> {
+    use vrct_overlay::layout::{PANEL_SIZE_RANGE, SUBTITLE_MIN_HEIGHT};
     let (map, cur) = (v.as_object()?, current.as_object()?);
+    // a value out of its range keeps the old one, as one of another type does
+    let in_range = |k: &str, x: &Value| {
+        let Some(n) = py_number(x) else { return true };
+        let ((min_w, _), (max_w, max_h)) = PANEL_SIZE_RANGE;
+        match k {
+            "opacity" => (0.2..=1.0).contains(&n),
+            "display_duration" | "fadeout_duration" => n >= 0.0,
+            // the widths a grab can make (vrct-overlay)
+            "ui_scaling" => (0.05..=3.0).contains(&n),
+            "width" => (min_w as f64..=max_w as f64).contains(&n),
+            "height" => (SUBTITLE_MIN_HEIGHT as f64..=max_h as f64).contains(&n),
+            _ => true,
+        }
+    };
     let mut new = cur.clone();
     for (form, x) in map {
-        new.insert(form.clone(), overlay_vr_window(x, cur.get(form)?)?);
+        let x = x.as_object()?.iter().filter(|(k, x)| in_range(k, x)).map(|(k, x)| (k.clone(), x.clone())).collect();
+        new.insert(form.clone(), overlay_vr_window(&Value::Object(x), cur.get(form)?)?);
     }
     Some(Value::Object(new))
 }
