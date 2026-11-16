@@ -146,7 +146,7 @@ fn on_event(app: &App, event: Event) -> Result<()> {
         })),
         Event::PanelOutOfView(out) => app.run(200, "vr_panel_log_out_of_view", json!(out)),
         Event::LauncherIntro(intro) => app.run(200, "vr_panel_launcher_intro", json!(intro.name())),
-        Event::Position { size, settings } => position_changed(app, &size, position_of(&settings)),
+        Event::Position { size, settings, .. } => position_changed(app, &size, position_of(&settings)),
         // when it was made (ms): the VR view opens / closes the keyboard, and ignores an old one
         // sent again when it opens anew
         Event::Shortcut => app.run(200, "vr_panel_keyboard_shortcut", json!(chrono_ms())),

@@ -301,7 +301,7 @@ impl Rig {
 
     fn positions(&self) -> Vec<(String, Settings)> {
         self.events.lock().unwrap().iter().filter_map(|e| match e {
-            Event::Position { size, settings } => Some((size.clone(), settings.clone())),
+            Event::Position { size, settings, .. } => Some((size.clone(), settings.clone())),
             _ => None,
         }).collect()
     }
@@ -708,6 +708,116 @@ fn a_recalled_log_comes_in_front_of_the_eyes() {
     r.hand(HEAD, head);
     r.w.recall_requested = Some((Region::Panel, Instant::now()));
     r.frame(0);
+    let expected = pose::position(&pose::recall_pose(&head));
+    let got = pose::position(&r.world("panel"));
+    assert!(pose::norm(pose::sub(got, expected)) < 1e-3, "{got:?} {expected:?}");
+}
+
+/// The log window turned into a subtitle form (fading, at its own place)
+fn to_form(r: &mut Rig, form: &str, tracker: &str, locked: bool) {
+    let pi = r.index("panel");
+    let s = Settings { tracker: tracker.into(), fadeout_duration: 2.0, ..r.w.sizes[pi].settings.clone() };
+    r.run.apply_panel_form(&mut r.w, form.into(), s, locked);
+}
+
+fn alpha_of(r: &Rig, size: &str) -> f64 {
+    r.steam.0.borrow().overlays[r.run.handles[r.index(size)] as usize - 1].alpha
+}
+
+#[test]
+fn a_locked_subtitle_is_not_pointed_at_and_leaves_the_input_to_the_game() {
+    let mut r = vr_ui();
+    to_form(&mut r, "single_line", "Playspace", true);
+    aim_at_panel(&mut r);
+    r.frame(0);
+    assert_eq!(r.steam.0.borrow().input_updates.last(), Some(&vec![]));
+    assert!(!r.shown("VRCT_pointer_dot"));
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), None);
+    assert_eq!(r.w.pointer_notified, None);
+}
+
+#[test]
+fn an_unlocked_subtitle_is_grabbed() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", false);
+    aim_at_panel(&mut r);
+    r.frame(0);
+    assert!(r.steam.0.borrow().input_updates.last().is_some_and(|hands| hands.contains(&RIGHT)));
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), Some(r.index("panel")));
+}
+
+#[test]
+fn changing_form_while_grabbed_saves_the_place_to_the_form_it_was_moved_in() {
+    let mut r = vr_ui();
+    aim_at_panel(&mut r);
+    r.frame(0);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    r.frame(20);
+    assert_eq!(r.grabbed(), Some(r.index("panel")));
+    r.events.lock().unwrap().clear();
+    to_form(&mut r, "single_line", "HMD", true);
+    assert_eq!(r.grabbed(), None);
+    let forms: Vec<Option<String>> = r.events.lock().unwrap().iter().filter_map(|e| match e {
+        Event::Position { form, .. } => Some(form.clone()),
+        _ => None,
+    }).collect();
+    assert_eq!(forms, vec![Some("history".to_string())]);
+    assert_eq!(r.w.panel_form, "single_line");
+    // the new form's own place and lock (the settings never lock: the lock is panel_locked)
+    let pi = r.index("panel");
+    assert_eq!((r.w.sizes[pi].settings.tracker.as_str(), r.w.sizes[pi].settings.locked, r.w.panel_locked), ("HMD", false, true));
+}
+
+#[test]
+fn a_changed_form_is_clear_until_shown_and_then_after_a_while_anyway() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", false);
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    // a grip on it does not show the old picture either
+    aim_at_panel(&mut r);
+    r.frame(0);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    r.run.panel_hidden_since = Some(Instant::now() - Duration::from_secs(2));
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 1.0);
+    assert!(r.run.panel_hidden_since.is_none());
+}
+
+#[test]
+fn the_history_that_never_fades_is_clear_too_while_changing_form() {
+    let mut r = vr_ui();
+    let pi = r.index("panel");
+    let s = r.w.sizes[pi].settings.clone();
+    assert_eq!(s.fadeout_duration, 0.0);
+    r.run.apply_panel_form(&mut r.w, "history".into(), s, false);
+    r.frame(0);
+    r.frame(20);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    r.run.show_panel(&mut r.w, pi);
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 1.0);
+}
+
+#[test]
+fn a_subtitle_on_the_head_is_recalled_on_the_head() {
+    let mut r = vr_ui();
+    let head = pose::pose_facing([0.0, 1.6, 0.0], [0.0, 1.6, 1.0], None);
+    r.hand(HEAD, head);
+    to_form(&mut r, "single_line", "HMD", true);
+    r.w.recall_requested = Some((Region::Panel, Instant::now()));
+    r.frame(0);
+    let pi = r.index("panel");
+    assert_eq!(r.w.sizes[pi].settings.tracker, "HMD");
+    let handle = r.run.handles[pi];
+    assert_eq!(r.steam.0.borrow().overlays[handle as usize - 1].place.map(|p| p.0), Some(Some(HEAD)));
     let expected = pose::position(&pose::recall_pose(&head));
     let got = pose::position(&r.world("panel"));
     assert!(pose::norm(pose::sub(got, expected)) < 1e-3, "{got:?} {expected:?}");

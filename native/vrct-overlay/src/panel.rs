@@ -367,15 +367,28 @@ impl Run<'_> {
             self.hide_tooltip();
             return Ok(());
         }
-        let Some(capture) = self.collect_capture(w, now)? else { return Ok(()) };
+        let Some((capture, started)) = self.collect_capture(w, now)? else { return Ok(()) };
         self.transfer_capture(w, capture, now)?;
         // a capture handled to the end
         self.panel.errors = 0;
+        // the log window's new content sent (one taken after it was drawn: no old one flashing)
+        if self.panel.last_change == now && self.panel_reveal_at.is_some_and(|at| started >= at)
+            && let Some(pi) = w.region_index(Region::Panel)
+        {
+            self.show_panel(w, pi);
+        }
         Ok(())
     }
 
-    /// collectCapture: the capture asked for, when done (asking for the next at once)
-    fn collect_capture(&mut self, w: &mut Worker, now: Instant) -> anyhow::Result<Option<Capture>> {
+    /// revealPanel: captured and sent at once (the next capture, even if the screen looks the same)
+    pub fn reveal_panel(&mut self) {
+        self.panel_reveal_at = Some(Instant::now());
+        self.panel.last_raw = None;
+        self.panel.last_capture = None;
+    }
+
+    /// collectCapture: the capture asked for, when done (asking for the next at once), and when it was taken
+    fn collect_capture(&mut self, w: &mut Worker, now: Instant) -> anyhow::Result<Option<(Capture, Instant)>> {
         let started_now = self.panel.job.is_none();
         if started_now {
             self.start_capture(w, now)?;
@@ -412,7 +425,7 @@ impl Run<'_> {
         if result.is_none() {
             self.log_layout(w, "no capture", String::new());
         }
-        Ok(result)
+        Ok(result.map(|capture| (capture, job.started)))
     }
 
     /// panelCaptureInterval: short while the VR UI is used or just changed

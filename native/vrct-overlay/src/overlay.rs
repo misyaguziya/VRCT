@@ -84,8 +84,9 @@ pub enum Event {
     /// pointer_callback: where the pointer is on the VR view (logical px), None off it
     /// where the pointer is on the VR view, and the other hand's when both point at it
     Pointer(Option<(i32, i32)>, Option<(i32, i32)>),
-    /// position_changed_callback: a window was moved / resized in VR (to save)
-    Position { size: String, settings: Settings },
+    /// position_changed_callback: a window was moved / resized in VR (to save); the log window's
+    /// form it was moved in (it may have changed since)
+    Position { size: String, settings: Settings, form: Option<String> },
     /// panel_out_of_view_callback
     PanelOutOfView(bool),
     /// launcher_intro_callback
@@ -126,8 +127,15 @@ pub(crate) enum Command {
     Recall(Region),
     Tooltip(Tooltip),
     LayoutRendered((u32, u32)),
+    PanelForm(String, Settings, bool),
+    RevealPanel,
     Stop,
 }
+
+/// The log window's form that is not a subtitle
+pub const PANEL_FORM_HISTORY: &str = "history";
+/// A log window changing form is hidden until the new one was captured, at most this long
+const PANEL_REVEAL_WAIT: Duration = Duration::from_millis(1500);
 
 /// Overlay: the handle (any thread). start() / stop() the overlay thread; the updates queue up
 /// while it is stopped.
@@ -304,6 +312,17 @@ impl Overlay {
     pub fn set_layout_rendered(&self, panel_size: (u32, u32)) {
         self.send(Command::LayoutRendered(panel_size));
     }
+
+    /// The log window's form ("history" or a subtitle) with its place, size, fade and lock: it
+    /// moves there, hidden until the VR view drew it (reveal_panel)
+    pub fn set_panel_form(&self, form: &str, settings: Settings, locked: bool) {
+        self.send(Command::PanelForm(form.into(), settings, locked));
+    }
+
+    /// The VR view drew the log window's new content: shown (and its display time starts) once captured
+    pub fn reveal_panel(&self) {
+        self.send(Command::RevealPanel);
+    }
 }
 
 impl Drop for Overlay {
@@ -341,6 +360,8 @@ pub(crate) struct Worker {
     pub vr_panel_enabled: bool,
     pub panel_enabled_requests: VecDeque<bool>,
     pub panel_locked: bool,
+    /// the log window's form ("history" or a subtitle's)
+    pub panel_form: String,
     pub keyboard_locked: bool,
     pub launcher_auto_hide: bool,
     /// the lasers' tilt up from the controllers' tips (degrees)
@@ -394,7 +415,8 @@ impl Worker {
         }));
         Self {
             sizes, commands, log, events, shared, stopped: false, connect_failure_logged: false,
-            vr_panel_enabled: true, panel_enabled_requests: VecDeque::new(), panel_locked: false, keyboard_locked: false, launcher_auto_hide: true,
+            vr_panel_enabled: true, panel_enabled_requests: VecDeque::new(), panel_locked: false, panel_form: PANEL_FORM_HISTORY.into(),
+            keyboard_locked: false, launcher_auto_hide: true,
             laser_pitch_up_deg: LASER_PITCH_UP_DEG, shortcut: Default::default(),
             launcher_defaults: None, launcher_reset_requested: false, launcher_reset_keep_hand: false,
             vr_windows_wanted: (false, false, false), requested_anchor: None, recall_requested: None,
@@ -416,6 +438,20 @@ impl Worker {
 
     pub fn emit(&self, event: Event) {
         (self.events)(event);
+    }
+
+    /// The log window shows subtitles (not the history)
+    pub fn panel_subtitle(&self) -> bool {
+        self.panel_form != PANEL_FORM_HISTORY
+    }
+
+    /// The form, its lock and its settings (never locked by settings: the lock is panel_locked)
+    pub(crate) fn set_panel_form(&mut self, form: String, settings: Settings, locked: bool) {
+        self.panel_form = form;
+        self.panel_locked = locked;
+        if let Some(pi) = self.region_index(Region::Panel) {
+            self.sizes[pi].settings = Settings { locked: false, ..settings };
+        }
     }
 
     /// What callers read: the settings and the state
@@ -475,7 +511,19 @@ impl Worker {
             Command::FadeoutDuration(name, v) => self.with(&name, |s| s.fadeout_duration = v),
             Command::Locked(name, v) => self.with(&name, |s| s.locked = v),
             // without SteamVR an image has nowhere to go (updateImage does nothing then)
-            Command::Image(..) => {}
+            Command::Image(..) | Command::RevealPanel => {}
+            Command::PanelForm(form, settings, locked) => {
+                let size = settings.panel_size;
+                self.set_panel_form(form, settings, locked);
+                if let Some((w, h)) = size {
+                    let (w, h) = layout::clamp_panel_size(w as f64, h as f64);
+                    if Layout::new(w, h) != self.layout {
+                        self.layout = Layout::new(w, h);
+                        self.layout_gen += 1;
+                        self.notify_layout();
+                    }
+                }
+            }
             other => self.apply_request(other),
         }
     }
@@ -767,6 +815,10 @@ pub(crate) struct Run<'s> {
     pub panel: crate::panel::Panel,
     /// the VR UI's capture is set up (overlay.py: self.gl)
     pub panel_ready: bool,
+    /// the log window's new content was drawn then: shown by the first capture started after it
+    pub panel_reveal_at: Option<Instant>,
+    /// the log window hidden while it changes form, since then
+    pub panel_hidden_since: Option<Instant>,
     /// this frame's tracked poses
     pub poses: Vec<vrct_openvr::TrackedDevicePose>,
     /// SteamVR's server: the connection is dead once it ends (None: not watched)
@@ -789,7 +841,8 @@ impl<'s> Run<'s> {
             first_frame_wait_logged: false, tooltip_state: None, tooltip_ready: false, tooltip_shown: false,
             tooltip_manipulating: false, resizing: None, corner_prev: HashMap::new(), ghost_key: None, resize_undo: None,
             panel_input: HashMap::new(), panel_scroll: HashMap::new(), trigger_blocked: HashSet::new(), input_suspended: HashSet::new(), input_update_failed: false, input_hands: None, mouse_owner: None, mouse_owner_keyboard: false, trigger_aim: HashMap::new(), trigger_value: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
-            debug_state: HashMap::new(), shortcut_presses: HashMap::new(), panel: crate::panel::Panel::new(), panel_ready: false, poses: vec![], server: None,
+            debug_state: HashMap::new(), shortcut_presses: HashMap::new(), panel: crate::panel::Panel::new(), panel_ready: false,
+            panel_reveal_at: None, panel_hidden_since: None, poses: vec![], server: None,
         }
     }
 
@@ -974,6 +1027,16 @@ impl<'s> Run<'s> {
     /// update(size): fading after the display duration, the launcher faded while not looked at,
     /// else the opacity as it is
     fn update(&mut self, w: &mut Worker, index: usize) {
+        if w.sizes[index].region == Some(Region::Panel)
+            && let Some(since) = self.panel_hidden_since
+        {
+            // changing form: clear until the new one was captured (shown anyway after a while)
+            if since.elapsed() < PANEL_REVEAL_WAIT {
+                self.set_alpha(index, 0.0);
+                return;
+            }
+            self.show_panel(w, index);
+        }
         let size = &mut w.sizes[index];
         let s = &size.settings;
         if s.fadeout_duration != 0.0 {
@@ -998,15 +1061,30 @@ impl<'s> Run<'s> {
         s.opacity > 0.0 && (s.fadeout_duration == 0.0 || w.sizes[index].fade_ratio > 0.0)
     }
 
-    /// wakeOverlay: no fade while grabbed
+    /// wakeOverlay: no fade while grabbed (the log window changing form stays clear)
     pub fn wake(&mut self, w: &mut Worker, index: usize) {
         w.sizes[index].last_update = Instant::now();
         w.sizes[index].fade_ratio = 1.0;
+        if w.sizes[index].region == Some(Region::Panel) && self.panel_hidden_since.is_some() {
+            return;
+        }
         self.set_alpha(index, w.sizes[index].settings.opacity);
+    }
+
+    /// The log window shown again after its change of form, its display time from now
+    pub fn show_panel(&mut self, w: &mut Worker, index: usize) {
+        self.panel_hidden_since = None;
+        self.panel_reveal_at = None;
+        self.wake(w, index);
     }
 
     /// A command with SteamVR
     fn apply(&mut self, w: &mut Worker, command: Command) {
+        let command = match command {
+            Command::PanelForm(form, settings, locked) => return self.apply_panel_form(w, form, settings, locked),
+            Command::RevealPanel => return self.reveal_panel(),
+            other => other,
+        };
         let name = match &command {
             Command::Image(n, _) | Command::Opacity(n, ..) | Command::UiScaling(n, _) | Command::Position(n, ..)
             | Command::DisplayDuration(n, _) | Command::FadeoutDuration(n, _) | Command::Locked(n, _) => n.clone(),
