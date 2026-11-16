@@ -564,8 +564,8 @@ fn whisper_loads(path: &std::path::Path) -> bool {
 
 /// checkCTranslate2Weight: the verified marker, else whether it loads on the CPU
 pub fn ctranslate2_weight_ok(app: &App, weight_type: &str) -> bool {
-    let Ok(w) = crate::translate::ctranslate2::weight(weight_type) else { return false };
-    weights::check(&app.config.env().path_local.join("weights").join("ctranslate2").join(w.directory_name), &ct2_loads)
+    let Ok(m) = weights::ctranslate2_model(weight_type) else { return false };
+    weights::check(&m.dir(&app.config.env().path_local), &ct2_loads)
 }
 
 /// checkWhisperWeight

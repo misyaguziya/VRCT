@@ -160,7 +160,7 @@ impl Translator {
                 };
                 &self.languages[translator]
             }
-            "CTranslate2" => &self.languages[translator][weight_type],
+            "CTranslate2" => &self.languages[translator][crate::weights::languages_key(weight_type)],
             _ => &self.languages[translator],
         };
         let code = |side: &str, name: &str| table[side][name].as_str().map(String::from);

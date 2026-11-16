@@ -94,6 +94,11 @@ impl CatalogModel {
     pub fn size(&self) -> u64 {
         self.weights.files.iter().chain(self.tokenizer.iter().flat_map(|t| &t.files)).map(|f| f.size).sum()
     }
+
+    /// `<root>/weights/<kind>/<id>`
+    pub fn dir(&self, root: &Path) -> PathBuf {
+        root.join("weights").join(self.family.kind()).join(&self.id)
+    }
 }
 
 /// A file path of the catalog: plain names under the folder only, no pickles (only model.bin of the
@@ -184,6 +189,11 @@ pub fn catalog() -> &'static [CatalogModel] {
 /// The catalog's model `id`
 pub fn model(id: &str) -> Option<&'static CatalogModel> {
     catalog().iter().find(|m| m.id == id)
+}
+
+/// The catalog's CTranslate2 model `id`
+pub fn ctranslate2_model(id: &str) -> Result<&'static CatalogModel> {
+    model(id).filter(|m| m.family != Family::Whisper).ok_or_else(|| anyhow::anyhow!("unknown weight type {id}"))
 }
 
 /// The key of languages.yml["CTranslate2"] for a weight type (a name not in the catalog as it is)
@@ -368,20 +378,20 @@ fn inside(base: &Path, filename: &str) -> Option<PathBuf> {
 /// listing fails 3 times or a file fails. `end` is called only after the files were tried.
 pub fn download_ctranslate2(http: &Http, root: &Path, weight_type: &str, loads: &dyn Fn(&Path) -> bool,
                             progress: &dyn Fn(f64), end: &dyn Fn(), log: &dyn Fn(&str, &str)) -> Result<bool> {
-    let w = crate::translate::ctranslate2::weight(weight_type)?;
-    let path = root.join("weights").join("ctranslate2").join(w.directory_name);
+    let m = ctranslate2_model(weight_type)?;
+    let path = m.dir(root);
     if check(&path, loads) {
         return Ok(true);
     }
     let mut files = None;
     for attempt in 1..=ATTEMPTS {
-        match list_repo_files(http, w.hf_repo) {
+        match list_repo_files(http, &m.weights.repo) {
             Ok(f) => {
                 files = Some(f);
                 break;
             }
             Err(_) if attempt < ATTEMPTS => {
-                log(&format!("CTranslate2 repo listing failed, retrying ({attempt}/{})", ATTEMPTS - 1), w.hf_repo);
+                log(&format!("CTranslate2 repo listing failed, retrying ({attempt}/{})", ATTEMPTS - 1), &m.weights.repo);
                 std::thread::sleep(BACKOFF * attempt);
             }
             Err(_) => {}
@@ -396,7 +406,7 @@ pub fn download_ctranslate2(http: &Http, root: &Path, weight_type: &str, loads: 
             continue;
         };
         let progress = (name == "model.bin").then_some(progress);
-        all &= download_file(http, &hf_hub_url(w.hf_repo, name), &file, progress, None, "CTranslate2", log);
+        all &= download_file(http, &hf_hub_url(&m.weights.repo, name), &file, progress, None, "CTranslate2", log);
     }
     end();
     Ok(all)
@@ -406,13 +416,14 @@ pub fn download_ctranslate2(http: &Http, root: &Path, weight_type: &str, loads: 
 /// layout v3.6.x's transformers wrote (`tokenizer/models--org--name/snapshots/<commit>/`, `refs/main`).
 /// Nothing is fetched when they are there (transformers asked the Hub for a newer revision every time).
 pub fn download_tokenizer(http: &Http, root: &Path, weight_type: &str, log: &dyn Fn(&str, &str)) -> Result<()> {
-    let w = crate::translate::ctranslate2::weight(weight_type)?;
-    let cache = root.join("weights").join("ctranslate2").join(w.directory_name).join("tokenizer");
-    let files = w.tokenizer_files();
-    if crate::hf_cache::snapshot_dir(&cache, w.tokenizer).is_ok_and(|s| files.iter().all(|f| s.join(f).is_file())) {
+    let m = ctranslate2_model(weight_type)?;
+    let cache = m.dir(root).join("tokenizer");
+    let tokenizer = m.tokenizer.as_ref().unwrap();
+    let files: Vec<&str> = tokenizer.files.iter().map(|f| f.path.as_str()).collect();
+    if crate::hf_cache::snapshot_dir(&cache, &tokenizer.repo).is_ok_and(|s| files.iter().all(|f| s.join(f).is_file())) {
         return Ok(());
     }
-    let url = format!("https://huggingface.co/api/models/{}/revision/main", w.tokenizer);
+    let url = format!("https://huggingface.co/api/models/{}/revision/main", tokenizer.repo);
     let response = http.get(&url, &[], Some(Duration::from_secs(10)))?;
     if !response.status().is_success() {
         bail!("{url}: {}", response.status());
@@ -421,9 +432,9 @@ pub fn download_tokenizer(http: &Http, root: &Path, weight_type: &str, log: &dyn
     let Some(commit) = info["sha"].as_str().filter(|c| !c.is_empty() && c.chars().all(|c| c.is_ascii_alphanumeric())) else {
         bail!("{url}: no commit");
     };
-    let repo = cache.join(format!("models--{}", w.tokenizer.replace('/', "--")));
+    let repo = cache.join(format!("models--{}", tokenizer.repo.replace('/', "--")));
     for name in files {
-        let url = format!("https://huggingface.co/{}/resolve/{commit}/{name}", w.tokenizer);
+        let url = format!("https://huggingface.co/{}/resolve/{commit}/{name}", tokenizer.repo);
         if !download_file(http, &url, &repo.join("snapshots").join(commit).join(name), None, None, "Tokenizer", log) {
             bail!("{url}: download failed");
         }
@@ -474,10 +485,6 @@ mod tests {
     fn the_catalog_has_the_repos_of_the_old_tables() {
         for (id, repo) in WHISPER_MODELS {
             assert_eq!(model(id).unwrap().weights.repo, repo);
-        }
-        for w in crate::translate::ctranslate2::WEIGHTS {
-            let m = model(w.weight_type).unwrap();
-            assert_eq!((m.weights.repo.as_str(), m.tokenizer.as_ref().unwrap().repo.as_str()), (w.hf_repo, w.tokenizer));
         }
     }
 

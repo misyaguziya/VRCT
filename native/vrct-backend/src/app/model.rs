@@ -116,7 +116,7 @@ impl Model {
     /// getTranslationLanguagesForEngine: the source languages (CTranslate2: of the weight type)
     pub fn translation_languages_for_engine(&self, config: &Config, engine: &str) -> Vec<String> {
         let table = &self.translation_lang[engine];
-        let table = if engine == "CTranslate2" { &table[config.get_str("CTRANSLATE2_WEIGHT_TYPE")] } else { table };
+        let table = if engine == "CTranslate2" { &table[crate::weights::languages_key(&config.get_str("CTRANSLATE2_WEIGHT_TYPE"))] } else { table };
         table["source"].as_object().map(|m| m.keys().cloned().collect()).unwrap_or_default()
     }
 

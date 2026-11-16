@@ -3,43 +3,12 @@
 //! them: NllbTokenizerFast (tokenizers 0.19.1) and M2M100Tokenizer (sentencepiece 0.2.1 +
 //! vocab.json), ported call by call.
 use crate::hf_cache;
+use crate::weights::{self, Family};
 use anyhow::{anyhow, bail, Context, Result};
 use sentencepiece::SentencePieceProcessor;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use vrct_ct2::{ModelConfig, TranslateOptions};
-
-/// translation_utils.ctranslate2_weights
-pub struct Weight {
-    pub weight_type: &'static str,
-    pub hf_repo: &'static str,
-    pub directory_name: &'static str,
-    pub tokenizer: &'static str,
-}
-
-pub const WEIGHTS: [Weight; 5] = [
-    Weight { weight_type: "m2m100_418M-ct2-int8", hf_repo: "jncraton/m2m100_418M-ct2-int8",
-             directory_name: "m2m100_418M-ct2-int8", tokenizer: "facebook/m2m100_418M" },
-    Weight { weight_type: "m2m100_1.2B-ct2-int8", hf_repo: "jncraton/m2m100_1.2B-ct2-int8",
-             directory_name: "m2m100_1.2B-ct2-int8", tokenizer: "facebook/m2m100_1.2B" },
-    Weight { weight_type: "nllb-200-distilled-600M-ct2-int8", hf_repo: "JustFrederik/nllb-200-distilled-600M-ct2-int8",
-             directory_name: "nllb-200-distilled-600M-ct2-int8", tokenizer: "facebook/nllb-200-distilled-600M" },
-    Weight { weight_type: "nllb-200-distilled-1.3B-ct2-int8", hf_repo: "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
-             directory_name: "nllb-200-distilled-1.3B-ct2-int8", tokenizer: "facebook/nllb-200-distilled-1.3B" },
-    Weight { weight_type: "nllb-200-3.3B-ct2-int8", hf_repo: "OpenNMT/nllb-200-3.3B-ct2-int8",
-             directory_name: "nllb-200-3.3B-ct2-int8", tokenizer: "facebook/nllb-200-3.3B" },
-];
-
-impl Weight {
-    /// The files of `tokenizer` that `Ct2Translator::load` reads
-    pub fn tokenizer_files(&self) -> &'static [&'static str] {
-        if self.weight_type.starts_with("m2m100") { &["sentencepiece.bpe.model", "vocab.json"] } else { &["tokenizer.json"] }
-    }
-}
-
-pub fn weight(weight_type: &str) -> Result<&'static Weight> {
-    WEIGHTS.iter().find(|w| w.weight_type == weight_type).ok_or_else(|| anyhow!("unknown weight type {weight_type}"))
-}
 
 pub struct Ct2Translator {
     translator: vrct_ct2::Translator,
@@ -57,8 +26,8 @@ impl Ct2Translator {
     /// changeCTranslate2Model(root, weight_type, device, device_index, compute_type) with the
     /// compute type already resolved ("auto" is getBestComputeType, `vrct_ct2::best_compute_type`).
     pub fn load(root: &Path, weight_type: &str, device: &str, device_index: i32, compute_type: &str) -> Result<Self> {
-        let w = weight(weight_type)?;
-        let dir = root.join("weights").join("ctranslate2").join(w.directory_name);
+        let m = weights::ctranslate2_model(weight_type)?;
+        let dir = m.dir(root);
         let config = ModelConfig {
             device: device.into(),
             device_index,
@@ -67,8 +36,8 @@ impl Ct2Translator {
             intra_threads: 4,
         };
         let translator = vrct_ct2::Translator::new(&dir, &config)?;
-        let snapshot = hf_cache::snapshot_dir(&dir.join("tokenizer"), w.tokenizer)?;
-        let tokenizer = if w.weight_type.starts_with("m2m100") {
+        let snapshot = hf_cache::snapshot_dir(&dir.join("tokenizer"), &m.tokenizer.as_ref().unwrap().repo)?;
+        let tokenizer = if m.family == Family::M2m100 {
             Tokenizer::M2m100(M2m100::load(&snapshot)?)
         } else {
             Tokenizer::Nllb(Nllb::load(&snapshot)?)

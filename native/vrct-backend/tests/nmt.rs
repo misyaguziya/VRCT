@@ -6,18 +6,18 @@
 //! there are skipped (and say so). VRCT_TEST_CUDA=1 also runs the *-cuda.json data.
 use serde_json::Value;
 use std::path::{Path, PathBuf};
-use vrct_backend::translate::ctranslate2::{weight, Ct2Translator};
+use vrct_backend::translate::ctranslate2::Ct2Translator;
 
 fn testdata() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../testdata/nmt")
 }
 
-fn weights_root(directory_name: &str) -> Option<PathBuf> {
+fn weights_root(weight_type: &str) -> Option<PathBuf> {
     std::env::var("VRCT_WEIGHTS_ROOTS")
         .ok()?
         .split(';')
         .map(PathBuf::from)
-        .find(|root| root.join("weights/ctranslate2").join(directory_name).join("model.bin").is_file())
+        .find(|root| root.join("weights/ctranslate2").join(weight_type).join("model.bin").is_file())
 }
 
 fn strings(v: &Value) -> Vec<String> {
@@ -27,7 +27,7 @@ fn strings(v: &Value) -> Vec<String> {
 fn check(file: &Path) -> Vec<String> {
     let data: Value = serde_json::from_slice(&std::fs::read(file).unwrap()).unwrap();
     let weight_type = data["weight_type"].as_str().unwrap();
-    let Some(root) = weights_root(weight(weight_type).unwrap().directory_name) else {
+    let Some(root) = weights_root(weight_type) else {
         eprintln!("SKIPPED {}: no weights for {weight_type} in VRCT_WEIGHTS_ROOTS", file.display());
         return vec![];
     };
