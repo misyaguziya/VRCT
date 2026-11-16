@@ -295,13 +295,43 @@ fn overlay_vr_window(v: &Value, current: &Value) -> Option<Value> {
     let mut new = cur.clone();
     for (k, x) in map {
         let k = k.as_str();
-        if k == "tracker" && x.as_str().is_some_and(|t| ["HMD", "LeftHand", "RightHand", "Playspace"].contains(&t)) {
+        if (k == "tracker" && x.as_str().is_some_and(|t| ["HMD", "LeftHand", "RightHand", "Playspace"].contains(&t)))
+            || (k == "locked" && x.is_boolean())
+        {
             new.insert(k.into(), x.clone());
         } else if (POSITION_KEYS.contains(&k) || k == "opacity" || k == "ui_scaling") && is_number(x) {
             new.insert(k.into(), to_float(x));
-        } else if ["display_duration", "fadeout_duration", "width", "height"].contains(&k) && is_int(x) && !x.is_boolean() {
+        } else if ["display_duration", "fadeout_duration", "width", "height", "font_size"].contains(&k) && is_int(x) && !x.is_boolean() {
             new.insert(k.into(), x.clone());
         }
+    }
+    Some(Value::Object(new))
+}
+
+/// The log window's subtitle forms: some of the forms, each with some of its keys (the others keep
+/// their value: a move in VR is not undone by a change made elsewhere)
+fn overlay_vr_subtitles(v: &Value, current: &Value) -> Option<Value> {
+    use vrct_overlay::layout::{PANEL_OPACITY_RANGE, PANEL_SIZE_RANGE, SUBTITLE_FONT_SIZE_RANGE, SUBTITLE_MIN_HEIGHT, WIDTH_RANGE_M};
+    let (map, cur) = (v.as_object()?, current.as_object()?);
+    // a value out of its range keeps the old one, as one of another type does
+    let in_range = |k: &str, x: &Value| {
+        let Some(n) = py_number(x) else { return true };
+        let ((min_w, _), (max_w, max_h)) = PANEL_SIZE_RANGE;
+        match k {
+            "opacity" => (PANEL_OPACITY_RANGE.0..=PANEL_OPACITY_RANGE.1).contains(&n),
+            "display_duration" | "fadeout_duration" => n >= 0.0,
+            // the widths a grab can make
+            "ui_scaling" => (WIDTH_RANGE_M.0..=WIDTH_RANGE_M.1).contains(&n),
+            "width" => (min_w as f64..=max_w as f64).contains(&n),
+            "height" => (SUBTITLE_MIN_HEIGHT as f64..=max_h as f64).contains(&n),
+            "font_size" => (SUBTITLE_FONT_SIZE_RANGE.0 as f64..=SUBTITLE_FONT_SIZE_RANGE.1 as f64).contains(&n),
+            _ => true,
+        }
+    };
+    let mut new = cur.clone();
+    for (form, x) in map {
+        let x = x.as_object()?.iter().filter(|(k, x)| in_range(k, x)).map(|(k, x)| (k.clone(), x.clone())).collect();
+        new.insert(form.clone(), overlay_vr_window(&Value::Object(x), cur.get(form)?)?);
     }
     Some(Value::Object(new))
 }
@@ -386,6 +416,7 @@ fn validate(name: &str, v: &Value, c: &View) -> Option<Value> {
         }
         "OVERLAY_SMALL_LOG_SETTINGS" | "OVERLAY_LARGE_LOG_SETTINGS" => overlay_log_settings(v, current),
         "OVERLAY_VR_PANEL_SETTINGS" | "OVERLAY_VR_LAUNCHER_SETTINGS" => overlay_vr_window(v, current),
+        "OVERLAY_VR_SUBTITLE_SETTINGS" => overlay_vr_subtitles(v, current),
         "SEND_MESSAGE_FORMAT_PARTS" | "RECEIVED_MESSAGE_FORMAT_PARTS" => {
             let structure = json!({"message": {"prefix": "str", "suffix": "str"}, "separator": "str",
                                    "translation": {"prefix": "str", "separator": "str", "suffix": "str"}, "translation_first": "bool"});

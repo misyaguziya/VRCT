@@ -93,7 +93,8 @@ export const MessageContainer = ({ messages, status, category, created_at, sourc
     );
 };
 
-const MessageWithTransliteration = ({ item }) => {
+// className: 段落の見た目 (VR の字幕が大きさと色を変えるため)
+export const MessageWithTransliteration = ({ item, className = styles.message_main }) => {
     const renderTokenNode = (token, key) => {
         const orig = token.orig ?? "";
         const hira = token.hira ?? "";
@@ -139,12 +140,12 @@ const MessageWithTransliteration = ({ item }) => {
         );
     };
 
-    if (!item.transliteration.length) {
-        return <p className={styles.message_main}>{item.message}</p>;
+    if (!item.transliteration?.length) {
+        return <p className={className}>{item.message}</p>;
     }
 
     return (
-        <p className={styles.message_main}>
+        <p className={className}>
             {item.transliteration.map((token, idx) => renderTokenNode(token, idx))}
         </p>
     );

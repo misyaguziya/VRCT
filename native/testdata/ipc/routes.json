@@ -1841,6 +1841,31 @@
    "handler": "setOverlayVrLaserPitch"
   },
   {
+   "endpoint": "/get/data/overlay_vr_panel_form",
+   "during_init": true,
+   "handler": "getOverlayVrPanelForm"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_panel_form",
+   "during_init": true,
+   "handler": "setOverlayVrPanelForm"
+  },
+  {
+   "endpoint": "/get/data/overlay_vr_subtitle_settings",
+   "during_init": true,
+   "handler": "getOverlayVrSubtitleSettings"
+  },
+  {
+   "endpoint": "/set/data/overlay_vr_subtitle_settings",
+   "during_init": true,
+   "handler": "setOverlayVrSubtitleSettings"
+  },
+  {
+   "endpoint": "/run/vr_panel_log_rendered",
+   "during_init": true,
+   "handler": "vrPanelLogRendered"
+  },
+  {
    "endpoint": "/get/data/keyboard_shortcut",
    "during_init": true,
    "handler": "getKeyboardShortcut"
@@ -1940,7 +1965,10 @@
   "enable_osc_query": "/run/enable_osc_query",
   "keyboard_state": "/run/keyboard_state",
   "keyboard_sent": "/run/keyboard_sent",
-  "vr_panel_keyboard_shortcut": "/run/vr_panel_keyboard_shortcut"
+  "vr_panel_keyboard_shortcut": "/run/vr_panel_keyboard_shortcut",
+  "overlay_vr_panel_locked": "/run/overlay_vr_panel_locked",
+  "overlay_vr_panel_opacity": "/run/overlay_vr_panel_opacity",
+  "overlay_vr_subtitle_settings": "/run/overlay_vr_subtitle_settings"
  },
  "simple_getters": {
   "getVersion": "VERSION",
@@ -2019,7 +2047,6 @@
   "getOverlaySmallLogSettings": "OVERLAY_SMALL_LOG_SETTINGS",
   "getOverlayLargeLog": "OVERLAY_LARGE_LOG",
   "getOverlayVrPanel": "OVERLAY_VR_PANEL",
-  "getOverlayVrPanelLocked": "OVERLAY_VR_PANEL_LOCKED",
   "getOverlayVrPanelFontSize": "OVERLAY_VR_PANEL_FONT_SIZE",
   "getOverlayVrLauncherAutoHide": "OVERLAY_VR_LAUNCHER_AUTO_HIDE",
   "getOverlayVrTooltip": "OVERLAY_VR_TOOLTIP",

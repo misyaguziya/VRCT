@@ -3511,6 +3511,110 @@
       "pushes": false
     },
     {
+      "name": "get the log window's form",
+      "endpoint": "/get/data/overlay_vr_panel_form",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "the log window as a one-line subtitle (its anchor, lock and opacity told)",
+      "endpoint": "/set/data/overlay_vr_panel_form",
+      "data": "single_line",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": true
+    },
+    {
+      "name": "get overlay_vr_panel_locked of the subtitle",
+      "endpoint": "/get/data/overlay_vr_panel_locked",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get overlay_vr_panel_opacity of the subtitle",
+      "endpoint": "/get/data/overlay_vr_panel_opacity",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get overlay_vr_panel_anchor of the subtitle",
+      "endpoint": "/get/data/overlay_vr_panel_anchor",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "the subtitle's opacity",
+      "endpoint": "/set/data/overlay_vr_panel_opacity",
+      "data": 0.6,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "get the subtitle settings",
+      "endpoint": "/get/data/overlay_vr_subtitle_settings",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "a form that is not one",
+      "endpoint": "/set/data/overlay_vr_panel_form",
+      "data": "triple_line",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "a part of the subtitle settings (the rest kept)",
+      "endpoint": "/set/data/overlay_vr_subtitle_settings",
+      "data": {
+        "single_line": {
+          "x_pos": 0.25,
+          "fadeout_duration": 0
+        }
+      },
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": true
+    },
+    {
+      "name": "the VR view drew the log window's new content",
+      "endpoint": "/run/vr_panel_log_rendered",
+      "data": null,
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": false
+    },
+    {
+      "name": "the log window back to the history",
+      "endpoint": "/set/data/overlay_vr_panel_form",
+      "data": "history",
+      "raw_data": null,
+      "rule": "exact",
+      "expect_status": null,
+      "pushes": true
+    },
+    {
       "name": "enable translation (two targets)",
       "endpoint": "/set/enable/translation",
       "data": null,
@@ -4764,6 +4868,43 @@
     "/get/data/keyboard_opacity": 1.0,
     "/get/data/keyboard_locked": false,
     "/get/data/overlay_vr_laser_pitch": 12.0,
+    "/get/data/overlay_vr_panel_form": "history",
+    "/get/data/overlay_vr_subtitle_settings": {
+      "multi_line": {
+        "width": 900,
+        "height": 700,
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 0.25,
+        "font_size": 27,
+        "tracker": "LeftHand",
+        "locked": true
+      },
+      "single_line": {
+        "width": 1200,
+        "height": 180,
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 1.0,
+        "font_size": 28,
+        "tracker": "HMD",
+        "locked": true
+      }
+    },
     "/get/data/keyboard_shortcut": "off"
   },
   "init_ms": 0,
@@ -10091,6 +10232,238 @@
       "result": "Internal error",
       "pushes": [],
       "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get the log window's form",
+      "endpoint": "/get/data/overlay_vr_panel_form",
+      "status": 200,
+      "result": "history",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "the log window as a one-line subtitle (its anchor, lock and opacity told)",
+      "endpoint": "/set/data/overlay_vr_panel_form",
+      "status": 200,
+      "result": "single_line",
+      "pushes": [
+        "/run/overlay_vr_panel_anchor",
+        "/run/overlay_vr_panel_locked",
+        "/run/overlay_vr_panel_opacity"
+      ],
+      "push_results": [
+        {
+          "endpoint": "/run/overlay_vr_panel_anchor",
+          "status": 200,
+          "result": "HMD"
+        },
+        {
+          "endpoint": "/run/overlay_vr_panel_locked",
+          "status": 200,
+          "result": true
+        },
+        {
+          "endpoint": "/run/overlay_vr_panel_opacity",
+          "status": 200,
+          "result": 1.0
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "name": "get overlay_vr_panel_locked of the subtitle",
+      "endpoint": "/get/data/overlay_vr_panel_locked",
+      "status": 200,
+      "result": true,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get overlay_vr_panel_opacity of the subtitle",
+      "endpoint": "/get/data/overlay_vr_panel_opacity",
+      "status": 200,
+      "result": 1.0,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get overlay_vr_panel_anchor of the subtitle",
+      "endpoint": "/get/data/overlay_vr_panel_anchor",
+      "status": 200,
+      "result": "HMD",
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "the subtitle's opacity",
+      "endpoint": "/set/data/overlay_vr_panel_opacity",
+      "status": 200,
+      "result": 0.6,
+      "pushes": [
+        "/run/overlay_vr_subtitle_settings"
+      ],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "get the subtitle settings",
+      "endpoint": "/get/data/overlay_vr_subtitle_settings",
+      "status": 200,
+      "result": {
+        "multi_line": {
+          "width": 900,
+          "height": 700,
+          "x_pos": 0.0,
+          "y_pos": 0.0,
+          "z_pos": 0.0,
+          "x_rotation": 0.0,
+          "y_rotation": 0.0,
+          "z_rotation": 0.0,
+          "display_duration": 5,
+          "fadeout_duration": 2,
+          "opacity": 1.0,
+          "ui_scaling": 0.25,
+          "font_size": 27,
+          "tracker": "LeftHand",
+          "locked": true
+        },
+        "single_line": {
+          "width": 1200,
+          "height": 180,
+          "x_pos": 0.0,
+          "y_pos": 0.0,
+          "z_pos": 0.0,
+          "x_rotation": 0.0,
+          "y_rotation": 0.0,
+          "z_rotation": 0.0,
+          "display_duration": 5,
+          "fadeout_duration": 2,
+          "opacity": 0.6,
+          "ui_scaling": 1.0,
+          "font_size": 28,
+          "tracker": "HMD",
+          "locked": true
+        }
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "a form that is not one",
+      "endpoint": "/set/data/overlay_vr_panel_form",
+      "status": 400,
+      "result": {
+        "error_code": "VALIDATION_CONFIG_VALUE_INVALID",
+        "message": "The provided value was rejected",
+        "data": "triple_line",
+        "details": {},
+        "category": "validation",
+        "severity": "warning"
+      },
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "a part of the subtitle settings (the rest kept)",
+      "endpoint": "/set/data/overlay_vr_subtitle_settings",
+      "status": 200,
+      "result": {
+        "multi_line": {
+          "width": 900,
+          "height": 700,
+          "x_pos": 0.0,
+          "y_pos": 0.0,
+          "z_pos": 0.0,
+          "x_rotation": 0.0,
+          "y_rotation": 0.0,
+          "z_rotation": 0.0,
+          "display_duration": 5,
+          "fadeout_duration": 2,
+          "opacity": 1.0,
+          "ui_scaling": 0.25,
+          "font_size": 27,
+          "tracker": "LeftHand",
+          "locked": true
+        },
+        "single_line": {
+          "width": 1200,
+          "height": 180,
+          "x_pos": 0.25,
+          "y_pos": 0.0,
+          "z_pos": 0.0,
+          "x_rotation": 0.0,
+          "y_rotation": 0.0,
+          "z_rotation": 0.0,
+          "display_duration": 5,
+          "fadeout_duration": 0,
+          "opacity": 0.6,
+          "ui_scaling": 1.0,
+          "font_size": 28,
+          "tracker": "HMD",
+          "locked": true
+        }
+      },
+      "pushes": [
+        "/run/overlay_vr_panel_locked",
+        "/run/overlay_vr_panel_opacity"
+      ],
+      "push_results": [
+        {
+          "endpoint": "/run/overlay_vr_panel_locked",
+          "status": 200,
+          "result": true
+        },
+        {
+          "endpoint": "/run/overlay_vr_panel_opacity",
+          "status": 200,
+          "result": 0.6
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "name": "the VR view drew the log window's new content",
+      "endpoint": "/run/vr_panel_log_rendered",
+      "status": 200,
+      "result": true,
+      "pushes": [],
+      "push_results": [],
+      "ms": 0
+    },
+    {
+      "name": "the log window back to the history",
+      "endpoint": "/set/data/overlay_vr_panel_form",
+      "status": 200,
+      "result": "history",
+      "pushes": [
+        "/run/overlay_vr_panel_anchor",
+        "/run/overlay_vr_panel_locked",
+        "/run/overlay_vr_panel_opacity"
+      ],
+      "push_results": [
+        {
+          "endpoint": "/run/overlay_vr_panel_anchor",
+          "status": 200,
+          "result": "Playspace"
+        },
+        {
+          "endpoint": "/run/overlay_vr_panel_locked",
+          "status": 200,
+          "result": false
+        },
+        {
+          "endpoint": "/run/overlay_vr_panel_opacity",
+          "status": 200,
+          "result": 0.56
+        }
+      ],
       "ms": 0
     },
     {

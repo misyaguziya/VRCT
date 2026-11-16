@@ -88,6 +88,11 @@ export const VrApp = () => {
 
     const toggleLog = () => setWindows(w => ({ ...w, log: !w.log }));
     const openLog = () => setWindows(w => ({ ...w, log: true }));
+    // ログ窓が字幕の形なら開いておく (起動時と、字幕の形に変わったとき)
+    const { currentOverlayVrPanelForm } = useVr();
+    useEffect(() => {
+        if (currentOverlayVrPanelForm.data !== "history") openLog();
+    }, [currentOverlayVrPanelForm.data]);
     const togglePopup = (name) => setWindows(w => ({ ...w, popup: w.popup === name ? null : name }));
     const closePopup = () => setWindows(w => ({ ...w, popup: null }));
     const toggleKeyboard = () => setWindows(w => ({ ...w, keyboard: !w.keyboard }));

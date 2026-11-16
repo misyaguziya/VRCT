@@ -12,6 +12,15 @@ pub const LAUNCHER_WIDTH_PX: u32 = 952;
 /// The log window's size (logical px): its default and the range of a corner drag
 pub const PANEL_DEFAULT_SIZE: (u32, u32) = (900, 700);
 pub const PANEL_SIZE_RANGE: ((u32, u32), (u32, u32)) = ((600, 400), (1400, 1000));
+/// The log window's least height as a subtitle (a line or two: no tall empty board)
+pub const SUBTITLE_MIN_HEIGHT: u32 = 120;
+/// A subtitle's text size (the translation's, logical px; the original's is about 2/3 of it).
+/// The same range is in src-ui/views/vr/subtitle_entries.js
+pub const SUBTITLE_FONT_SIZE_RANGE: (u32, u32) = (16, 56);
+/// The widths (m) a grab with the trigger held can make a window
+pub const WIDTH_RANGE_M: (f64, f64) = (0.05, 3.0);
+/// The log window's opacity range (below it, it could not be found again in VR)
+pub const PANEL_OPACITY_RANGE: (f64, f64) = (0.2, 1.0);
 /// The keyboard's size (logical px)
 pub const KEYBOARD_SIZE: (u32, u32) = (1200, 560);
 /// Corner radius of each region (logical px): outside it the capture is clear
@@ -117,9 +126,9 @@ fn round(value: f64) -> u32 {
     value.round_ties_even().max(0.0) as u32
 }
 
-/// clampPanelSize
-pub fn clamp_panel_size(width: f64, height: f64) -> (u32, u32) {
-    let ((min_w, min_h), (max_w, max_h)) = PANEL_SIZE_RANGE;
+/// clampPanelSize, at least `min_h` high (PANEL_SIZE_RANGE's for the history, SUBTITLE_MIN_HEIGHT for a subtitle)
+pub fn clamp_panel_size(width: f64, height: f64, min_h: u32) -> (u32, u32) {
+    let ((min_w, _), (max_w, max_h)) = PANEL_SIZE_RANGE;
     (round(width.max(min_w as f64).min(max_w as f64)), round(height.max(min_h as f64).min(max_h as f64)))
 }
 

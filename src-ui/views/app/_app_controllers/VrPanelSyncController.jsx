@@ -30,6 +30,10 @@ const WINDOW_REQUEST_PATHS = [
     "/set/data/overlay_vr_panel_font_size",
     "/run/vr_panel_layout_rendered",
     "/run/vr_panel_tooltip",
+    "/set/data/overlay_vr_panel_form",
+    "/run/vr_panel_log_rendered",
+    // 字幕の形の文字の大きさ (操作バーの A−/A＋、部分更新)
+    "/set/data/overlay_vr_subtitle_settings",
 ];
 
 const atomEntries = () => Object.entries(dynamicStoreRegistry)

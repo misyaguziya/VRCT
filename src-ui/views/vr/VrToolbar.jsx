@@ -5,6 +5,7 @@ import { useVr } from "@logics_configs";
 import { VrTooltipButton } from "./VrTooltip";
 import shared from "./VrSettingsWindow.module.scss";
 import styles from "./VrToolbar.module.scss";
+import { SUBTITLE_FONT_SIZE } from "./subtitle_entries";
 
 const PATHS = {
     world: "M2 22l2.5-5h15l2.5 5zM12 2a4.5 4.5 0 0 0-4.5 4.5c0 3.4 4.5 8.5 4.5 8.5s4.5-5.1 4.5-8.5A4.5 4.5 0 0 0 12 2zM12 5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z", // 床に立てたピン
@@ -14,7 +15,12 @@ const PATHS = {
     lock: "M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11",
     unlock: "M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7-1",
     opacity: "M4 4h16v16H4zM4 12h16M12 4v16",
+    history: "M4 3h16v18H4zM7.5 8h9M7.5 12h9M7.5 16h5",
+    multi_line: "M3 7h18M3 12h18M3 17h12",
+    single_line: "M2 8h20v8H2zM6 12h12",
 };
+// ログ窓の形: 押すたびに順に切り替える (操作バーの幅 720px に3つは並ばない)
+const FORMS = ["history", "multi_line", "single_line"];
 const ANCHORS = [["Playspace", "anchor_playspace", "world"], ["LeftHand", "anchor_left_hand", "hand"],
     ["RightHand", "anchor_right_hand", "hand"], ["HMD", "anchor_head", "head"]];
 const OPACITY_STEPS = [1.0, 0.8, 0.6, 0.4];
@@ -26,7 +32,20 @@ export const VrToolbar = () => {
     const { currentOverlayVrPanelAnchor: anchor, setOverlayVrPanelAnchor,
         currentOverlayVrPanelLocked: locked, toggleOverlayVrPanelLocked,
         currentOverlayVrPanelOpacity: opacity, setOverlayVrPanelOpacity,
-        currentOverlayVrPanelFontSize: font, setOverlayVrPanelFontSize } = useVr();
+        currentOverlayVrPanelFontSize: font, setOverlayVrPanelFontSize,
+        currentOverlayVrPanelForm: form, setOverlayVrPanelForm,
+        currentOverlayVrSubtitleSettings: subtitle, setOverlayVrSubtitleSettings } = useVr();
+    const form_id = FORMS.includes(form.data) ? form.data : "history";
+    const is_subtitle = form_id !== "history";
+    // 文字の大きさは形ごと: 履歴は OVERLAY_VR_PANEL_FONT_SIZE (原文の px)、字幕はその形の font_size (訳文の px)
+    const size = is_subtitle ? {
+        value: subtitle.data[form_id].font_size, state: subtitle,
+        min: SUBTITLE_FONT_SIZE.min, max: SUBTITLE_FONT_SIZE.max, key: (name) => `${name}_subtitle`,
+        set: (value) => setOverlayVrSubtitleSettings({ [form_id]: { font_size: value } }),
+    } : {
+        value: font.data, state: font, min: FONT_SIZE.min, max: FONT_SIZE.max, key: (name) => name, set: setOverlayVrPanelFontSize,
+    };
+    const nextForm = FORMS[(FORMS.indexOf(form_id) + 1) % FORMS.length];
     const currentAnchor = t(`vr_panel.${ANCHORS.find(([id]) => id === anchor.data)?.[1] ?? "anchor_playspace"}`);
     const current = t("vr_panel.tooltip.current");
     const percent = Math.round(Number(opacity.data) * 100);
@@ -48,17 +67,23 @@ export const VrToolbar = () => {
                 onClick={() => asyncStdoutToPython("/run/vr_panel_recall_log")}><Icon name="recall" /></Button>
             <Button className={styles.lock_button} label={t("vr_panel.lock")} selected={locked.data === true} state={locked}
                 tipState={locked.data === true ? t("vr_panel.locked") : t("vr_panel.tooltip.unlocked")}
-                tipHelp={t(`vr_panel.tooltip.${locked.data === true ? "unlock_help" : "lock_help"}`)}
+                tipHelp={t(`vr_panel.tooltip.${locked.data === true ? "unlock_help" : is_subtitle ? "lock_help_subtitle" : "lock_help"}`)}
                 onClick={toggleOverlayVrPanelLocked}><Icon name={locked.data === true ? "lock" : "unlock"} /></Button>
         </div>
+        <div className={styles.group}>
+            <Button className={styles.form_button} label={`${t("vr_panel.tooltip.form")}: ${t(`vr_panel.form_${form_id}`)}`}
+                tipTitle={t("vr_panel.tooltip.form")} state={form} tipState={`${current}: ${t(`vr_panel.form_${form_id}`)}`}
+                tipHelp={t("vr_panel.tooltip.form_help")} onClick={() => setOverlayVrPanelForm(nextForm)}><Icon name={form_id} /></Button>
+        </div>
         <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.font")}>
-            <Button className={styles.font_button} label={t("vr_panel.tooltip.smaller")} state={font}
-                tipState={t("vr_panel.tooltip.font_current", { size: font.data })} tipHelp={t(`vr_panel.tooltip.${font.data <= FONT_SIZE.min ? "font_limit" : "font_help"}`)}
-                disabled={font.data <= FONT_SIZE.min} onClick={() => setOverlayVrPanelFontSize(font.data - 1)}>A−</Button>
-            <span className={styles.value} aria-label={`${t("vr_panel.tooltip.font")}: ${font.data}`}>{font.data}</span>
-            <Button className={styles.font_button} label={t("vr_panel.tooltip.larger")} state={font}
-                tipState={t("vr_panel.tooltip.font_current", { size: font.data })} tipHelp={t(`vr_panel.tooltip.${font.data >= FONT_SIZE.max ? "font_limit" : "font_help"}`)}
-                disabled={font.data >= FONT_SIZE.max} onClick={() => setOverlayVrPanelFontSize(font.data + 1)}>A＋</Button>
+            <Button className={styles.font_button} label={`${t("vr_panel.tooltip.smaller")}: ${size.value}`} state={size.state}
+                tipState={t(`vr_panel.tooltip.${size.key("font_current")}`, { size: size.value })}
+                tipHelp={t(`vr_panel.tooltip.${size.key(size.value <= size.min ? "font_limit" : "font_help")}`)}
+                disabled={size.value <= size.min} onClick={() => size.set(size.value - 1)}>A−</Button>
+            <Button className={styles.font_button} label={`${t("vr_panel.tooltip.larger")}: ${size.value}`} state={size.state}
+                tipState={t(`vr_panel.tooltip.${size.key("font_current")}`, { size: size.value })}
+                tipHelp={t(`vr_panel.tooltip.${size.key(size.value >= size.max ? "font_limit" : "font_help")}`)}
+                disabled={size.value >= size.max} onClick={() => size.set(size.value + 1)}>A＋</Button>
         </div>
         <div className={styles.group}>
             <Button className={styles.opacity_button} label={`${t("vr_panel.log_opacity")}: ${percent}%`} tipTitle={t("vr_panel.log_opacity")}

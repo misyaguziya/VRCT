@@ -4,6 +4,7 @@ import { useI18n } from "@useI18n";
 import { useIsOpenedConfigPage, useVrPanelLogOutOfView, useVrPanelLauncherIntro } from "@logics_common";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useMainFunction } from "@logics_main";
+import { useVr } from "@logics_configs";
 import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
@@ -30,7 +31,13 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKey
     const intro = currentVrPanelLauncherIntro.data;
     const is_log_lost = windows.log && currentVrPanelLogOutOfView.data === true;
     const is_locked = currentIsOpenedConfigPage.data === true;
-    const recallLog = () => { openLog(); asyncStdoutToPython("/run/vr_panel_recall_log"); };
+    // ログ: 長押しで目の前へ呼び戻す。ロックした字幕はレーザーが当たらないので、ここでロックも外す
+    const { currentOverlayVrPanelForm, currentOverlayVrPanelLocked, toggleOverlayVrPanelLocked } = useVr();
+    const recallLog = () => {
+        openLog();
+        if (currentOverlayVrPanelForm.data !== "history" && currentOverlayVrPanelLocked.data === true) toggleOverlayVrPanelLocked();
+        asyncStdoutToPython("/run/vr_panel_recall_log");
+    };
     // キーボード: 長押しで目の前へ呼び戻す (閉じていれば開く。ログのボタンと同じ)
     const recallKeyboard = () => { openKeyboard(); asyncStdoutToPython("/run/vr_panel_recall_keyboard"); };
     return <div className={styles.root} style={{ "--vrct-logo": `url("${vrct_logo}")` }}>
