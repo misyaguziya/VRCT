@@ -14,6 +14,10 @@ pub const PANEL_DEFAULT_SIZE: (u32, u32) = (900, 700);
 pub const PANEL_SIZE_RANGE: ((u32, u32), (u32, u32)) = ((600, 400), (1400, 1000));
 /// The log window's least height as a subtitle (a line or two: no tall empty board)
 pub const SUBTITLE_MIN_HEIGHT: u32 = 120;
+/// The widths (m) a grab with the trigger held can make a window
+pub const WIDTH_RANGE_M: (f64, f64) = (0.05, 3.0);
+/// The log window's opacity range (below it, it could not be found again in VR)
+pub const PANEL_OPACITY_RANGE: (f64, f64) = (0.2, 1.0);
 /// The keyboard's size (logical px)
 pub const KEYBOARD_SIZE: (u32, u32) = (1200, 560);
 /// Corner radius of each region (logical px): outside it the capture is clear

@@ -104,9 +104,10 @@ pub struct Shared {
     pub intro: Intro,
     pub layout: Layout,
     pub tooltip_epoch: u64,
-    /// the log window's form and lock (kept by a worker made again after a stop that timed out)
+    /// the log window's form and the log size the VR view last drew (kept by a worker made again
+    /// after a stop that timed out; its lock is sent again before each start)
     pub panel_form: String,
-    pub panel_locked: bool,
+    pub layout_rendered: (u32, u32),
 }
 
 pub(crate) enum Command {
@@ -416,7 +417,7 @@ impl Worker {
         let shared = Arc::new(Mutex::new(Shared {
             settings: sizes.iter().map(|s| (s.name.clone(), s.settings.clone())).collect(),
             initialized: false, intro: Intro::Idle, layout, tooltip_epoch,
-            panel_form: PANEL_FORM_HISTORY.into(), panel_locked: false,
+            panel_form: PANEL_FORM_HISTORY.into(), layout_rendered: layout::PANEL_DEFAULT_SIZE,
         }));
         Self {
             sizes, commands, log, events, shared, stopped: false, connect_failure_logged: false,
@@ -433,13 +434,13 @@ impl Worker {
         }
     }
 
-    /// A worker going on from what a stopped one published (its settings, layout, form and lock)
+    /// A worker going on from what a stopped one published (its settings, layout, form and what
+    /// the VR view drew; the lock and the other requests are sent again by the app before a start)
     fn from_shared(shared: Shared, commands: Receiver<Command>, log: Log, events: Events) -> Self {
         let mut worker = Worker::new(shared.settings, commands, log, events);
         worker.layout = shared.layout;
         worker.panel_form = shared.panel_form;
-        worker.panel_locked = shared.panel_locked;
-        worker.publish(false);
+        worker.layout_rendered = shared.layout_rendered;
         worker
     }
 
@@ -485,7 +486,7 @@ impl Worker {
         shared.layout = self.layout;
         shared.tooltip_epoch = self.tooltip_epoch;
         shared.panel_form.clone_from(&self.panel_form);
-        shared.panel_locked = self.panel_locked;
+        shared.layout_rendered = self.layout_rendered;
     }
 
     /// The VR view's layout and the tooltip generation (getVrLayout) to the app

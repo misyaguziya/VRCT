@@ -622,7 +622,8 @@ pub fn get_overlay_vr_panel_opacity(app: &App, _: Data) -> Result<Reply> {
 /// setOverlayVrPanelOpacity: 0.2–1.0 (below it the window could not be found again in VR), the
 /// current form's (a subtitle's as far as it has faded)
 pub fn set_overlay_vr_panel_opacity(app: &App, data: Data) -> Result<Reply> {
-    let Some(opacity) = data.as_ref().and_then(py_float).filter(|o| (0.2..=1.0).contains(o)) else {
+    let (low, high) = vrct_overlay::layout::PANEL_OPACITY_RANGE;
+    let Some(opacity) = data.as_ref().and_then(py_float).filter(|o| (low..=high).contains(o)) else {
         return Ok(errors::error("VALIDATION_CONFIG_VALUE_INVALID", form_value(app, "opacity")));
     };
     let form = panel_form(&app.config);

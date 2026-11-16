@@ -949,14 +949,90 @@ fn changing_form_drops_an_anchor_asked_for_the_form_before() {
 }
 
 #[test]
-fn a_worker_made_again_after_a_stop_keeps_the_form_and_lock() {
+fn a_worker_made_again_after_a_stop_keeps_the_form_layout_and_what_was_drawn() {
     let mut r = vr_ui();
-    to_form(&mut r, "single_line", "HMD", true);
+    let pi = r.index("panel");
+    let low = Settings { panel_size: Some((1200, 180)), ..r.w.sizes[pi].settings.clone() };
+    r.run.apply_panel_form(&mut r.w, "single_line".into(), low, true);
+    r.w.layout_rendered = (1200, 180);
     r.w.publish(false);
     let shared = r.w.shared.lock().unwrap().clone();
     let (_commands, received) = command_wait::channel();
     let again = Worker::from_shared(shared, received, Arc::new(|_| {}), Arc::new(|_| {}));
-    assert_eq!((again.panel_form.as_str(), again.panel_locked, again.layout), ("single_line", true, r.w.layout));
+    assert_eq!((again.panel_form.as_str(), again.layout, again.layout_rendered), ("single_line", r.w.layout, (1200, 180)));
+}
+
+/// A subtitle on the head, behind it (out of view); the head looking ahead (-z)
+fn subtitle_behind_the_head(r: &mut Rig) -> Mat4 {
+    let head = translation([0.0, 1.6, 0.0]);
+    r.hand(HEAD, head);
+    let pi = r.index("panel");
+    let s = Settings { tracker: "HMD".into(), position: [0.0, 0.0, -2.0, 0.0, 0.0, 0.0], fadeout_duration: 2.0,
+                       ..r.w.sizes[pi].settings.clone() };
+    r.run.apply_panel_form(&mut r.w, "single_line".into(), s, false);
+    head
+}
+
+fn assert_in_front_on_the_head(r: &Rig, head: &Mat4) {
+    let pi = r.index("panel");
+    assert_eq!(r.w.sizes[pi].settings.tracker, "HMD");
+    let handle = r.run.handles[pi];
+    assert_eq!(r.steam.0.borrow().overlays[handle as usize - 1].place.map(|p| p.0), Some(Some(HEAD)));
+    let expected = pose::position(&pose::recall_pose(head));
+    let got = pose::position(&r.world("panel"));
+    assert!(pose::norm(pose::sub(got, expected)) < 1e-3, "{got:?} {expected:?}");
+}
+
+#[test]
+fn a_subtitle_on_the_head_out_of_view_comes_in_front_on_the_head_when_opened() {
+    let mut r = vr_ui();
+    r.w.vr_windows_wanted = (false, false, false);
+    r.frame(0);
+    let head = subtitle_behind_the_head(&mut r);
+    r.w.vr_windows_wanted = (true, false, false);
+    r.frame(0);
+    assert_in_front_on_the_head(&r, &head);
+}
+
+#[test]
+fn a_subtitle_on_the_head_out_of_view_comes_in_front_on_the_head_when_recalled() {
+    let mut r = vr_ui();
+    let head = subtitle_behind_the_head(&mut r);
+    r.w.recall_requested = Some((Region::Panel, Instant::now()));
+    r.frame(0);
+    assert_in_front_on_the_head(&r, &head);
+}
+
+#[test]
+fn an_opened_subtitle_shows_with_the_first_capture_after_it_without_a_sign_from_the_view() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", true);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
+    r.w.vr_windows_wanted = (false, false, false);
+    r.frame(0);
+    r.w.vr_windows_wanted = (true, false, false);
+    r.frame(0);
+    assert!(r.run.panel_reveal_at.is_some());
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    r.run.after_transfer(&mut r.w, Instant::now(), true);
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 1.0);
+}
+
+#[test]
+fn a_subtitle_that_never_fades_is_not_pointed_at_while_clear() {
+    let mut r = vr_ui();
+    let pi = r.index("panel");
+    let s = r.w.sizes[pi].settings.clone();
+    assert_eq!(s.fadeout_duration, 0.0);
+    r.run.apply_panel_form(&mut r.w, "multi_line".into(), s, false);
+    aim_at_panel(&mut r);
+    r.frame(0);
+    assert_eq!(r.steam.0.borrow().input_updates.last(), Some(&vec![]));
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), None);
 }
 
 #[test]
