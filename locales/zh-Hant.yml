@@ -264,6 +264,9 @@ config_page:
             desc: "如果偵測到清單內的單詞，則不會發送訊息。要一次新增多個詞語，請用「,」（半形逗號）分隔。\n*重複詞語會被忽略。"
             add_button_label: "新增"
             count_desc: "當前註冊詞語數量：{{count}}"
+        mic_vad_filter:
+            label: "麥克風VAD過濾器"
+            desc: "偵測到靜音區間後，再將音訊發送至語音辨識。如果說話途中轉錄停止，請關閉此設定。"
         speaker_record_timeout:
             label: "喇叭音訊 - 判定結束時間"
             desc: "偵測到靜音並在指定秒數後認為喇叭輸入已結束。（秒）"
@@ -273,6 +276,9 @@ config_page:
         speaker_max_phrase:
             label: "喇叭最大等待訊息數"
             desc: "轉錄後的訊息在顯示到記錄前最多可以積壓的數量。超過後，最舊的訊息會被捨棄，不會顯示。"
+        speaker_vad_filter:
+            label: "喇叭VAD過濾器"
+            desc: "偵測到靜音區間後，再將音訊發送至語音辨識。如果遊戲音效或語音聊天連續播放時轉錄停止，或顯示「語音辨識請求失敗」，請關閉此設定。"
         select_transcription_engine:
             label: "語音辨識使用的引擎"
         whisper_weight_type:
