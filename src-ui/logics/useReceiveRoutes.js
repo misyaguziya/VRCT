@@ -22,6 +22,8 @@ export const STATIC_ROUTE_META_LIST = [
     // ログウィンドウが視線から外れた・戻った / 呼び戻しの応答
     { endpoint: "/run/vr_panel_log_out_of_view", ns: common, hook_name: "useVrPanelLogOutOfView", method_name: "updateVrPanelLogOutOfView" },
     { endpoint: "/run/vr_panel_launcher_intro", ns: common, hook_name: "useVrPanelLauncherIntro", method_name: "updateVrPanelLauncherIntro" },
+    // SteamVR につながった・切れた (VR UI の画面は ON かつつながっている間だけ作る)
+    { endpoint: "/run/vr_panel_steamvr", ns: common, hook_name: "useVrPanelSteamVr", method_name: "updateVrPanelSteamVr" },
     { endpoint: "/run/steamvr_bindings", ns: common, hook_name: "useSteamVrBindings", method_name: "receiveSteamVrBindings" },
     { endpoint: "/run/vr_panel_keyboard_shortcut", ns: common, hook_name: "useVrPanelKeyboardShortcut", method_name: "updateVrPanelKeyboardShortcut" },
     { endpoint: "/run/vr_panel_recall_log", ns: null, hook_name: null, method_name: null },

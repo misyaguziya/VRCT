@@ -5,7 +5,7 @@ import { getDefaultStore } from "jotai";
 
 import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
-import { useIsOpenedConfigPage } from "@logics_common";
+import { useIsOpenedConfigPage, useVrPanelSteamVr } from "@logics_common";
 import { useVr } from "@logics_configs";
 import { encodeOrdered, isRelayAllowed } from "../../../logics/common/vrPanelWire";
 import { isLanguageMutation, rejectLanguageMutation } from "../../../logics/main/languageMutations";
@@ -60,12 +60,13 @@ export const VrPanelSyncController = () => {
     const { currentIsOpenedConfigPage, setIsOpenedConfigPage } = useIsOpenedConfigPage();
     const { currentIsEnabledOverlayVrPanel } = useVr();
 
-    // VR画面のウィンドウは VR UI が ON の間だけ作る (OFF の間も動かしておくと、使わない人にも負荷がかかる)。
-    // 作られた VR画面は vr-panel-ready を送ってくるので、状態はそのときに送る
-    const is_vr_panel_enabled = currentIsEnabledOverlayVrPanel.data === true;
+    // VR画面のウィンドウは VR UI が ON で、SteamVR につながっている間だけ作る (それ以外も動かしておくと、
+    // VR を使っていない間にも負荷がかかる)。作られた VR画面は vr-panel-ready を送ってくるので、状態はそのときに送る
+    const { currentVrPanelSteamVr } = useVrPanelSteamVr();
+    const is_vr_panel_needed = currentIsEnabledOverlayVrPanel.data === true && currentVrPanelSteamVr.data === true;
     useEffect(() => {
-        invoke("set_vr_panel_window", { open: is_vr_panel_enabled }).catch(console.error);
-    }, [is_vr_panel_enabled]);
+        invoke("set_vr_panel_window", { open: is_vr_panel_needed }).catch(console.error);
+    }, [is_vr_panel_needed]);
     const isOpenedConfigPageRef = useRef(currentIsOpenedConfigPage.data);
     isOpenedConfigPageRef.current = currentIsOpenedConfigPage.data;
     // VRのVR設定ウィンドウを開いているか (開いている間はVRからの送信を通す)
@@ -81,10 +82,10 @@ export const VrPanelSyncController = () => {
         }
     }, [currentIsOpenedConfigPage.data]);
 
-    // VR UI がOFFの間は、全atomの同期も VR画面からの要求の受付もしない (VR画面のウィンドウが無く、
-    // ログが数千件に育ってもメッセージごとに全件を直列化して送ることになるため)。ONになったら全状態を送る
+    // VR画面のウィンドウが無い間 (VR UI が OFF か SteamVR につながっていない) は、全atomの同期も VR画面からの
+    // 要求の受付もしない (ログが数千件に育ってもメッセージごとに全件を直列化して送ることになるため)。作られたら全状態を送る
     useEffect(() => {
-        if (!is_vr_panel_enabled) return undefined;
+        if (!is_vr_panel_needed) return undefined;
         const entries = atomEntries();
         const unsubscribes = entries.map(([name, atom]) =>
             jotai.sub(atom, () => emitState([[name, atom]]))
@@ -134,7 +135,7 @@ export const VrPanelSyncController = () => {
             unlistenStdout.then(f => f());
             unlistenConfigPage.then(f => f());
         };
-    }, [is_vr_panel_enabled]);
+    }, [is_vr_panel_needed]);
 
     return null;
 };

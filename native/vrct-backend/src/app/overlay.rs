@@ -192,6 +192,14 @@ fn on_event(app: &App, event: Event) -> Result<()> {
         // when it was made (ms): the VR view opens / closes the keyboard, and ignores an old one
         // sent again when it opens anew
         Event::Shortcut => app.run(200, "vr_panel_keyboard_shortcut", json!(chrono_ms())),
+        // SteamVR connected / gone: the VR view's window is made only meanwhile (by the UI), and the
+        // keyboard's dictionaries made ready once it is (a VR UI left on costs nothing without VR)
+        Event::SteamVr(connected) => {
+            if connected && app.config.get_bool("OVERLAY_VR_PANEL") {
+                super::keyboard::start(app);
+            }
+            app.run(200, "vr_panel_steamvr", json!(connected))
+        }
     }
 }
 
@@ -281,8 +289,9 @@ pub fn sync_overlay_running(app: &App) -> Result<()> {
     o.set_laser_pitch(app.config.get("OVERLAY_VR_LASER_PITCH").as_f64().unwrap_or(vrct_overlay::overlay::LASER_PITCH_UP_DEG));
     o.set_shortcut(shortcut_of(app));
     o.set_launcher_auto_hide(app.config.get_bool("OVERLAY_VR_LAUNCHER_AUTO_HIDE"));
-    // the VR UI's keyboard: its dictionaries made ready (once; not stopped when it goes off)
-    if app.config.get_bool("OVERLAY_VR_PANEL") {
+    // the VR UI's keyboard: its dictionaries made ready (once; not stopped when it goes off) when
+    // SteamVR is already connected, else once it connects (Event::SteamVr)
+    if app.config.get_bool("OVERLAY_VR_PANEL") && o.shared().initialized {
         super::keyboard::start(app);
     }
     if app.config.get_bool("OVERLAY_SMALL_LOG") || app.config.get_bool("OVERLAY_LARGE_LOG") || app.config.get_bool("OVERLAY_VR_PANEL") {
@@ -297,7 +306,8 @@ pub fn sync_overlay_running(app: &App) -> Result<()> {
 pub fn push_initial_state(app: &App) -> Result<()> {
     let shared = overlay(app).shared();
     app.run(200, "vr_panel_layout", layout_json(&shared.layout, shared.tooltip_epoch))?;
-    app.run(200, "vr_panel_launcher_intro", json!(shared.intro.name()))
+    app.run(200, "vr_panel_launcher_intro", json!(shared.intro.name()))?;
+    app.run(200, "vr_panel_steamvr", json!(shared.initialized))
 }
 
 /// shutdownOverlay
@@ -801,6 +811,17 @@ mod bindings_tests {
         // outside the widths a grab can make: refused, kept as it was
         assert!(super::position_changed(&app, super::KEYBOARD, None, position(5.0)).is_err());
         assert_eq!(app.config.get("KEYBOARD_WIDTH"), serde_json::json!(0.846));
+    }
+    #[test]
+    fn steamvr_connected_is_told_and_the_vr_ui_off_prepares_nothing() {
+        let app = super::super::test_app(0);
+        let idle = super::super::keyboard::get_keyboard_state(&app, None).unwrap().result;
+        crate::ipc::take_printed();
+        super::on_event(&app, vrct_overlay::overlay::Event::SteamVr(true)).unwrap();
+        let told: Vec<_> = crate::ipc::take_printed().into_iter().map(|p| (p["endpoint"].clone(), p["result"].clone())).collect();
+        assert_eq!(told, vec![(serde_json::json!("/run/vr_panel_steamvr"), serde_json::json!(true))]);
+        // the VR UI off (the default): the keyboard's dictionaries are not fetched
+        assert_eq!(super::super::keyboard::get_keyboard_state(&app, None).unwrap().result, idle);
     }
 }
 

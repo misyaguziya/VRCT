@@ -1,5 +1,5 @@
 import { emit } from "@tauri-apps/api/event";
-import { useStore_VrPanelLogOutOfView, useStore_VrPanelLauncherIntro, useStore_VrPanelKeyboardShortcut, useStore_SteamVrBindings } from "@store";
+import { useStore_VrPanelLogOutOfView, useStore_VrPanelLauncherIntro, useStore_VrPanelKeyboardShortcut, useStore_SteamVrBindings, useStore_VrPanelSteamVr } from "@store";
 
 // バックエンドから届く VR UI 上のポインタ位置 ({x, y} または null) を VR ウィンドウへ転送する。
 // VR ウィンドウはバックエンドと直接つながっていないため、メインウィンドウが中継する。
@@ -20,6 +20,12 @@ export const useVrPanelLogOutOfView = () => {
 export const useVrPanelLauncherIntro = () => {
     const { currentVrPanelLauncherIntro, updateVrPanelLauncherIntro } = useStore_VrPanelLauncherIntro();
     return { currentVrPanelLauncherIntro, updateVrPanelLauncherIntro };
+};
+
+// SteamVR につながっているか (バックエンドが変わったときと起動時に送る)
+export const useVrPanelSteamVr = () => {
+    const { currentVrPanelSteamVr, updateVrPanelSteamVr } = useStore_VrPanelSteamVr();
+    return { currentVrPanelSteamVr, updateVrPanelSteamVr };
 };
 
 // SteamVR のボタン設定を開く (/run/steamvr_bindings)。結果はバックエンドの返事で変わる

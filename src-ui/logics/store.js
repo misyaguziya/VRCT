@@ -220,6 +220,8 @@ export const { atomInstance: Atom_MicThresholdCheckStatus, useHook: useStore_Mic
 export const { atomInstance: Atom_VrPanelLogOutOfView, useHook: useStore_VrPanelLogOutOfView } = createAtomWithHook(false, "VrPanelLogOutOfView", {is_state_ok: true});
 // VR UI のランチャーの起動演出 ("idle" 通常 / "pending" 最初に出すのを待つ / "playing" 演出中)。atom なので VR ウィンドウへも同期される
 export const { atomInstance: Atom_VrPanelLauncherIntro, useHook: useStore_VrPanelLauncherIntro } = createAtomWithHook("idle", "VrPanelLauncherIntro", {is_state_ok: true});
+// SteamVR につながっているか (VR UI の画面とキーボードの辞書は、ON かつつながっている間だけ用意する)
+export const { atomInstance: Atom_VrPanelSteamVr, useHook: useStore_VrPanelSteamVr } = createAtomWithHook(false, "VrPanelSteamVr", {is_state_ok: true});
 // SteamVR のボタン設定を開いた結果 ("pending" / "requested" / "not_running" / "not_ready" / "failed"。null: まだ押していない)
 export const { atomInstance: Atom_SteamVrBindings, useHook: useStore_SteamVrBindings } = createAtomWithHook(null, "SteamVrBindings", {is_state_ok: true});
 // コントローラのショートカットが押された時刻 (ms。VR 画面がキーボードを開閉する)。atom なので VR ウィンドウへも同期される

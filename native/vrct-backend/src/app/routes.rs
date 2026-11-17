@@ -470,6 +470,7 @@ pub const RUN_MAPPING: &[(&str, &str)] = &[
     ("vr_panel_launcher_intro", "/run/vr_panel_launcher_intro"),
     ("overlay_vr_panel_anchor", "/run/overlay_vr_panel_anchor"),
     ("vr_panel_layout", "/run/vr_panel_layout"),
+    ("vr_panel_steamvr", "/run/vr_panel_steamvr"),
     ("overlay_large_log_settings", "/run/overlay_large_log_settings"),
     ("selectable_mic_host_list", "/run/selectable_mic_host_list"),
     ("selectable_mic_device_list", "/run/selectable_mic_device_list"),

@@ -687,6 +687,19 @@ fn the_bar_shows_after_pointing_at_the_log_a_moment() {
 }
 
 #[test]
+fn a_change_of_the_steamvr_connection_is_told_once() {
+    let r = vr_ui();
+    let told = |r: &Rig| r.events.lock().unwrap().iter().filter(|e| matches!(e, Event::SteamVr(_))).cloned().collect::<Vec<_>>();
+    r.events.lock().unwrap().clear();
+    // the rig starts not connected
+    r.w.publish(true);
+    r.w.publish(true);
+    r.w.publish(false);
+    r.w.publish(false);
+    assert_eq!(told(&r), vec![Event::SteamVr(true), Event::SteamVr(false)]);
+}
+
+#[test]
 fn the_bar_stays_while_the_form_changes() {
     let mut r = vr_ui();
     aim_at_panel(&mut r);

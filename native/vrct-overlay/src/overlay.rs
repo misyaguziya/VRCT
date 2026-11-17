@@ -93,6 +93,9 @@ pub enum Event {
     LauncherIntro(Intro),
     /// the controller shortcut was made (to open / close the keyboard)
     Shortcut,
+    /// connected to SteamVR with the overlays made (true) / not any more (false): what the VR UI
+    /// needs (its window, the keyboard's dictionaries) is made only meanwhile
+    SteamVr(bool),
 }
 
 /// What callers can read at any time (the last the overlay thread published)
@@ -201,7 +204,10 @@ impl Overlay {
             worker.shared = self.shared.clone();
             self.idle = Some(worker);
         }
-        self.shared.lock().unwrap().initialized = false;
+        let was = std::mem::replace(&mut self.shared.lock().unwrap().initialized, false);
+        if was {
+            (self.events)(Event::SteamVr(false));
+        }
     }
 
     pub fn shared(&self) -> Shared {
@@ -480,9 +486,10 @@ impl Worker {
         }
     }
 
-    /// What callers read: the settings and the state
+    /// What callers read: the settings and the state (a change of the connection is told)
     pub fn publish(&self, initialized: bool) {
         let mut shared = self.shared.lock().unwrap();
+        let changed = shared.initialized != initialized;
         shared.settings = self.sizes.iter().map(|s| (s.name.clone(), s.settings.clone())).collect();
         shared.initialized = initialized;
         shared.intro = self.intro;
@@ -490,6 +497,10 @@ impl Worker {
         shared.tooltip_epoch = self.tooltip_epoch;
         shared.panel_form.clone_from(&self.panel_form);
         shared.layout_rendered = self.layout_rendered;
+        drop(shared);
+        if changed {
+            self.emit(Event::SteamVr(initialized));
+        }
     }
 
     /// The VR view's layout and the tooltip generation (getVrLayout) to the app
