@@ -76,6 +76,8 @@ const RECALL_PENDING_SEC: f64 = 1.0;
 const TOOLBAR_M_PER_PX: f64 = 0.4 / 900.0;
 const TOOLBAR_GAP_M: f64 = 0.012;
 const TOOLBAR_SHOW_AFTER_SEC: f64 = 0.3;
+// an unlocked subtitle faded out shows again after pointed at this long
+const FADED_PANEL_WAKE_SEC: f64 = 0.4;
 const TOOLBAR_HIDE_AFTER_SEC: f64 = 2.0;
 const TOOLBAR_FADE_SEC: f64 = 0.25;
 // Moving the log onto a hand / the head brings it within these distances
@@ -283,8 +285,9 @@ impl Run<'_> {
             if size.region == Some(Region::Launcher) && !self.launcher_interactive {
                 continue;
             }
-            // a locked or faded subtitle is not there for the lasers (the game keeps its input, and
-            // nothing unseen takes it; it shows again with a new line, opened or recalled)
+            // a locked or faded subtitle is not there for the lasers (the game keeps its input; it shows
+            // again with a new line, opened or recalled), nor one clear until its new content is
+            // captured. An unlocked faded one shows again when pointed at a while (faded_panel_pointed)
             if size.region == Some(Region::Panel) && w.panel_subtitle()
                 && (w.panel_locked || !self.is_visible(w, i) || self.panel_hidden_since.is_some())
             {
@@ -299,6 +302,20 @@ impl Run<'_> {
             }
         }
         best
+    }
+
+    /// A hand pointing at the unlocked subtitle while it has faded out (not a target: the game keeps
+    /// the input until it was pointed at FADED_PANEL_WAKE_SEC and shows again)
+    fn faded_panel_pointed(&self, w: &Worker, hand: u32, ray: &Mat4) -> bool {
+        let Some(pi) = w.region_index(Region::Panel) else { return false };
+        if !w.panel_subtitle() || w.panel_locked || self.panel_hidden_since.is_some() || self.is_visible(w, pi)
+            || w.sizes[pi].settings.opacity <= 0.0 || self.hidden.contains(&Region::Panel)
+            || self.tracker(&w.sizes[pi].settings.tracker).1 == Follow::Device(hand)
+        {
+            return false;
+        }
+        self.intersect(ray, self.handles[pi])
+            .is_some_and(|hit| self.has_content_at(w, pi, &hit) && self.hit_inside_region(w, Target::Size(pi), &hit))
     }
 
     /// regionPixel: the hit as a pixel of the capture (from the overlay's pose and width: SteamVR's
@@ -608,6 +625,7 @@ impl Run<'_> {
         let mut second_xy: Option<(i32, i32)> = None;
         let mut pointing_log = false;
         let mut pointing_launcher = false;
+        let mut pointing_faded_panel = false;
         let panel = w.region_index(Region::Panel);
         let mut hands = [vrct_openvr::CONTROLLER_ROLE_LEFT_HAND, vrct_openvr::CONTROLLER_ROLE_RIGHT_HAND]
             .map(|role| self.vr.system.tracked_device_index_for_controller_role(role));
@@ -619,6 +637,7 @@ impl Run<'_> {
             let grip = hand_pose.is_some() && self.controller_state(hand).is_some_and(|s| s.button_pressed & GRIP_MASK != 0);
             let mut target: Option<(Target, Hit)> = None;
             if let Some(ray) = &hand_pose {
+                pointing_faded_panel |= self.faded_panel_pointed(w, hand, ray);
                 target = self.pointing_overlay(w, ray).map(|(i, hit)| (Target::Size(i), hit));
                 let toolbar = match (self.toolbar, self.toolbar_visible) {
                     (Some(handle), true) => self.intersect(ray, handle).filter(|hit| self.hit_inside_region(w, Target::Toolbar, hit)),
@@ -772,12 +791,23 @@ impl Run<'_> {
         self.show_other_pointer(other.as_ref());
         self.notify_pointer(w, hover_xy, second_xy);
         self.update_toolbar_visibility(w, now, pointing_log);
-        // a subtitle (or its bar) pointed at does not fade meanwhile (a faded one is not shown by it)
+        // a subtitle (or its bar) pointed at does not fade meanwhile
         if pointing_log && w.panel_subtitle()
             && let Some(pi) = panel
-            && self.is_visible(w, pi)
         {
             self.wake(w, pi);
+        }
+        // an unlocked one faded out shows again once pointed at a while (a laser passing over it
+        // does nothing; the game keeps the input meanwhile), then it is pointed at as usual
+        match (pointing_faded_panel, panel) {
+            (true, Some(pi)) => {
+                let started = *self.faded_panel_pointed_since.get_or_insert(now);
+                if since(now, started) >= FADED_PANEL_WAKE_SEC {
+                    self.faded_panel_pointed_since = None;
+                    self.wake(w, pi);
+                }
+            }
+            _ => self.faded_panel_pointed_since = None,
         }
         self.launcher_pointed = pointing_launcher;
     }
@@ -1628,8 +1658,9 @@ impl Run<'_> {
 
     /// applyPanelForm: the log window becomes another form (history / a subtitle) at that form's
     /// place, size and lock, clear until the VR view's new content was captured. A grab or resize
-    /// of it ends first, saved to the form it was made in.
-    pub(crate) fn apply_panel_form(&mut self, w: &mut Worker, form: String, settings: Settings, locked: bool) {
+    /// of it ends first, saved to the form it was made in. A form used for the first time takes the
+    /// place, anchor and scale (metres per pixel) the log window has now, told to be saved for it.
+    pub(crate) fn apply_panel_form(&mut self, w: &mut Worker, form: String, mut settings: Settings, locked: bool, first_use: bool) {
         let Some(pi) = w.region_index(Region::Panel) else {
             w.set_panel_form(form, settings, locked);
             return;
@@ -1647,14 +1678,27 @@ impl Run<'_> {
             self.hide_resize_ghost();
         }
         self.resize_undo = None;
+        if first_use {
+            let now = &w.sizes[pi].settings;
+            settings.position = now.position;
+            settings.tracker = now.tracker.clone();
+            if let (Some((old, _)), Some((new, _))) = (now.panel_size, settings.panel_size)
+                && old > 0
+            {
+                settings.ui_scaling = (now.ui_scaling * new as f64 / old as f64).clamp(layout::WIDTH_RANGE_M.0, layout::WIDTH_RANGE_M.1);
+            }
+        }
         let size = settings.panel_size;
         w.set_panel_form(form, settings, locked);
-        self.hide_toolbar_now(w);
+        // the bar stays (moved with the log by place): the form button can be pressed again at once
         self.reset_tooltip_epoch(w, true);
         self.hide_panel_until_shown(w, pi);
         let width = w.sizes[pi].settings.ui_scaling;
         self.update_ui_scaling(w, pi, width);
         self.place(w, pi);
+        if first_use {
+            self.notify_position(w, pi);
+        }
         // another size: placed again once captured at it (apply_layout)
         if let Some((width, height)) = size {
             self.set_panel_size(w, width as f64, height as f64);

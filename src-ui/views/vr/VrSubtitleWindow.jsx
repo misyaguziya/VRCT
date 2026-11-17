@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { useI18n } from "@useI18n";
 import { MessageWithTransliteration } from "../app/main_page/main_section/message_container/log_box/message_container/MessageContainer";
 
 import { subtitleSmallFontSize } from "./subtitle_entries";
@@ -9,8 +10,13 @@ import styles from "./VrSubtitleWindow.module.scss";
 // 文字の大きさ (訳文の px、原文・時刻はその約 2/3) は形ごとに操作バーで変える。
 // 表示・消える演出はオーバーレイの不透明度だけで行う (ここに transition / animation を置かない)。
 // ロックを外している間だけ、角の取っ手を出す (当たり判定と大きさの変更は vrct-overlay)
-export const VrSubtitleWindow = ({ form, entries, is_locked, font_size }) => (
-    <div className={clsx(win.window, styles.board, styles[form])} data-vr-hoverable={is_locked ? undefined : ""}
+export const VrSubtitleWindow = ({ form, entries, is_locked, font_size }) => {
+    const { t } = useI18n();
+    // 種類の表記はメイン画面のログと同じ (送信 / 受信 / 受信 (チャット読み取り))
+    const kind = (entry) => entry.category === "sent" ? t("main_page.message_log.sent")
+        : entry.is_ocr ? t("main_page.message_log.received_ocr", { ocr: t("main_page.ocr") })
+        : t("main_page.message_log.received");
+    return <div className={clsx(win.window, styles.board, styles[form])} data-vr-hoverable={is_locked ? undefined : ""}
         style={{ "--subtitle_large": `${font_size}px`, "--subtitle_small": `${subtitleSmallFontSize(font_size)}px` }}>
         <div className={styles.entries}>
             {entries.map(entry => (
@@ -18,7 +24,7 @@ export const VrSubtitleWindow = ({ form, entries, is_locked, font_size }) => (
                     {form === "multi_line" && (
                         <p className={styles.info}>
                             <span className={styles.time}>{entry.created_at}</span>
-                            <span className={styles.kind}>{entry.category === "sent" ? "Send" : "Receive"}</span>
+                            <span className={styles.kind}>{kind(entry)}</span>
                         </p>
                     )}
                     {entry.small && <MessageWithTransliteration item={entry.small} className={styles.small} />}
@@ -29,5 +35,5 @@ export const VrSubtitleWindow = ({ form, entries, is_locked, font_size }) => (
         {!is_locked && ["top_left", "bottom_left", "bottom_right"].map(corner => (
             <span key={corner} className={`${win.resize_handle} ${win[corner]}`} data-vr-hoverable="" />
         ))}
-    </div>
-);
+    </div>;
+};

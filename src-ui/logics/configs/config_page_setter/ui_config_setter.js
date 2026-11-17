@@ -769,8 +769,8 @@ export const SETTINGS_ARRAY = [
         Category: "Vr",
         Base_Name: "OverlayVrSubtitleSettings",
         default_value: {
-            multi_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, font_size: 27, tracker: "LeftHand", locked: true },
-            single_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, font_size: 28, tracker: "HMD", locked: true },
+            multi_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, font_size: 27, tracker: "LeftHand", locked: false },
+            single_line: { display_duration: 5, fadeout_duration: 2, opacity: 1.0, font_size: 28, tracker: "HMD", locked: false },
         },
         ui_template_id: "object",
         logics_template_id: "get_set",

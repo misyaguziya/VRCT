@@ -5084,10 +5084,11 @@
         "display_duration": 5,
         "fadeout_duration": 2,
         "opacity": 1.0,
-        "ui_scaling": 0.25,
+        "ui_scaling": 0.4,
         "font_size": 27,
         "tracker": "LeftHand",
-        "locked": true
+        "locked": false,
+        "placed": false
       },
       "single_line": {
         "width": 1200,
@@ -5101,10 +5102,11 @@
         "display_duration": 5,
         "fadeout_duration": 2,
         "opacity": 1.0,
-        "ui_scaling": 1.0,
+        "ui_scaling": 0.5333,
         "font_size": 28,
         "tracker": "HMD",
-        "locked": true
+        "locked": false,
+        "placed": false
       }
     },
     "/get/data/keyboard_shortcut": "off"
@@ -5116,9 +5118,7 @@
       "endpoint": "/get/data/selected_tab_no",
       "status": 200,
       "result": "1",
-      "pushes": [
-        "/run/selected_speaker_device"
-      ],
+      "pushes": [],
       "push_results": [],
       "ms": 0
     },
@@ -5961,6 +5961,7 @@
       "status": 200,
       "result": [],
       "pushes": [
+        "/run/selected_speaker_device",
         "/run/software_update_info"
       ],
       "push_results": [],
@@ -10451,20 +10452,63 @@
       "status": 200,
       "result": "single_line",
       "pushes": [
+        "/run/overlay_vr_subtitle_settings",
         "/run/overlay_vr_panel_anchor",
         "/run/overlay_vr_panel_locked",
         "/run/overlay_vr_panel_opacity"
       ],
       "push_results": [
         {
+          "endpoint": "/run/overlay_vr_subtitle_settings",
+          "status": 200,
+          "result": {
+            "multi_line": {
+              "width": 900,
+              "height": 700,
+              "x_pos": 0.0,
+              "y_pos": 0.0,
+              "z_pos": 0.0,
+              "x_rotation": 0.0,
+              "y_rotation": 0.0,
+              "z_rotation": 0.0,
+              "display_duration": 5,
+              "fadeout_duration": 2,
+              "opacity": 1.0,
+              "ui_scaling": 0.4,
+              "font_size": 27,
+              "tracker": "LeftHand",
+              "locked": false,
+              "placed": false
+            },
+            "single_line": {
+              "width": 1200,
+              "height": 180,
+              "x_pos": 0.5209,
+              "y_pos": 0.6442,
+              "z_pos": -0.9509,
+              "x_rotation": 95.0133,
+              "y_rotation": 44.0232,
+              "z_rotation": 42.6138,
+              "display_duration": 5,
+              "fadeout_duration": 2,
+              "opacity": 1.0,
+              "ui_scaling": 0.5333,
+              "font_size": 28,
+              "tracker": "Playspace",
+              "locked": false,
+              "placed": true
+            }
+          }
+        },
+        {
           "endpoint": "/run/overlay_vr_panel_anchor",
           "status": 200,
-          "result": "HMD"
+          "result": "Playspace"
         },
         {
           "endpoint": "/run/overlay_vr_panel_locked",
           "status": 200,
-          "result": true
+          "result": false
         },
         {
           "endpoint": "/run/overlay_vr_panel_opacity",
@@ -10478,7 +10522,7 @@
       "name": "get overlay_vr_panel_locked of the subtitle",
       "endpoint": "/get/data/overlay_vr_panel_locked",
       "status": 200,
-      "result": true,
+      "result": false,
       "pushes": [],
       "push_results": [],
       "ms": 0
@@ -10496,7 +10540,7 @@
       "name": "get overlay_vr_panel_anchor of the subtitle",
       "endpoint": "/get/data/overlay_vr_panel_anchor",
       "status": 200,
-      "result": "HMD",
+      "result": "Playspace",
       "pushes": [],
       "push_results": [],
       "ms": 0
@@ -10529,27 +10573,29 @@
           "display_duration": 5,
           "fadeout_duration": 2,
           "opacity": 1.0,
-          "ui_scaling": 0.25,
+          "ui_scaling": 0.4,
           "font_size": 27,
           "tracker": "LeftHand",
-          "locked": true
+          "locked": false,
+          "placed": false
         },
         "single_line": {
           "width": 1200,
           "height": 180,
-          "x_pos": 0.0,
-          "y_pos": 0.0,
-          "z_pos": 0.0,
-          "x_rotation": 0.0,
-          "y_rotation": 0.0,
-          "z_rotation": 0.0,
+          "x_pos": 0.5209,
+          "y_pos": 0.6442,
+          "z_pos": -0.9509,
+          "x_rotation": 95.0133,
+          "y_rotation": 44.0232,
+          "z_rotation": 42.6138,
           "display_duration": 5,
           "fadeout_duration": 2,
           "opacity": 0.6,
-          "ui_scaling": 1.0,
+          "ui_scaling": 0.5333,
           "font_size": 28,
-          "tracker": "HMD",
-          "locked": true
+          "tracker": "Playspace",
+          "locked": false,
+          "placed": true
         }
       },
       "pushes": [],
@@ -10589,27 +10635,29 @@
           "display_duration": 5,
           "fadeout_duration": 2,
           "opacity": 1.0,
-          "ui_scaling": 0.25,
+          "ui_scaling": 0.4,
           "font_size": 27,
           "tracker": "LeftHand",
-          "locked": true
+          "locked": false,
+          "placed": false
         },
         "single_line": {
           "width": 1200,
           "height": 180,
           "x_pos": 0.25,
-          "y_pos": 0.0,
-          "z_pos": 0.0,
-          "x_rotation": 0.0,
-          "y_rotation": 0.0,
-          "z_rotation": 0.0,
+          "y_pos": 0.6442,
+          "z_pos": -0.9509,
+          "x_rotation": 95.0133,
+          "y_rotation": 44.0232,
+          "z_rotation": 42.6138,
           "display_duration": 5,
           "fadeout_duration": 0,
           "opacity": 0.6,
-          "ui_scaling": 1.0,
+          "ui_scaling": 0.5333,
           "font_size": 28,
-          "tracker": "HMD",
-          "locked": true
+          "tracker": "Playspace",
+          "locked": false,
+          "placed": true
         }
       },
       "pushes": [
@@ -10620,7 +10668,7 @@
         {
           "endpoint": "/run/overlay_vr_panel_locked",
           "status": 200,
-          "result": true
+          "result": false
         },
         {
           "endpoint": "/run/overlay_vr_panel_opacity",

@@ -301,7 +301,7 @@ fn overlay_vr_window(v: &Value, current: &Value) -> Option<Value> {
     for (k, x) in map {
         let k = k.as_str();
         if (k == "tracker" && x.as_str().is_some_and(|t| ["HMD", "LeftHand", "RightHand", "Playspace"].contains(&t)))
-            || (k == "locked" && x.is_boolean())
+            || ((k == "locked" || k == "placed") && x.is_boolean())
         {
             new.insert(k.into(), x.clone());
         } else if (POSITION_KEYS.contains(&k) || k == "opacity" || k == "ui_scaling") && is_number(x) {

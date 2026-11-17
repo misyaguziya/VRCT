@@ -7,7 +7,8 @@ import shared from "./VrSettingsWindow.module.scss";
 import styles from "./VrToolbar.module.scss";
 import { SUBTITLE_FONT_SIZE } from "./subtitle_entries";
 
-const PATHS = {
+// lock はランチャーの錠前の印 (VrLauncher) でも使う
+export const PATHS = {
     world: "M2 22l2.5-5h15l2.5 5zM12 2a4.5 4.5 0 0 0-4.5 4.5c0 3.4 4.5 8.5 4.5 8.5s4.5-5.1 4.5-8.5A4.5 4.5 0 0 0 12 2zM12 5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2z", // 床に立てたピン
     hand: "M8 21v-5l-3-4V7M8 12V4.5a1.5 1.5 0 0 1 3 0V11M11 10V3.5a1.5 1.5 0 0 1 3 0V11M14 10.5V5a1.5 1.5 0 0 1 3 0v8c0 4-2 8-6 8H8",
     head: "M12 3.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM4 21c.8-4 4-6.5 8-6.5s7.2 2.5 8 6.5",

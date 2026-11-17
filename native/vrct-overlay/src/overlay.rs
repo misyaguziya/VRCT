@@ -131,7 +131,8 @@ pub(crate) enum Command {
     Recall(Region),
     Tooltip(Tooltip),
     LayoutRendered((u32, u32)),
-    PanelForm(String, Settings, bool),
+    /// form, its settings, its lock, used for the first time (it takes the place the log window is at)
+    PanelForm(String, Settings, bool, bool),
     RevealPanel,
     Stop,
 }
@@ -318,9 +319,11 @@ impl Overlay {
     }
 
     /// The log window's form ("history" or a subtitle) with its place, size, fade and lock: it
-    /// moves there, hidden until the VR view drew it (reveal_panel)
-    pub fn set_panel_form(&self, form: &str, settings: Settings, locked: bool) {
-        self.send(Command::PanelForm(form.into(), settings, locked));
+    /// moves there, hidden until the VR view drew it (reveal_panel). `first_use`: a form not shown
+    /// before starts where the log window is (its live place, a grab in progress included) at its
+    /// scale, and that place is told (Event::Position)
+    pub fn set_panel_form(&self, form: &str, settings: Settings, locked: bool, first_use: bool) {
+        self.send(Command::PanelForm(form.into(), settings, locked, first_use));
     }
 
     /// The VR view drew the log window's new content: shown (and its display time starts) once captured
@@ -537,7 +540,8 @@ impl Worker {
             Command::Locked(name, v) => self.with(&name, |s| s.locked = v),
             // without SteamVR an image has nowhere to go (updateImage does nothing then)
             Command::Image(..) | Command::RevealPanel => {}
-            Command::PanelForm(form, settings, locked) => {
+            // without SteamVR there is no grab: the place given is the saved one
+            Command::PanelForm(form, settings, locked, _) => {
                 let size = settings.panel_size;
                 self.set_panel_form(form, settings, locked);
                 if let Some((w, h)) = size {
@@ -844,6 +848,8 @@ pub(crate) struct Run<'s> {
     pub panel_reveal_at: Option<Instant>,
     /// the log window hidden while it changes form, since then
     pub panel_hidden_since: Option<Instant>,
+    /// an unlocked subtitle faded out pointed at since then (shown again after a while)
+    pub faded_panel_pointed_since: Option<Instant>,
     /// this frame's tracked poses
     pub poses: Vec<vrct_openvr::TrackedDevicePose>,
     /// SteamVR's server: the connection is dead once it ends (None: not watched)
@@ -867,7 +873,7 @@ impl<'s> Run<'s> {
             tooltip_manipulating: false, resizing: None, corner_prev: HashMap::new(), ghost_key: None, resize_undo: None,
             panel_input: HashMap::new(), panel_scroll: HashMap::new(), trigger_blocked: HashSet::new(), input_suspended: HashSet::new(), input_update_failed: false, input_hands: None, mouse_owner: None, mouse_owner_keyboard: false, trigger_aim: HashMap::new(), trigger_value: HashMap::new(), mouse: Default::default(), tip_offsets: HashMap::new(),
             debug_state: HashMap::new(), shortcut_presses: HashMap::new(), panel: crate::panel::Panel::new(), panel_ready: false,
-            panel_reveal_at: None, panel_hidden_since: None, poses: vec![], server: None,
+            panel_reveal_at: None, panel_hidden_since: None, faded_panel_pointed_since: None, poses: vec![], server: None,
         }
     }
 
@@ -1106,7 +1112,7 @@ impl<'s> Run<'s> {
     /// A command with SteamVR
     fn apply(&mut self, w: &mut Worker, command: Command) {
         let command = match command {
-            Command::PanelForm(form, settings, locked) => return self.apply_panel_form(w, form, settings, locked),
+            Command::PanelForm(form, settings, locked, first_use) => return self.apply_panel_form(w, form, settings, locked, first_use),
             Command::RevealPanel => return self.reveal_panel(),
             other => other,
         };

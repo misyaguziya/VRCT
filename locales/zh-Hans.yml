@@ -603,6 +603,7 @@ vr_panel:
         click_recall: "按下以召回"
         log_open_help: "按下以打开 · 长按以召回"
         log_close_help: "按下以关闭 · 长按以召回"
+        log_locked_help: "长按以解锁并召回"
         close_view: "按下以关闭"
         open_view: "按下以打开"
         anchor: "固定位置"

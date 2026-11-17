@@ -115,7 +115,7 @@ export const VrApp = () => {
             <UiLanguageController />
             <FontFamilyController />
 
-            <Region layout={layout} name="panel"><VrLogWindow onClose={toggleLog} /></Region>
+            <Region layout={layout} name="panel"><VrLogWindow is_open={windows.log} onClose={toggleLog} /></Region>
             <Region layout={layout} name="launcher"><VrLauncher windows={windows} toggleLog={toggleLog} openLog={openLog} togglePopup={togglePopup} toggleKeyboard={toggleKeyboard} openKeyboard={openKeyboard} /></Region>
             <Region layout={layout} name="popup"><VrPopupWindow popup={windows.popup} onClose={closePopup} /></Region>
             <Region layout={layout} name="toolbar"><VrToolbar /></Region>

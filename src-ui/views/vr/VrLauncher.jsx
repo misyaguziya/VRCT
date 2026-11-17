@@ -16,10 +16,12 @@ import KeyboardSvg from "@images/mui_keyboard_alt.svg?react";
 import vrct_logo from "@images/vrct_logo_for_dark_mode.png";
 import vrct_icon from "@images/vrct_icon_for_vr_intro.png";
 import { VrTooltipButton } from "./VrTooltip";
+import { PATHS } from "./VrToolbar";
 import shared from "./VrSettingsWindow.module.scss";
 import styles from "./VrLauncher.module.scss";
 
 const LONG_PRESS_MS = 600;
+const LOCK_PATH = PATHS.lock;
 export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKeyboard, openKeyboard }) => {
     const { t } = useI18n();
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
@@ -33,9 +35,11 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKey
     const is_locked = currentIsOpenedConfigPage.data === true;
     // ログ: 長押しで目の前へ呼び戻す。ロックした字幕はレーザーが当たらないので、ここでロックも外す
     const { currentOverlayVrPanelForm, currentOverlayVrPanelLocked, toggleOverlayVrPanelLocked } = useVr();
+    // ロックした字幕はレーザーが当たらず、それ自体からは外し方がわからないので、ログボタンに錠前を出す
+    const is_subtitle_locked = currentOverlayVrPanelForm.data !== "history" && currentOverlayVrPanelLocked.data === true;
     const recallLog = () => {
         openLog();
-        if (currentOverlayVrPanelForm.data !== "history" && currentOverlayVrPanelLocked.data === true) toggleOverlayVrPanelLocked();
+        if (is_subtitle_locked) toggleOverlayVrPanelLocked();
         asyncStdoutToPython("/run/vr_panel_recall_log");
     };
     // キーボード: 長押しで目の前へ呼び戻す (閉じていれば開く。ログのボタンと同じ)
@@ -60,7 +64,7 @@ export const VrLauncher = ({ windows, toggleLog, openLog, togglePopup, toggleKey
             <span className={styles.divider} aria-hidden="true" />
             <div className={styles.group} role="group" aria-label={t("vr_panel.tooltip.windows_group")}>
                 <WindowButton Svg={CopyThinSvg} label={is_log_lost ? t("vr_panel.recall_log") : t("vr_panel.window_log")}
-                    name={t("vr_panel.window_log")} is_open={windows.log} is_attention={is_log_lost}
+                    name={t("vr_panel.window_log")} is_open={windows.log} is_attention={is_log_lost} is_locked={is_subtitle_locked}
                     onClick={is_log_lost ? () => asyncStdoutToPython("/run/vr_panel_recall_log") : toggleLog} onLongPress={recallLog} />
                 <WindowButton Svg={KeyboardSvg} label={t("vr_panel.keyboard.title")}
                     is_open={windows.keyboard} onClick={toggleKeyboard} onLongPress={recallKeyboard} />
@@ -87,13 +91,12 @@ const FunctionButton = ({ Svg, label, name, state, onClick, is_locked }) => {
         onClick={() => { if (!is_pending && !is_locked) onClick(); }}>
         <Svg className={styles.icon} aria-hidden="true" />
         {(is_locked || is_pending) && <span className={styles.state_mark} aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d={is_locked ? "M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11" :
-                "M6 3h12M6 21h12M7 3v4l5 5-5 5v4M17 3v4l-5 5 5 5v4"} /></svg>
+            <svg viewBox="0 0 24 24"><path d={is_locked ? LOCK_PATH : "M6 3h12M6 21h12M7 3v4l5 5-5 5v4M17 3v4l-5 5 5 5v4"} /></svg>
         </span>}
     </VrTooltipButton>;
 };
 
-const WindowButton = ({ Svg, label, name = label, is_open, is_attention = false, onClick, onLongPress = null }) => {
+const WindowButton = ({ Svg, label, name = label, is_open, is_attention = false, is_locked = false, onClick, onLongPress = null }) => {
     const { t } = useI18n();
     const timer = useRef(null);
     const long_pressed = useRef(false);
@@ -108,14 +111,16 @@ const WindowButton = ({ Svg, label, name = label, is_open, is_attention = false,
         setIsHolding(true);
         timer.current = setTimeout(() => { long_pressed.current = true; stopTimer(); onLongPress(); }, LONG_PRESS_MS);
     };
+    const state = t(`vr_panel.tooltip.${is_holding ? "holding" : is_attention ? "lost" : is_open ? "open" : "hidden"}`);
     return <VrTooltipButton className={clsx(shared.button, styles.button, styles.window_button, {
         [shared.is_on]: is_open, [styles.is_attention]: is_attention, [styles.is_holding]: is_holding,
-    })} aria-label={is_attention ? t("vr_panel.recall_log") : name} aria-pressed={is_open}
-        tipTitle={name} tipState={t(`vr_panel.tooltip.${is_holding ? "holding" : is_attention ? "lost" : is_open ? "open" : "hidden"}`)}
-        tipHelp={t(`vr_panel.tooltip.${is_holding ? "holding_help" : is_attention ? "click_recall" :
+    })} aria-label={`${is_attention ? t("vr_panel.recall_log") : name}${is_locked ? ` (${t("vr_panel.locked")})` : ""}`} aria-pressed={is_open}
+        tipTitle={name} tipState={is_locked && !is_holding ? `${state} · ${t("vr_panel.locked")}` : state}
+        tipHelp={t(`vr_panel.tooltip.${is_holding ? "holding_help" : is_attention ? "click_recall" : is_locked ? "log_locked_help" :
             onLongPress ? (is_open ? "log_close_help" : "log_open_help") : is_open ? "close_view" : "open_view"}`)}
         onMouseDown={onMouseDown} onMouseUp={stopTimer} onMouseLeave={stopTimer} onBlur={stopTimer}
         onClick={() => { if (!long_pressed.current) onClick(); long_pressed.current = false; }}>
         <Svg className={styles.icon} aria-hidden="true" />
+        {is_locked && <span className={styles.state_mark} aria-hidden="true"><svg viewBox="0 0 24 24"><path d={LOCK_PATH} /></svg></span>}
     </VrTooltipButton>;
 };

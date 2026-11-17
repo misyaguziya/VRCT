@@ -2362,10 +2362,11 @@
      "display_duration": 5,
      "fadeout_duration": 2,
      "opacity": 1.0,
-     "ui_scaling": 0.25,
+     "ui_scaling": 0.4,
      "font_size": 27,
      "tracker": "LeftHand",
-     "locked": true
+     "locked": false,
+     "placed": false
     },
     "single_line": {
      "width": 1200,
@@ -2379,10 +2380,11 @@
      "display_duration": 5,
      "fadeout_duration": 2,
      "opacity": 1.0,
-     "ui_scaling": 1.0,
+     "ui_scaling": 0.5333,
      "font_size": 28,
      "tracker": "HMD",
-     "locked": true
+     "locked": false,
+     "placed": false
     }
    }
   },

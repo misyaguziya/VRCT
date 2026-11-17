@@ -603,6 +603,7 @@ vr_panel:
         click_recall: "Press to recall"
         log_open_help: "Press to open · Hold to recall"
         log_close_help: "Press to close · Hold to recall"
+        log_locked_help: "Hold to unlock and recall"
         close_view: "Press to close"
         open_view: "Press to open"
         anchor: "Anchor"

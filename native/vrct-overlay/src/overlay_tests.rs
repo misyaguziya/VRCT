@@ -687,6 +687,19 @@ fn the_bar_shows_after_pointing_at_the_log_a_moment() {
 }
 
 #[test]
+fn the_bar_stays_while_the_form_changes() {
+    let mut r = vr_ui();
+    aim_at_panel(&mut r);
+    r.frame(0);
+    r.frame(350);
+    assert!(r.run.toolbar_visible);
+    to_form(&mut r, "single_line", "Playspace", false);
+    r.frame(0);
+    assert!(r.run.toolbar_visible && r.shown("VRCT_toolbar"));
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+}
+
+#[test]
 fn closing_the_log_while_it_is_grabbed_lets_it_go() {
     let mut r = vr_ui();
     aim_at_panel(&mut r);
@@ -717,7 +730,7 @@ fn a_recalled_log_comes_in_front_of_the_eyes() {
 fn to_form(r: &mut Rig, form: &str, tracker: &str, locked: bool) {
     let pi = r.index("panel");
     let s = Settings { tracker: tracker.into(), fadeout_duration: 2.0, ..r.w.sizes[pi].settings.clone() };
-    r.run.apply_panel_form(&mut r.w, form.into(), s, locked);
+    r.run.apply_panel_form(&mut r.w, form.into(), s, locked, false);
 }
 
 fn alpha_of(r: &Rig, size: &str) -> f64 {
@@ -776,6 +789,33 @@ fn changing_form_while_grabbed_saves_the_place_to_the_form_it_was_moved_in() {
 }
 
 #[test]
+fn a_form_used_first_while_grabbed_takes_the_place_the_grab_left_and_tells_it() {
+    let mut r = vr_ui();
+    aim_at_panel(&mut r);
+    r.frame(0);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    r.frame(20);
+    // moved while held (not saved yet)
+    r.hand(RIGHT, aiming([0.4, 1.4, -0.2], PANEL_AT));
+    r.frame(20);
+    r.events.lock().unwrap().clear();
+    let pi = r.index("panel");
+    // the saved (stale) place sent with it
+    let stale = Settings { position: [9.0; 6], tracker: "HMD".into(), panel_size: Some((1200, 180)), ui_scaling: 2.0,
+                           ..r.w.sizes[pi].settings.clone() };
+    r.run.apply_panel_form(&mut r.w, "single_line".into(), stale, false, true);
+    let told = r.positions();
+    assert_eq!(told.len(), 2, "{told:?}");
+    let (history, single) = (&told[0].1, &told[1].1);
+    assert_eq!((single.position, single.tracker.as_str()), (history.position, history.tracker.as_str()));
+    assert_ne!(single.position, [9.0; 6]);
+    // the same metres per pixel: 0.6 m for 900 px is 0.8 m for 1200 px
+    assert!((single.ui_scaling - 0.8).abs() < 1e-9, "{}", single.ui_scaling);
+    assert_eq!(r.w.sizes[pi].settings.position, history.position);
+}
+
+#[test]
 fn a_changed_form_is_clear_until_shown_and_then_after_a_while_anyway() {
     let mut r = vr_ui();
     to_form(&mut r, "multi_line", "Playspace", false);
@@ -799,7 +839,7 @@ fn the_history_that_never_fades_is_clear_too_while_changing_form() {
     let pi = r.index("panel");
     let s = r.w.sizes[pi].settings.clone();
     assert_eq!(s.fadeout_duration, 0.0);
-    r.run.apply_panel_form(&mut r.w, "history".into(), s, false);
+    r.run.apply_panel_form(&mut r.w, "history".into(), s, false, false);
     r.frame(0);
     r.frame(20);
     assert_eq!(alpha_of(&r, "panel"), 0.0);
@@ -845,9 +885,47 @@ fn a_subtitle_not_on_the_head_is_recalled_in_front_of_the_eyes_as_the_history() 
 }
 
 #[test]
-fn a_faded_subtitle_is_not_pointed_at_nor_woken_by_the_laser() {
+fn a_faded_unlocked_subtitle_shows_again_when_pointed_at() {
     let mut r = vr_ui();
     to_form(&mut r, "multi_line", "Playspace", false);
+    let pi = r.index("panel");
+    r.run.show_panel(&mut r.w, pi);
+    r.w.sizes[pi].last_update = Instant::now() - Duration::from_secs(60);
+    // no hand on it (the left one at the wrist points ahead)
+    r.hand(LEFT, aiming([-0.2, 1.2, -0.3], [-3.0, 1.2, 0.0]));
+    r.hand(RIGHT, aiming([0.2, 1.2, -0.3], [3.0, 1.2, 0.0]));
+    r.frame(0);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    // pointed at a moment (a laser passing over it): still clear, the game keeps the input and the grip
+    aim_at_panel(&mut r);
+    r.frame(20);
+    r.frame(20);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    assert_eq!(r.steam.0.borrow().input_updates.last(), Some(&vec![]));
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), None);
+    // looked away: counted again from the start
+    r.buttons(RIGHT, 0);
+    r.hand(RIGHT, aiming([0.2, 1.2, -0.3], [3.0, 1.2, 0.0]));
+    r.frame(300);
+    aim_at_panel(&mut r);
+    r.frame(0);
+    r.frame(300);
+    assert_eq!(alpha_of(&r, "panel"), 0.0);
+    // pointed at a while: shown, then a target as usual
+    r.frame(150);
+    r.frame(20);
+    assert_eq!(alpha_of(&r, "panel"), 1.0);
+    r.buttons(RIGHT, GRIP);
+    r.frame(20);
+    assert_eq!(r.grabbed(), Some(pi));
+}
+
+#[test]
+fn a_faded_locked_subtitle_is_not_pointed_at_nor_woken_by_the_laser() {
+    let mut r = vr_ui();
+    to_form(&mut r, "multi_line", "Playspace", true);
     let pi = r.index("panel");
     r.run.show_panel(&mut r.w, pi);
     r.w.sizes[pi].last_update = Instant::now() - Duration::from_secs(60);
@@ -934,9 +1012,9 @@ fn a_subtitle_may_be_lower_than_the_history() {
     let mut r = vr_ui();
     let pi = r.index("panel");
     let low = Settings { panel_size: Some((1200, 180)), ..r.w.sizes[pi].settings.clone() };
-    r.run.apply_panel_form(&mut r.w, "single_line".into(), low.clone(), true);
+    r.run.apply_panel_form(&mut r.w, "single_line".into(), low.clone(), true, false);
     assert_eq!(r.w.layout.panel_size(), (1200, 180));
-    r.run.apply_panel_form(&mut r.w, "history".into(), low, false);
+    r.run.apply_panel_form(&mut r.w, "history".into(), low, false, false);
     assert_eq!(r.w.layout.panel_size(), (1200, 400));
 }
 
@@ -953,7 +1031,7 @@ fn a_worker_made_again_after_a_stop_keeps_the_form_layout_and_what_was_drawn() {
     let mut r = vr_ui();
     let pi = r.index("panel");
     let low = Settings { panel_size: Some((1200, 180)), ..r.w.sizes[pi].settings.clone() };
-    r.run.apply_panel_form(&mut r.w, "single_line".into(), low, true);
+    r.run.apply_panel_form(&mut r.w, "single_line".into(), low, true, false);
     r.w.layout_rendered = (1200, 180);
     r.w.publish(false);
     let shared = r.w.shared.lock().unwrap().clone();
@@ -969,7 +1047,7 @@ fn subtitle_behind_the_head(r: &mut Rig) -> Mat4 {
     let pi = r.index("panel");
     let s = Settings { tracker: "HMD".into(), position: [0.0, 0.0, -2.0, 0.0, 0.0, 0.0], fadeout_duration: 2.0,
                        ..r.w.sizes[pi].settings.clone() };
-    r.run.apply_panel_form(&mut r.w, "single_line".into(), s, false);
+    r.run.apply_panel_form(&mut r.w, "single_line".into(), s, false, false);
     head
 }
 
@@ -1026,7 +1104,7 @@ fn a_subtitle_that_never_fades_is_not_pointed_at_while_clear() {
     let pi = r.index("panel");
     let s = r.w.sizes[pi].settings.clone();
     assert_eq!(s.fadeout_duration, 0.0);
-    r.run.apply_panel_form(&mut r.w, "multi_line".into(), s, false);
+    r.run.apply_panel_form(&mut r.w, "multi_line".into(), s, false, false);
     aim_at_panel(&mut r);
     r.frame(0);
     assert_eq!(r.steam.0.borrow().input_updates.last(), Some(&vec![]));

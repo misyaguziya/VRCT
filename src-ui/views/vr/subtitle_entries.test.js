@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SUBTITLE_FONT_SIZE, subtitleEntries, subtitleKey, subtitleSmallFontSize } from "./subtitle_entries.js";
+import { SUBTITLE_FONT_SIZE, nextShownSince, subtitleEntries, subtitleKey, subtitleSmallFontSize } from "./subtitle_entries.js";
 
 test("the original's size is about two thirds of the translation's (as before by default)", () => {
     assert.equal(subtitleSmallFontSize(27), 18);
@@ -63,7 +63,33 @@ test("a sent message translated after a later received one changes the key", () 
     assert.notEqual(before, after);
 });
 
-test("nothing to show: no key (nothing is told)", () => {
-    assert.equal(subtitleKey("multi_line", []), null);
-    assert.equal(subtitleKey("single_line", subtitleEntries([log(1, "sent")], "single_line", false)), null);
+test("after_id: only the logs after it (the one-line subtitle shows what came after it was shown)", () => {
+    const logs = [log(1, "received"), log(2, "sent"), log(3, "received")];
+    assert.deepEqual(subtitleEntries(logs.slice(0, 2), "single_line", false, 2).map(e => e.id), []);
+    assert.deepEqual(subtitleEntries(logs, "single_line", false, 2).map(e => e.id), [3]);
+    // an id no longer in the logs: all of them
+    assert.deepEqual(subtitleEntries(logs, "single_line", false, 99).map(e => e.id), [3]);
+    assert.deepEqual(subtitleEntries(logs, "multi_line", false).map(e => e.id), [1, 2, 3]);
+});
+
+test("the one-line subtitle counts again from a form change or the log window opened, not while it stays", () => {
+    let s = nextShownSince(null, "single_line", true, "a");
+    assert.equal(s.after_id, "a");
+    s = nextShownSince(s, "single_line", true, "b");
+    assert.equal(s.after_id, "a");
+    s = nextShownSince(s, "single_line", false, "c");
+    assert.equal(s.after_id, "a");
+    s = nextShownSince(s, "single_line", true, "d");
+    assert.equal(s.after_id, "d");
+    s = nextShownSince(s, "multi_line", true, "e");
+    assert.equal(s.after_id, null);
+    s = nextShownSince(s, "single_line", true, "f");
+    assert.equal(s.after_id, "f");
+});
+
+test("nothing to show: still a key of its own per form (told at once on a form change)", () => {
+    const empty = [subtitleKey("multi_line", []), subtitleKey("single_line", subtitleEntries([log(1, "sent")], "single_line", false))];
+    assert.ok(empty.every(key => typeof key === "string"));
+    assert.notEqual(empty[0], empty[1]);
+    assert.notEqual(empty[1], subtitleKey("single_line", subtitleEntries([log(1, "received")], "single_line", false)));
 });

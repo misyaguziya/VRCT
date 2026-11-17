@@ -169,7 +169,7 @@ impl Overlays {
         let overlay = Overlay::new(sizes, std::sync::Arc::new(ipc::log), std::sync::Arc::new(events));
         overlay.set_launcher_defaults(settings_of(&default_launcher()));
         let locked = panel.locked;
-        overlay.set_panel_form(&form, panel, locked);
+        overlay.set_panel_form(&form, panel, locked, false);
         Self { overlay: Mutex::new(overlay), image: Mutex::new(OverlayImage::new(&fonts)), fonts }
     }
 }
@@ -226,6 +226,9 @@ fn position_changed(app: &App, size: &str, form: Option<&str>, mut position: Map
             let current = panel_form(&app.config);
             let form = form.unwrap_or(current.as_str());
             let tracker = position.get("tracker").cloned().unwrap_or(Value::Null);
+            if form != HISTORY {
+                position.insert("placed".into(), json!(true));
+            }
             save_form_settings(app, form, position)?;
             if form != current {
                 return Ok(());
@@ -467,15 +470,33 @@ pub fn set_disable_overlay_vr_panel_locked(app: &App, _: Data) -> Result<Reply> 
 }
 
 /// The log window's form: "history" (the log) or a subtitle ("multi_line", "single_line"). Changed:
-/// the window goes to that form's place, size and lock, and its anchor, lock and opacity are told
+/// the window takes that form's own place, size and lock (each form is kept as the user left it), and
+/// its anchor, lock and opacity are told. A subtitle form used for the first time ("placed" false)
+/// starts where the window is, at its scale (metres per pixel), unlocked so that it can be placed.
+/// The saved place is written here; the overlay takes the live one (a grab in progress) and tells it
 pub fn set_overlay_vr_panel_form(app: &App, data: Data) -> Result<Reply> {
     let before = panel_form(&app.config);
+    let was = form_settings(&app.config, &before);
     let reply = super::basic::validated(app, "OVERLAY_VR_PANEL_FORM", data.unwrap_or(Value::Null))?;
     let form = panel_form(&app.config);
     if form != before {
+        let own = form_settings(&app.config, &form);
+        let first_use = form != HISTORY && own.get("placed") != Some(&json!(true));
+        if first_use {
+            let mut first: Map<String, Value> = POSITION_KEYS.iter().chain(&["tracker"])
+                .filter_map(|key| Some((key.to_string(), was.get(*key)?.clone()))).collect();
+            let per_px = num(&was, "ui_scaling") / num(&was, "width");
+            if per_px.is_finite() && per_px > 0.0 {
+                let (min, max) = vrct_overlay::layout::WIDTH_RANGE_M;
+                first.insert("ui_scaling".into(), json!(vrct_overlay::pose::round_to((per_px * num(&own, "width")).clamp(min, max), 4)));
+            }
+            first.insert("locked".into(), json!(false));
+            first.insert("placed".into(), json!(true));
+            save_form_settings(app, &form, first)?;
+        }
         let settings = settings_of(&form_settings(&app.config, &form));
         let locked = settings.locked;
-        overlay(app).set_panel_form(&form, settings, locked);
+        overlay(app).set_panel_form(&form, settings, locked, first_use);
         app.run(200, "overlay_vr_panel_anchor", form_value(app, "tracker"))?;
         app.run(200, "overlay_vr_panel_locked", form_value(app, "locked"))?;
         app.run(200, "overlay_vr_panel_opacity", form_value(app, "opacity"))?;
@@ -812,12 +833,39 @@ mod panel_form_tests {
     }
 
     #[test]
-    fn each_form_keeps_its_own_opacity_lock_and_place() {
+    fn a_form_used_first_starts_where_the_window_is_and_then_keeps_its_own_place() {
         let app = super::super::test_app(0);
+        let moved = json!({"x_pos": 0.4, "y_pos": 0.5, "z_pos": 0.6, "x_rotation": 10.0, "y_rotation": 20.0, "z_rotation": 30.0,
+                           "ui_scaling": 0.6, "tracker": "RightHand", "width": 900, "height": 700});
+        position_changed(&app, PANEL, Some("history"), moved.as_object().unwrap().clone()).unwrap();
+        set_enable_overlay_vr_panel_locked(&app, None).unwrap();
+        let history = app.config.get("OVERLAY_VR_PANEL_SETTINGS");
         take_printed();
         assert_eq!(set_overlay_vr_panel_form(&app, Some(json!("single_line"))).unwrap().result, json!("single_line"));
-        assert_eq!(pushes(), vec![("overlay_vr_panel_anchor".into(), json!("HMD")), ("overlay_vr_panel_locked".into(), json!(true)),
+        assert_eq!(pushes(), vec![("overlay_vr_subtitle_settings".into(), app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS")),
+                                  ("overlay_vr_panel_anchor".into(), json!("RightHand")), ("overlay_vr_panel_locked".into(), json!(false)),
                                   ("overlay_vr_panel_opacity".into(), json!(1.0))]);
+        // first used: the history's place and anchor, its scale (0.6 m for 900 px: 0.8 m for 1200 px),
+        // unlocked to be placed; its own pixel size kept
+        let single = &app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS")["single_line"];
+        for key in POSITION_KEYS.iter().chain(&["tracker"]) {
+            assert_eq!(single[*key], history[*key], "{key}");
+        }
+        assert_eq!((single["width"].clone(), single["height"].clone(), single["ui_scaling"].clone(), single["placed"].clone()),
+                   (json!(1200), json!(180), json!(0.8), json!(true)));
+        // placed elsewhere, then the history and back: its own place, not the history's
+        let own = json!({"x_pos": -0.3, "y_pos": 1.4, "z_pos": -1.0, "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
+                         "ui_scaling": 0.9, "tracker": "Playspace", "width": 1200, "height": 180});
+        position_changed(&app, PANEL, Some("single_line"), own.as_object().unwrap().clone()).unwrap();
+        set_overlay_vr_panel_form(&app, Some(json!("history"))).unwrap();
+        assert_eq!((get_overlay_vr_panel_anchor(&app, None).unwrap().result, get_overlay_vr_panel_locked(&app, None).unwrap().result),
+                   (json!("RightHand"), json!(true)));
+        take_printed();
+        set_overlay_vr_panel_form(&app, Some(json!("single_line"))).unwrap();
+        assert_eq!(pushes(), vec![("overlay_vr_panel_anchor".into(), json!("Playspace")), ("overlay_vr_panel_locked".into(), json!(false)),
+                                  ("overlay_vr_panel_opacity".into(), json!(1.0))]);
+        let single = &app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS")["single_line"];
+        assert_eq!((single["x_pos"].clone(), single["ui_scaling"].clone()), (json!(-0.3), json!(0.9)));
         // the same form again: nothing told
         set_overlay_vr_panel_form(&app, Some(json!("single_line"))).unwrap();
         assert!(pushes().is_empty());
@@ -828,9 +876,9 @@ mod panel_form_tests {
         assert_eq!(told, vec!["overlay_vr_subtitle_settings", "overlay_vr_subtitle_settings"]);
         let subtitles = app.config.get("OVERLAY_VR_SUBTITLE_SETTINGS");
         assert_eq!((subtitles["single_line"]["opacity"].clone(), subtitles["single_line"]["locked"].clone()), (json!(0.6), json!(false)));
-        assert_eq!(subtitles["multi_line"]["locked"], json!(true));
+        assert_eq!(subtitles["multi_line"], crate::config::default_of("OVERLAY_VR_SUBTITLE_SETTINGS").unwrap()["multi_line"]);
         assert_eq!((app.config.get("OVERLAY_VR_PANEL_SETTINGS")["opacity"].clone(), app.config.get("OVERLAY_VR_PANEL_LOCKED")),
-                   (json!(1.0), json!(false)));
+                   (json!(1.0), json!(true)));
         // moved in VR as single_line: saved there and told
         let moved = json!({"x_pos": 0.1, "y_pos": 0.2, "z_pos": 0.3, "x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
                            "ui_scaling": 1.2, "tracker": "HMD", "width": 1200, "height": 400});
@@ -865,7 +913,7 @@ mod panel_form_tests {
             "opacity": 0.1, "display_duration": -1, "ui_scaling": 5.0, "width": 2000, "height": 100, "y_pos": 0.3}}))).unwrap();
         let s = &reply.result["single_line"];
         assert_eq!((s["opacity"].clone(), s["display_duration"].clone(), s["ui_scaling"].clone(), s["width"].clone(), s["height"].clone(), s["y_pos"].clone()),
-                   (json!(1.0), json!(5), json!(1.0), json!(1200), json!(180), json!(0.3)));
+                   (json!(1.0), json!(5), json!(0.5333), json!(1200), json!(180), json!(0.3)));
         let reply = set_overlay_vr_subtitle_settings(&app, Some(json!({"single_line": {"opacity": 0.2, "height": 120, "ui_scaling": 3}}))).unwrap();
         let s = &reply.result["single_line"];
         assert_eq!((s["opacity"].clone(), s["height"].clone(), s["ui_scaling"].clone()), (json!(0.2), json!(120), json!(3.0)));

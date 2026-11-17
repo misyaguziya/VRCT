@@ -603,6 +603,7 @@ vr_panel:
         click_recall: "押すと呼び戻します"
         log_open_help: "押すと開きます · 長押しで呼び戻す"
         log_close_help: "押すと閉じます · 長押しで呼び戻す"
+        log_locked_help: "長押しでロックを外して呼び戻す"
         close_view: "押すと閉じます"
         open_view: "押すと開きます"
         anchor: "固定先"

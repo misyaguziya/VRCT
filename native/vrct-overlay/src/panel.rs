@@ -377,8 +377,9 @@ impl Run<'_> {
     }
 
     /// The log window's new content shown once a capture taken after it was drawn was sent (no
-    /// old one flashing). One taken before it is not kept as the last sent: it may already hold
-    /// the new content, and the next capture, the same picture, must still be sent to show it
+    /// old one flashing; one at the old size is not sent at all: transfer_capture). One taken before
+    /// it is not kept as the last sent: it may already hold the new content, and the next capture,
+    /// the same picture, must still be sent to show it
     pub(crate) fn after_transfer(&mut self, w: &mut Worker, started: Instant, transferred: bool) {
         let Some(at) = self.panel_reveal_at else { return };
         if started < at {

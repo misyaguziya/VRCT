@@ -40,9 +40,11 @@
     .entry.received { align-items: flex-start; text-align: left; }
     .entry.sent { align-items: flex-end; text-align: right; }
     .info { margin: 0; display: flex; gap: 0.5em; font-size: var(--subtitle_small); line-height: 1.4; }
-    .time { color: rgb(120, 120, 120); }
-    .received .kind { color: rgb(168, 97, 180); }
-    .sent .kind { color: rgb(97, 151, 180); }
+    // 時刻・種類は小さい文字なので、板に対して 4.5:1 以上 (VR はにじむので画面より厳しく)。
+    // チャット読み取りの受信も同じ紫 (補足なので目立たせない)。見分けは「受信 (チャット読み取り)」の文字で
+    .time { color: rgb(150, 150, 150); }
+    .received .kind { color: rgb(190, 125, 205); }
+    .sent .kind { color: rgb(110, 165, 195); }
     .small { font-size: var(--subtitle_small); line-height: 1.4; }
     .large { font-size: var(--subtitle_large); line-height: 1.35; }
 }
