@@ -122,6 +122,8 @@ pub struct Overlays {
     pub overlay: Mutex<Overlay>,
     pub image: Mutex<OverlayImage>,
     fonts: std::path::PathBuf,
+    /// shutdown began: the overlay's events (its stop told as SteamVR gone) are not told any more
+    shutting_down: std::sync::atomic::AtomicBool,
 }
 
 impl Overlays {
@@ -170,7 +172,7 @@ impl Overlays {
         overlay.set_launcher_defaults(settings_of(&default_launcher()));
         let locked = panel.locked;
         overlay.set_panel_form(&form, panel, locked, false);
-        Self { overlay: Mutex::new(overlay), image: Mutex::new(OverlayImage::new(&fonts)), fonts }
+        Self { overlay: Mutex::new(overlay), image: Mutex::new(OverlayImage::new(&fonts)), fonts, shutting_down: Default::default() }
     }
 }
 
@@ -180,6 +182,9 @@ fn overlay(app: &App) -> std::sync::MutexGuard<'_, Overlay> {
 
 /// The overlay's callbacks (from its thread)
 fn on_event(app: &App, event: Event) -> Result<()> {
+    if app.model.overlays.shutting_down.load(std::sync::atomic::Ordering::SeqCst) {
+        return Ok(());
+    }
     match event {
         Event::Layout { layout, tooltip_epoch } => app.run(200, "vr_panel_layout", layout_json(&layout, tooltip_epoch)),
         // {"x", "y", "second": the other hand's {"x", "y"} or null}; null when none points at it
@@ -312,6 +317,7 @@ pub fn push_initial_state(app: &App) -> Result<()> {
 
 /// shutdownOverlay
 pub fn shutdown(app: &App) {
+    app.model.overlays.shutting_down.store(true, std::sync::atomic::Ordering::SeqCst);
     overlay(app).stop();
 }
 
@@ -822,6 +828,29 @@ mod bindings_tests {
         assert_eq!(told, vec![(serde_json::json!("/run/vr_panel_steamvr"), serde_json::json!(true))]);
         // the VR UI off (the default): the keyboard's dictionaries are not fetched
         assert_eq!(super::super::keyboard::get_keyboard_state(&app, None).unwrap().result, idle);
+    }
+    #[test]
+    fn steamvr_connected_with_the_vr_ui_on_prepares_the_dictionaries() {
+        // every request answered 404 by a local server: the preparing that starts fails at once, nothing
+        // is fetched from the net
+        let root = super::super::test_server(|_| (404, vec![]));
+        let app = super::super::test_app_with(0, crate::net::Http::redirected(&root).unwrap());
+        app.config.set("OVERLAY_VR_PANEL", serde_json::json!(true)).unwrap();
+        let status = || super::super::keyboard::get_keyboard_state(&app, None).unwrap().result["status"].clone();
+        super::on_event(&app, vrct_overlay::overlay::Event::SteamVr(true)).unwrap();
+        let until = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while status() != serde_json::json!("failed") && std::time::Instant::now() < until {
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        assert_eq!(status(), serde_json::json!("failed"), "the preparing did not start");
+    }
+    #[test]
+    fn nothing_is_told_once_shutdown_began() {
+        let app = super::super::test_app(0);
+        app.model.overlays.shutting_down.store(true, std::sync::atomic::Ordering::SeqCst);
+        crate::ipc::take_printed();
+        super::on_event(&app, vrct_overlay::overlay::Event::SteamVr(false)).unwrap();
+        assert!(crate::ipc::take_printed().is_empty());
     }
 }
 

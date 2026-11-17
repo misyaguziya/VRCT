@@ -4,7 +4,7 @@ import { getDefaultStore } from "jotai";
 
 import { dynamicStoreRegistry } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
-import { useIsOpenedConfigPage, useVrPanelKeyboardShortcut } from "@logics_common";
+import { useIsOpenedConfigPage, useVrPanelKeyboardShortcut, useVrPanelWindows } from "@logics_common";
 
 import {
     UiLanguageController,
@@ -20,6 +20,7 @@ import { VrToolbar } from "./VrToolbar";
 import { VrTooltip } from "./VrTooltip";
 import { keepNewestVrLayout } from "../../logics/common/vrPanelTooltip";
 import { decodeOrdered } from "../../logics/common/vrPanelWire";
+import { VR_WINDOWS_PATH, isUntouchedVrWindows, restoreVrWindows } from "../../logics/common/vrPanelWindows";
 
 import styles from "./VrApp.module.scss";
 
@@ -65,9 +66,22 @@ export const VrApp = () => {
     // 起動時はランチャーだけを出す (ログは必要なときにランチャーから開く)
     // キーボードは一時ウィンドウとは別に開く (言語・設定と同時に使える)
     const [windows, setWindows] = useState({ log: false, popup: null, keyboard: false });
+    // 何も開いていない最初の状態は送らない (メインが覚えている窓 = バックエンドが知っている窓を上書きしない)
+    const reported = useRef(false);
     useEffect(() => {
-        asyncStdoutToPython("/run/vr_panel_windows", { log: windows.log, popup: windows.popup !== null, keyboard: windows.keyboard });
+        if (!reported.current && isUntouchedVrWindows(windows)) return;
+        reported.current = true;
+        asyncStdoutToPython(VR_WINDOWS_PATH, { log: windows.log, popup: windows.popup !== null, keyboard: windows.keyboard });
     }, [windows.log, windows.popup, windows.keyboard]);
+    // 作り直した VR 画面 (SteamVR の再起動・VR UI の OFF → ON): メインが覚えていたログ窓・キーボードを開き直す (一度だけ)
+    const { currentVrPanelWindows } = useVrPanelWindows();
+    const restored = useRef(false);
+    useEffect(() => {
+        const remembered = currentVrPanelWindows.data;
+        if (restored.current || !(remembered.log || remembered.keyboard)) return;
+        restored.current = true;
+        setWindows(w => restoreVrWindows(w, remembered));
+    }, [currentVrPanelWindows.data]);
 
     // VR設定ウィンドウを開いている間は、デスクトップで設定画面を開いたのと同じ扱いにする
     // (メインがメイン機能を止め、閉じたら戻す。VrPanelSyncController)

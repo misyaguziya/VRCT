@@ -55,7 +55,7 @@ VR の操作バーの A−/A＋ はどの形でも出て、今の形の値を変
 既存の `/run/overlay_vr_panel_anchor` は、形を変えたときにも出る。
 
 `/run/vr_panel_steamvr` (bool、2026-11-17 追加): SteamVR につながった (true)・切れた (false) とき、と起動時。
-メインウィンドウはこれと VR UI の ON/OFF が両方そろっている間だけ VR 画面の窓を作る (`VrPanelSyncController`)。
+メインウィンドウは、VR UI が ON で SteamVR に一度つながったら VR 画面の窓を作り、VR UI を OFF にするまで残す (`VrPanelSyncController`)。
 デスクトップの画面で「SteamVR を待っています」のような表示を出したい場合に使える。
 
 small / large は廃止して VR UI に統合する方針 (設計書 P2.5「移し方」)。今は並べて動かしている。

@@ -8,6 +8,7 @@ import { useStdoutToPython } from "@useStdoutToPython";
 import { useIsOpenedConfigPage, useVrPanelSteamVr } from "@logics_common";
 import { useVr } from "@logics_configs";
 import { encodeOrdered, isRelayAllowed } from "../../../logics/common/vrPanelWire";
+import { VR_WINDOWS_PATH, configPageAfterVrPanelGone, rememberedVrWindows, vrPanelWindowWanted } from "../../../logics/common/vrPanelWindows";
 import { isLanguageMutation, rejectLanguageMutation } from "../../../logics/main/languageMutations";
 
 // VRパネル (vr_panel ウィンドウ) をこのウィンドウの完全なミラーにする。
@@ -60,10 +61,12 @@ export const VrPanelSyncController = () => {
     const { currentIsOpenedConfigPage, setIsOpenedConfigPage } = useIsOpenedConfigPage();
     const { currentIsEnabledOverlayVrPanel } = useVr();
 
-    // VR画面のウィンドウは VR UI が ON で、SteamVR につながっている間だけ作る (それ以外も動かしておくと、
-    // VR を使っていない間にも負荷がかかる)。作られた VR画面は vr-panel-ready を送ってくるので、状態はそのときに送る
+    // VR画面のウィンドウは VR UI が ON で SteamVR に一度つながったら作り、VR UI を OFF にするまで残す (SteamVR を
+    // 使わない間に負荷をかけない。切れても作り直さない)。作られた VR画面は vr-panel-ready を送ってくるので、状態はそのときに送る
     const { currentVrPanelSteamVr } = useVrPanelSteamVr();
-    const is_vr_panel_needed = currentIsEnabledOverlayVrPanel.data === true && currentVrPanelSteamVr.data === true;
+    const had_window = useRef(false);
+    had_window.current = vrPanelWindowWanted(had_window.current, currentIsEnabledOverlayVrPanel.data === true, currentVrPanelSteamVr.data === true);
+    const is_vr_panel_needed = had_window.current;
     useEffect(() => {
         invoke("set_vr_panel_window", { open: is_vr_panel_needed }).catch(console.error);
     }, [is_vr_panel_needed]);
@@ -96,6 +99,10 @@ export const VrPanelSyncController = () => {
                 console.warn("[vr-panel] blocked request from the VR panel:", payload.path);
                 rejectLanguageMutation(payload.languageRequest, "blocked");
                 return;
+            }
+            // 開いている窓は覚えておく (VR 画面を作り直したときに開き直す)
+            if (payload.path === VR_WINDOWS_PATH) {
+                jotai.set(dynamicStoreRegistry.Atom_VrPanelWindows, { state: "ok", data: rememberedVrWindows(payload.value) });
             }
             // ウィンドウの開閉・呼び戻しと、ログの操作バー (固定先・ロック・不透明度) はメイン機能と関係ないので、
             // 設定画面を開いている間も通す
@@ -134,6 +141,12 @@ export const VrPanelSyncController = () => {
             unlistenReady.then(f => f());
             unlistenStdout.then(f => f());
             unlistenConfigPage.then(f => f());
+            // VR 画面の窓が無くなった (SteamVR の終了・VR UI の OFF): VR の設定ウィンドウが開いた設定画面は
+            // 「閉じた」がもう届かないので、ここで閉じる (メイン機能が止まったままにならない)
+            const config_page = configPageAfterVrPanelGone(isOpenedByVrRef.current);
+            isVrSettingsOpenRef.current = false;
+            isOpenedByVrRef.current = false;
+            if (config_page !== null) setIsOpenedConfigPage(config_page);
         };
     }, [is_vr_panel_needed]);
 

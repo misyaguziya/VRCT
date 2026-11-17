@@ -222,6 +222,8 @@ export const { atomInstance: Atom_VrPanelLogOutOfView, useHook: useStore_VrPanel
 export const { atomInstance: Atom_VrPanelLauncherIntro, useHook: useStore_VrPanelLauncherIntro } = createAtomWithHook("idle", "VrPanelLauncherIntro", {is_state_ok: true});
 // SteamVR につながっているか (VR UI の画面とキーボードの辞書は、ON かつつながっている間だけ用意する)
 export const { atomInstance: Atom_VrPanelSteamVr, useHook: useStore_VrPanelSteamVr } = createAtomWithHook(false, "VrPanelSteamVr", {is_state_ok: true});
+// VR 画面で開いていた窓 ({log, keyboard})。メインが覚え、作り直した VR 画面が開き直す (logics/common/vrPanelWindows.js)
+export const { atomInstance: Atom_VrPanelWindows, useHook: useStore_VrPanelWindows } = createAtomWithHook({ log: false, keyboard: false }, "VrPanelWindows", {is_state_ok: true});
 // SteamVR のボタン設定を開いた結果 ("pending" / "requested" / "not_running" / "not_ready" / "failed"。null: まだ押していない)
 export const { atomInstance: Atom_SteamVrBindings, useHook: useStore_SteamVrBindings } = createAtomWithHook(null, "SteamVrBindings", {is_state_ok: true});
 // コントローラのショートカットが押された時刻 (ms。VR 画面がキーボードを開閉する)。atom なので VR ウィンドウへも同期される
