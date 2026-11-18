@@ -66,22 +66,28 @@ export const VrApp = () => {
     // 起動時はランチャーだけを出す (ログは必要なときにランチャーから開く)
     // キーボードは一時ウィンドウとは別に開く (言語・設定と同時に使える)
     const [windows, setWindows] = useState({ log: false, popup: null, keyboard: false });
-    // 何も開いていない最初の状態は送らない (メインが覚えている窓 = バックエンドが知っている窓を上書きしない)
+    const reportWindows = (w) => asyncStdoutToPython(VR_WINDOWS_PATH, { log: w.log, popup: w.popup !== null, keyboard: w.keyboard });
+    // メインの状態が届くまでは、何も開いていない最初の状態を送らない (メインが覚えている窓を、開き直す前に
+    // 「全部閉じた」で上書きしない)。届いた後は、全部閉じていても送る
     const reported = useRef(false);
     useEffect(() => {
         if (!reported.current && isUntouchedVrWindows(windows)) return;
         reported.current = true;
-        asyncStdoutToPython(VR_WINDOWS_PATH, { log: windows.log, popup: windows.popup !== null, keyboard: windows.keyboard });
+        reportWindows(windows);
     }, [windows.log, windows.popup, windows.keyboard]);
-    // 作り直した VR 画面 (SteamVR の再起動・VR UI の OFF → ON): メインが覚えていたログ窓・キーボードを開き直す (一度だけ)
+    // 作り直した VR 画面 (VR UI の OFF → ON): メインの最初の状態が届いたら、覚えていたログ窓・キーボードを開き直し
+    // (一度だけ)、その結果を必ず送る (戻さないポップアップが開いていたら、バックエンドに閉じたと伝わる)
+    const [is_synced, setIsSynced] = useState(false);
     const { currentVrPanelWindows } = useVrPanelWindows();
     const restored = useRef(false);
     useEffect(() => {
-        const remembered = currentVrPanelWindows.data;
-        if (restored.current || !(remembered.log || remembered.keyboard)) return;
+        if (!is_synced || restored.current) return;
         restored.current = true;
-        setWindows(w => restoreVrWindows(w, remembered));
-    }, [currentVrPanelWindows.data]);
+        reported.current = true;
+        const next = restoreVrWindows(windows, currentVrPanelWindows.data);
+        setWindows(next);
+        reportWindows(next);
+    }, [is_synced]);
 
     // VR設定ウィンドウを開いている間は、デスクトップで設定画面を開いたのと同じ扱いにする
     // (メインがメイン機能を止め、閉じたら戻す。VrPanelSyncController)
@@ -124,7 +130,7 @@ export const VrApp = () => {
 
     return (
         <div ref={atlas} className={styles.atlas} style={{ width: atlas_width, height: atlas_height }}>
-            <VrStateReceiver />
+            <VrStateReceiver onSynced={() => setIsSynced(true)} />
             <VrPointerHover />
             <UiLanguageController />
             <FontFamilyController />
@@ -165,7 +171,8 @@ const VrPointerHover = () => {
 };
 
 // メインウィンドウから送られてくるatomの値を、このウィンドウのatomへそのまま反映する。
-const VrStateReceiver = () => {
+// 開いていた窓を含む状態を受け取ったら onSynced を呼ぶ
+const VrStateReceiver = ({ onSynced }) => {
     useEffect(() => {
         const jotai = getDefaultStore();
         const unlisten = listen("vr-panel-state", ({ payload }) => {
@@ -175,6 +182,8 @@ const VrStateReceiver = () => {
                 if (atom) jotai.set(atom, previous => name === "VrPanelLayout" &&
                     keepNewestVrLayout(previous.data, value.data) === previous.data ? previous : value);
             }
+            // 開いていた窓 (メインが覚えている分) が届いてから (1 つの atom の変化だけが先に届くことがある)
+            if ("VrPanelWindows" in payload) onSynced();
         });
         // 受信の準備ができてから全状態を要求する (メインが先に起動していた場合)
         unlisten.then(() => emit("vr-panel-ready"));
