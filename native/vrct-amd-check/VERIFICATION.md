@@ -5,22 +5,28 @@ The implementation policy is CT2 for CPU, NVIDIA/CUDA and AMD/ROCm. Additional
 Vulkan comparisons and whisper.cpp fixes are not prerequisites for that work.
 The product sidecar itself has not yet been migrated from CT2 4.6 to 4.9.
 
-- RX 7800 XT / gfx1101 and RX 9070 XT / gfx1201: diagnostic 0.3.1, ROCm CT2 4.9.0,
+- RX 7800 XT / gfx1101, RX 7900 XTX / gfx1100 and RX 9070 XT / gfx1201:
+  diagnostic 0.3.1, ROCm CT2 4.9.0,
   all 11 cases and 48 requests including warmups per configuration succeeded.
 - RTX 2080 Ti / NVIDIA driver 617.42: CUDA CT2 4.9.0 with a matching rebuilt
   diagnostic adapter, all 11 cases and 48 requests including warmups succeeded.
-- All three configurations produced matching expected outputs within each model;
+- All four configurations produced matching expected outputs within each model;
   inference children exited normally, without timeout. GPU effective compute
   types were float16/int8_float16; CPU int8 resolved to int8_float32.
 - Shared-model two-thread probes passed. These do not cover simultaneous
   Whisper plus NLLB residency, repeated in-process unload/reload, VRAM release,
   long-running use, or the production 4.6-to-4.9 regression tests.
-- RX 7900 XTX has no collected 0.3.1 rerun; this is a remaining hardware check,
-  not a new prerequisite for starting integration.
+- RX 7900 XTX's collected 0.3.1 rerun passes even the first Whisper FP16 case
+  that crashed in 0.1.0. All 13 CT2 startup checks confirm the cache workaround.
+  Reported driver/runtime versions match the old report. This supports the
+  workaround but is not a cache-on/off control experiment or proof of a
+  permanent fix. Preprocessing changed since 0.1.0, and the old report does not
+  establish identical model artifacts.
 
 Sanitized public record: https://github.com/misyaguziya/VRCT/issues/128
+RX 7900 XTX rerun: https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7010797206
 
-The handoff, NVIDIA validation summary and Claude implementation request are
+The handoff, AMD/NVIDIA validation summaries and Claude implementation request are
 saved in the repository's docs directory. Raw volunteer reports, local runtime
 logs, model weights, vendor DLLs and distribution ZIPs are outside this source
 snapshot. The bundled synthetic utterance remains a required diagnostic asset.

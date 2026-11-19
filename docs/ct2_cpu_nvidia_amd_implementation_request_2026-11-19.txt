@@ -24,6 +24,8 @@ D:\WORKSPACE\WORK\VRChatProject\VRCT\.claude\worktrees\rust-p3-amd-spike\docs\nv
 https://github.com/misyaguziya/VRCT/issues/128
 AMD 0.3.1検証結果：
 https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005180939
+RX 7900 XTXの0.3.1再検証結果：
+https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7010797206
 NVIDIA検証結果：
 https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005977892
 
@@ -33,9 +35,10 @@ https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005977892
 
 2. 確認済みの検証結果
 
-CT2 4.9.0で、次の3構成の基本動作を確認済みです。
+CT2 4.9.0で、次の4構成の基本動作を確認済みです。
 
 ・Radeon RX 7800 XT / gfx1101：ROCm版
+・Radeon RX 7900 XTX / gfx1100：ROCm版
 ・Radeon RX 9070 XT / gfx1201：ROCm版
 ・GeForce RTX 2080 Ti / ドライバー617.42：CUDA版
 
@@ -52,7 +55,8 @@ NVIDIAでは、公式4.9.0 wheelのハッシュを照合し、同じ版のヘッ
 
 これは診断ツールによる短い固定入力の基本試験です。本体統合後の4.6→4.9回帰、反復再ロード、VRAM解放、
 Whisperと翻訳の同時常駐、長時間動作まで検証済みとは扱わないでください。
-RX 7900 XTXの0.3.1再検証は未収集ですが、その結果待ちを実装着手条件にはしません。
+RX 7900 XTXも0.3.1の再検証を受領し、旧版でクラッシュした最初のWhisper FP16を含めて成功しています。
+詳細は同じdocsディレクトリのamd_rx7900xtx_ct2_031_validation_2026-11-19.txtを参照してください。
 
 3. 実装時の重要事項
 
@@ -81,7 +85,8 @@ ROCm版を使うsidecarでは、AMD_COMGR_CACHE=0を最初のCT2呼び出し・D
 stdoutのJSON IPCも壊さないでください。
 
 旧RX 7900 XTXのLLVMクラッシュは、非ASCIIキャッシュパスでのCOMGRキャッシュ整理が最有力原因です。
-影響実機での解消は未確定なので、単なる再試行成功を修正の証拠にはしないでください。
+影響実機の0.3.1再検証成功は回避策の有効性を支持しますが、キャッシュ有効／無効の対照試験ではありません。
+原因の確定や恒久解決とは扱わず、本体でも回避策を維持してください。
 
 D. GPU列挙・計算型選択をAMDへ対応させる
 

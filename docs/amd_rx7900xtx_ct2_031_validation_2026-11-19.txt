@@ -1,0 +1,80 @@
+RX 7900 XTXでのCT2 0.3.1再検証結果
+受領・解析日：2026-11-19
+個人情報を除いた共有記録：
+https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7010797206
+
+結論
+
+Radeon RX 7900 XTX / gfx1100でも、検証ツール0.3.1のCT2全11ケース・warmup込み48回が成功した。
+旧0.1.0でLLVM ERROR: Can't get available size / 0xC0000409となった最初のWhisper FP16も、
+今回の実行ではwarmupと計測3回を完了し、子プロセスは正常終了した。
+AMD_COMGR_CACHE=0のDLLロード前適用を全13項目で確認した。
+
+GPU名、報告されたWindows DriverVersion 32.0.31035.1003、HIP runtime_version 70260201は旧レポートと一致。
+今回の成功はキャッシュ回避策の有効性を支持する。ただし、同じ環境でキャッシュの有効／無効を切り替えた
+対照試験ではない。旧版から前処理・計測条件等も変わり、モデルの同一性も旧レポートでは確認できない。
+原因の確定や恒久解決の証明とはしない。
+COMGR単体の再現試験では、キャッシュ整理時刻により直後の再試行だけ成功したため、単発成功の限界を保持する。
+
+確認した構成
+
+- Windows x64、診断0.3.1、report schema 3。
+- Radeon RX 7900 XTX、HIP device 0、architecture gfx1100。
+- Windows DriverVersion：32.0.31035.1003。Adrenalinの製品版表記へは換算していない。
+- HIP runtime_version：70260201、ドライバー由来。HIP device_countは1。
+- CT2 PE build_family：rocm。CT2が列挙したdevice_countは1、allow_non_rocmはfalse。
+- Whisper large-v3-turboの保存FP16モデル、NLLB distilled-600Mの保存INT8_FLOAT32モデル。
+- Whisperモデル・設定・tokenizerのハッシュ照合がレポート上で成立している。
+  共通メルは128×3000、元音声2565ms、SHA-256：
+  bf912b8bd3ea22ea48fb220e67062137bcb44bc286210cbe8d3b5908e7756aea
+
+CT2の結果
+
+Whisperは6ケース・26推論、NLLBは5ケース・22推論。すべてwarmupを含む。
+Whisper：GPU FP16／INT8_FLOAT16、CPU INT8／float32、GPU各精度の共有モデル2スレッド試験。
+NLLB：GPU FP16／INT8_FLOAT16、CPU INT8、GPU各精度の共有モデル2スレッド試験。
+単独試験はwarmup 1回＋計測3回、共有モデル試験はwarmup 1回＋2スレッド×2回。
+共有モデル試験は1 replicaへのリクエストであり、WhisperとNLLBの同時常駐試験ではない。
+
+全推論子プロセスがexit 0、timed_out=false。
+GPUは実効device cuda、実効精度float16／int8_float16。
+CPUの要求int8は実効int8_float32、Whisper CPU float32は実効float32。
+Whisperの全出力：Hello, how are you today?
+NLLBの全出力：こんにちは 今日はどうですか?
+
+imports・compute query・11推論ケースの計13項目すべてで、次の適用記録を確認した。
+configured_value="0"、observed_disabled=true、verified_before_vendor_load=true。
+新JSON・TXTに、旧LLVM fatalメッセージや0xC0000409は記録されていない。
+
+単独推論中央値（3回、ms。ロード・前処理・warmupを除く）：
+モデル    GPU FP16   GPU INT8_FLOAT16   CPU INT8   CPU float32
+Whisper    98.8      111.6             2824.8     3514.7
+NLLB       74.4       97.4              184.4     対象外
+中央値はsamplesから再計算して一致を確認した。旧0.1.0との速度差や機種間の性能順位は算出しない。
+
+CT2以外の項目
+
+レポート全31項目はOK 26、WARN 1、FAIL 1、BLOCKED 2、SKIP 1。
+- FAILはwhisper.cppのCPU試験（whisper-resident-cpu / 0xC0000005）のみ。CT2の失敗ではない。
+- CPU側の比較2項目は、上記別エンジンの測定不足によりBLOCKED。
+- libhipblas.dllという別名のロードだけWARN。実名hipblas.dllのロードと後続CT2推論は成功。
+- llama.cpp推論はローカルモデル不足でSKIP。
+Vulkanの追加比較・別エンジンの修正は今回のCT2方針の必須項目へ戻さない。
+
+実装方針への反映と未確認事項
+
+AMDはRX 7800 XT／RX 7900 XTX／RX 9070 XTの3構成、NVIDIAはRTX 2080 Tiの計4構成で、
+CT2 4.9.0の全11ケースを確認済みとなった。CPU・NVIDIA・AMDをCT2へ統一する方針を継続する。
+本体実装でもROCm版の最初のCT2呼び出しより前からAMD_COMGR_CACHE=0を適用する。
+
+本体4.6→4.9統合後の回帰、モデルの反復解放／再ロード・VRAM解放、Whisper＋翻訳の同時利用、
+長時間・多言語・実音声、配布構成とCPUフォールバックは引き続き確認が必要。
+今回の1回の再検証から、全AMD GPU・全利用条件でクラッシュが解消したとは判断しない。
+
+証跡
+
+個人情報を含み得る原本はgitへ追加せず、技術項目のみ抽出した。
+受領JSON SHA-256：8b27ac441c79f000b1e1cd1dc9bf8a9eca46ebc7da416b46cfa3ab9c2f45a595
+受領TXT SHA-256：fd17045ed2a4a6fa128d0a128aa989c10ab7adebd1c097a6f2716d545c1ff2cf
+JSON／TXTの11 CT2推論ステータスは一致。独立照合でもケース数・回数・精度・出力・終了状態・
+キャッシュ適用13項目と、計測中央値の一致を確認した。
