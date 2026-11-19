@@ -3405,6 +3405,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "vrct-amd-check"
+version = "0.3.1"
+dependencies = [
+ "anyhow",
+ "cc",
+ "hound",
+ "libloading 0.8.9",
+ "object",
+ "regex",
+ "rustfft",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokenizers",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "vrct-audio"
 version = "0.1.0"
 dependencies = [

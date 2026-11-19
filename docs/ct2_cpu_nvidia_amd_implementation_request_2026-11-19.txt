@@ -1,0 +1,118 @@
+Claude向け実装依頼文：CT2によるCPU・NVIDIA・AMD対応
+作成日：2026-11-19
+
+VRCTのRustバックエンドに、CTranslate2（CT2）でCPU・NVIDIA・AMDに対応する実装をお願いします。
+検証段階はOKと判断済みです。以下の結果と注意点を踏まえ、本体統合・検証まで進めてください。
+
+1. 実装方針
+
+・CT2 4.9.0を基準として、CPU・NVIDIA/CUDA・AMD/ROCmに対応する。
+・既存のCT2版Whisperとローカル翻訳経路を活用し、必要な変更に絞る。
+・Vulkanの追加採用、CT2対Vulkanの比較、whisper.cpp側の不具合調査は今回の対象外。
+・既存の設定、JSON IPC、モデル選択、多言語対応、遅延初期化、終了処理との互換性を維持する。
+
+調査・検証を行ったworktree：
+D:\WORKSPACE\WORK\VRChatProject\VRCT\.claude\worktrees\rust-p3-amd-spike
+
+詳細資料：
+D:\WORKSPACE\WORK\VRChatProject\VRCT\.claude\worktrees\rust-p3-amd-spike\docs\amd_ct2_claude_handoff_2026-11-19.txt
+
+NVIDIA検証記録：
+D:\WORKSPACE\WORK\VRChatProject\VRCT\.claude\worktrees\rust-p3-amd-spike\docs\nvidia_ct2_49_validation_2026-11-19.txt
+
+共有記録：
+https://github.com/misyaguziya/VRCT/issues/128
+AMD 0.3.1検証結果：
+https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005180939
+NVIDIA検証結果：
+https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005977892
+
+実装先のHEAD・AGENTS.md・既存差分を最初に確認してください。
+上記は調査時点の作業場所です。別worktreeでは同じコミットの内容を参照し、パスを読み替えてください。
+既存変更を削除・巻き戻しせず、git管理外のモデル・DLL・生レポートが自動共有されているとも仮定しないでください。
+
+2. 確認済みの検証結果
+
+CT2 4.9.0で、次の3構成の基本動作を確認済みです。
+
+・Radeon RX 7800 XT / gfx1101：ROCm版
+・Radeon RX 9070 XT / gfx1201：ROCm版
+・GeForce RTX 2080 Ti / ドライバー617.42：CUDA版
+
+各構成とも全11ケース、ウォームアップ込み48回の推論が成功し、全子プロセスが正常終了しました。
+認識・翻訳結果も各モデル内で一致しています。
+
+試験内容：
+・Whisper：GPU FP16、INT8_FLOAT16、CPU INT8、float32、GPU各精度で共有モデルへの2スレッド呼び出し。
+・NLLB：GPU FP16、INT8_FLOAT16、CPU INT8、GPU各精度で共有モデルへの2スレッド呼び出し。
+・GPUの実効精度は指定どおり。CPU INT8の実効型はINT8_FLOAT32。
+
+NVIDIAでは、公式4.9.0 wheelのハッシュを照合し、同じ版のヘッダーとCUDA DLLに対して診断adapterを再ビルドしています。
+依存はcuBLAS 12系とcuDNN 9.7.1.26です。
+
+これは診断ツールによる短い固定入力の基本試験です。本体統合後の4.6→4.9回帰、反復再ロード、VRAM解放、
+Whisperと翻訳の同時常駐、長時間動作まで検証済みとは扱わないでください。
+RX 7900 XTXの0.3.1再検証は未収集ですが、その結果待ちを実装着手条件にはしません。
+
+3. 実装時の重要事項
+
+A. CT2の版・ABIをそろえる
+
+調査時点の本体はCT2 4.6.0です。4.9.0のDLLだけを差し替えず、正式ヘッダー・DLL・import library・C++ shimをそろえて
+再ビルドしてください。CRT/MSVC、Release /MD等の整合も確認してください。
+診断adapterは参考実装であり、本体shimの直接の代替ではありません。
+
+B. CUDA版とROCm版の配布・起動を整理する
+
+両方ともctranslate2.dllという名前なので、同一プロセスで読み込み済みDLLを差し替える設計を前提にしないでください。
+既存の配布方式を確認し、ビルド／配布単位の分離など、最小の方式を選んでください。
+CPU経路も含め、必要な依存DLLがない場合の起動・エラー処理を確認してください。
+CT2本体をロードできない場合、同一プロセス内のCPU切り替えだけでは救済できません。
+
+C. ROCmのキャッシュ回避策を本体へ組み込む
+
+ROCm版を使うsidecarでは、AMD_COMGR_CACHE=0を最初のCT2呼び出し・DLLロードより前から適用してください。
+親プロセスから環境変数を渡す方式が確実です。
+調査時点ではredirect_stderr()がdevice_list()より前の最初のCT2 shim呼び出しです。
+初期化順序を再確認し、単体起動やテスト経路も考慮してください。Windowsの永続環境設定は変更しないでください。
+
+設定値と適用確認状態を既存のログ機構へ記録してください。
+診断ツールのstderrマーカーをそのまま移植すると、製品UIのエラー通知へ流れる可能性があります。
+stdoutのJSON IPCも壊さないでください。
+
+旧RX 7900 XTXのLLVMクラッシュは、非ASCIIキャッシュパスでのCOMGRキャッシュ整理が最有力原因です。
+影響実機での解消は未確定なので、単なる再試行成功を修正の証拠にはしないでください。
+
+D. GPU列挙・計算型選択をAMDへ対応させる
+
+現在のGPU列挙と一部の計算型選択はNVIDIA前提です。
+HIPでRadeonの名前・architecture・device indexを取得し、既存の設定・UIへ接続してください。
+AMDでもCT2へ渡すdevice名は「cuda」です。vendorとCT2 device名を分けて扱ってください。
+
+NVIDIA向けのGPU名判定をRadeonへ流用せず、AMDでは実推論を確認したFP16／INT8_FLOAT16を軸に初期選択を検討してください。
+能力列挙だけで未検証のBF16等を既定にしないでください。既存NVIDIAの選択動作も回帰確認してください。
+
+E. 配布に必要な資産をそろえる
+
+ROCmのDLLだけでなく、rocblas/library・hipblaslt/libraryなどのカーネル資産とディレクトリ構造、ライセンスも保持してください。
+依存の取得元・版・ハッシュを固定し、別アプリやPATH上のDLLが混入しないようにしてください。
+現在のDLLコピーにはサイズだけで更新判定する箇所があるため、同サイズの別版が残る問題も確認してください。
+検証ZIPには比較用エンジン・モデルが含まれるので、そのまま製品へ同梱しないでください。モデルの配布条件も別途確認してください。
+
+F. 本体の音声処理とモデル寿命を維持する
+
+診断ツールの英語固定、128メル、音声長制限、beam 1、生成上限などを本体へ固定コピーしないでください。
+既存の言語検出、多言語、80メルのモデル、長い音声の分割、生成設定を維持してください。
+既存の所有権、future、lock、停止・joinを活用し、推論中にモデルやDLLを破棄しないでください。
+ROCm版でCPUを選んだ場合も含め、モデル解放・再ロードを確認してください。
+
+4. 完了条件
+
+・CPU・NVIDIA・AMDの選択、推論、エラー処理、終了処理が既存フローへ接続されている。
+・本体統合後にWhisper・翻訳の基本動作と、4.6時点の品質・性能・互換性の回帰を確認する。
+・モデルの反復解放／再ロード、VRAM解放、Whisper＋翻訳の同時利用、長時間動作を確認する。
+・GPU初期化失敗時のCPU経路と、実際の配布構成での起動・終了を確認する。
+・変更対象の既存テスト、必要な契約テスト、workspace Clippyを実行し、独立レビューを行う。
+・実機やデータ不足で実行できない項目は、未実行として具体的に報告する。SKIPを成功扱いしない。
+
+最終報告には、採用した配布・起動方式、変更点、検証結果、未確認項目をまとめてください。

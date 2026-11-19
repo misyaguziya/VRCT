@@ -1,0 +1,196 @@
+Claude向け引き継ぎ：CT2によるCPU／NVIDIA／AMD対応
+更新日：2026-11-19
+
+1. 依頼者の決定と今回の実装範囲
+
+依頼者は、ここまでのAMD検証を「OK」として、本体実装へ進める判断済み。
+推論エンジンをCTranslate2（CT2）へ統一し、CPU・NVIDIA/CUDA・AMD/ROCmを対象とする。
+音声認識は既存のCT2版Whisper、ローカル翻訳はCT2版NLLB等の既存経路を生かす。
+Vulkanの追加採用、CT2対Vulkanの比較、whisper.cpp側の不具合調査は実装の必須項目から外す。
+既存の比較記録は参考履歴として残す。新しい比較を実装の着手条件にしない。
+
+本体への統合はまだ行っていない。下記の未確認事項は、実装・受入工程の項目として扱う。
+RX 7900 XTXの追加レポート待ちを、新たな実装着手条件として追加しない。
+この記録の範囲は検証ツールと引き継ぎ情報で、本体コードへの統合はまだ行っていない。
+実装依頼文は同じdocsディレクトリのct2_cpu_nvidia_amd_implementation_request_2026-11-19.txtに保存した。
+
+共有記録：
+https://github.com/misyaguziya/VRCT/issues/128
+0.3.1結果の追記：
+https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005180939
+NVIDIA結果の追記：
+https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005977892
+関連要望：
+https://github.com/misyaguziya/VRCT/issues/88
+
+2. 作業場所と参照元
+
+この調査・検証を行った実装基準worktree：
+D:\WORKSPACE\WORK\VRChatProject\VRCT\.claude\worktrees\rust-p3-amd-spike
+branch：claude/rust-p3-amd-spike
+
+チャットのcwdにあるce60/VRCTは別の古いcheckoutなので、混同しないこと。
+Claude側の実装先でHEAD・AGENTS.md・既存差分を確認し、以下の相対パスを読み替える。
+保存前の調査worktreeでは native/Cargo.toml・Cargo.lock が変更済み、native/vrct-amd-check/ は未追跡だった。
+今回の保存対象はこれらの検証ソースと資料。git管理外のモデル・DLL・生レポート・ZIPは含めない。
+他worktreeへgit管理外の資産が自動共有されるとは仮定しない。既存の未コミット変更も保護する。
+
+最初に読むもの：
+- ルートAGENTS.md、native/README.md
+- native/vrct-amd-check/README.ja.md、README.md、VERIFICATION.md
+- native/vrct-amd-check/adapter/ct2_49.cpp
+- native/vrct-amd-check/src/ct2/ffi.rs、cache.rs
+- native/vrct-amd-check/src/hip.rs、hip_abi.rs、pe.rs
+- native/vrct-amd-check/package.ps1
+
+検証ツールは0.3.1／レポートschema 3。製品コードとは独立した診断用実装である。
+検証ZIPは native/target/amd-check-package-v3.1/vrct-amd-check-0.3.1-windows-x64.zip。
+SHA-256：89bb1a6eb0026e22c5f0b8b1f034c5a9d06669da0efb036b32826329d2cd2d30
+このZIPには比較用のVulkan・GGMLモデル等も含むため、そのまま製品へ同梱しない。
+
+3. 確認できたこと
+
+CT2 4.9.0 ROCm版＋HIP SDK 7.2由来の同梱ライブラリ／カーネルで検証した。
+Whisperはlarge-v3-turboの保存FP16モデル、NLLBはdistilled-600Mの保存INT8モデル。
+NLLBのGPU FP16という表記は実行時の計算型であり、保存モデルが非量子化FP16という意味ではない。
+取得元・revision・SHA-256はpackage.ps1に固定済み。
+
+GPU                 architecture   0.3.1 CT2結果
+Radeon RX 7800 XT    gfx1101        全11ケース成功、全子プロセス正常終了
+Radeon RX 9070 XT    gfx1201        全11ケース成功、全子プロセス正常終了
+
+各構成でウォームアップ込み48回の推論に成功し、各モデル内の認識・翻訳結果が一致。
+- Whisper：GPU FP16／INT8_FLOAT16、CPU INT8／float32、GPU各精度の2スレッド共有モデル試験
+- NLLB：GPU FP16／INT8_FLOAT16、CPU INT8、GPU各精度の2スレッド共有モデル試験
+- CPUの要求int8は実効INT8_FLOAT32。GPUは要求どおりの実効精度を確認。
+- 対象13項目すべてで、AMD_COMGR_CACHE=0をDLLロード前に確認。
+
+参考の単独推論中央値（各3回、ms。ロード・前処理・ウォームアップを除外）：
+GPU          Whisper FP16   Whisper INT8_FLOAT16   NLLB FP16   NLLB INT8_FLOAT16
+RX 7800 XT   199.6          243.3                  116.4       159.1
+RX 9070 XT   166.7          182.6                   81.5       185.6
+
+短い合成音声・定型文での基本動作確認であり、長時間安定性や全AMD GPU対応の証明ではない。
+HIP SDKは協力者レポート上で未検出だったが、hipBLAS等は同梱物を使用している。
+ドライバーだけで全依存がそろう、という結論にはしない。
+
+RX 7900 XTX/gfx1100は旧0.1.0で最初のWhisper FP16のみLLVMエラーで異常終了。
+後続のINT8_FLOAT16とFP16並行試験、NLLBは成功した。0.3.1での同機種再検証は未収集。
+0.3.1で残った別エンジンのwhisper.cpp CPUアクセス違反は、CT2の失敗として扱わない。
+
+NVIDIA追加検証（2026-11-19）：
+GeForce RTX 2080 Ti / ドライバー617.42で、CT2 4.9.0のCUDA版を隔離環境で確認した。
+Whisper・NLLBの同じ11ケース／warmup込み48回がすべて成功し、出力一致・全子exit 0・timeoutなし。
+GPUは実効float16 / int8_float16、CPU int8は実効int8_float32。共有モデルへの2スレッド試験も成功。
+PyPI公式wheelのhashを照合し、4.9ヘッダーとCUDA DLLに対して診断adapterを別途再ビルドした。
+cuBLAS 12系とcuDNN 9.7.1.26のDLL群を隔離コピーし、既存AMD配布物は変更していない。
+詳細：docs/nvidia_ct2_49_validation_2026-11-19.txt
+証跡：native/target/nvidia-ct2-49-selftest-2026-11-19/vrct_amd_check_report.json
+これは診断adapterでの基本動作確認。本体shim統合後の4.6対4.9回帰、多言語、反復再ロード、
+VRAM解放、Whisper＋翻訳の同時常駐、長時間動作、他NVIDIA機種は引き続き実装後の受入項目。
+Vulkan比較は実施していない。AMD用レポートの対象外SKIP/BLOCKEDをNVIDIA CT2の失敗と混同しない。
+
+4. 最重要：COMGRキャッシュのクラッシュ回避
+
+旧クラッシュのシグネチャ：
+LLVM ERROR: Can't get available size
+終了コード 0xC0000409
+
+ROCm COMGRのLLVMキャッシュ整理がUTF-8パスをGetDiskFreeSpaceExAへ渡す問題が最有力。
+同梱DLLだけのGPU実行なしコンパイル試験で、非ASCIIキャッシュパスから同じクラッシュを再現した。
+ASCIIパスまたはAMD_COMGR_CACHE=0で成功。整理時刻を先に書くため、直後の再実行だけ成功することがある。
+単なる再試行成功を修正完了の根拠にしない。ディスク容量不足やFP16非対応の意味でもない。
+影響実機での原因確定・回避効果は未確認だが、回避策自体の適用は上記2機種で確認済み。
+
+本体でもAMD/ROCm経路に AMD_COMGR_CACHE=0 を、COMGRの使用より前に固定する。
+DLLロード前から子プロセス環境で渡す方式が最も確実。設定後の動的切替や、Windows永続設定の変更は避ける。
+TEMP/TMPだけを変えても、既定キャッシュのKnown Folder API由来パスは変更できない。
+キャッシュ無効化でコンパイル・ロード・初回処理が増える可能性があるため、適用状態と時間を記録する。
+
+現在の本体は native/vrct-backend/build.rs でCT2をdelay-loadしている。
+main.rsでは vrct_ct2::redirect_stderr() が最初のCT2 shim呼出しで、compute::device_list()より前にある。
+sidecar自身で設定するなら、この最初の呼出しより前・スレッド起動前に行い、単体起動時も確認する。
+親から渡す方式の入口は src-ui/views/app/_app_controllers/StartPythonController.jsx のCommand.sidecar。
+テストbinaryや別の起動経路にもdelay-loadや環境設定が効くとは仮定しない。
+
+診断ツールの実装例：src/ct2/cache.rs と main.rs。
+configured_value、observed_disabled、verified_before_vendor_loadを区別して記録している。
+未観測を成功扱いしない。検証済みの起動後に推論が失敗した場合は、元のFAILも保持する。
+ただし診断ツールのstderrマーカーを製品へそのまま移植しないこと。
+製品UIは通常のstderr行をエラーダイアログへ流し、stdoutはJSON IPC専用なので、既存ログ機構へ接続する。
+
+一次資料：
+https://github.com/ROCm/llvm-project/blob/rocm-7.2.0/llvm/lib/Support/Windows/Path.inc#L156-L166
+https://github.com/ROCm/llvm-project/blob/rocm-7.2.0/llvm/lib/Support/CachePruning.cpp#L159-L190
+https://github.com/ROCm/llvm-project/blob/rocm-7.2.0/amd/comgr/src/comgr-env.cpp#L71-L91
+https://github.com/llvm/llvm-project/pull/170716
+
+5. 本体統合で見落としやすい点
+
+A. CT2 4.6.0と4.9.0のC++ ABIを混ぜない
+本体のnative/third_party.toml、vrct-ct2/shim/ct2_shim.cppは現在4.6.0前提。
+4.9.0に移すなら、同じ版の正式ヘッダー・DLL・import library・shimをそろえて再ビルドする。
+C++ STL、future、options、CRT/MSVCの整合が必要。Release DLLに合わせた/MD等を確認する。
+検証用4.9 adapterはC ABI内でC++所有権を管理する参考例であり、本体shimのそのままの代替ではない。
+
+B. エンジン統一と、配布DLL一本化を混同しない
+CUDA版とROCm版はどちらもctranslate2.dllという名前。
+読み込み済みDLLを同じプロセスで差し替える構成は、現状実装されていない。
+最初に、ビルド／配布単位でvendorを分けるか、起動元で実行経路を選ぶかを決める。
+現構成に近い配布単位の分離を最小変更候補とし、不要な汎用loaderを先回りで追加しない。
+CPUを使えるライブラリでも、GPU依存DLLの欠落でCT2本体をロードできなければ、同じプロセス内のCPU切替だけでは救済できない。
+
+C. GPU列挙とauto計算型は現在NVIDIA前提
+native/vrct-backend/src/compute.rsはcuBLASとnvcuda.dllを使っている。
+ROCm向けにはHIPによる名前・architecture・device indexの取得が必要。
+RTX/Tesla等でなければfloat32だけにする分岐を、Radeonへそのまま適用しない。
+AMDでもCT2へ渡すdevice文字列は"cuda"。"rocm"や"hip"へ安易に変更しない。
+vendor/buildの種類とCT2 device名は分けて扱い、既存IPC・設定キーとの互換性を保つ。
+現在のauto候補順はINT8_BFLOAT16等を先に選ぶ。AMDで実推論を確認したのはFP16/INT8_FLOAT16なので、未検証の型を能力列挙だけで既定にしない。
+FP16をAMDの初期候補とする案はあるが、最終的な優先順はVRAM・モデル・既存仕様を確認して決める。
+
+D. DLL以外のカーネル資産も配布する
+検証ではHIP SDK 7.2由来のamdhip64_7.dll、amd_comgr_3.dll、hipblas.dll、rocblas.dll、hipblaslt.dll等を使用。
+rocblas/library、hipblaslt/libraryのディレクトリ構造と共通・architecture別の資産を保持する。
+ファイル名だけのgfx判定や全Radeon対応を前提にせず、実装時点で収録対象を確認する。
+正しい名前のhipblas.dllを使い、libhipblas.dllへ改名してWARNを隠さない。
+実際に読み込んだDLLの場所・版・vendorを記録し、PATHや別アプリのDLLの混入を避ける。
+配布入口は native/third_party.toml、native/xtask/src/main.rs、src-tauri/tauri.conf.json。
+vrct-ct2/build.rsのDLLコピー更新判定はファイルサイズだけなので、同サイズの別版が残らないよう版・hashも考慮する。
+ライセンスも保持する。特に検証同梱NLLBはCC BY-NC 4.0であり、配布条件の検討は検証OKと別に必要。
+
+E. 比較ツールの固定パラメーターを本体仕様へ持ち込まない
+診断は英語固定、128メル、0.2～30秒、beam 1、生成上限128トークン等の比較用条件。
+共通メルは比較入力を合わせるための実装であり、本体へ追加する必須機能ではない。
+本体の言語自動検出、多言語、80メルのモデル、長い音声の分割、既存beam設定等を維持する。
+診断adapterのmax_length=256は固定promptで生成枠128を確保するための設定。一般入力へ固定コピーしない。
+CT2更新後の生成長・終了条件・デフォルトoptionsは、既存Whisperの基準テストで回帰確認する。
+検証用モデルへの固定・モデルcatalogの変更も、AMD対応のついでに行わない。
+
+F. モデルと非同期処理の寿命を守る
+本体のvrct-ct2の所有型、translate/ctranslate2.rs、app/model.rs、app/pipeline.rsの既存管理を再利用する。
+推論中にモデルやDLLを破棄しない。futureの完了、停止・join・lockとの整合を保つ。
+診断の単一モデル構造は、本体の文字起こし・翻訳の同時利用を置き換えるものではない。
+正常な子プロセス終了の確認は、長時間のVRAM利用や同一プロセスでの反復再ロードの保証ではない。
+
+6. 推奨する進め方と受入確認
+
+1) 実装先の現状を読み、CT2の版・ABI・GPU別の配布／起動方式を決める。
+2) 本体の最初のCT2呼出しより前に、ROCmキャッシュ回避設定・確認・ログを組み込む。
+3) HIP列挙、Radeon向け能力／auto選択、既存設定・UIへの接続を最小変更で行う。
+4) DLL・カーネル・ライセンスの取得とステージングを対応させる。
+5) 本体統合後のCPU・NVIDIAの既存動作回帰、AMDの推論、モデル解放・再ロード、同時利用・長時間動作を確認する。
+6) GPU初期化失敗時のCPU経路、エラー通知、終了・再起動、実際の配布構成での起動を確認する。
+
+変更箇所に応じ、native/からcargo clippy --workspace --all-targets -- -D warningsと対象crateのテストを行う。
+vrct-ct2、vrct-whisper、vrct-backend、必要ならvrct-contractの既存テストを利用し、重み・DLL・基準データの準備はnative/README.mdに従う。
+テスト用の重みやGPUが無い場合は未実行を明記し、SKIPを成功とはしない。
+ルートAGENTS.mdに従い、既存の未コミット差分・基準データ・IPC契約を保護する。
+
+調査worktreeのnative/third_partyには既存の切れたjunctionがあるため、ビルド前に実体を確認する。
+以前のworkspace Clippyは一時的な参照先修復で通し、その後は元へ戻している。
+過去の一時的なinclude/DLL/target-dir上書きを、本体の標準配布構成と誤認しない。
+
+検証ツールで既に確認したもの：29テスト、crate／workspace Clippy、両adapter有効release build、独立レビュー、配布ZIP全2030ファイルのCRC。
+これらは本体実装後の回帰試験を代替しない。引き継ぎ作成後、上記のNVIDIA診断を追加実行した。
+本体コードの変更・製品sidecarの回帰試験はまだ行っていない。

@@ -1,0 +1,94 @@
+NVIDIAでのCT2 4.9.0動作検証
+検証日：2026-11-19
+個人情報を除いた共有記録：
+https://github.com/misyaguziya/VRCT/issues/128#issuecomment-7005977892
+
+結論
+
+GeForce RTX 2080 Ti / NVIDIAドライバー617.42で、CT2 4.9.0 CUDA版の基本動作を確認した。
+Whisper・NLLBの全11ケース、ウォームアップ込み48回の推論に成功。
+全ケースの出力が期待文に一致し、子プロセスはすべて終了コード0、タイムアウトなし。
+製品sidecarへの4.9統合や、4.6対4.9の回帰比較はまだ行っていない。
+
+構成
+
+- Windows x64、GPUはGeForce RTX 2080 Ti（11 GiB）、NVIDIAドライバー617.42。
+- CT2はPyPIのctranslate2-4.9.0-cp311-cp311-win_amd64.whl内のCUDA版DLL。
+  wheel SHA-256：a81306ee947ff9e8fdffd016c9131801c56472a89c50161a00dc802bd55d47b9
+  DLL SHA-256：a9009ad682a2c5a11f6942c3b8dac68189d629685ef02fbc3e1ab6e4c6082ab8
+  PyPI公式メタデータのwheel hashと、展開済みDLLのhashを照合した。
+  https://pypi.org/pypi/ctranslate2/4.9.0/json
+- 診断ツール0.3.1の汎用supervisorをコピーし、同じ4.9.0の正式ヘッダーとCUDA DLLに対して
+  診断用C ABI adapterを別フォルダーで再ビルドした。Release /MD、protocol 2。
+- cuBLAS 12系DLL、cuDNN 9.7.1.26のDLL群は、既存VRCTインストールから検証先へコピー。
+  CT2 wheel内の異なるcuDNN dispatcherは使用せず、9.7.1.26のDLL群をそろえて使用した。
+  cuBLASの正確なwheel版は断定していない。各DLLのSHA-256はdll-manifest.jsonに記録。
+- Whisper：large-v3-turbo、保存FP16、128メル。NLLB：distilled-600M、保存INT8_FLOAT32。
+  モデルは既存0.3.1配布物のものを参照し、重みの変更・再変換はしていない。
+- 本体ソース・既存AMD配布フォルダー・ZIP・Windows永続設定は変更していない。
+
+結果
+
+モデル    実行先・要求精度        ケース数   推論回数（warmup込み）
+Whisper   GPU float16             2          9
+Whisper   GPU int8_float16        2          9
+Whisper   CPU int8               1          4
+Whisper   CPU float32            1          4
+NLLB      GPU float16             2          9
+NLLB      GPU int8_float16        2          9
+NLLB      CPU int8               1          4
+合計                             11         48
+
+GPUの各精度は、単独実行と2スレッドからの共有モデル利用をそれぞれ1ケースとして数えている。
+単独はwarmup 1回＋計測3回、並行はwarmup 1回＋2スレッド×2回。
+並行試験は同一モデル・1 replicaへの同時リクエストであり、WhisperとNLLBの同時常駐試験ではない。
+
+GPUの実効deviceはcuda、実効精度は指定どおりfloat16 / int8_float16。
+CPUの要求int8は、両モデルとも実効int8_float32。Whisper CPU float32は実効float32。
+Whisperの出力：Hello, how are you today?
+NLLBの出力：こんにちは 今日はどうですか?
+すべてのwarmup・計測出力が上記に一致した。
+
+参考の単独推論中央値（3回、ms。モデルロード・前処理・warmupを除く）：
+モデル    GPU float16   GPU int8_float16   CPU int8    CPU float32
+Whisper   168.0         186.5              8210.4      9333.9
+NLLB      121.3         197.8               401.0      対象外
+短い固定入力での値であり、他PCやAMD実機との性能順位、4.6からの性能変化を示すものではない。
+
+診断の実行条件と証跡
+
+worktree内の隔離フォルダー：
+native/target/nvidia-ct2-49-selftest-2026-11-19/
+
+起動オプション：
+--allow-non-rocm --ct2-whisper-model <既存0.3.1のWhisperモデル絶対パス>
+--nllb-model <既存0.3.1のNLLBモデル絶対パス> --runs 3 --timeout 300
+
+既存supervisorの子プロセス隔離・Windows Job Objectを使用した。
+診断仕様によりCT2子プロセスのAMD_COMGR_CACHE=0も継承し、13項目でロード前の適用を確認した。
+CUDA版に対するこの確認は、ROCmの回避策をNVIDIAで検証したという意味ではない。
+
+保存したファイル：
+- vrct_amd_check_report.json / .txt：supervisorによる全ケースの生レポート
+- validation-summary.json：11ケース・48回・出力・実効精度・終了状態の照合結果
+- provenance.json：GPU、起動コマンド、wheel/DLL/adapterのhash、取得元とビルド方法
+- dll-manifest.json：隔離した各DLLのサイズ・版情報・SHA-256
+- build.log、supervisor-console.log：ビルド・実行記録
+
+AMD用診断を非ROCm self-testモードで利用したため、ファイル名・見出しにAMD表記が残っている。
+HIPは意図どおりSKIP。Vulkan/whisper.cpp/llama.cpp用DLL・モデルは置かず、該当試験はSKIP、
+それらを必要とする比較はBLOCKEDになっている。今回の必須項目であるCT2試験の失敗ではない。
+レポート全項目を一括して「すべてPASS」とは表現しない。
+
+PE importsのbuild_familyはunknown。CUDAのcuBLAS等は実行時にロードされるため、PE importsだけで
+CUDA版と判定していない。公式wheelの出自・hashと実GPU推論を別の根拠として使用した。
+
+Claudeでの本体実装後に残る確認
+
+- 本体の4.9ヘッダー・DLL・shimをそろえたビルドと、4.6時点の基準に対する回帰確認。
+- 本体で利用する言語、モデル、生成上限、beam等の条件での動作。
+- 同一プロセスでの反復モデル解放・再ロード、VRAM解放、Whisper＋翻訳の同時利用。
+- 長時間動作、GPU初期化失敗時のCPU経路、実際の配布構成での起動と終了。
+- 他のNVIDIA世代・GPU・ドライバー。今回の結果はRTX 2080 Ti / 617.42の確認に限定する。
+
+正常な子プロセス終了だけで、上記のモデル寿命・VRAM解放が検証済みとは判断しない。
