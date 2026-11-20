@@ -2,13 +2,14 @@ VRCT Translator Engines License
 
 Copyright (c) 2026 misyaguziya. All rights reserved.
 
-This software is source-available, not open source. Read it freely; use it
-only as described below.
+This software is proprietary. It is distributed as a binary only; its source
+code is not published. Use it only as described below.
 
 1. DEFINITIONS
 
-   "Software" means this package (translator-engines), including its source
-   code, documentation, and any modification or derivative work of it.
+   "Software" means this package (translator-engines) in any form, including
+   its binaries, source code, documentation, and any modification or
+   derivative work of it.
 
    "Copyright Holder" means misyaguziya, the author of the Software.
 
@@ -23,10 +24,9 @@ only as described below.
    Permission is granted, free of charge, to any person obtaining a copy of
    the Software to:
 
-   (a) read, study, and audit the Software;
-   (b) use, copy, and modify the Software solely as a component of VRCT,
-       including building VRCT from source for personal use; and
-   (c) distribute the Software only as a bundled component of an official
+   (a) use and copy the Software solely as a component of VRCT, including
+       building VRCT from source for personal use; and
+   (b) distribute the Software only as a bundled component of an official
        distribution of VRCT.
 
 3. RESTRICTIONS
