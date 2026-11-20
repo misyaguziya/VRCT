@@ -39,7 +39,7 @@ cargo xtask fetch-native --cuda   # cuBLAS / cuDNN も (約 1.3 GB のダウン�
 
 ## 推論の照合（P1）
 
-Python 版が出した基準（`testdata/`）と、Rust 版の出力が完全に一致するかを見る（Python は使わない）。重み・辞書・モデルは環境変数で場所を渡す（無ければそのテストは「SKIPPED」と出して飛ばす）。
+VRCT 自身の処理（翻訳のトークン化・ターゲット接頭辞・デコード、Whisper の抑制トークン・メル特徴量など）は、Python 版の基準（`testdata/`）と照合する。CT2 の翻訳結果と文字起こし結果は、各クレートの `tests/*-ct2-<ver>/` にある Rust 版の基準と照合する。重み・辞書・モデルは環境変数で場所を渡す（無ければそのテストは「SKIPPED」と出して飛ばす）。
 
 ```powershell
 cd native
@@ -51,7 +51,8 @@ cargo test --release -p vrct-whisper -p vrct-ocr -p vrct-backend -- --nocapture
 ```
 
 - `VRCT_TEST_CUDA=1` で `*-cuda.json` も比べる。cuBLAS / cuDNN（`fetch-native --cuda`）を PATH に入れておく。
-- 基準を足す・作り直すときは、Python 版が残っているコミット（上）を別の worktree に出し、そこの `reference/export_*.py` を使う。音声は `reference/make_audio_corpus.ps1` で作る（声は PC で違うので、作り直したら基準も作り直す）。
+- CT2 を更新したら、まず旧版の基準でテストを実行して差分を読む。出力を確認したら、両テストの `CT2` を `third_party.toml` の版に合わせ、`VRCT_TEST_ACCEPT=1` で再実行して基準を保存する（保存した回は失敗として終わる。Python 版の基準との差があると保存しない）。その後は変数を外して照合する。
+- Python 版の基準を足す・作り直すときは、Python 版が残っているコミット（上）を別の worktree に出し、そこの `reference/export_*.py` を使う。音声は `reference/make_audio_corpus.ps1` で作る（声は PC で違うので、作り直したら基準も作り直す）。
 - 数値の一致は AVX2 / FMA を持つ x64 CPU が前提（numpy・OpenBLAS が CPU で計算方法を変えるため）。
 
 ## 外部 API・ファイルの照合（P2）

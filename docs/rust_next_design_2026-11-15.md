@@ -11,9 +11,10 @@ UI デザイン: `docs/rust_next_ui_design_2026-11-15.html`（2026-11-15 時点�
 | P1 | 済み（#127・#126） | #127 の回線断は未 |
 | P2 | 済み（オーバーレイの土台、キーボード、11-05 以降の MSKB の修正、キーボード辞書は VR UI を ON にしたときに準備、表示倍率への対応、見た目を今の MSKB に合わせる） | 全部未（VR） |
 | P2.5 | 段階 1 済み（ログ窓の字幕の形）。段階 2〜4 は未着手 | 全部未（VR） |
-| P3 | 未着手 | — |
+| P3 | 検証済み（issue #128、AMD 3 機種と NVIDIA で CT2 4.9.0 が動いた）。設計を確認中、本体は未着手 | 実機の受け入れは未 |
 | P4 | 済み（`claude/rust-p4-model-catalog`、未マージ。バックエンド。検証済みのモデルの一覧＝カタログ、再開・SHA-256 照合・中止・削除・取得元）。UI は `docs/model_catalog_ui_handover.md` | 実回線の取得・再開、プロキシ、ミラーは未 |
-| P5〜P6 | 未着手 | — |
+| P5 | やめた（2026-11-19、エンジンは CT2 に統一。P3 の方針） | — |
+| P6 | 未着手 | — |
 
 `rust-full-backend` はまだ push していない。
 
@@ -54,9 +55,9 @@ UI デザイン: `docs/rust_next_ui_design_2026-11-15.html`（2026-11-15 時点�
 | P1 | issue #127・#126 | 小 | なし（単体テストで確認） |
 | P2 | オーバーレイの土台の改善 + キーボード | 大 | VR 実機（SteamVR・VRChat） |
 | P2.5 | 字幕（small / large）を VR UI のログ窓に吸収 | 中 | VR 実機 |
-| P3 | AMD 版（ROCm のエディション）。**評価で Vulkan が足りないときだけ作る** | 中 | AMD の GPU（RDNA3 / RDNA4） |
+| P3 | CT2 4.9.0 への統一と AMD 版（ROCm のエディション）。**2026-11-19 に作ると決定** | 中〜大 | AMD の GPU（RDNA3 / RDNA3.5 / RDNA4） |
 | P4 | 検証済みのモデルの一覧（カタログ）から入れる・消す | 中 | なし |
-| P5 | llama.cpp・speech.cpp（Vulkan 版を同梱、選べるエンジンとして追加） | 中 | GPU 各社 |
+| P5 | ~~llama.cpp・speech.cpp（Vulkan 版を同梱、選べるエンジンとして追加）~~ **やめた（2026-11-19、CT2 に統一）** | — | — |
 | P6 | OCR の評価 → 差し替え | 評価が先 | なし |
 
 P0 → P1 → P2 → P2.5 は順番に進める。P5 は「付け加える形」で作ることが決まった（下の「推論エンジンの選定」）。**P3 を作るかどうかは、AMD の実機での Vulkan の評価で決まる。** P4 は独立に進められる。P6 の評価は、実装と並行していつでも始められる。
@@ -313,53 +314,91 @@ VRCT の方が良い点（残す）: SteamVR の交差判定とマウス座標�
 
 ---
 
-## P3. AMD 版（3 つ目のエディション）— 条件つき
+## P3. CT2 4.9.0 への統一と AMD 版（3 つ目のエディション）
 
-**位置づけ（2026-11-15 決定）: AMD の GPU は、まず P5 の Vulkan のエンジン（speech.cpp・llama.cpp）で使えるようにする。この節の AMD 版（CTranslate2 の ROCm ビルド）は、AMD の実機の評価で Vulkan が実用にならないと分かったときだけ作る。** 作らない場合、今の Whisper / NLLB（CTranslate2）は AMD では CPU で動く。以下は、作ると決まったときの設計。
+**方針（2026-11-19 確定、issue #128）: 推論エンジンは CTranslate2（CT2）に統一し、4.9.0 を基準に CPU・NVIDIA（CUDA）・AMD（ROCm）を対象にする。** P5 の Vulkan のエンジン（llama.cpp・speech.cpp）の追加と、CT2 との比較はやめる（これまでの比較は issue #128 に履歴として残す）。
 
-### 確認できたこと
+### 確認できたこと（検証ツール 0.3.1、`native/vrct-amd-check`）
 
-- CTranslate2 は v4.7.0（2026-02）で ROCm/HIP に対応。最新は v4.9.0（2026-11-10）。v4.8.3 で Windows の ROCm の停止と DLL の読み込みを修正、v4.8.4 で HIP の割り当て方式を変更、v4.8.5 で Windows のビルド手順（`docs/building_rocm_windows.md`）を追加。
-- ROCm のビルドでも `device="cuda"` を使う。つまり **1 つの `ctranslate2.dll` に CUDA と ROCm の両方は入らない**。
-- ビルド手順が挙げる同梱 DLL は `ctranslate2.dll`・`libiomp5md.dll`・`amdhip64_7.dll`・`hipblas.dll`。
-- 9 月の調査で、HIP SDK は利用者の PC には不要（ビルドする PC だけ）、再配布のライセンスは MIT / Apache-2.0 と確認済み。
+- CT2 4.9.0 で、Radeon RX 7800 XT（gfx1101）・RX 7900 XTX（gfx1100）・RX 9070 XT（gfx1201）の ROCm 版と、GeForce RTX 2080 Ti の CUDA 版が、同じ 11 ケース（Whisper large-v3-turbo と NLLB 600M。GPU の float16 / int8_float16、CPU int8、同じモデルへの 2 スレッド同時）・ウォームアップ込み 48 回の推論に成功。
+- RX 7900 XTX で旧版に出た `LLVM ERROR: Can't get available size`（0xC0000409）は、ROCm COMGR のキャッシュ整理が非 ASCII のパスを扱えないことが最有力の原因。`AMD_COMGR_CACHE=0` を DLL の読み込みより前に設定した 0.3.1 では起きなかった（対照試験ではないので、恒久的な解決の証明とはしない）。
+- HIP SDK は利用者の PC に要らない（HIP ランタイムはドライバ由来、hipBLAS などは同梱物で動いた）。
+- まだ: 本体に組み込んだ後の 4.6 → 4.9 の回帰、モデルの解放・再読み込みと VRAM の解放、Whisper と翻訳の同時常駐、長時間・多言語・実音声。
 
-### 確認できていないこと
+### 設計
 
-- **上流の issue #2016（DLL の名前の不一致）と #2021（RX 9070 XT でメモリアクセス違反）は、どちらも open のまま。** v4.8.3〜4.9.0 の修正で実際に直っているかは、実機で見る。
-- rocBLAS 本体とカーネル（Tensile）が要るか、全体の大きさ（9 月の見積もりは約 280〜300MB）。
-- 実機での速度。
+#### 1. エディション: CPU 版・CUDA 版・AMD 版の 3 つ（ビルドで分ける）
 
-### 設計: インストーラは今のまま、エディションを 1 つ足す
-
-今は CPU 版と CUDA 版をビルドで分け、アップデーターは `/EDITION=` で版を選んでいる（`update.rs:419-427`、`package.json` の `build-cuda` / `release-cuda`）。**同じ仕組みに `amd` を足す。** 実行時に DLL を切り替える仕組みは作らない。
+CUDA 版と ROCm 版はどちらも `ctranslate2.dll` という名前で、1 つのプロセスに両方は入らない。**今の CPU 版・CUDA 版と同じく、ビルドと配布物で分ける。** 実行時に DLL を切り替える仕組みは作らない。
 
 | | CPU 版 | CUDA 版 | AMD 版（新） |
 |---|---|---|---|
-| CTranslate2 | 4.6.0 | 4.6.0 | **4.9.0（ROCm ビルド）** |
-| 同梱 | — | cuBLAS / cuDNN | amdhip64 / hipblas ほか |
+| CT2 | 4.9.0（PyPI の wheel） | 4.9.0（PyPI の wheel） | 4.9.0（上流の ROCm 用 wheel） |
+| 同梱 | — | cuBLAS 12 / cuDNN 9（今と同じ） | hipBLAS・rocBLAS・hipBLASLt とカーネル（AMD 公式の ROCm 7.2 の wheel から）。HIP ランタイムはドライバのもの |
+| 増える大きさ | — | 今と同じ | 約 0.95GB（CT2 113MB、DLL 約 40MB、カーネル約 780MB。RDNA3 / RDNA3.5 / RDNA4 の分） |
 | ビルド | `build` | `build-cuda` | `build-amd`（新） |
 | 配布 | `VRCT.zip` | `VRCT_cuda.zip` | `VRCT_amd.zip`（新） |
 
-- **`third_party.toml`** に ROCm ビルドの CTranslate2 と HIP の DLL を足す（版と SHA-256）。`cargo xtask fetch-native --amd`、`stage-sidecar` にエディションを足す。
-- **CTranslate2 の版**: AMD 版だけ 4.9.0（ROCm は 4.8.3 以降が要る）。CPU 版と CUDA 版は 4.6.0 のまま据え置く（照合テストの基準を動かさない）。`vrct-ct2` の shim はエディションごとのヘッダーでビルドする。3 つを揃えるのは、AMD 版が安定してから別の作業にする。
-- **ROCm ビルドの CTranslate2 の入手**: 公式のビルド手順で自分でビルドし、VRCT の Hugging Face リポジトリに置く（上流の wheel は #2016 の名前の問題があるため）。ビルドは ROCm 7.2 の環境が要る。
-- **`compute.rs`**: 今は `nvcuda.dll` と `cublas64_12.dll` で GPU を探し、名前（GTX / RTX / Tesla…）で計算の型を決めている。AMD 版では HIP の DLL で探し、名前は DXGI から取り、計算の型は Radeon 用の表にする。エディションは 1 つの定数（ビルド時に決まる）で分ける。
-- **アップデーター**: エディションの値に `amd` を足す。CPU 版から AMD 版へ移る導線は、今の「CUDA 版へ」と同じ形。
-- **互換性**: endpoint と応答の形は変えない（`device: "cuda"` のまま、名前に Radeon が入る）。UI の変更は、アップデーターの版の選択肢に AMD 版が 1 つ増えるだけ。
+- エディションは、ビルドのときに決まる 1 つの定数（cargo の feature `amd`）で分ける。コードは 1 つ。
+- CPU 版と CUDA 版は今と同じく同じ `ctranslate2.dll` を使う（CUDA 版は cuBLAS・cuDNN を足すだけ）。
 
-「CUDA と並列」は、**CUDA 版と AMD 版を同じコードから並べてビルド・配布する**という意味で設計した。1 台に NVIDIA と AMD の両方の GPU がある PC では、入れた版の方だけを使う。
+#### 2. CT2 を 4.6.0 から 4.9.0 に上げる（全エディション）
 
-### P3-0. 最初にやる実機の確認（AMD の所有者に依頼）
+- `third_party.toml` の `ctranslate2` を 4.9.0 の wheel・ヘッダー（タグ v4.9.0）・ライセンスに上げる。AMD 版用に `[ctranslate2-rocm]` を足す（上流の `rocm-python-wheels-Windows.zip` の SHA-256 と、その中の cp311 の wheel）。
+- `vrct-ct2` の shim を 4.9.0 のヘッダーで作り直す。CRT（/MD）・MSVC の設定をそろえる。検証ツールの 4.9.0 用の部品は参考にするだけで、そのまま使わない。
+- `vrct-ct2/build.rs` の DLL のコピーは、大きさだけでなく中身（SHA-256）でも更新を判定する（同じ大きさの別の版が残らないように）。
+- **ここだけを先に入れて、CPU と NVIDIA での 4.6 → 4.9 の回帰を確かめる**（AMD の作業から切り離せる）。契約テストのチャットの翻訳は完全一致で比べているので、訳が変わったら中身を読んで基準を取り直すかを決める。
+- **結果（2026-11-20、この PC の CPU と RTX）**: 4.6.0 は Python 版の基準と全件一致。4.9.0 は計算の変化（MKL の GEMM、int8 のスケール、CUDA の softmax・Conv1D など）でモデルの出力が変わる（NLLB 600M の訳は CPU 29 / CUDA 35 件（172 件中）、Whisper base の文字は CPU 17 / CUDA 10 件（58 件中）。言語の判定は変わらない。良くなったものも悪くなったものもある）。VRCT 自身の処理（トークン化・復号・メル・抑制トークン）は差なし。
+  - 基準の扱い: Python 版の基準（`testdata/`）は書き出し直さず、VRCT 自身の処理の照合に使い続ける。CT2 の出力は、確認した Rust 版の出力を CT2 の版ごとの基準（`vrct-backend/tests/nmt-ct2-4.9.0/`、`vrct-whisper/tests/transcribe-ct2-4.9.0/`）として持つ（`native/README.md`）。M2M100 と large-v3-turbo は重みが無く、基準はまだ無い。
+  - 契約テスト: 420 件中 1 件（チャットの英訳 "Tokyo train station" → "Tokyo station"）が変わり、基準を取り直した。
+  - 速さ: 推論照合の所要時間（CPU と CUDA の合計）は 4.6 と同程度（NLLB 238 秒 → 221〜240 秒、Whisper 107 秒 → 98〜106 秒）。
+  - 読み直し: CUDA で NLLB の読み込み・解放を 5 回繰り返して落ちない。解放後の VRAM の増え方（1 回あたり約 8MiB）は 4.6 と同じ。読み込み中の VRAM は 4.9 の方が約 250MiB 多い（約 900MiB、4.6 は約 640MiB）。
 
-先に、エンジンの評価（Vulkan の speech.cpp・llama.cpp を AMD の実機で流す）を行う。そこで Vulkan が足りないと分かった場合だけ、次へ進む。
+#### 3. AMD 版のサイドカーの起動: `AMD_COMGR_CACHE=0`
 
-1. ROCm 7.2 で CTranslate2 v4.9.0 をビルドし、SDK を入れていない PC に DLL だけ置いて読み込めるか。
-2. RDNA3（RX 7000）と RDNA4（RX 9000）で、float16 / int8 が動くか（#2021 の再現の有無）。
-3. 1 発話の遅延を、CPU の `large-v3-turbo-int8` と比べる。
-4. 必要な DLL の一覧と大きさを確定する。
+- AMD 版のサイドカーは、`main` の最初（スレッドを作る前、`vrct_ct2::redirect_stderr()` より前）で、自分の環境変数に `AMD_COMGR_CACHE=0` を設定する。CT2 と HIP の DLL は遅延読み込みなので、その後に読み込まれる COMGR はこの値を見る。
+- Windows の永続的な環境変数は変えない。
+- 設定した値と、HIP の DLL を読み込む前に設定できたことを `process.log` に記録する（標準エラーに書くと UI のエラー通知に流れるので書かない。標準出力の JSON も壊さない）。
+- 親（Tauri）から渡す案もあるが、単体起動・テスト・開発用の起動でも同じになるよう、サイドカー自身で設定する。
 
-確認用の小さい実行ファイル（モデルを読んで 1 文を文字起こし・翻訳し、時間を出す）を渡す形にする。**ここが通ってから AMD 版の実装に入る。**
+#### 4. GPU の列挙と計算の型（`compute.rs`）
+
+- AMD 版は `nvcuda.dll` と cuBLAS の代わりに、`amdhip64_7.dll` で GPU を数え、名前と architecture（gfx1100 など）を取る。CT2 に渡す device 名は AMD でも `"cuda"` のまま。
+- 端末の一覧（`/get/data/selectable_transcription_compute_device_list` と `selectable_translation_compute_device_list` の要素）に `"vendor": "nvidia" | "amd"` を足す。既存のキーと値は変えない（UI は今のまま動く）。
+- NVIDIA の名前で決める分岐（GTX は float16 なし、RTX / Tesla 以外は float32 だけ）は Radeon に当てはめない。
+- AMD の「自動」で選ぶ計算の型は、実機で確かめた順に **float16 → int8_float16 → int8_float32 → float32**（bfloat16 系は能力にあっても既定にしない）。実機の中央値では float16 の方が速かった。
+- `COMPUTE_MODE` は AMD 版で Radeon が見つかったとき `"amd"` にする（今は `"cuda"` / `"cpu"`）。UI は `=== "cuda"` で判定しているので、今のままなら AMD 版は CUDA と表示されない。
+
+#### 5. 配布物をそろえる（`xtask`）
+
+- `cargo xtask fetch-native --amd`: ROCm 版の CT2 と、AMD 公式の ROCm 7.2 の wheel（`https://repo.radeon.com/rocm/windows/rocm-rel-7.2/` の `rocm_sdk_libraries_custom-7.2.0.dev0`）から `hipblas.dll`・`rocblas.dll`・`libhipblaslt.dll` とカーネル（`rocblas/library`・`hipblaslt/library` の gfx110x / gfx115x / gfx120x）・ライセンスを取る。版と SHA-256 は `third_party.toml` に固定する（今の CUDA 版が PyPI から cuBLAS・cuDNN を取るのと同じ形）。VRCT 独自の置き場は作らない。
+  - HIP ランタイム（`amdhip64_7.dll`）は Adrenalin ドライバが `System32` に入れるものを使い、同梱しない（CUDA 版が `nvcuda.dll` をドライバに頼るのと同じ。Ollama も同じ形）。ドライバが古くて無いときは、AMD 版でも CPU で動き、ドライバの更新を促すログを出す。
+  - 検証ツールで確かめたのは HIP SDK 7.2 のインストーラーから取った組み合わせ（`amd_comgr_3.dll`・`hipblaslt.dll` など）で、公式の wheel の組み合わせ（`amd_comgr0702.dll`・`libhipblaslt.dll` など、名前が違う）とは別物。**公式の wheel の組み合わせとドライバのランタイムで、検証ツールを作り直して RDNA3 / RDNA4 でもう一度確かめる。**`AMD_COMGR_CACHE=0` が効くことも、この組み合わせで確かめ直す。
+- `cargo xtask stage-sidecar --amd`: `rocblas/library`・`hipblaslt/library` の並びを保って `_internal` に置く。DLL を探す場所は `_internal` だけにし、PATH や別のアプリの DLL を拾わない。実際に読み込んだ DLL の場所を `process.log` に残す。
+- 検証用の zip（比較用のエンジン・モデル入り）は製品に入れない。
+
+#### 6. インストーラー・アップデーター・UI
+
+- インストーラー（`template.nsi` の CPU / GPU の選択）とアップデーター（`/EDITION=`。今は `/run/update_software` が CPU 版、`/run/update_cuda_software` が `gpu`）に `amd` を足す。AMD 版への更新は、新しい endpoint `/run/update_amd_software` にする（既存の 2 つは変えない）。
+- アップデーターの更新先の選択肢（Updater.jsx）と版の表示（VersionLabel.jsx の CUDA の印）に AMD を足すのは、デスクトップ UI の担当の方へ引き継ぎ文書で渡す（新しい値 `COMPUTE_MODE = "amd"`、`vendor`、`/run/update_amd_software`）。
+
+#### 7. 変えないもの
+
+- 本体の音声処理（言語の自動判定、多言語、80 メルのモデル、長い音声の分割、beam などの生成の設定）。検証ツールの英語固定・128 メル・30 秒の上限・beam 1 は持ち込まない。
+- モデルの持ち方と寿命（`vrct-ct2` の所有型、`translate/ctranslate2.rs`、`app/model.rs`、`app/pipeline.rs`）。推論中にモデルや DLL を捨てない。
+- IPC の endpoint と、設定のキー。モデルの一覧（カタログ）も、このついでには変えない。
+
+### 進める順番
+
+1. **CT2 4.9.0 への更新**（全エディション共通）。この PC の CPU と NVIDIA で回帰を確かめる（文字起こし・翻訳の結果、契約テスト、速さ、モデルの読み直し）。
+2. **AMD 版のビルドと起動**（feature `amd`、`AMD_COMGR_CACHE`、HIP での列挙、計算の型、`fetch-native` / `stage-sidecar --amd`）。この PC では AMD 版が「Radeon が無い」と CPU で正しく動くところまでを確かめる。並行して、検証ツールを公式の wheel の組み合わせとドライバのランタイムで作り直し、RDNA3 / RDNA4 の協力者にもう一度回してもらう。
+3. **インストーラー・アップデーター**と、UI の引き継ぎ文書。
+4. **AMD の実機での受け入れ**（協力者）: AMD 版の VRCT を入れて、文字起こし・翻訳が GPU で動くこと、モデルの読み直し・VRAM の解放、Whisper と翻訳の同時利用、長時間、GPU を使えないときに CPU に戻ること。RDNA3 と RDNA4 をそれぞれ 1 台以上。
+
+### 決めておきたいこと
+
+- ~~AMD 版の対象 GPU~~ → **RDNA3（gfx110x）・RDNA3.5（gfx115x）・RDNA4（gfx120x）に限る（2026-11-20 決定）。** 検証した ROCm 7.2 を保つため。AMD 公式の 7.2 の wheel には RDNA2（gfx103x）のカーネルが無い（RDNA2 用の世代別 wheel は 7.13 からで、CT2 4.9.0 との組み合わせは未確認）。CT2 の DLL 自体は gfx1030〜1035 も含む。**RX 6000 番台の検証に協力してくれる人が出てきたら、もう一度検討する。**
+- ~~HIP SDK の DLL とカーネルの置き場所~~ → **AMD 公式の wheel から取る（2026-11-20 決定）。** VRCT の Hugging Face には置かない。
 
 ---
 
@@ -424,6 +463,8 @@ huggingface.co と hf-mirror.com からの実取得、途中で切っての再�
 ---
 
 ## P5. llama.cpp と speech.cpp
+
+> **2026-11-19: やめた。** エンジンは CT2 に統一する（P3）。以下は検討の記録として残す。
 
 どちらも「VRCT が自分で起動する、OpenAI 互換のローカルサーバー」として扱う。VRCT は既に、翻訳の OpenAI 互換クライアント（`translate/llm.rs`、`app/translation_api.rs`）と、文字起こしの OpenAI 互換クライアント（`app/transcription_api.rs` の OpenAI / Custom）を持っているので、新しく書くのは「子プロセスの起動と停止」だけになる。
 

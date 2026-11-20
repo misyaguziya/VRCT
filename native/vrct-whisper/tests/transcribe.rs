@@ -1,14 +1,17 @@
-//! transcribe against the Python backend (native/testdata/whisper/*.json, written by
-//! native/reference/export_whisper.py): suppressed tokens, mel features (80 and 128 mels), language
-//! detection and every segment field must be identical.
+//! Suppressed tokens and mel feature hashes (80 and 128 mels) are checked against the Python data in
+//! testdata/whisper/. Transcription info and segments are checked against tests/transcribe-ct2-<ver>/.
+//! Review the output diffs first, then rerun with VRCT_TEST_ACCEPT=1 to save the available models' baselines.
 //!
 //! VRCT_WEIGHTS_ROOTS: folders holding weights/whisper/<model> (';'-separated). Models not found are
 //! skipped (and say so). VRCT_TEST_CUDA=1 also runs the *-cuda.json data.
-use serde_json::Value;
+use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use vrct_whisper::mel::FeatureExtractor;
 use vrct_whisper::{TranscribeOptions, WhisperModel};
+
+// Must match third_party.toml. Re-accept the model outputs after a CT2 upgrade.
+const CT2: &str = "ct2-4.9.0";
 
 fn testdata() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../testdata/whisper")
@@ -35,13 +38,51 @@ fn sha256(v: &[f32]) -> String {
     Sha256::digest(&bytes).iter().map(|b| format!("{b:02x}")).collect()
 }
 
-/// JSON equality with numbers compared as f64 (Python writes 1 for a float 1.0)
+/// JSON equality with numbers compared as f64 (1 and 1.0 compare equal).
 fn same(a: &Value, b: &Value) -> bool {
     match (a, b) {
         (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
         (Value::Array(x), Value::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| same(a, b)),
         (Value::Object(x), Value::Object(y)) => x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|w| same(v, w))),
         _ => a == b,
+    }
+}
+
+fn check_transcriptions(file: &Path, cases: Vec<Value>, problems: &mut Vec<String>) {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("tests/transcribe-{CT2}"));
+    let path = dir.join(file.file_name().unwrap());
+    // accepting always fails the run (never a silent pass) and writes nothing over other problems
+    if std::env::var("VRCT_TEST_ACCEPT").is_ok_and(|v| v == "1") {
+        if problems.is_empty() {
+            std::fs::create_dir_all(dir).unwrap();
+            let baseline = serde_json::to_string_pretty(&json!({ "cases": cases })).unwrap();
+            std::fs::write(&path, format!("{baseline}\n")).unwrap();
+            problems.push(format!("accepted {}; run again without VRCT_TEST_ACCEPT", path.display()));
+        } else {
+            problems.push(format!("not accepted {}: fix the problems above first", path.display()));
+        }
+        return;
+    }
+    if !path.try_exists().unwrap() {
+        problems.push(format!("no {CT2} baseline for {}; run with VRCT_TEST_ACCEPT=1 after checking the outputs", file.display()));
+        return;
+    }
+    let baseline: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let expected = baseline["cases"].as_array().unwrap();
+    if cases.len() != expected.len() {
+        problems.push(format!("{}: case count {} != {}", file.display(), cases.len(), expected.len()));
+    }
+    for (i, (got, want)) in cases.iter().zip(expected).enumerate() {
+        if got["files"] != want["files"] || got["force_language"] != want["force_language"] {
+            problems.push(format!("{}: case {i} files or force_language differ from the {CT2} baseline", file.display()));
+            continue;
+        }
+        let name = format!("{} force={}", got["files"], got["force_language"]);
+        for field in ["info", "segments"] {
+            if !same(&got[field], &want[field]) {
+                problems.push(format!("{name}: {field} {} != {}", got[field], want[field]));
+            }
+        }
     }
 }
 
@@ -68,6 +109,7 @@ fn check(file: &Path) -> Vec<String> {
             }
         }
     }
+    let mut cases = Vec::new();
     for case in data["cases"].as_array().unwrap() {
         let files: Vec<&str> = case["files"].as_array().unwrap().iter().map(|f| f.as_str().unwrap()).collect();
         let audio: Vec<f32> = files.iter().flat_map(|f| read_wav(f)).collect();
@@ -80,22 +122,22 @@ fn check(file: &Path) -> Vec<String> {
             without_timestamps: true,
             ..TranscribeOptions::default()
         };
-        let name = format!("{}{} force={}", files[0], if files.len() > 1 { "+" } else { "" }, options.language.is_some());
         let (segments, info) = model.transcribe(&audio, &options).unwrap();
-        let got_info = serde_json::json!({"language": info.language, "language_probability": info.language_probability as f64,
-                                          "duration": info.duration});
-        if !same(&got_info, &case["info"]) {
-            problems.push(format!("{name}: info {got_info} != {}", case["info"]));
+        let got_info = json!({"language": info.language, "language_probability": info.language_probability as f64,
+                              "duration": info.duration});
+        // VRCT's own values stay checked against Python: the duration, and the info of a forced language
+        let python_info = if options.language.is_some() { got_info.clone() } else { json!({"duration": info.duration}) };
+        if python_info.as_object().unwrap().iter().any(|(k, v)| !same(v, &case["info"][k])) {
+            problems.push(format!("{files:?}: info {got_info} != {} (Python)", case["info"]));
         }
         let got: Vec<Value> = segments
             .iter()
-            .map(|s| serde_json::json!({"id": s.id, "seek": s.seek, "start": s.start, "end": s.end, "text": s.text,
-                                       "tokens": s.tokens, "avg_logprob": s.avg_logprob, "no_speech_prob": s.no_speech_prob as f64}))
+            .map(|s| json!({"id": s.id, "seek": s.seek, "start": s.start, "end": s.end, "text": s.text,
+                            "tokens": s.tokens, "avg_logprob": s.avg_logprob, "no_speech_prob": s.no_speech_prob as f64}))
             .collect();
-        if !same(&Value::Array(got.clone()), &case["segments"]) {
-            problems.push(format!("{name}: segments {got:?} != {}", case["segments"]));
-        }
+        cases.push(json!({ "files": files, "force_language": case["force_language"], "info": got_info, "segments": got }));
     }
+    check_transcriptions(file, cases, &mut problems);
     eprintln!("{}: {} cases, {} clips, problems {}", file.display(), data["cases"].as_array().unwrap().len(),
               data["features_sha256"].as_object().unwrap().len(), problems.len());
     problems

@@ -1,0 +1,2845 @@
+{
+  "translate": [
+    {
+      "text": "Hello, how are you today?",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁今日は",
+        "どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは 今日はどうですか?"
+    },
+    {
+      "text": "Hello, how are you today?",
+      "source_language": "eng_Latn",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁안녕",
+        "하세요",
+        ",",
+        "▁오늘",
+        "▁어때",
+        "요",
+        "?"
+      ],
+      "result": "안녕하세요, 오늘 어때요?"
+    },
+    {
+      "text": "I can't believe it's already October.",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁もう",
+        "10",
+        "月",
+        "だ",
+        "なんて",
+        "信じられない",
+        "."
+      ],
+      "result": "もう10月だなんて信じられない."
+    },
+    {
+      "text": "I can't believe it's already October.",
+      "source_language": "eng_Latn",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Je",
+        "▁n",
+        "'",
+        "arri",
+        "ve",
+        "▁pas",
+        "▁à",
+        "▁croire",
+        "▁qu",
+        "'",
+        "il",
+        "▁soit",
+        "▁déjà",
+        "▁octobre",
+        "."
+      ],
+      "result": "Je n'arrive pas à croire qu'il soit déjà octobre."
+    },
+    {
+      "text": "We're going to the store; do you need anything?",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "店",
+        "に行",
+        "こう",
+        ".",
+        "▁何か",
+        "必要",
+        "ない",
+        "か",
+        "."
+      ],
+      "result": "店に行こう. 何か必要ないか."
+    },
+    {
+      "text": "We're going to the store; do you need anything?",
+      "source_language": "eng_Latn",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁가게",
+        "로",
+        "▁가",
+        "자",
+        "고",
+        ",",
+        "▁뭔가",
+        "▁필요",
+        "해",
+        "?"
+      ],
+      "result": "가게로 가자고, 뭔가 필요해?"
+    },
+    {
+      "text": "The meeting starts at 3:30 PM, so don't be late!",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "会議",
+        "は",
+        "午後",
+        "3",
+        "時",
+        "半",
+        "から",
+        "始まる",
+        "ので",
+        "遅",
+        "刻",
+        "しないでください",
+        "!"
+      ],
+      "result": "会議は午後3時半から始まるので遅刻しないでください!"
+    },
+    {
+      "text": "The meeting starts at 3:30 PM, so don't be late!",
+      "source_language": "eng_Latn",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁La",
+        "▁réunion",
+        "▁commence",
+        "▁à",
+        "▁15",
+        "▁h",
+        "▁30,",
+        "▁alors",
+        "▁ne",
+        "▁tarde",
+        "z",
+        "▁pas",
+        "▁!"
+      ],
+      "result": "La réunion commence à 15 h 30, alors ne tardez pas!"
+    },
+    {
+      "text": "She said \"it's fine\" but I'm not sure.",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁彼女は",
+        "\"",
+        "大丈夫",
+        "\"",
+        "と言った",
+        "が",
+        "▁私は",
+        "確信",
+        "していない",
+        "."
+      ],
+      "result": "彼女は\"大丈夫\"と言ったが 私は確信していない."
+    },
+    {
+      "text": "She said \"it's fine\" but I'm not sure.",
+      "source_language": "eng_Latn",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁\"",
+        "괜",
+        "찮",
+        "아요",
+        "\"",
+        "라고",
+        "▁했지만",
+        "▁확신",
+        "하지",
+        "▁못",
+        "했어요",
+        "."
+      ],
+      "result": "\"괜찮아요\"라고 했지만 확신하지 못했어요."
+    },
+    {
+      "text": "Let's meet at the station in front of the big clock.",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁大",
+        "時計",
+        "の前",
+        "で",
+        "駅",
+        "で",
+        "会",
+        "おう",
+        "."
+      ],
+      "result": "大時計の前で駅で会おう."
+    },
+    {
+      "text": "Let's meet at the station in front of the big clock.",
+      "source_language": "eng_Latn",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁On",
+        "▁se",
+        "▁retrou",
+        "ve",
+        "▁à",
+        "▁la",
+        "▁gare",
+        "▁devant",
+        "▁la",
+        "▁grande",
+        "▁hor",
+        "loge",
+        "."
+      ],
+      "result": "On se retrouve à la gare devant la grande horloge."
+    },
+    {
+      "text": "This world is so beautiful at night.",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界は",
+        "夜",
+        "に",
+        "とても",
+        "美しい"
+      ],
+      "result": "この世界は夜にとても美しい"
+    },
+    {
+      "text": "This world is so beautiful at night.",
+      "source_language": "eng_Latn",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁이",
+        "▁세상은",
+        "▁밤에",
+        "▁너무",
+        "▁아름답",
+        "습니다",
+        "."
+      ],
+      "result": "이 세상은 밤에 너무 아름답습니다."
+    },
+    {
+      "text": "I've been playing VRChat for about two years now.",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁2",
+        "年",
+        "ほど",
+        "前から",
+        "V",
+        "RC",
+        "hat",
+        "を",
+        "プレイ",
+        "しています"
+      ],
+      "result": "2年ほど前からVRChatをプレイしています"
+    },
+    {
+      "text": "I've been playing VRChat for about two years now.",
+      "source_language": "eng_Latn",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Je",
+        "▁joue",
+        "▁à",
+        "▁V",
+        "RC",
+        "hat",
+        "▁depuis",
+        "▁deux",
+        "▁ans",
+        "."
+      ],
+      "result": "Je joue à VRChat depuis deux ans."
+    },
+    {
+      "text": "Could you speak a little more slowly, please?",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁少し",
+        "ゆっくり",
+        "話",
+        "してくれ",
+        "ませんか",
+        "?"
+      ],
+      "result": "少しゆっくり話してくれませんか?"
+    },
+    {
+      "text": "Could you speak a little more slowly, please?",
+      "source_language": "eng_Latn",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁좀",
+        "▁더",
+        "▁천천히",
+        "▁말",
+        "해주",
+        "시",
+        "겠어요",
+        "?"
+      ],
+      "result": "좀 더 천천히 말해주시겠어요?"
+    },
+    {
+      "text": "Thanks for the help, I really appreciate it.",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "助けて",
+        "くれて",
+        "ありがとう",
+        "▁本当に",
+        "感謝",
+        "します"
+      ],
+      "result": "助けてくれてありがとう 本当に感謝します"
+    },
+    {
+      "text": "Thanks for the help, I really appreciate it.",
+      "source_language": "eng_Latn",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Merci",
+        "▁pour",
+        "▁l",
+        "'",
+        "aide",
+        ",",
+        "▁je",
+        "▁l",
+        "'",
+        "appr",
+        "é",
+        "cie",
+        "▁vraiment",
+        "."
+      ],
+      "result": "Merci pour l'aide, je l'apprécie vraiment."
+    },
+    {
+      "text": "Wait... what did you just say?",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "待",
+        "って",
+        "...",
+        "▁何を",
+        "言った",
+        "の",
+        "?"
+      ],
+      "result": "待って... 何を言ったの?"
+    },
+    {
+      "text": "Wait... what did you just say?",
+      "source_language": "eng_Latn",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁잠깐",
+        "...",
+        "▁방금",
+        "▁뭐라고",
+        "▁했",
+        "지",
+        "?"
+      ],
+      "result": "잠깐... 방금 뭐라고 했지?"
+    },
+    {
+      "text": "He's got 3 cats and 2 dogs.",
+      "source_language": "eng_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁彼は",
+        "3",
+        "匹",
+        "猫",
+        "と",
+        "2",
+        "匹",
+        "犬",
+        "を持っている",
+        "."
+      ],
+      "result": "彼は3匹猫と2匹犬を持っている."
+    },
+    {
+      "text": "He's got 3 cats and 2 dogs.",
+      "source_language": "eng_Latn",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Il",
+        "▁a",
+        "▁3",
+        "▁ch",
+        "ats",
+        "▁et",
+        "▁2",
+        "▁chi",
+        "ens",
+        "."
+      ],
+      "result": "Il a 3 chats et 2 chiens."
+    },
+    {
+      "text": "こんにちは。今日はとてもいい天気ですね。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hello",
+        ".",
+        "▁It",
+        "'",
+        "s",
+        "▁very",
+        "▁nice",
+        "▁today",
+        "."
+      ],
+      "result": "Hello. It's very nice today."
+    },
+    {
+      "text": "こんにちは。今日はとてもいい天気ですね。",
+      "source_language": "jpn_Jpan",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁안녕",
+        "하세요",
+        ".",
+        "▁날씨",
+        "가",
+        "▁아주",
+        "▁좋",
+        "네요",
+        "."
+      ],
+      "result": "안녕하세요. 날씨가 아주 좋네요."
+    },
+    {
+      "text": "このワールド、夜景がすごくきれい！",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁This",
+        "▁world",
+        "▁is",
+        "▁so",
+        "▁beautiful",
+        "▁at",
+        "▁night",
+        "."
+      ],
+      "result": "This world is so beautiful at night."
+    },
+    {
+      "text": "このワールド、夜景がすごくきれい！",
+      "source_language": "jpn_Jpan",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Ce",
+        "▁monde",
+        ",",
+        "▁cette",
+        "▁sc",
+        "ène",
+        "▁noct",
+        "ur",
+        "ne",
+        ",",
+        "▁est",
+        "▁magni",
+        "fique",
+        "."
+      ],
+      "result": "Ce monde, cette scène nocturne, est magnifique."
+    },
+    {
+      "text": "ちょっと待って、マイクの調子が悪いみたい。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Wait",
+        "▁a",
+        "▁minute",
+        ",",
+        "▁Mike",
+        "'",
+        "s",
+        "▁not",
+        "▁feeling",
+        "▁well",
+        "."
+      ],
+      "result": "Wait a minute, Mike's not feeling well."
+    },
+    {
+      "text": "ちょっと待って、マイクの調子が悪いみたい。",
+      "source_language": "jpn_Jpan",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁잠깐",
+        "만",
+        ",",
+        "▁마이크",
+        "가",
+        "▁안",
+        "좋",
+        "아"
+      ],
+      "result": "잠깐만, 마이크가 안좋아"
+    },
+    {
+      "text": "明日の夜9時にまた集まりましょう。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁We",
+        "'",
+        "ll",
+        "▁meet",
+        "▁again",
+        "▁tomorrow",
+        "▁night",
+        "▁at",
+        "▁9:",
+        "00."
+      ],
+      "result": "We'll meet again tomorrow night at 9:00."
+    },
+    {
+      "text": "明日の夜9時にまた集まりましょう。",
+      "source_language": "jpn_Jpan",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Nous",
+        "▁nous",
+        "▁retrou",
+        "ver",
+        "ons",
+        "▁demain",
+        "▁à",
+        "▁ne",
+        "uf",
+        "▁heures",
+        "▁du",
+        "▁soir",
+        "."
+      ],
+      "result": "Nous nous retrouverons demain à neuf heures du soir."
+    },
+    {
+      "text": "初めまして、日本から来ました。よろしくお願いします。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁It",
+        "'",
+        "s",
+        "▁a",
+        "▁pleasure",
+        "▁to",
+        "▁be",
+        "▁here",
+        "▁from",
+        "▁Japan",
+        "."
+      ],
+      "result": "It's a pleasure to be here from Japan."
+    },
+    {
+      "text": "初めまして、日本から来ました。よろしくお願いします。",
+      "source_language": "jpn_Jpan",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁일본",
+        "에서",
+        "▁왔",
+        "을",
+        "▁때",
+        "▁반",
+        "갑",
+        "습니다",
+        "."
+      ],
+      "result": "일본에서 왔을 때 반갑습니다."
+    },
+    {
+      "text": "それ、本当に面白いね（笑）",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁That",
+        "'",
+        "s",
+        "▁really",
+        "▁funny",
+        "."
+      ],
+      "result": "That's really funny."
+    },
+    {
+      "text": "それ、本当に面白いね（笑）",
+      "source_language": "jpn_Jpan",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁C",
+        "'",
+        "est",
+        "▁vraiment",
+        "▁dr",
+        "ôle",
+        "."
+      ],
+      "result": "C'est vraiment drôle."
+    },
+    {
+      "text": "音声が途切れていますか？聞こえますか？",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Do",
+        "▁you",
+        "▁hear",
+        "▁the",
+        "▁sound",
+        "?"
+      ],
+      "result": "Do you hear the sound?"
+    },
+    {
+      "text": "音声が途切れていますか？聞こえますか？",
+      "source_language": "jpn_Jpan",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁음",
+        "향",
+        "이",
+        "▁끊",
+        "어",
+        "졌",
+        "나요",
+        "?"
+      ],
+      "result": "음향이 끊어졌나요?"
+    },
+    {
+      "text": "翻訳ツールを使って話しています。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "'",
+        "m",
+        "▁talking",
+        "▁to",
+        "▁you",
+        "▁using",
+        "▁translation",
+        "▁tools",
+        "."
+      ],
+      "result": "I'm talking to you using translation tools."
+    },
+    {
+      "text": "翻訳ツールを使って話しています。",
+      "source_language": "jpn_Jpan",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Nous",
+        "▁parl",
+        "ons",
+        "▁avec",
+        "▁des",
+        "▁ou",
+        "tils",
+        "▁de",
+        "▁traduc",
+        "tion",
+        "."
+      ],
+      "result": "Nous parlons avec des outils de traduction."
+    },
+    {
+      "text": "ＶＲＣｈａｔは楽しいです。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁V",
+        "RC",
+        "hat",
+        "▁is",
+        "▁fun",
+        "."
+      ],
+      "result": "VRChat is fun."
+    },
+    {
+      "text": "ＶＲＣｈａｔは楽しいです。",
+      "source_language": "jpn_Jpan",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁V",
+        "RC",
+        "hat",
+        "은",
+        "▁재미",
+        "있",
+        "죠",
+        "."
+      ],
+      "result": "VRChat은 재미있죠."
+    },
+    {
+      "text": "ｶﾀｶﾅの半角も混ぜてみる。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "'",
+        "m",
+        "▁going",
+        "▁to",
+        "▁mix",
+        "▁the",
+        "▁half",
+        "▁of",
+        "▁the",
+        "▁cata",
+        "c",
+        "omb",
+        "s",
+        "."
+      ],
+      "result": "I'm going to mix the half of the catacombs."
+    },
+    {
+      "text": "ｶﾀｶﾅの半角も混ぜてみる。",
+      "source_language": "jpn_Jpan",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁Je",
+        "▁vais",
+        "▁mél",
+        "anger",
+        "▁les",
+        "▁demi",
+        "-",
+        "c",
+        "ô",
+        "tes",
+        "▁de",
+        "▁Kat",
+        "akana",
+        "."
+      ],
+      "result": "Je vais mélanger les demi-côtes de Katakana."
+    },
+    {
+      "text": "「ありがとう」と言いたかっただけです。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁just",
+        "▁wanted",
+        "▁to",
+        "▁say",
+        ",",
+        "▁\"",
+        "T",
+        "hank",
+        "▁you",
+        "\"."
+      ],
+      "result": "I just wanted to say, \"Thank you\"."
+    },
+    {
+      "text": "「ありがとう」と言いたかっただけです。",
+      "source_language": "jpn_Jpan",
+      "target_language": "kor_Hang",
+      "hypothesis": [
+        "kor_Hang",
+        "▁저는",
+        "▁\"",
+        "감",
+        "사",
+        "합니다",
+        "\".",
+        "▁라고",
+        "▁말하고",
+        "▁싶",
+        "었습니다",
+        "."
+      ],
+      "result": "저는 \"감사합니다\". 라고 말하고 싶었습니다."
+    },
+    {
+      "text": "①番の部屋に集合してください。",
+      "source_language": "jpn_Jpan",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Please",
+        "▁gather",
+        "▁in",
+        "▁the",
+        "▁first",
+        "▁room",
+        "."
+      ],
+      "result": "Please gather in the first room."
+    },
+    {
+      "text": "①番の部屋に集合してください。",
+      "source_language": "jpn_Jpan",
+      "target_language": "fra_Latn",
+      "hypothesis": [
+        "fra_Latn",
+        "▁R",
+        "assemb",
+        "lez",
+        "-",
+        "vous",
+        "▁dans",
+        "▁la",
+        "▁première",
+        "▁pièce",
+        "."
+      ],
+      "result": "Rassemblez-vous dans la première pièce."
+    },
+    {
+      "text": "안녕하세요, 만나서 반갑습니다.",
+      "source_language": "kor_Hang",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ",",
+        "▁nice",
+        "▁to",
+        "▁meet",
+        "▁you",
+        "."
+      ],
+      "result": "Hi, nice to meet you."
+    },
+    {
+      "text": "안녕하세요, 만나서 반갑습니다.",
+      "source_language": "kor_Hang",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁",
+        "初め",
+        "まして"
+      ],
+      "result": "こんにちは 初めまして"
+    },
+    {
+      "text": "오늘 저녁에 같이 게임할래요?",
+      "source_language": "kor_Hang",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁You",
+        "▁want",
+        "▁to",
+        "▁play",
+        "▁with",
+        "▁me",
+        "▁tonight",
+        "?"
+      ],
+      "result": "You want to play with me tonight?"
+    },
+    {
+      "text": "오늘 저녁에 같이 게임할래요?",
+      "source_language": "kor_Hang",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁今",
+        "晩",
+        "一緒に",
+        "遊",
+        "んで",
+        "み",
+        "ませんか",
+        "?"
+      ],
+      "result": "今晩一緒に遊んでみませんか?"
+    },
+    {
+      "text": "이 월드는 정말 예쁘네요!",
+      "source_language": "kor_Hang",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁This",
+        "▁world",
+        "▁is",
+        "▁so",
+        "▁beautiful",
+        "!"
+      ],
+      "result": "This world is so beautiful!"
+    },
+    {
+      "text": "이 월드는 정말 예쁘네요!",
+      "source_language": "kor_Hang",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界は",
+        "美しい",
+        "!"
+      ],
+      "result": "この世界は美しい!"
+    },
+    {
+      "text": "잠깐만요, 소리가 안 들려요.",
+      "source_language": "kor_Hang",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Wait",
+        "▁a",
+        "▁minute",
+        ",",
+        "▁I",
+        "▁can",
+        "'",
+        "t",
+        "▁hear",
+        "▁you",
+        "."
+      ],
+      "result": "Wait a minute, I can't hear you."
+    },
+    {
+      "text": "잠깐만요, 소리가 안 들려요.",
+      "source_language": "kor_Hang",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "待",
+        "って",
+        "▁",
+        "音",
+        "が",
+        "聞こ",
+        "えない"
+      ],
+      "result": "待って 音が聞こえない"
+    },
+    {
+      "text": "한국어를 조금 할 수 있어요.",
+      "source_language": "kor_Hang",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁can",
+        "▁speak",
+        "▁a",
+        "▁little",
+        "▁Korean",
+        "."
+      ],
+      "result": "I can speak a little Korean."
+    },
+    {
+      "text": "한국어를 조금 할 수 있어요.",
+      "source_language": "kor_Hang",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "韓国",
+        "語を",
+        "少し",
+        "話",
+        "せる"
+      ],
+      "result": "韓国語を少し話せる"
+    },
+    {
+      "text": "你好，很高兴认识你。",
+      "source_language": "zho_Hans",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hello",
+        ",",
+        "▁nice",
+        "▁to",
+        "▁meet",
+        "▁you",
+        "."
+      ],
+      "result": "Hello, nice to meet you."
+    },
+    {
+      "text": "你好，很高兴认识你。",
+      "source_language": "zho_Hans",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        ".",
+        "▁",
+        "初め",
+        "まして",
+        "."
+      ],
+      "result": "こんにちは. 初めまして."
+    },
+    {
+      "text": "我们明天晚上再见吧！",
+      "source_language": "zho_Hans",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁See",
+        "▁you",
+        "▁tomorrow",
+        "▁night",
+        "!"
+      ],
+      "result": "See you tomorrow night!"
+    },
+    {
+      "text": "我们明天晚上再见吧！",
+      "source_language": "zho_Hans",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日の",
+        "夜",
+        "まで",
+        "よ",
+        "ろ",
+        "しく",
+        "!"
+      ],
+      "result": "明日の夜までよろしく!"
+    },
+    {
+      "text": "这个世界的风景真漂亮。",
+      "source_language": "zho_Hans",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁The",
+        "▁world",
+        "▁is",
+        "▁beautiful",
+        "."
+      ],
+      "result": "The world is beautiful."
+    },
+    {
+      "text": "这个世界的风景真漂亮。",
+      "source_language": "zho_Hans",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界の",
+        "景",
+        "色",
+        "は",
+        "美しい",
+        "."
+      ],
+      "result": "この世界の景色は美しい."
+    },
+    {
+      "text": "你能听到我的声音吗？",
+      "source_language": "zho_Hans",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Can",
+        "▁you",
+        "▁hear",
+        "▁my",
+        "▁voice",
+        "?"
+      ],
+      "result": "Can you hear my voice?"
+    },
+    {
+      "text": "你能听到我的声音吗？",
+      "source_language": "zho_Hans",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁私の",
+        "声が",
+        "聞こ",
+        "える",
+        "か",
+        "?"
+      ],
+      "result": "私の声が聞こえるか?"
+    },
+    {
+      "text": "我正在用翻译软件和你说话。",
+      "source_language": "zho_Hans",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "'",
+        "m",
+        "▁talking",
+        "▁to",
+        "▁you",
+        "▁with",
+        "▁translation",
+        "▁software",
+        "."
+      ],
+      "result": "I'm talking to you with translation software."
+    },
+    {
+      "text": "我正在用翻译软件和你说话。",
+      "source_language": "zho_Hans",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "翻訳",
+        "ソフト",
+        "を使って",
+        "話",
+        "している",
+        "んです"
+      ],
+      "result": "翻訳ソフトを使って話しているんです"
+    },
+    {
+      "text": "你好，很高興認識你。",
+      "source_language": "zho_Hant",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hello",
+        ",",
+        "▁nice",
+        "▁to",
+        "▁meet",
+        "▁you",
+        "."
+      ],
+      "result": "Hello, nice to meet you."
+    },
+    {
+      "text": "你好，很高興認識你。",
+      "source_language": "zho_Hant",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "初め",
+        "まして",
+        ",",
+        "お",
+        "会い",
+        "できて",
+        "嬉しい",
+        "です",
+        "."
+      ],
+      "result": "初めまして,お会いできて嬉しいです."
+    },
+    {
+      "text": "這個世界的風景真漂亮。",
+      "source_language": "zho_Hant",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁This",
+        "▁is",
+        "▁a",
+        "▁beautiful",
+        "▁lands",
+        "cape",
+        "."
+      ],
+      "result": "This is a beautiful landscape."
+    },
+    {
+      "text": "這個世界的風景真漂亮。",
+      "source_language": "zho_Hant",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界",
+        "景",
+        "色",
+        "は",
+        "美しい",
+        "."
+      ],
+      "result": "この世界景色は美しい."
+    },
+    {
+      "text": "我們明天晚上再見吧！",
+      "source_language": "zho_Hant",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁We",
+        "'",
+        "ll",
+        "▁see",
+        "▁you",
+        "▁tomorrow",
+        "▁night",
+        "!"
+      ],
+      "result": "We'll see you tomorrow night!"
+    },
+    {
+      "text": "我們明天晚上再見吧！",
+      "source_language": "zho_Hant",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日の",
+        "夜",
+        "に会",
+        "う",
+        "!"
+      ],
+      "result": "明日の夜に会う!"
+    },
+    {
+      "text": "Привет! Как у тебя дела?",
+      "source_language": "rus_Cyrl",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Привет! Как у тебя дела?",
+      "source_language": "rus_Cyrl",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Я не понимаю, что ты говоришь.",
+      "source_language": "rus_Cyrl",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁know",
+        "▁what",
+        "▁you",
+        "'",
+        "re",
+        "▁talking",
+        "▁about",
+        "."
+      ],
+      "result": "I don't know what you're talking about."
+    },
+    {
+      "text": "Я не понимаю, что ты говоришь.",
+      "source_language": "rus_Cyrl",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁何",
+        "て",
+        "言",
+        "ってる",
+        "の",
+        "?"
+      ],
+      "result": "何て言ってるの?"
+    },
+    {
+      "text": "Давай встретимся завтра вечером.",
+      "source_language": "rus_Cyrl",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Let",
+        "'",
+        "s",
+        "▁see",
+        "▁you",
+        "▁tomorrow",
+        "▁night",
+        "."
+      ],
+      "result": "Let's see you tomorrow night."
+    },
+    {
+      "text": "Давай встретимся завтра вечером.",
+      "source_language": "rus_Cyrl",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日の",
+        "夜",
+        "に",
+        "会",
+        "おう"
+      ],
+      "result": "明日の夜に会おう"
+    },
+    {
+      "text": "Этот мир очень красивый.",
+      "source_language": "rus_Cyrl",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁This",
+        "▁world",
+        "▁is",
+        "▁so",
+        "▁beautiful",
+        "."
+      ],
+      "result": "This world is so beautiful."
+    },
+    {
+      "text": "Этот мир очень красивый.",
+      "source_language": "rus_Cyrl",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界は",
+        "とても",
+        "美しい",
+        "."
+      ],
+      "result": "この世界はとても美しい."
+    },
+    {
+      "text": "Bonjour, comment ça va ?",
+      "source_language": "fra_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hi, how you doing?"
+    },
+    {
+      "text": "Bonjour, comment ça va ?",
+      "source_language": "fra_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Je ne comprends pas ce que tu dis.",
+      "source_language": "fra_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁understand",
+        "▁what",
+        "▁you",
+        "'",
+        "re",
+        "▁saying",
+        "."
+      ],
+      "result": "I don't understand what you're saying."
+    },
+    {
+      "text": "Je ne comprends pas ce que tu dis.",
+      "source_language": "fra_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "言っている",
+        "ことは",
+        "理解",
+        "できない",
+        "."
+      ],
+      "result": "言っていることは理解できない."
+    },
+    {
+      "text": "On se retrouve demain soir à 21 h ?",
+      "source_language": "fra_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁'",
+        "ll",
+        "▁see",
+        "▁you",
+        "▁tomorrow",
+        "▁night",
+        "▁at",
+        "▁9:",
+        "▁00",
+        "▁?"
+      ],
+      "result": "I 'll see you tomorrow night at 9: 00?"
+    },
+    {
+      "text": "On se retrouve demain soir à 21 h ?",
+      "source_language": "fra_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日の",
+        "夜",
+        "9",
+        "時に",
+        "会",
+        "える",
+        "か",
+        "?"
+      ],
+      "result": "明日の夜9時に会えるか?"
+    },
+    {
+      "text": "C'est vraiment magnifique ici !",
+      "source_language": "fra_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁It",
+        "'",
+        "s",
+        "▁really",
+        "▁beautiful",
+        "▁here",
+        "!"
+      ],
+      "result": "It's really beautiful here!"
+    },
+    {
+      "text": "C'est vraiment magnifique ici !",
+      "source_language": "fra_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁ここは",
+        "本当に",
+        "美しい",
+        "!"
+      ],
+      "result": "ここは本当に美しい!"
+    },
+    {
+      "text": "Guten Abend! Wie geht's dir?",
+      "source_language": "deu_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Good",
+        "▁evening",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Good evening, how are you?"
+    },
+    {
+      "text": "Guten Abend! Wie geht's dir?",
+      "source_language": "deu_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "ん",
+        "ばん",
+        "は",
+        "!",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんばんは! どうですか?"
+    },
+    {
+      "text": "Ich verstehe dich leider nicht.",
+      "source_language": "deu_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁understand",
+        "▁what",
+        "▁you",
+        "▁mean",
+        "."
+      ],
+      "result": "I don't understand what you mean."
+    },
+    {
+      "text": "Ich verstehe dich leider nicht.",
+      "source_language": "deu_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁私は",
+        "あなたを",
+        "理解",
+        "できない",
+        "."
+      ],
+      "result": "私はあなたを理解できない."
+    },
+    {
+      "text": "Wollen wir morgen zusammen spielen?",
+      "source_language": "deu_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Do",
+        "▁you",
+        "▁want",
+        "▁to",
+        "▁play",
+        "▁tomorrow",
+        "?"
+      ],
+      "result": "Do you want to play tomorrow?"
+    },
+    {
+      "text": "Wollen wir morgen zusammen spielen?",
+      "source_language": "deu_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日",
+        "一緒に",
+        "遊",
+        "んで",
+        "み",
+        "ませんか",
+        "?"
+      ],
+      "result": "明日一緒に遊んでみませんか?"
+    },
+    {
+      "text": "Die Aussicht ist wunderschön.",
+      "source_language": "deu_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁The",
+        "▁view",
+        "▁is",
+        "▁beautiful",
+        "."
+      ],
+      "result": "The view is beautiful."
+    },
+    {
+      "text": "Die Aussicht ist wunderschön.",
+      "source_language": "deu_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "景",
+        "色",
+        "は",
+        "美しい",
+        "."
+      ],
+      "result": "景色は美しい."
+    },
+    {
+      "text": "¡Hola! ¿Cómo estás?",
+      "source_language": "spa_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Hey, how are you?"
+    },
+    {
+      "text": "¡Hola! ¿Cómo estás?",
+      "source_language": "spa_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "No entiendo lo que dices.",
+      "source_language": "spa_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁understand",
+        "▁what",
+        "▁you",
+        "'",
+        "re",
+        "▁saying",
+        "."
+      ],
+      "result": "I don't understand what you're saying."
+    },
+    {
+      "text": "No entiendo lo que dices.",
+      "source_language": "spa_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "言っている",
+        "ことは",
+        "理解",
+        "できない"
+      ],
+      "result": "言っていることは理解できない"
+    },
+    {
+      "text": "¿Nos vemos mañana por la noche?",
+      "source_language": "spa_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "'",
+        "ll",
+        "▁see",
+        "▁you",
+        "▁tomorrow",
+        "▁night",
+        "?"
+      ],
+      "result": "I'll see you tomorrow night?"
+    },
+    {
+      "text": "¿Nos vemos mañana por la noche?",
+      "source_language": "spa_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日の",
+        "夜",
+        "に",
+        "会",
+        "える",
+        "か",
+        "?"
+      ],
+      "result": "明日の夜に会えるか?"
+    },
+    {
+      "text": "Este mundo es precioso.",
+      "source_language": "spa_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁This",
+        "▁world",
+        "▁is",
+        "▁beautiful",
+        "."
+      ],
+      "result": "This world is beautiful."
+    },
+    {
+      "text": "Este mundo es precioso.",
+      "source_language": "spa_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界は",
+        "美しい"
+      ],
+      "result": "この世界は美しい"
+    },
+    {
+      "text": "Ciao, come stai?",
+      "source_language": "ita_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Ciao, come stai?",
+      "source_language": "ita_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        ",",
+        "どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは,どうですか?"
+    },
+    {
+      "text": "Non riesco a sentirti bene.",
+      "source_language": "ita_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁can",
+        "'",
+        "t",
+        "▁hear",
+        "▁you",
+        "."
+      ],
+      "result": "I can't hear you."
+    },
+    {
+      "text": "Non riesco a sentirti bene.",
+      "source_language": "ita_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "聞こ",
+        "えない",
+        "わ"
+      ],
+      "result": "聞こえないわ"
+    },
+    {
+      "text": "Ci vediamo domani sera?",
+      "source_language": "ita_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "'",
+        "ll",
+        "▁see",
+        "▁you",
+        "▁tomorrow",
+        "▁night",
+        "?"
+      ],
+      "result": "I'll see you tomorrow night?"
+    },
+    {
+      "text": "Ci vediamo domani sera?",
+      "source_language": "ita_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日の",
+        "夜",
+        "?"
+      ],
+      "result": "明日の夜?"
+    },
+    {
+      "text": "مرحبا، كيف حالك؟",
+      "source_language": "arb_Arab",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "مرحبا، كيف حالك؟",
+      "source_language": "arb_Arab",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "لا أفهم ما تقوله.",
+      "source_language": "arb_Arab",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁understand",
+        "▁what",
+        "▁you",
+        "'",
+        "re",
+        "▁saying",
+        "."
+      ],
+      "result": "I don't understand what you're saying."
+    },
+    {
+      "text": "لا أفهم ما تقوله.",
+      "source_language": "arb_Arab",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "分からない",
+        "わ"
+      ],
+      "result": "分からないわ"
+    },
+    {
+      "text": "هذا العالم جميل جدا.",
+      "source_language": "arb_Arab",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁This",
+        "▁world",
+        "▁is",
+        "▁so",
+        "▁beautiful",
+        "."
+      ],
+      "result": "This world is so beautiful."
+    },
+    {
+      "text": "هذا العالم جميل جدا.",
+      "source_language": "arb_Arab",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界は",
+        "とても",
+        "美しい"
+      ],
+      "result": "この世界はとても美しい"
+    },
+    {
+      "text": "สวัสดีครับ ยินดีที่ได้รู้จัก",
+      "source_language": "tha_Thai",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ".",
+        "▁Nice",
+        "▁to",
+        "▁meet",
+        "▁you",
+        "."
+      ],
+      "result": "Hi. Nice to meet you."
+    },
+    {
+      "text": "สวัสดีครับ ยินดีที่ได้รู้จัก",
+      "source_language": "tha_Thai",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁",
+        "初め",
+        "まして"
+      ],
+      "result": "こんにちは 初めまして"
+    },
+    {
+      "text": "พรุ่งนี้เล่นด้วยกันไหม",
+      "source_language": "tha_Thai",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Do",
+        "▁you",
+        "▁want",
+        "▁to",
+        "▁play",
+        "▁tomorrow",
+        "?"
+      ],
+      "result": "Do you want to play tomorrow?"
+    },
+    {
+      "text": "พรุ่งนี้เล่นด้วยกันไหม",
+      "source_language": "tha_Thai",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日は",
+        "一緒に",
+        "遊",
+        "んで",
+        "み",
+        "ませんか",
+        "?"
+      ],
+      "result": "明日は一緒に遊んでみませんか?"
+    },
+    {
+      "text": "ได้ยินเสียงผมไหมครับ",
+      "source_language": "tha_Thai",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Can",
+        "▁you",
+        "▁hear",
+        "▁me",
+        "?"
+      ],
+      "result": "Can you hear me?"
+    },
+    {
+      "text": "ได้ยินเสียงผมไหมครับ",
+      "source_language": "tha_Thai",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "聞こ",
+        "える",
+        "か",
+        "?"
+      ],
+      "result": "聞こえるか?"
+    },
+    {
+      "text": "Xin chào, bạn khỏe không?",
+      "source_language": "vie_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Hi, how are you?"
+    },
+    {
+      "text": "Xin chào, bạn khỏe không?",
+      "source_language": "vie_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Tôi không hiểu bạn nói gì.",
+      "source_language": "vie_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁know",
+        "▁what",
+        "▁you",
+        "'",
+        "re",
+        "▁saying",
+        "."
+      ],
+      "result": "I don't know what you're saying."
+    },
+    {
+      "text": "Tôi không hiểu bạn nói gì.",
+      "source_language": "vie_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁何",
+        "と言",
+        "ってる",
+        "か",
+        "分からない",
+        "."
+      ],
+      "result": "何と言ってるか分からない."
+    },
+    {
+      "text": "Thế giới này đẹp quá!",
+      "source_language": "vie_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁This",
+        "▁world",
+        "▁is",
+        "▁beautiful",
+        "!"
+      ],
+      "result": "This world is beautiful!"
+    },
+    {
+      "text": "Thế giới này đẹp quá!",
+      "source_language": "vie_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁この",
+        "世界は",
+        "美しい",
+        "!"
+      ],
+      "result": "この世界は美しい!"
+    },
+    {
+      "text": "Halo, apa kabar?",
+      "source_language": "ind_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Hi, how are you?"
+    },
+    {
+      "text": "Halo, apa kabar?",
+      "source_language": "ind_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Saya tidak mengerti apa yang kamu katakan.",
+      "source_language": "ind_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁understand",
+        "▁what",
+        "▁you",
+        "'",
+        "re",
+        "▁saying",
+        "."
+      ],
+      "result": "I don't understand what you're saying."
+    },
+    {
+      "text": "Saya tidak mengerti apa yang kamu katakan.",
+      "source_language": "ind_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "言っている",
+        "ことは",
+        "理解",
+        "できない",
+        "."
+      ],
+      "result": "言っていることは理解できない."
+    },
+    {
+      "text": "Besok malam kita main bersama, ya?",
+      "source_language": "ind_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Tomorrow",
+        "▁night",
+        "▁we",
+        "'",
+        "ll",
+        "▁play",
+        "▁together",
+        ",",
+        "▁okay",
+        "?"
+      ],
+      "result": "Tomorrow night we'll play together, okay?"
+    },
+    {
+      "text": "Besok malam kita main bersama, ya?",
+      "source_language": "ind_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁明",
+        "日の",
+        "夜",
+        "▁一緒",
+        "に",
+        "遊",
+        "んで",
+        "しょ",
+        "?"
+      ],
+      "result": "明日の夜 一緒に遊んでしょ?"
+    },
+    {
+      "text": "Merhaba, nasılsın?",
+      "source_language": "tur_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Merhaba, nasılsın?",
+      "source_language": "tur_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Seni duyamıyorum.",
+      "source_language": "tur_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁can",
+        "'",
+        "t",
+        "▁hear",
+        "▁you",
+        "."
+      ],
+      "result": "I can't hear you."
+    },
+    {
+      "text": "Seni duyamıyorum.",
+      "source_language": "tur_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "聞こ",
+        "えない"
+      ],
+      "result": "聞こえない"
+    },
+    {
+      "text": "Привіт, як справи?",
+      "source_language": "ukr_Cyrl",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Hi, how are you?"
+    },
+    {
+      "text": "Привіт, як справи?",
+      "source_language": "ukr_Cyrl",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Я тебе не розумію.",
+      "source_language": "ukr_Cyrl",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁don",
+        "'",
+        "t",
+        "▁understand",
+        "▁you",
+        "."
+      ],
+      "result": "I don't understand you."
+    },
+    {
+      "text": "Я тебе не розумію.",
+      "source_language": "ukr_Cyrl",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "分からない",
+        "."
+      ],
+      "result": "分からない."
+    },
+    {
+      "text": "Cześć, jak się masz?",
+      "source_language": "pol_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Cześć, jak się masz?",
+      "source_language": "pol_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Nie słyszę cię dobrze.",
+      "source_language": "pol_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁can",
+        "'",
+        "t",
+        "▁hear",
+        "▁you",
+        "."
+      ],
+      "result": "I can't hear you."
+    },
+    {
+      "text": "Nie słyszę cię dobrze.",
+      "source_language": "pol_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "聞こ",
+        "えない",
+        "わ"
+      ],
+      "result": "聞こえないわ"
+    },
+    {
+      "text": "नमस्ते, आप कैसे हैं?",
+      "source_language": "hin_Deva",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Hi, how are you?"
+    },
+    {
+      "text": "नमस्ते, आप कैसे हैं?",
+      "source_language": "hin_Deva",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        ",",
+        "どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは,どうですか?"
+    },
+    {
+      "text": "मुझे समझ नहीं आया।",
+      "source_language": "hin_Deva",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁I",
+        "▁didn",
+        "'",
+        "t",
+        "▁understand",
+        "."
+      ],
+      "result": "I didn't understand."
+    },
+    {
+      "text": "मुझे समझ नहीं आया।",
+      "source_language": "hin_Deva",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁",
+        "分かり",
+        "ませんでした"
+      ],
+      "result": "分かりませんでした"
+    },
+    {
+      "text": "Hallo, hoe gaat het met je?",
+      "source_language": "nld_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Hallo, hoe gaat het met je?",
+      "source_language": "nld_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        ",",
+        "どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは,どうですか?"
+    },
+    {
+      "text": "Hej, hur mår du?",
+      "source_language": "swe_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Hej, hur mår du?",
+      "source_language": "swe_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Γεια σου, τι κάνεις;",
+      "source_language": "ell_Grek",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Γεια σου, τι κάνεις;",
+      "source_language": "ell_Grek",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "な",
+        "ってる",
+        "の",
+        "?"
+      ],
+      "result": "こんにちは どうなってるの?"
+    },
+    {
+      "text": "שלום, מה שלומך?",
+      "source_language": "heb_Hebr",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hi",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Hi, how are you?"
+    },
+    {
+      "text": "שלום, מה שלומך?",
+      "source_language": "heb_Hebr",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        ",",
+        "どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは,どうですか?"
+    },
+    {
+      "text": "Hei, mitä kuuluu?",
+      "source_language": "fin_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Hei, mitä kuuluu?",
+      "source_language": "fin_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Ahoj, jak se máš?",
+      "source_language": "ces_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Ahoj, jak se máš?",
+      "source_language": "ces_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Szia, hogy vagy?",
+      "source_language": "hun_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hey",
+        ",",
+        "▁how",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "Hey, how you doing?"
+    },
+    {
+      "text": "Szia, hogy vagy?",
+      "source_language": "hun_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    },
+    {
+      "text": "Kumusta ka?",
+      "source_language": "tgl_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁How",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "How are you?"
+    },
+    {
+      "text": "Kumusta ka?",
+      "source_language": "tgl_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁どう",
+        "な",
+        "ってる",
+        "?"
+      ],
+      "result": "どうなってる?"
+    },
+    {
+      "text": "Apa khabar?",
+      "source_language": "zsm_Latn",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁How",
+        "▁you",
+        "▁doing",
+        "?"
+      ],
+      "result": "How you doing?"
+    },
+    {
+      "text": "Apa khabar?",
+      "source_language": "zsm_Latn",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁どう",
+        "な",
+        "ってる",
+        "?"
+      ],
+      "result": "どうなってる?"
+    },
+    {
+      "text": "হ্যালো, আপনি কেমন আছেন?",
+      "source_language": "ben_Beng",
+      "target_language": "eng_Latn",
+      "hypothesis": [
+        "eng_Latn",
+        "▁Hello",
+        ",",
+        "▁how",
+        "▁are",
+        "▁you",
+        "?"
+      ],
+      "result": "Hello, how are you?"
+    },
+    {
+      "text": "হ্যালো, আপনি কেমন আছেন?",
+      "source_language": "ben_Beng",
+      "target_language": "jpn_Jpan",
+      "hypothesis": [
+        "jpn_Jpan",
+        "▁こ",
+        "んに",
+        "ち",
+        "は",
+        "▁どう",
+        "ですか",
+        "?"
+      ],
+      "result": "こんにちは どうですか?"
+    }
+  ]
+}

@@ -17,9 +17,11 @@ fn main() {
     let third_party = Path::new(env!("CARGO_MANIFEST_DIR")).join("../third_party/ctranslate2");
     let dll_dir = env::var_os("CT2_DLL_DIR").map(PathBuf::from).unwrap_or_else(|| third_party.clone());
     let include_dir = env::var_os("CT2_INCLUDE_DIR").map(PathBuf::from).unwrap_or_else(|| third_party.join("include"));
+    // whole folders: an added DLL or a changed header also reruns this
+    println!("cargo:rerun-if-changed={}", dll_dir.display());
+    println!("cargo:rerun-if-changed={}", include_dir.display());
     let dll_path = dll_dir.join("ctranslate2.dll");
     assert!(dll_path.is_file(), "{} not found: run `cargo xtask fetch-native` in native/", dll_path.display());
-    println!("cargo:rerun-if-changed={}", dll_path.display());
     let out = PathBuf::from(env::var("OUT_DIR").unwrap());
     let target = env::var("TARGET").unwrap();
 
@@ -58,12 +60,17 @@ fn main() {
 
     // OUT_DIR = target/<profile>/build/vrct-ct2-<hash>/out
     let profile_dir = out.ancestors().nth(3).unwrap();
-    for dir in [profile_dir.to_path_buf(), profile_dir.join("deps")] {
-        for entry in std::fs::read_dir(&dll_dir).unwrap().flatten() {
-            let path = entry.path();
-            if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("dll")) {
+    let dirs = [profile_dir.to_path_buf(), profile_dir.join("deps")];
+    for entry in std::fs::read_dir(&dll_dir).unwrap().flatten() {
+        let path = entry.path();
+        if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("dll")) {
+            let source_len = entry.metadata().unwrap().len();
+            let source = std::cell::LazyCell::new(|| std::fs::read(&path).unwrap());
+            for dir in &dirs {
                 let dest = dir.join(entry.file_name());
-                let stale = std::fs::metadata(&dest).map(|d| d.len() != entry.metadata().unwrap().len()).unwrap_or(true);
+                let stale = std::fs::metadata(&dest).map_or(true, |d| {
+                    d.len() != source_len || std::fs::read(&dest).unwrap() != *source
+                });
                 if stale {
                     std::fs::copy(&path, &dest).unwrap();
                 }
