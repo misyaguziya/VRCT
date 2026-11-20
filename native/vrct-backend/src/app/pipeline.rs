@@ -105,7 +105,7 @@ pub fn load_ctranslate2(app: &App) -> Result<()> {
     let (name, index) = (device["device"].as_str().unwrap_or("cpu").to_string(), device["device_index"].as_i64().unwrap_or(0));
     let mut compute_type = app.config.get_str("SELECTED_TRANSLATION_COMPUTE_TYPE");
     if compute_type == "auto" {
-        compute_type = crate::compute::best_compute_type(&name, index as usize);
+        compute_type = crate::compute::best_compute_type(&device).into();
     }
     let mut translator = app.model.translator.write().unwrap();
     translator.ctranslate2 = None;

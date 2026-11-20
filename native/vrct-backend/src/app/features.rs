@@ -554,7 +554,7 @@ pub fn update_cuda_software(app: &App, data: Data) -> Result<Reply> {
 /// ctranslate2.Translator(path, compute_type=getBestComputeType("cpu", 0)) loads
 fn ct2_loads(path: &std::path::Path) -> bool {
     let config = vrct_ct2::ModelConfig { device: "cpu".into(), device_index: 0,
-                                         compute_type: crate::compute::best_compute_type("cpu", 0),
+                                         compute_type: vrct_ct2::best_compute_type("cpu", 0, "cpu").into(),
                                          inter_threads: 1, intra_threads: 0 };
     vrct_ct2::Translator::new(path, &config).is_ok()
 }

@@ -1,5 +1,5 @@
-//! cargo xtask fetch-native [--cuda]
-//! cargo xtask stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <weights folder>]
+//! cargo xtask fetch-native [--cuda | --amd]
+//! cargo xtask stage-sidecar --out <dir> [--release] [--cuda | --amd] [--exe-name <name>] [--weights <weights folder>]
 //!   (the installed layout; --weights makes a junction: the sidecar reads the weights from beside it)
 //! cargo xtask release-zip --out <zip>
 //!   (VRCT.exe, VRCT-sidecar.exe and _internal/ of src-tauri/target/release, for the updater: the layout of the installed folder)
@@ -32,6 +32,12 @@ struct Entry {
     sha256: String,
     #[serde(default)]
     cuda: bool,
+    #[serde(default)]
+    amd: bool,
+    /// A wheel inside the downloaded zip (ROCm CT2).
+    nested_wheel: Option<String>,
+    /// Keep file paths relative to this wheel directory (ROCm BLAS kernels).
+    relative_to: Option<String>,
     headers_url: Option<String>,
     headers_sha256: Option<String>,
     headers_dir: Option<String>,
@@ -41,6 +47,16 @@ struct Entry {
     /// ... or one license file to download (when the package has none)
     license_url: Option<String>,
     license_sha256: Option<String>,
+    /// Component notices when a binary package omits the license texts.
+    #[serde(default)]
+    notices: Vec<Notice>,
+}
+
+#[derive(Deserialize)]
+struct Notice {
+    name: String,
+    url: String,
+    sha256: String,
 }
 
 fn native_dir() -> PathBuf {
@@ -98,15 +114,23 @@ fn matches(pattern: &str, name: &str) -> bool {
     }
 }
 
-fn extract_wheel(wheel: &Path, files: &[String], dest: &Path) -> Result<()> {
+fn extract_wheel(wheel: &Path, files: &[String], dest: &Path, relative_to: Option<&str>) -> Result<()> {
     let mut zip = zip::ZipArchive::new(fs::File::open(wheel)?)?;
     let mut found = vec![false; files.len()];
     for i in 0..zip.len() {
         let mut member = zip.by_index(i)?;
+        if member.is_dir() {
+            continue;
+        }
         let name = member.name().to_string();
         let Some(k) = files.iter().position(|p| matches(p, &name)) else { continue };
         found[k] = true;
-        let out = dest.join(Path::new(&name).file_name().unwrap());
+        let path = member.enclosed_name().context("invalid archive path")?;
+        let out = match relative_to {
+            Some(prefix) => dest.join(path.strip_prefix(prefix)?),
+            None => dest.join(path.file_name().context("missing archive filename")?),
+        };
+        fs::create_dir_all(out.parent().unwrap())?;
         let mut f = fs::File::create(&out)?;
         std::io::copy(&mut member, &mut f)?;
         println!("  {}", out.display());
@@ -176,18 +200,20 @@ fn extract_headers(tarball: &Path, dir: &str, dest: &Path) -> Result<()> {
     Ok(())
 }
 
-fn fetch_native(cuda: bool) -> Result<()> {
+fn fetch_native(cuda: bool, amd: bool) -> Result<()> {
     let native = native_dir();
     let table: BTreeMap<String, Entry> = toml::from_str(&fs::read_to_string(native.join("third_party.toml"))?)?;
     let root = native.join("third_party");
     let cache = root.join(".cache");
     fs::create_dir_all(&cache)?;
     for (name, e) in &table {
-        if e.cuda && !cuda {
+        if (e.cuda && !cuda) || (e.amd && !amd) {
             continue;
         }
         println!("{name} {}", e.version);
-        let dest = root.join(name);
+        // A failed notice download must not leave a half-fetched AMD package available to stage.
+        let installed = root.join(name);
+        let dest = if e.amd { cache.join(format!("{name}.unpacking")) } else { installed.clone() };
         if dest.exists() {
             fs::remove_dir_all(&dest)?; // stale files of an older version must not stay
         }
@@ -199,32 +225,48 @@ fn fetch_native(cuda: bool) -> Result<()> {
             None
         } else if let Some(url) = &e.url {
             let archive = url.rsplit('/').next().unwrap_or("archive.zip");
-            let cached = fetch(url, &format!("{name}-{}-{archive}", e.version), &e.sha256, &cache)?;
+            let mut cached = fetch(url, &format!("{name}-{}-{archive}", e.version), &e.sha256, &cache)?;
+            if let Some(member) = &e.nested_wheel {
+                let mut zip = zip::ZipArchive::new(fs::File::open(&cached)?)?;
+                let mut wheel = zip.by_name(member)?;
+                cached = cache.join(format!("{name}-{}.whl", e.version));
+                std::io::copy(&mut wheel, &mut fs::File::create(&cached)?)?;
+            }
             if archive.ends_with(".7z") {
                 extract_7z(&cached, &e.files, &dest)?;
             } else {
-                extract_wheel(&cached, &e.files, &dest)?;
+                extract_wheel(&cached, &e.files, &dest, e.relative_to.as_deref())?;
             }
             Some(cached)
         } else {
             let url = wheel_url(name, &e.version, &e.wheel)?;
             let wheel = fetch(&url, &e.wheel, &e.sha256, &cache)?;
-            extract_wheel(&wheel, &e.files, &dest)?;
+            extract_wheel(&wheel, &e.files, &dest, None)?;
             Some(wheel)
         };
-        if !e.licenses.is_empty() || e.license_url.is_some() {
+        if !e.licenses.is_empty() || e.license_url.is_some() || !e.notices.is_empty() {
             fs::create_dir_all(dest.join("licenses"))?;
         }
         if !e.licenses.is_empty() {
-            extract_wheel(archive.as_deref().context("licenses need a wheel or zip")?, &e.licenses, &dest.join("licenses"))?;
+            extract_wheel(archive.as_deref().context("licenses need a wheel or zip")?, &e.licenses, &dest.join("licenses"), None)?;
         }
         if let (Some(url), Some(sha)) = (&e.license_url, &e.license_sha256) {
             let cached = fetch(url, &format!("{name}-{}-LICENSE", e.version), sha, &cache)?;
             fs::copy(&cached, dest.join("licenses").join("LICENSE"))?;
         }
+        for notice in &e.notices {
+            let cached = fetch(&notice.url, &format!("{name}-{}-{}", e.version, notice.name), &notice.sha256, &cache)?;
+            fs::copy(cached, dest.join("licenses").join(&notice.name))?;
+        }
         if let (Some(url), Some(sha), Some(dir)) = (&e.headers_url, &e.headers_sha256, &e.headers_dir) {
             let tarball = fetch(url, &format!("{name}-{}-headers.tar.gz", e.version), sha, &cache)?;
             extract_headers(&tarball, dir, &dest)?;
+        }
+        if e.amd {
+            if installed.exists() {
+                fs::remove_dir_all(&installed)?;
+            }
+            fs::rename(dest, installed)?;
         }
     }
     Ok(())
@@ -279,14 +321,27 @@ fn copy_dlls(from: &Path, dest: &Path) -> Result<()> {
     Ok(())
 }
 
-/// The sidecar as it is installed: `<exe_name>` and `_internal` with the DLLs (CUDA's with --cuda),
+/// The sidecar as installed: `<exe_name>` and `_internal` (CUDA DLLs with --cuda, ct2-rocm/ with --amd),
 /// the translators' settings, SudachiPy's resources and dictionary, the overlay's fonts, Silero VAD
 /// and the OCR models. Everything but the repository's files comes from fetch-native.
-fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights: Option<PathBuf>) -> Result<()> {
+fn stage_sidecar(out: &Path, release: bool, cuda: bool, amd: bool, exe_name: &str, weights: Option<PathBuf>) -> Result<()> {
     let native = native_dir();
     let built = native.join("target").join(if release { "release" } else { "debug" });
     let third_party = native.join("third_party");
     let data = native.join("data");
+    if amd {
+        for file in ["ctranslate2-rocm/ctranslate2.dll", "rocm-libraries/hipblas.dll", "rocm-libraries/rocsolver.dll",
+                     "rocm-libraries/rocblas.dll", "rocm-libraries/libhipblaslt.dll"] {
+            if !third_party.join(file).is_file() {
+                bail!("missing {file}: run cargo xtask fetch-native --amd");
+            }
+        }
+        for dir in ["rocm-libraries/rocblas/library", "rocm-libraries/hipblaslt/library"] {
+            if !third_party.join(dir).is_dir() {
+                bail!("missing {dir}: run cargo xtask fetch-native --amd");
+            }
+        }
+    }
     fs::create_dir_all(out)?;
     // a fresh _internal; the files of the flat layout staged before go too (config.json, the logs
     // and the weights stay)
@@ -311,6 +366,16 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     }
     for dir in dll_dirs {
         copy_dlls(&third_party.join(dir), &internal)?;
+    }
+    if amd {
+        let rocm = internal.join("ct2-rocm");
+        fs::create_dir_all(&rocm)?;
+        let libraries = third_party.join("rocm-libraries");
+        copy_dlls(&third_party.join("ctranslate2-rocm"), &rocm)?;
+        copy_dlls(&libraries, &rocm)?;
+        for dir in ["rocblas", "hipblaslt"] {
+            copy_dir(&libraries.join(dir), &rocm.join(dir))?;
+        }
     }
     copy_dir(&data.join("translation_settings"), &internal.join("translation_settings"))?;
     copy_dir(&data.join("fonts"), &internal.join("fonts"))?;
@@ -342,7 +407,7 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     for entry in fs::read_dir(&third_party)? {
         let path = entry?.path();
         let name = path.file_name().unwrap().to_string_lossy().to_string();
-        if !cuda && name.starts_with("nvidia-") {
+        if (!cuda && name.starts_with("nvidia-")) || (!amd && matches!(name.as_str(), "ctranslate2-rocm" | "rocm-libraries")) {
             continue;
         }
         if path.join("licenses").is_dir() {
@@ -489,11 +554,16 @@ fn arg(args: &[String], flag: &str) -> Option<String> {
 
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    let cuda = args.iter().any(|a| a == "--cuda");
+    let amd = args.iter().any(|a| a == "--amd");
+    if cuda && amd {
+        bail!("--cuda and --amd are mutually exclusive");
+    }
     match args.first().map(String::as_str) {
-        Some("fetch-native") => fetch_native(args.iter().any(|a| a == "--cuda")),
+        Some("fetch-native") => fetch_native(cuda, amd),
         Some("stage-sidecar") => stage_sidecar(&PathBuf::from(arg(&args, "--out").context("--out <dir>")?),
                                                args.iter().any(|a| a == "--release"),
-                                               args.iter().any(|a| a == "--cuda"),
+                                               cuda, amd,
                                                &arg(&args, "--exe-name").unwrap_or_else(|| "VRCT-sidecar.exe".into()),
                                                arg(&args, "--weights").map(PathBuf::from)),
         Some("release-zip") => {
@@ -505,6 +575,6 @@ fn main() -> Result<()> {
             args.get(1).context("<repo>")?,
             &arg(&args, "--revision").unwrap_or_else(|| "main".into()),
             arg(&args, "--only").map(|o| o.split(',').map(String::from).collect())),
-        _ => bail!("usage: cargo xtask fetch-native [--cuda] | stage-sidecar --out <dir> [--release] [--cuda] [--exe-name <name>] [--weights <dir>] | release-zip --out <zip> | model-catalog-files <repo> [--revision <rev>] [--only a,b]"),
+        _ => bail!("usage: cargo xtask fetch-native [--cuda | --amd] | stage-sidecar --out <dir> [--release] [--cuda | --amd] [--exe-name <name>] [--weights <dir>] | release-zip --out <zip> | model-catalog-files <repo> [--revision <rev>] [--only a,b]"),
     }
 }

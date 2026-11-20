@@ -322,25 +322,20 @@ VRCT の方が良い点（残す）: SteamVR の交差判定とマウス座標�
 
 - CT2 4.9.0 で、Radeon RX 7800 XT（gfx1101）・RX 7900 XTX（gfx1100）・RX 9070 XT（gfx1201）の ROCm 版と、GeForce RTX 2080 Ti の CUDA 版が、同じ 11 ケース（Whisper large-v3-turbo と NLLB 600M。GPU の float16 / int8_float16、CPU int8、同じモデルへの 2 スレッド同時）・ウォームアップ込み 48 回の推論に成功。
 - RX 7900 XTX で旧版に出た `LLVM ERROR: Can't get available size`（0xC0000409）は、ROCm COMGR のキャッシュ整理が非 ASCII のパスを扱えないことが最有力の原因。`AMD_COMGR_CACHE=0` を DLL の読み込みより前に設定した 0.3.1 では起きなかった（対照試験ではないので、恒久的な解決の証明とはしない）。
-- HIP SDK は利用者の PC に要らない（HIP ランタイムはドライバ由来、hipBLAS などは同梱物で動いた）。
+- 検証ツールは HIP SDK 7.2 から取り出した DLL とカーネルを同梱し、協力者の PC に SDK をインストールせずに動いた。
 - まだ: 本体に組み込んだ後の 4.6 → 4.9 の回帰、モデルの解放・再読み込みと VRAM の解放、Whisper と翻訳の同時常駐、長時間・多言語・実音声。
 
 ### 設計
 
-#### 1. エディション: CPU 版・CUDA 版・AMD 版の 3 つ（ビルドで分ける）
+#### 1. 3 つのエディションで同じサイドカーを使う
 
-CUDA 版と ROCm 版はどちらも `ctranslate2.dll` という名前で、1 つのプロセスに両方は入らない。**今の CPU 版・CUDA 版と同じく、ビルドと配布物で分ける。** 実行時に DLL を切り替える仕組みは作らない。
+| 配布物 | `_internal` の構成 |
+|---|---|
+| CPU 版 | PyPI の CT2 4.9.0 と共通の DLL・データ |
+| CUDA 版 | CPU 版に cuBLAS 12 と cuDNN 9 を追加 |
+| AMD 版 | CPU 版に `ct2-rocm/` を追加 |
 
-| | CPU 版 | CUDA 版 | AMD 版（新） |
-|---|---|---|---|
-| CT2 | 4.9.0（PyPI の wheel） | 4.9.0（PyPI の wheel） | 4.9.0（上流の ROCm 用 wheel） |
-| 同梱 | — | cuBLAS 12 / cuDNN 9（今と同じ） | hipBLAS・rocBLAS・hipBLASLt とカーネル（AMD 公式の ROCm 7.2 の wheel から）。HIP ランタイムはドライバのもの |
-| 増える大きさ | — | 今と同じ | 約 0.95GB（CT2 113MB、DLL 約 40MB、カーネル約 780MB。RDNA3 / RDNA3.5 / RDNA4 の分） |
-| ビルド | `build` | `build-cuda` | `build-amd`（新） |
-| 配布 | `VRCT.zip` | `VRCT_cuda.zip` | `VRCT_amd.zip`（新） |
-
-- エディションは、ビルドのときに決まる 1 つの定数（cargo の feature `amd`）で分ける。コードは 1 つ。
-- CPU 版と CUDA 版は今と同じく同じ `ctranslate2.dll` を使う（CUDA 版は cuBLAS・cuDNN を足すだけ）。
+AMD 版は起動時に System32 の `amdhip64_7.dll` を確認し、`ct2-rocm/ctranslate2.dll` を絶対パスで先に読み込む。以降の CT2 呼び出しはその DLL を使う。どちらかの読み込みに失敗したら、理由を `process.log` に残し、通常の `_internal/ctranslate2.dll` で起動する。実行ファイルは全版共通。
 
 #### 2. CT2 を 4.6.0 から 4.9.0 に上げる（全エディション）
 
@@ -354,28 +349,24 @@ CUDA 版と ROCm 版はどちらも `ctranslate2.dll` という名前で、1 つ
   - 速さ: 推論照合の所要時間（CPU と CUDA の合計）は 4.6 と同程度（NLLB 238 秒 → 221〜240 秒、Whisper 107 秒 → 98〜106 秒）。
   - 読み直し: CUDA で NLLB の読み込み・解放を 5 回繰り返して落ちない。解放後の VRAM の増え方（1 回あたり約 8MiB）は 4.6 と同じ。読み込み中の VRAM は 4.9 の方が約 250MiB 多い（約 900MiB、4.6 は約 640MiB）。
 
-#### 3. AMD 版のサイドカーの起動: `AMD_COMGR_CACHE=0`
+#### 3. COMGR のキャッシュ
 
-- AMD 版のサイドカーは、`main` の最初（スレッドを作る前、`vrct_ct2::redirect_stderr()` より前）で、自分の環境変数に `AMD_COMGR_CACHE=0` を設定する。CT2 と HIP の DLL は遅延読み込みなので、その後に読み込まれる COMGR はこの値を見る。
-- Windows の永続的な環境変数は変えない。
-- 設定した値と、HIP の DLL を読み込む前に設定できたことを `process.log` に記録する（標準エラーに書くと UI のエラー通知に流れるので書かない。標準出力の JSON も壊さない）。
-- 親（Tauri）から渡す案もあるが、単体起動・テスト・開発用の起動でも同じになるよう、サイドカー自身で設定する。
+全版で `main` の最初にプロセス内の `AMD_COMGR_CACHE=0` を設定する。値と、設定時に HIP と CT2 が未ロードだったかを `process.log` に記録する。
 
-#### 4. GPU の列挙と計算の型（`compute.rs`）
+#### 4. GPU の列挙と計算の型
 
-- AMD 版は `nvcuda.dll` と cuBLAS の代わりに、`amdhip64_7.dll` で GPU を数え、名前と architecture（gfx1100 など）を取る。CT2 に渡す device 名は AMD でも `"cuda"` のまま。
-- 端末の一覧（`/get/data/selectable_transcription_compute_device_list` と `selectable_translation_compute_device_list` の要素）に `"vendor": "nvidia" | "amd"` を足す。既存のキーと値は変えない（UI は今のまま動く）。
-- NVIDIA の名前で決める分岐（GTX は float16 なし、RTX / Tesla 以外は float32 だけ）は Radeon に当てはめない。
-- AMD の「自動」で選ぶ計算の型は、実機で確かめた順に **float16 → int8_float16 → int8_float32 → float32**（bfloat16 系は能力にあっても既定にしない）。実機の中央値では float16 の方が速かった。
-- `COMPUTE_MODE` は AMD 版で Radeon が見つかったとき `"amd"` にする（今は `"cuda"` / `"cpu"`）。UI は `=== "cuda"` で判定しているので、今のままなら AMD 版は CUDA と表示されない。
+ROCm 版 CT2 の読み込み後、`ROCBLAS_TENSILE_LIBPATH` と `HIPBLASLT_TENSILE_LIBPATH` を exe からの相対パス `_internal\ct2-rocm\rocblas\library` と `_internal\ct2-rocm\hipblaslt\library` で上書きする。
 
-#### 5. 配布物をそろえる（`xtask`）
+CT2 で GPU を数え、HIP の `hipDeviceGetName` で名前を、`hipGetDevicePropertiesR0600` で gfx 名を取る。同梱の両ライブラリが対応する Radeon だけを一覧に載せ、CT2 に渡すデバイス名は `cuda`、番号は元の HIP デバイス番号とする。各 GPU の gfx 名と採否は `process.log` に残す。翻訳・文字起こしのデバイス一覧は GPU に `vendor`（`amd` / `nvidia`）を持つ。AMD 版の `COMPUTE_MODE` は使える Radeon があれば `amd`、なければ `cpu`。
 
-- `cargo xtask fetch-native --amd`: ROCm 版の CT2 と、AMD 公式の ROCm 7.2 の wheel（`https://repo.radeon.com/rocm/windows/rocm-rel-7.2/` の `rocm_sdk_libraries_custom-7.2.0.dev0`）から `hipblas.dll`・`rocblas.dll`・`libhipblaslt.dll` とカーネル（`rocblas/library`・`hipblaslt/library` の gfx110x / gfx115x / gfx120x）・ライセンスを取る。版と SHA-256 は `third_party.toml` に固定する（今の CUDA 版が PyPI から cuBLAS・cuDNN を取るのと同じ形）。VRCT 独自の置き場は作らない。
-  - HIP ランタイム（`amdhip64_7.dll`）は Adrenalin ドライバが `System32` に入れるものを使い、同梱しない（CUDA 版が `nvcuda.dll` をドライバに頼るのと同じ。Ollama も同じ形）。ドライバが古くて無いときは、AMD 版でも CPU で動き、ドライバの更新を促すログを出す。
-  - 検証ツールで確かめたのは HIP SDK 7.2 のインストーラーから取った組み合わせ（`amd_comgr_3.dll`・`hipblaslt.dll` など）で、公式の wheel の組み合わせ（`amd_comgr0702.dll`・`libhipblaslt.dll` など、名前が違う）とは別物。**公式の wheel の組み合わせとドライバのランタイムで、検証ツールを作り直して RDNA3 / RDNA4 でもう一度確かめる。**`AMD_COMGR_CACHE=0` が効くことも、この組み合わせで確かめ直す。
-- `cargo xtask stage-sidecar --amd`: `rocblas/library`・`hipblaslt/library` の並びを保って `_internal` に置く。DLL を探す場所は `_internal` だけにし、PATH や別のアプリの DLL を拾わない。実際に読み込んだ DLL の場所を `process.log` に残す。
-- 検証用の zip（比較用のエンジン・モデル入り）は製品に入れない。
+Radeon の選択肢は CT2 が報告した型と `auto`。自動選択は float16 → int8_float16 → int8_float32 → float32 の順で、最初に対応する型を使う。
+
+#### 5. AMD 版の配布物
+
+- `cargo xtask fetch-native --amd` で CT2 の Windows zip（194,022,876 バイト）と AMD の wheel（492,439,790 バイト）を取得する。CT2 は zip 内の cp311 wheel を使う。SHA-256 は `third_party.toml` に固定した。[CT2 v4.9.0 ROCm 版](https://github.com/OpenNMT/CTranslate2/releases/download/v4.9.0/rocm-python-wheels-Windows.zip)・[AMD 公式 ROCm 7.2 wheel](https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm_sdk_libraries_custom-7.2.0.dev0-py3-none-win_amd64.whl)
+- `cargo xtask stage-sidecar --out target\sidecar-stage-amd --release --amd` で追加する `_internal/ct2-rocm/` は 975.11 MiB。内訳は CT2 と BLAS 関連の DLL 5 本（222.97 MiB）、`rocblas/library/`（117.75 MiB）、`hipblaslt/library/`（634.39 MiB）。hipBLAS が使う rocSOLVER も同じ wheel から取る。対象は gfx110x、gfx115x、gfx120x。
+- HIP と COMGR は Adrenalin ドライバのものを使う。OpenMP は共通の `_internal/libiomp5md.dll` を使う。どちらの wheel にもライセンス本文がないため、同じ版の公式ソースから本文を取り、wheel の dist-info の METADATA と一緒に `_internal/licenses/` に置く。
+- 検証ツール 0.3.1 に同梱した HIP SDK と今回の wheel では DLL の構成が異なる。今回の配布物とドライバでの推論は RDNA3 と RDNA4 の実機で確認する。
 
 #### 6. インストーラー・アップデーター・UI
 
@@ -391,7 +382,7 @@ CUDA 版と ROCm 版はどちらも `ctranslate2.dll` という名前で、1 つ
 ### 進める順番
 
 1. **CT2 4.9.0 への更新**（全エディション共通）。この PC の CPU と NVIDIA で回帰を確かめる（文字起こし・翻訳の結果、契約テスト、速さ、モデルの読み直し）。
-2. **AMD 版のビルドと起動**（feature `amd`、`AMD_COMGR_CACHE`、HIP での列挙、計算の型、`fetch-native` / `stage-sidecar --amd`）。この PC では AMD 版が「Radeon が無い」と CPU で正しく動くところまでを確かめる。並行して、検証ツールを公式の wheel の組み合わせとドライバのランタイムで作り直し、RDNA3 / RDNA4 の協力者にもう一度回してもらう。
+2. **AMD 版のビルドと起動**（共通の exe と `ct2-rocm/`、CPU への切り替え、GPU の列挙と計算の型）。この PC では AMD 版が「Radeon が無い」と CPU で正しく動くところまでを確かめる。並行して、検証ツールを公式の wheel の組み合わせとドライバのランタイムで作り直し、RDNA3 / RDNA4 の協力者にもう一度回してもらう。
 3. **インストーラー・アップデーター**と、UI の引き継ぎ文書。
 4. **AMD の実機での受け入れ**（協力者）: AMD 版の VRCT を入れて、文字起こし・翻訳が GPU で動くこと、モデルの読み直し・VRAM の解放、Whisper と翻訳の同時利用、長時間、GPU を使えないときに CPU に戻ること。RDNA3 と RDNA4 をそれぞれ 1 台以上。
 

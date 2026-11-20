@@ -1,5 +1,5 @@
 # バックエンドが同梱するネイティブライブラリ。今の Python 版と同じバイナリを、同じ版の wheel から取り出す。
-# `cargo xtask fetch-native [--cuda]` が native/third_party/<name>/ に置く (git 管理外)。
+# `cargo xtask fetch-native [--cuda | --amd]` が native/third_party/<name>/ に置く (git 管理外)。
 #
 # 版を上げるとき: version / wheel / sha256 を書き換える (sha256 は PyPI の JSON の digests.sha256)
 # → fetch-native → ビルド → 回帰テスト。CTranslate2 はヘッダーも同じ版のタグに合わせる。
@@ -17,6 +17,75 @@ headers_sha256 = "f00d80d10d6ca46b310fa68fa23d36fb34b9cfc6758b6ae5242b3ba89e67a6
 headers_dir = "CTranslate2-4.9.0/include/"
 license_url = "https://raw.githubusercontent.com/OpenNMT/CTranslate2/v4.9.0/LICENSE"
 license_sha256 = "54aa79d9fe3c09e67a16dcd95b9e88676405a6ec174efda31036983cf7672ecb"
+
+[ctranslate2-rocm]
+version = "4.9.0"
+amd = true
+url = "https://github.com/OpenNMT/CTranslate2/releases/download/v4.9.0/rocm-python-wheels-Windows.zip"
+sha256 = "99cbc7210f035d04ed2f38aa653e79b2b1dcc90cb7503af72d880785b66b7f84"
+nested_wheel = "temp-windows/ctranslate2-4.9.0-cp311-cp311-win_amd64.whl"
+files = ["ctranslate2/ctranslate2.dll"]
+# dist-info は MIT の指定のみ。本文は CPU 版と同じタグから取る。
+licenses = ["ctranslate2-4.9.0.dist-info/METADATA"]
+license_url = "https://raw.githubusercontent.com/OpenNMT/CTranslate2/v4.9.0/LICENSE"
+license_sha256 = "54aa79d9fe3c09e67a16dcd95b9e88676405a6ec174efda31036983cf7672ecb"
+
+[[ctranslate2-rocm.notices]]
+name = "hipcub-LICENSE.txt"
+url = "https://raw.githubusercontent.com/ROCm/rocm-libraries/5b515cf1bca9959fb434c2414cf79b42fe25e93b/projects/hipcub/LICENSE.txt"
+sha256 = "af1b0bce89e2ab523e43a09ddb8a2e52838e8d772fe89d4c29e86965cb627bc1"
+
+[[ctranslate2-rocm.notices]]
+name = "spdlog-LICENSE"
+url = "https://raw.githubusercontent.com/gabime/spdlog/76fb40d95455f249bd70824ecfcae7a8f0930fa3/LICENSE"
+sha256 = "a7241a379cb98d37788f82c2fc2e484c3ae85dae881fd3406f0637644850926f"
+
+[rocm-libraries]
+version = "7.2.0.dev0"
+amd = true
+url = "https://repo.radeon.com/rocm/windows/rocm-rel-7.2/rocm_sdk_libraries_custom-7.2.0.dev0-py3-none-win_amd64.whl"
+sha256 = "29a155b8f0da7b4ea05481ba665dc08749462a66bfc7cee27a6976bdea41f0cc"
+relative_to = "_rocm_sdk_libraries_custom/bin"
+files = [
+  "_rocm_sdk_libraries_custom/bin/hipblas.dll",
+  "_rocm_sdk_libraries_custom/bin/rocsolver.dll",
+  "_rocm_sdk_libraries_custom/bin/rocblas.dll",
+  "_rocm_sdk_libraries_custom/bin/libhipblaslt.dll",
+  "_rocm_sdk_libraries_custom/bin/rocblas/library/*",
+  "_rocm_sdk_libraries_custom/bin/hipblaslt/library/*",
+]
+# wheel にライセンス本文がないので、各部品の本文を ROCm のタグ rocm-7.2.0 から取る。
+licenses = ["rocm_sdk_libraries_custom-7.2.0.dev0.dist-info/METADATA"]
+
+[[rocm-libraries.notices]]
+name = "hipblas-LICENSE.md"
+url = "https://raw.githubusercontent.com/ROCm/rocm-libraries/5b515cf1bca9959fb434c2414cf79b42fe25e93b/projects/hipblas/LICENSE.md"
+sha256 = "fec91d5fe42b9fef3e0d8088e769c113f8dd6eda614b6bc5a646feacb16c88a4"
+
+[[rocm-libraries.notices]]
+name = "rocblas-LICENSE.md"
+url = "https://raw.githubusercontent.com/ROCm/rocm-libraries/5b515cf1bca9959fb434c2414cf79b42fe25e93b/projects/rocblas/LICENSE.md"
+sha256 = "b57f384b03b348ca6dc3694dafa3ed7e69003a910fcd9e402eca514f4d86af83"
+
+[[rocm-libraries.notices]]
+name = "rocsolver-LICENSE.md"
+url = "https://raw.githubusercontent.com/ROCm/rocm-libraries/5b515cf1bca9959fb434c2414cf79b42fe25e93b/projects/rocsolver/LICENSE.md"
+sha256 = "a037bdde286c83bb33b905fbabe2aa4187553b7abe41ae281aa1b2dab89ef95a"
+
+[[rocm-libraries.notices]]
+name = "hipblaslt-LICENSE.md"
+url = "https://raw.githubusercontent.com/ROCm/rocm-libraries/5b515cf1bca9959fb434c2414cf79b42fe25e93b/projects/hipblaslt/LICENSE.md"
+sha256 = "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+
+[[rocm-libraries.notices]]
+name = "hipblas-common-LICENSE.md"
+url = "https://raw.githubusercontent.com/ROCm/rocm-libraries/5b515cf1bca9959fb434c2414cf79b42fe25e93b/projects/hipblas-common/LICENSE.md"
+sha256 = "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
+
+[[rocm-libraries.notices]]
+name = "tensile-LICENSE.md"
+url = "https://raw.githubusercontent.com/ROCm/rocm-libraries/5b515cf1bca9959fb434c2414cf79b42fe25e93b/shared/tensile/LICENSE.md"
+sha256 = "b185aaa652b0bf066c37a0d6314ce4bf4521e4a3c9bf46edd2f6a777ac522223"
 
 [numpy]
 # メル特徴量の行列積に使う OpenBLAS (numpy が呼んでいるものと同じ cblas_sgemm64_)

@@ -478,8 +478,12 @@ fn validate(name: &str, v: &Value, c: &View) -> Option<Value> {
             if device == "NoDevice" || (c.env.devices)().speaker.iter().any(|n| n == device) { Some(v.clone()) } else { None }
         }
         "SELECTED_TRANSLATION_COMPUTE_DEVICE" | "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE" => {
-            v.is_object().then_some(())?;
-            c.env.compute_devices.iter().any(|d| py_eq(d, v)).then(|| v.clone())
+            let mut device = v.clone();
+            // Saved GPU selections before the vendor field were all NVIDIA.
+            if device["device"] == "cuda" && device.get("vendor").is_none() {
+                device["vendor"] = json!("nvidia");
+            }
+            c.env.compute_devices.iter().find(|d| py_eq(d, v) || py_eq(d, &device)).cloned()
         }
         _ => panic!("no check for {name}"),
     }
@@ -509,7 +513,11 @@ impl Config {
                 "PATH_CONFIG" => json!(env.path_local.join("config.json").to_string_lossy()),
                 "PATH_LOGS" => json!(env.path_local.join("logs").to_string_lossy()),
                 "SELECTABLE_COMPUTE_DEVICE_LIST" => json!(env.compute_devices),
-                "COMPUTE_MODE" => json!(if env.compute_devices.iter().any(|d| d["device"] == "cuda") { "cuda" } else { "cpu" }),
+                "COMPUTE_MODE" => json!(match env.compute_devices.iter().find(|d| d["device"] == "cuda") {
+                    Some(d) if d["vendor"] == "amd" => "amd",
+                    Some(_) => "cuda",
+                    None => "cpu",
+                }),
                 "SELECTED_TRANSLATION_COMPUTE_DEVICE" | "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE" => env.compute_devices[0].clone(),
                 "SELECTED_MIC_HOST" => json!(env.default_mic.0),
                 "SELECTED_MIC_DEVICE" => json!(env.default_mic.1),
@@ -751,6 +759,26 @@ mod tests {
             transcription_lang: json!({"Japanese": {"Japan": {"Google": "ja-JP"}}, "English": {"United States": {"Google": "en-US"}}}),
             new_token: || "token".into(),
         }
+    }
+
+    #[test]
+    fn gpu_mode_and_saved_selection() {
+        let dir = std::env::temp_dir().join(format!("vrct-config-gpu-{}", std::process::id()));
+        let old = json!({"device": "cuda", "device_index": 0, "device_name": "GPU", "compute_types": ["auto", "float32"]});
+        for (vendor, mode) in [("amd", "amd"), ("nvidia", "cuda")] {
+            let mut env = env(&dir);
+            let mut gpu = old.clone();
+            gpu["vendor"] = json!(vendor);
+            env.compute_devices.push(gpu.clone());
+            let config = Config::new(env);
+            assert_eq!(config.get("COMPUTE_MODE"), mode);
+            let key = "SELECTED_TRANSLATION_COMPUTE_DEVICE";
+            assert_eq!(config.set(key, old.clone()).is_ok(), vendor == "nvidia");
+            if vendor == "nvidia" {
+                assert_eq!(config.get(key), gpu);
+            }
+        }
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

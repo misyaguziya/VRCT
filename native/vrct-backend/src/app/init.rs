@@ -438,7 +438,6 @@ fn background(app: &App, label: &'static str, job: fn(&App) -> Result<()>) {
 
 /// Controller.init: `escalate` runs when the UI stops feeding the watchdog
 pub fn init(app: &App, escalate: impl Fn() + Send + 'static) -> Result<()> {
-    logs::PROCESS.clear();
     ipc::log("Start Initialization");
     let started = Instant::now();
     // _bootstrapModel: the overlay's callbacks tell their state at once

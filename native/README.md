@@ -14,8 +14,8 @@ Python 版のコードは削除した。基準データ（`testdata/`）は、�
 
 | 場所 | 中身 |
 |---|---|
-| `third_party.toml` | 同梱するネイティブ DLL（CTranslate2・onnxruntime・OpenBLAS・CUDA）と辞書・モデルの版と SHA-256。Python 版が使っていたのと同じ wheel から取り出す |
-| `xtask/` | `cargo xtask fetch-native [--cuda]`: 上の DLL と CTranslate2 のヘッダーを `third_party/`（git 管理外）に置く |
+| `third_party.toml` | 同梱するネイティブ DLL（CTranslate2・onnxruntime・OpenBLAS・CUDA・ROCm）と辞書・モデルの版と SHA-256 |
+| `xtask/` | `cargo xtask fetch-native [--cuda \| --amd]` で DLL と CTranslate2 のヘッダーを `third_party/`（git 管理外）に置く |
 | `vrct-contract/` | IPC の契約テスト。バックエンドを stdin / stdout だけで動かし、確認済みの応答 (`baseline.json`) と比べる |
 | `vrct-ct2/` | CTranslate2（wheel の `ctranslate2.dll`）の受け口。C の shim と安全な Rust の型 |
 | `vrct-whisper/` | faster-whisper 1.1.1 の `transcribe`（VRCT が通る経路）。メル特徴量は numpy と同じ計算 |
@@ -33,7 +33,18 @@ Python 版のコードは削除した。基準データ（`testdata/`）は、�
 cd native
 cargo xtask fetch-native          # CPU 版の分
 cargo xtask fetch-native --cuda   # cuBLAS / cuDNN も (約 1.3 GB のダウンロード)
+cargo xtask fetch-native --amd    # ROCm 版 CT2 と AMD 公式の BLAS・カーネルも
+
+# AMD 版を組み立てる（exe は全版共通）
+cargo build --release -p vrct-backend
+cargo xtask stage-sidecar --out target\sidecar-stage-amd --release --amd
 ```
+
+AMD 版は CPU 版の `_internal/` に `ct2-rocm/` を加える。中身は `ctranslate2.dll`、`hipblas.dll`、`rocsolver.dll`、`rocblas.dll`、`libhipblaslt.dll` と、DLL からの位置を保った `rocblas/library/`・`hipblaslt/library/`（RDNA3・3.5・4 用）。ライセンスは `_internal/licenses/ctranslate2-rocm/` と `_internal/licenses/rocm-libraries/` に置く。`--amd` と `--cuda` はどちらか一方を指定する。
+
+サイドカーは起動直後に自身の環境変数 `AMD_COMGR_CACHE` を `0` にする。`ct2-rocm/ctranslate2.dll` があれば、System32 の HIP ランタイム（Adrenalin ドライバ）を確認して ROCm 版 CT2 を読み込む。失敗した場合は理由を `process.log` に記録し、共通の `_internal/ctranslate2.dll` で CPU を使う。
+
+ROCm 版 CT2 を読み込むと、`ROCBLAS_TENSILE_LIBPATH` と `HIPBLASLT_TENSILE_LIBPATH` をそれぞれ exe からの相対パス `_internal\ct2-rocm\rocblas\library` と `_internal\ct2-rocm\hipblaslt\library` に設定する。両方に対応するカーネルがある Radeon だけを元の HIP デバイス番号で表示する。各 GPU の gfx 名と採否は `process.log` に記録し、該当する GPU がなければ CPU を使う。
 
 版を上げるときは `third_party.toml` の `version` / `wheel` / `sha256`（PyPI の JSON の `digests.sha256`）を書き換え、取り直してビルドし、回帰テストを流す。
 

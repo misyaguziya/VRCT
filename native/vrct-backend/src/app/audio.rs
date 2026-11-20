@@ -398,7 +398,7 @@ fn create_transcriber(app: &App, kind: Kind, recorder: &Recorder) -> Result<Tran
             let (name, index) = (device["device"].as_str().unwrap_or("cpu").to_string(), device["device_index"].as_i64().unwrap_or(0));
             let mut compute_type = app.config.get_str("SELECTED_TRANSCRIPTION_COMPUTE_TYPE");
             if compute_type == "auto" {
-                compute_type = crate::compute::best_compute_type(&name, index as usize);
+                compute_type = crate::compute::best_compute_type(&device).into();
             }
             let path = app.config.env().path_local.join("weights").join("whisper").join(app.config.get_str("WHISPER_WEIGHT_TYPE"));
             Engine::Whisper(crate::transcriber::load_whisper(&path, &name, index as i32, &compute_type)?)
