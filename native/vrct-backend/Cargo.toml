@@ -62,7 +62,7 @@ windows = { version = "=0.61.1", features = [
     "Win32_Graphics_Dxgi",
     "Win32_Graphics_Dxgi_Common",
 ] }
-vrct-webtranslate = { path = "../vrct-webtranslate" }
+vrct-translator-engines = { path = "../vrct-translator-engines" }
 # The same tokenizers as the Python backend's (tokenizers 0.19.1 wraps this crate). esaxx (training
 # only) is built with the static CRT, which cannot be mixed with the /MD CTranslate2 shim.
 tokenizers = { version = "=0.19.1", default-features = false, features = ["onig"] }

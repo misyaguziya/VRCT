@@ -187,7 +187,7 @@ impl Translator {
                 None => return Translation::Failed("DeepL is not authenticated".into()),
                 Some(d) => d.translate(message, Some(&source), &target),
             },
-            "Google" | "Bing" | "Papago" => vrct_webtranslate::translate_text(Some(message), &translator.to_lowercase(),
+            "Google" | "Bing" | "Papago" => vrct_translator_engines::translate_text(Some(message), &translator.to_lowercase(),
                 Some(&source), Some(&target), Some(WEB_TRANSLATOR_TIMEOUT_SECONDS)).map_err(anyhow::Error::msg),
             "CTranslate2" => match &self.ctranslate2 {
                 None => return Translation::Failed("no CTranslate2 model".into()),

@@ -97,6 +97,16 @@ dictionary, Silero VAD, RapidOCR's models) are listed with their versions and
 licenses in `native/third_party.toml`. All of these notices are included in the
 built application under `_internal/licenses/`.
 
+## Exception: the web translators (`translator_engines.dll`)
+
+`native/vrct-translator-engines/bin/translator_engines.dll` (Google / Bing /
+Papago web translation) is proprietary and is distributed as a binary only. It
+is licensed for use in VRCT only; using it in forks, derivatives or any other
+software is not permitted. See `native/vrct-translator-engines/LICENSE`
+(shipped as `_internal/licenses/translator_engines.txt`). The Rust crates it is
+built with are listed in `native/vrct-translator-engines/THIRD_PARTY_LICENSES.txt`
+(shipped as `rust-crates-translator_engines.txt`).
+
 ## Audio processing dependencies
 
 The Google protocol adapter (`native/vrct-backend/src/asr.rs`), the energy detector

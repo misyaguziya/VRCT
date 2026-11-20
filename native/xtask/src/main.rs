@@ -312,6 +312,9 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
     for dir in dll_dirs {
         copy_dlls(&third_party.join(dir), &internal)?;
     }
+    // the web translators: a binary of the repository (its source is not in it)
+    fs::copy(native.join("vrct-translator-engines/bin/translator_engines.dll"), internal.join("translator_engines.dll"))
+        .context("vrct-translator-engines/bin/translator_engines.dll")?;
     copy_dir(&data.join("translation_settings"), &internal.join("translation_settings"))?;
     copy_dir(&data.join("fonts"), &internal.join("fonts"))?;
     copy_dir(&data.join("sudachi"), &internal.join("sudachi"))?;
@@ -354,7 +357,9 @@ fn stage_sidecar(out: &Path, release: bool, cuda: bool, exe_name: &str, weights:
                        ("vrct-audio/SPEECH_RECOGNITION_LICENSE.txt", "speech_recognition.txt"),
                        ("vrct-backend/GOOGLE_SPEECH_LICENSE.txt", "google_speech.txt"),
                        ("vrct-ocr/LICENSE-APACHE-2.0", "rapidocr-port-apache-2.0.txt"),
-                       ("vrct-ime/RIME_THIRD_PARTY_NOTICES.txt", "rime.txt")] {
+                       ("vrct-ime/RIME_THIRD_PARTY_NOTICES.txt", "rime.txt"),
+                       ("vrct-translator-engines/LICENSE", "translator_engines.txt"),
+                       ("vrct-translator-engines/THIRD_PARTY_LICENSES.txt", "rust-crates-translator_engines.txt")] {
         fs::copy(native.join(from), licenses.join(to)).with_context(|| from.to_string())?;
     }
     if let Some(weights) = weights {

@@ -2,7 +2,7 @@
 # PoC は外す。
 [workspace]
 resolver = "2"
-members = ["xtask", "vrct-contract", "vrct-audio", "vrct-graphics", "vrct-ct2", "vrct-whisper", "vrct-ocr", "vrct-openvr", "vrct-overlay", "vrct-webtranslate", "vrct-ime", "vrct-backend"]
+members = ["xtask", "vrct-contract", "vrct-audio", "vrct-graphics", "vrct-ct2", "vrct-whisper", "vrct-ocr", "vrct-openvr", "vrct-overlay", "vrct-translator-engines", "vrct-ime", "vrct-backend"]
 exclude = ["poc-oscquery"]
 
 [workspace.package]
