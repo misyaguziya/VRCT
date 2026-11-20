@@ -98,5 +98,5 @@
 
 ## 4. 決定事項（2026-10-11、ユーザー）
 
-- **translator_engines のソース**は `D:\WORKSPACE\WORK\VRChatProject\translator_engines`（別リポジトリ、約 1900 行の Rust、独自ライセンス「VRCT の部品としてのみ使用可」）。Google/Bing/Papago の本体（`google.rs` ほか、reqwest blocking）は素の Rust で、PyO3 に依存するのは `lib.rs` の入口 5 関数だけ。今は `crate-type = ["cdylib"]` のみなので、Rust のバックエンドから使うには `rlib` の追加と PyO3 部分の feature 分離、Rust 向けの公開関数が必要（別リポジトリのため、変更は相談してから）。
+- **translator_engines** は非公開の別リポジトリ（独自ライセンス「VRCT の部品としてのみ使用可」）。Rust のバックエンドからは、C の入口を足した DLL を同梱して使う（2026-11-20 に決定、`native/vrct-translator-engines`）。
 - **置き場所は A: Rust の sidecar**。今の IPC 契約（stdin/stdout の 1 行 JSON、base64 の data、status、エンドポイント名）を保ち、UI は変更しない。

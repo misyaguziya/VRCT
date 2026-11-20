@@ -1,0 +1,10 @@
+[package]
+name = "vrct-translator-engines"
+version = "0.3.0"
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "Loads translator_engines.dll (Google / Bing / Papago web translators, a VRCT-only binary)"
+
+[dependencies]
+libloading = "0.8"

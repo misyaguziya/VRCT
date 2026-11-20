@@ -22,7 +22,7 @@ Python 版のコードは削除した。基準データ（`testdata/`）は、�
 | `vrct-ocr/` | 吹き出し検出（YOLOX）と RapidOCR 3.9.2 の移植（OpenCV / numpy の該当処理、Clipper、bidi） |
 | `vrct-backend/` | バックエンド本体。今は翻訳（NLLB / M2M100・LLM・DeepL・Web 翻訳の入口）、音訳（Sudachi + ヘボン式）、文字起こしの API、重みとトークナイザーの取得、ソフトの更新、テレメトリー、WebSocket・OBS のサーバー |
 | `vrct-ime/` | VR キーボードの入力。日本語・中国語は librime（`rime.dll` を実行時に読み込む）、韓国語はハングルの合成、英語はそのまま。辞書は VR UI を初めて ON にしたときにバックエンドが取得する |
-| `vrct-webtranslate/` | Web 翻訳（Google / Bing / Papago）。`translator_engines` のソースを取り込み、PyO3 の入口を外したもの |
+| `vrct-translator-engines/` | Web 翻訳（Google / Bing / Papago）。`bin/translator_engines.dll`（VRCT 専用ライセンスのバイナリ、ソースは非公開）を最初の翻訳で読み込む |
 | `data/` | 配布に入れるデータ（翻訳設定・フォント・OCR のモデル・Sudachi のリソース）と、Python 版から書き出した表（エラーコード・設定のスキーマ・文字起こしの言語） |
 | `reference/` | 照合用の文（`corpus/`）と、照合用の音声を作るスクリプト |
 | `testdata/` | 基準データ（Python 版の出力）と照合用の音声・画像。音声と画像は合成したもの |
@@ -72,7 +72,7 @@ Python 版が送った HTTP の要求を、送る直前（httpx / requests / url
 
 ```powershell
 cd native
-cargo test -p vrct-backend -p vrct-webtranslate
+cargo test -p vrct-backend -p vrct-translator-engines
 ```
 
 - 基準の作り直しは P1 と同じく、Python 版が残っているコミットの `reference/export_*.py` で（記録の仕組みは `reference/http_capture.py`）。記録に秘密を残さない: `export_weights.py` は `HF_HUB_DISABLE_IMPLICIT_TOKEN=1` で動かし、鍵は偽物を使う。

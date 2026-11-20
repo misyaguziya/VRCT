@@ -42,7 +42,7 @@ React と Tauri
 
 sidecar起動は [StartPythonController.jsx](C:/Users/misyaguzi/.codex/worktrees/4508/VRCT/src-ui/views/app/_app_controllers/StartPythonController.jsx:64)、要求送信は [useStdoutToPython.js](C:/Users/misyaguzi/.codex/worktrees/4508/VRCT/src-ui/logics/common/useStdoutToPython.js:28)。音声や画像を毎フレームJSONでUIへ送る構造ではないため、sidecar廃止だけで画像転送負荷が消えるわけではない。
 
-翻訳の既存DLLは [translator_engines.pyd](C:/Users/misyaguzi/.codex/worktrees/4508/VRCT/src-python/translator_engines.pyd)。WindowsのPython拡張DLLとして `translate_text` をimportしている。[呼び出し元](C:/Users/misyaguzi/.codex/worktrees/4508/VRCT/src-python/models/translation/translation_translator.py:17)にはRust製と記載されている。このcheckoutには当該Rustソースがなく、PyO3採用やGIL解放などの内部契約までは確定できない。
+翻訳の既存DLLは `src-python/translator_engines.pyd`。WindowsのPython拡張DLLとして `translate_text` をimportしている。呼び出し元（`src-python/models/translation/translation_translator.py:17`）にはRust製と記載されている。このcheckoutには当該Rustソースがなく、PyO3採用やGIL解放などの内部契約までは確定できない。
 
 ## 音声認識
 
