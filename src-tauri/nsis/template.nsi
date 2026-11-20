@@ -196,9 +196,10 @@ Function PageLeaveChooseLanguage
     ${EndIf}
 FunctionEnd
 
-; 4-2. Choose CPU/GPU edition page
+; 4-2. Choose CPU, NVIDIA or AMD edition
 Var RadioCpuEdition
 Var RadioGpuEdition
+Var RadioAmdEdition
 Var DialogChooseEdition
 Var SelectedEdition
 Page custom PageChooseEdition PageLeaveChooseEdition
@@ -213,11 +214,15 @@ Function PageChooseEdition
 
     ${NSD_CreateRadioButton} 0 20u 100% 12u "CPU version (smaller download, works on any PC)"
     Pop $RadioCpuEdition
-    ${NSD_CreateRadioButton} 0 40u 100% 12u "GPU version (requires an NVIDIA GPU, larger download, faster recognition)"
+    ${NSD_CreateRadioButton} 0 40u 100% 12u "NVIDIA GPU version (larger download, faster recognition)"
     Pop $RadioGpuEdition
+    ${NSD_CreateRadioButton} 0 60u 100% 24u "AMD GPU version (Radeon RX 7000 / 9000 series and Ryzen AI 300 series, needs a recent AMD driver)"
+    Pop $RadioAmdEdition
 
     ${If} $SelectedEdition == "gpu"
         SendMessage $RadioGpuEdition ${BM_SETCHECK} ${BST_CHECKED} 0
+    ${ElseIf} $SelectedEdition == "amd"
+        SendMessage $RadioAmdEdition ${BM_SETCHECK} ${BST_CHECKED} 0
     ${Else}
         SendMessage $RadioCpuEdition ${BM_SETCHECK} ${BST_CHECKED} 0
     ${EndIf}
@@ -227,8 +232,11 @@ FunctionEnd
 
 Function PageLeaveChooseEdition
     ${NSD_GetState} $RadioGpuEdition $0
+    ${NSD_GetState} $RadioAmdEdition $1
     ${If} $0 == ${BST_CHECKED}
         StrCpy $SelectedEdition "gpu"
+    ${ElseIf} $1 == ${BST_CHECKED}
+        StrCpy $SelectedEdition "amd"
     ${Else}
         StrCpy $SelectedEdition "cpu"
     ${EndIf}
@@ -506,8 +514,8 @@ Function .onInit
   IfErrors +2 0
     StrCpy $PassiveMode 1
 
-  ; Preselect the CPU/GPU edition page when launched from within the app
-  ; (e.g. "/EDITION=gpu" from the in-app CPU/GPU switch button). The page
+  ; Preselect the edition when launched from within the app
+  ; (/EDITION=cpu, /EDITION=gpu or /EDITION=amd). The page
   ; is still shown so the user can change their mind before installing.
   ${GetOptions} $CMDLINE "/EDITION=" $0
   IfErrors +2 0
@@ -764,17 +772,21 @@ Section Install
   !define SOFTWARE_RELEASE_REPO_BETA "ms-software/VRCT-beta"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   !define SOFTWARE_DOWNLOAD_FILENAME_GPU "VRCT_cuda.zip"
+  !define SOFTWARE_DOWNLOAD_FILENAME_AMD "VRCT_amd.zip"
 
   ; Free-space budget (MiB) per edition. The compressed archive is written to
   ; %TEMP%, the extracted tree to $INSTDIR, and both exist at once during
   ; extraction, so a same-drive install needs DOWNLOAD + EXTRACT together.
   ; Measured 2026-08: VRCT.zip ~485MB / ~1.5GB unpacked; VRCT_cuda.zip
-  ; ~3461MB / ~5757MB unpacked. Values below add headroom -- re-measure and
+  ; ~3461MB / ~5757MB unpacked. AMD adds 363 MiB deflated / 975 MiB unpacked
+  ; to CPU (ct2-rocm, measured 2026-11). Values below add headroom -- re-measure and
   ; bump them when the packages grow.
   !define REQ_DOWNLOAD_MB_CPU 1024
   !define REQ_EXTRACT_MB_CPU 3072
   !define REQ_DOWNLOAD_MB_GPU 4096
   !define REQ_EXTRACT_MB_GPU 7168
+  !define REQ_DOWNLOAD_MB_AMD 1536
+  !define REQ_EXTRACT_MB_AMD 4096
 
   Var /GLOBAL i
   Var /GLOBAL cmder_dl
@@ -806,6 +818,10 @@ Section Install
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_GPU}"
     StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_GPU}
     StrCpy $req_extract_mb ${REQ_EXTRACT_MB_GPU}
+  ${ElseIf} $SelectedEdition == "amd"
+    StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME_AMD}"
+    StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_AMD}
+    StrCpy $req_extract_mb ${REQ_EXTRACT_MB_AMD}
   ${Else}
     StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
     StrCpy $req_dl_mb ${REQ_DOWNLOAD_MB_CPU}

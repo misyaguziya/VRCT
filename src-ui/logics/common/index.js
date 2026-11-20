@@ -9,7 +9,7 @@ export { useIsSoftwareUpdating } from "./useIsSoftwareUpdating";
 export { useNotificationStatus } from "./useNotificationStatus";
 export { useOpenFolder } from "./useOpenFolder";
 export { useMessage } from "./useMessage";
-export { useUpdateSoftware } from "./useUpdateSoftware";
+export { useUpdateSoftware, UPDATE_SOFTWARE_ENDPOINTS } from "./useUpdateSoftware";
 export { useVolume } from "./useVolume";
 export { useHandleNetworkConnection } from "./useHandleNetworkConnection";
 export { useHandleOscQuery } from "./useHandleOscQuery";

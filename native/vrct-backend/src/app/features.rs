@@ -549,6 +549,10 @@ pub fn update_cuda_software(app: &App, data: Data) -> Result<Reply> {
     run_update(app, "gpu", "update_cuda_software", data)
 }
 
+pub fn update_amd_software(app: &App, data: Data) -> Result<Reply> {
+    run_update(app, "amd", "update_amd_software", data)
+}
+
 // ------------------------------------------------------------------------------------ weights
 
 /// ctranslate2.Translator(path, compute_type=getBestComputeType("cpu", 0)) loads

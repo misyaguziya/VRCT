@@ -78,6 +78,7 @@ update_modal:
     channel_beta: "Beta"
     compute_mode_cpu: "CPU"
     compute_mode_cuda: "GPU (CUDA)"
+    compute_mode_amd: "GPU (AMD)"
     latest_label: "Latest"
     install_latest_button: "Update to Latest Version"
     install_button: "Reinstall with These Settings"
@@ -86,7 +87,7 @@ update_modal:
     channel_label: "Release channel"
     channel_desc: "Beta gives you early access but may be less stable."
     compute_mode_label: "Device build"
-    compute_mode_desc: "GPU (CUDA) runs faster on NVIDIA GPUs but requires ~5 GB of additional disk space."
+    compute_mode_desc: "GPU builds run faster: CUDA on NVIDIA GPUs (~5 GB of additional disk space), AMD on Radeon RX 7000 or later (~1 GB of additional disk space)."
     version_label: "Version to install"
     version_desc: "Pick from releases published on the selected channel."
     no_versions_available: "No releases are available on the selected channel yet."
@@ -94,6 +95,7 @@ update_modal:
     change_col_after: "After install"
     warn_downgrade: "This is a downgrade from {{from}} to {{to}}. Config file compatibility is not guaranteed."
     warn_cuda_extra_size: "The GPU build requires roughly 5 GB of additional download."
+    warn_amd_extra_size: "The AMD GPU build requires roughly 400 MB of additional download."
     warn_switch_channel: "You are switching to the {{channel}} channel. Future update notifications will follow {{channel}} releases."
 
 config_page:

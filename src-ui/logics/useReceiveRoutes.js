@@ -12,6 +12,7 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/initialization_progress", ns: common, hook_name: "useInitProgress", method_name: "updateInitProgress" },
     { endpoint: "/run/enable_ai_models", ns: common, hook_name: "useIsVrctAvailable", method_name: "handleAiModelsAvailability" },
     { endpoint: "/get/data/compute_mode", ns: common, hook_name: "useComputeMode", method_name: "updateComputeMode" },
+    { endpoint: "/get/data/installed_edition", ns: common, hook_name: "useComputeMode", method_name: "updateInstalledEdition" },
 
     { endpoint: "/run/update_software", ns: null, hook_name: null, method_name: null },
 
@@ -32,6 +33,7 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/vr_panel_log_rendered", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/vr_panel_tooltip", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
+    { endpoint: "/run/update_amd_software", ns: null, hook_name: null, method_name: null },
 
     // VRキーボード: キー・候補・クリアの応答はキーボードの表示そのもの。Enter で送った結果はログにも出す
     { endpoint: "/run/keyboard_key", ns: configs, hook_name: "useVr", method_name: "updateFromBackendKeyboardState" },

@@ -78,6 +78,7 @@ update_modal:
     channel_beta: "测试版"
     compute_mode_cpu: "CPU 版"
     compute_mode_cuda: "GPU 版 (CUDA)"
+    compute_mode_amd: "GPU 版 (AMD)"
     latest_label: "最新"
     install_latest_button: "更新至最新版本"
     install_button: "按此设置重新安装"
@@ -86,7 +87,7 @@ update_modal:
     channel_label: "发布渠道"
     channel_desc: "测试版可提前体验新功能，但可能不稳定。"
     compute_mode_label: "设备构建"
-    compute_mode_desc: "GPU 版可在 NVIDIA GPU 上高速运行，但需要约 5GB 的额外磁盘空间。"
+    compute_mode_desc: "GPU 版运行更快：CUDA 适用于 NVIDIA GPU，需要约 5GB 额外磁盘空间；AMD 适用于 Radeon RX 7000 及更新型号，需要约 1GB 额外磁盘空间。"
     version_label: "要安装的版本"
     version_desc: "可从所选渠道公开发布的版本中选择。"
     no_versions_available: "所选渠道暂无可用版本。"
@@ -94,6 +95,7 @@ update_modal:
     change_col_after: "安装后"
     warn_downgrade: "这是从 {{from}} 到 {{to}} 的降级。配置文件的兼容性无法保证。"
     warn_cuda_extra_size: "GPU 版大约需要 5GB 的额外下载。"
+    warn_amd_extra_size: "AMD GPU 版大约需要 400MB 的额外下载。"
     warn_switch_channel: "将切换到{{channel}}渠道，今后的更新通知也将以{{channel}}为准。"
 
 config_page:

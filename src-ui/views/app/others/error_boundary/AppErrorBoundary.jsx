@@ -14,6 +14,7 @@ import {
     useSoftwareVersion,
     useComputeMode,
     useCopyToClipboard,
+    UPDATE_SOFTWARE_ENDPOINTS,
 } from "@logics_common";
 import { CloseButton } from "@common_components";
 
@@ -98,23 +99,20 @@ const SafeActionButtons = () => {
 };
 
 const ActionButtons = () => {
-    const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
+    const { updateSoftware } = useUpdateSoftware();
     const { currentIsSoftwareUpdating, updateIsSoftwareUpdating } = useIsSoftwareUpdating();
     const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
-    const { currentComputeMode } = useComputeMode();
+    const { currentInstalledEdition } = useComputeMode();
 
     const is_update_available = currentLatestSoftwareVersionInfo?.data?.is_update_available === true;
     const is_updating = currentIsSoftwareUpdating?.data === true;
-    const is_cpu = currentComputeMode?.data === "cpu";
+    // 導入済みの版が分かるまでは更新先を決められない
+    const edition = currentInstalledEdition?.data;
+    const is_edition_known = Object.hasOwn(UPDATE_SOFTWARE_ENDPOINTS, edition);
 
     const onClickUpdate = () => {
         try {
-            updateIsSoftwareUpdating(true);
-            if (is_cpu) {
-                updateSoftware();
-            } else {
-                updateSoftware_CUDA();
-            }
+            if (updateSoftware(edition)) updateIsSoftwareUpdating(true);
         } catch (e) {
             console.error("[AppErrorBoundary] Update failed:", e);
         }
@@ -127,7 +125,7 @@ const ActionButtons = () => {
                 <button
                     className={styles.update_button}
                     onClick={onClickUpdate}
-                    disabled={is_updating}
+                    disabled={is_updating || !is_edition_known}
                 >
                     {is_updating ? "Updating..." : "Update Available — Update Now"}
                 </button>

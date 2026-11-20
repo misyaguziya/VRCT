@@ -370,8 +370,8 @@ Radeon の選択肢は CT2 が報告した型と `auto`。自動選択は float1
 
 #### 6. インストーラー・アップデーター・UI
 
-- インストーラー（`template.nsi` の CPU / GPU の選択）とアップデーター（`/EDITION=`。今は `/run/update_software` が CPU 版、`/run/update_cuda_software` が `gpu`）に `amd` を足す。AMD 版への更新は、新しい endpoint `/run/update_amd_software` にする（既存の 2 つは変えない）。
-- アップデーターの更新先の選択肢（Updater.jsx）と版の表示（VersionLabel.jsx の CUDA の印）に AMD を足すのは、デスクトップ UI の担当の方へ引き継ぎ文書で渡す（新しい値 `COMPUTE_MODE = "amd"`、`vendor`、`/run/update_amd_software`）。
+- インストーラーは CPU / NVIDIA / AMD の 3 択。`/run/update_amd_software` は共通のセットアップに `/EDITION=amd` を渡す。`release-amd` の配布物は `VRCT_amd.zip` で、リリース時に同名の `.sha256` を添える。
+- デスクトップの更新先選択（初期値はインストール済みの版 `/get/data/installed_edition`）・版表示・VR からの更新拒否も実装済み。見た目の調整は UI 担当へ引き継ぐ。[AMD 版の UI 引き継ぎ](amd_edition_ui_handover.md)
 
 #### 7. 変えないもの
 
@@ -383,7 +383,7 @@ Radeon の選択肢は CT2 が報告した型と `auto`。自動選択は float1
 
 1. **CT2 4.9.0 への更新**（全エディション共通）。この PC の CPU と NVIDIA で回帰を確かめる（文字起こし・翻訳の結果、契約テスト、速さ、モデルの読み直し）。
 2. **AMD 版のビルドと起動**（共通の exe と `ct2-rocm/`、CPU への切り替え、GPU の列挙と計算の型）。この PC では AMD 版が「Radeon が無い」と CPU で正しく動くところまでを確かめる。並行して、検証ツールを公式の wheel の組み合わせとドライバのランタイムで作り直し、RDNA3 / RDNA4 の協力者にもう一度回してもらう。
-3. **インストーラー・アップデーター**と、UI の引き継ぎ文書。
+3. **インストーラー・アップデーター・配布スクリプトとデスクトップ UI は実装済み**（2026-11-20）。この PC で AMD 版が CPU に切り替わった状態の画面を確認した。
 4. **AMD の実機での受け入れ**（協力者）: AMD 版の VRCT を入れて、文字起こし・翻訳が GPU で動くこと、モデルの読み直し・VRAM の解放、Whisper と翻訳の同時利用、長時間、GPU を使えないときに CPU に戻ること。RDNA3 と RDNA4 をそれぞれ 1 台以上。
 
 ### 決めておきたいこと

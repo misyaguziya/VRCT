@@ -4,6 +4,14 @@ use super::handlers as h;
 use super::App;
 use crate::ipc::{Handler, Route};
 
+/// Runtime routes include Rust-only endpoints in addition to the Python reference below.
+pub fn all_routes() -> Vec<(&'static str, Route<App>)> {
+    let mut all = routes();
+    all.push(("/run/update_amd_software", Route { during_init: true, handler: h::update_amd_software, ordered: false }));
+    all.push(("/get/data/installed_edition", Route { during_init: true, handler: h::get_installed_edition, ordered: false }));
+    all
+}
+
 pub fn routes() -> Vec<(&'static str, Route<App>)> {
     let r = |during_init: bool, handler: Handler<App>| Route { during_init, handler, ordered: false };
     // the VR keyboard's input: in the order typed (keys, candidates, the language it composes in)
@@ -395,7 +403,13 @@ pub fn routes() -> Vec<(&'static str, Route<App>)> {
     ]
 }
 
-/// run_mapping: the pushes' names and endpoints
+/// Look up a push in the Python reference and the Rust-only additions.
+pub fn run_endpoint(name: &str) -> Option<&'static str> {
+    RUN_MAPPING.iter().chain(&[("update_amd_software", "/run/update_amd_software")])
+        .find(|(key, _)| *key == name).map(|(_, endpoint)| *endpoint)
+}
+
+/// run_mapping: the Python pushes' names and endpoints
 pub const RUN_MAPPING: &[(&str, &str)] = &[
     ("enable_translation", "/run/enable_translation"),
     ("enable_transcription_send", "/run/enable_transcription_send"),
@@ -486,3 +500,20 @@ pub const RUN_MAPPING: &[(&str, &str)] = &[
     ("overlay_vr_panel_opacity", "/run/overlay_vr_panel_opacity"),
     ("overlay_vr_subtitle_settings", "/run/overlay_vr_subtitle_settings"),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn amd_update_accepts_requests_and_pushes_errors_on_the_same_endpoint() {
+        let endpoint = "/run/update_amd_software";
+        let routes = all_routes();
+        let mut matches = routes.iter().filter(|(path, _)| *path == endpoint);
+        let (_, route) = matches.next().expect("AMD update route");
+        assert!(route.during_init);
+        assert!(!route.ordered);
+        assert!(matches.next().is_none());
+        assert_eq!(run_endpoint("update_amd_software"), Some(endpoint));
+    }
+}

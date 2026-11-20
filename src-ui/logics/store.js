@@ -144,6 +144,8 @@ export const { atomInstance: Atom_IsBackendReady, useHook: useStore_IsBackendRea
 export const { atomInstance: Atom_IsVrctAvailable, useHook: useStore_IsVrctAvailable } = createAtomWithHook(true, "IsVrctAvailable");
 export const { atomInstance: Atom_IsOscAvailable, useHook: useStore_IsOscAvailable } = createAtomWithHook(true, "IsOscAvailable");
 export const { atomInstance: Atom_ComputeMode, useHook: useStore_ComputeMode } = createAtomWithHook("cpu", "ComputeMode");
+// インストール済みの版 ("cpu" | "cuda" | "amd")。GPU を使えず CPU で動くときも COMPUTE_MODE と違い版のまま
+export const { atomInstance: Atom_InstalledEdition, useHook: useStore_InstalledEdition } = createAtomWithHook(null, "InstalledEdition");
 export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useStore_IsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
 export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_MainFunctionsStateMemory } = createAtomWithHook({
     transcription_send: false,

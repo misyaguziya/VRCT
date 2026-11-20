@@ -66,7 +66,7 @@ impl App {
     /// self.run(status, self.run_mapping[name], result): a name not in run_mapping fails as the
     /// KeyError did (the handler answers 500)
     pub fn run(&self, status: i64, name: &str, result: impl Into<Value>) -> Result<()> {
-        let endpoint = routes::RUN_MAPPING.iter().find(|(n, _)| *n == name).map(|(_, e)| *e)
+        let endpoint = routes::run_endpoint(name)
             .ok_or_else(|| anyhow!("KeyError: {name:?} is not in run_mapping"))?;
         ipc::print_response(status, Some(endpoint), &result.into());
         Ok(())
@@ -74,7 +74,7 @@ impl App {
 
     /// self.run_mapping.get(name, default) (the device-loss pushes)
     pub fn run_or(&self, status: i64, name: &str, default: &str, result: impl Into<Value>) {
-        let endpoint = routes::RUN_MAPPING.iter().find(|(n, _)| *n == name).map_or(default, |(_, e)| *e);
+        let endpoint = routes::run_endpoint(name).unwrap_or(default);
         ipc::print_response(status, Some(endpoint), &result.into());
     }
 

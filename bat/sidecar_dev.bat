@@ -34,7 +34,7 @@ if exist src-tauri\bin\_internal (
 )
 mkdir src-tauri\bin\_internal
 if errorlevel 1 exit /b 1
-echo VRCT dev-fast placeholder; production builds must run build.bat or build_cuda.bat.> src-tauri\bin\_internal\.vrct-dev-placeholder
+echo VRCT dev-fast placeholder; production builds must run build.bat, build_cuda.bat or build_amd.bat.> src-tauri\bin\_internal\.vrct-dev-placeholder
 if errorlevel 1 exit /b 1
 echo dev sidecar wrapper installed at src-tauri\bin\VRCT-sidecar-x86_64-pc-windows-msvc.exe
 endlocal

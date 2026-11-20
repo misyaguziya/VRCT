@@ -121,3 +121,8 @@ getters! {
     get_ocr_min_confidence => "OCR_MIN_CONFIDENCE",
     get_ocr_bubble_min_text_length => "OCR_BUBBLE_MIN_TEXT_LENGTH",
 }
+
+/// The installed edition, for the updater (COMPUTE_MODE is "cpu" when the AMD edition runs on the CPU)
+pub fn get_installed_edition(_: &App, _: Option<Value>) -> anyhow::Result<Reply> {
+    Ok(Reply::ok(crate::compute::installed_edition(&crate::config::executable_dir().join("_internal"))))
+}

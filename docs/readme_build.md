@@ -56,13 +56,18 @@ RapidOCR のモデルは `native/third_party.toml` に版と SHA-256 が書い�
 
 ## ビルドの種類
 
-VRCTでは、以下の2種類のビルドが可能です:
+VRCTには3つのエディションがあります。
 
 ### CPU版
 標準的なCPUで動作するバージョン。GPUは不要。
 
 ### CUDA版
 NVIDIA GPUを活用した高速処理版。CUDA対応GPUが必要。
+
+### AMD版
+Radeon RX 7000 / 9000 シリーズ、Ryzen AI 300 / Strix Halo の対応 iGPU（gfx1150 / gfx1151）で動作します。
+HIP ランタイム（`amdhip64_7.dll`）を含む最近の AMD Adrenalin ドライバーが必要です。
+ドライバーや GPU が対応していない場合は CPU で動作します。
 
 ## 開発ビルド
 
@@ -88,6 +93,10 @@ npm run dev-cuda
 
 CPU版と同様ですが、cuBLAS / cuDNN を同梱したバックエンドをビルドします (`build-sidecar-cuda`)。
 
+### AMD版の開発ビルド
+
+`npm run dev-amd` は `build-sidecar-amd` で ROCm ライブラリを配置してから開発サーバーを起動します。
+
 ### UIのみの開発
 
 バックエンドのビルドをスキップして、UIのみを開発する場合:
@@ -107,7 +116,7 @@ npm run dev-fast
 ```
 
 `dev-fast` の前に、`native/` でバックエンドをビルドして配置しておきます
-（設定ファイル・ログは `native/target/sidecar-stage/` に書かれます。CUDA 版は `fetch-native` と `stage-sidecar` に `--cuda`）:
+（設定ファイル・ログは `native/target/sidecar-stage/` に書かれます。`fetch-native` と `stage-sidecar` には CUDA 版なら `--cuda`、AMD 版なら `--amd` を付けます）:
 
 ```bash
 cd native
@@ -161,9 +170,13 @@ npm run release-cuda
 - インストーラー: `src-tauri/target/release/bundle/nsis/`
 - ZIPファイル: `VRCT_cuda.zip` (release-cudaコマンド使用時)
 
-### 両バージョンの同時ビルド
+### AMD版のリリースビルド
 
-CPU版とCUDA版の両方をビルドする場合:
+`npm run build-amd` でインストーラーを生成します。`npm run release-amd` は同じビルドを行い、配布用の `VRCT_amd.zip` も生成します。
+
+### 全エディションのビルド
+
+CPU 版、CUDA 版、AMD 版を順にビルドして ZIP にまとめるには、次を実行します。
 
 ```bash
 npm run release-all
@@ -184,7 +197,7 @@ npm run release-all
 - **設定箇所**: `package.json` の `version` だけ。
 - **成果物への影響**:
 	- インストーラー（NSIS）は `package.json` の `version` をプロダクトバージョンとして反映。
-	- ZIPパッケージ名はスクリプト既定では固定（`VRCT.zip`/`VRCT_cuda.zip`）。ファイル名にバージョンを含めたい場合は、`package.json` の `release` スクリプトを調整してください。
+	- 配布 ZIP の名前はインストーラーとリリースワークフローで共通です（`VRCT.zip`、`VRCT_cuda.zip`、`VRCT_amd.zip`）。
 
 ### バックエンドのビルド
 
@@ -215,6 +228,10 @@ npm run build-sidecar-cuda
 ```
 
 CPU版の手順に `--cuda` を付けたもの (`bat/build_cuda.bat`)。cuBLAS / cuDNN の DLL が `_internal/` に加わります。
+
+#### AMD版
+
+`npm run build-sidecar-amd`（`bat/build_amd.bat`）は `fetch-native` と `stage-sidecar` に `--amd` を指定します。実行ファイルは全版共通で、AMD 版には `_internal/ct2-rocm/` とそのライセンスが加わります。
 
 ### フロントエンドのビルド
 
@@ -311,7 +328,7 @@ jobs:
 - アーティファクトのパスは既定構成に合わせています：
 	- インストーラー: `src-tauri/target/release/bundle/nsis/`
 	- ZIP: ルート直下の `VRCT.zip`
-- CUDA版も同様にビルドする場合は、`npm run build-cuda` と `cd native && cargo run -q --release -p xtask -- release-zip --out ../VRCT_cuda.zip` を追加して、別アーティファクト名でアップロード・添付してください。
+- 実際の `.github/workflows/release.yml` は `npm run release-all` で全版を作り、3 つの ZIP と各 `.sha256` を Hugging Face の同じリビジョンに公開します。GitHub Release には共通インストーラーとその `.sha256` を添付します。
 
 ## ユーティリティコマンド
 
@@ -351,6 +368,7 @@ VRCT/
 ├── bat/                    # バッチスクリプト
 │   ├── build.bat          # CPU版バックエンドのビルドと配置
 │   ├── build_cuda.bat     # CUDA版バックエンドのビルドと配置
+│   ├── build_amd.bat      # AMD版バックエンドのビルドと配置
 │   └── sidecar_dev.bat    # dev-fast用sidecarラッパービルド
 ├── native/                # Rust バックエンド (vrct-backend) とその部品、xtask
 │   ├── data/             # 配布に入れるデータ (翻訳設定・フォント・OCR モデルなど)
@@ -441,7 +459,7 @@ GitHub Releasesで配布されるsetup.exeは、実行時にHugging Faceから�
 チャンネル・バージョンの指定はGUI画面ではなく `/CHANNEL=` `/VERSION=` の
 CLI引数でのみ行えます(setup.exe自体はどのバージョン・チャンネルのものでも
 構いません)。setup.exeを単体でダブルクリックした場合はこれらの引数が付かない
-ため、CPU/GPU選択のみでビルド元チャンネルの最新版がインストールされます
+ため、CPU / NVIDIA GPU / AMD GPU の選択のみでビルド元チャンネルの最新版がインストールされます
 (GUI上に選択肢を増やさないための意図的な設計です)。VRCT本体のUpdaterタブ
 からの更新はこれらの引数を自動的に付与して起動します。
 

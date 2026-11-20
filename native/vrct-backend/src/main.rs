@@ -151,7 +151,7 @@ fn main() -> Result<()> {
     let app = App::new(config, model);
     app::register_error_hook(&app);
 
-    let dispatcher = Dispatcher::new(app.clone(), routes::routes());
+    let dispatcher = Dispatcher::new(app.clone(), routes::all_routes());
     dispatcher.start_receiver();
     dispatcher.start_workers(WORKERS);
 

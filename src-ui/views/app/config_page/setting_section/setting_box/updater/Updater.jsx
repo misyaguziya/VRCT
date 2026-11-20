@@ -9,6 +9,7 @@ import {
     useIsSoftwareUpdating,
     useSoftwareVersion,
     useAvailableReleases,
+    UPDATE_SOFTWARE_ENDPOINTS,
 } from "@logics_common";
 import { useUpdater } from "@logics_configs";
 
@@ -35,14 +36,22 @@ const isSemverGreater = (a, b) => {
     return ap > bp;
 };
 
+const editionLabel = (t, edition) => {
+    if (edition === "cuda") return t("update_modal.compute_mode_cuda");
+    if (edition === "amd") return t("update_modal.compute_mode_amd");
+    if (edition === "cpu") return t("update_modal.compute_mode_cpu");
+    return "—";
+};
+
 export const Updater = () => {
     const { t } = useI18n();
 
     const { currentSoftwareVersion, currentLatestSoftwareVersionInfo } = useSoftwareVersion();
-    const { currentComputeMode } = useComputeMode();
+    // 更新先は実行中の計算モードではなく導入済みの版で決める (GPU を使えない GPU 版は COMPUTE_MODE が "cpu")
+    const { currentInstalledEdition } = useComputeMode();
     const { currentReleaseChannel } = useUpdater();
     const { currentAvailableReleases, getAvailableReleases } = useAvailableReleases();
-    const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
+    const { updateSoftware } = useUpdateSoftware();
     const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
 
     const [tmp_selected_channel, setTmpSelectedChannel] = useState(null);
@@ -56,7 +65,7 @@ export const Updater = () => {
     }, []);
 
     const target_channel = tmp_selected_channel ?? currentReleaseChannel.data ?? "stable";
-    const target_compute_mode = tmp_selected_compute_mode ?? currentComputeMode.data ?? "cpu";
+    const target_compute_mode = tmp_selected_compute_mode ?? currentInstalledEdition.data ?? null;
 
     const filtered_releases = useMemo(() => {
         const list = Array.isArray(currentAvailableReleases.data) ? currentAvailableReleases.data : [];
@@ -97,6 +106,7 @@ export const Updater = () => {
     const compute_mode_options = [
         { id: "cpu", label: t("update_modal.compute_mode_cpu") },
         { id: "cuda", label: t("update_modal.compute_mode_cuda") },
+        { id: "amd", label: t("update_modal.compute_mode_amd") },
     ];
 
     const version_variable = { state: currentAvailableReleases.state, data: target_version };
@@ -106,7 +116,7 @@ export const Updater = () => {
     const latest_release_version = filtered_releases[0]?.version;
 
     const is_channel_changed = target_channel !== currentReleaseChannel.data;
-    const is_compute_mode_changed = target_compute_mode !== currentComputeMode.data;
+    const is_compute_mode_changed = target_compute_mode !== currentInstalledEdition.data;
     const is_version_customized = Boolean(
         target_version &&
         latest_release_version &&
@@ -127,19 +137,14 @@ export const Updater = () => {
         return "up_to_date";
     }, [is_custom, is_update_available, is_latest_newer]);
 
-    const is_ready_to_install = Boolean(target_version) && filtered_releases.length > 0;
+    const is_ready_to_install = Boolean(target_version) && filtered_releases.length > 0 && Object.hasOwn(UPDATE_SOFTWARE_ENDPOINTS, target_compute_mode);
     const is_fetching_releases = currentAvailableReleases.state === "pending";
 
     const onClickInstall = () => {
         if (!is_ready_to_install) return;
         // チャンネルはここで保存しない。インストーラは指定バージョンのチャンネルで入れ、
         // 起動時にバージョンから決め直す。保存すると、失敗や中止のあとも変わったまま残る
-        updateIsSoftwareUpdating(true);
-        if (target_compute_mode === "cpu") {
-            updateSoftware(target_version);
-        } else {
-            updateSoftware_CUDA(target_version);
-        }
+        if (updateSoftware(target_compute_mode, target_version)) updateIsSoftwareUpdating(true);
     };
 
     const onClickRefresh = () => {
@@ -156,7 +161,7 @@ export const Updater = () => {
                 <UpdateSummary
                     summary_mode={summary_mode}
                     is_fetching={is_fetching_releases}
-                    current_compute_mode={currentComputeMode.data}
+                    current_compute_mode={currentInstalledEdition.data}
                     target_compute_mode={target_compute_mode}
                     current_channel={currentReleaseChannel.data}
                     target_channel={target_channel}
@@ -331,10 +336,10 @@ const SummaryCustomDiff = ({
     const is_downgrade =
         is_version_changed && isSemverGreater(current_version, target_version);
 
-    const warning_compute_mode =
-        is_compute_mode_changed && target_compute_mode === "cuda"
-            ? t("update_modal.warn_cuda_extra_size")
-            : null;
+    const warning_compute_mode = !is_compute_mode_changed ? null
+        : target_compute_mode === "cuda" ? t("update_modal.warn_cuda_extra_size")
+        : target_compute_mode === "amd" ? t("update_modal.warn_amd_extra_size")
+        : null;
 
     const warning_channel = is_channel_changed
         ? t("update_modal.warn_switch_channel", {
@@ -368,16 +373,8 @@ const SummaryCustomDiff = ({
             {/* Row 1: デバイス構成 */}
             <DiffRow
                 label={t("update_modal.compute_mode_label")}
-                before={
-                    current_compute_mode === "cuda"
-                        ? t("update_modal.compute_mode_cuda")
-                        : t("update_modal.compute_mode_cpu")
-                }
-                after={
-                    target_compute_mode === "cuda"
-                        ? t("update_modal.compute_mode_cuda")
-                        : t("update_modal.compute_mode_cpu")
-                }
+                before={editionLabel(t, current_compute_mode)}
+                after={editionLabel(t, target_compute_mode)}
                 is_changed={is_compute_mode_changed}
                 warning={warning_compute_mode}
             />

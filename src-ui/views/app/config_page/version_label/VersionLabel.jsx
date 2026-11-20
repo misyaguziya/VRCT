@@ -10,7 +10,9 @@ export const VersionLabel = ({ isCompact = false }) => {
     const { currentComputeMode } = useComputeMode();
     const { is_copied, copyToClipboard } = useCopyToClipboard();
 
-    const is_cuda = currentComputeMode.data === "cuda";
+    // 実行中の GPU の印 (GPU を使えず CPU で動くときは付けない)
+    const gpu_badge = { cuda: "CUDA", amd: "AMD" }[currentComputeMode.data] ?? null;
+    const is_cuda = gpu_badge !== null;
     const software_version_number = currentSoftwareVersion.data || "";
 
     const is_beta = software_version_number.toLowerCase().includes("beta");
@@ -18,7 +20,7 @@ export const VersionLabel = ({ isCompact = false }) => {
 
     const onCopy = () => {
         if (isCompact) return;
-        const copy_text = is_cuda ? `${software_version_number} CUDA` : `${software_version_number}`;
+        const copy_text = is_cuda ? `${software_version_number} ${gpu_badge}` : `${software_version_number}`;
         copyToClipboard(copy_text);
     };
 
@@ -43,17 +45,17 @@ export const VersionLabel = ({ isCompact = false }) => {
                     <div className={styles.compact_content}>
                         <p className={styles.compact_version_label}>{`v${base_version}`}</p>
                         {is_beta && <span className={styles.compact_badge}>Beta</span>}
-                        {is_cuda && <span className={styles.compact_badge}>CUDA</span>}
+                        {is_cuda && <span className={styles.compact_badge}>{gpu_badge}</span>}
                     </div>
                 ) : (
                     <div className={styles.expanded_row}>
                         <div className={styles.version_text_block}>
                             <p className={styles.version_label}>
                                 {`v${software_version_number}`}
-                                {!is_beta && is_cuda && <span className={styles.inline_cuda}> CUDA</span>}
+                                {!is_beta && is_cuda && <span className={styles.inline_cuda}> {gpu_badge}</span>}
                             </p>
                             {is_two_line_expanded && (
-                                <p className={styles.second_line_cuda}>CUDA</p>
+                                <p className={styles.second_line_cuda}>{gpu_badge}</p>
                             )}
                         </div>
                         {is_copied ? (

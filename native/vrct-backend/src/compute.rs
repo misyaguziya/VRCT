@@ -126,6 +126,17 @@ fn radeon_devices(count: usize, resources: &Path) -> Vec<(usize, String)> {
     devices
 }
 
+/// The edition installed (its bundled DLLs), whatever this PC's GPU and driver: "amd" | "cuda" | "cpu"
+pub fn installed_edition(resources: &Path) -> &'static str {
+    if resources.join("ct2-rocm").join("ctranslate2.dll").is_file() {
+        "amd"
+    } else if resources.join(CUBLAS).is_file() {
+        "cuda"
+    } else {
+        "cpu"
+    }
+}
+
 fn sorted_types(device: &str, index: i32) -> Vec<String> {
     let mut types: Vec<String> = vrct_ct2::supported_compute_types(device, index).unwrap_or_default().into_iter().map(String::from).collect();
     types.sort();
@@ -169,6 +180,18 @@ pub fn best_compute_type(device: &Value) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn installed_edition_from_the_bundled_dlls() {
+        let dir = std::env::temp_dir().join(format!("vrct-edition-{}", std::process::id()));
+        std::fs::create_dir_all(dir.join("ct2-rocm")).unwrap();
+        assert_eq!(installed_edition(&dir), "cpu");
+        std::fs::write(dir.join(CUBLAS), b"").unwrap();
+        assert_eq!(installed_edition(&dir), "cuda");
+        std::fs::write(dir.join("ct2-rocm").join("ctranslate2.dll"), b"").unwrap();
+        assert_eq!(installed_edition(&dir), "amd");
+        let _ = std::fs::remove_dir_all(dir);
+    }
 
     #[test]
     fn matches_hip_arch_to_kernel_filenames() {

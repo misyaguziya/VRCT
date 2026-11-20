@@ -78,6 +78,7 @@ update_modal:
     channel_beta: "Beta版"
     compute_mode_cpu: "CPU版"
     compute_mode_cuda: "GPU版 (CUDA)"
+    compute_mode_amd: "GPU版 (AMD)"
     latest_label: "最新"
     install_latest_button: "最新バージョンへ更新"
     install_button: "この設定で再インストール"
@@ -86,7 +87,7 @@ update_modal:
     channel_label: "リリースチャンネル"
     channel_desc: "Beta版は新機能を先取りできますが、動作が不安定な場合があります。"
     compute_mode_label: "デバイス構成"
-    compute_mode_desc: "GPU版はNVIDIA GPUで高速に動作しますが、約 5GB のディスク容量が必要です。"
+    compute_mode_desc: "GPU版は高速に動作します。CUDA は NVIDIA GPU 用で約 5GB、AMD は Radeon RX 7000 以降用で約 1GB の追加ディスク容量が必要です。"
     version_label: "インストールするバージョン"
     version_desc: "選択したチャンネルで公開されているリリースから選べます。"
     no_versions_available: "選択中のチャンネルには利用可能なバージョンがありません。"
@@ -94,6 +95,7 @@ update_modal:
     change_col_after: "インストール後"
     warn_downgrade: "{{from}} から {{to}} へのダウングレードになります。設定ファイルの互換性は保証されません。"
     warn_cuda_extra_size: "GPU版は約 5GB の追加ダウンロードが必要です。"
+    warn_amd_extra_size: "AMD GPU版は約 400MB の追加ダウンロードが必要です。"
     warn_switch_channel: "{{channel}}チャンネルに切り替わります。次回以降のアップデート通知も{{channel}}が対象になります。"
 
 config_page:

@@ -547,7 +547,7 @@ fn init_servers(app: &App) -> Result<()> {
 /// at once; a getter that fails gives null
 pub fn update_config_settings(app: &App) {
     let mut settings = Map::new();
-    for (endpoint, route) in routes::routes() {
+    for (endpoint, route) in routes::all_routes() {
         if !endpoint.starts_with("/get/data/") || endpoint == "/get/data/available_releases" {
             continue;
         }
