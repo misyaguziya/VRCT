@@ -151,7 +151,16 @@ pub struct ModelConfig {
     pub intra_threads: usize,
 }
 
+/// Models are created and freed one at a time: on Windows ROCm, Translator and Whisper loading at
+/// the same moment hung (issue #128), and freeing has its own ROCm hangs upstream.
+static POOLS: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn pools() -> std::sync::MutexGuard<'static, ()> {
+    POOLS.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 fn new_pool(f: ffi::NewFn, path: &Path, c: &ModelConfig) -> Result<NonNull<c_void>> {
+    let _one_at_a_time = pools();
     let Some(path) = path.to_str() else { bail!("model path is not UTF-8: {}", path.display()) };
     let (path, device, compute) = (cstring(path)?, cstring(&c.device)?, cstring(&c.compute_type)?);
     check(unsafe { f(path.as_ptr(), device.as_ptr(), c.device_index, compute.as_ptr(), c.inter_threads, c.intra_threads) })
@@ -226,6 +235,7 @@ impl Translator {
 
 impl Drop for Translator {
     fn drop(&mut self) {
+        let _one_at_a_time = pools();
         unsafe { ffi::ct2_translator_free(self.0.as_ptr()) }
     }
 }
@@ -377,6 +387,7 @@ impl Whisper {
 
 impl Drop for Whisper {
     fn drop(&mut self) {
+        let _one_at_a_time = pools();
         unsafe { ffi::ct2_whisper_free(self.0.as_ptr()) }
     }
 }
