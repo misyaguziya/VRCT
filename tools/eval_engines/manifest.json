@@ -1,0 +1,54 @@
+{
+  "_comment": "P5 の評価で使う外部の物。版と SHA-256 (TSV は git の blob SHA-1) を固定する。fetch.py が読む。",
+  "files": [
+    {
+      "dest": "bin/speech-0.11.0-windows-x64-vulkan.zip",
+      "url": "https://github.com/nyosegawa/speech.cpp/releases/download/v0.11.0/speech-0.11.0-windows-x64-vulkan.zip",
+      "sha256": "b64f498179fc46d08149317eaea9fe6f24e6fa0cd194557b374c97e76ccc9c67",
+      "extract": "bin/speech"
+    },
+    {
+      "dest": "bin/llama-b12584-bin-win-vulkan-x64.zip",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12584/llama-b12584-bin-win-vulkan-x64.zip",
+      "sha256": "362094a7b2ed5df7c1146238a848356686703794621f1088ef12976719562fbe",
+      "extract": "bin/llama"
+    },
+    {
+      "dest": "models/Qwen3-ASR-0.6B-Q8_0.gguf",
+      "url": "https://huggingface.co/sakasegawa/Qwen3-ASR-0.6B-GGUF/resolve/ee78f8709547f39bea3b924a16c72403826cac92/Qwen3-ASR-0.6B-Q8_0.gguf",
+      "sha256": "416e10c15b4a3d9002bd337d18fc450233fdf68502b6e10d1379d2789838afd0"
+    },
+    {
+      "dest": "models/Qwen3-ASR-1.7B-Q8_0.gguf",
+      "url": "https://huggingface.co/sakasegawa/Qwen3-ASR-1.7B-GGUF/resolve/81e2423d24073cdeeccb5951df16accc89e075a2/Qwen3-ASR-1.7B-Q8_0.gguf",
+      "sha256": "5f219b78a1d9c3b9e97da27708b36f8a0bc1bfc1650b541c0a6dbaf87c9a62d0"
+    },
+    {
+      "dest": "models/parakeet-tdt_ctc-0.6B-ja-Q8_0.gguf",
+      "url": "https://huggingface.co/sakasegawa/parakeet-tdt_ctc-0.6b-ja-GGUF/resolve/f7cb5387e1e76385456b7a792054565ecf177417/parakeet-tdt_ctc-0.6B-ja-Q8_0.gguf",
+      "sha256": "6ff90c5240f0778dfb44816916eb3c8e634645e120170d6ae43c0f50a11d79d0"
+    },
+    {
+      "dest": "models/reazonspeech-nemo-619M-v2-Q8_0.gguf",
+      "url": "https://huggingface.co/sakasegawa/reazonspeech-nemo-v2-GGUF/resolve/ed04d9ee2cd156414982a7c0f6123c6fd1093904/reazonspeech-nemo-619M-v2-Q8_0.gguf",
+      "sha256": "944411cb740938f858c939aa1d42f7eb4bb884fc350d9daae8b7e724853e54a3"
+    },
+    {
+      "dest": "models/HY-MT1.5-1.8B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/tencent/HY-MT1.5-1.8B-GGUF/resolve/265b2e615a7dc9b06c435dc878829ad99a512ba2/HY-MT1.5-1.8B-Q4_K_M.gguf",
+      "sha256": "4383ac0c3c8e476de98ff979c2a3f069f8c4fb385e7860cf2d28da896cc477c7"
+    }
+  ],
+  "fleurs": {
+    "_comment": "google/fleurs (CC-BY-4.0) のテスト分。4 言語に共通の文 id から n 件を選んで wav に取り出す",
+    "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+    "n": 50,
+    "languages": {
+      "ja": {"config": "ja_jp", "tsv_git_sha1": "f4b9cacaa2cd31d44a25d80bdc1a9653497e816f", "audio_sha256": "5de465fa7aaafc4e2c13aba44771550b8cd2dd29bb9b265daeb6d92ca8e0c136"},
+      "en": {"config": "en_us", "tsv_git_sha1": "bcd7e3e4ecb8ad2a4d9754fc6be14dd6d3364b54", "audio_sha256": "d9c2e37b41aacd41bc283554a0a82b5476b36887049774ecb2819dcaaa55a356"},
+      "ko": {"config": "ko_kr", "tsv_git_sha1": "205651a43227b76307e360201410776ddd0e80f4", "audio_sha256": "3489e529f2aad18d3357b746c5f955941d258b79dc60d8a102d5bced2a223184"},
+      "zh": {"config": "cmn_hans_cn", "tsv_git_sha1": "3c520b03f63be24c7096021605a95a351038d541", "audio_sha256": "09d19ad18f5d7e91076880807e866cd16abd924c7052b55f71cdae91714fc166"}
+    }
+  },
+  "whisper_from_catalog": ["large-v3-turbo-int8"]
+}
